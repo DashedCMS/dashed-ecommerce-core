@@ -2,9 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore;
 
+use Qubiqx\QcommerceEcommerceCore\Commands\QcommerceEcommerceCoreCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Commands\QcommerceEcommerceCoreCommand;
 
 class QcommerceEcommerceCoreServiceProvider extends PackageServiceProvider
 {
