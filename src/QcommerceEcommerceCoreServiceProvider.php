@@ -43,17 +43,17 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         ]);
 
         $package
-            ->name('qcommerce-core')
+            ->name('qcommerce-ecommerce-core')
             ->hasConfigFile([
-                'filament',
-                'filament-spatie-laravel-translatable-plugin',
-                'filesystems',
-                'laravellocalization',
-                'media-library',
-                'qcommerce-core',
+//                'filament',
+//                'filament-spatie-laravel-translatable-plugin',
+//                'filesystems',
+//                'laravellocalization',
+//                'media-library',
+//                'qcommerce-core',
             ])
             ->hasRoutes([
-                'frontend',
+//                'frontend',
             ])
             ->hasViews()
             ->hasAssets()
