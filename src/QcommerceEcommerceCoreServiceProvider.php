@@ -4,6 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Spatie\LaravelPackageTools\Package;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
@@ -33,12 +34,12 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         ]);
 
         cms()->builder('settingPages', [
-//            'general' => [
-//                'name' => 'Algemeen',
-//                'description' => 'Algemene informatie van de website',
-//                'icon' => 'cog',
-//                'page' => GeneralSettingsPage::class,
-//            ],
+            'invoicing' => [
+                'name' => 'Facturatie instellingen',
+                'description' => 'Instellingen voor de facturatie',
+                'icon' => 'document-report',
+                'page' => InvoiceSettingsPage::class,
+            ],
         ]);
 
         $package
@@ -71,7 +72,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     protected function getPages(): array
     {
         return array_merge(parent::getPages(), [
-//            SettingsPage::class,
+            InvoiceSettingsPage::class,
         ]);
     }
 

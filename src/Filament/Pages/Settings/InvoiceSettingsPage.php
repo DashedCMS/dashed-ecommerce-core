@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceCore\Filament\Pages\Settings;
+namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
 
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Tabs;
@@ -13,17 +13,17 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\User;
 
-class FormSettingsPage extends Page implements HasForms
+class InvoiceSettingsPage extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-bell';
+    protected static ?string $navigationIcon = 'heroicon-o-document-report';
     protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $navigationLabel = 'Formulier instellingen';
+    protected static ?string $navigationLabel = 'Facturatie instellingen';
     protected static ?string $navigationGroup = 'Overige';
-    protected static ?string $title = 'Formulier instellingen';
+    protected static ?string $title = 'Facturatie instellingen';
 
-    protected static string $view = 'qcommerce-core::settings.pages.form-settings';
+    protected static string $view = 'qcommerce-ecommerce-core::settings.pages.invoice-settings';
 
     public function mount(): void
     {
