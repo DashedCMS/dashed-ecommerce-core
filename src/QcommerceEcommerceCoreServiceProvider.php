@@ -33,7 +33,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 //            ],
         ]);
 
-        cms()->builder('settingPages', array_merge(cms()->builder('settingPages'), [
+        cms()->builder(
+            'settingPages',
+            array_merge(cms()->builder('settingPages'), [
                 'invoicing' => [
                     'name' => 'Facturatie instellingen',
                     'description' => 'Instellingen voor de facturatie',
