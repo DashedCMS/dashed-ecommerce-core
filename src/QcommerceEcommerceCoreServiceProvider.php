@@ -64,9 +64,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
     protected function getStyles(): array
     {
-        return [
+        return array_merge(parent::getStyles(), [
             'qcommerce-ecommerce-core' => str_replace('/vendor/qubiqx/qcommerce-ecommerce-core/src', '', str_replace('/packages/qubiqx/qcommerce-ecommerce-core/src', '', __DIR__)) . '/vendor/qubiqx/qcommerce-ecommerce-core/resources/dist/css/qcommerce-ecommerce-core.css',
-        ];
+        ]);
     }
 
     protected function getPages(): array
