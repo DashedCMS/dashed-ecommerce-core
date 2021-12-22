@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Qubiqx\QcommerceEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class QcommerceEcommerceCoreCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'qcommerce-ecommerce-core';
 
     public $description = 'My command';
 
