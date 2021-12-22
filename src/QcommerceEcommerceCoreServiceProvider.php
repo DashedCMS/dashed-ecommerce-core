@@ -2,9 +2,15 @@
 
 namespace Qubiqx\QcommerceEcommerceCore;
 
+<<<<<<< HEAD
 use Filament\PluginServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 use Spatie\LaravelPackageTools\Package;
+=======
+use Qubiqx\QcommerceEcommerceCore\Commands\QcommerceEcommerceCoreCommand;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+>>>>>>> fd376c3e3c58773e03aaedb1d89ff5333cde6fe0
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 {
