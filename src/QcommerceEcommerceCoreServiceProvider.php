@@ -4,7 +4,11 @@ namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Spatie\LaravelPackageTools\Package;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
@@ -42,6 +46,30 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
                     'icon' => 'document-report',
                     'page' => InvoiceSettingsPage::class,
                 ],
+                'order' => [
+                    'name' => 'Bestellingen',
+                    'description' => 'Instellingen voor de bestellingen',
+                    'icon' => 'cash',
+                    'page' => OrderSettingsPage::class,
+                ],
+                'paymentMethods' => [
+                    'name' => 'Betaalmethodes',
+                    'description' => 'Stel handmatige betaalmethodes in',
+                    'icon' => 'credit-card',
+                    'page' => PaymentMethodResource::class,
+                ],
+                'vat' => [
+                    'name' => 'BTW instellingen',
+                    'description' => 'Beheren hoe je winkel belastingen in rekening brengt',
+                    'icon' => 'receipt-tax',
+                    'page' => VATSettingsPage::class,
+                ],
+                'checkout' => [
+                    'name' => 'Afreken instellingen',
+                    'description' => 'Je online betaalprocess aanpassen',
+                    'icon' => 'shopping-cart',
+                    'page' => CheckoutSettingsPage::class,
+                ],
             ])
         );
 
@@ -76,13 +104,16 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         return array_merge(parent::getPages(), [
             InvoiceSettingsPage::class,
+            OrderSettingsPage::class,
+            CheckoutSettingsPage::class,
+            VATSettingsPage::class,
         ]);
     }
 
     protected function getResources(): array
     {
-        return [
-//            PageResource::class,
-        ];
+        return array_merge(parent::getResources(), [
+            PaymentMethodResource::class,
+        ]);
     }
 }

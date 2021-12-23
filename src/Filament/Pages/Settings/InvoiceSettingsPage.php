@@ -2,16 +2,16 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
-use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
 
 class InvoiceSettingsPage extends Page implements HasForms
 {
@@ -23,21 +23,18 @@ class InvoiceSettingsPage extends Page implements HasForms
     protected static ?string $navigationGroup = 'Overige';
     protected static ?string $title = 'Facturatie instellingen';
 
-    protected static string $view = 'qcommerce-ecommerce-core::settings.pages.invoice-settings';
+    protected static string $view = 'qcommerce-core::settings.pages.default-settings';
 
     public function mount(): void
     {
         $formData = [];
         $sites = Sites::getSites();
         foreach ($sites as $site) {
-//            $site['notification_form_inputs_emails'] = '';
-//            $notificationFormInputsEmails = Customsetting::get('notification_form_inputs_emails', $site['id'], '[]');
-            $formData["notification_form_inputs_emails_{$site['id']}"] = json_decode(Customsetting::get('notification_form_inputs_emails', $site['id'], '{}'));
-//            if ($notificationFormInputsEmails) {
-//                foreach (json_decode($notificationFormInputsEmails) as $notificationFormInputsEmail) {
-//                    $site['notification_form_inputs_emails'] .= $notificationFormInputsEmail . ',';
-//                }
-//            }
+            $formData["invoice_id_prefix_{$site['id']}"] = Customsetting::get('invoice_id_prefix', $site['id']);
+            $formData["invoice_id_suffix_{$site['id']}"] = Customsetting::get('invoice_id_suffix', $site['id']);
+            $formData["random_invoice_number_{$site['id']}"] = Customsetting::get('random_invoice_number', $site['id'], false) ? true : false;
+            $formData["current_invoice_number_{$site['id']}"] = Customsetting::get('current_invoice_number', $site['id'], '1001');
+            $formData["invoice_id_replacement_{$site['id']}"] = Customsetting::get('invoice_id_replacement', $site['id'], '*****');
         }
 
         $this->form->fill($formData);
@@ -52,14 +49,65 @@ class InvoiceSettingsPage extends Page implements HasForms
         foreach ($sites as $site) {
             $schema = [
                 Placeholder::make('label')
-                    ->label("Notificaties voor {$site['name']}")
-                    ->content('Stel extra opties in voor de notificaties.'),
-                TagsInput::make("notification_form_inputs_emails_{$site['id']}")
-                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
-                    ->label('Emails om de bevestigingsmail van een formulier aanvraag naar te sturen')
-                    ->placeholder('Voer een email in')
+                    ->label("Facturerings instellingen voor {$site['name']}")
+                    ->content('Let op: je kan per site een andere pre / suffix gebruiken om met de factuur ID te herkenning in de administratie via welke site de bestelling is binnen gekomen. Dit is alleen ?wettelijk (niet zeker)? toegestaan als het wel in 1 administratie terecht komt.')
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ]),
+                Checkbox::make("random_invoice_number_{$site['id']}")
+                    ->label('Gebruik een willekeurige invoice ID')
                     ->reactive()
-                    ->required(),
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ]),
+                TextInput::make("invoice_id_replacement_{$site['id']}")
+                    ->label('Invoice ID replacement')
+                    ->maxLength(25)
+                    ->rules([
+                        'max:25'
+                    ])
+                    ->helperText('Gebruik * voor een random getal / letter, bijv: *****')
+                    ->reactive()
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ])
+                    ->hidden(fn($get) => !$get("random_invoice_number_{$site['id']}")),
+                TextInput::make("current_invoice_number_{$site['id']}")
+                    ->label('Huidige factuurnummer')
+                    ->type('number')
+                    ->rules([
+                        'numeric'
+                    ])
+                    ->helperText('Alleen numeriek')
+                    ->reactive()
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ])
+                    ->hidden(fn($get) => $get("random_invoice_number_{$site['id']}")),
+                TextInput::make("invoice_id_prefix_{$site['id']}")
+                    ->label('Voorvoegsel')
+                    ->maxLength(5)
+                    ->rules([
+                        'max:5'
+                    ]),
+                TextInput::make("invoice_id_suffix_{$site['id']}")
+                    ->label('Achtervoegsel')
+                    ->reactive()
+                    ->maxLength(5)
+                    ->rules([
+                        'max:5'
+                    ]),
+                Placeholder::make("invoice_id_example_{$site['id']}")
+                    ->label("Voorbeeld van factuur ID")
+                    ->content('QC#*****QC of QC#1001QC')
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ]),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -79,20 +127,19 @@ class InvoiceSettingsPage extends Page implements HasForms
     public function submit()
     {
         $sites = Sites::getSites();
-        $formState = $this->form->getState();
 
         foreach ($sites as $site) {
-            $emails = $this->form->getState()["notification_form_inputs_emails_{$site['id']}"];
-            foreach ($emails as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    unset($emails[$key]);
-                }
+            Customsetting::set('invoice_id_prefix', $this->form->getState()["invoice_id_prefix_{$site['id']}"], $site['id']);
+            Customsetting::set('invoice_id_suffix', $this->form->getState()["invoice_id_suffix_{$site['id']}"], $site['id']);
+            Customsetting::set('random_invoice_number', $this->form->getState()["random_invoice_number_{$site['id']}"], $site['id']);
+            if (isset($this->form->getState()["current_invoice_number_{$site['id']}"])) {
+                Customsetting::set('current_invoice_number', $this->form->getState()["current_invoice_number_{$site['id']}"], $site['id']);
             }
-            Customsetting::set('notification_form_inputs_emails', $emails, $site['id']);
-            $formState["notification_form_inputs_emails_{$site['id']}"] = $emails;
+            if (isset($this->form->getState()["invoice_id_replacement_{$site['id']}"])) {
+                Customsetting::set('invoice_id_replacement', $this->form->getState()["invoice_id_replacement_{$site['id']}"], $site['id']);
+            }
         }
 
-        $this->form->fill($formState);
-        $this->notify('success', 'De formulier instellingen zijn opgeslagen');
+        $this->notify('success', 'De facturatie instellingen zijn opgeslagen');
     }
 }
