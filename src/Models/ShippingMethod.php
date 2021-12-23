@@ -21,6 +21,7 @@ class ShippingMethod extends Model
         'costs',
         'sort',
         'variables',
+        'variable_static_costs',
         'minimum_order_value',
         'maximum_order_value',
         'order',
@@ -28,6 +29,10 @@ class ShippingMethod extends Model
 
     public $translatable = [
         'name',
+    ];
+
+    protected $casts = [
+      'variables' => 'array'
     ];
 
     protected $table = 'qcommerce__shipping_methods';

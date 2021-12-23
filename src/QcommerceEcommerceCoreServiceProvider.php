@@ -11,6 +11,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Spatie\LaravelPackageTools\Package;
 
@@ -91,6 +92,12 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
                     'icon' => 'truck',
                     'page' => ShippingZoneResource::class,
                 ],
+                'shippingMethod' => [
+                    'name' => 'Verzendmethodes',
+                    'description' => 'Maak verzendmethodes aan',
+                    'icon' => 'truck',
+                    'page' => ShippingMethodResource::class,
+                ],
             ])
         );
 
@@ -138,6 +145,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             PaymentMethodResource::class,
             ShippingClassResource::class,
             ShippingZoneResource::class,
+            ShippingMethodResource::class,
         ]);
     }
 }

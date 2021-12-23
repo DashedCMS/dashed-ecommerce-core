@@ -1,0 +1,167 @@
+<?php
+
+namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+
+use Filament\Forms\Components\BelongsToSelect;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Resources\Form;
+use Filament\Resources\Resource;
+use Filament\Resources\Table;
+use Filament\Tables\Columns\TextColumn;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
+use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
+use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
+
+class ShippingMethodResource extends Resource
+{
+    use Translatable;
+
+    protected static ?string $model = ShippingMethod::class;
+
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
+    protected static ?string $navigationGroup = 'Content';
+    protected static ?string $navigationLabel = 'Verzendmethodes';
+    protected static ?string $label = 'Verzendmethode';
+    protected static ?string $pluralLabel = 'Verzendmethodes';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return [
+            'name',
+        ];
+    }
+
+    public static function form(Form $form): Form
+    {
+        $schema = [
+            Section::make('Globale informatie')
+                ->schema([
+                    BelongsToSelect::make('shipping_zone_id')
+                        ->relationship('shippingZone', 'name')
+                        ->label('Hangt onder verzendzone')
+                        ->required(),
+                ])
+                ->collapsed(fn($livewire) => $livewire instanceof EditShippingMethod),
+            Section::make('Content')
+                ->schema([
+                    TextInput::make('name')
+                        ->label('Name')
+                        ->required()
+                        ->maxLength(100)
+                        ->rules([
+                            'max:100',
+                        ]),
+                    Radio::make('sort')
+                        ->label('Soort verzendmethod')
+                        ->options([
+                            'static_amount' => 'Vast bedrag',
+                            'variable_amount' => 'Variabel bedrag',
+                            'free_delivery' => 'Gratis verzending',
+                            'take_away' => 'Afhalen',
+                        ])
+                        ->reactive()
+                        ->required(),
+                    TextInput::make('minimum_order_value')
+                        ->label('Vanaf hoeveel € moet deze verzendmethode geldig zijn')
+                        ->rules([
+                            'numeric',
+                        ]),
+                    TextInput::make('maximum_order_value')
+                        ->label('Tot hoeveel € moet deze verzendmethode geldig zijn (zet op 100000 voor oneindig)')
+                        ->rules([
+                            'numeric',
+                        ]),
+                    TextInput::make('costs')
+                        ->label('Kosten van deze verzendmethode')
+                        ->rules([
+                            'numeric',
+                        ])
+                        ->hidden(fn($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
+                    Repeater::make('variables')
+                        ->label('Extra vaste kosten van deze verzendmethode')
+                        ->helperText('Met variable berekening kan je per x aantal items rekenen, we rekenen van boven naar beneden')
+                        ->schema([
+                            TextInput::make('amount_of_items')
+                                ->label('Voor hoeveel stuks moet dit gelden')
+                                ->type('number')
+                                ->rules([
+                                    'numeric',
+                                ]),
+                            TextInput::make('costs')
+                                ->label('Vul een prijs in voor dit aantal')
+                                ->rules([
+                                    'numeric',
+                                ]),
+                        ])
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
+                    TextInput::make('variable_static_costs')
+                        ->label('Extra vaste kosten van deze verzendmethode')
+                        ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
+                        ->rules([
+                            'max:255',
+                        ])
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
+                    TextInput::make('order')
+                        ->label('Volgorde van de verzendmethode')
+                        ->type('number')
+                        ->rules([
+                            'numeric',
+                        ]),
+                ])
+        ];
+
+//        test(fn($livewire, $record);
+//        function test ($livewire, $record) {
+//            if($livewire instanceof EditShippingMethod){
+//                foreach(ShippingClass::where('site_id', dd($record->shippingZone->site_id))->get() as $shippingClass){
+//                    dd($shippingClass);
+//                }
+//            }
+//        }
+
+        return $form
+            ->schema($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->label('Naam')
+                    ->sortable(),
+                TextColumn::make('shippingZone.name')
+                    ->label('Verzendzone')
+                    ->sortable()
+                    ->searchable(),
+            ])
+            ->filters([
+                //
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListShippingMethods::route('/'),
+            'create' => CreateShippingMethod::route('/create'),
+            'edit' => EditShippingMethod::route('/{record}/edit'),
+        ];
+    }
+}

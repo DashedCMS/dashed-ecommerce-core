@@ -2,17 +2,20 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
+use Qubiqx\QcommerceEcommerceCore\Classes\Countries;
+use Qubiqx\QcommerceEcommerceCore\Classes\PaymentMethods;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\CreateShippingZone;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\EditShippingZone;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\ListShippingZones;
@@ -52,11 +55,11 @@ class ShippingZoneResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(function () {
-                                return ! (Sites::getAmountOfSites() > 1);
+                                return !(Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
+                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -66,15 +69,21 @@ class ShippingZoneResource extends Resource
                             ->rules([
                                 'max:100',
                             ]),
-                        Textarea::make('description')
-                            ->label('Beschrijving')
-                            ->helperText('Alleen intern gebruik')
-                            ->rows(2)
-                            ->maxLength(1250)
+                        TextInput::make('search_fields')
+                            ->label('Voer extra woorden in waarop deze verzendzone geactiveerd mag worden, woorden scheiden met een komma')
+                            ->maxLength(255)
                             ->rules([
-                                'nullable',
-                                'max:1250',
+                                'max:255',
                             ]),
+                        Toggle::make('hide_vat_on_invoice')
+                            ->label('Verberg BTW op de factuur bij het kiezen van deze verzendzone'),
+                        MultiSelect::make('zones')
+                            ->label('Geactiveerde regio\'s')
+                            ->options(collect(Countries::getCountries())->pluck('name'))
+                            ->required(),
+                        MultiSelect::make('disabled_payment_method_ids')
+                            ->label('Deactiveer betalingsmethodes voor deze verzendzone')
+                            ->options(collect(PaymentMethods::get())->pluck('name', 'id'))
                     ]),
             ]);
     }
@@ -89,7 +98,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
             ])
             ->filters([

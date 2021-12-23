@@ -29,6 +29,11 @@ class ShippingZone extends Model
 
     protected $table = 'qcommerce__shipping_zones';
 
+    protected $casts = [
+        'zones' => 'array',
+        'disabled_payment_method_ids' => 'array'
+    ];
+
     public function site()
     {
         foreach (Sites::getSites() as $site) {
