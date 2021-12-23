@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Qubiqx\Qcommerce\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Translatable\HasTranslations;
+use Qubiqx\Qcommerce\Classes\Sites;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Translatable\HasTranslations;
 
 class ShippingClass extends Model
 {

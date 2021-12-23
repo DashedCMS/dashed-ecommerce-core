@@ -2,22 +2,15 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
 
-use Filament\Forms\Components\Card;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
-use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
-use Qubiqx\QcommerceCore\Classes\Locales;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
 
 class ProductSettingsPage extends Page implements HasForms
 {
@@ -72,7 +65,7 @@ class ProductSettingsPage extends Page implements HasForms
                 Select::make("product_out_of_stock_sellable_date_should_be_valid_{$site['id']}")
                     ->options([
                         '1' => 'Ja',
-                        '0' => 'Nee'
+                        '0' => 'Nee',
                     ])
                     ->label('Indien een product doorverkocht kan worden bij 0 voorraad, moet de \'weer op voorraad\' datum dan in de toekomst liggen?')
                     ->required(),

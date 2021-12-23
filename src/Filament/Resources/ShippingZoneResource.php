@@ -11,11 +11,11 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables\Columns\TextColumn;
+use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\CreateShippingZone;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\EditShippingZone;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\ListShippingZones;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
 
 class ShippingZoneResource extends Resource
@@ -52,11 +52,11 @@ class ShippingZoneResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingClass),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -89,7 +89,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
             ])
             ->filters([

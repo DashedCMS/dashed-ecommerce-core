@@ -11,12 +11,11 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Filament\Resources\PageResource\Pages\EditPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
+use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
 
 class ShippingClassResource extends Resource
 {
