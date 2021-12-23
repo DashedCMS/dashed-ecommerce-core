@@ -2,25 +2,17 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Closure;
-use Filament\Forms\Components\Builder;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Filament\Resources\PageResource\Pages\CreatePage;
 use Qubiqx\QcommerceCore\Filament\Resources\PageResource\Pages\EditPage;
-use Qubiqx\QcommerceCore\Filament\Resources\PageResource\Pages\ListPages;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages\CreatePaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages\EditPaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages\ListPaymentMethods;
@@ -58,11 +50,11 @@ class PaymentMethodResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn($livewire) => $livewire instanceof EditPage),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPage),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -124,7 +116,7 @@ class PaymentMethodResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
             ])
             ->filters([

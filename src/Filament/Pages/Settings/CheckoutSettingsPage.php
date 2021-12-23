@@ -2,26 +2,18 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
 
-use Faker\Provider\Text;
-use Filament\Forms\Components\Card;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
-use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
-use Qubiqx\QcommerceCore\Classes\Locales;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
 
 class CheckoutSettingsPage extends Page implements HasForms
 {
@@ -81,7 +73,7 @@ class CheckoutSettingsPage extends Page implements HasForms
                     ->label('Voor- en achternaam')
                     ->options([
                         'last' => 'Alleen achternaam nodig',
-                        'full' => 'Voor- en achternaam vereisen'
+                        'full' => 'Voor- en achternaam vereisen',
                     ])
                     ->required(),
                 Radio::make("checkout_form_company_name_{$site['id']}")

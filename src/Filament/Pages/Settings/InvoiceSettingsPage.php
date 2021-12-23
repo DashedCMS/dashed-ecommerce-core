@@ -66,7 +66,7 @@ class InvoiceSettingsPage extends Page implements HasForms
                     ->label('Invoice ID replacement')
                     ->maxLength(25)
                     ->rules([
-                        'max:25'
+                        'max:25',
                     ])
                     ->helperText('Gebruik * voor een random getal / letter, bijv: *****')
                     ->reactive()
@@ -74,12 +74,12 @@ class InvoiceSettingsPage extends Page implements HasForms
                         'default' => 1,
                         'lg' => 2,
                     ])
-                    ->hidden(fn($get) => !$get("random_invoice_number_{$site['id']}")),
+                    ->hidden(fn ($get) => ! $get("random_invoice_number_{$site['id']}")),
                 TextInput::make("current_invoice_number_{$site['id']}")
                     ->label('Huidige factuurnummer')
                     ->type('number')
                     ->rules([
-                        'numeric'
+                        'numeric',
                     ])
                     ->helperText('Alleen numeriek')
                     ->reactive()
@@ -87,19 +87,19 @@ class InvoiceSettingsPage extends Page implements HasForms
                         'default' => 1,
                         'lg' => 2,
                     ])
-                    ->hidden(fn($get) => $get("random_invoice_number_{$site['id']}")),
+                    ->hidden(fn ($get) => $get("random_invoice_number_{$site['id']}")),
                 TextInput::make("invoice_id_prefix_{$site['id']}")
                     ->label('Voorvoegsel')
                     ->maxLength(5)
                     ->rules([
-                        'max:5'
+                        'max:5',
                     ]),
                 TextInput::make("invoice_id_suffix_{$site['id']}")
                     ->label('Achtervoegsel')
                     ->reactive()
                     ->maxLength(5)
                     ->rules([
-                        'max:5'
+                        'max:5',
                     ]),
                 Placeholder::make("invoice_id_example_{$site['id']}")
                     ->label("Voorbeeld van factuur ID")
