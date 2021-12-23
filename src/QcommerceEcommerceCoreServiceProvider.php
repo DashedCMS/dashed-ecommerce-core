@@ -7,8 +7,11 @@ use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Spatie\LaravelPackageTools\Package;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
@@ -64,11 +67,29 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
                     'icon' => 'receipt-tax',
                     'page' => VATSettingsPage::class,
                 ],
+                'product' => [
+                    'name' => 'Product instellingen',
+                    'description' => 'Beheren instellingen over je producten',
+                    'icon' => 'shopping-bag',
+                    'page' => ProductSettingsPage::class,
+                ],
                 'checkout' => [
                     'name' => 'Afreken instellingen',
                     'description' => 'Je online betaalprocess aanpassen',
                     'icon' => 'shopping-cart',
                     'page' => CheckoutSettingsPage::class,
+                ],
+                'shippingClass' => [
+                    'name' => 'Verzendklasses',
+                    'description' => 'Is een product breekbaar of veel groter? Reken een meerprijs',
+                    'icon' => 'truck',
+                    'page' => ShippingClassResource::class,
+                ],
+                'shippingZone' => [
+                    'name' => 'Verzendzones',
+                    'description' => 'Bepaal waar je allemaal naartoe verstuurd',
+                    'icon' => 'truck',
+                    'page' => ShippingZoneResource::class,
                 ],
             ])
         );
@@ -106,6 +127,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             InvoiceSettingsPage::class,
             OrderSettingsPage::class,
             CheckoutSettingsPage::class,
+            ProductSettingsPage::class,
             VATSettingsPage::class,
         ]);
     }
@@ -114,6 +136,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         return array_merge(parent::getResources(), [
             PaymentMethodResource::class,
+            ShippingClassResource::class,
+            ShippingZoneResource::class,
         ]);
     }
 }

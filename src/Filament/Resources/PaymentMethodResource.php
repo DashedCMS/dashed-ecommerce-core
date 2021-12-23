@@ -13,9 +13,9 @@ use Filament\Resources\Table;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Filament\Resources\PageResource\Pages\EditPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages\CreatePaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages\EditPaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages\ListPaymentMethods;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
 use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 
 class PaymentMethodResource extends Resource
@@ -54,7 +54,7 @@ class PaymentMethodResource extends Resource
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditPage),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')

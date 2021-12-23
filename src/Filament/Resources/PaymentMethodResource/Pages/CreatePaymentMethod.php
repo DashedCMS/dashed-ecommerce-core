@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\PageResource\Pages;
+namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
