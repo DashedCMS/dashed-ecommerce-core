@@ -32,7 +32,7 @@ class ShippingMethod extends Model
     ];
 
     protected $casts = [
-      'variables' => 'array'
+      'variables' => 'array',
     ];
 
     protected $table = 'qcommerce__shipping_methods';

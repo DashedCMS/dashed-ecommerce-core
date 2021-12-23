@@ -3,9 +3,9 @@
 namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Exception;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\App;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Str;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Qubiqx\QcommerceCore\Classes\Helper;
 use Qubiqx\QcommerceCore\Models\Customsetting;
@@ -67,7 +67,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -131,7 +131,7 @@ class ShoppingCart
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (!$calculateInclusiveTax) {
+        if (! $calculateInclusiveTax) {
             $cartTotal = $cartTotal + self::btw(false, $calculateDiscount);
         }
 
@@ -342,7 +342,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -372,7 +372,7 @@ class ShoppingCart
 
                 $taxTotal += $price;
                 if ($cartItem->model->vat_rate > 0) {
-                    if (!isset($totalAmountForVats[$cartItem->model->vat_rate])) {
+                    if (! isset($totalAmountForVats[$cartItem->model->vat_rate])) {
                         $totalAmountForVats[$cartItem->model->vat_rate] = 0;
                     }
                     $totalAmountForVats[$cartItem->model->vat_rate] += ($cartItem->price * $cartItem->qty);
@@ -432,7 +432,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -472,14 +472,13 @@ class ShoppingCart
 
     public static function getAvailablePaymentMethods($countryName = null)
     {
-
     }
 
     public static function removeInvalidItems()
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode || !$discountCode->isValidForCart()) {
+        if (! $discountCode || ! $discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
@@ -488,7 +487,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (!$cartItem->model) {
+            if (! $cartItem->model) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
             } elseif ($cartItem->model->stock() < $cartItem->qty) {
@@ -498,12 +497,12 @@ class ShoppingCart
                 Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (!$cartItemDeleted) {
+            if (! $cartItemDeleted) {
                 $productPrice = $cartItem->model->currentPrice;
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
-                    if (!$cartItemDeleted) {
+                    if (! $cartItemDeleted) {
                         $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                         if ($thisProductExtraOption) {
                             $options[$productExtraOptionId] = [
@@ -521,7 +520,7 @@ class ShoppingCart
                         }
                     }
                 }
-                if (!$cartItemDeleted) {
+                if (! $cartItemDeleted) {
                     $cartItem->price = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
@@ -531,6 +530,7 @@ class ShoppingCart
                         } catch (Exception $exception) {
                             $cartItemExists = false;
                         }
+
                         try {
                             Cart::get($otherCartItem->rowId);
                             $otherCartItemExists = true;
@@ -551,26 +551,25 @@ class ShoppingCart
                                             Cart::update($cartItem->rowId, $newQuantity);
                                             Cart::remove($otherCartItem->rowId);
                                         }
-
                                     } else {
                                         $hasOnlySingleOptionExtras = true;
                                         $optionsForBothItems = [];
 
                                         foreach ($cartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (!$productExtraOption->calculate_only_1_quantity) {
+                                            if (! $productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (!isset($optionsForBothItems[$key])) {
+                                            if (! isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (!$productExtraOption->calculate_only_1_quantity) {
+                                            if (! $productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (!isset($optionsForBothItems[$key])) {
+                                            if (! isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
@@ -620,6 +619,7 @@ class ShoppingCart
     {
         try {
             Cart::get($rowId);
+
             return true;
         } catch (Exception $e) {
             return false;
@@ -668,7 +668,7 @@ class ShoppingCart
             'depositRequired' => $depositAmount > 0.00 ? true : false,
             'depositAmount' => $depositAmount,
             'depositAmountFormatted' => Helper::formatPrice($depositAmount),
-            'depositPaymentMethods' => $depositPaymentMethods
+            'depositPaymentMethods' => $depositPaymentMethods,
         ];
     }
 }
