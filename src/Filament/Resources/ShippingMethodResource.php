@@ -126,7 +126,7 @@ class ShippingMethodResource extends Resource
                 ->rules([
                     'numeric',
                 ])
-                ->hidden(fn($livewire, $record) => !($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
+                ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
         }
 
         if ($shippingClasses) {
