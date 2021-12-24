@@ -3,7 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\Qcommerce\Classes\Sites;
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Translatable\HasTranslations;
 
@@ -18,13 +18,11 @@ class ShippingClass extends Model
         'site_id',
         'name',
         'description',
-        'slug',
     ];
 
     public $translatable = [
         'name',
         'description',
-        'slug',
     ];
 
     protected $table = 'qcommerce__shipping_classes';

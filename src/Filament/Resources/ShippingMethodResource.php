@@ -119,14 +119,20 @@ class ShippingMethodResource extends Resource
                 ])
         ];
 
-//        test(fn($livewire, $record);
-//        function test ($livewire, $record) {
-//            if($livewire instanceof EditShippingMethod){
-//                foreach(ShippingClass::where('site_id', dd($record->shippingZone->site_id))->get() as $shippingClass){
-//                    dd($shippingClass);
-//                }
-//            }
-//        }
+        $shippingClasses = [];
+        foreach (ShippingClass::get() as $shippingClass) {
+            $shippingClasses[] = TextInput::make("shipping_class_costs_$shippingClass->id")
+                ->label("Vul een meerprijs in voor producten in deze verzendklasse $shippingClass->name")
+                ->rules([
+                    'numeric',
+                ])
+                ->hidden(fn($livewire, $record) => !($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
+        }
+
+        if ($shippingClasses) {
+            $schema[] = Section::make('Verzendklas meerprijzen')
+                ->schema($shippingClasses);
+        }
 
         return $form
             ->schema($schema);
