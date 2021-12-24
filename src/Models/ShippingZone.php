@@ -31,7 +31,7 @@ class ShippingZone extends Model
 
     protected $casts = [
         'zones' => 'array',
-        'disabled_payment_method_ids' => 'array'
+        'disabled_payment_method_ids' => 'array',
     ];
 
     public function site()

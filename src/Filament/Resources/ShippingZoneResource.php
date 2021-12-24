@@ -5,7 +5,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Concerns\Translatable;
@@ -55,11 +54,11 @@ class ShippingZoneResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingZone),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -83,7 +82,7 @@ class ShippingZoneResource extends Resource
                             ->required(),
                         MultiSelect::make('disabled_payment_method_ids')
                             ->label('Deactiveer betalingsmethodes voor deze verzendzone')
-                            ->options(collect(PaymentMethods::get())->pluck('name', 'id'))
+                            ->options(collect(PaymentMethods::get())->pluck('name', 'id')),
                     ]),
             ]);
     }
@@ -98,7 +97,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
             ])
             ->filters([
