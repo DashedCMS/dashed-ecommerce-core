@@ -6,7 +6,6 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethodClass;
 
 class EditShippingMethod extends EditRecord
 {
@@ -20,7 +19,7 @@ class EditShippingMethod extends EditRecord
             $shippingMethodClass = $this->record->shippingMethodClasses()->where('shipping_class_id', $shippingClass->id)->first();
             if ($shippingMethodClass) {
                 $this->form->fill(array_merge($this->form->getState(), [
-                    "shipping_class_costs_$shippingClass->id" => $shippingMethodClass->costs
+                    "shipping_class_costs_$shippingClass->id" => $shippingMethodClass->costs,
                 ]));
             }
         }
@@ -34,7 +33,7 @@ class EditShippingMethod extends EditRecord
 
                 $shippingMethodClass = $this->record->shippingMethodClasses()->where('shipping_class_id', $shippingClass->id)->first();
 
-                if (!$shippingMethodClass) {
+                if (! $shippingMethodClass) {
                     $shippingMethodClass = $this->record->shippingMethodClasses()->create([
                         'shipping_class_id' => $shippingClass->id,
                     ]);
