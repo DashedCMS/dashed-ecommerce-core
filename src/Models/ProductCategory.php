@@ -51,7 +51,7 @@ class ProductCategory extends Model implements HasMedia
 
     protected $with = [
         'parentProductCategory',
-        'media'
+        'media',
     ];
 
     protected static function booted()
@@ -118,7 +118,7 @@ class ProductCategory extends Model implements HasMedia
 
     public function getUrl()
     {
-        if (!$this->hasChilds()) {
+        if (! $this->hasChilds()) {
             if ($this->products->count() == 1) {
                 return $this->products->first()->getUrl();
             } else {
@@ -143,7 +143,7 @@ class ProductCategory extends Model implements HasMedia
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (!$category) {
+            if (! $category) {
                 return;
             }
         }
@@ -163,7 +163,7 @@ class ProductCategory extends Model implements HasMedia
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (!$category) {
+            if (! $category) {
                 return;
             }
         }
@@ -182,7 +182,7 @@ class ProductCategory extends Model implements HasMedia
 
     public function hasChilds()
     {
-        return (boolean)$this->getFirstChilds()->count();
+        return (bool)$this->getFirstChilds()->count();
 //        return self::where('parent_category_id', $this->id)->count() ? true : false;
     }
 

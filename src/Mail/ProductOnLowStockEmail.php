@@ -5,13 +5,14 @@ namespace Qubiqx\QcommerceEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Qubiqx\QcommerceEcommerce\Models\Product;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 
 class ProductOnLowStockEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public Product $product;
 

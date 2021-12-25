@@ -3,10 +3,10 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;

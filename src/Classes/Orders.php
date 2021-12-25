@@ -15,20 +15,20 @@ class Orders
     {
         return [
             'unhandled' => [
-                'name' => 'Niet afgehandeld'
+                'name' => 'Niet afgehandeld',
             ],
             'handled' => [
-                'name' => 'Afgehandeld'
+                'name' => 'Afgehandeld',
             ],
             'in_treatment' => [
-                'name' => 'In behandeling'
+                'name' => 'In behandeling',
             ],
             'packed' => [
-                'name' => 'Ingepakt'
+                'name' => 'Ingepakt',
             ],
             'shipped' => [
-                'name' => 'Verzonden'
-            ]
+                'name' => 'Verzonden',
+            ],
         ];
     }
 
