@@ -2,21 +2,21 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Pages\Page;
 use Filament\Forms\Components\Card;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Tabs;
+use Qubiqx\QcommerceCore\Models\User;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Tabs\Tab;
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Pages\Page;
+use Filament\Forms\Components\RichEditor;
 use Qubiqx\QcommerceCore\Classes\Locales;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Filament\Forms\Components\Placeholder;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
+use Filament\Forms\Concerns\InteractsWithForms;
 
 class OrderSettingsPage extends Page implements HasForms
 {

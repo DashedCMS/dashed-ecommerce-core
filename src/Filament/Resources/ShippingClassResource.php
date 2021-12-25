@@ -2,20 +2,20 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Form;
-use Filament\Resources\Resource;
 use Filament\Resources\Table;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
 
 class ShippingClassResource extends Resource
 {

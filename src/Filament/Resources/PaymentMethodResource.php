@@ -2,20 +2,20 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Form;
-use Filament\Resources\Resource;
 use Filament\Resources\Table;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Concerns\Translatable;
+use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
 
 class PaymentMethodResource extends Resource
 {

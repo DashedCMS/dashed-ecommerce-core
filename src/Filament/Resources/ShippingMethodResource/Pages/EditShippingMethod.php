@@ -3,9 +3,9 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
 
 use Filament\Resources\Pages\EditRecord;
+use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
 
 class EditShippingMethod extends EditRecord
 {

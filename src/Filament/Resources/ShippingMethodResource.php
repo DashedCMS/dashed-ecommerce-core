@@ -2,21 +2,21 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\BelongsToSelect;
+use Filament\Resources\Form;
+use Filament\Resources\Table;
+use Filament\Resources\Resource;
 use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Concerns\Translatable;
-use Filament\Resources\Form;
-use Filament\Resources\Resource;
-use Filament\Resources\Table;
-use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
+use Filament\Forms\Components\BelongsToSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
 
 class ShippingMethodResource extends Resource
 {

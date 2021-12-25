@@ -2,11 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Qubiqx\Qcommerce\Classes\ShoppingCart;
 use Qubiqx\Qcommerce\Classes\Sites;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
+use Qubiqx\Qcommerce\Classes\ShoppingCart;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ShippingMethod extends Model
 {
