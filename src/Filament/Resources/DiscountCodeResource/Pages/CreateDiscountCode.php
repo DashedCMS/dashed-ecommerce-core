@@ -22,15 +22,16 @@ class CreateDiscountCode extends CreateRecord
     {
 //        $this->
         dd($this->form->data());
+
         return;
         $this->fillForm([
-            'code' => 'asdf'
+            'code' => 'asdf',
         ]);
 //        dd($this->fillForm([
 //            'code' => 'asdf'
 //        ]));
         $this->form->fill(array_merge($this->form->getFlatFields(), [
-            'code' => 'asdf'
+            'code' => 'asdf',
         ]));
 //        dd();
     }

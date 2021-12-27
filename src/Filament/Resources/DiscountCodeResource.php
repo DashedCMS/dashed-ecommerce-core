@@ -2,23 +2,22 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\BelongsToManyMultiSelect;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\MultiSelect;
-use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
+use Filament\Forms\Components\MultiSelect;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Filament\Forms\Components\BelongsToManyMultiSelect;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\ListDiscountCodes;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
 
 class DiscountCodeResource extends Resource
 {
@@ -54,7 +53,7 @@ class DiscountCodeResource extends Resource
                             ->label('Actief op sites')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                         TextInput::make('name')
@@ -77,15 +76,15 @@ class DiscountCodeResource extends Resource
                         Toggle::make('create_multiple_codes')
                             ->label('Meerdere codes aanmaken')
                             ->reactive()
-                            ->hidden(fn($livewire) => !$livewire instanceof CreateDiscountCode),
+                            ->hidden(fn ($livewire) => ! $livewire instanceof CreateDiscountCode),
                         TextInput::make('amount_of_codes')
                             ->label('Hoeveel kortingscodes moeten er aangemaakt worden')
                             ->helperText('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
                             ->type('number')
                             ->maxValue(500)
-                            ->hidden(fn($get) => !$get('create_multiple_codes')),
+                            ->hidden(fn ($get) => ! $get('create_multiple_codes')),
                     ])
-                    ->collapsed(fn($livewire) => $livewire instanceof EditDiscountCode),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditDiscountCode),
                 Section::make('Content')
                     ->schema([
                         Radio::make('type')
@@ -93,7 +92,7 @@ class DiscountCodeResource extends Resource
                             ->reactive()
                             ->options([
                                 'percentage' => 'Percentage',
-                                'amount' => 'Vast bedrag'
+                                'amount' => 'Vast bedrag',
                             ]),
                         TextInput::make('discount_percentage')
                             ->label('Kortingswaarde')
@@ -109,7 +108,7 @@ class DiscountCodeResource extends Resource
                                 'min:1',
                                 'max:100',
                             ])
-                            ->hidden(fn($get) => $get('type') != 'percentage'),
+                            ->hidden(fn ($get) => $get('type') != 'percentage'),
                         TextInput::make('discount_amount')
                             ->label('Kortingswaarde')
                             ->helperText('Hoeveel euro korting krijg je met deze code')
@@ -123,20 +122,20 @@ class DiscountCodeResource extends Resource
                                 'min:1',
                                 'max:100000',
                             ])
-                            ->hidden(fn($get) => $get('type') != 'amount'),
+                            ->hidden(fn ($get) => $get('type') != 'amount'),
                         Radio::make('valid_for')
                             ->label('Van toepassing op')
                             ->reactive()
                             ->options([
                                 '' => 'Alle producten',
                                 'products' => 'Specifieke producten',
-                                'categories' => 'Specifieke categorieën'
+                                'categories' => 'Specifieke categorieën',
                             ]),
                         BelongsToManyMultiSelect::make('products')
                             ->relationship('products', 'name')
                             ->preload()
                             ->label('Selecteer producten waar deze kortingscode voor geldt, alleen als "Van toepassing op" gelijk is aan "Specifieke producten"')
-                            ->required(fn($get) => $get('valid_for') == 'products')
+                            ->required(fn ($get) => $get('valid_for') == 'products')
                             ->rules([
 //                                'required',
                             ]),
@@ -145,10 +144,10 @@ class DiscountCodeResource extends Resource
                             ->relationship('productCategories', 'name')
                             ->preload()
                             ->label('Selecteer categorieën waar deze kortingscode voor geldt, alleen als "Van toepassing op" gelijk is aan "Specifieke categorieën"')
-                            ->required(fn($get) => $get('valid_for') == 'categories')
+                            ->required(fn ($get) => $get('valid_for') == 'categories')
                             ->rules([
 //                                'required',
-                            ])
+                            ]),
 //                            ->hidden(fn($get) => $get('valid_for') != 'categories'),
                     ]),
             ]);
@@ -169,7 +168,7 @@ class DiscountCodeResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('amount_of_uses')
                     ->label('Aantal gebruiken')
