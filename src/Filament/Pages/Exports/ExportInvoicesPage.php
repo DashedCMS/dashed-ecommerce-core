@@ -63,12 +63,6 @@ class ExportInvoicesPage extends Page implements HasForms
 
     public function submit()
     {
-<<<<<<< HEAD
-=======
-        $this->notify('success', 'De export is gedownload');
-
-        return;
->>>>>>> 73ba868bfe5aaa08daa35ca08a4b7c7d19177225
         $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
         if ($this->form->getState()['start_date'] != null) {
             $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
