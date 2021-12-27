@@ -11,7 +11,6 @@ use Filament\Resources\Concerns\Translatable;
 use Filament\Forms\Components\BelongsToSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilterOption;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\ListProductFilterOption;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;
 
 class ProductFilterOptionResource extends Resource
