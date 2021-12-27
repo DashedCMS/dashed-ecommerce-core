@@ -3,20 +3,11 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyReturnRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyReturnRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyReturnRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
@@ -24,14 +15,23 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyReturnRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyReturnRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyReturnRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 {

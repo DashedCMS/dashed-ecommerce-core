@@ -15,7 +15,7 @@ class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
 
     protected function getData(): array
     {
-        $statistics = Cache::remember('monthly-revenue-and-return-line-chart-stats', 60 * 60, function(){
+        $statistics = Cache::remember('monthly-revenue-and-return-line-chart-stats', 60 * 60, function () {
             $statistics = [];
 
             $monthDate = now()->subMonth();

@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
 
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Support\Facades\Cache;
 use Qubiqx\QcommerceCore\Classes\Helper;
+use Filament\Widgets\StatsOverviewWidget;
+use Filament\Widgets\StatsOverviewWidget\Card;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 
@@ -15,7 +15,7 @@ class MonthlyReturnRevenueStats extends StatsOverviewWidget
     {
         $statistics = [];
 
-        $statistics = Cache::remember('monthly-return-revenue-stats', 60 * 60, function(){
+        $statistics = Cache::remember('monthly-return-revenue-stats', 60 * 60, function () {
             $statistics = [];
 
             $monthReturnOrders = Order::where('created_at', '>=', now()->startOfMonth())->isReturn()->get();

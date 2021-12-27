@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
 
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Support\Facades\Cache;
 use Qubiqx\QcommerceCore\Classes\Helper;
+use Filament\Widgets\StatsOverviewWidget;
+use Filament\Widgets\StatsOverviewWidget\Card;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 
@@ -13,7 +13,7 @@ class YearlyRevenueStats extends StatsOverviewWidget
 {
     protected function getCards(): array
     {
-        $statistics = Cache::remember('yearly-revenue-stats', 60 * 60, function(){
+        $statistics = Cache::remember('yearly-revenue-stats', 60 * 60, function () {
             $statistics = [];
 
             $yearOrders = Order::where('created_at', '>=', now()->startOfYear())->isPaid()->get();

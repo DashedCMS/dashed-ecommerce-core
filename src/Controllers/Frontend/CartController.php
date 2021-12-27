@@ -8,17 +8,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
 use Artesaos\SEOTools\Facades\SEOTools;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
+use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
 
 class CartController extends FrontendController
 {
@@ -54,32 +54,35 @@ class CartController extends FrontendController
 
     public function applyDiscountCode(Request $request)
     {
-        if (!$request->discount_code) {
+        if (! $request->discount_code) {
             session(['discountCode' => '']);
 
             ShoppingCart::removeInvalidItems();
+
             return redirect()->back();
         }
 
         $discountCode = DiscountCode::usable()->where('code', $request->discount_code)->first();
 
-        if (!$discountCode || !$discountCode->isValidForCart()) {
+        if (! $discountCode || ! $discountCode->isValidForCart()) {
             session(['discountCode' => '']);
 
             ShoppingCart::removeInvalidItems();
+
             return redirect()->back()->with('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
         }
 
         session(['discountCode' => $discountCode->code]);
 
         ShoppingCart::removeInvalidItems();
+
         return redirect()->back()->with('success', Translation::get('discount-code-applied', 'cart', 'The discount code has been applied and discount has been calculated'));
     }
 
     public function addToCart(Request $request, Product $product)
     {
         $quantity = $request->qty;
-        if (!$quantity || !is_numeric($quantity)) {
+        if (! $quantity || ! is_numeric($quantity)) {
             $quantity = 1;
         }
 
@@ -90,8 +93,9 @@ class CartController extends FrontendController
         foreach ($product->allProductExtras() as $productExtra) {
             if ($productExtra->type == 'single') {
                 $productValue = $request['product-extra-' . $productExtra->id];
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     ShoppingCart::removeInvalidItems();
+
                     return redirect()->back()->with('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'))->withInput();
                 }
 
@@ -110,8 +114,9 @@ class CartController extends FrontendController
             } else {
                 foreach ($productExtra->productExtraOptions as $option) {
                     $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && !$productOptionValue) {
+                    if ($productExtra->required && ! $productOptionValue) {
                         ShoppingCart::removeInvalidItems();
+
                         return redirect()->back()->with('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'))->withInput();
                     }
 
@@ -141,7 +146,7 @@ class CartController extends FrontendController
                     ShoppingCart::removeInvalidItems();
 
                     return redirect()->back()->with('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
-                        'quantity' => $product->limit_purchases_per_customer_limit
+                        'quantity' => $product->limit_purchases_per_customer_limit,
                     ]))->withInput();
                 }
 
@@ -150,14 +155,14 @@ class CartController extends FrontendController
             }
         }
 
-        if (!$cartUpdated) {
+        if (! $cartUpdated) {
             if ($product->limit_purchases_per_customer && $quantity > $product->limit_purchases_per_customer_limit) {
                 Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
                 ShoppingCart::removeInvalidItems();
 
                 return redirect()->back()->with('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
-                    'quantity' => $product->limit_purchases_per_customer_limit
+                    'quantity' => $product->limit_purchases_per_customer_limit,
                 ]))->withInput();
             }
 
@@ -174,22 +179,24 @@ class CartController extends FrontendController
         }
 
         ShoppingCart::removeInvalidItems();
+
         return redirect($redirectUrl)->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
     }
 
     public function updateToCart(Request $request, $rowId)
     {
         $quantity = $request->qty;
-        if (!is_numeric($quantity)) {
+        if (! is_numeric($quantity)) {
             $quantity = 1;
         }
 
-        if (!$quantity) {
+        if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 Cart::remove($rowId);
             }
 
             ShoppingCart::removeInvalidItems();
+
             return redirect()->back()->with('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
         } else {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
@@ -198,6 +205,7 @@ class CartController extends FrontendController
             }
 
             ShoppingCart::removeInvalidItems();
+
             return redirect()->back()->with('success', Translation::get('product-updated-to-cart', 'cart', 'The product has been updated to your cart'));
         }
     }
@@ -209,6 +217,7 @@ class CartController extends FrontendController
         }
 
         ShoppingCart::removeInvalidItems();
+
         return redirect()->back()->with('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
     }
 
@@ -495,7 +504,7 @@ class CartController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (!$hasAccessToOrder) {
+        if (! $hasAccessToOrder) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -514,7 +523,7 @@ class CartController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (!$hasAccessToOrder) {
+        if (! $hasAccessToOrder) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 

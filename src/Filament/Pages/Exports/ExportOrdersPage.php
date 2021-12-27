@@ -3,27 +3,14 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\App;
-use Filament\Forms\Components\Radio;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\View;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Tabs\Tab;
-use Filament\Forms\Components\Textarea;
-use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Maatwebsite\Excel\Facades\Excel;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Placeholder;
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Exports\OrderListExport;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Exports\OrderListExport;
 
 class ExportOrdersPage extends Page implements HasForms
 {
@@ -43,13 +30,13 @@ class ExportOrdersPage extends Page implements HasForms
             DatePicker::make('start_date')
                 ->label('Start datum')
                 ->rules([
-                    'nullable'
+                    'nullable',
                 ]),
             DatePicker::make('end_date')
                 ->label('Eind datum')
                 ->rules([
                     'nullable',
-                    'after:start_date'
+                    'after:start_date',
                 ]),
         ];
     }
@@ -71,6 +58,7 @@ class ExportOrdersPage extends Page implements HasForms
         Excel::store(new OrderListExport($orders), '/exports/order-lists/order-list.xlsx');
 
         $this->notify('success', 'De export is gedownload');
+
         return Storage::download('/exports/order-lists/order-list.xlsx');
     }
 }

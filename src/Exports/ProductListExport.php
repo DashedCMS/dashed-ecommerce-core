@@ -40,7 +40,7 @@ class ProductListExport implements FromArray
                 'Lengte',
                 'Breedte',
                 'Hoogte',
-            ]
+            ],
         ];
 
         foreach ($this->products as $product) {
@@ -72,7 +72,7 @@ class ProductListExport implements FromArray
         }
 
         return [
-            $productsArray
+            $productsArray,
         ];
     }
 }

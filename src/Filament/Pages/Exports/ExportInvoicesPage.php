@@ -30,7 +30,7 @@ class ExportInvoicesPage extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'sort' => 'merged'
+            'sort' => 'merged',
         ]);
     }
 
@@ -145,6 +145,7 @@ class ExportInvoicesPage extends Page implements HasForms
         }
 
         $this->notify('success', 'De export is gedownload');
+
         return Storage::download('/exports/invoices/exported-invoice.pdf');
     }
 }

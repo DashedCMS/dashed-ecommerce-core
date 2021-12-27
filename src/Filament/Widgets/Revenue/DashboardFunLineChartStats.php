@@ -4,10 +4,8 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceCore\Classes\Helper;
 use Qubiqx\QcommerceCore\Models\User;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 
 class DashboardFunLineChartStats extends LineChartWidget
 {
@@ -18,7 +16,7 @@ class DashboardFunLineChartStats extends LineChartWidget
 
     protected function getData(): array
     {
-        $statistics = Cache::remember('monthly-fun-data-line-chart-stats', 60 * 60, function(){
+        $statistics = Cache::remember('monthly-fun-data-line-chart-stats', 60 * 60, function () {
             $statistics = [];
 
             $monthDate = now()->subMonth();

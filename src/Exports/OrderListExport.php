@@ -50,7 +50,7 @@ class OrderListExport implements FromArray
                 'Locale',
                 'Bestellings herkomst',
                 'Aangekocht op',
-            ]
+            ],
         ];
 
         foreach ($this->orders as $order) {
@@ -92,7 +92,7 @@ class OrderListExport implements FromArray
         }
 
         return [
-            $ordersArray
+            $ordersArray,
         ];
     }
 }
