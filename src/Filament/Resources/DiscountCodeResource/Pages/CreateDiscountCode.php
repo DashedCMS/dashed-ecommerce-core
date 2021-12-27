@@ -2,13 +2,13 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
+use Illuminate\Support\Str;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Str;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
 
 class CreateDiscountCode extends CreateRecord
 {

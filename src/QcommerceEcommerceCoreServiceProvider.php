@@ -3,8 +3,6 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -14,9 +12,11 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 {

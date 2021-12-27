@@ -4,7 +4,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristic
 
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 
 class ListProductCharacteristic extends ListRecords

@@ -5,7 +5,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResour
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 
 class EditProductCategory extends EditRecord
 {

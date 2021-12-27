@@ -2,28 +2,18 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Columns\BooleanColumn;
-use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\MultiSelect;
-use Filament\Forms\Components\BelongsToManyMultiSelect;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\ListDiscountCodes;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\CreateProductCharacteristic;
+use Filament\Tables\Columns\BooleanColumn;
+use Filament\Resources\Concerns\Translatable;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\EditProductCharacteristic;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\ListProductCharacteristic;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\CreateProductCharacteristic;
 
 class ProductCharacteristicResource extends Resource
 {
@@ -71,7 +61,7 @@ class ProductCharacteristicResource extends Resource
                         'max:100',
                     ]),
                 Toggle::make('hide_from_public')
-                    ->label('Dit kenmerk verbergen op de website')
+                    ->label('Dit kenmerk verbergen op de website'),
             ]);
     }
 

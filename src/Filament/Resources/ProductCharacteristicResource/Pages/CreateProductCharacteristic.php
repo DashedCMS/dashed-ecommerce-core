@@ -4,9 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristic
 
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristic;
 
 class CreateProductCharacteristic extends CreateRecord
 {

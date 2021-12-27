@@ -55,7 +55,7 @@ class ProductCategory extends Model implements HasMedia
     ];
 
     protected $casts = [
-      'site_ids' => 'array'
+      'site_ids' => 'array',
     ];
 
     protected static function booted()

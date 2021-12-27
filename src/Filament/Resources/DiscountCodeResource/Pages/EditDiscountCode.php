@@ -2,9 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
+use Illuminate\Support\Str;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Str;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 
 class EditDiscountCode extends EditRecord
