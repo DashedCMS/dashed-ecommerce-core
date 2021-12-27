@@ -3,6 +3,8 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\Textarea;
+use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Placeholder;
@@ -36,31 +39,46 @@ class ExportInvoicesPage extends Page implements HasForms
     protected function getFormSchema(): array
     {
         return [
-                Radio::make("checkout_account_")
-                    ->label('Klantaccounts')
-                    ->options([
-                        'disabled' => 'Accounts zijn uitgeschakeld',
-                        'optional' => 'Accounts zijn optioneel',
-                        'required' => 'Account vereist',
-                    ])
-                    ->required(),
-            ];
+            DatePicker::make('start_date')
+                ->label('Start datum')
+                ->rules([
+                    'nullable'
+                ]),
+            DatePicker::make('end_date')
+                ->label('Eind datum')
+                ->rules([
+                    'nullable',
+                    'after:start_date'
+                ]),
+            Select::make('sort')
+                ->label('Soort export')
+                ->options([
+                    'merged' => 'Alle facturen in 1 PDF',
+                    'combined' => 'Alle orders in 1 factuur',
+                ])
+                ->rules([
+                    'required'
+                ])
+                ->required(),
+        ];
     }
 
     public function submit()
     {
+        $this->notify('success', 'De export is gedownload');
+        return;
         $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
-        if (request()->get('beginDate') != null) {
-            $orders->where('created_at', '>=', Carbon::parse(request()->get('beginDate'))->startOfDay());
+        if ($this->form->getState()['start_date'] != null) {
+            $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
         }
 
-        if (request()->get('endDate') != null) {
-            $orders->where('created_at', '<=', Carbon::parse(request()->get('endDate'))->endOfDay());
+        if ($this->form->getState()['end_date'] != null) {
+            $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['end_date'])->endOfDay());
         }
         $orders = $orders->get();
 
-        if ($request->sort == 'merged') {
-            $pdfMerger = PDFMerger::init();
+        if ($this->form->getState()['sort'] == 'merged') {
+            $pdfMerger = PdfMerger::init();
 
             foreach ($orders as $order) {
                 $invoicePath = storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
@@ -69,7 +87,7 @@ class ExportInvoicesPage extends Page implements HasForms
 
             $pdfMerger->merge();
             $pdfMerger->save(storage_path('app/invoices/exported-invoice.pdf'));
-        } elseif ($request->sort == 'combined') {
+        } elseif ($this->form->getState()['sort'] == 'combined') {
             $subTotal = 0;
             $btw = 0;
             $paymentCosts = 0;
@@ -91,8 +109,6 @@ class ExportInvoicesPage extends Page implements HasForms
             foreach ($orders as $order) {
                 $subTotal += $order->subtotal;
                 $btw += $order->btw;
-//                $paymentCosts += $order->payment_costs;
-//                $shippingCosts += $order->shipping_costs;
                 $discount += $order->discount;
                 $total += $order->total;
 
