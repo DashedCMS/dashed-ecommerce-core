@@ -70,7 +70,7 @@ class ProductFilterResource extends Resource
                     ->label('Aantal waardes')
                     ->sortable()
                     ->searchable()
-                    ->getStateUsing(fn($record) => $record->productFilterOptions->count()),
+                    ->getStateUsing(fn ($record) => $record->productFilterOptions->count()),
             ])
             ->filters([
                 //
