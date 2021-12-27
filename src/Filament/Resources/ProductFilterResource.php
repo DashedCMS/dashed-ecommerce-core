@@ -13,16 +13,12 @@ use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
-<<<<<<< HEAD
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers\ProductFilterOptionRelationManager;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\CreateProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
-=======
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
->>>>>>> 1c007ce87058a3f30d645f2e34142d5c3d31711f
 
 class ProductFilterResource extends Resource
 {
@@ -78,7 +74,7 @@ class ProductFilterResource extends Resource
                     ->label('Aantal waardes')
                     ->sortable()
                     ->searchable()
-                    ->getStateUsing(fn ($record) => $record->productFilterOptions->count()),
+                    ->getStateUsing(fn($record) => $record->productFilterOptions->count()),
             ])
             ->filters([
                 //
