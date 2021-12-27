@@ -2,29 +2,18 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Builder;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\BooleanColumn;
-use Filament\Tables\Columns\TagsColumn;
+use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\MultiSelect;
+use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
-use Filament\Forms\Components\BelongsToSelect;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\CreateProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
 
 class ProductFilterResource extends Resource
 {
@@ -80,7 +69,7 @@ class ProductFilterResource extends Resource
                     ->label('Aantal waardes')
                     ->sortable()
                     ->searchable()
-                    ->getStateUsing(fn($record) => $record->productFilterOptions->count()),
+                    ->getStateUsing(fn ($record) => $record->productFilterOptions->count()),
             ])
             ->filters([
                 //
