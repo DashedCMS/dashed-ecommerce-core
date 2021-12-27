@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -146,6 +147,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             CheckoutSettingsPage::class,
             ProductSettingsPage::class,
             VATSettingsPage::class,
+            ExportInvoicesPage::class,
         ]);
     }
 
