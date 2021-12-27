@@ -8,7 +8,5 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 
 class EditDiscountCode extends EditRecord
 {
-    use Translatable;
-
     protected static string $resource = DiscountCodeResource::class;
 }

@@ -4,6 +4,8 @@ namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -48,7 +50,7 @@ class DiscountCode extends Model
     ];
 
     protected $casts = [
-      'site_ids' => 'array'
+        'site_ids' => 'array'
     ];
 
     public function scopeSearch($query)
@@ -66,7 +68,7 @@ class DiscountCode extends Model
 
     public function scopeThisSite($query)
     {
-        $query->where('site_ids->' . config('qcommerce.currentSite'), 'active');
+        $query->whereJsonContains('site_ids', config('qcommerce.currentSite'));
     }
 
     public function scopeUsable($query)
@@ -127,23 +129,11 @@ class DiscountCode extends Model
         return number_format($discountedPrice, 2, '.', '');
     }
 
-    public function activeSiteIds()
-    {
-        $sites = [];
-        foreach (Sites::getSites() as $site) {
-            if (self::where('id', $this->id)->where('site_ids->' . $site['id'], 'active')->count()) {
-                array_push($sites, $site['id']);
-            }
-        }
-
-        return $sites;
-    }
-
     public function siteNames()
     {
         $sites = [];
         foreach (Sites::getSites() as $site) {
-            if (self::where('id', $this->id)->where('site_ids->' . $site['id'], 'active')->count()) {
+            if (self::where('id', $this->id)->whereJsonContains('site_ids', $site['id'])->count()) {
                 $sites[$site['name']] = 'active';
             } else {
                 $sites[$site['name']] = 'inactive';
@@ -182,17 +172,17 @@ class DiscountCode extends Model
         }
     }
 
-    public function products()
+    public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'qcommerce__discount_product');
     }
 
-    public function productCategories()
+    public function productCategories(): BelongsToMany
     {
         return $this->belongsToMany(ProductCategory::class, 'qcommerce__discount_category');
     }
 
-    public function orders()
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
