@@ -39,9 +39,7 @@ class ProductFilterOptionResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'E-commerce';
-    protected static ?string $navigationLabel = 'Product filter opties';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $label = 'Product filter optie';
     protected static ?string $pluralLabel = 'Product filter opties';
     protected static ?int $navigationSort = 3;
@@ -114,7 +112,7 @@ class ProductFilterOptionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListProductFilterOption::route('/'),
+            'index' => CreateProductFilterOption::route('/'),
             'create' => CreateProductFilterOption::route('/create'),
             'edit' => EditProductFilterOption::route('/{record}/edit'),
         ];
