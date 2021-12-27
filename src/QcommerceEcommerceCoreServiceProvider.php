@@ -3,6 +3,8 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -148,6 +150,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ShippingZoneResource::class,
             ShippingMethodResource::class,
             DiscountCodeResource::class,
+            ProductCategoryResource::class,
+            ProductCharacteristicResource::class,
         ]);
     }
 }

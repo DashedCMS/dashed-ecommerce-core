@@ -31,6 +31,7 @@ class DiscountCodeResource extends Resource
     protected static ?string $navigationLabel = 'Kortingscodes';
     protected static ?string $label = 'Kortingscode';
     protected static ?string $pluralLabel = 'Kortingscodes';
+    protected static ?int $navigationSort = 50;
 
     public static function getGloballySearchableAttributes(): array
     {
@@ -52,7 +53,7 @@ class DiscountCodeResource extends Resource
                     ->schema([
                         MultiSelect::make('site_ids')
                             ->label('Actief op sites')
-                            ->options(collect(Sites::getSites())->pluck('name', 'id'))
+                            ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
                                 return ! (Sites::getAmountOfSites() > 1);
                             })
@@ -68,6 +69,7 @@ class DiscountCodeResource extends Resource
                             ->label('Code')
                             ->helperText('Deze code vullen mensen in om af te rekenen.')
                             ->required()
+                            ->unique('qcommerce__discount_codes', 'code', fn ($record) => $record)
                             ->minLength(3)
                             ->maxLength(100)
                             ->rules([
@@ -82,6 +84,7 @@ class DiscountCodeResource extends Resource
                             ->label('Hoeveel kortingscodes moeten er aangemaakt worden')
                             ->helperText('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
                             ->type('number')
+                            ->required()
                             ->maxValue(500)
                             ->hidden(fn ($get) => ! $get('create_multiple_codes')),
                     ])
@@ -128,33 +131,33 @@ class DiscountCodeResource extends Resource
                             ->label('Van toepassing op')
                             ->reactive()
                             ->options([
-                                '' => 'Alle producten',
+                                null => 'Alle producten',
                                 'products' => 'Specifieke producten',
                                 'categories' => 'Specifieke categorieën',
                             ]),
                         BelongsToManyMultiSelect::make('products')
                             ->relationship('products', 'name')
                             ->preload()
-                            ->label('Selecteer producten waar deze kortingscode voor geldt, alleen als "Van toepassing op" gelijk is aan "Specifieke producten"')
+                            ->label('Selecteer producten waar deze kortingscode voor geldt')
                             ->required(fn ($get) => $get('valid_for') == 'products')
                             ->rules([
-//                                'required',
+                                'required',
                             ])
                             ->hidden(fn ($get) => $get('valid_for') != 'products'),
                         BelongsToManyMultiSelect::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->preload()
-                            ->label('Selecteer categorieën waar deze kortingscode voor geldt, alleen als "Van toepassing op" gelijk is aan "Specifieke categorieën"')
+                            ->label('Selecteer categorieën waar deze kortingscode voor geldt')
                             ->required(fn ($get) => $get('valid_for') == 'categories')
                             ->rules([
-//                                'required',
+                                'required',
                             ])
                             ->hidden(fn ($get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
                             ->label('Minimale eisen')
                             ->reactive()
                             ->options([
-                                '' => 'Geen',
+                                null => 'Geen',
                                 'products' => 'Minimaal aantal producten',
                                 'amount' => 'Minimaal aankoopbedrag',
                             ]),

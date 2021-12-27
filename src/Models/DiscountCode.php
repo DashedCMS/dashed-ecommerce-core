@@ -4,6 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -51,7 +52,24 @@ class DiscountCode extends Model
 
     protected $casts = [
         'site_ids' => 'array',
+        'valid_customers' => 'array',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($discountCode) {
+            $code = '';
+            foreach (str_split($discountCode->code) as $codeCharacter) {
+                if ($codeCharacter == '*') {
+                    $codeCharacter = strtoupper(Str::random(1));
+                }
+                $code .= $codeCharacter;
+            }
+            $discountCode->code = $code;
+        });
+    }
 
     public function scopeSearch($query)
     {
@@ -145,7 +163,7 @@ class DiscountCode extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->start_date && ! $this->end_date) {
+        if (!$this->start_date && !$this->end_date) {
             return 'active';
         } else {
             if ($this->start_date && $this->end_date) {
@@ -211,7 +229,7 @@ class DiscountCode extends Model
                     $emailIsValid = true;
                 }
             }
-            if (! $emailIsValid) {
+            if (!$emailIsValid) {
                 return false;
             }
         }

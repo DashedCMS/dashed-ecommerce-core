@@ -54,6 +54,10 @@ class ProductCategory extends Model implements HasMedia
         'media',
     ];
 
+    protected $casts = [
+      'site_ids' => 'array'
+    ];
+
     protected static function booted()
     {
         static::created(function ($productCategory) {

@@ -16,6 +16,7 @@ class ProductCharacteristics extends Model
     protected $fillable = [
         'name',
         'order',
+        'hide_from_public',
     ];
 
     public $translatable = [
