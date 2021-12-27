@@ -34,6 +34,13 @@ class ExportInvoicesPage extends Page implements HasForms
 
     protected static string $view = 'qcommerce-ecommerce-core::exports.pages.export-invoices';
 
+    public function mount(): void
+    {
+        $this->form->fill([
+            'sort' => 'merged'
+        ]);
+    }
+
     protected function getFormSchema(): array
     {
         return [
@@ -63,8 +70,6 @@ class ExportInvoicesPage extends Page implements HasForms
 
     public function submit()
     {
-        $this->notify('success', 'De export is gedownload');
-        return;
         $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
         if ($this->form->getState()['start_date'] != null) {
             $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
@@ -80,11 +85,12 @@ class ExportInvoicesPage extends Page implements HasForms
 
             foreach ($orders as $order) {
                 $invoicePath = storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                $order->downloadInvoiceUrl();
                 $pdfMerger->addPdf($invoicePath, 'all');
             }
 
             $pdfMerger->merge();
-            $pdfMerger->save(storage_path('app/invoices/exported-invoice.pdf'));
+            $pdfMerger->save(storage_path('app/exports/invoices/exported-invoice.pdf'));
         } elseif ($this->form->getState()['sort'] == 'combined') {
             $subTotal = 0;
             $btw = 0;
@@ -133,18 +139,19 @@ class ExportInvoicesPage extends Page implements HasForms
                 }
             }
 
-            $view = View::make('qcommerce::frontend.combined-invoices.pdf', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales'));
+            $view = View::make('qcommerce-ecommerce-core::frontend.combined-invoices.pdf', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales'));
             $contents = $view->render();
             $pdf = App::make('dompdf.wrapper');
             $pdf->loadHTML($contents);
             $output = $pdf->output();
 
-            $invoicePath = '/invoices/exported-invoice.pdf';
+            $invoicePath = '/exports/invoices/exported-invoice.pdf';
             Storage::put($invoicePath, $output);
         } else {
             $this->notify('error', 'De export kon niet worden gemaakt');
         }
 
         $this->notify('success', 'De export is gedownload');
+        return Storage::download('/exports/invoices/exported-invoice.pdf');
     }
 }

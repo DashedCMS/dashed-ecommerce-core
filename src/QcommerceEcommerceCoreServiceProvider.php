@@ -3,6 +3,16 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyReturnRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyReturnRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyReturnRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -123,7 +133,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 //                'qcommerce-core',
             ])
             ->hasRoutes([
-//                'frontend',
+                'frontend',
             ])
             ->hasViews()
             ->hasAssets()
@@ -148,6 +158,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ProductSettingsPage::class,
             VATSettingsPage::class,
             ExportInvoicesPage::class,
+            ExportOrdersPage::class,
+            ExportProductsPage::class,
         ]);
     }
 
@@ -163,6 +175,20 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ProductFilterResource::class,
             ProductFilterOptionResource::class,
             ProductCharacteristicResource::class,
+        ]);
+    }
+
+    protected function getWidgets(): array
+    {
+        return array_merge(parent::getWidgets(), [
+            MonthlyRevenueAndReturnLineChartStats::class,
+            DashboardFunLineChartStats::class,
+            DailyRevenueStats::class,
+            MonthlyRevenueStats::class,
+            YearlyRevenueStats::class,
+            DailyReturnRevenueStats::class,
+            MonthlyReturnRevenueStats::class,
+            YearlyReturnRevenueStats::class,
         ]);
     }
 }
