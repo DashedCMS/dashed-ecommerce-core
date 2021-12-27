@@ -20,9 +20,7 @@ class CreateDiscountCode extends CreateRecord
 
     public function generateRandomCode(): void
     {
-//        $this->
-        dd($this->form->data());
-
+//        dd($this->form->get());
         return;
         $this->fillForm([
             'code' => 'asdf',
@@ -30,9 +28,7 @@ class CreateDiscountCode extends CreateRecord
 //        dd($this->fillForm([
 //            'code' => 'asdf'
 //        ]));
-        $this->form->fill(array_merge($this->form->getFlatFields(), [
-            'code' => 'asdf',
-        ]));
+        $this->form->fill();
 //        dd();
     }
 }
