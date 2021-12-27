@@ -3,22 +3,17 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Spatie\Image\Manipulations;
-use Spatie\MediaLibrary\HasMedia;
-use Qubiqx\Qcommerce\Classes\Sites;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
-class ProductCategory extends Model implements HasMedia
+class ProductCategory extends Model
 {
     use SoftDeletes;
     use HasTranslations;
-    use InteractsWithMedia;
     use LogsActivity;
 
     protected static $logFillable = true;
@@ -31,6 +26,8 @@ class ProductCategory extends Model implements HasMedia
         'name',
         'slug',
         'content',
+        'image',
+        'meta_image',
         'meta_title',
         'meta_description',
     ];
@@ -39,6 +36,8 @@ class ProductCategory extends Model implements HasMedia
         'name',
         'slug',
         'content',
+        'image',
+        'meta_image',
         'meta_title',
         'meta_description',
     ];
@@ -50,12 +49,12 @@ class ProductCategory extends Model implements HasMedia
     ];
 
     protected $with = [
-        'parentProductCategory',
-        'media',
+        'parentProductCategory'
     ];
 
     protected $casts = [
-      'site_ids' => 'array',
+        'site_ids' => 'array',
+        'content' => 'array',
     ];
 
     protected static function booted()
@@ -67,14 +66,6 @@ class ProductCategory extends Model implements HasMedia
         static::updated(function ($productCategory) {
             Cache::tags(['product-categories'])->flush();
         });
-    }
-
-    public function registerMediaConversions(Media $media = null): void
-    {
-        $this
-            ->addMediaConversion('preview')
-            ->fit(Manipulations::FIT_CROP, 300, 300)
-            ->nonQueued();
     }
 
     public function scopeSearch($query)
@@ -93,14 +84,6 @@ class ProductCategory extends Model implements HasMedia
     public function scopeThisSite($query)
     {
         $query->where('site_ids->' . config('qcommerce.currentSite'), 'active');
-    }
-
-    public function getImageAttribute()
-    {
-        $image = $this->getFirstMedia('image-' . app()->getLocale());
-        if ($image) {
-            return $image;
-        }
     }
 
     public function parentProductCategory()
@@ -122,7 +105,7 @@ class ProductCategory extends Model implements HasMedia
 
     public function getUrl()
     {
-        if (! $this->hasChilds()) {
+        if (!$this->hasChilds()) {
             if ($this->products->count() == 1) {
                 return $this->products->first()->getUrl();
             } else {
@@ -147,7 +130,7 @@ class ProductCategory extends Model implements HasMedia
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (! $category) {
+            if (!$category) {
                 return;
             }
         }
@@ -167,7 +150,7 @@ class ProductCategory extends Model implements HasMedia
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (! $category) {
+            if (!$category) {
                 return;
             }
         }

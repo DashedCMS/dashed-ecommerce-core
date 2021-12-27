@@ -47,7 +47,7 @@ class PaymentMethodResource extends Resource
                     ->schema([
                         Select::make('site_id')
                             ->label('Actief op site')
-                            ->options(collect(Sites::getSites())->pluck('name', 'id'))
+                            ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
                                 return ! (Sites::getAmountOfSites() > 1);
                             })
