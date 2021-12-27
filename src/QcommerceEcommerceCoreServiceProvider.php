@@ -3,7 +3,6 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -14,6 +13,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;

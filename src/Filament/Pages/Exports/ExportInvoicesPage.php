@@ -7,12 +7,10 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
-use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\View;
 use Filament\Forms\Contracts\HasForms;
+<<<<<<< HEAD
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\Textarea;
 use LynX39\LaraPdfMerger\Facades\PdfMerger;
@@ -20,6 +18,9 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Placeholder;
 use Qubiqx\QcommerceCore\Models\Customsetting;
+=======
+use Illuminate\Support\Facades\Storage;
+>>>>>>> 2bd397d51e3a6967156a6043cc48c977b7b69a1f
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
