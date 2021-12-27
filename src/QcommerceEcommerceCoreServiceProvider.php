@@ -3,17 +3,15 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilterOption;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
@@ -21,6 +19,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
@@ -39,7 +38,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-        cms()->builder('routeModels',
+        cms()->builder(
+            'routeModels',
             array_merge(cms()->builder('routeModels'), [
                 'productCategory' => [
                     'name' => 'Product categorie',

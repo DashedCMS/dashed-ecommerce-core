@@ -4,9 +4,9 @@ namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 
 class ProductFilter extends Model
 {
