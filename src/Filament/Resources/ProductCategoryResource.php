@@ -2,22 +2,19 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\BelongsToSelect;
-use Filament\Forms\Components\Builder;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\MultiSelect;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Builder;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\BooleanColumn;
-use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\MultiSelect;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Forms\Components\BelongsToSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
@@ -53,7 +50,7 @@ class ProductCategoryResource extends Resource
                     ->label('Actief op sites')
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                     ->hidden(function () {
-                        return !(Sites::getAmountOfSites() > 1);
+                        return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->required(),
                 BelongsToSelect::make('parent_product_category_id')
@@ -117,12 +114,12 @@ class ProductCategoryResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('parentProductCategory.name')
                     ->label('Bovenliggende category')
                     ->sortable()
-                    ->searchable()
+                    ->searchable(),
             ])
             ->filters([
                 //

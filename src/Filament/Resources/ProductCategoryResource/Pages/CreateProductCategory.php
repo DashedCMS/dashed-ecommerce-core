@@ -2,12 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
 
-use Filament\Resources\Pages\CreateRecord;
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
 use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Filament\Resources\Pages\CreateRecord;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
 
 class CreateProductCategory extends CreateRecord
 {

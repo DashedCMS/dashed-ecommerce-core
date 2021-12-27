@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Spatie\Image\Manipulations;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
@@ -49,7 +48,7 @@ class ProductCategory extends Model
     ];
 
     protected $with = [
-        'parentProductCategory'
+        'parentProductCategory',
     ];
 
     protected $casts = [
@@ -105,7 +104,7 @@ class ProductCategory extends Model
 
     public function getUrl()
     {
-        if (!$this->hasChilds()) {
+        if (! $this->hasChilds()) {
             if ($this->products->count() == 1) {
                 return $this->products->first()->getUrl();
             } else {
@@ -130,7 +129,7 @@ class ProductCategory extends Model
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (!$category) {
+            if (! $category) {
                 return;
             }
         }
@@ -150,7 +149,7 @@ class ProductCategory extends Model
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (!$category) {
+            if (! $category) {
                 return;
             }
         }
