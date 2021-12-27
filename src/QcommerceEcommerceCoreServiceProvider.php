@@ -3,6 +3,11 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductFilterOption;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -34,15 +39,17 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-        cms()->builder('routeModels', [
-//            'page' => [
-//                'name' => 'Pagina',
-//                'pluralName' => 'Pagina\'s',
-//                'class' => Page::class,
-//                'nameField' => 'name',
-//                'routeHandler' => PageRouteHandler::class,
-//            ],
-        ]);
+        cms()->builder('routeModels',
+            array_merge(cms()->builder('routeModels'), [
+                'productCategory' => [
+                    'name' => 'Product categorie',
+                    'pluralName' => 'Product categorieën',
+                    'class' => ProductCategory::class,
+                    'nameField' => 'name',
+                    'routeHandler' => ProductCategoryRouteHandler::class,
+                ],
+            ])
+        );
 
         cms()->builder(
             'settingPages',
@@ -151,6 +158,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ShippingMethodResource::class,
             DiscountCodeResource::class,
             ProductCategoryResource::class,
+            ProductFilterResource::class,
+            ProductFilterOptionResource::class,
             ProductCharacteristicResource::class,
         ]);
     }

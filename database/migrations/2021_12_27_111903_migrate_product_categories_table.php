@@ -34,6 +34,16 @@ class MigrateProductCategoriesTable extends Migration
             $productCategory->content = $newContent;
             $productCategory->save();
         }
+
+        foreach (\Qubiqx\QcommerceCore\Models\MenuItem::withTrashed()->get() as $menuItem) {
+            $menuItem->model = str_replace('Qubiqx\Qcommerce\Models\ProductCategory', 'Qubiqx\QcommerceEcommerceCore\Models\ProductCategory', $menuItem->model);
+            $siteIds = [];
+            foreach($menuItem->site_ids as $siteIdKey => $siteId){
+                $siteIds[] = $siteIdKey;
+            }
+            $menuItem->site_ids = $siteIds;
+            $menuItem->save();
+        }
     }
 
     /**

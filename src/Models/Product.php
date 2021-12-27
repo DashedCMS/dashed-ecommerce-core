@@ -4,23 +4,17 @@ namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Spatie\Image\Manipulations;
-use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Support\Facades\App;
-use Qubiqx\Qcommerce\Classes\Sites;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\Qcommerce\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
-class Product extends Model implements HasMedia
+class Product extends Model
 {
     use HasTranslations;
-    use InteractsWithMedia;
     use SoftDeletes;
     use LogsActivity;
 
@@ -90,7 +84,6 @@ class Product extends Model implements HasMedia
     ];
 
     protected $with = [
-        'media',
         'productFilters',
         'parentProduct',
     ];
@@ -116,14 +109,6 @@ class Product extends Model implements HasMedia
                 }
             }
         });
-    }
-
-    public function registerMediaConversions(Media $media = null): void
-    {
-        $this
-            ->addMediaConversion('preview')
-            ->fit(Manipulations::FIT_CROP, 300, 300)
-            ->nonQueued();
     }
 
     public function scopeSearch($query)
