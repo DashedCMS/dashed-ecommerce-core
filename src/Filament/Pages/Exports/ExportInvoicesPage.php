@@ -3,21 +3,14 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\App;
-use Filament\Forms\Components\Radio;
 use Illuminate\Support\Facades\View;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Tabs\Tab;
-use Filament\Forms\Components\Textarea;
-use LynX39\LaraPdfMerger\Facades\PdfMerger;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Placeholder;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Illuminate\Support\Facades\Storage;
+use Filament\Forms\Components\DatePicker;
+use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -47,13 +40,13 @@ class ExportInvoicesPage extends Page implements HasForms
             DatePicker::make('start_date')
                 ->label('Start datum')
                 ->rules([
-                    'nullable'
+                    'nullable',
                 ]),
             DatePicker::make('end_date')
                 ->label('Eind datum')
                 ->rules([
                     'nullable',
-                    'after:start_date'
+                    'after:start_date',
                 ]),
             Select::make('sort')
                 ->label('Soort export')
@@ -62,7 +55,7 @@ class ExportInvoicesPage extends Page implements HasForms
                     'combined' => 'Alle orders in 1 factuur',
                 ])
                 ->rules([
-                    'required'
+                    'required',
                 ])
                 ->required(),
         ];
@@ -70,6 +63,12 @@ class ExportInvoicesPage extends Page implements HasForms
 
     public function submit()
     {
+<<<<<<< HEAD
+=======
+        $this->notify('success', 'De export is gedownload');
+
+        return;
+>>>>>>> 73ba868bfe5aaa08daa35ca08a4b7c7d19177225
         $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
         if ($this->form->getState()['start_date'] != null) {
             $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
