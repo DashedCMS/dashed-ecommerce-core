@@ -7,28 +7,27 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
+use Qubiqx\QcommerceCore\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceEcommerceCore\Classes\Countries;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderCancelledMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderConfirmationMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\AdminPreOrderConfirmationMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledWithCreditMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\ProductOnLowStockEmail;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Qubiqx\QcommerceCore\Models\Customsetting;
+use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Qubiqx\QcommerceEcommerceCore\Classes\Countries;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledMail;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Qubiqx\QcommerceEcommerceCore\Mail\ProductOnLowStockEmail;
+use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderCancelledMail;
+use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderConfirmationMail;
+use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledWithCreditMail;
+use Qubiqx\QcommerceEcommerceCore\Mail\AdminPreOrderConfirmationMail;
+use Qubiqx\QcommerceEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
 
 class Order extends Model
 {
@@ -176,7 +175,7 @@ class Order extends Model
         if ($this->contains_pre_orders) {
             $labels[] = [
                 'status' => 'Bevat pre-orders',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ];
         }
 
@@ -463,7 +462,7 @@ class Order extends Model
         if ($this->order_origin == 'own') {
             $this->generateInvoiceId();
             $order = Order::find($this->id);
-            if (!Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce::frontend.invoices.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -474,7 +473,7 @@ class Order extends Model
                 Storage::put($invoicePath, $output);
             }
 
-            if (!$this->invoice_send_to_customer) {
+            if (! $this->invoice_send_to_customer) {
                 Orders::sendNotification($this);
 
                 if (env('APP_ENV') == 'local') {
@@ -508,7 +507,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (!Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (! Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce::frontend.packing-slips.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -526,7 +525,7 @@ class Order extends Model
         if ($this->order_origin == 'own' && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (!Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce::frontend.credit-invoices.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -617,7 +616,7 @@ class Order extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false)
     {
-        if (!$newStatus || $this->status == $newStatus) {
+        if (! $newStatus || $this->status == $newStatus) {
             return;
         }
 
@@ -1100,8 +1099,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && !$this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
-            if (!Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+            if (! Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -1171,28 +1170,28 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (!$this->credit_for_order_id) {
+        if (! $this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status]['name'] ?? '',
-                    'color' => 'red'
+                    'color' => 'red',
                 ];
             } else {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status]['name'] ?? '',
-                    'color' => 'green'
+                    'color' => 'green',
                 ];
             }
         } else {
             if ($this->retour_status == 'unhandled') {
                 return [
                     'status' => $this->retourStatus(),
-                    'color' => 'red'
+                    'color' => 'red',
                 ];
             } else {
                 return [
                     'status' => $this->retourStatus(),
-                    'color' => 'green'
+                    'color' => 'green',
                 ];
             }
         }
@@ -1204,32 +1203,32 @@ class Order extends Model
         if ($this->status == 'pending') {
             return [
                 'status' => 'Lopende aankoop',
-                'color' => 'blue'
+                'color' => 'blue',
             ];
         } elseif ($this->status == 'cancelled') {
             return [
                 'status' => 'Geannuleerd',
-                'color' => 'red'
+                'color' => 'red',
             ];
         } elseif ($this->status == 'waiting_for_confirmation') {
             return [
                 'status' => 'Wachten op bevestiging betaling',
-                'color' => 'purple'
+                'color' => 'purple',
             ];
         } elseif ($this->status == 'return') {
             return [
                 'status' => 'Retour',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ];
         } elseif ($this->status == 'partially_paid') {
             return [
                 'status' => 'Gedeeltelijk betaald',
-                'color' => 'yellow'
+                'color' => 'yellow',
             ];
         } else {
             return [
                 'status' => 'Betaald',
-                'color' => 'green'
+                'color' => 'green',
             ];
         }
     }

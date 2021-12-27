@@ -2,12 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use Qubiqx\Qcommerce\Classes\Helper;
+use Illuminate\Database\Eloquent\Model;
 use Qubiqx\Qcommerce\Classes\ShoppingCart;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderPayment extends Model
 {
@@ -31,7 +31,7 @@ class OrderPayment extends Model
 
     protected $appends = [
         'payment_method_name',
-        'amount_formatted'
+        'amount_formatted',
     ];
 
     public static function boot()
@@ -67,11 +67,12 @@ class OrderPayment extends Model
         if ($this->paymentMethod) {
             return $this->paymentMethod->payment_instructions;
         } else {
-            foreach(ShoppingCart::getAllPaymentMethods() as $paymentMethod){
-                if($paymentMethod['id'] == $this->psp_payment_method_id){
+            foreach (ShoppingCart::getAllPaymentMethods() as $paymentMethod) {
+                if ($paymentMethod['id'] == $this->psp_payment_method_id) {
                     return (string)$paymentMethod['payment_instructions'];
                 }
             }
+
             return '';
         }
     }
@@ -83,7 +84,7 @@ class OrderPayment extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false): string
     {
-        if (!$newStatus || $this->status == $newStatus) {
+        if (! $newStatus || $this->status == $newStatus) {
             return '';
         }
 
