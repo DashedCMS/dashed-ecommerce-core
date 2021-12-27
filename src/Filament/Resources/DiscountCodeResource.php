@@ -140,7 +140,7 @@ class DiscountCodeResource extends Resource
                             ->rules([
 //                                'required',
                             ])
-                            ->hidden(fn($get) => $get('valid_for') != 'products'),
+                            ->hidden(fn ($get) => $get('valid_for') != 'products'),
                         BelongsToManyMultiSelect::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->preload()
@@ -149,7 +149,7 @@ class DiscountCodeResource extends Resource
                             ->rules([
 //                                'required',
                             ])
-                            ->hidden(fn($get) => $get('valid_for') != 'categories'),
+                            ->hidden(fn ($get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
                             ->label('Minimale eisen')
                             ->reactive()
