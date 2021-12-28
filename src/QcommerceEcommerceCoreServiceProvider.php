@@ -3,6 +3,10 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -160,6 +164,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ExportInvoicesPage::class,
             ExportOrdersPage::class,
             ExportProductsPage::class,
+            RevenueStatisticsPage::class,
+            ProductStatisticsPage::class,
+            DiscountStatisticsPage::class,
         ]);
     }
 
@@ -171,6 +178,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ShippingZoneResource::class,
             ShippingMethodResource::class,
             DiscountCodeResource::class,
+            ProductResource::class,
             ProductCategoryResource::class,
             ProductFilterResource::class,
             ProductFilterOptionResource::class,

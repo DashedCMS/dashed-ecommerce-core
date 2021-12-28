@@ -35,10 +35,16 @@ class DashboardFunLineChartStats extends LineChartWidget
                 [
                     'label' => 'Nieuwe gebruikers',
                     'data' => $statistics['newUsers'],
+                    'backgroundColor' => 'lightblue',
+                    'borderColor' => "blue",
+                    'fill' => 'start',
                 ],
                 [
                     'label' => 'Nieuwe bestellingen',
                     'data' => $statistics['newOrders'],
+                    'backgroundColor' => 'yellow',
+                    'borderColor' => "gold",
+                    'fill' => 'start',
                 ],
             ],
             'labels' => $statistics['labels'],
