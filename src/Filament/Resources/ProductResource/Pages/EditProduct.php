@@ -2,11 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord

@@ -2,15 +2,14 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\CreateRecord;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 
 class CreateProduct extends CreateRecord
 {

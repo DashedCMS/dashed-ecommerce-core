@@ -3,22 +3,17 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
-use Filament\Forms\Components\Card;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
-use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
+use Filament\Forms\Components\Card;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
-use Illuminate\Support\Facades\Storage;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceCore\Classes\Helper;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Exports\ProductListExport;
 
 class RevenueStatisticsPage extends Page implements HasForms
 {
@@ -139,11 +134,11 @@ class RevenueStatisticsPage extends Page implements HasForms
                       'backgroundColor' => 'orange',
                       'borderColor' => "red",
                       'fill' => 'start',
-                  ]
+                  ],
               ],
-              'labels' => $graph['labels']
+              'labels' => $graph['labels'],
           ],
-          'data' => $statistics
+          'data' => $statistics,
         ];
     }
 
@@ -216,14 +211,14 @@ class RevenueStatisticsPage extends Page implements HasForms
                         ->label('Eind datum')
                         ->rules([
                             'nullable',
-                            'after:start_date'
+                            'after:start_date',
                         ])
                         ->reactive(),
                 ])
                 ->columns([
                     'default' => 1,
                     'lg' => 7,
-                ])
+                ]),
         ];
     }
 

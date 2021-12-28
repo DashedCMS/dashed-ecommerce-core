@@ -3,13 +3,10 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -30,6 +27,9 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyReturnRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyReturnRevenueStats;
