@@ -2,19 +2,18 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\MultiSelectFilter;
-use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Storage;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Filament\Tables\Filters\MultiSelectFilter;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 
 class ListOrders extends ListRecords
 {
@@ -26,16 +25,16 @@ class ListOrders extends ListRecords
             BulkAction::make('downloadInvoices')
                 ->label('Download facturen')
                 ->color('primary')
-                ->action(fn(Collection $records) => function ($records) {
+                ->action(fn (Collection $records) => function ($records) {
                     return Storage::download('/exports/invoices/exported-invoice.pdf');
-                })
+                }),
         ];
     }
 
     protected function getTableFilters(): array
     {
         $orderOrigins = [];
-        foreach(Order::distinct('order_origin')->pluck('order_origin')->unique() as $orderOrigin){
+        foreach (Order::distinct('order_origin')->pluck('order_origin')->unique() as $orderOrigin) {
             $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
         }
 
@@ -72,7 +71,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['start_date'],
-                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                         );
                 }),
             Filter::make('end_date')
@@ -84,9 +83,9 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['end_date'],
-                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                         );
-                })
+                }),
         ];
     }
 
