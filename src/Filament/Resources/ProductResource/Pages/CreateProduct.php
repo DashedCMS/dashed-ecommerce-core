@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\CreateRecord;
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
@@ -16,6 +17,26 @@ class CreateProduct extends CreateRecord
     use Translatable;
 
     protected static string $resource = ProductResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['slug'] = Str::slug($data['slug'] ?: $data['name']);
+
+        while (Product::where('slug->' . $this->activeFormLocale, $data['slug'])->count()) {
+            $data['slug'] .= Str::random(1);
+        }
+
+        $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
+        $content = $data['content'] ?? [];
+        $data['content'] = null;
+        $data['content'][$this->activeFormLocale] = $content;
+
+        $images = $data['images'] ?? [];
+        $data['images'] = null;
+        $data['images'][$this->activeFormLocale] = $images;
+
+        return $data;
+    }
 
 //    protected function getActions(): array
 //    {
@@ -33,49 +54,4 @@ class CreateProduct extends CreateRecord
 //            $this->data['code'] .= '*****';
 //        }
 //    }
-
-    public function afterCreate(): void
-    {
-        $code = $this->data['code'];
-        if ($this->data['create_multiple_codes']) {
-            $amountOfCodes = $this->data['amount_of_codes'] - 1;
-            while ($amountOfCodes > 1) {
-                $discountCode = new DiscountCode();
-                $discountCode->site_ids = $this->record->site_ids;
-                $discountCode->name = $this->record->name;
-                $discountCode->code = $code;
-                $discountCode->limit_use_per_customer = $this->record->limit_use_per_customer;
-                $discountCode->use_stock = $this->record->use_stock;
-                $discountCode->stock = $this->record->getRawOriginal('stock');
-                $discountCode->minimal_requirements = $this->record->minimal_requirements;
-                $discountCode->minimum_amount = $this->record->minimum_amount;
-                $discountCode->minimum_products_count = $this->record->minimum_products_count;
-                $discountCode->type = $this->record->type;
-                $discountCode->discount_percentage = $this->record->discount_percentage;
-                $discountCode->discount_amount = $this->record->discount_amount;
-                $discountCode->valid_for = $this->record->valid_for;
-                $discountCode->valid_for_customers = $this->record->valid_for_customers ?: 'all';
-                $discountCode->valid_customers = $this->record->valid_customers ?: [];
-                $discountCode->start_date = $this->record->start_date;
-                $discountCode->end_date = $this->record->end_date;
-                $discountCode->save();
-
-                $selectedProductCategoriesIds = [];
-                foreach ($this->record->productCategories as $category) {
-                    $selectedProductCategoriesIds[] = $category['id'];
-                }
-                $selectedProductCategories = ProductCategories::getFromIdsWithParents($selectedProductCategoriesIds);
-                $discountCode->productCategories()->sync($selectedProductCategories);
-
-                $selectedProductIds = [];
-                foreach ($this->record->products as $product) {
-                    $selectedProductIds[] = $product['id'];
-                }
-                $selectedProducts = Product::find($selectedProductIds);
-                $discountCode->products()->sync($selectedProducts);
-
-                $amountOfCodes--;
-            }
-        }
-    }
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Spatie\Translatable\HasTranslations;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -49,7 +50,7 @@ class Product extends Model
         'use_stock',
         'stock_status',
         'stock',
-        'image',
+//        'image',
         'images',
         'out_of_stock_sellable',
         'expected_in_stock_date',
@@ -77,7 +78,7 @@ class Product extends Model
         'description',
         'search_terms',
         'content',
-        'image',
+//        'image',
         'images',
         'meta_title',
         'meta_description',
@@ -742,15 +743,15 @@ class Product extends Model
         return $this->hasMany(ProductCharacteristic::class);
     }
 
-    public function montaPortalProduct()
-    {
-        return $this->hasOne(MontaportalProduct::class);
-    }
+//    public function montaPortalProduct()
+//    {
+//        return $this->hasOne(MontaportalProduct::class);
+//    }
 
-    public function exactonlineProduct()
-    {
-        return $this->hasOne(ExactonlineProduct::class);
-    }
+//    public function exactonlineProduct()
+//    {
+//        return $this->hasOne(ExactonlineProduct::class);
+//    }
 
     public function productExtras()
     {
