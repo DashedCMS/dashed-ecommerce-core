@@ -8,7 +8,6 @@ use Filament\Tables\Actions\LinkAction;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\ButtonAction;
-use Qubiqx\QcommerceCore\Models\MenuItem;
 use Filament\Resources\RelationManagers\HasManyRelationManager;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 
@@ -52,7 +51,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
             ])
             ->headerActions([
                 ButtonAction::make('Aanmaken')
-                    ->url(fn ($record) => route('filament.resources.products.create')),
+                    ->url(fn($record) => route('filament.resources.products.create')),
             ]);
     }
 
@@ -61,7 +60,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
         return array_merge(parent::getTableActions(), [
             LinkAction::make('edit')
                 ->label('Bewerken')
-                ->url(fn (Product $record) => route('filament.resources.products.edit', [$record])),
+                ->url(fn(Product $record) => route('filament.resources.products.edit', [$record])),
         ]);
     }
 }

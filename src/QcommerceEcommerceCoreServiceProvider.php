@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -183,6 +184,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ProductFilterResource::class,
             ProductFilterOptionResource::class,
             ProductCharacteristicResource::class,
+            OrderResource::class,
         ]);
     }
 

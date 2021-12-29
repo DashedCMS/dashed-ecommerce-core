@@ -2,12 +2,16 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
@@ -172,16 +176,83 @@ class EditProduct extends EditRecord
 
     protected function getActions(): array
     {
-        return array_merge(parent::getActions() ?: [], [
-            ButtonAction::make('Bekijk product')
+        $buttons = [];
+
+        if ($this->record->type != 'variable' || $this->record->parent_product_id) {
+            $buttons[] = ButtonAction::make('Bekijk product')
                 ->url($this->record->getUrl())
-                ->openUrlInNewTab(),
-            $this->getActiveFormLocaleSelectAction(),
-        ]);
+                ->openUrlInNewTab();
+            $buttons[] = ButtonAction::make('Dupliceer product')
+                ->action('duplicateProduct')
+                ->color('warning');
+        }
+
+        $buttons[] = $this->getActiveFormLocaleSelectAction();
+
+        return array_merge(parent::getActions() ?: [], $buttons);
     }
 
-//    public function generateRandomCode(): void
-//    {
-//        $this->data['code'] = Str::upper(Str::random(10));
-//    }
+    public function duplicateProduct()
+    {
+        $newProduct = $this->record->replicate();
+        $newProduct->sku = 'SKU' . rand(10000, 99999);
+        foreach (Locales::getLocales() as $locale) {
+            $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']));
+            while (Product::where('slug->' . $locale['id'], $newProduct->getTranslation('slug', $locale['id']))->count()) {
+                $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']) . Str::random(1));
+            }
+        }
+        $newProduct->save();
+
+        $this->record->load('productCategories', 'shippingClasses', 'productFilters', 'activeProductFilters', 'productCharacteristics', 'productExtras');
+
+        $newProduct->productCategories()->sync($this->record->productCategories);
+        $newProduct->shippingClasses()->sync($this->record->shippingClasses);
+        $newProduct->activeProductFilters()->sync($this->record->activeProductFilters);
+
+        foreach (DB::table('qcommerce__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
+            DB::table('qcommerce__product_characteristic')->insert([
+                'product_id' => $newProduct->id,
+                'product_characteristic_id' => $productCharacteristic->product_characteristic_id,
+                'value' => $productCharacteristic->value,
+            ]);
+        }
+
+        foreach (DB::table('qcommerce__product_filter')->where('product_id', $this->record->id)->get() as $productFilter) {
+            DB::table('qcommerce__product_filter')->insert([
+                'product_id' => $newProduct->id,
+                'product_filter_id' => $productFilter->product_filter_id,
+                'product_filter_option_id' => $productFilter->product_filter_option_id,
+            ]);
+        }
+
+        foreach (DB::table('qcommerce__product_suggested_product')->where('product_id', $this->record->id)->get() as $suggestedProduct) {
+            DB::table('qcommerce__product_suggested_product')->insert([
+                'product_id' => $newProduct->id,
+                'suggested_product_id' => $suggestedProduct->suggested_product_id,
+                'order' => $suggestedProduct->order,
+            ]);
+        }
+
+        foreach (DB::table('qcommerce__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
+            $newProductExtra = new ProductExtra();
+            $newProductExtra->product_id = $newProduct->id;
+            foreach (json_decode($productExtra->name, true) as $locale => $name) {
+                $newProductExtra->setTranslation('name', $locale, $name);
+            }
+            $newProductExtra->type = $productExtra->type;
+            $newProductExtra->required = $productExtra->required;
+            $newProductExtra->save();
+
+            foreach (DB::table('qcommerce__product_extra_options')->where('product_extra_id', $productExtra->id)->whereNull('deleted_at')->get() as $productExtraOption) {
+                DB::table('qcommerce__product_extra_options')->insert([
+                    'product_extra_id' => $newProductExtra->id,
+                    'value' => $productExtraOption->value,
+                    'price' => $productExtraOption->price,
+                ]);
+            }
+        }
+
+        return redirect(route('filament.resources.products.edit', [$newProduct]));
+    }
 }
