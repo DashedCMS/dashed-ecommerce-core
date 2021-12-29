@@ -21,14 +21,16 @@ class EditProduct extends EditRecord
 
     protected static string $resource = ProductResource::class;
 
+    protected static ?string $title = 'Bewerk product';
+
     public function mount($record): void
     {
         $thisRecord = $this->getRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -83,6 +85,13 @@ class EditProduct extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             $this->data["product_characteristic_$productCharacteristic->id"] = $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->exists() ? $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first()->getTranslation('value', $this->activeFormLocale) : null;
         }
+
+        foreach ($this->data['productExtras'] as &$productExtra) {
+            $productExtra['name'] = $productExtra['name'][$this->activeFormLocale] ?? '';
+            foreach ($productExtra['productExtraOptions'] as &$productExtraOption) {
+                $productExtraOption['value'] = $productExtraOption['value'][$this->activeFormLocale] ?? '';
+            }
+        }
     }
 
     public function afterSave(): void
@@ -109,7 +118,7 @@ class EditProduct extends EditRecord
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
+        if (($this->record->type == 'variable' && !$this->record->parent_product_id) || $this->record->type == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($this->data["product_filter_$productFilter->id"]) {
@@ -138,7 +147,7 @@ class EditProduct extends EditRecord
 
         foreach ($productCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if (! $thisProductCharacteristic) {
+            if (!$thisProductCharacteristic) {
                 $thisProductCharacteristic = new ProductCharacteristic();
                 $thisProductCharacteristic->product_id = $this->record->id;
                 $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -150,7 +159,7 @@ class EditProduct extends EditRecord
 
     protected function getBreadcrumbs(): array
     {
-        if (! $this->record->parentProduct) {
+        if (!$this->record->parentProduct) {
             return parent::getBreadcrumbs();
         }
 
@@ -161,14 +170,15 @@ class EditProduct extends EditRecord
         return $breadcrumbs;
     }
 
-//    protected function getActions(): array
-//    {
-//        return array_merge(parent::getActions() ?: [], [
-//            ButtonAction::make('Bekijk product')
-//                ->url($this->record->getUrl())
-//            ->openUrlInNewTab(),
-//        ]);
-//    }
+    protected function getActions(): array
+    {
+        return array_merge(parent::getActions() ?: [], [
+            ButtonAction::make('Bekijk product')
+                ->url($this->record->getUrl())
+                ->openUrlInNewTab(),
+            $this->getActiveFormLocaleSelectAction(),
+        ]);
+    }
 
 //    public function generateRandomCode(): void
 //    {

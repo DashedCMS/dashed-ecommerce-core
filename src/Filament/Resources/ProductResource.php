@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\HasManyRepeater;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -22,8 +23,11 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\RelationManagers\ChildProductsRelationManager;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Filament\Forms\Components\BelongsToManyMultiSelect;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
@@ -64,15 +68,6 @@ class ProductResource extends Resource
 
         $schema[] = Section::make('Algemene instellingen')
             ->schema([
-                MultiSelect::make('site_ids')
-                    ->label('Actief op sites')
-                    ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
-                    ->default([Sites::getFirstSite()['id']])
-                    ->hidden(function () {
-                        return ! (Sites::getAmountOfSites() > 1);
-                    })
-                    ->required()
-                    ->disabled(fn ($record) => $record && $record->parent_product_id),
                 Select::make('type')
                     ->label('Soort product')
                     ->options([
@@ -82,15 +77,28 @@ class ProductResource extends Resource
                     ->default('simple')
                     ->required()
                     ->reactive()
-                    ->hidden(fn ($record) => $record && $record->parent_product_id),
+                    ->hidden(fn($record) => $record && $record->parent_product_id),
+                Select::make('parent_product_id')
+                    ->label('Bovenliggende product')
+                    ->options(Product::where('type', 'variable')->whereNull('parent_product_id')->pluck('name', 'id'))
+                    ->reactive()
+                    ->searchable()
+                    ->hidden(fn(\Closure $get, $livewire) => $get('type') != 'variable' || $livewire instanceof EditProduct),
+                MultiSelect::make('site_ids')
+                    ->label('Actief op sites')
+                    ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
+                    ->default([Sites::getFirstSite()['id']])
+                    ->hidden(fn(\Closure $get) => !(Sites::getAmountOfSites() > 1) || $get('parent_product_id') && $get('type') == 'variable')
+                    ->required()
+                    ->disabled(fn($record) => $record && $record->parent_product_id),
                 Toggle::make('public')
                     ->label('Openbaar')
                     ->default(1),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina')
-                    ->hidden(fn ($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_product_id)),
             ])
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Voorraad beheren')
             ->schema([
@@ -107,20 +115,20 @@ class ProductResource extends Resource
                         'numeric',
                         'max:100000',
                     ])
-                    ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                    ->hidden(fn(\Closure $get) => !$get('use_stock')),
                 Toggle::make('out_of_stock_sellable')
                     ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                     ->reactive()
-                    ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                    ->hidden(fn(\Closure $get) => !$get('use_stock')),
                 DatePicker::make('expected_in_stock_date')
                     ->label('Wanneer komt dit product weer op voorraad')
                     ->reactive()
                     ->required()
-                    ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
+                    ->hidden(fn(\Closure $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
                 Toggle::make('low_stock_notification')
                     ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                     ->reactive()
-                    ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                    ->hidden(fn(\Closure $get) => !$get('use_stock')),
                 TextInput::make('low_stock_notification_limit')
                     ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
                     ->type('number')
@@ -136,7 +144,7 @@ class ProductResource extends Resource
                         'min:1',
                         'max:100000',
                     ])
-                    ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
+                    ->hidden(fn(\Closure $get) => !$get('use_stock') || !$get('low_stock_notification')),
                 Select::make('stock_status')
                     ->label('Is dit product op voorraad')
                     ->options([
@@ -148,7 +156,7 @@ class ProductResource extends Resource
                     ->rules([
                         'required',
                     ])
-                    ->hidden(fn (\Closure $get) => $get('use_stock')),
+                    ->hidden(fn(\Closure $get) => $get('use_stock')),
                 Toggle::make('limit_purchases_per_customer')
                     ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
                     ->reactive(),
@@ -165,9 +173,9 @@ class ProductResource extends Resource
                         'min:1',
                         'max:100000',
                     ])
-                    ->hidden(fn (\Closure $get) => ! $get('limit_purchases_per_customer')),
+                    ->hidden(fn(\Closure $get) => !$get('limit_purchases_per_customer')),
             ])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id))
+            ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
             ->collapsible();
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
@@ -181,19 +189,19 @@ class ProductResource extends Resource
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
             $productFilterSchema[] = Toggle::make("product_filter_{$productFilter->id}_use_for_variations")
                 ->label("$productFilter->name gebruiken voor variaties op de product pagina")
-                ->hidden(fn (\Closure $get) => ! $get("product_filter_$productFilter->id"))
+                ->hidden(fn(\Closure $get) => !$get("product_filter_$productFilter->id"))
                 ->columnSpan([
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $productFilterSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                     ->label("$productFilter->name: $productFilterOption->name")
-                    ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
+                    ->hidden(fn(\Closure $get, $record) => !$get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && !$record->parent_product_id));
             }
         }
 
@@ -203,8 +211,8 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 2,
             ])
-            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
+            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
         $productCharacteristicSchema = [];
@@ -220,8 +228,8 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 3,
             ])
-            ->hidden(fn ($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)))
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+            ->hidden(fn($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)))
+            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Content beheren')
             ->schema([TextInput::make('name')
@@ -232,7 +240,7 @@ class ProductResource extends Resource
                     'max:255',]),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->unique('qcommerce__products', 'slug', fn ($record) => $record)
+                    ->unique('qcommerce__products', 'slug', fn($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren')
                     ->rules(['max:255',]),
                 RichEditor::make('description')
@@ -255,36 +263,36 @@ class ProductResource extends Resource
                     ->rules(['max:10000',])
                     ->columnSpan(['default' => 1,
                         'lg' => 2,])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                 Textarea::make('short_description')
                     ->label('Korte beschrijving')
                     ->rows(5)
                     ->maxLength(2500)
                     ->rules(['max:2500',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                 Textarea::make('search_terms')
                     ->label('Zoekwoorden')
                     ->rows(2)
                     ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden')
                     ->maxLength(2500)
                     ->rules(['max:2500',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                 TextInput::make('meta_title')
                     ->label('Meta titel')
                     ->maxLength(100)
                     ->rules(['max:100',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                 Textarea::make('meta_description')
                     ->label('Meta descriptie')
                     ->rows(2)
                     ->maxLength(200)
                     ->rules(['max:200',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                 FileUpload::make('meta_image')
                     ->directory('qcommerce/products/meta-images')
                     ->name('Meta afbeelding')
                     ->image()
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                 TextInput::make('order')
                     ->label('Volgorde')
                     ->required()
@@ -300,10 +308,10 @@ class ProductResource extends Resource
                     ->blocks(cms()->builder('blocks'))
                     ->columnSpan(['default' => 1,
                         'lg' => 2,])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id)),])
+                    ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),])
             ->columns(['default' => 1,
                 'lg' => 2,])
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
@@ -334,7 +342,7 @@ class ProductResource extends Resource
 //                            ]),
                     ]),
             ])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id))
+            ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
             ->collapsible();
 
         $schema[] = Section::make('Praktische informatie beheren')
@@ -401,15 +409,16 @@ class ProductResource extends Resource
                     ->rules(['max:255',]),])
             ->columns(['default' => 1,
                 'lg' => 2,])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id))
+            ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
             ->collapsible();
 
         $schema[] = Section::make('Linkjes beheren')
-            ->schema([BelongsToManyMultiSelect::make('productCategories')
-                ->preload()
-                ->relationship('productCategories', 'name')
-                ->label('Link aan categorieeën')
-                ->helperText('Bovenliggende categorieën worden automatisch geactiveerd'),
+            ->schema([
+                BelongsToManyMultiSelect::make('productCategories')
+                    ->preload()
+                    ->relationship('productCategories', 'name')
+                    ->label('Link aan categorieeën')
+                    ->helperText('Bovenliggende categorieën worden automatisch geactiveerd'),
                 BelongsToManyMultiSelect::make('shippingClasses')
                     ->preload()
                     ->relationship('shippingClasses', 'name')
@@ -418,9 +427,131 @@ class ProductResource extends Resource
                     ->preload()
                     ->relationship('suggestedProducts', 'name')
                     ->label('Link voorgestelde producten'),])
-            ->columns(['default' => 1,
-                'lg' => 2,])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record || $record && ! $record->parent_product_id))
+            ->columns([
+                'default' => 1,
+                'lg' => 2
+            ])
+            ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
+            ->collapsible();
+
+        $schema[] = Section::make('Product extras')
+            ->schema([
+                HasManyRepeater::make('productExtras')
+                    ->relationship('productExtras')
+                    ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
+                        $relationship = $component->getRelationship();
+                        $state = $component->getState();
+
+                        foreach ($relationship->pluck($relationship->getLocalKeyName()) as $keyToCheckForDeletion) {
+                            if (array_key_exists($keyToCheckForDeletion, $state)) {
+                                continue;
+                            }
+
+                            $relationship->find($keyToCheckForDeletion)?->delete();
+                        }
+
+                        $childComponentContainers = $component->getChildComponentContainers();
+
+                        foreach ($state as $itemKey => &$itemData) {
+
+                            if ($record = ProductExtra::find($itemKey)) {
+                                $name = json_decode($record->getRawOriginal('name'), true);
+                                $name[$livewire->activeFormLocale] = $itemData['name'];
+                                $itemData['name'] = $name;
+                                $record->update($itemData);
+
+                                continue;
+                            }
+
+                            $name = [];
+                            $name[$livewire->activeFormLocale] = $itemData['name'];
+                            $itemData['name'] = $name;
+                            $record = $relationship->create($itemData);
+                            $childComponentContainers[$itemKey]->model($record)->saveRelationships();
+                        }
+                    })
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Naam')
+                            ->required()
+                            ->maxLength(255)
+                            ->rules([
+                                'required',
+                                'max:255'
+                            ]),
+                        Toggle::make('required')
+                            ->label('Verplicht'),
+                        Select::make('type')
+                            ->label('Naam')
+                            ->options([
+                                'single' => '1 optie',
+                                'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)'
+                            ])
+                            ->default('single')
+                            ->required()
+                            ->rules([
+                                'required'
+                            ]),
+                        HasManyRepeater::make('productExtraOptions')
+                            ->relationship('productExtraOptions')
+                            ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
+                                $relationship = $component->getRelationship();
+                                $state = $component->getState();
+
+                                foreach ($relationship->pluck($relationship->getLocalKeyName()) as $keyToCheckForDeletion) {
+                                    if (array_key_exists($keyToCheckForDeletion, $state)) {
+                                        continue;
+                                    }
+
+                                    $relationship->find($keyToCheckForDeletion)?->delete();
+                                }
+
+                                $childComponentContainers = $component->getChildComponentContainers();
+
+                                foreach ($state as $itemKey => &$itemData) {
+
+                                    if ($record = ProductExtraOption::find($itemKey)) {
+                                        $value = json_decode($record->getRawOriginal('value'), true);
+                                        $value[$livewire->activeFormLocale] = $itemData['value'];
+                                        $itemData['value'] = $value;
+                                        $record->update($itemData);
+
+                                        continue;
+                                    }
+
+                                    $value = [];
+                                    $value[$livewire->activeFormLocale] = $itemData['value'];
+                                    $itemData['value'] = $value;
+                                    $record = $relationship->create($itemData);
+                                    $childComponentContainers[$itemKey]->model($record)->saveRelationships();
+                                }
+                            })
+                            ->schema([
+                                TextInput::make('value')
+                                    ->label('Waarde')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->rules([
+                                        'required',
+                                        'max:255'
+                                    ]),
+                                TextInput::make('price')
+                                    ->label('Meerprijs van deze optie')
+                                    ->prefix('€')
+                                    ->helperText('Voorbeeld: 10.25')
+                                    ->required()
+                                    ->rules([
+                                        'required',
+                                        'numeric',
+                                        'min:0.01',
+                                        'max:10000',
+                                    ]),
+                                Toggle::make('calculate_only_1_quantity')
+                                    ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
+                            ])
+                    ])
+            ])
+            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
             ->collapsible();
 
         return $form->schema($schema);
@@ -445,7 +576,7 @@ class ProductResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen'),
@@ -460,7 +591,7 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ChildProductsRelationManager::class
         ];
     }
 

@@ -95,7 +95,7 @@ class DiscountStatisticsPage extends Page implements HasForms
             $graphBeginDate->addDay();
         }
 
-        return [
+        $graphData = [
             'graph' => [
                 'datasets' => [
                     [
@@ -111,6 +111,10 @@ class DiscountStatisticsPage extends Page implements HasForms
             'data' => $statistics,
             'orders' => $orders,
         ];
+
+        $this->emit('updatedStatistics', $graphData);
+
+        return $graphData;
     }
 
     protected function getFormSchema(): array

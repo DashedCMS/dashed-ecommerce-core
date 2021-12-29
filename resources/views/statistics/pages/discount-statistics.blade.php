@@ -17,8 +17,8 @@
                         },
                     )
 
-                    $wire.on('updateStatisticsData', async ({ data }) => {
-                        chart.data = 'data'
+                    $wire.on('updatedStatistics', async ({ graph }) => {
+                        chart.data = graph
                         chart.update('resize')
                     })
                 },

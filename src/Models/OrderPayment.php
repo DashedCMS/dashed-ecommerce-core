@@ -3,9 +3,9 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Support\Str;
-use Qubiqx\Qcommerce\Classes\Helper;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\Qcommerce\Classes\ShoppingCart;
+use Qubiqx\QcommerceCore\Classes\Helper;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

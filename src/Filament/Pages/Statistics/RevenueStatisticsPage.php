@@ -125,21 +125,25 @@ class RevenueStatisticsPage extends Page implements HasForms
             $graphBeginDate->addDay();
         }
 
-        return [
-          'graph' => [
-              'datasets' => [
-                  [
-                      'label' => 'Stats',
-                      'data' => $graph['data'],
-                      'backgroundColor' => 'orange',
-                      'borderColor' => "red",
-                      'fill' => 'start',
-                  ],
-              ],
-              'labels' => $graph['labels'],
-          ],
-          'data' => $statistics,
+        $graphData = [
+            'graph' => [
+                'datasets' => [
+                    [
+                        'label' => 'Stats',
+                        'data' => $graph['data'],
+                        'backgroundColor' => 'orange',
+                        'borderColor' => "red",
+                        'fill' => 'start',
+                    ],
+                ],
+                'labels' => $graph['labels'],
+            ],
+            'data' => $statistics,
         ];
+
+        $this->emit('updatedStatistics', $graphData);
+
+        return $graphData;
     }
 
     protected function getFormSchema(): array

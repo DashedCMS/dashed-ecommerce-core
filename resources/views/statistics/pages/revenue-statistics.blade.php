@@ -4,7 +4,7 @@
         {{ $this->form }}
 
         <div class="grid mt-6">
-            <canvas x-data="{
+            <canvas wire:ignore x-data="{
                 chart: null,
 
                 init: function () {
@@ -17,8 +17,8 @@
                         },
                     )
 
-                    $wire.on('updateStatisticsData', async ({ data }) => {
-                        chart.data = 'data'
+                    $wire.on('updatedStatistics', async ({ graph }) => {
+                        chart.data = graph
                         chart.update('resize')
                     })
                 },
