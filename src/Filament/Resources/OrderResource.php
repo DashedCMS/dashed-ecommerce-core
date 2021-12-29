@@ -2,6 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Columns\ViewColumn;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -94,26 +97,30 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Betaalmethode')
-                ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
+                    ->getStateUsing(fn($record) => Str::substr($record->payment_method, 0, 10)),
                 BadgeColumn::make('payment_status')
                     ->label('Betaalstatus')
-                    ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
+                    ->getStateUsing(fn($record) => $record->orderStatus()['status'])
                     ->colors([
-                        'primary' => fn ($state): bool => $state === 'Lopende aankoop',
-                        'danger' => fn ($state): bool => $state === 'Geannuleerd',
-                        'warning' => fn ($state): bool => $state === 'Retour',
-                        'success' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Betaald', 'Wachten op bevestiging betaling']),
+                        'primary' => fn($state): bool => $state === 'Lopende aankoop',
+                        'danger' => fn($state): bool => $state === 'Geannuleerd',
+                        'warning' => fn($state): bool => $state === 'Retour',
+                        'success' => fn($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Betaald', 'Wachten op bevestiging betaling']),
                     ]),
                 BadgeColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
-                    ->getStateUsing(fn ($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status]['name'] ?? '')
+                    ->getStateUsing(fn($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
                     ->colors([
                         'danger',
-                        'success' => fn ($state): bool => $state === 'Afgehandeld',
+                        'success' => fn($state): bool => $state === 'Afgehandeld',
                     ]),
-                TagsColumn::make('other_statussus')
-                    ->label('Betaalstatus')
-                    ->hidden(Customsetting::get('order_index_show_other_statuses', Sites::getActive(), true) ? false : true),
+//                ViewColumn::make('statusLabels')
+//            ->view('filament.tables.columns.multiple-labels')
+//                    ->hidden(Customsetting::get('order_index_show_other_statuses', Sites::getActive(), true) ? false : true),
+//                TagsColumn::make('statusLabels')
+//                    ->label('Andere statussen')
+//                    ->getStateUsing(fn($record) => $record->statusLabels)
+//                    ->hidden(Customsetting::get('order_index_show_other_statuses', Sites::getActive(), true) ? false : true),
                 TextColumn::make('name')
                     ->label('Klant')
                     ->searchable([
@@ -149,11 +156,14 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('total')
                     ->label('Totaal')
-                ->getStateUsing(fn ($record) => Helper::formatPrice($record->total)),
+                    ->getStateUsing(fn($record) => Helper::formatPrice($record->total)),
                 TextColumn::make('created_at')
                     ->label('Aangemaakt op')
-                ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i')),
+                    ->getStateUsing(fn($record) => $record->created_at->format('d-m-Y H:i'))
+                    ->searchable()
+                    ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ]);

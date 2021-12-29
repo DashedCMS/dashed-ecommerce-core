@@ -1173,12 +1173,12 @@ class Order extends Model
         if (! $this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
-                    'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status]['name'] ?? '',
+                    'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
                     'color' => 'red',
                 ];
             } else {
                 return [
-                    'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status]['name'] ?? '',
+                    'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
                     'color' => 'green',
                 ];
             }

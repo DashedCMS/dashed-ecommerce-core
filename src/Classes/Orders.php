@@ -14,21 +14,11 @@ class Orders
     public static function getFulfillmentStatusses()
     {
         return [
-            'unhandled' => [
-                'name' => 'Niet afgehandeld',
-            ],
-            'handled' => [
-                'name' => 'Afgehandeld',
-            ],
-            'in_treatment' => [
-                'name' => 'In behandeling',
-            ],
-            'packed' => [
-                'name' => 'Ingepakt',
-            ],
-            'shipped' => [
-                'name' => 'Verzonden',
-            ],
+            'unhandled' => 'Niet afgehandeld',
+            'handled' => 'Afgehandeld',
+            'in_treatment' => 'In behandeling',
+            'packed' => 'Ingepakt',
+            'shipped' => 'Verzonden',
         ];
     }
 
