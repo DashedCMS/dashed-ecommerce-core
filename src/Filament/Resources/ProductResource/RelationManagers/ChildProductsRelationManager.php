@@ -5,12 +5,11 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Relat
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Tables\Actions\LinkAction;
-use Filament\Tables\Columns\BooleanColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\ButtonAction;
-use Qubiqx\QcommerceCore\Models\MenuItem;
-use Filament\Resources\RelationManagers\HasManyRelationManager;
+use Filament\Tables\Columns\BooleanColumn;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Filament\Resources\RelationManagers\HasManyRelationManager;
 
 class ChildProductsRelationManager extends HasManyRelationManager
 {
