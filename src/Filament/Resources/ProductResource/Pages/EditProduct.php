@@ -3,17 +3,17 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Illuminate\Support\Str;
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceCore\Classes\Locales;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristic;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
+use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristic;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord
 {
@@ -25,10 +25,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->getRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (!$thisRecord->images) {
+            if (! $thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (!$images) {
-                    if (!is_array($images)) {
+                if (! $images) {
+                    if (! is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -109,13 +109,13 @@ class EditProduct extends EditRecord
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        if (($this->record->type == 'variable' && !$this->record->parent_product_id) || $this->record->type == 'simple') {
+        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($this->data["product_filter_$productFilter->id"]) {
                     $this->record->activeProductFilters()->attach($productFilter->id);
                     $this->record->activeProductFilters()->updateExistingPivot($productFilter->id, [
-                        'use_for_variations' => $this->data["product_filter_{$productFilter->id}_use_for_variations"]
+                        'use_for_variations' => $this->data["product_filter_{$productFilter->id}_use_for_variations"],
                     ]);
                 }
             }
@@ -138,7 +138,7 @@ class EditProduct extends EditRecord
 
         foreach ($productCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if (!$thisProductCharacteristic) {
+            if (! $thisProductCharacteristic) {
                 $thisProductCharacteristic = new ProductCharacteristic();
                 $thisProductCharacteristic->product_id = $this->record->id;
                 $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -150,7 +150,7 @@ class EditProduct extends EditRecord
 
     protected function getBreadcrumbs(): array
     {
-        if (!$this->record->parentProduct) {
+        if (! $this->record->parentProduct) {
             return parent::getBreadcrumbs();
         }
 

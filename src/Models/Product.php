@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Spatie\Translatable\HasTranslations;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class Product extends Model
