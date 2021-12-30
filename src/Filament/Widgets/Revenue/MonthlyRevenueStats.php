@@ -22,8 +22,8 @@ class MonthlyRevenueStats extends StatsOverviewWidget
                 'products' => OrderProduct::whereIn('order_id', $monthOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
                 'orderAmount' => $monthOrders->sum('total'),
             ];
-            $statistics['month']['averageOrderAmount'] = $monthOrders->count() ? Helper::formatPrice($statistics['month']['orderAmount'] / $statistics['month']['orders']) : Helper::formatPrice(0);
-            $statistics['month']['orderAmount'] = Helper::formatPrice($statistics['month']['orderAmount']);
+            $statistics['month']['averageOrderAmount'] = $monthOrders->count() ? CurrencyHelper::formatPrice($statistics['month']['orderAmount'] / $statistics['month']['orders']) : CurrencyHelper::formatPrice(0);
+            $statistics['month']['orderAmount'] = CurrencyHelper::formatPrice($statistics['month']['orderAmount']);
 
             return $statistics;
         });

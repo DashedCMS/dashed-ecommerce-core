@@ -58,7 +58,8 @@
                 "Qubiqx\\QcommerceEcommerceCore\\QcommerceEcommerceCoreServiceProvider"
             ],
             "aliases": {
-                "QcommerceEcommerceCore": "Qubiqx\\QcommerceEcommerceCore\\Facades\\QcommerceEcommerceCore"
+                "QcommerceEcommerceCore": "Qubiqx\\QcommerceEcommerceCore\\Facades\\QcommerceEcommerceCore",
+                "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper"
             }
         }
     },

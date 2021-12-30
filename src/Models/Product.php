@@ -29,8 +29,6 @@ class Product extends Model
         'site_ids',
         'name',
         'slug',
-        'image',
-        'images',
         'short_description',
         'description',
         'search_terms',
@@ -291,23 +289,12 @@ class Product extends Model
         }
     }
 
-//    public function getImageAttribute()
-//    {
-//        return Cache::tags(["product-$this->id"])->rememberForever("product-image-attribute-" . $this->id, function () {
-//            if ($this->childProducts()->count()) {
-//                $image = $this->childProducts()->first()->getFirstMedia('main-image-' . app()->getLocale());
-//            } else {
-//                $image = $this->getFirstMedia('main-image-' . app()->getLocale());
-//            }
-//            if ($image) {
-//                return $image;
-//            } else {
-//                return '';
-//            }
-//        });
-//    }
-//
-//    public function getImagesAttribute()
+    public function getFirstImageUrlAttribute()
+    {
+        return collect($this->images)->sortBy('order')->first()['image'] ?? '';
+    }
+
+    //    public function getImagesAttribute()
 //    {
 //        return Cache::tags(["product-$this->id"])->rememberForever("product-images-attribute-" . $this->id, function () {
 //            if ($this->childProducts()->count()) {

@@ -21,6 +21,16 @@ class Orders
             'shipped' => 'Verzonden',
         ];
     }
+    public static function getReturnStatusses()
+    {
+        return [
+            'handled' => 'Afgehandeld',
+            'unhandled' => 'Niet afgehandeld',
+            'received' => 'Ontvangen',
+            'shipped' => 'Onderweg',
+            'waiting_for_return' => 'Wachten op retour',
+        ];
+    }
 
     public static function sendNotification(Order $order, $email = null)
     {

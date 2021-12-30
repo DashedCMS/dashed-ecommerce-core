@@ -540,7 +540,7 @@
                                                                     <span class="product-sku"
                                                                           style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; display: inline-block; width: 55%; font-weight: bold;">{{$orderProduct->quantity}}x</span>
                                                                         <span class="product-quantity"
-                                                                              style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; display: inline-block; width: 40%; text-align: right; font-weight: bold;">{{Helper::formatPrice($orderProduct->price)}}</span>
+                                                                              style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; display: inline-block; width: 40%; text-align: right; font-weight: bold;">{{CurrencyHelper::formatPrice($orderProduct->price)}}</span>
                                                                     </div>
                                                                 </td>
                                                             </tr>
@@ -562,7 +562,7 @@
                                                             <td width="25%" align="right"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{Helper::formatPrice($order->subtotal)}}</span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{CurrencyHelper::formatPrice($order->subtotal)}}</span>
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -574,7 +574,7 @@
                                                             <td width="25%" align="right"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{Helper::formatPrice($order->btw)}}</span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{CurrencyHelper::formatPrice($order->btw)}}</span>
                                                             </td>
                                                         </tr>
 {{--                                                        <tr>--}}
@@ -587,7 +587,7 @@
 {{--                                                                style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">--}}
 {{--                                                                <span--}}
 {{--                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">@if($order->shipping_costs > 0.01)--}}
-{{--                                                                        {{Helper::formatPrice($order->shipping_costs)}} @else {{Translation::get('order-confirmation-email-order-free-shipping', 'orders', 'Free')}} @endif</span>--}}
+{{--                                                                        {{CurrencyHelper::formatPrice($order->shipping_costs)}} @else {{Translation::get('order-confirmation-email-order-free-shipping', 'orders', 'Free')}} @endif</span>--}}
 {{--                                                            </td>--}}
 {{--                                                        </tr>--}}
 {{--                                                        @if($order->payment_costs > 0.01)--}}
@@ -600,7 +600,7 @@
 {{--                                                                <td width="25%" align="right"--}}
 {{--                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">--}}
 {{--                                                                <span--}}
-{{--                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{Helper::formatPrice($order->payment_costs)}}</span>--}}
+{{--                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{CurrencyHelper::formatPrice($order->payment_costs)}}</span>--}}
 {{--                                                                </td>--}}
 {{--                                                            </tr>--}}
 {{--                                                        @endif--}}
@@ -614,7 +614,7 @@
                                                                 <td width="25%" align="right"
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{Helper::formatPrice($order->discount)}}</span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{CurrencyHelper::formatPrice($order->discount)}}</span>
                                                                 </td>
                                                             </tr>
                                                         @endif
@@ -627,7 +627,7 @@
                                                             <td width="25%" align="right"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{Helper::formatPrice($order->total)}}</span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">{{CurrencyHelper::formatPrice($order->total)}}</span>
                                                             </td>
                                                         </tr>
                                                     </table>

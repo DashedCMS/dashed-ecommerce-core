@@ -179,6 +179,8 @@ class Order extends Model
             ];
         }
 
+        //Todo: extend statusses from other packages
+
 //        if ($this->keen_delivery_shipment_id) {
 //            $labels[] = [
 //                'status' => 'Doorgezet naar KeenDelivery',

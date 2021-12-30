@@ -79,10 +79,10 @@ class DiscountStatisticsPage extends Page implements HasForms
 
         $statistics = [
             'ordersAmount' => $totalOrderCount,
-            'orderAmount' => Helper::formatPrice($totalAmount),
-            'discountAmount' => Helper::formatPrice($discountAmount),
-            'averageDiscountAmount' => Helper::formatPrice($averageDiscountAmount),
-            'averageOrderAmount' => Helper::formatPrice($averageOrderAmount),
+            'orderAmount' => CurrencyHelper::formatPrice($totalAmount),
+            'discountAmount' => CurrencyHelper::formatPrice($discountAmount),
+            'averageDiscountAmount' => CurrencyHelper::formatPrice($averageDiscountAmount),
+            'averageOrderAmount' => CurrencyHelper::formatPrice($averageOrderAmount),
             'productsSold' => OrderProduct::whereIn('order_id', $orders->pluck('id'))->sum('quantity'),
         ];
 

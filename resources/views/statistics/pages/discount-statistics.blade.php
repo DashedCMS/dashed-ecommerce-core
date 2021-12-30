@@ -202,10 +202,10 @@
                                 {{ $order->name }}
                             </td>
                             <td class="px-4 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
-                                {{ Helper::formatPrice($order->discount) }}
+                                {{ CurrencyHelper::formatPrice($order->discount) }}
                             </td>
                             <td class="px-4 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
-                                {{ Helper::formatPrice($order->total) }}
+                                {{ CurrencyHelper::formatPrice($order->total) }}
                             </td>
                             <td class="px-4 py-2 whitespace-nowrap text-xs font-medium text-gray-900">
                                 {{ $order->created_at }}

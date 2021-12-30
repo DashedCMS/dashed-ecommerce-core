@@ -224,7 +224,7 @@
                         @endif
                     </td>
                     <td>
-                        {{Helper::formatPrice($orderProduct->price, 'EUR', true)}}
+                        {{CurrencyHelper::formatPrice($orderProduct->price, 'EUR', true)}}
                     </td>
                 </tr>
             @endforeach
@@ -238,7 +238,7 @@
                     {{Translation::get('subtotal', 'credit-invoice', 'Subtotal')}}
                 </td>
                 <td>
-                    {{Helper::formatPrice($order->subtotal, 'EUR', true)}}
+                    {{CurrencyHelper::formatPrice($order->subtotal, 'EUR', true)}}
                 </td>
             </tr>
             @if(!$order->shippingMethod->shippingZone->hide_vat_on_invoice)
@@ -247,7 +247,7 @@
                         {{Translation::get('btw', 'credit-invoice', 'BTW')}}
                     </td>
                     <td>
-                        {{Helper::formatPrice($order->btw, 'EUR', true)}}
+                        {{CurrencyHelper::formatPrice($order->btw, 'EUR', true)}}
                     </td>
                 </tr>
             @endif
@@ -257,7 +257,7 @@
 {{--                </td>--}}
 {{--                <td>--}}
 {{--                    @if($order->shipping_costs != 0.00)--}}
-{{--                        {{Helper::formatPrice($order->shipping_costs, 'EUR', true)}} @else {{Translation::get('free-shipping', 'credit-invoice', 'Free')}} @endif--}}
+{{--                        {{CurrencyHelper::formatPrice($order->shipping_costs, 'EUR', true)}} @else {{Translation::get('free-shipping', 'credit-invoice', 'Free')}} @endif--}}
 {{--                </td>--}}
 {{--            </tr>--}}
 {{--            @if($order->payment_costs != 0.00)--}}
@@ -266,7 +266,7 @@
 {{--                        {{Translation::get('payment-costs', 'credit-invoice', 'Betalingsmethode kosten')}}:--}}
 {{--                    </td>--}}
 {{--                    <td>--}}
-{{--                        {{Helper::formatPrice($order->payment_costs, 'EUR', true)}}--}}
+{{--                        {{CurrencyHelper::formatPrice($order->payment_costs, 'EUR', true)}}--}}
 {{--                    </td>--}}
 {{--                </tr>--}}
 {{--            @endif--}}
@@ -276,7 +276,7 @@
                         {{Translation::get('discount', 'credit-invoice', 'Discount')}}:
                     </td>
                     <td>
-                        {{Helper::formatPrice($order->discount, 'EUR', true)}}
+                        {{CurrencyHelper::formatPrice($order->discount, 'EUR', true)}}
                     </td>
                 </tr>
             @endif
@@ -285,7 +285,7 @@
                     {{Translation::get('total', 'credit-invoice', 'Total')}}:
                 </td>
                 <td>
-                    {{Helper::formatPrice($order->total, 'EUR', true)}}
+                    {{CurrencyHelper::formatPrice($order->total, 'EUR', true)}}
                 </td>
             </tr>
         </table>

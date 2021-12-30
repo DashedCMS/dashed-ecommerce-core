@@ -107,12 +107,12 @@ class RevenueStatisticsPage extends Page implements HasForms
 
         $statistics = [
             'ordersAmount' => $totalOrderCount,
-            'orderAmount' => Helper::formatPrice($totalAmount),
-            'paymentCostsAmount' => Helper::formatPrice($paymentCosts),
-            'shippingCostsAmount' => Helper::formatPrice($shippingCosts),
-            'discountAmount' => Helper::formatPrice($orders->sum('discount')),
-            'btwAmount' => Helper::formatPrice($orders->sum('btw')),
-            'averageOrderAmount' => Helper::formatPrice($averageOrderAmount),
+            'orderAmount' => CurrencyHelper::formatPrice($totalAmount),
+            'paymentCostsAmount' => CurrencyHelper::formatPrice($paymentCosts),
+            'shippingCostsAmount' => CurrencyHelper::formatPrice($shippingCosts),
+            'discountAmount' => CurrencyHelper::formatPrice($orders->sum('discount')),
+            'btwAmount' => CurrencyHelper::formatPrice($orders->sum('btw')),
+            'averageOrderAmount' => CurrencyHelper::formatPrice($averageOrderAmount),
             'productsSold' => OrderProduct::whereIn('order_id', $orders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
         ];
 

@@ -20,8 +20,8 @@ class DailyReturnRevenueStats extends StatsOverviewWidget
             'products' => OrderProduct::whereIn('order_id', $todayReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
             'orderAmount' => $todayReturnOrders->sum('total'),
         ];
-        $statistics['dayReturn']['averageOrderAmount'] = $todayReturnOrders->count() ? Helper::formatPrice($statistics['dayReturn']['orderAmount'] / $statistics['dayReturn']['orders']) : Helper::formatPrice(0);
-        $statistics['dayReturn']['orderAmount'] = Helper::formatPrice($statistics['dayReturn']['orderAmount']);
+        $statistics['dayReturn']['averageOrderAmount'] = $todayReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['dayReturn']['orderAmount'] / $statistics['dayReturn']['orders']) : CurrencyHelper::formatPrice(0);
+        $statistics['dayReturn']['orderAmount'] = CurrencyHelper::formatPrice($statistics['dayReturn']['orderAmount']);
 
         return [
             Card::make('Aantal bestellingen (vandaag retour)', $statistics['dayReturn']['orders']),

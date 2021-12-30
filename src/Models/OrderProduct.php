@@ -29,6 +29,10 @@ class OrderProduct extends Model
         'product_extras',
     ];
 
+    protected $casts = [
+      'product_extras' => 'array'
+    ];
+
     public static function boot()
     {
         parent::boot();

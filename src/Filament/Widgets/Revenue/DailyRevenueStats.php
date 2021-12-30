@@ -20,8 +20,8 @@ class DailyRevenueStats extends StatsOverviewWidget
             'products' => OrderProduct::whereIn('order_id', $todayOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
             'orderAmount' => $todayOrders->sum('total'),
         ];
-        $statistics['day']['averageOrderAmount'] = $todayOrders->count() ? Helper::formatPrice($statistics['day']['orderAmount'] / $statistics['day']['orders']) : Helper::formatPrice(0);
-        $statistics['day']['orderAmount'] = Helper::formatPrice($statistics['day']['orderAmount']);
+        $statistics['day']['averageOrderAmount'] = $todayOrders->count() ? CurrencyHelper::formatPrice($statistics['day']['orderAmount'] / $statistics['day']['orders']) : CurrencyHelper::formatPrice(0);
+        $statistics['day']['orderAmount'] = CurrencyHelper::formatPrice($statistics['day']['orderAmount']);
 
 //                ->description('32k increase')
 //                ->descriptionIcon('heroicon-s-trending-up')

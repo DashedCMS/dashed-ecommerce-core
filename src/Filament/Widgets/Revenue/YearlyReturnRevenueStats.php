@@ -22,8 +22,8 @@ class YearlyReturnRevenueStats extends StatsOverviewWidget
                 'products' => OrderProduct::whereIn('order_id', $yearReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
                 'orderAmount' => $yearReturnOrders->sum('total'),
             ];
-            $statistics['yearReturn']['averageOrderAmount'] = $yearReturnOrders->count() ? Helper::formatPrice($statistics['yearReturn']['orderAmount'] / $statistics['yearReturn']['orders']) : Helper::formatPrice(0);
-            $statistics['yearReturn']['orderAmount'] = Helper::formatPrice($statistics['yearReturn']['orderAmount']);
+            $statistics['yearReturn']['averageOrderAmount'] = $yearReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['yearReturn']['orderAmount'] / $statistics['yearReturn']['orders']) : CurrencyHelper::formatPrice(0);
+            $statistics['yearReturn']['orderAmount'] = CurrencyHelper::formatPrice($statistics['yearReturn']['orderAmount']);
 
             return $statistics;
         });

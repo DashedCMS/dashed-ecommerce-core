@@ -24,8 +24,8 @@ class MonthlyReturnRevenueStats extends StatsOverviewWidget
                 'products' => OrderProduct::whereIn('order_id', $monthReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
                 'orderAmount' => $monthReturnOrders->sum('total'),
             ];
-            $statistics['monthReturn']['averageOrderAmount'] = $monthReturnOrders->count() ? Helper::formatPrice($statistics['monthReturn']['orderAmount'] / $statistics['monthReturn']['orders']) : Helper::formatPrice(0);
-            $statistics['monthReturn']['orderAmount'] = Helper::formatPrice($statistics['monthReturn']['orderAmount']);
+            $statistics['monthReturn']['averageOrderAmount'] = $monthReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['monthReturn']['orderAmount'] / $statistics['monthReturn']['orders']) : CurrencyHelper::formatPrice(0);
+            $statistics['monthReturn']['orderAmount'] = CurrencyHelper::formatPrice($statistics['monthReturn']['orderAmount']);
 
             return $statistics;
         });

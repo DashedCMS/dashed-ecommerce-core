@@ -22,8 +22,8 @@ class YearlyRevenueStats extends StatsOverviewWidget
                 'products' => OrderProduct::whereIn('order_id', $yearOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
                 'orderAmount' => $yearOrders->sum('total'),
             ];
-            $statistics['year']['averageOrderAmount'] = $yearOrders->count() ? Helper::formatPrice($statistics['year']['orderAmount'] / $statistics['year']['orders']) : Helper::formatPrice(0);
-            $statistics['year']['orderAmount'] = Helper::formatPrice($statistics['year']['orderAmount']);
+            $statistics['year']['averageOrderAmount'] = $yearOrders->count() ? CurrencyHelper::formatPrice($statistics['year']['orderAmount'] / $statistics['year']['orders']) : CurrencyHelper::formatPrice(0);
+            $statistics['year']['orderAmount'] = CurrencyHelper::formatPrice($statistics['year']['orderAmount']);
 
             return $statistics;
         });

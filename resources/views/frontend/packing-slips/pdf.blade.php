@@ -227,7 +227,7 @@
     @endif
     <div>
         <table class="border-product">
-            @foreach($order->orderProducts()->whereNotIn('sku', \Qubiqx\Qcommerce\Classes\SKUs::hideOnPackingSlip())->get() as $orderProduct)
+            @foreach($order->orderProducts()->whereNotIn('sku', \Qubiqx\QcommerceEcommerceCore\Classes\SKUs::hideOnPackingSlip())->get() as $orderProduct)
                 <tr>
                     <td>
                         {{$orderProduct->name}}

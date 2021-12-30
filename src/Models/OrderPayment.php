@@ -79,7 +79,7 @@ class OrderPayment extends Model
 
     public function getAmountFormattedAttribute()
     {
-        return Helper::formatPrice($this->amount);
+        return CurrencyHelper::formatPrice($this->amount);
     }
 
     public function changeStatus($newStatus = null, $sendMail = false): string

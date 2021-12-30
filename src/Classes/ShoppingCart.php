@@ -5,11 +5,16 @@ namespace Qubiqx\QcommerceEcommerceCore\Classes;
 use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
-use Qubiqx\QcommerceCore\Classes\Helper;
+use Qubiqx\Qcommerce\Models\Product;
+use Qubiqx\Qcommerce\Models\Translation;
 use Gloudemans\Shoppingcart\Facades\Cart;
-use Qubiqx\QcommerceCore\Models\Translation;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
+use Qubiqx\Qcommerce\Models\DiscountCode;
+use Qubiqx\Qcommerce\Models\ShippingZone;
+use Qubiqx\Qcommerce\Models\Customsetting;
+use Qubiqx\Qcommerce\Models\PaymentMethod;
+use Qubiqx\Qcommerce\Models\ShippingMethod;
+use Rolandstarke\Thumbnail\Facades\Thumbnail;
+use Qubiqx\Qcommerce\Models\ProductExtraOption;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class ShoppingCart
@@ -67,7 +72,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -84,7 +89,7 @@ class ShoppingCart
         }
 
         if ($formatResult) {
-            return Helper::formatPrice($totalDiscount);
+            return CurrencyHelper::formatPrice($totalDiscount);
         } else {
             return number_format($totalDiscount, 2, '.', '');
         }
@@ -92,6 +97,19 @@ class ShoppingCart
 
     public static function subtotal($formatResult = false, $shippingMethodId = null, $paymentMethodId = null)
     {
+        $cartTotal = self::total(false, false, $shippingMethodId, $paymentMethodId);
+
+        $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
+        if (!$calculateInclusiveTax) {
+            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
+        }
+
+        if ($formatResult) {
+            return CurrencyHelper::formatPrice($cartTotal);
+        } else {
+            return number_format($cartTotal, 2, '.', '');
+        }
+
         $cartTotal = 0;
         foreach (self::cartItems() as $cartItem) {
             $cartTotal = $cartTotal + ($cartItem->price * $cartItem->qty);
@@ -100,7 +118,7 @@ class ShoppingCart
         if ($shippingMethodId) {
             $shippingMethod = ShippingMethod::find($shippingMethodId);
             if ($shippingMethod) {
-                $cartTotal += $shippingMethod->costs;
+                $cartTotal += $shippingMethod->costsForCart;
             }
         }
 
@@ -113,7 +131,7 @@ class ShoppingCart
         }
 
         if ($formatResult) {
-            return Helper::formatPrice($cartTotal);
+            return CurrencyHelper::formatPrice($cartTotal);
         } else {
             return number_format($cartTotal, 2, '.', '');
         }
@@ -131,14 +149,14 @@ class ShoppingCart
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
-            $cartTotal = $cartTotal + self::btw(false, $calculateDiscount);
+        if (!$calculateInclusiveTax) {
+            $cartTotal = $cartTotal + self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
         }
 
         if ($shippingMethodId) {
             $shippingMethod = ShippingMethod::find($shippingMethodId);
             if ($shippingMethod) {
-                $cartTotal += $shippingMethod->costs;
+                $cartTotal += $shippingMethod->costsForCart;
             }
         }
 
@@ -151,7 +169,7 @@ class ShoppingCart
         }
 
         if ($formatResult) {
-            return Helper::formatPrice($cartTotal);
+            return CurrencyHelper::formatPrice($cartTotal);
         } else {
             return number_format($cartTotal, 2, '.', '');
         }
@@ -173,7 +191,7 @@ class ShoppingCart
         }
 
         if ($formatResult) {
-            return Helper::formatPrice($depositAmount);
+            return CurrencyHelper::formatPrice($depositAmount);
         } else {
             return number_format($depositAmount, 2, '.', '');
         }
@@ -275,7 +293,7 @@ class ShoppingCart
         }
 
         if ($formatResult) {
-            return Helper::formatPrice($taxTotal);
+            return CurrencyHelper::formatPrice($taxTotal);
         } else {
             return number_format($taxTotal, 2, '.', '');
         }
@@ -342,7 +360,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -372,7 +390,7 @@ class ShoppingCart
 
                 $taxTotal += $price;
                 if ($cartItem->model->vat_rate > 0) {
-                    if (! isset($totalAmountForVats[$cartItem->model->vat_rate])) {
+                    if (!isset($totalAmountForVats[$cartItem->model->vat_rate])) {
                         $totalAmountForVats[$cartItem->model->vat_rate] = 0;
                     }
                     $totalAmountForVats[$cartItem->model->vat_rate] += ($cartItem->price * $cartItem->qty);
@@ -432,7 +450,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -459,7 +477,7 @@ class ShoppingCart
                     if ($shippingMethod->costs == 0) {
                         $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');
                     } else {
-                        $shippingMethod->costsFormatted = Helper::formatPrice($costs);
+                        $shippingMethod->costsFormatted = CurrencyHelper::formatPrice($costs);
                     }
                 }
 
@@ -470,15 +488,208 @@ class ShoppingCart
         return [];
     }
 
-    public static function getAvailablePaymentMethods($countryName = null)
+    public static function getAvailablePaymentMethods($countryName, $formatResult = false)
     {
+        $paymentMethods = self::getPaymentMethods();
+        $shippingZones = ShippingZone::get();
+        foreach ($shippingZones as $shippingZone) {
+            $shippingZoneIsActive = false;
+            foreach (json_decode($shippingZone->zones, true) as $zone) {
+                foreach (Countries::getCountries() as $country) {
+                    if ($country['name'] == $zone['id']) {
+                        if (strtolower($country['name']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        foreach ($country['altSpellings'] as $altSpelling) {
+                            if (strlen($countryName) > 5) {
+                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+                                    $shippingZoneIsActive = true;
+                                }
+                            } else {
+                                if (strtolower($altSpelling) == strtolower($countryName)) {
+                                    $shippingZoneIsActive = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+                $searchFields = explode(',', $shippingZone->search_fields);
+                foreach ($searchFields as $searchField) {
+                    if (strtolower($searchField) == strtolower($countryName)) {
+                        $shippingZoneIsActive = true;
+                    }
+                }
+            }
+
+            if ($shippingZoneIsActive && $shippingZone->disabled_payment_method_ids) {
+                $disabledPaymentMethodIds = json_decode($shippingZone->disabled_payment_method_ids, true);
+                if (is_array($disabledPaymentMethodIds)) {
+                    foreach ($disabledPaymentMethodIds as $disabledPaymentMethod) {
+                        foreach ($paymentMethods as $key => $paymentMethod) {
+                            if ($disabledPaymentMethod['id'] == $paymentMethod['id']) {
+                                unset($paymentMethods[$key]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $paymentMethods;
+    }
+
+    public static function getPaymentMethods()
+    {
+        $paymentMethods = [];
+        foreach (PaymentMethod::where('available_from_amount', '<', self::total())->get() as $paymentMethod) {
+            $paymentMethods[] = [
+                'id' => $paymentMethod->id,
+                'system' => 'own',
+                'name' => $paymentMethod->name,
+                'image' => [],
+                'postpay' => false,
+                'extra_costs' => $paymentMethod->extra_costs,
+                'additional_info' => $paymentMethod->additional_info,
+                'payment_instructions' => $paymentMethod->payment_instructions,
+                'deposit_calculation' => $paymentMethod->deposit_calculation
+            ];
+        }
+
+        if (Customsetting::get('mollie_connected')) {
+            foreach (Mollie::getPaymentMethods() as $paymentMethod) {
+                if ($paymentMethod->active) {
+                    $paymentMethods[] = [
+                        'id' => 'mollie_' . $paymentMethod->id,
+                        'system' => 'mollie',
+                        'image' => [],
+                        'name' => $paymentMethod->description,
+                        'postpay' => false,
+                        'extra_costs' => Customsetting::get('mollie_payment_method_costs_' . $paymentMethod->id, Sites::getActive(), 0),
+                        'additional_info' => '',
+                        'payment_instructions' => '',
+                        'deposit_calculation' => ''
+                    ];
+                }
+            }
+        }
+
+        if (Customsetting::get('paynl_connected')) {
+            foreach (PayNL::getPaymentMethods() as $paymentMethod) {
+                if ($paymentMethod['active'] && ($paymentMethod['min_amount'] / 100) <= self::total() && ($paymentMethod['max_amount'] / 100) >= self::total()) {
+                    $paymentMethods[] = [
+                        'id' => 'paynl_' . $paymentMethod['id'],
+                        'system' => 'paynl',
+                        'image' => [
+                            'original' => 'https://static.pay.nl/' . $paymentMethod['brand']['image'],
+                            '20' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(20)->url(true),
+                            '25' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(25)->url(true),
+                            '50' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(50)->url(true),
+                            '100' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(100)->url(true),
+                        ],
+                        'name' => $paymentMethod['visibleName'],
+                        'postpay' => $paymentMethod['postpay'],
+                        'extra_costs' => Customsetting::get('paynl_payment_method_costs_' . $paymentMethod['id'], Sites::getActive(), 0),
+                        'additional_info' => Customsetting::get('paynl_payment_method_additional_info_' . $paymentMethod['id'], Sites::getActive()),
+                        'payment_instructions' => Customsetting::get('paynl_payment_method_payment_instructions_' . $paymentMethod['id'], Sites::getActive()),
+                        'deposit_calculation' => ''
+                    ];
+                }
+            }
+        }
+
+        return $paymentMethods;
+    }
+
+    public static function getAllPaymentMethods()
+    {
+        $paymentMethods = [];
+        foreach (PaymentMethod::get() as $paymentMethod) {
+            $paymentMethods[] = [
+                'id' => $paymentMethod->id,
+                'system' => 'own',
+                'name' => $paymentMethod->name,
+                'image' => [],
+                'postpay' => false,
+                'extra_costs' => $paymentMethod->extra_costs,
+                'additional_info' => $paymentMethod->additional_info,
+                'payment_instructions' => $paymentMethod->payment_instructions,
+                'deposit_calculation' => $paymentMethod->deposit_calculation,
+            ];
+        }
+        if (Customsetting::get('mollie_connected')) {
+            foreach (Mollie::getPaymentMethods() as $paymentMethod) {
+                $paymentMethods[] = [
+                    'id' => 'mollie_' . $paymentMethod->id,
+                    'system' => 'mollie',
+                    'image' => [],
+                    'name' => $paymentMethod->description,
+                    'postpay' => false,
+                    'extra_costs' => Customsetting::get('mollie_payment_method_costs_' . $paymentMethod->id, Sites::getActive(), 0),
+                    'additional_info' => '',
+                    'payment_instructions' => '',
+                    'deposit_calculation' => '',
+                ];
+            }
+        }
+        if (Customsetting::get('paynl_connected')) {
+            foreach (PayNL::getPaymentMethods() as $paymentMethod) {
+                $paymentMethods[] = [
+                    'id' => 'paynl_' . $paymentMethod['id'],
+                    'system' => 'paynl',
+                    'image' => [
+                        'original' => 'https://static.pay.nl/' . $paymentMethod['brand']['image'],
+                        '20' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(20)->url(true),
+                        '25' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(25)->url(true),
+                        '50' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(50)->url(true),
+                        '100' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(100)->url(true),
+                    ],
+                    'name' => $paymentMethod['visibleName'],
+                    'postpay' => $paymentMethod['postpay'],
+                    'extra_costs' => Customsetting::get('paynl_payment_method_costs_' . $paymentMethod['id'], Sites::getActive(), 0),
+                    'additional_info' => Customsetting::get('paynl_payment_method_additional_info_' . $paymentMethod['id'], Sites::getActive()),
+                    'payment_instructions' => Customsetting::get('paynl_payment_method_payment_instructions_' . $paymentMethod['id'], Sites::getActive()),
+                    'deposit_calculation' => '',
+                ];
+            }
+        }
+
+        return $paymentMethods;
+    }
+
+    public static function getPaymentMethodsForDeposit($paymentMethodId)
+    {
+        $paymentMethods = self::getAllPaymentMethods();
+
+        foreach ($paymentMethods as $key => $paymentMethod) {
+            if ($paymentMethod['system'] == 'own') {
+                unset($paymentMethods[$key]);
+            } else {
+                if (!(Customsetting::get("payment_method_{$paymentMethodId}_deposit_payment_method_{$paymentMethod['id']}") ? true : false)) {
+                    unset($paymentMethods[$key]);
+                }
+            }
+        }
+
+        return $paymentMethods;
     }
 
     public static function removeInvalidItems()
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
@@ -487,7 +698,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (! $cartItem->model) {
+            if (!$cartItem->model) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
             } elseif ($cartItem->model->stock() < $cartItem->qty) {
@@ -497,12 +708,12 @@ class ShoppingCart
                 Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (! $cartItemDeleted) {
+            if (!$cartItemDeleted) {
                 $productPrice = $cartItem->model->currentPrice;
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
-                    if (! $cartItemDeleted) {
+                    if (!$cartItemDeleted) {
                         $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                         if ($thisProductExtraOption) {
                             $options[$productExtraOptionId] = [
@@ -520,7 +731,7 @@ class ShoppingCart
                         }
                     }
                 }
-                if (! $cartItemDeleted) {
+                if (!$cartItemDeleted) {
                     $cartItem->price = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
@@ -530,7 +741,6 @@ class ShoppingCart
                         } catch (Exception $exception) {
                             $cartItemExists = false;
                         }
-
                         try {
                             Cart::get($otherCartItem->rowId);
                             $otherCartItemExists = true;
@@ -551,25 +761,26 @@ class ShoppingCart
                                             Cart::update($cartItem->rowId, $newQuantity);
                                             Cart::remove($otherCartItem->rowId);
                                         }
+
                                     } else {
                                         $hasOnlySingleOptionExtras = true;
                                         $optionsForBothItems = [];
 
                                         foreach ($cartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption->calculate_only_1_quantity) {
+                                            if (!$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption->calculate_only_1_quantity) {
+                                            if (!$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
@@ -619,7 +830,6 @@ class ShoppingCart
     {
         try {
             Cart::get($rowId);
-
             return true;
         } catch (Exception $e) {
             return false;
@@ -656,19 +866,23 @@ class ShoppingCart
         }
 
         return [
-            'subTotal' => Helper::formatPrice($subTotal),
-            'discount' => Helper::formatPrice($discount),
-            'btw' => Helper::formatPrice($btw),
-            'total' => Helper::formatPrice($total),
+            'subTotal' => $subTotal,
+            'subTotalFormatted' => CurrencyHelper::formatPrice($subTotal),
+            'discount' => $discount,
+            'discountFormatted' => CurrencyHelper::formatPrice($discount),
+            'btw' => $btw,
+            'btwFormatted' => CurrencyHelper::formatPrice($btw),
+            'total' => $total,
+            'totalFormatted' => CurrencyHelper::formatPrice($total),
             'shippingCosts' => $shippingCosts,
-            'shippingCostsFormatted' => Helper::formatPrice($shippingCosts),
+            'shippingCostsFormatted' => CurrencyHelper::formatPrice($shippingCosts),
             'paymentCosts' => $paymentCosts,
-            'paymentCostsFormatted' => Helper::formatPrice($paymentCosts),
+            'paymentCostsFormatted' => CurrencyHelper::formatPrice($paymentCosts),
             'postpayPaymentMethod' => PaymentMethods::isPostpayMethod($paymentMethodId),
             'depositRequired' => $depositAmount > 0.00 ? true : false,
             'depositAmount' => $depositAmount,
-            'depositAmountFormatted' => Helper::formatPrice($depositAmount),
-            'depositPaymentMethods' => $depositPaymentMethods,
+            'depositAmountFormatted' => CurrencyHelper::formatPrice($depositAmount),
+            'depositPaymentMethods' => $depositPaymentMethods
         ];
     }
 }

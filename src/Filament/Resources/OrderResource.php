@@ -14,6 +14,7 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Tables\Columns\BadgeColumn;
 use Qubiqx\QcommerceCore\Classes\Helper;
 use Qubiqx\QcommerceCore\Models\Customsetting;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
@@ -154,7 +155,7 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('total')
                     ->label('Totaal')
-                    ->getStateUsing(fn ($record) => Helper::formatPrice($record->total)),
+                    ->getStateUsing(fn ($record) => CurrencyHelper::formatPrice($record->total)),
                 TextColumn::make('created_at')
                     ->label('Aangemaakt op')
                     ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
@@ -179,6 +180,7 @@ class OrderResource extends Resource
             'index' => ListOrders::route('/'),
 //            'create' => CreateOrder::route('/create'),
 //            'edit' => EditOrder::route('/{record}/edit'),
+            'view' => ViewOrder::route('/{record}/view'),
         ];
     }
 }

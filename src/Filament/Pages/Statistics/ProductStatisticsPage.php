@@ -82,7 +82,7 @@ class ProductStatisticsPage extends Page implements HasForms
             $product->amountSold = $orderProducts->where('product_id', $product->id)->sum('price');
             $totalQuantitySold += $product->quantitySold;
             $totalAmountSold += $product->amountSold;
-            $product->amountSold = Helper::formatPrice($product->amountSold);
+            $product->amountSold = CurrencyHelper::formatPrice($product->amountSold);
             $product->currentStock = $product->use_stock ? $product->stock : ($product->stock_status == 'in_stock' ? 100000 : 0);
         }
 
@@ -92,8 +92,8 @@ class ProductStatisticsPage extends Page implements HasForms
 
         $statistics = [
             'totalQuantitySold' => $totalQuantitySold,
-            'totalAmountSold' => Helper::formatPrice($totalAmountSold),
-            'averageCostPerProduct' => Helper::formatPrice($averageCostPerProduct),
+            'totalAmountSold' => CurrencyHelper::formatPrice($totalAmountSold),
+            'averageCostPerProduct' => CurrencyHelper::formatPrice($averageCostPerProduct),
         ];
 
         $graph = [];
