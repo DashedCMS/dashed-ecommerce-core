@@ -6,15 +6,15 @@ use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use Gloudemans\Shoppingcart\Facades\Cart;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
+use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
+use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 
 class ShoppingCart
 {

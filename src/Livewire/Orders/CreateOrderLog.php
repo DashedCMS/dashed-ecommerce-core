@@ -2,12 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
+use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Livewire\Component;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderNoteMail;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
+use Qubiqx\QcommerceEcommerceCore\Mail\OrderNoteMail;
 
 class CreateOrderLog extends Component
 {
