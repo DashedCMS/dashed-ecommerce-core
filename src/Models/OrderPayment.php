@@ -4,6 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
+use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
@@ -30,7 +31,6 @@ class OrderPayment extends Model
 
     protected $appends = [
         'payment_method_name',
-        'amount_formatted',
     ];
 
     public static function boot()
@@ -74,11 +74,6 @@ class OrderPayment extends Model
 
             return '';
         }
-    }
-
-    public function getAmountFormattedAttribute()
-    {
-        return CurrencyHelper::formatPrice($this->amount);
     }
 
     public function changeStatus($newStatus = null, $sendMail = false): string

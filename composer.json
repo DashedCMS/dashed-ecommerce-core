@@ -59,7 +59,8 @@
             ],
             "aliases": {
                 "QcommerceEcommerceCore": "Qubiqx\\QcommerceEcommerceCore\\Facades\\QcommerceEcommerceCore",
-                "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper"
+                "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper",
+                "Orders": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Orders"
             }
         }
     },

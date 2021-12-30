@@ -155,30 +155,32 @@
                             @endif
                         </div>
                     </div>
-                    {{--                    <div class="mt-4 bg-white rounded-md p-4">--}}
-                    {{--                        <h2 class="text-2xl font-bold">--}}
-                    {{--                            Betalingen--}}
-                    {{--                        </h2>--}}
-                    {{--                        <div class="grid grid-cols-3 gap-4 mt-4">--}}
-                    {{--                            <div v-for="payment in $record->orderPayments">--}}
-                    {{--                                <p>--}}
-                    {{--                                    PSP: {{ payment.psp }}--}}
-                    {{--                                </p>--}}
-                    {{--                                <p>--}}
-                    {{--                                    PSP ID: {{ payment.psp_id }}--}}
-                    {{--                                </p>--}}
-                    {{--                                <p>--}}
-                    {{--                                    Betaalmethode: {{ payment.payment_method_name }}--}}
-                    {{--                                </p>--}}
-                    {{--                                <p>--}}
-                    {{--                                    Bedrag: {{ payment.amount_formatted }}--}}
-                    {{--                                </p>--}}
-                    {{--                                <p>--}}
-                    {{--                                    Status: {{ payment.status }}--}}
-                    {{--                                </p>--}}
-                    {{--                            </div>--}}
-                    {{--                        </div>--}}
-                    {{--                    </div>--}}
+                    <div class="mt-4 bg-white rounded-md p-4">
+                        <h2 class="text-2xl font-bold">
+                            Betalingen
+                        </h2>
+                        <div class="grid grid-cols-3 gap-4 mt-4">
+                            @foreach($record->orderPayments as $orderPayment)
+                                <div>
+                                    <p>
+                                        PSP: {{ $orderPayment->psp }}
+                                    </p>
+                                    <p>
+                                        PSP ID: {{ $orderPayment->psp_id }}
+                                    </p>
+                                    <p>
+                                        Betaalmethode: {{ $orderPayment->payment_method_name }}
+                                    </p>
+                                    <p>
+                                        Bedrag: {{ CurrencyHelper::formatPrice($orderPayment->amount) }}
+                                    </p>
+                                    <p>
+                                        Status: {{ $orderPayment->status }}
+                                    </p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                     {{--                    <div class="mt-4 bg-white rounded-md p-4"--}}
                     {{--                         v-if="!$record->credit_for_order_id && keenDeliveryConnected && ($record->status == 'paid' || $record->status == 'waiting_for_confirmation') && !$record->keen_delivery_shipment_id">--}}
                     {{--                        <div class="space-y-4 grid" v-if="!keenDelivery.shippingMethod">--}}
@@ -251,130 +253,132 @@
                     {{--                    </div>--}}
                 </div>
                 <div class="col-span-2 space-y-4">
-                    {{--                    <div class="bg-white rounded-md p-4 space-y-2" v-if="!$record->credit_for_order_id">--}}
-                    {{--                        <select-input v-model="fulfillmentStatus.status" label="Verander fulfillment status">--}}
-                    {{--                            <option :value="key" v-for="(status, key) in fulfillmentStatusses">{{--}}
-                    {{--                                            status.name--}}
-                    {{--                                        }}--}}
-                    {{--                            </option>--}}
-                    {{--                        </select-input>--}}
+                    @if(!$record->credit_for_order_id)
+                        <div class="bg-white rounded-md p-4 space-y-2">
+                            <select-input v-model="fulfillmentStatus.status" label="Verander fulfillment status">
+                                @foreach(Orders::getFulfillmentStatusses() as $key => $status)
+                                    <option value="{{ $key }}">{{ $status }}</option>
+                                @endforeach
+                            </select-input>
 
-                    {{--                        <hr>--}}
+                            {{--                        <hr>--}}
 
-                    {{--                        <div v-if="$record->status == 'pending' || $record->status == 'partially_paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'cancelled'">--}}
-                    {{--                            <text-input v-model="newPaymentForm.newPaymentAmount"--}}
-                    {{--                                        :error="newPaymentForm.errors ? newPaymentForm.errors.newPaymentAmount : ''"--}}
-                    {{--                                        required--}}
-                    {{--                                        :label="'Het bedrag dat is betaald (al voldaan: ' + $record->paidAmount + ')'"></text-input>--}}
-                    {{--                            <button v-on:click="markAsPaid()"--}}
-                    {{--                                    class="btn-secondary w-full">--}}
-                    {{--                                Voeg betaling toe--}}
-                    {{--                            </button>--}}
-                    {{--                        </div>--}}
-                    {{--                        <button v-on:click="startCancelform()"--}}
-                    {{--                                v-if="($record->status == 'paid' || $record->status == 'waiting_for_confirmation') && $record->order_origin == 'own'"--}}
-                    {{--                                class="btn-secondary w-full">--}}
-                    {{--                            Markeer als geannuleerd--}}
-                    {{--                        </button>--}}
-                    {{--                        <button v-on:click="submitCancel()"--}}
-                    {{--                                v-if="($record->status == 'paid' || $record->status == 'waiting_for_confirmation') && $record->order_origin != 'own'"--}}
-                    {{--                                class="btn-secondary w-full">--}}
-                    {{--                            Markeer als geannuleerd--}}
-                    {{--                        </button>--}}
-                    {{--                        <div v-if="$record->montaPortalOrder && $record->montaPortal$record->pushed_to_montaportal == 2">--}}
-                    {{--                            <p v-if="$record->montaPortal$record->error">Error: $record->montaPortal$record->error</p>--}}
-                    {{--                            <button v-on:click="repushToMontaportal()"--}}
-                    {{--                                    class="btn-secondary w-full">--}}
-                    {{--                                Opnieuw naar Montaportal pushen--}}
-                    {{--                            </button>--}}
-                    {{--                        </div>--}}
-                    {{--                        <template v-if="$record->status == 'partially_paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'paid'">--}}
-                    {{--                            <hr>--}}
-                    {{--                            <text-input v-model="orderNotificationForm.email"--}}
-                    {{--                                        :error="orderNotificationForm.errors ? orderNotificationForm.errors.email : ''"--}}
-                    {{--                                        required--}}
-                    {{--                                        type="email"--}}
-                    {{--                                        label="Bestelbevestiging versturen naar"></text-input>--}}
-                    {{--                            <button v-on:click="sendOrderNotification()"--}}
-                    {{--                                    class="btn-secondary w-full">--}}
-                    {{--                                Stuur bevestiging--}}
-                    {{--                            </button>--}}
-                    {{--                        </template>--}}
-                    {{--                    </div>--}}
-                    {{--                    <div class="bg-white rounded-md p-4 space-y-2" v-else>--}}
-                    {{--                        <select-input v-model="returnStatus.status" label="Verander retour status">--}}
-                    {{--                            <option value="unhandled">Niet afgehandeld</option>--}}
-                    {{--                            <option value="handled">Afgehandeld</option>--}}
-                    {{--                            <option value="received">Ontvangen</option>--}}
-                    {{--                            <option value="shipped">Onderweg</option>--}}
-                    {{--                            <option value="waiting_for_return">Wachten op retour</option>--}}
-                    {{--                        </select-input>--}}
-                    {{--                    </div>--}}
-                    {{--                    <div class="bg-white rounded-md p-4">--}}
-                    {{--                        <div class="space-y-4">--}}
-                    {{--                            <img class="mx-auto h-20 w-20 rounded-full lg:w-24 lg:h-24"--}}
-                    {{--                                 :src="$record->profilePicture"--}}
-                    {{--                                 alt="">--}}
-                    {{--                            <div class="space-y-2 text-center">--}}
-                    {{--                                <div class="text-xs font-medium lg:text-sm grid">--}}
-                    {{--                                    <h3>{{ $record->name }}</h3>--}}
-                    {{--                                    <a :href="'tel:' + $record->phone_number" class="text-indigo-600"--}}
-                    {{--                                       v-if="$record->phone_number">{{ $record->phone_number }}</a>--}}
-                    {{--                                    <a :href="'mailto:' + $record->email" class="text-indigo-600">{{--}}
-                    {{--                                                    $record->email--}}
-                    {{--                                                }}</a>--}}
-                    {{--                                </div>--}}
-                    {{--                            </div>--}}
-                    {{--                        </div>--}}
-                    {{--                        <hr class="my-4">--}}
-                    {{--                        <div>--}}
-                    {{--                            <ul class="divide-y divide-gray-200">--}}
-                    {{--                                <li class="py-4" v-for="log in orderLogs">--}}
-                    {{--                                    <div class="flex space-x-3">--}}
-                    {{--                                        <img class="h-6 w-6 rounded-full" :src="log.profilePicture" alt="">--}}
-                    {{--                                        <div class="flex-1 space-y-1">--}}
-                    {{--                                            <div class="flex items-center justify-between">--}}
-                    {{--                                                <h3 class="text-sm font-medium">{{ log.name }}</h3>--}}
-                    {{--                                                <p class="text-sm text-gray-500">{{--}}
-                    {{--                                                                log.createdAtFormatted--}}
-                    {{--                                                            }}</p>--}}
-                    {{--                                            </div>--}}
-                    {{--                                            <p class="text-sm text-gray-500">{{ log.tag }}</p>--}}
-                    {{--                                            <p class="text-sm text-gray-500" v-if="log.public_for_customer">--}}
-                    {{--                                                Klant heeft een email gehad</p>--}}
-                    {{--                                            <p class="text-sm text-gray-900" v-if="log.note"--}}
-                    {{--                                               v-html="log.note"></p>--}}
-                    {{--                                        </div>--}}
-                    {{--                                    </div>--}}
-                    {{--                                </li>--}}
-                    {{--                                <li class="py-4">--}}
-                    {{--                                    <div class="flex space-x-3">--}}
-                    {{--                                        <img class="h-6 w-6 rounded-full" :src="$page.props.user.profilePicture"--}}
-                    {{--                                             alt="">--}}
-                    {{--                                        <form @submit.prevent="submitNewNote" class="flex-1 space-y-1">--}}
-                    {{--                                            <div class="flex items-center">--}}
-                    {{--                                                <input id="public_for_customer"--}}
-                    {{--                                                       v-model="newNote.public_for_customer"--}}
-                    {{--                                                       type="checkbox"--}}
-                    {{--                                                       class="form-checkbox h-4 w-4 text-secondary-600 transition duration-150 ease-in-out">--}}
-                    {{--                                                <label for="public_for_customer"--}}
-                    {{--                                                       class="ml-2 block text-sm leading-5 text-gray-900">--}}
-                    {{--                                                    Moet de klant een notificatie mail krijgen met deze inhoud?--}}
-                    {{--                                                </label>--}}
-                    {{--                                            </div>--}}
-                    {{--                                            <textarea-input v-model="newNote.note" label="Maak een notitie"--}}
-                    {{--                                                            rows="3"--}}
-                    {{--                                                            :error="newNote.errors ? newNote.errors.note : ''"></textarea-input>--}}
-                    {{--                                            <loading-button :loading="newNote.processing"--}}
-                    {{--                                                            class="btn-secondary float-right my-4"--}}
-                    {{--                                                            type="submit">Notitie aanmaken--}}
-                    {{--                                            </loading-button>--}}
-                    {{--                                        </form>--}}
-                    {{--                                    </div>--}}
-                    {{--                                </li>--}}
-                    {{--                            </ul>--}}
-                    {{--                        </div>--}}
-                    {{--                    </div>--}}
+                            {{--                        <div v-if="$record->status == 'pending' || $record->status == 'partially_paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'cancelled'">--}}
+                            {{--                            <text-input v-model="newPaymentForm.newPaymentAmount"--}}
+                            {{--                                        :error="newPaymentForm.errors ? newPaymentForm.errors.newPaymentAmount : ''"--}}
+                            {{--                                        required--}}
+                            {{--                                        :label="'Het bedrag dat is betaald (al voldaan: ' + $record->paidAmount + ')'"></text-input>--}}
+                            {{--                            <button v-on:click="markAsPaid()"--}}
+                            {{--                                    class="btn-secondary w-full">--}}
+                            {{--                                Voeg betaling toe--}}
+                            {{--                            </button>--}}
+                            {{--                        </div>--}}
+                            {{--                        <button v-on:click="startCancelform()"--}}
+                            {{--                                v-if="($record->status == 'paid' || $record->status == 'waiting_for_confirmation') && $record->order_origin == 'own'"--}}
+                            {{--                                class="btn-secondary w-full">--}}
+                            {{--                            Markeer als geannuleerd--}}
+                            {{--                        </button>--}}
+                            {{--                        <button v-on:click="submitCancel()"--}}
+                            {{--                                v-if="($record->status == 'paid' || $record->status == 'waiting_for_confirmation') && $record->order_origin != 'own'"--}}
+                            {{--                                class="btn-secondary w-full">--}}
+                            {{--                            Markeer als geannuleerd--}}
+                            {{--                        </button>--}}
+                            {{--                        <div v-if="$record->montaPortalOrder && $record->montaPortal$record->pushed_to_montaportal == 2">--}}
+                            {{--                            <p v-if="$record->montaPortal$record->error">Error: $record->montaPortal$record->error</p>--}}
+                            {{--                            <button v-on:click="repushToMontaportal()"--}}
+                            {{--                                    class="btn-secondary w-full">--}}
+                            {{--                                Opnieuw naar Montaportal pushen--}}
+                            {{--                            </button>--}}
+                            {{--                        </div>--}}
+                            {{--                        <template v-if="$record->status == 'partially_paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'paid'">--}}
+                            {{--                            <hr>--}}
+                            {{--                            <text-input v-model="orderNotificationForm.email"--}}
+                            {{--                                        :error="orderNotificationForm.errors ? orderNotificationForm.errors.email : ''"--}}
+                            {{--                                        required--}}
+                            {{--                                        type="email"--}}
+                            {{--                                        label="Bestelbevestiging versturen naar"></text-input>--}}
+                            {{--                            <button v-on:click="sendOrderNotification()"--}}
+                            {{--                                    class="btn-secondary w-full">--}}
+                            {{--                                Stuur bevestiging--}}
+                            {{--                            </button>--}}
+                            {{--                        </template>--}}
+                        </div>
+                    @else
+                        <div class="bg-white rounded-md p-4 space-y-2">
+                            {{--                        <select-input v-model="returnStatus.status" label="Verander retour status">--}}
+                            {{--                            <option value="unhandled">Niet afgehandeld</option>--}}
+                            {{--                            <option value="handled">Afgehandeld</option>--}}
+                            {{--                            <option value="received">Ontvangen</option>--}}
+                            {{--                            <option value="shipped">Onderweg</option>--}}
+                            {{--                            <option value="waiting_for_return">Wachten op retour</option>--}}
+                            {{--                        </select-input>--}}
+                            {{--                    </div>--}}
+                            {{--                    <div class="bg-white rounded-md p-4">--}}
+                            {{--                        <div class="space-y-4">--}}
+                            {{--                            <img class="mx-auto h-20 w-20 rounded-full lg:w-24 lg:h-24"--}}
+                            {{--                                 :src="$record->profilePicture"--}}
+                            {{--                                 alt="">--}}
+                            {{--                            <div class="space-y-2 text-center">--}}
+                            {{--                                <div class="text-xs font-medium lg:text-sm grid">--}}
+                            {{--                                    <h3>{{ $record->name }}</h3>--}}
+                            {{--                                    <a :href="'tel:' + $record->phone_number" class="text-indigo-600"--}}
+                            {{--                                       v-if="$record->phone_number">{{ $record->phone_number }}</a>--}}
+                            {{--                                    <a :href="'mailto:' + $record->email" class="text-indigo-600">{{--}}
+                            {{--                                                    $record->email--}}
+                            {{--                                                }}</a>--}}
+                            {{--                                </div>--}}
+                            {{--                            </div>--}}
+                            {{--                        </div>--}}
+                            {{--                        <hr class="my-4">--}}
+                            {{--                        <div>--}}
+                            {{--                            <ul class="divide-y divide-gray-200">--}}
+                            {{--                                <li class="py-4" v-for="log in orderLogs">--}}
+                            {{--                                    <div class="flex space-x-3">--}}
+                            {{--                                        <img class="h-6 w-6 rounded-full" :src="log.profilePicture" alt="">--}}
+                            {{--                                        <div class="flex-1 space-y-1">--}}
+                            {{--                                            <div class="flex items-center justify-between">--}}
+                            {{--                                                <h3 class="text-sm font-medium">{{ log.name }}</h3>--}}
+                            {{--                                                <p class="text-sm text-gray-500">{{--}}
+                            {{--                                                                log.createdAtFormatted--}}
+                            {{--                                                            }}</p>--}}
+                            {{--                                            </div>--}}
+                            {{--                                            <p class="text-sm text-gray-500">{{ log.tag }}</p>--}}
+                            {{--                                            <p class="text-sm text-gray-500" v-if="log.public_for_customer">--}}
+                            {{--                                                Klant heeft een email gehad</p>--}}
+                            {{--                                            <p class="text-sm text-gray-900" v-if="log.note"--}}
+                            {{--                                               v-html="log.note"></p>--}}
+                            {{--                                        </div>--}}
+                            {{--                                    </div>--}}
+                            {{--                                </li>--}}
+                            {{--                                <li class="py-4">--}}
+                            {{--                                    <div class="flex space-x-3">--}}
+                            {{--                                        <img class="h-6 w-6 rounded-full" :src="$page.props.user.profilePicture"--}}
+                            {{--                                             alt="">--}}
+                            {{--                                        <form @submit.prevent="submitNewNote" class="flex-1 space-y-1">--}}
+                            {{--                                            <div class="flex items-center">--}}
+                            {{--                                                <input id="public_for_customer"--}}
+                            {{--                                                       v-model="newNote.public_for_customer"--}}
+                            {{--                                                       type="checkbox"--}}
+                            {{--                                                       class="form-checkbox h-4 w-4 text-secondary-600 transition duration-150 ease-in-out">--}}
+                            {{--                                                <label for="public_for_customer"--}}
+                            {{--                                                       class="ml-2 block text-sm leading-5 text-gray-900">--}}
+                            {{--                                                    Moet de klant een notificatie mail krijgen met deze inhoud?--}}
+                            {{--                                                </label>--}}
+                            {{--                                            </div>--}}
+                            {{--                                            <textarea-input v-model="newNote.note" label="Maak een notitie"--}}
+                            {{--                                                            rows="3"--}}
+                            {{--                                                            :error="newNote.errors ? newNote.errors.note : ''"></textarea-input>--}}
+                            {{--                                            <loading-button :loading="newNote.processing"--}}
+                            {{--                                                            class="btn-secondary float-right my-4"--}}
+                            {{--                                                            type="submit">Notitie aanmaken--}}
+                            {{--                                            </loading-button>--}}
+                            {{--                                        </form>--}}
+                            {{--                                    </div>--}}
+                            {{--                                </li>--}}
+                            {{--                            </ul>--}}
+                            {{--                        </div>--}}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
