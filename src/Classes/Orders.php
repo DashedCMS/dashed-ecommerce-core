@@ -21,6 +21,7 @@ class Orders
             'shipped' => 'Verzonden',
         ];
     }
+
     public static function getReturnStatusses()
     {
         return [

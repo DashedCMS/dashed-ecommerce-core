@@ -30,7 +30,7 @@ class OrderProduct extends Model
     ];
 
     protected $casts = [
-      'product_extras' => 'array'
+      'product_extras' => 'array',
     ];
 
     public static function boot()

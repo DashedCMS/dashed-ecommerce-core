@@ -4,7 +4,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Contracts\View\View;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 
 class ViewOrder extends ViewRecord
@@ -26,11 +25,10 @@ class ViewOrder extends ViewRecord
                 ->openUrlInNewTab(),
             ButtonAction::make('Download factuur')
                 ->url($this->record->downloadInvoiceUrl())
-                ->hidden(!$this->record->downloadInvoiceUrl()),
+                ->hidden(! $this->record->downloadInvoiceUrl()),
             ButtonAction::make('Download pakbon')
                 ->url($this->record->downloadPackingslipUrl())
-                ->hidden(!$this->record->downloadPackingslipUrl()),
+                ->hidden(! $this->record->downloadPackingslipUrl()),
         ];
     }
-
 }
