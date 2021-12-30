@@ -284,7 +284,6 @@
                                 :order="$record"></livewire:change-order-retour-status>
                         @endif
                     </div>
-                    {{--                    <livewire:show-order-logs></livewire:show-order-logs>--}}
                     <div class="bg-white rounded-md p-4">
                         <div class="space-y-4">
                             <img class="mx-auto h-20 rounded-full lg:h-24"
@@ -310,7 +309,9 @@
                             @foreach($record->logs as $log)
                                 <li class="py-4">
                                     <div class="flex space-x-3">
-                                        <img class="h-6 w-6 rounded-full" src="{{ Helper::getProfilePicture($record->user ? $record->user->email : $record->email) }}" alt="">
+                                        <img class="h-6 w-6 rounded-full"
+                                             src="{{ Helper::getProfilePicture($record->user ? $record->user->email : $record->email) }}"
+                                             alt="">
                                         <div class="flex-1 space-y-1">
                                             <div class="flex items-center justify-between">
                                                 <h3 class="text-sm font-medium">{{ $log->user_id ? $log->user->name : ($record->user ? $record->user->name : (\Illuminate\Support\Str::contains('system', $record->tag) ? 'System' : $record->name)) }}</h3>
@@ -331,29 +332,7 @@
                                 </li>
                             @endforeach
                             <li class="py-4">
-                                <div class="flex space-x-3">
-                                    <img class="h-6 w-6 rounded-full" :src="$page.props.user.profilePicture"
-                                         alt="">
-                                    <form @submit.prevent="submitNewNote" class="flex-1 space-y-1">
-                                        <div class="flex items-center">
-                                            <input id="public_for_customer"
-                                                   v-model="newNote.public_for_customer"
-                                                   type="checkbox"
-                                                   class="form-checkbox h-4 w-4 text-secondary-600 transition duration-150 ease-in-out">
-                                            <label for="public_for_customer"
-                                                   class="ml-2 block text-sm leading-5 text-gray-900">
-                                                Moet de klant een notificatie mail krijgen met deze inhoud?
-                                            </label>
-                                        </div>
-                                        <textarea-input v-model="newNote.note" label="Maak een notitie"
-                                                        rows="3"
-                                                        :error="newNote.errors ? newNote.errors.note : ''"></textarea-input>
-                                        <loading-button :loading="newNote.processing"
-                                                        class="btn-secondary float-right my-4"
-                                                        type="submit">Notitie aanmaken
-                                        </loading-button>
-                                    </form>
-                                </div>
+                                <livewire:create-order-log :order="$record"></livewire:create-order-log>
                             </li>
                         </ul>
                     </div>

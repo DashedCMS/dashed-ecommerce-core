@@ -4,6 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore;
 
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -58,6 +59,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('change-order-retour-status', ChangeOrderRetourStatus::class);
         Livewire::component('add-payment-to-order', AddPaymentToOrder::class);
         Livewire::component('send-order-confirmation-to-email', SendOrderConfirmationToEmail::class);
+        Livewire::component('create-order-log', CreateOrderLog::class);
     }
 
     public function configurePackage(Package $package): void

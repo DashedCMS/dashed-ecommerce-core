@@ -61,7 +61,7 @@
                 "QcommerceEcommerceCore": "Qubiqx\\QcommerceEcommerceCore\\Facades\\QcommerceEcommerceCore",
                 "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper",
                 "Orders": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Orders",
-                "SKUs": "Qubiqx\\QcommerceEcommerceCore\\Classes\\SKUs"
+                "SKUs": "Qubiqx\\QcommerceEcommerceCore\\Classes\\SKUs",
             }
         }
     },
