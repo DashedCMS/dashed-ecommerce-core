@@ -2,10 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 
 class SendOrderConfirmationToEmail extends Component
 {
@@ -15,7 +13,7 @@ class SendOrderConfirmationToEmail extends Component
     protected $rules = [
       'email' => [
           'required',
-          'email:rfc'
+          'email:rfc',
       ],
     ];
 

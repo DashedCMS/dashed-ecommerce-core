@@ -2,22 +2,20 @@
 
 namespace Qubiqx\QcommerceEcommerceCore;
 
-use Filament\PluginServiceProvider;
 use Livewire\Livewire;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
+use Filament\PluginServiceProvider;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
@@ -32,6 +30,8 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;

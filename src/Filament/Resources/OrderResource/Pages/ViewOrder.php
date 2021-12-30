@@ -14,7 +14,7 @@ class ViewOrder extends ViewRecord
 
     protected $listeners = [
         'refreshPage' => 'render',
-        'notify' => 'message'
+        'notify' => 'message',
     ];
 
     protected function getTitle(): string
@@ -30,10 +30,10 @@ class ViewOrder extends ViewRecord
                 ->openUrlInNewTab(),
             ButtonAction::make('Download factuur')
                 ->url($this->record->downloadInvoiceUrl())
-                ->hidden(!$this->record->downloadInvoiceUrl()),
+                ->hidden(! $this->record->downloadInvoiceUrl()),
             ButtonAction::make('Download pakbon')
                 ->url($this->record->downloadPackingslipUrl())
-                ->hidden(!$this->record->downloadPackingslipUrl()),
+                ->hidden(! $this->record->downloadPackingslipUrl()),
         ];
     }
 

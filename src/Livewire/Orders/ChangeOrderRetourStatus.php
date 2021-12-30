@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 
 class ChangeOrderRetourStatus extends Component

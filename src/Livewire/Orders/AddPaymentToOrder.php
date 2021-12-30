@@ -2,9 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 
 class AddPaymentToOrder extends Component
 {
@@ -15,7 +13,7 @@ class AddPaymentToOrder extends Component
       'paymentAmount' => [
           'required',
           'numeric',
-          'min:0.01'
+          'min:0.01',
       ],
     ];
 
@@ -23,7 +21,7 @@ class AddPaymentToOrder extends Component
     {
         $this->order = $order;
         $this->paymentAmount = $order->total - $order->orderPayments->where('status', 'paid')->sum('amount');
-        if($this->paymentAmount < 0){
+        if ($this->paymentAmount < 0) {
             $this->paymentAmount = 0;
         }
     }
@@ -37,7 +35,7 @@ class AddPaymentToOrder extends Component
     {
         $this->validate();
 
-        if($this->order->status != 'paid'){
+        if ($this->order->status != 'paid') {
             $orderPayment = $this->order->orderPayments()->create([
                 'psp' => 'own',
                 'payment_method' => 'manual_payment',
