@@ -3,6 +3,11 @@
 namespace Qubiqx\QcommerceEcommerceCore;
 
 use Filament\PluginServiceProvider;
+use Livewire\Livewire;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -48,6 +53,11 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             $schedule = app(Schedule::class);
 //            $schedule->command(CreateSitemap::class)->daily();
         });
+
+        Livewire::component('change-order-fulfillment-status', ChangeOrderFulfillmentStatus::class);
+        Livewire::component('change-order-retour-status', ChangeOrderRetourStatus::class);
+        Livewire::component('add-payment-to-order', AddPaymentToOrder::class);
+        Livewire::component('send-order-confirmation-to-email', SendOrderConfirmationToEmail::class);
     }
 
     public function configurePackage(Package $package): void

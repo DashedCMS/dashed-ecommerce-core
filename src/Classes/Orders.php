@@ -4,10 +4,10 @@ namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Qubiqx\QcommerceEcommerce\Models\Order;
-use Qubiqx\QcommerceEcommerce\Models\OrderLog;
 use Qubiqx\QcommerceEcommerceCore\Mail\OrderConfirmationMail;
 use Qubiqx\QcommerceEcommerceCore\Mail\PreOrderConfirmationMail;
+use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 
 class Orders
 {

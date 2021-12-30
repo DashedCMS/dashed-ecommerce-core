@@ -233,7 +233,7 @@
                                                         <tbody>
                                                         <tr>
                                                             <?php
-                                                            $site = \Qubiqx\Qcommerce\Models\Customsetting::where('name', 'site_name')->thisSite()->first();
+                                                            $site = Customsetting::where('name', 'site_name')->thisSite()->first();
                                                             if ($site) {
                                                                 $logo = $site->getFirstMedia('logo');
                                                             } else {
