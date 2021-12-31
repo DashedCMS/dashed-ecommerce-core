@@ -11,7 +11,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
-//use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -76,7 +75,7 @@ class ExportInvoicesPage extends Page implements HasForms
         $orders = $orders->get();
 
         if ($this->form->getState()['sort'] == 'merged') {
-            $pdfMerger = PdfMerger::init();
+            $pdfMerger = PDFMerger::init();
 
             foreach ($orders as $order) {
                 $url = $order->downloadInvoiceUrl();
