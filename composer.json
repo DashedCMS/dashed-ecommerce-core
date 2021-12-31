@@ -37,7 +37,10 @@
         "psr-4": {
             "Qubiqx\\QcommerceEcommerceCore\\": "src",
             "Qubiqx\\QcommerceEcommerceCore\\Database\\Factories\\": "database/factories"
-        }
+        },
+        "files": [
+            "src/Helpers/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

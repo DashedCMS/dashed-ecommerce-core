@@ -27,6 +27,7 @@ class PaymentMethod extends Model
         'postpay',
         'psp',
         'psp_id',
+        'image',
         'active',
     ];
 

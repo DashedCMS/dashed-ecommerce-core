@@ -18,6 +18,7 @@ class ExtendPaymentMethodsForExternPsps extends Migration
             $table->boolean('postpay')->default(0);
             $table->string('psp')->default('own');
             $table->string('psp_id')->nullable();
+            $table->string('image')->nullable();
         });
     }
 
