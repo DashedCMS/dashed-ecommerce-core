@@ -11,4 +11,9 @@ class CreateShippingMethod extends CreateRecord
     use Translatable;
 
     protected static string $resource = ShippingMethodResource::class;
+
+    public function beforeFill()
+    {
+        $this->data['variables'] = [];
+    }
 }

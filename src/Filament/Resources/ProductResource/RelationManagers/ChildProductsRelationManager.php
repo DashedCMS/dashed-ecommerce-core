@@ -14,6 +14,7 @@ use Filament\Resources\RelationManagers\HasManyRelationManager;
 class ChildProductsRelationManager extends HasManyRelationManager
 {
     protected static string $relationship = 'childProducts';
+    protected static string $view = 'qcommerce-ecommerce-core::products.child-products.table';
 
     protected static ?string $recordTitleAttribute = 'name';
 

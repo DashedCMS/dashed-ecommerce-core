@@ -117,7 +117,7 @@ class ProductCategoryResource extends Resource
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('parentProductCategory.name')
-                    ->label('Bovenliggende category')
+                    ->label('Bovenliggende categorie')
                     ->sortable()
                     ->searchable(),
             ])

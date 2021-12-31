@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
+use Dompdf\Exception;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
@@ -10,7 +11,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
-use LynX39\LaraPdfMerger\Facades\PdfMerger;
+//use LynX39\LaraPdfMerger\Facades\PdfMerger;
+use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -63,7 +65,7 @@ class ExportInvoicesPage extends Page implements HasForms
 
     public function submit()
     {
-        $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
+        $orders = Order::with(['orderProducts', 'orderProducts.product'])->where('order_origin', 'own')->calculatableForStats();
         if ($this->form->getState()['start_date'] != null) {
             $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
         }
@@ -77,13 +79,15 @@ class ExportInvoicesPage extends Page implements HasForms
             $pdfMerger = PdfMerger::init();
 
             foreach ($orders as $order) {
-                $invoicePath = storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
-                $order->downloadInvoiceUrl();
-                $pdfMerger->addPdf($invoicePath, 'all');
+                $url = $order->downloadInvoiceUrl();
+                if ($url) {
+                    $invoicePath = storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                    $pdfMerger->addPdf($invoicePath, 'all');
+                }
             }
 
             $pdfMerger->merge();
-            $pdfMerger->save(storage_path('app/exports/invoices/exported-invoice.pdf'));
+            $pdfMerger->download();
         } elseif ($this->form->getState()['sort'] == 'combined') {
             $subTotal = 0;
             $btw = 0;
@@ -139,13 +143,13 @@ class ExportInvoicesPage extends Page implements HasForms
             $output = $pdf->output();
 
             $invoicePath = '/exports/invoices/exported-invoice.pdf';
-            Storage::put($invoicePath, $output);
+            Storage::disk('public')->put($invoicePath, $output);
         } else {
             $this->notify('error', 'De export kon niet worden gemaakt');
         }
 
         $this->notify('success', 'De export is gedownload');
 
-        return Storage::download('/exports/invoices/exported-invoice.pdf');
+        return Storage::disk('public')->download('/exports/invoices/exported-invoice.pdf');
     }
 }

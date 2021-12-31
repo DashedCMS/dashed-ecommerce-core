@@ -78,11 +78,11 @@ class ShippingZoneResource extends Resource
                             ->label('Verberg BTW op de factuur bij het kiezen van deze verzendzone'),
                         MultiSelect::make('zones')
                             ->label('Geactiveerde regio\'s')
-                            ->options(collect(Countries::getCountries())->pluck('name'))
+                            ->options(collect(Countries::getCountries())->pluck('name')->toArray())
                             ->required(),
                         MultiSelect::make('disabled_payment_method_ids')
                             ->label('Deactiveer betalingsmethodes voor deze verzendzone')
-                            ->options(collect(PaymentMethods::get())->pluck('name', 'id')),
+                            ->options(collect(PaymentMethods::get())->pluck('name', 'id')->toArray()),
                     ]),
             ]);
     }

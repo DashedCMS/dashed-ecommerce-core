@@ -232,7 +232,7 @@
                     <td>
                         {{$orderProduct->name}}
                         @if($orderProduct->product_extras)
-                            @foreach(json_decode($orderProduct->product_extras, true) as $option)
+                            @foreach($orderProduct->product_extras as $option)
                                 <br>
                                 <small>{{$option['name']}}: {{$option['value']}}</small>
                             @endforeach

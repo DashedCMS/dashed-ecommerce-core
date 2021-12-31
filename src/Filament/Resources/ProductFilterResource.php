@@ -69,7 +69,6 @@ class ProductFilterResource extends Resource
                 TextColumn::make('product_filter_values_amount')
                     ->label('Aantal waardes')
                     ->sortable()
-                    ->searchable()
                     ->getStateUsing(fn ($record) => $record->productFilterOptions->count()),
             ])
             ->filters([

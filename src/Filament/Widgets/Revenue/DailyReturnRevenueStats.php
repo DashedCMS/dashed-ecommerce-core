@@ -4,6 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
+use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 

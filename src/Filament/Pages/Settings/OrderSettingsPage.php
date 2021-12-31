@@ -291,7 +291,7 @@ class OrderSettingsPage extends Page implements HasForms
                     unset($emails[$key]);
                 }
             }
-            Customsetting::set('notification_invoice_emails', $emails, $site['id']);
+            Customsetting::set('notification_invoice_emails', json_encode($emails), $site['id']);
             $formState["notification_invoice_emails_{$site['id']}"] = $emails;
         }
 
