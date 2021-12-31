@@ -24,6 +24,10 @@ class PaymentMethod extends Model
         'extra_costs',
         'available_from_amount',
         'deposit_calculation',
+        'postpay',
+        'psp',
+        'psp_id',
+        'active',
     ];
 
     public $translatable = [

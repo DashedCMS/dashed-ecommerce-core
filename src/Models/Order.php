@@ -1138,7 +1138,6 @@ class Order extends Model
     public function activateReviewEmailsToBeSend()
     {
         OrderIsPushableForReviewEvent::dispatch($this);
-//        Webwinkelkeur::sendReviewEmail($this);
     }
 
     public function downloadInvoiceUrl()
