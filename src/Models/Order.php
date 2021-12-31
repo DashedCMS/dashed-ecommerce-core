@@ -12,8 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceEcommerceCore\Events\Orders\MarkOrderAsPushableForReviewEvent;
-use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderIsPushableForReviewEvent;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
@@ -30,6 +28,7 @@ use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderConfirmationMail;
 use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Qubiqx\QcommerceEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 use Qubiqx\QcommerceEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
+use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderIsPushableForReviewEvent;
 
 class Order extends Model
 {
