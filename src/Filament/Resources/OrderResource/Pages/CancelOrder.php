@@ -2,17 +2,17 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\TextInput;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\ViewRecord;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
+use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 
 class CancelOrder extends ViewRecord implements HasForms
@@ -70,7 +70,7 @@ class CancelOrder extends ViewRecord implements HasForms
             Section::make('Retour aanmaken')
                 ->schema([
                     Placeholder::make('')
-                        ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.')
+                        ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
                 ])
                 ->hidden($this->record->order_origin != 'own'),
             Section::make('Bestelde producten')
@@ -78,9 +78,9 @@ class CancelOrder extends ViewRecord implements HasForms
                     TextInput::make('extra_order_line_name')
                         ->required()
                         ->rules([
-                            'required'
+                            'required',
                         ])
-                        ->hidden(fn($get) => !$get('extra_order_line')),
+                        ->hidden(fn ($get) => ! $get('extra_order_line')),
                     TextInput::make('extra_order_line_price')
                         ->required()
                         ->rules([
@@ -89,11 +89,11 @@ class CancelOrder extends ViewRecord implements HasForms
                             'min:0.01',
                             'max:100000',
                         ])
-                        ->hidden(fn($get) => !$get('extra_order_line')),
+                        ->hidden(fn ($get) => ! $get('extra_order_line')),
                 ]))
                 ->columns([
                     'default' => 1,
-                    'lg' => 3
+                    'lg' => 3,
                 ])
                 ->hidden($this->record->order_origin != 'own'),
             Section::make('Overige opties')
@@ -118,7 +118,7 @@ class CancelOrder extends ViewRecord implements HasForms
                                     dan op 0 hierboven)')
                         ->reactive(),
                 ])
-                ->hidden($this->record->order_origin != 'own')
+                ->hidden($this->record->order_origin != 'own'),
         ];
     }
 
@@ -147,8 +147,9 @@ class CancelOrder extends ViewRecord implements HasForms
             $extraOrderLineName = $this->form->getState()['extra_order_line_name'] ?? '';
             $extraOrderLinePrice = $this->form->getState()['extra_order_line_price'] ?? '';
 
-            if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
+            if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
                 $this->notify('danger', 'Je moet tenminste 1 product laten retourneren.');
+
                 return;
             }
 
@@ -156,7 +157,7 @@ class CancelOrder extends ViewRecord implements HasForms
                 $createCreditInvoice = true;
             }
 
-            if (!$createCreditInvoice) {
+            if (! $createCreditInvoice) {
                 $this->record->changeStatus('cancelled', $sendCustomerEmail);
 
                 $this->notify('success', 'Bestelling gemarkeerd als geannuleerd');

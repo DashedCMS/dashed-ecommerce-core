@@ -31,6 +31,7 @@ class ListOrders extends ListRecords
                 ->color('primary')
                 ->action(fn (Collection $records) => function ($records) {
                     $this->notify('success', 'test');
+
                     return redirect('/test');
                     exit;
 

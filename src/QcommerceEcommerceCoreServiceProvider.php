@@ -4,17 +4,16 @@ namespace Qubiqx\QcommerceEcommerceCore;
 
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
-use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
-use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
+use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
@@ -46,6 +45,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyReturnRevenueSt
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyReturnRevenueStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 {
