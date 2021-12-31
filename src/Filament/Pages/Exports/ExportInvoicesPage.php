@@ -3,15 +3,14 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
-use Dompdf\Exception;
 use Filament\Pages\Page;
+use GrofGraf\LaravelPDFMerger\PDFMerger;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
-use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -75,13 +74,13 @@ class ExportInvoicesPage extends Page implements HasForms
         $orders = $orders->get();
 
         if ($this->form->getState()['sort'] == 'merged') {
-            $pdfMerger = PDFMerger::init();
+            $pdfMerger = \PDFMerger::init();
 
             foreach ($orders as $order) {
                 $url = $order->downloadInvoiceUrl();
                 if ($url) {
                     $invoicePath = storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
-                    $pdfMerger->addPdf($invoicePath, 'all');
+                    $pdfMerger->addPathToPDF($invoicePath, 'all');
                 }
             }
 
