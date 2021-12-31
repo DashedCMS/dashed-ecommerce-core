@@ -50,7 +50,7 @@ class ShippingMethodResource extends Resource
                         ->label('Hangt onder verzendzone')
                         ->required(),
                 ])
-                ->collapsed(fn($livewire) => $livewire instanceof EditShippingMethod),
+                ->collapsed(fn ($livewire) => $livewire instanceof EditShippingMethod),
             Section::make('Content')
                 ->schema([
                     TextInput::make('name')
@@ -85,7 +85,7 @@ class ShippingMethodResource extends Resource
                         ->rules([
                             'numeric',
                         ])
-                        ->hidden(fn($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
+                        ->hidden(fn ($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
                     Repeater::make('variables')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Met variable berekening kan je per x aantal items rekenen, we rekenen van boven naar beneden')
@@ -103,14 +103,14 @@ class ShippingMethodResource extends Resource
                                 ]),
                         ])
                         ->nullable()
-                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('variable_static_costs')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
                         ->rules([
                             'max:255',
                         ])
-                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('order')
                         ->label('Volgorde van de verzendmethode')
                         ->type('number')
@@ -127,7 +127,7 @@ class ShippingMethodResource extends Resource
                 ->rules([
                     'numeric',
                 ])
-                ->hidden(fn($livewire, $record) => !($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
+                ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
         }
 
         if ($shippingClasses) {

@@ -9,12 +9,12 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
+use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 
 class ProductStatisticsPage extends Page implements HasForms
 {

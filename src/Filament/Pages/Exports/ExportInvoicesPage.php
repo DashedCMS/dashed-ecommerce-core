@@ -3,7 +3,6 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
-use Dompdf\Exception;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
@@ -12,10 +11,10 @@ use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 //use LynX39\LaraPdfMerger\Facades\PdfMerger;
-use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 
 class ExportInvoicesPage extends Page implements HasForms
 {
