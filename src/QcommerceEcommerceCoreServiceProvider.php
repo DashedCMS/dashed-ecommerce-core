@@ -4,6 +4,9 @@ namespace Qubiqx\QcommerceEcommerceCore;
 
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
+use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
+use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -52,7 +55,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
-//            $schedule->command(CreateSitemap::class)->daily();
+            $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
+//            $schedule->command(RecalculatePurchasesCommand::class)->weekly();
+            $schedule->command(CancelOldOrders::class)->everyFifteenMinutes();
         });
 
         Livewire::component('change-order-fulfillment-status', ChangeOrderFulfillmentStatus::class);

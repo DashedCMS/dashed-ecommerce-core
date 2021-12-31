@@ -45,10 +45,10 @@
         } </style>
     <!--[if mso]>
     <xml>
-    <o:OfficeDocumentSettings>
-        <o:AllowPNG/>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-    </o:OfficeDocumentSettings>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
     </xml>
     <![endif]--> <!--[if lte mso 11]>
     <style type="text/css"> .outlook-group-fix {
@@ -171,8 +171,8 @@
     <!-- Body Wrapper --> <!--[if mso | IE]>
     <table align="center" border="0" cellpadding="0" cellspacing="0" class="body-wrapper-outlook" style="width:600px;"
            width="600">
-    <tr>
-        <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+        <tr>
+            <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
     <![endif]-->
     <div class="body-wrapper"
          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding-bottom: 20px; box-shadow: 0 4px 10px #ddd; background: #F2F2F2; background-color: #F2F2F2; margin: 0px auto; max-width: 600px; margin-bottom: 10px;">
@@ -186,11 +186,11 @@
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                     <![endif]--> <!-- Pre-Headers --> <!--[if mso | IE]>
                     <tr>
-                    <td class="pre-header-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="pre-header-outlook"
-                               style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="pre-header-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" class="pre-header-outlook"
+                                   style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <!--[if mso | IE]>
                     </td>
@@ -200,11 +200,11 @@
                     </tr>
                     <![endif]--> <!-- header --> <!--[if mso | IE]>
                     <tr>
-                    <td class="header-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="header-outlook"
-                               style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="header-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" class="header-outlook"
+                                   style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="header"
                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 22px; padding: 15px 0; margin: 0px auto; max-width: 560px;">
@@ -216,7 +216,7 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
+                                        <tr>
                                     <![endif]--> <!-- LOGO --> <!--[if mso | IE]>
                                     <td class="" style="vertical-align:middle;width:140px;">
                                     <![endif]-->
@@ -232,21 +232,17 @@
                                                            style="border-collapse:collapse;border-spacing:0px;">
                                                         <tbody>
                                                         <tr>
-                                                            <?php
-                                                            $site = Customsetting::where('name', 'site_name')->thisSite()->first();
-                                                            if ($site) {
-                                                                $logo = $site->getFirstMedia('logo');
-                                                            } else {
-                                                                $logo = '';
-                                                            }
-                                                            ?>
+                                                            @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                                                             @if($logo)
                                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;width: 160px;"
                                                                     width="160"><a href="{{url('/')}}" target="_blank"
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{Thumbnail::src($logo->getUrl())->heighten(100)->url(true)}}"
+                                                                             src="{{glide($logo, [
+    'h' => 100,
+    'w' => 'auto'
+])}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
                                                                              width="160"> </a></td>
                                                             @endif
@@ -274,8 +270,8 @@
                                                         <!--[if mso | IE]>
                                                         <table role="presentation" border="0" cellpadding="0"
                                                                cellspacing="0" align="center">
-                                                        <tr>
-                                                            <td style="padding:15px 10px;" class="">
+                                                            <tr>
+                                                                <td style="padding:15px 10px;" class="">
                                                         <![endif]--> <a class="link"
                                                                         href="{{url('/')}}"
                                                                         target="_blank"
@@ -309,11 +305,11 @@
                     </tr>
                     <![endif]--> <!-- notice --> <!--[if mso | IE]>
                     <tr>
-                    <td class="notice-wrap-outlook margin-bottom-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0"
-                               class="notice-wrap-outlook margin-bottom-outlook" style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="notice-wrap-outlook margin-bottom-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="notice-wrap-outlook margin-bottom-outlook" style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="notice-wrap margin-bottom"
                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px; margin-bottom: 15px;">
@@ -325,8 +321,8 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:560px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:560px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
@@ -408,11 +404,12 @@
 
                     <!--[if mso | IE]>
                     <tr>
-                    <td class="server-box-one-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="server-box-one-outlook"
-                               style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="server-box-one-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="server-box-one-outlook"
+                                   style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="server-box-one"
                          style="background-color: #fff; padding: 20px 20px 20px 10px; border-radius: 10px; box-sizing: border-box; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px; margin-bottom: 20px;">
@@ -424,8 +421,8 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:560px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:560px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
@@ -490,11 +487,11 @@
 
                     <!-- product list --> <!-- Products List --> <!--[if mso | IE]>
                     <tr>
-                    <td class="products-list-outlook margin-bottom-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0"
-                               class="products-list-outlook margin-bottom-outlook" style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="products-list-outlook margin-bottom-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="products-list-outlook margin-bottom-outlook" style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="products-list margin-bottom"
                          style="padding: 10px 0; background-color: #fff; border-radius: 10px; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px; margin-bottom: 15px;">
@@ -506,8 +503,8 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:560px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:560px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
@@ -537,9 +534,12 @@
                                                                     valign="top"><a
                                                                         href="{{$orderProduct->product ? $orderProduct->product->getUrl() : '#'}}"
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
-                                                                        @if(optional($orderProduct->product)->image)
+                                                                        @if(optional($orderProduct->product)->firstImageUrl)
                                                                             <img
-                                                                                src="{{Thumbnail::src($orderProduct->product->image->getUrl())->widen(100)->url(true)}}"
+                                                                                src="{{ glide($orderProduct->product->firstImageUrl, [
+                                                                                    'h' => 100,
+                                                                                    'w' => 'auto'
+                                                                                ]) }}"
                                                                                 class="products-gallery-image"
                                                                                 style="display: block; width: 80px;"
                                                                                 width="80">@endif </a></td>
@@ -677,11 +677,12 @@
                     <![endif]-->
                     <!--[if mso | IE]>
                     <tr>
-                    <td class="" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="" style="width:560px;"
-                               width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0" class=""
+                                   style="width:560px;"
+                                   width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div
                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px;">
@@ -693,7 +694,7 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
+                                        <tr>
                                     <![endif]--> <!-- address --> <!--[if mso | IE]>
                                     <td class="server-box-first-outlook server-box-two-outlook"
                                         style="vertical-align:top;width:271.04px;">
@@ -792,11 +793,12 @@
                     <![endif]-->
                     <!--[if mso | IE]>
                     <tr>
-                    <td class="server-box-one-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="server-box-one-outlook"
-                               style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="server-box-one-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="server-box-one-outlook"
+                                   style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="server-box-one"
                          style="background-color: #fff; padding: 20px 20px 20px 10px; border-radius: 10px; box-sizing: border-box; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px; margin-bottom: 20px;">
@@ -808,8 +810,8 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:560px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:560px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
@@ -871,11 +873,12 @@
                     @if($order->invoice_street)
                     <!--[if mso | IE]>
                     <tr>
-                    <td class="server-box-one-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="server-box-one-outlook"
-                               style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="server-box-one-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="server-box-one-outlook"
+                                   style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="server-box-one"
                          style="background-color: #fff; padding: 20px 20px 20px 10px; border-radius: 10px; box-sizing: border-box; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px; margin-bottom: 20px;">
@@ -887,8 +890,8 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:560px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:560px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
@@ -949,11 +952,12 @@
                     @if($order->note)
                     <!--[if mso | IE]>
                     <tr>
-                    <td class="server-box-one-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" class="server-box-one-outlook"
-                               style="width:560px;" width="560">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="server-box-one-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="server-box-one-outlook"
+                                   style="width:560px;" width="560">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="server-box-one"
                          style="background-color: #fff; padding: 20px 20px 20px 10px; border-radius: 10px; box-sizing: border-box; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; margin: 0px auto; max-width: 560px; margin-bottom: 20px;">
@@ -965,8 +969,8 @@
                                     align="center">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:560px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:560px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; text-align: left; direction: ltr; display: inline-block; vertical-align: top; width: 100%;">
@@ -976,7 +980,13 @@
                                             <tr>
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; width: 60px; margin-bottom: 10px; vertical-align: top; color: {{Translation::get('primary-color-code', 'emails', '#A0131C')}};"
                                                     class="server-img" width="60" valign="top">
-                                                    <svg style="width: 100%; max-width: 60px;" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                                    <svg style="width: 100%; max-width: 60px;" class="w-6 h-6"
+                                                         fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                         xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                              stroke-width="2"
+                                                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                                    </svg>
                                                 </td>
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 20px; color: #333; padding-left: 10px;">
                                                     <div
@@ -1034,11 +1044,11 @@
                     <!-- footer information -->
                     <!--[if mso | IE]>
                     <tr>
-                    <td class="footer-information-outlook" width="600px">
-                        <table align="center" border="0" cellpadding="0" cellspacing="0"
-                               class="footer-information-outlook" style="width:600px;" width="600">
-                            <tr>
-                                <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
+                        <td class="footer-information-outlook" width="600px">
+                            <table align="center" border="0" cellpadding="0" cellspacing="0"
+                                   class="footer-information-outlook" style="width:600px;" width="600">
+                                <tr>
+                                    <td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;">
                     <![endif]-->
                     <div class="footer-information" style="margin:0px auto;max-width:600px;">
                         <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"
@@ -1048,8 +1058,8 @@
                                 <td style="direction:ltr;font-size:0px;padding:0px;text-align:center;">
                                     <!--[if mso | IE]>
                                     <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="" style="vertical-align:top;width:600px;">
+                                        <tr>
+                                            <td class="" style="vertical-align:top;width:600px;">
                                     <![endif]-->
                                     <div class="column-per-100 outlook-group-fix"
                                          style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">

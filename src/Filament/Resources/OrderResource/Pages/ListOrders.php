@@ -30,17 +30,20 @@ class ListOrders extends ListRecords
                 ->label('Download facturen')
                 ->color('primary')
                 ->action(fn (Collection $records) => function ($records) {
+                    $this->notify('success', 'test');
                     return redirect('/test');
+                    exit;
 
                     return Storage::download('/exports/invoices/exported-invoice.pdf');
-                }),
+                })
+                ->deselectRecordsAfterCompletion(),
         ];
     }
 
     protected function getTableActions(): array
     {
         return array_merge(parent::getTableActions(), [
-            ButtonAction::make('downloadInvoices')
+            ButtonAction::make('quickActions')
                 ->label('Quick')
                 ->color('primary')
                 ->modalHeading('Snel bewerken')

@@ -28,6 +28,17 @@ class ProductExtra extends Model
 
     protected $table = 'qcommerce__product_extras';
 
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($productExtra) {
+            foreach ($productExtra->productExtraOptions as $productExtraOption) {
+                $productExtraOption->delete();
+            }
+        });
+    }
+
     public function product()
     {
         return $this->belongsto(Product::class);

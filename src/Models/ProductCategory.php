@@ -67,6 +67,12 @@ class ProductCategory extends Model
         static::updated(function ($productCategory) {
             Cache::tags(['product-categories'])->flush();
         });
+
+        static::deleting(function ($productCategory) {
+            foreach ($productCategory->getChilds() as $child) {
+                $child->delete();
+            }
+        });
     }
 
     public function scopeSearch($query)

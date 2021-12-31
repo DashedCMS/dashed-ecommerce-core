@@ -25,6 +25,13 @@ class ProductFilterOption extends Model
 
     protected $table = 'qcommerce__product_filter_options';
 
+    protected static function booted()
+    {
+        static::deleting(function ($filterOption) {
+            $filterOption->products()->detach();
+        });
+    }
+
     public function productFilter()
     {
         return $this->belongsTo(ProductFilter::class);

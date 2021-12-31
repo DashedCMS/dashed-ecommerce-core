@@ -232,21 +232,17 @@
                                                            style="border-collapse:collapse;border-spacing:0px;">
                                                         <tbody>
                                                         <tr>
-                                                            <?php
-                                                            $site = Customsetting::where('name', 'site_name')->thisSite()->first();
-                                                            if ($site) {
-                                                                $logo = $site->getFirstMedia('logo');
-                                                            } else {
-                                                                $logo = '';
-                                                            }
-                                                            ?>
+                                                            @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                                                             @if($logo)
                                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;width: 160px;"
                                                                     width="160"><a href="{{url('/')}}" target="_blank"
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{Thumbnail::src($logo->getUrl())->heighten(100)->url(true)}}"
+                                                                             src="{{glide($logo, [
+    'h' => 100,
+    'w' => 'auto'
+])}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
                                                                              width="160"> </a></td>
                                                             @endif
@@ -537,9 +533,12 @@
                                                                     valign="top"><a
                                                                         href="{{$orderProduct->product ? $orderProduct->product->getUrl() : '#'}}"
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
-                                                                        @if(optional($orderProduct->product)->image)
+                                                                        @if(optional($orderProduct->product)->firstImageUrl)
                                                                             <img
-                                                                                src="{{Thumbnail::src($orderProduct->product->image->getUrl())->widen(100)->url(true)}}"
+                                                                                src="{{ glide($orderProduct->product->firstImageUrl, [
+                                                                                    'h' => 100,
+                                                                                    'w' => 'auto'
+                                                                                ]) }}"
                                                                                 class="products-gallery-image"
                                                                                 style="display: block; width: 80px;"
                                                                                 width="80">@endif </a></td>

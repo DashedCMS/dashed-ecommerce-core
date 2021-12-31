@@ -26,6 +26,15 @@ class ProductFilter extends Model
 
     protected $table = 'qcommerce__product_filters';
 
+    protected static function booted()
+    {
+        static::deleting(function ($productFilter) {
+            foreach ($productFilter->productFilterOptions as $option) {
+                $option->delete();
+            }
+        });
+    }
+
     public function scopeSearch($query)
     {
         if (request()->get('search')) {

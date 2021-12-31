@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Tables\Columns\BadgeColumn;
 use Qubiqx\QcommerceCore\Models\Customsetting;
+use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\CancelOrder;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
@@ -180,6 +182,7 @@ class OrderResource extends Resource
 //            'create' => CreateOrder::route('/create'),
 //            'edit' => EditOrder::route('/{record}/edit'),
             'view' => ViewOrder::route('/{record}/view'),
+            'cancel' => CancelOrder::route('/{record}/cancel'),
         ];
     }
 }

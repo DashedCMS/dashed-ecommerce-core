@@ -26,6 +26,14 @@ class ProductCharacteristic extends Model
 
     protected $table = 'qcommerce__product_characteristic';
 
+    protected static function booted()
+    {
+        static::deleting(function ($productCharacteristic) {
+            $productCharacteristic->productCharacteristic()->detach();
+            ProductCharacteristic::where('product_characteristic_id', $productCharacteristic->id)->delete();
+        });
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);
