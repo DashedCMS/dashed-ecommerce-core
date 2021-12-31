@@ -45,12 +45,12 @@ class ExportOrdersPage extends Page implements HasForms
     {
         $orders = Order::isPaidOrReturn();
 
-        if (request()->get('beginDate') != null) {
-            $orders->where('created_at', '>=', Carbon::parse(request()->get('beginDate'))->startOfDay());
+        if ($this->form->getState()['start_date'] != null) {
+            $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
         }
 
-        if (request()->get('endDate') != null) {
-            $orders->where('created_at', '<=', Carbon::parse(request()->get('endDate'))->endOfDay());
+        if ($this->form->getState()['end_date'] != null) {
+            $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['end_date'])->endOfDay());
         }
 
         $orders = $orders->get();
