@@ -49,7 +49,7 @@ use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsW
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 {
-    public static string $name = 'qcommerce-core';
+    public static string $name = 'qcommerce-ecommerce-core';
 
     public function bootingPackage()
     {

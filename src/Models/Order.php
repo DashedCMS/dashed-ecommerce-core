@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceEcommerceCore\Events\Orders\MarkOrderAsPushableForReviewEvent;
+use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderIsPushableForReviewEvent;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
@@ -1135,7 +1137,7 @@ class Order extends Model
 
     public function activateReviewEmailsToBeSend()
     {
-        //Todo: emit and catch in own package
+        OrderIsPushableForReviewEvent::dispatch($this);
 //        Webwinkelkeur::sendReviewEmail($this);
     }
 
