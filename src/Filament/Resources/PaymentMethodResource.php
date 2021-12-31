@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\MultiSelect;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -9,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\BooleanColumn;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
@@ -43,6 +45,69 @@ class PaymentMethodResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $contentSchema = [
+            TextInput::make('name')
+                ->label('Name')
+                ->required()
+                ->maxLength(100)
+                ->rules([
+                    'max:100',
+                ]),
+            Toggle::make('active')
+                ->label('Actief'),
+            Toggle::make('postpay')
+                ->label('Achteraf betaalmethode')
+                ->hidden(fn($record) => $record->psp == 'own'),
+            Textarea::make('additional_info')
+                ->label('Aanvullende gegevens')
+                ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
+                ->rows(2)
+                ->maxLength(1250)
+                ->rules([
+                    'nullable',
+                    'max:1250',
+                ]),
+            Textarea::make('payment_instructions')
+                ->label('Betalingsinstructies')
+                ->helperText('Wordt getoond aan klanten wanneer zij een bestelling hebben geplaatst met deze betaalmethode')
+                ->rows(2)
+                ->maxLength(1250)
+                ->rules([
+                    'nullable',
+                    'max:1250',
+                ]),
+            FileUpload::make('image')
+                ->label('Afbeelding / icon')
+                ->directory('qcommerce/payment-methods')
+                ->image(),
+            TextInput::make('extra_costs')
+                ->label('Extra kosten wanneer deze betalingsmethode wordt gekozen')
+                ->rules([
+                    'numeric',
+                    'max:255',
+                ]),
+            TextInput::make('available_from_amount')
+                ->label('Vanaf hoeveel € moet deze betaalmethode beschikbaar zijn')
+                ->rules([
+                    'numeric',
+                    'max:255',
+                ]),
+            TextInput::make('deposit_calculation')
+                ->label('Calculatie voor de aanbetaling met deze betaalmethode (leeg = geen aanbetaling), let op: hiervoor moet je een PSP gekoppeld hebben & dit werkt niet bij het aanmaken van handmatige orders')
+                ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
+                ->maxLength(255)
+                ->rules([
+                    'nullable',
+                    'max:255',
+                ])
+                ->reactive()
+                ->hidden(fn($record) => $record->psp != 'own'),
+            MultiSelect::make('deposit_calculation_payment_method_ids')
+                ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
+                ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
+                ->hidden(fn($record, \Closure $get) => $record->psp != 'own' || !$get('deposit_calculation')),
+        ];
+
         return $form
             ->schema([
                 Section::make('Globale informatie')
@@ -51,69 +116,13 @@ class PaymentMethodResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return ! (Sites::getAmountOfSites() > 1);
+                                return !(Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
+                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Content')
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Name')
-                            ->required()
-                            ->maxLength(100)
-                            ->rules([
-                                'max:100',
-                            ]),
-                        Toggle::make('active')
-                            ->label('Actief'),
-                        Toggle::make('postpay')
-                            ->label('Achteraf betaalmethode')
-                            ->hidden(fn ($record) => $record->psp == 'own'),
-                        Textarea::make('additional_info')
-                            ->label('Aanvullende gegevens')
-                            ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
-                            ->rows(2)
-                            ->maxLength(1250)
-                            ->rules([
-                                'nullable',
-                                'max:1250',
-                            ]),
-                        Textarea::make('payment_instructions')
-                            ->label('Betalingsinstructies')
-                            ->helperText('Wordt getoond aan klanten wanneer zij een bestelling hebben geplaatst met deze betaalmethode')
-                            ->rows(2)
-                            ->maxLength(1250)
-                            ->rules([
-                                'nullable',
-                                'max:1250',
-                            ]),
-                        FileUpload::make('image')
-                            ->label('Afbeelding / icon')
-                            ->directory('qcommerce/payment-methods')
-                            ->image(),
-                        TextInput::make('extra_costs')
-                            ->label('Extra kosten wanneer deze betalingsmethode wordt gekozen')
-                            ->rules([
-                                'numeric',
-                                'max:255',
-                            ]),
-                        TextInput::make('available_from_amount')
-                            ->label('Vanaf hoeveel € moet deze betaalmethode beschikbaar zijn')
-                            ->rules([
-                                'numeric',
-                                'max:255',
-                            ]),
-                        TextInput::make('deposit_calculation')
-                            ->label('Calculatie voor de aanbetaling met deze betaalmethode (leeg = geen aanbetaling), let op: hiervoor moet je een PSP gekoppeld hebben & dit werkt niet bij het aanmaken van handmatige orders')
-                            ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
-                            ->maxLength(255)
-                            ->rules([
-                                'nullable',
-                                'max:255',
-                            ])
-                            ->hidden(fn ($record) => $record->psp != 'own'),
-                    ]),
+                    ->schema($contentSchema),
             ]);
     }
 
@@ -127,8 +136,15 @@ class PaymentMethodResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
+                TextColumn::make('psp')
+                    ->label('PSP')
+                    ->sortable()
+                    ->searchable(),
+                BooleanColumn::make('active')
+                    ->label('Actief'),
+
             ])
             ->filters([
                 //

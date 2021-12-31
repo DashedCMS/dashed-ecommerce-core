@@ -29,12 +29,17 @@ class PaymentMethod extends Model
         'psp_id',
         'image',
         'active',
+        'deposit_calculation_payment_method_ids',
     ];
 
     public $translatable = [
         'name',
         'additional_info',
         'payment_instructions',
+    ];
+
+    protected $casts = [
+        'deposit_calculation_payment_method_ids' => 'array',
     ];
 
     protected $table = 'qcommerce__payment_methods';

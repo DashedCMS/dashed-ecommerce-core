@@ -19,6 +19,7 @@ class ExtendPaymentMethodsForExternPsps extends Migration
             $table->string('psp')->default('own');
             $table->string('psp_id')->nullable();
             $table->string('image')->nullable();
+            $table->json('deposit_calculation_payment_method_ids')->nullable();
         });
     }
 
