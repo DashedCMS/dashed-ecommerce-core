@@ -2,9 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages;
 
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
-use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
 
 class CreatePaymentMethod extends CreateRecord

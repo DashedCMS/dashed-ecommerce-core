@@ -72,19 +72,19 @@ class StartTransactionRequest extends FormRequest
                 'max:255',
             ],
             'invoice_house_nr' => [
-                Rule::requiredIf(!empty(request()->get('invoice_street'))),
+                Rule::requiredIf(! empty(request()->get('invoice_street'))),
                 'max:255',
             ],
             'invoice_zip_code' => [
-                Rule::requiredIf(!empty(request()->get('invoice_street'))),
+                Rule::requiredIf(! empty(request()->get('invoice_street'))),
                 'max:255',
             ],
             'invoice_city' => [
-                Rule::requiredIf(!empty(request()->get('invoice_street'))),
+                Rule::requiredIf(! empty(request()->get('invoice_street'))),
                 'max:255',
             ],
             'invoice_country' => [
-                Rule::requiredIf(!empty(request()->get('invoice_street'))),
+                Rule::requiredIf(! empty(request()->get('invoice_street'))),
                 'max:255',
             ],
 //            'payment_method' => [
