@@ -11,6 +11,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\BooleanColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
@@ -132,6 +133,7 @@ class PaymentMethodResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('site_id')
                     ->label('Actief op site')
@@ -142,6 +144,8 @@ class PaymentMethodResource extends Resource
                     ->label('PSP')
                     ->sortable()
                     ->searchable(),
+                ImageColumn::make('image')
+                    ->label('Afbeelding'),
                 BooleanColumn::make('active')
                     ->label('Actief'),
 
