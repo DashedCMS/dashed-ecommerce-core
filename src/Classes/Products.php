@@ -4,8 +4,8 @@ namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Cache;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
 class Products
 {
@@ -109,14 +109,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (!$productValidForFilter) {
+                            if (! $productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && !$productValidForFilter) {
+                    if ($filterIsActive && ! $productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -165,7 +165,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
