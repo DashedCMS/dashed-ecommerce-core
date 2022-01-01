@@ -109,11 +109,11 @@ class PaymentMethodResource extends Resource
                     'max:255',
                 ])
                 ->reactive()
-                ->hidden(fn ($record) => !$record || ($record && $record->psp != 'own')),
+                ->hidden(fn ($record) => ! $record || ($record && $record->psp != 'own')),
             MultiSelect::make('deposit_calculation_payment_method_ids')
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn ($record, \Closure $get) => (!$record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
+                ->hidden(fn ($record, \Closure $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
         ];
 
         return $form

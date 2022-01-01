@@ -5,9 +5,8 @@ namespace Qubiqx\QcommerceEcommerceCore\Classes;
 use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
-use Gloudemans\Shoppingcart\Facades\Cart;
-use Qubiqx\QcommerceCore\Classes\Locales;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -17,7 +16,6 @@ use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use function PHPUnit\Framework\assertFalse;
 
 class ShoppingCart
 {
@@ -74,7 +72,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -102,7 +100,7 @@ class ShoppingCart
         $cartTotal = self::total(false, false, $shippingMethodId, $paymentMethodId);
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (!$calculateInclusiveTax) {
+        if (! $calculateInclusiveTax) {
             $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
         }
 
@@ -151,7 +149,7 @@ class ShoppingCart
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (!$calculateInclusiveTax) {
+        if (! $calculateInclusiveTax) {
             $cartTotal = $cartTotal + self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
         }
 
@@ -362,7 +360,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -392,7 +390,7 @@ class ShoppingCart
 
                 $taxTotal += $price;
                 if ($cartItem->model->vat_rate > 0) {
-                    if (!isset($totalAmountForVats[$cartItem->model->vat_rate])) {
+                    if (! isset($totalAmountForVats[$cartItem->model->vat_rate])) {
                         $totalAmountForVats[$cartItem->model->vat_rate] = 0;
                     }
                     $totalAmountForVats[$cartItem->model->vat_rate] += ($cartItem->price * $cartItem->qty);
@@ -452,7 +450,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -527,7 +525,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -546,7 +544,7 @@ class ShoppingCart
 //                            unset($paymentMethods[$key]);
                         }
                     }
-                    if($isCorrectPaymentMethod){
+                    if ($isCorrectPaymentMethod) {
                         $correctPaymentMethods[] = $paymentMethod;
                     }
                 }
@@ -578,7 +576,7 @@ class ShoppingCart
             if ($paymentMethod['system'] == 'own') {
                 unset($paymentMethods[$key]);
             } else {
-                if (!(Customsetting::get("payment_method_{$paymentMethodId}_deposit_payment_method_{$paymentMethod['id']}") ? true : false)) {
+                if (! (Customsetting::get("payment_method_{$paymentMethodId}_deposit_payment_method_{$paymentMethod['id']}") ? true : false)) {
                     unset($paymentMethods[$key]);
                 }
             }
@@ -591,7 +589,7 @@ class ShoppingCart
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode || !$discountCode->isValidForCart()) {
+        if (! $discountCode || ! $discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
@@ -600,7 +598,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (!$cartItem->model) {
+            if (! $cartItem->model) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
             } elseif ($cartItem->model->stock() < $cartItem->qty) {
@@ -610,12 +608,12 @@ class ShoppingCart
                 Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (!$cartItemDeleted) {
+            if (! $cartItemDeleted) {
                 $productPrice = $cartItem->model->currentPrice;
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
-                    if (!$cartItemDeleted) {
+                    if (! $cartItemDeleted) {
                         $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                         if ($thisProductExtraOption) {
                             $options[$productExtraOptionId] = [
@@ -633,7 +631,7 @@ class ShoppingCart
                         }
                     }
                 }
-                if (!$cartItemDeleted) {
+                if (! $cartItemDeleted) {
                     $cartItem->price = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
@@ -670,19 +668,19 @@ class ShoppingCart
 
                                         foreach ($cartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (!$productExtraOption->calculate_only_1_quantity) {
+                                            if (! $productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (!isset($optionsForBothItems[$key])) {
+                                            if (! isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (!$productExtraOption->calculate_only_1_quantity) {
+                                            if (! $productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (!isset($optionsForBothItems[$key])) {
+                                            if (! isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }

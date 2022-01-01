@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
-
 use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
 
 class ShippingZones
@@ -24,7 +23,7 @@ class ShippingZones
                 foreach ($allShippingZone->zones as $zone) {
                     $regions[] = [
                         'name' => $zone,
-                        'value' => $zone
+                        'value' => $zone,
                     ];
                 }
             }
