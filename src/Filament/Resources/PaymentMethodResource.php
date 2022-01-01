@@ -9,17 +9,13 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
-<<<<<<< HEAD
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Tables\Columns\ImageColumn;
-=======
->>>>>>> 5166fac0b1f98168cc024ff37083c0fbe00ebb91
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MultiSelect;
-use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
