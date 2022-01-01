@@ -29,7 +29,7 @@ class TransactionController extends FrontendController
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             return redirect()->back()->with('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))->withInput();
         }
 
@@ -41,7 +41,6 @@ class TransactionController extends FrontendController
             }
         }
 
-<<<<<<< HEAD
         $noPaymentMethodPresent = (bool)$paymentMethod;
         if (!$noPaymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
@@ -52,10 +51,6 @@ class TransactionController extends FrontendController
             if (!$noPaymentMethodPresent) {
                 return redirect()->back()->with('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))->withInput();
             }
-=======
-        if (! $paymentMethod && (! PayNL::isConnected() && ! Mollie::isConnected())) {
-            return redirect()->back()->with('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))->withInput();
->>>>>>> ba9fd4417c3682a2d78202776436fe75cf971f24
         }
 
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($request->country);
@@ -66,7 +61,7 @@ class TransactionController extends FrontendController
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             return redirect()->back()->with('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))->withInput();
         }
 
@@ -83,17 +78,17 @@ class TransactionController extends FrontendController
                 }
             }
 
-            if (! $depositPaymentMethod) {
+            if (!$depositPaymentMethod) {
                 return redirect()->back()->with('error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))->withInput();
             }
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($request->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($request->email)) {
             session(['discountCode' => '']);
 
             return redirect()->back()->with('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))->withInput();
@@ -258,7 +253,7 @@ class TransactionController extends FrontendController
         }
         $orderPayment->psp = $psp;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
@@ -305,13 +300,13 @@ class TransactionController extends FrontendController
     {
         $paymentId = $request->paymentId;
 
-        if (! $paymentId) {
+        if (!$paymentId) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
         $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
 
-        if (! $orderPayment) {
+        if (!$orderPayment) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -323,7 +318,7 @@ class TransactionController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (! $hasAccessToOrder) {
+        if (!$hasAccessToOrder) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -364,15 +359,15 @@ class TransactionController extends FrontendController
         $paymentId = $request->paymentId;
         $orderId = $request->id;
 
-        if (! $orderId) {
+        if (!$orderId) {
             $orderId = $request->orderId;
         }
 
-        if (! $orderId) {
+        if (!$orderId) {
             $orderId = $request->order_id;
         }
 
-        if (! $orderId && ! $paymentId) {
+        if (!$orderId && !$paymentId) {
             echo "OrderID = $orderId";
             echo "PaymentID = $paymentId";
 
@@ -385,7 +380,7 @@ class TransactionController extends FrontendController
             $orderPayment = OrderPayment::where('psp_id', $orderId)->orWhere('hash', $orderId)->first();
         }
 
-        if (! $orderPayment) {
+        if (!$orderPayment) {
             return 'order not found';
         }
 
@@ -394,37 +389,13 @@ class TransactionController extends FrontendController
         if ($orderPayment->psp == 'own') {
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
-<<<<<<< HEAD
-        }else{
+        } else {
             foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
                 if ($orderPayment->psp == $pspId) {
                     $newStatus = $psp['class']::getOrderStatus($orderPayment);
                     $newPaymentStatus = $orderPayment->changeStatus($newStatus);
                     $order->changeStatus($newPaymentStatus);
                 }
-=======
-        } elseif ($orderPayment->psp == 'mollie') {
-            $newStatus = Mollie::getOrderStatus($orderPayment);
-            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-            $order->changeStatus($newPaymentStatus);
-        } elseif ($orderPayment->psp == 'paynl') {
-            $newStatus = PayNL::getOrderStatus($orderPayment);
-            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-            $order->changeStatus($newPaymentStatus);
-
-            if ($order->status == 'paid') {
-                echo "TRUE| Paid";
-
-                return;
-            } elseif ($order->status == 'cancelled') {
-                echo "TRUE| Canceled";
-
-                return;
-            } else {
-                echo "TRUE| Pending";
-
-                return;
->>>>>>> ba9fd4417c3682a2d78202776436fe75cf971f24
             }
         }
 
