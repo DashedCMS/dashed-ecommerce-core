@@ -63,6 +63,7 @@
             "aliases": {
                 "QcommerceEcommerceCore": "Qubiqx\\QcommerceEcommerceCore\\Facades\\QcommerceEcommerceCore",
                 "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper",
+                "EcommerceAccountHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\EcommerceAccountHelper",
                 "ShoppingCart": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ShoppingCart",
                 "ProductCategories": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ProductCategories",
                 "Products": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Products",

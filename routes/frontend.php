@@ -24,8 +24,6 @@ Route::group(
             ], function () {
                 //Account routes
                 Route::prefix('/' . Translation::get('account-slug', 'slug', 'account'))->group(function () {
-                    Route::get('/', [AccountController::class, 'account'])->name('qcommerce.frontend.account');
-                    Route::post('/', [AccountController::class, 'accountPost'])->name('qcommerce.frontend.account.post');
                     Route::get('/' . Translation::get('account-orders-slug', 'slug', 'orders'), [AccountController::class, 'orders'])->name('qcommerce.frontend.account.orders');
                 });
             });

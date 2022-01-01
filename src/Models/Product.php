@@ -172,7 +172,7 @@ class Product extends Model
 
     public function scopeThisSite($query)
     {
-        $query->where('site_ids->' . Sites::getActive(), 'active');
+        $query->whereJsonContains('site_ids', Sites::getActive());
     }
 
     public function scopePublic($query)

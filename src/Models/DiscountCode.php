@@ -86,7 +86,7 @@ class DiscountCode extends Model
 
     public function scopeThisSite($query)
     {
-        $query->whereJsonContains('site_ids', config('qcommerce.currentSite'));
+        $query->whereJsonContains('site_ids', Sites::getActive());
     }
 
     public function scopeUsable($query)
