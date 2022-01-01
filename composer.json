@@ -65,6 +65,7 @@
                 "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper",
                 "EcommerceAccountHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\EcommerceAccountHelper",
                 "ShoppingCart": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ShoppingCart",
+                "ShippingZones": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ShippingZones",
                 "ProductCategories": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ProductCategories",
                 "Products": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Products",
                 "Orders": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Orders",

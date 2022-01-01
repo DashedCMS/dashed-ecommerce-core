@@ -33,7 +33,7 @@ class AddImageFieldsToProductCategories extends Migration
                         } catch (Exception $exception) {
 
                         }
-                        $productCategory->setTranslation('image', $locale['id'], "/qcommerce/product-categories/meta-images/$media->file_name");
+                        $productCategory->setTranslation('image', $locale['id'], "/qcommerce/product-categories/images/$media->file_name");
                         $productCategory->save();
                     }
                 }

@@ -13,6 +13,7 @@ use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\AccountController;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\CartController;
+use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\TransactionController;
 
 Route::group(
     [
@@ -34,8 +35,8 @@ Route::group(
         //Cart routes
         Route::get('/' . Translation::get('cart-slug', 'slug', 'cart'), [CartController::class, 'cart'])->name('qcommerce.frontend.cart');
         Route::get('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [CartController::class, 'checkout'])->name('qcommerce.frontend.checkout');
-        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [CartController::class, 'startTransaction'])->name('qcommerce.frontend.start-transaction');
-        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [CartController::class, 'complete'])->name('qcommerce.frontend.checkout.complete');
+        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [TransactionController::class, 'startTransaction'])->name('qcommerce.frontend.start-transaction');
+        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [TransactionController::class, 'complete'])->name('qcommerce.frontend.checkout.complete');
         Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->name('qcommerce.frontend.download-invoice');
         Route::get('/download-packing-slip/{orderHash}', [CartController::class, 'downloadPackingSlip'])->name('qcommerce.frontend.download-packing-slip');
         Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->name('qcommerce.frontend.cart.apply-discount-code');

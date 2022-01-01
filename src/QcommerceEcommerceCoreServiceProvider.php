@@ -4,6 +4,10 @@ namespace Qubiqx\QcommerceEcommerceCore;
 
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
+use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductRouteHandler;
+use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
@@ -65,6 +69,13 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('add-payment-to-order', AddPaymentToOrder::class);
         Livewire::component('send-order-confirmation-to-email', SendOrderConfirmationToEmail::class);
         Livewire::component('create-order-log', CreateOrderLog::class);
+
+        User::addDynamicRelation('orders', function(User $model) {
+            return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
+        });
+        User::addDynamicRelation('lastOrder', function(User $model) {
+            return $model->orders()->latest()->first();
+        });
     }
 
     public function configurePackage(Package $package): void
@@ -74,6 +85,13 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         cms()->builder(
             'routeModels',
             array_merge(cms()->builder('routeModels'), [
+                'product' => [
+                    'name' => 'Product',
+                    'pluralName' => 'Products',
+                    'class' => Product::class,
+                    'nameField' => 'name',
+                    'routeHandler' => ProductRouteHandler::class,
+                ],
                 'productCategory' => [
                     'name' => 'Product categorie',
                     'pluralName' => 'Product categorieën',
