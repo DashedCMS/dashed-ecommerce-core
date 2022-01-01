@@ -7,16 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
+use Qubiqx\QcommerceCore\Models\User;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
 use Qubiqx\QcommerceEcommerceCore\Requests\Frontend\StartTransactionRequest;
@@ -29,7 +29,7 @@ class TransactionController extends FrontendController
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             return redirect()->back()->with('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))->withInput();
         }
 
@@ -42,13 +42,13 @@ class TransactionController extends FrontendController
         }
 
         $noPaymentMethodPresent = (bool)$paymentMethod;
-        if (!$noPaymentMethodPresent) {
+        if (! $noPaymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $noPaymentMethodPresent = false;
                 }
             }
-            if (!$noPaymentMethodPresent) {
+            if (! $noPaymentMethodPresent) {
                 return redirect()->back()->with('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))->withInput();
             }
         }
@@ -61,7 +61,7 @@ class TransactionController extends FrontendController
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             return redirect()->back()->with('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))->withInput();
         }
 
@@ -78,17 +78,17 @@ class TransactionController extends FrontendController
                 }
             }
 
-            if (!$depositPaymentMethod) {
+            if (! $depositPaymentMethod) {
                 return redirect()->back()->with('error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))->withInput();
             }
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($request->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($request->email)) {
             session(['discountCode' => '']);
 
             return redirect()->back()->with('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))->withInput();
@@ -253,7 +253,7 @@ class TransactionController extends FrontendController
         }
         $orderPayment->psp = $psp;
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
@@ -290,6 +290,7 @@ class TransactionController extends FrontendController
             return redirect(url(route('qcommerce.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
         } else {
             $transaction = ecommerce()->builder('paymentServiceProviders')[$psp]['class']::startTransaction($orderPayment);
+
             return redirect($transaction['redirectUrl'], 303);
         }
 
@@ -300,13 +301,13 @@ class TransactionController extends FrontendController
     {
         $paymentId = $request->paymentId;
 
-        if (!$paymentId) {
+        if (! $paymentId) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
         $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
 
-        if (!$orderPayment) {
+        if (! $orderPayment) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -318,7 +319,7 @@ class TransactionController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (!$hasAccessToOrder) {
+        if (! $hasAccessToOrder) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -359,15 +360,15 @@ class TransactionController extends FrontendController
         $paymentId = $request->paymentId;
         $orderId = $request->id;
 
-        if (!$orderId) {
+        if (! $orderId) {
             $orderId = $request->orderId;
         }
 
-        if (!$orderId) {
+        if (! $orderId) {
             $orderId = $request->order_id;
         }
 
-        if (!$orderId && !$paymentId) {
+        if (! $orderId && ! $paymentId) {
             echo "OrderID = $orderId";
             echo "PaymentID = $paymentId";
 
@@ -380,7 +381,7 @@ class TransactionController extends FrontendController
             $orderPayment = OrderPayment::where('psp_id', $orderId)->orWhere('hash', $orderId)->first();
         }
 
-        if (!$orderPayment) {
+        if (! $orderPayment) {
             return 'order not found';
         }
 
