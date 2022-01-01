@@ -367,7 +367,7 @@
                                                                             role="presentation"
                                                                             style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; border: none; border-radius: 3px; cursor: auto; mso-padding-alt: 10px 25px; background: {{Translation::get('primary-color-code', 'emails', '#A0131C')}};"
                                                                             valign="middle"><a
-                                                                                href="{{route('qcommerce.orders.edit', $order)}}"
+                                                                                href="{{ route('filament.resources.orders.view', [$order]) }}"
                                                                                 style="display: inline-block; background: {{Translation::get('primary-color-code', 'emails', '#A0131C')}}; color: #ffffff; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 18px; font-weight: bold; line-height: 120%; margin: 0; text-decoration: none; text-transform: none; padding: 10px 25px; mso-padding-alt: 0px; border-radius: 3px;"
                                                                                 target="_blank"> {{Translation::get('pre-order-confirmation-email-view-order-button', 'pre-orders', 'View order')}} </a>
                                                                         </td>
@@ -548,7 +548,7 @@
                                                                            style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; display: block; color: #333; font-weight: bold; line-height: 20px; text-decoration: none;">
                                                                             {{ $orderProduct->name }} </a>
                                                                         @if($orderProduct->product_extras)
-                                                                            @foreach(json_decode($orderProduct->product_extras, true) as $option)
+                                                                            @foreach($orderProduct->product_extras as $option)
                                                                                 <br/>
                                                                                 <span>{{$option['name']}}: {{$option['value']}}</span>
                                                                             @endforeach

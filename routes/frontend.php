@@ -11,6 +11,7 @@ use Qubiqx\QcommerceCore\Middleware\FrontendMiddleware;
 use Qubiqx\QcommerceCore\Middleware\GuestMiddleware;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\Translation;
+use Qubiqx\QcommerceEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\AccountController;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\CartController;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\TransactionController;
@@ -45,3 +46,15 @@ Route::group(
         Route::post('/remove-from-cart/{rowId}', [CartController::class, 'removeFromCart'])->name('qcommerce.frontend.cart.remove-from-cart');
     }
 );
+
+Route::middleware(['web'])->prefix(config('filament.path') . '/api')->group(function () {
+    Route::get('/checkout/available-shipping-methods', [CheckoutApiController::class, 'availableShippingMethods'])->name('qcommerce.api.checkout.available-shipping-methods');
+    Route::get('/checkout/available-payment-methods', [CheckoutApiController::class, 'availablePaymentMethods'])->name('qcommerce.api.checkout.available-payment-methods');
+    Route::get('/checkout/get-checkout-data', [CheckoutApiController::class, 'getCheckoutData'])->name('qcommerce.api.checkout.get-checkout-data');
+});
+
+if (!app()->runningInConsole()) {
+    //Checkout routes
+    Route::get('/' . Translation::get('checkout-slug', 'slug', 'checkout') . '/exchange', [TransactionController::class, 'exchange'])->name('qcommerce.frontend.checkout.exchange');
+    Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout') . '/exchange', [TransactionController::class, 'exchange'])->name('qcommerce.frontend.checkout.exchange');
+}

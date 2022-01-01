@@ -126,18 +126,12 @@
                 <table>
                     <tr>
                         <td class='logo-parent'>
-                            <?php
-                            $store = CustomSetting::where('name', 'site_name')->thisSite()->first();
-                            if ($store) {
-                                $logo = $store->getFirstMedia('logo');
-                                $favicon = $store->getFirstMedia('favicon');
-                            } else {
-                                $logo = '';
-                                $favicon = '';
-                            }
-                            ?>
+                            @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                             @if($logo)
-                                <img src="{{Thumbnail::src($logo->getUrl())->heighten(100)->url(true)}}"
+                                <img src="{{glide($logo, [
+    'h' => 100,
+    'w' => 'auto'
+])}}"
                                      class="logo">
                             @endif
                         </td>
@@ -300,8 +294,8 @@
             </tr>
         </table>
     </div>
-        <div style="height:50px">
-        </div>
+    <div style="height:50px">
+    </div>
     <div>
         <hr>
         <div style="width:30%;display:inline-block;">

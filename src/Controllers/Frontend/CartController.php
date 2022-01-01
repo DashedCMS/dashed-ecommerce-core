@@ -235,7 +235,7 @@ class CartController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return response()->download(storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf'));
+        return response()->download(storage_path('app/public/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf'));
     }
 
     public function downloadPackingSlip(Request $request, $orderHash)
@@ -252,6 +252,6 @@ class CartController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return response()->download(storage_path('app/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf'));
+        return response()->download(storage_path('app/public/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf'));
     }
 }

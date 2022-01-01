@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
 use Artesaos\SEOTools\Facades\SEOTools;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
+use Qubiqx\QcommerceCore\Models\User;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
+use Qubiqx\QcommerceEcommerceCore\Requests\Frontend\StartTransactionRequest;
 
 class TransactionController extends FrontendController
 {
@@ -41,8 +41,16 @@ class TransactionController extends FrontendController
             }
         }
 
-        if (!$paymentMethod && (!PayNL::isConnected() && !Mollie::isConnected())) {
-            return redirect()->back()->with('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))->withInput();
+        $noPaymentMethodPresent = (bool)$paymentMethod;
+        if (!$noPaymentMethodPresent) {
+            foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
+                if ($psp['class']::isConnected()) {
+                    $noPaymentMethodPresent = false;
+                }
+            }
+            if (!$noPaymentMethodPresent) {
+                return redirect()->back()->with('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))->withInput();
+            }
         }
 
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($request->country);
@@ -184,7 +192,7 @@ class TransactionController extends FrontendController
                     'price' => ProductExtraOption::find($optionId)->price,
                 ];
             }
-            $orderProduct->product_extras = json_encode($productExtras);
+            $orderProduct->product_extras = $productExtras;
 
             if ($cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
                 $orderProduct->is_pre_order = true;
@@ -206,7 +214,7 @@ class TransactionController extends FrontendController
                 $orderProduct->btw = ShoppingCart::vatForPaymentMethod($paymentMethod['id']);
             }
             $orderProduct->discount = 0;
-            $orderProduct->product_extras = json_encode([]);
+            $orderProduct->product_extras = [];
             $orderProduct->sku = 'payment_costs';
             $orderProduct->save();
         }
@@ -221,7 +229,7 @@ class TransactionController extends FrontendController
             $orderProduct->btw = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, true);
             $orderProduct->vat_rate = ShoppingCart::vatRateForShippingMethod($order->shippingMethod->id);
             $orderProduct->discount = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, false) - $orderProduct->btw;
-            $orderProduct->product_extras = json_encode([]);
+            $orderProduct->product_extras = [];
             $orderProduct->sku = 'shipping_costs';
             $orderProduct->save();
         }
@@ -235,12 +243,12 @@ class TransactionController extends FrontendController
         $orderPayment->amount = $order->total;
         $orderPayment->order_id = $order->id;
         if ($paymentMethod) {
-            $psp = $paymentMethod['system'];
+            $psp = $paymentMethod['psp'];
         } else {
-            if (PayNL::isConnected()) {
-                $psp = 'paynl';
-            } elseif (Mollie::isConnected()) {
-                $psp = 'mollie';
+            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
+                if ($ecommercePSP['class']::isConnected()) {
+                    $psp = $pspId;
+                }
             }
         }
         $orderPayment->psp = $psp;
@@ -253,7 +261,7 @@ class TransactionController extends FrontendController
             if ($depositAmount > 0.00) {
                 $orderPayment->amount = $depositAmount;
                 $orderPayment->psp = $depositPaymentMethod['system'];
-                $orderPayment->psp_payment_method_id = $depositPaymentMethod['id'];
+                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
 
                 $order->has_deposit = true;
                 $order->save();
@@ -263,7 +271,7 @@ class TransactionController extends FrontendController
             }
         } else {
             $orderPayment->payment_method = $paymentMethod['name'];
-            $orderPayment->psp_payment_method_id = $paymentMethod['id'];
+            $orderPayment->payment_method_id = $paymentMethod['id'];
         }
 
         $orderPayment->save();
@@ -280,17 +288,12 @@ class TransactionController extends FrontendController
             $order->changeStatus($newPaymentStatus);
 
             return redirect(url(route('qcommerce.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
-        } elseif ($orderPayment->psp == 'mollie') {
-            $transaction = Mollie::startTransaction($order, $orderPayment);
-
-            return redirect($transaction->getCheckoutUrl(), 303);
-        } elseif ($orderPayment->psp == 'paynl') {
-            $transaction = PayNL::startTransaction($order, $orderPayment);
-
-            return redirect($transaction->getRedirectUrl(), 303);
         } else {
-            throw new \Exception('Cannot start payment');
+            $transaction = ecommerce()->builder('paymentServiceProviders')[$psp]['class']::startTransaction($orderPayment);
+            return redirect($transaction['redirectUrl'], 303);
         }
+
+        throw new \Exception('Cannot start payment');
     }
 
     public function complete(Request $request)
@@ -319,8 +322,8 @@ class TransactionController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        foreach(ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp){
-            if($orderPayment->psp == $pspId){
+        foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
+            if ($orderPayment->psp == $pspId) {
                 $newStatus = $psp['class']::getOrderStatus($orderPayment);
                 $newPaymentStatus = $orderPayment->changeStatus($newStatus);
             }
@@ -385,25 +388,22 @@ class TransactionController extends FrontendController
         if ($orderPayment->psp == 'own') {
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
-        } elseif ($orderPayment->psp == 'mollie') {
-            $newStatus = Mollie::getOrderStatus($orderPayment);
-            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-            $order->changeStatus($newPaymentStatus);
-        } elseif ($orderPayment->psp == 'paynl') {
-            $newStatus = PayNL::getOrderStatus($orderPayment);
-            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-            $order->changeStatus($newPaymentStatus);
-
-            if ($order->status == 'paid') {
-                echo "TRUE| Paid";
-                return;
-            } elseif ($order->status == 'cancelled') {
-                echo "TRUE| Canceled";
-                return;
-            } else {
-                echo "TRUE| Pending";
-                return;
+        }else{
+            foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
+                if ($orderPayment->psp == $pspId) {
+                    $newStatus = $psp['class']::getOrderStatus($orderPayment);
+                    $newPaymentStatus = $orderPayment->changeStatus($newStatus);
+                    $order->changeStatus($newPaymentStatus);
+                }
             }
+        }
+
+        if ($order->status == 'paid') {
+            echo "TRUE| Paid";
+        } elseif ($order->status == 'cancelled') {
+            echo "TRUE| Canceled";
+        } else {
+            echo "TRUE| Pending";
         }
 
         return $order->status;

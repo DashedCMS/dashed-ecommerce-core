@@ -1143,7 +1143,7 @@ class Order extends Model
     {
         $this->createInvoice();
 
-        if (file_exists(storage_path('app/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
+        if (file_exists(storage_path('app/public/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
             return route('qcommerce.frontend.download-invoice', ['orderHash' => $this->hash]);
         } else {
             return '';
@@ -1154,7 +1154,7 @@ class Order extends Model
     {
         $this->createPackingSlip();
 
-        if (file_exists(storage_path('app/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
+        if (file_exists(storage_path('app/public/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
             return route('qcommerce.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         } else {
             return '';

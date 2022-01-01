@@ -531,7 +531,7 @@
                                                                            style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; display: block; color: #333; font-weight: bold; line-height: 20px; text-decoration: none;">
                                                                             {{ $orderProduct->name }} </a>
                                                                         @if($orderProduct->product_extras)
-                                                                            @foreach(json_decode($orderProduct->product_extras, true) as $option)
+                                                                            @foreach($orderProduct->product_extras as $option)
                                                                                 <br/>
                                                                                 <span>{{$option['name']}}: {{$option['value']}}</span>
                                                                             @endforeach

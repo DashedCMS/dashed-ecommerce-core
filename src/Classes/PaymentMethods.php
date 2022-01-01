@@ -7,17 +7,6 @@ use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 
 class PaymentMethods
 {
-    public static function isPostpayMethod($paymentMethodId)
-    {
-        foreach (self::getPaymentMethods() as $paymentMethod) {
-            if ($paymentMethod['id'] == $paymentMethodId) {
-                return $paymentMethod['postpay'];
-            }
-        }
-
-        return false;
-    }
-
     //Todo: 2 functions below must be 1 function inside ShoppingCart class
 //    public static function getAvailablePaymentMethods($countryName)
 //    {

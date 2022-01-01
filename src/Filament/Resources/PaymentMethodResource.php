@@ -55,10 +55,11 @@ class PaymentMethodResource extends Resource
                     'max:100',
                 ]),
             Toggle::make('active')
-                ->label('Actief'),
+                ->label('Actief')
+            ->default(1),
             Toggle::make('postpay')
                 ->label('Achteraf betaalmethode')
-                ->hidden(fn ($record) => $record->psp == 'own'),
+                ->hidden(fn ($record) => $record && $record->psp == 'own'),
             Textarea::make('additional_info')
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
@@ -84,15 +85,21 @@ class PaymentMethodResource extends Resource
             TextInput::make('extra_costs')
                 ->label('Extra kosten wanneer deze betalingsmethode wordt gekozen')
                 ->rules([
+                    'required',
                     'numeric',
                     'max:255',
-                ]),
+                ])
+            ->required()
+            ->default(0),
             TextInput::make('available_from_amount')
                 ->label('Vanaf hoeveel € moet deze betaalmethode beschikbaar zijn')
                 ->rules([
+                    'required',
                     'numeric',
                     'max:255',
-                ]),
+                ])
+            ->required()
+            ->default(0),
             TextInput::make('deposit_calculation')
                 ->label('Calculatie voor de aanbetaling met deze betaalmethode (leeg = geen aanbetaling), let op: hiervoor moet je een PSP gekoppeld hebben & dit werkt niet bij het aanmaken van handmatige orders')
                 ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
@@ -102,11 +109,11 @@ class PaymentMethodResource extends Resource
                     'max:255',
                 ])
                 ->reactive()
-                ->hidden(fn ($record) => $record->psp != 'own'),
+                ->hidden(fn ($record) => !$record || ($record && $record->psp != 'own')),
             MultiSelect::make('deposit_calculation_payment_method_ids')
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn ($record, \Closure $get) => $record->psp != 'own' || ! $get('deposit_calculation')),
+                ->hidden(fn ($record, \Closure $get) => (!$record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
         ];
 
         return $form
@@ -121,6 +128,9 @@ class PaymentMethodResource extends Resource
                             })
                             ->required(),
                     ])
+                    ->hidden(function () {
+                        return ! (Sites::getAmountOfSites() > 1);
+                    })
                     ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Content')
                     ->schema($contentSchema),

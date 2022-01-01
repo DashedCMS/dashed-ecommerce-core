@@ -5,7 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceEcommerce\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceCore\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 
@@ -31,7 +31,7 @@ class AdminPreOrderConfirmationMail extends Mailable
      */
     public function build()
     {
-        $invoicePath = storage_path('app/invoices/invoice-'.$this->order->invoice_id.'-'.$this->order->hash.'.pdf');
+        $invoicePath = storage_path('app/public/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
         return $this->view('qcommerce-ecommerce-core::emails.admin-confirm-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('admin-order-confirmation-email-subject', 'orders', 'Order received #:orderId:', 'text', [
@@ -40,7 +40,7 @@ class AdminPreOrderConfirmationMail extends Mailable
             ->with([
                 'order' => $this->order,
             ])->attach($invoicePath, [
-                'as' => Customsetting::get('company_name').' - '.$this->order->invoice_id.'.pdf',
+                'as' => Customsetting::get('company_name') . ' - ' . $this->order->invoice_id . '.pdf',
                 'mime' => 'application/pdf',
             ]);
     }
