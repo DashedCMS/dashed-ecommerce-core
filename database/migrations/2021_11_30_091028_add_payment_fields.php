@@ -29,7 +29,7 @@ class AddPaymentFields extends Migration
             $table->timestamps();
         });
 
-        foreach(\Qubiqx\Qcommerce\Models\Order::get() as $order){
+        foreach(\Qubiqx\QcommerceEcommerceCore\Models\Order::get() as $order){
             if($order->total > 0.00){
                 $order->orderPayments()->create([
                     'psp' => $order->psp,
