@@ -5,13 +5,13 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductRouteHandler;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
+use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductRouteHandler;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
@@ -70,10 +70,10 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('send-order-confirmation-to-email', SendOrderConfirmationToEmail::class);
         Livewire::component('create-order-log', CreateOrderLog::class);
 
-        User::addDynamicRelation('orders', function(User $model) {
+        User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
         });
-        User::addDynamicRelation('lastOrder', function(User $model) {
+        User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();
         });
     }
