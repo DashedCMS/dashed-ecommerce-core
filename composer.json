@@ -65,6 +65,7 @@
                 "CurrencyHelper": "Qubiqx\\QcommerceEcommerceCore\\Classes\\CurrencyHelper",
                 "ShoppingCart": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ShoppingCart",
                 "ProductCategories": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ProductCategories",
+                "Products": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Products",
                 "Orders": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Orders",
                 "SKUs": "Qubiqx\\QcommerceEcommerceCore\\Classes\\SKUs"
             }
