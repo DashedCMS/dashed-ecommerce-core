@@ -10,7 +10,7 @@ class EcommerceManager
 
     public function builder(string $name, ?array $blocks = null): self|array
     {
-        if (!$blocks) {
+        if (! $blocks) {
             return static::$builders[$name];
         }
 

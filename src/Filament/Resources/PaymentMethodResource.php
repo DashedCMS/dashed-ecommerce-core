@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\MultiSelect;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -10,12 +9,17 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
+<<<<<<< HEAD
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Tables\Columns\ImageColumn;
+=======
+>>>>>>> 5166fac0b1f98168cc024ff37083c0fbe00ebb91
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\MultiSelect;
+use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
@@ -58,7 +62,7 @@ class PaymentMethodResource extends Resource
                 ->label('Actief'),
             Toggle::make('postpay')
                 ->label('Achteraf betaalmethode')
-                ->hidden(fn($record) => $record->psp == 'own'),
+                ->hidden(fn ($record) => $record->psp == 'own'),
             Textarea::make('additional_info')
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
@@ -102,11 +106,11 @@ class PaymentMethodResource extends Resource
                     'max:255',
                 ])
                 ->reactive()
-                ->hidden(fn($record) => $record->psp != 'own'),
+                ->hidden(fn ($record) => $record->psp != 'own'),
             MultiSelect::make('deposit_calculation_payment_method_ids')
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn($record, \Closure $get) => $record->psp != 'own' || !$get('deposit_calculation')),
+                ->hidden(fn ($record, \Closure $get) => $record->psp != 'own' || ! $get('deposit_calculation')),
         ];
 
         return $form
@@ -117,11 +121,11 @@ class PaymentMethodResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Content')
                     ->schema($contentSchema),
             ]);
@@ -138,7 +142,7 @@ class PaymentMethodResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
                     ->label('PSP')
