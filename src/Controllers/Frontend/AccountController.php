@@ -2,13 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Controllers\Frontend;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
 use Artesaos\SEOTools\Facades\SEOTools;
-use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
 use Qubiqx\QcommerceCore\Models\Translation;
-use Qubiqx\QcommerceCore\Requests\Frontend\UpdateAccountRequest;
+use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
 
 class AccountController extends FrontendController
 {
