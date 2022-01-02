@@ -178,7 +178,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ->hasViews()
             ->hasAssets()
             ->hasCommands([
-//                CreateSitemap::class,
+                CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
+                RecalculatePurchasesCommand::class,
+                CancelOldOrders::class,
             ]);
     }
 

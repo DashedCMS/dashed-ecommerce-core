@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
 use Spatie\Translatable\HasTranslations;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -20,6 +21,7 @@ class Product extends Model
     use HasTranslations;
     use SoftDeletes;
     use LogsActivity;
+    use HasDynamicRelation;
 
     protected static $logFillable = true;
 

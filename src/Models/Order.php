@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
@@ -30,12 +31,12 @@ use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Qubiqx\QcommerceEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Qubiqx\QcommerceEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
-use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderIsPushableForReviewEvent;
 
 class Order extends Model
 {
     use SoftDeletes;
     use LogsActivity;
+    use HasDynamicRelation;
 
     protected static $logFillable = true;
 
@@ -691,12 +692,6 @@ class Order extends Model
     public function markAsPushableToEfulfillment()
     {
         //Todo: emit event and catch in other packages
-//        if (EfulfillmentShop::connected(Sites::getActive())) {
-//            $this->pushable_to_efulfillment_shop = 1;
-//            $this->save();
-//        }
-
-        //Todo: emit event and catch in other packages
 //        if (Montaportal::connected(Sites::getActive())) {
 //            $this->montaPortalOrder()->create([]);
 //        }
@@ -1130,11 +1125,6 @@ class Order extends Model
             $this->ga_commerce_hit_send = 1;
             $this->save();
         }
-    }
-
-    public function activateReviewEmailsToBeSend()
-    {
-        OrderIsPushableForReviewEvent::dispatch($this);
     }
 
     public function downloadInvoiceUrl()
