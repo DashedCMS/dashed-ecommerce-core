@@ -689,14 +689,6 @@ class Order extends Model
         }
     }
 
-    public function markAsPushableToEfulfillment()
-    {
-        //Todo: emit event and catch in other packages
-//        if (Montaportal::connected(Sites::getActive())) {
-//            $this->montaPortalOrder()->create([]);
-//        }
-    }
-
     public function markAsPushableToAccountancy()
     {
         //Todo: emit event and catch in other packages

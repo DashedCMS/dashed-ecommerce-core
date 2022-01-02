@@ -6,6 +6,9 @@ class EcommerceManager
 {
     protected static $builders = [
         'paymentServiceProviders' => [],
+        'orderSideWidgets' => [],
+        'orderFullWidgets' => [],
+        'productWidgets' => [],
     ];
 
     public function builder(string $name, ?array $blocks = null): self|array

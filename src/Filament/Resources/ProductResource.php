@@ -592,13 +592,9 @@ class ProductResource extends Resource
 
     public static function getRelations(): array
     {
-        $relations = [];
-
-        if ((fn ($record) => $record->type == 'variable' && ! $record->parent_product_id)) {
-            $relations[] = ChildProductsRelationManager::class;
-        }
-
-        return $relations;
+        return [
+            ChildProductsRelationManager::class
+        ];
     }
 
     public static function getPages(): array

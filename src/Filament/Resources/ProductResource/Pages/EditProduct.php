@@ -22,6 +22,7 @@ class EditProduct extends EditRecord
     use Translatable;
 
     protected static string $resource = ProductResource::class;
+//    protected static string $view = 'qcommerce-ecommerce-core::products.edit-product';
 
     protected static ?string $title = 'Bewerk product';
 
@@ -29,10 +30,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->getRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -120,7 +121,7 @@ class EditProduct extends EditRecord
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
+        if (($this->record->type == 'variable' && !$this->record->parent_product_id) || $this->record->type == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($this->data["product_filter_$productFilter->id"]) {
@@ -149,7 +150,7 @@ class EditProduct extends EditRecord
 
         foreach ($productCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if (! $thisProductCharacteristic) {
+            if (!$thisProductCharacteristic) {
                 $thisProductCharacteristic = new ProductCharacteristic();
                 $thisProductCharacteristic->product_id = $this->record->id;
                 $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -161,7 +162,7 @@ class EditProduct extends EditRecord
 
     protected function getBreadcrumbs(): array
     {
-        if (! $this->record->parentProduct) {
+        if (!$this->record->parentProduct) {
             return parent::getBreadcrumbs();
         }
 
