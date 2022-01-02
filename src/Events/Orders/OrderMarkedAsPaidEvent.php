@@ -9,7 +9,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
-class OrderIsPushableForReviewEvent
+class OrderMarkedAsPaidEvent
 {
     use Dispatchable;
     use InteractsWithSockets;

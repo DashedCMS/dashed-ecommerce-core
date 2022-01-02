@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceEcommerceCore\Events\Orders\InvoiceCreatedEvent;
+use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
@@ -474,8 +476,11 @@ class Order extends Model
 
                 $invoicePath = '/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
+
+                InvoiceCreatedEvent::dispatch($this);
             }
 
+            //Todo: change below to a listener for InvoiceCreatedEvent
             if (! $this->invoice_send_to_customer) {
                 Orders::sendNotification($this);
 
@@ -537,6 +542,8 @@ class Order extends Model
 
                 $invoicePath = '/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
+
+                InvoiceCreatedEvent::dispatch($this);
             }
         }
     }
@@ -744,9 +751,7 @@ class Order extends Model
 
             $this->deductStock();
             $this->deductDiscount();
-            $this->markAsPushableToEfulfillment();
-            $this->markAsPushableToAccountancy();
-            $this->activateReviewEmailsToBeSend();
+            OrderMarkedAsPaidEvent::dispatch($this);
 
             ShoppingCart::emptyMyCart();
 
@@ -774,12 +779,9 @@ class Order extends Model
 
         $this->deductStock();
         $this->deductDiscount();
-        $this->markAsPushableToEfulfillment();
-        $this->markAsPushableToAccountancy();
-        $this->activateReviewEmailsToBeSend();
+        OrderMarkedAsPaidEvent::dispatch($this);
 
         ShoppingCart::emptyMyCart();
-        session(['discountCode' => '']);
 
         $this->sendGAEcommerceHit();
     }
@@ -800,12 +802,9 @@ class Order extends Model
 
         $this->deductStock();
         $this->deductDiscount();
-        $this->markAsPushableToEfulfillment();
-        $this->markAsPushableToAccountancy();
-        $this->activateReviewEmailsToBeSend();
+        OrderMarkedAsPaidEvent::dispatch($this);
 
         ShoppingCart::emptyMyCart();
-        session(['discountCode' => '']);
 
         $this->sendGAEcommerceHit();
     }
@@ -1090,7 +1089,6 @@ class Order extends Model
             $newOrder->refillStock(false);
         }
 
-        $this->markAsPushableToAccountancy();
         $this->changeFulfillmentStatus($fulfillmentStatus);
 
         return $newOrder;
