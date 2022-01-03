@@ -4,7 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Qubiqx\Qcommerce\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Models\Order;
 
 class CancelOldOrders extends Command
 {
