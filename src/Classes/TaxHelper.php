@@ -2,10 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
-use Illuminate\Support\Facades\Request;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\ProductCategory;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class TaxHelper
 {
