@@ -3,7 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Helper;
+use Qubiqx\QcommerceCore\Classes\TaxHelper;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -69,6 +69,6 @@ class OrderProduct extends Model
 
     public function getVatWithoutDiscountAttribute()
     {
-        return Helper::calculateTax($this->price + $this->discount, $this->vat_rate);
+        return TaxHelper::calculateTax($this->price + $this->discount, $this->vat_rate);
     }
 }
