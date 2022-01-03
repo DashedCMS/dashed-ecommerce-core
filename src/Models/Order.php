@@ -689,21 +689,6 @@ class Order extends Model
         }
     }
 
-    public function markAsPushableToAccountancy()
-    {
-        //Todo: emit event and catch in other packages
-//        if (Eboekhouden::connected(Sites::getActive())) {
-//            $this->pushable_to_eboekhouden = 1;
-//            $this->save();
-//        }
-
-        //Todo: emit event and catch in other packages
-        //Safety because exactonline disconnects often
-//        if (Customsetting::get('exactonline_client_id', Sites::getActive())) {
-//            $this->exactonlineOrder()->create([]);
-//        }
-    }
-
     public function markAsPaid()
     {
         if ($this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid') {
