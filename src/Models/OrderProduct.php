@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Qubiqx\Qcommerce\Classes\Helper;
 use Illuminate\Database\Eloquent\Model;
+use Qubiqx\QcommerceCore\Classes\Helper;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
