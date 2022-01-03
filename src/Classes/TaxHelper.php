@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceCore\Classes;
+namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Request;
 use Qubiqx\QcommerceCore\Models\Customsetting;
