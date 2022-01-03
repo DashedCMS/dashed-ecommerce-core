@@ -6,11 +6,6 @@ use Illuminate\Support\Str;
 
 class Countries
 {
-    public static function getCountries()
-    {
-        return json_decode(file_get_contents('../vendor/qubiqx/qcommerce-ecommerce-core/src/Classes/countries.json'), true);
-    }
-
     public static function getCountryIsoCode($countryName)
     {
         $activeCountry = false;
@@ -42,5 +37,10 @@ class Countries
                 return $country['alpha2Code'];
             }
         }
+    }
+
+    public static function getCountries()
+    {
+        return json_decode(file_get_contents('./countries.json'), true);
     }
 }
