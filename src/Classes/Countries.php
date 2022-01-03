@@ -41,6 +41,6 @@ class Countries
 
     public static function getCountries()
     {
-        return json_decode(file_get_contents('./countries.json'), true);
+        return json_decode(file_get_contents(__DIR__ . '/countries.json'), true);
     }
 }
