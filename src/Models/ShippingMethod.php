@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Qubiqx\Qcommerce\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
+use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Spatie\Translatable\HasTranslations;
-use Qubiqx\Qcommerce\Classes\ShoppingCart;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class ShippingMethod extends Model
@@ -64,7 +64,7 @@ class ShippingMethod extends Model
             $shippingCosts = 0;
             $cartItemsCount = ShoppingCart::cartItemsCount();
 
-            foreach (json_decode($this->variables, true) as $variable) {
+            foreach ($this->variables as $variable) {
                 while ($cartItemsCount >= $variable['amount_of_items']) {
                     $cartItemsCount -= $variable['amount_of_items'];
                     $shippingCosts += $variable['costs'];
