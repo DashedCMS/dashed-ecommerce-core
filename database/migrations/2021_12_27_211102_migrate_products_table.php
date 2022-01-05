@@ -48,7 +48,7 @@ class MigrateProductsTable extends Migration
                         } catch (Exception $exception) {
 
                         }
-                        $product->setTranslation('meta_image', $locale['id'], "/qcommerce/products/meta-images/$media->file_name");
+                        $product->setTranslation('meta_image', $locale['id'], "qcommerce/products/meta-images/$media->file_name");
                         $product->save();
                     }
                 }
@@ -70,7 +70,7 @@ class MigrateProductsTable extends Migration
                         }
 
                         $images[] = [
-                            'image' => "/qcommerce/products/images/$media->file_name",
+                            'image' => "qcommerce/products/images/$media->file_name",
                             'alt_text' => is_array(json_decode($media->custom_properties, true)) ? (json_decode($media->custom_properties, true)['alt'] ?? '') : '',
                             'order' => $imageCount
                         ];
@@ -95,7 +95,7 @@ class MigrateProductsTable extends Migration
                             }
 
                             $images[] = [
-                                'image' => "/qcommerce/products/images/$media->file_name",
+                                'image' => "qcommerce/products/images/$media->file_name",
                                 'alt_text' => is_array(json_decode($media->custom_properties, true)) ? (json_decode($media->custom_properties, true)['alt'] ?? '') : '',
                                 'order' => $imageCount
                             ];
