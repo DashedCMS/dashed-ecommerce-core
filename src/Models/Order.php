@@ -468,14 +468,14 @@ class Order extends Model
         if ($this->order_origin == 'own') {
             $this->generateInvoiceId();
             $order = Order::find($this->id);
-            if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::exists('/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce-ecommerce-core::frontend.invoices.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+                $invoicePath = '/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
@@ -523,7 +523,7 @@ class Order extends Model
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/packing-slips/packing-slip-' . ($order->invoice_id ? $order->invoice_id : $order->id) . '-' . $order->hash . '.pdf';
+                $invoicePath = '/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ? $order->invoice_id : $order->id) . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
             }
         }
@@ -541,7 +541,7 @@ class Order extends Model
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+                $invoicePath = '/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
@@ -1108,7 +1108,7 @@ class Order extends Model
     {
         $this->createInvoice();
 
-        if (file_exists(storage_path('app/public/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
+        if (file_exists(storage_path('app/public/qcommerce/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
             return route('qcommerce.frontend.download-invoice', ['orderHash' => $this->hash]);
         } else {
             return '';
@@ -1119,7 +1119,7 @@ class Order extends Model
     {
         $this->createPackingSlip();
 
-        if (file_exists(storage_path('app/public/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
+        if (file_exists(storage_path('app/public/qcommerce/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
             return route('qcommerce.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         } else {
             return '';

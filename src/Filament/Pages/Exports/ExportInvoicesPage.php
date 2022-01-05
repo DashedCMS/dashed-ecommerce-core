@@ -78,7 +78,7 @@ class ExportInvoicesPage extends Page implements HasForms
             foreach ($orders as $order) {
                 $url = $order->downloadInvoiceUrl();
                 if ($url) {
-                    $invoicePath = storage_path('app/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                    $invoicePath = storage_path('app/public/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
                     $pdfMerger->addPDF($invoicePath, 'all');
                 }
             }
@@ -86,7 +86,7 @@ class ExportInvoicesPage extends Page implements HasForms
             $pdfMerger->merge();
 
             $invoicePath = '/exports/invoices/exported-invoice.pdf';
-            Storage::disk('public')->put($invoicePath, '');
+            Storage::put($invoicePath, '');
             $pdfMerger->save(storage_path('app/public' . $invoicePath));
         } elseif ($this->form->getState()['sort'] == 'combined') {
             $subTotal = 0;

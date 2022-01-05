@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
@@ -14,6 +15,7 @@ use Filament\Tables\Actions\ButtonAction;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
 use Filament\Tables\Filters\MultiSelectFilter;
+use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
@@ -30,19 +32,83 @@ class ListOrders extends ListRecords
                 ->color('primary')
                 ->action('downloadInvoices')
                 ->deselectRecordsAfterCompletion(),
+            BulkAction::make('downloadPackingSlips')
+                ->label('Download pakbonnen')
+                ->color('primary')
+                ->action('downloadPackingSlips')
+                ->deselectRecordsAfterCompletion(),
+            BulkAction::make('changeFulfillmentStatus')
+                ->color('primary')
+                ->label('Fulfillment status')
+                ->form([
+                    Select::make('fulfillment_status')
+                        ->label('Veranderd fulfillment status naar')
+                        ->options(Orders::getFulfillmentStatusses())
+                        ->required(),
+                ])
+                ->action(function (Collection $records, array $data): void {
+                    foreach ($records as $record) {
+                        $record->changeFulfillmentStatus($data['fulfillment_status']);
+                    }
+                })
+                ->deselectRecordsAfterCompletion(),
         ];
     }
 
-    public function downloadInvoices()
+    public function downloadInvoices(Collection $records)
     {
-        dd('asdf');
-//        dd($this->records);
-//        $this->notify('success', 'test');
+        $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
 
-//        return redirect('/test');
-//        exit;
+        $hasPdf = false;
+        foreach ($records as $order) {
+            $url = $order->downloadInvoiceUrl();
+            if ($url) {
+                $invoicePath = storage_path('app/public/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                $pdfMerger->addPDF($invoicePath, 'all');
+                $hasPdf = true;
+            }
+        }
 
-//        return Storage::download('/exports/invoices/exported-invoice.pdf');
+        if ($hasPdf) {
+            $pdfMerger->merge();
+
+            $invoicePath = '/qcommerce/exports/invoices/exported-invoice.pdf';
+            Storage::put($invoicePath, '');
+            $pdfMerger->save(storage_path('app/public' . $invoicePath));
+            $this->notify('success', 'De export is gedownload');
+            return Storage::download($invoicePath);
+        } else {
+            $this->notify('error', 'Geen facturen om te downloaden');
+        }
+    }
+
+    public function downloadPackingSlips(Collection $records)
+    {
+        $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
+
+        $hasPdf = false;
+        foreach ($records as $order) {
+            $url = $order->downloadPackingSlipUrl();
+            if ($url) {
+                $packingSlipPath = storage_path('app/public/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
+                if (file_exists($packingSlipPath)) {
+                    $pdfMerger->addPdf($packingSlipPath, 'all');
+                    $hasPdf = true;
+                }
+            }
+        }
+
+        if ($hasPdf) {
+            $pdfMerger->merge();
+
+            $invoicePath = '/qcommerce/exports/packing-slips/exported-packing-slip.pdf';
+            Storage::put($invoicePath, '');
+            $pdfMerger->save(storage_path('app/public' . $invoicePath));
+            $this->notify('success', 'De export is gedownload');
+            return Storage::download($invoicePath);
+        } else {
+            $this->notify('error', 'Geen pakbonnen om te downloaden');
+        }
     }
 
     protected function getActions(): array
@@ -65,14 +131,14 @@ class ListOrders extends ListRecords
                                 ->label('Fulfillment status')
                                 ->options(Orders::getFulfillmentStatusses())
                                 ->required()
-                                ->default(fn ($record) => $record->fulfillment_status)
-                                ->hidden(fn ($record) => $record->credit_for_order_id),
+                                ->default(fn($record) => $record->fulfillment_status)
+                                ->hidden(fn($record) => $record->credit_for_order_id),
                             Select::make('retour_status')
                                 ->label('Retour status')
                                 ->options(Orders::getReturnStatusses())
                                 ->required()
-                                ->default(fn ($record) => $record->retour_status)
-                                ->hidden(fn ($record) => ! $record->credit_for_order_id),
+                                ->default(fn($record) => $record->retour_status)
+                                ->hidden(fn($record) => !$record->credit_for_order_id),
                         ])
                         ->columns([
                             'default' => 1,
@@ -82,10 +148,10 @@ class ListOrders extends ListRecords
                         ->schema([
                             Placeholder::make('shippingAddress')
                                 ->label('Verzendadres')
-                                ->content(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . '<br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
+                                ->content(fn($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
                             Placeholder::make('shippingAddress')
                                 ->label('Factuuradres')
-                                ->content(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . '<br>' : '') . "$record->name<br>$record->invoice_street $record->invoice_house_nr<br>$record->invoice_city $record->invoice_zip_code<br>$record->invoice_country")),
+                                ->content(fn($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->invoice_street $record->invoice_house_nr<br>$record->invoice_city $record->invoice_zip_code<br>$record->invoice_country")),
                         ])
                         ->columns([
                             'default' => 1,
@@ -119,7 +185,7 @@ class ListOrders extends ListRecords
                     'waiting_for_confirmation' => 'Wachten op bevestiging',
                     'pending' => 'Lopende aankoop',
                     'cancelled' => 'Geannuleerd',
-                    'return' => 'Retour',
+                    'return ' => 'Retour',
                 ]),
 //            MultiSelectFilter::make('payment_method')
 //                ->options(OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method')->unique()),
@@ -138,7 +204,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['start_date'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
                         );
                 }),
             Filter::make('end_date')
@@ -150,7 +216,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['end_date'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
                         );
                 }),
         ];
