@@ -51,6 +51,11 @@ class OrderPayment extends Model
         return $this->belongsTo(PaymentMethod::class)->withTrashed();
     }
 
+    public function scopePaid($query)
+    {
+        return $query->where('status', 'paid');
+    }
+
     public function getPaymentMethodNameAttribute(): string
     {
         if ($this->paymentMethod) {
@@ -65,19 +70,13 @@ class OrderPayment extends Model
         if ($this->paymentMethod) {
             return $this->paymentMethod->payment_instructions;
         } else {
-            foreach (ShoppingCart::getAllPaymentMethods() as $paymentMethod) {
-                if ($paymentMethod['id'] == $this->psp_payment_method_id) {
-                    return (string)$paymentMethod['payment_instructions'];
-                }
-            }
-
             return '';
         }
     }
 
     public function changeStatus($newStatus = null, $sendMail = false): string
     {
-        if (! $newStatus || $this->status == $newStatus) {
+        if (!$newStatus || $this->status == $newStatus) {
             return '';
         }
 

@@ -10,6 +10,8 @@ use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 
 class DailyRevenueStats extends StatsOverviewWidget
 {
+    protected static string $view = 'qcommerce-ecommerce-core::widgets.revenue-stats-widget';
+
     protected function getCards(): array
     {
         $statistics = [];
@@ -23,16 +25,36 @@ class DailyRevenueStats extends StatsOverviewWidget
         $statistics['day']['averageOrderAmount'] = $todayOrders->count() ? CurrencyHelper::formatPrice($statistics['day']['orderAmount'] / $statistics['day']['orders']) : CurrencyHelper::formatPrice(0);
         $statistics['day']['orderAmount'] = CurrencyHelper::formatPrice($statistics['day']['orderAmount']);
 
-//                ->description('32k increase')
-//                ->descriptionIcon('heroicon-s-trending-up')
-//                ->chart([7, 2, 10, 3, 15, 4, 17])
-//                ->color('success'),
+        $todayReturnOrders = Order::where('created_at', '>=', now()->startOfDay())->isReturn()->get();
+        $statistics['dayReturn'] = [
+            'orders' => $todayReturnOrders->count(),
+            'products' => OrderProduct::whereIn('order_id', $todayReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+            'orderAmount' => $todayReturnOrders->sum('total'),
+        ];
+        $statistics['dayReturn']['averageOrderAmount'] = $todayReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['dayReturn']['orderAmount'] / $statistics['dayReturn']['orders']) : CurrencyHelper::formatPrice(0);
+        $statistics['dayReturn']['orderAmount'] = CurrencyHelper::formatPrice($statistics['dayReturn']['orderAmount']);
 
         return [
-            Card::make('Aantal bestellingen (vandaag)', $statistics['day']['orders']),
-            Card::make('Totaal bedrag', $statistics['day']['orderAmount']),
-            Card::make('Gemiddelde waarde per order', $statistics['day']['averageOrderAmount']),
-            Card::make('Aantal producten verkocht', $statistics['day']['products']),
+          [
+              'name' => 'Aantal bestellingen (vandaag)',
+              'number' => $statistics['day']['orders'],
+              'retourNumber' => $statistics['dayReturn']['orders'],
+          ],
+          [
+              'name' => 'Totaal bedrag',
+              'number' => $statistics['day']['orderAmount'],
+              'retourNumber' => $statistics['dayReturn']['orderAmount'],
+          ],
+          [
+              'name' => 'Gemiddelde waarde per order',
+              'number' => $statistics['day']['averageOrderAmount'],
+              'retourNumber' => $statistics['dayReturn']['averageOrderAmount'],
+          ],
+          [
+              'name' => 'Aantal producten verkocht',
+              'number' => $statistics['day']['products'],
+              'retourNumber' => $statistics['dayReturn']['products'],
+          ]
         ];
     }
 }

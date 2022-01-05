@@ -13,7 +13,7 @@ class ViewOrder extends ViewRecord
     protected static string $view = 'qcommerce-ecommerce-core::orders.view-order';
 
     protected $listeners = [
-        'refreshPage' => 'render',
+        'refreshPage' => 'renderPage',
         'notify' => 'message',
     ];
 
@@ -24,17 +24,22 @@ class ViewOrder extends ViewRecord
 
     protected function getActions(): array
     {
-        return [
+        return array_merge([
             ButtonAction::make('Bekijk in website')
                 ->url($this->record->url)
                 ->openUrlInNewTab(),
             ButtonAction::make('Download factuur')
                 ->url($this->record->downloadInvoiceUrl())
-                ->hidden(! $this->record->downloadInvoiceUrl()),
+                ->hidden(!$this->record->downloadInvoiceUrl()),
             ButtonAction::make('Download pakbon')
                 ->url($this->record->downloadPackingslipUrl())
-                ->hidden(! $this->record->downloadPackingslipUrl()),
-        ];
+                ->hidden(!$this->record->downloadPackingslipUrl()),
+        ], ecommerce()->buttonActions('order'));
+    }
+
+    public function renderPage()
+    {
+        $this->redirect(route('filament.resources.orders.view', [$this->record]));
     }
 
     public function message($notify)

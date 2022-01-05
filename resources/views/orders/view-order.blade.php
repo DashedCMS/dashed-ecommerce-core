@@ -7,7 +7,7 @@
     <div>
         <div class="mt-4">
             <div class="grid grid-cols-6 gap-8">
-                <div class="col-span-4">
+                <div class="col-span-4 space-y-4">
                     <div class="text-sm text-gray-500 space-x-2 space-y-2 bg-white rounded-md p-4">
                         <span class="font-bold">Status:</span>
                         @php
@@ -35,7 +35,7 @@
                             </a>
                         @endif
                     </div>
-                    <div class="mt-4 bg-white rounded-md p-4">
+                    <div class="bg-white rounded-md p-4">
                         <h2 class="text-2xl font-bold mb-4">Bestelde producten</h2>
                         @foreach($record->orderProducts as $orderProduct)
                             <div class="grid grid-cols-12 gap-4 border-t border-primary py-4">
@@ -81,7 +81,7 @@
                             </div>
                         @endforeach
                     </div>
-                    <div class="mt-4 bg-white rounded-md p-4">
+                    <div class="bg-white rounded-md p-4">
                         <div class="grid grid-cols-3 gap-4 mt-4">
                             <div>
                                 <h2 class="text-2xl font-bold">
@@ -155,7 +155,7 @@
                             @endif
                         </div>
                     </div>
-                    <div class="mt-4 bg-white rounded-md p-4">
+                    <div class="bg-white rounded-md p-4">
                         <h2 class="text-2xl font-bold">
                             Betalingen
                         </h2>
@@ -181,76 +181,12 @@
                             @endforeach
                         </div>
                     </div>
-                    {{--                    <div class="mt-4 bg-white rounded-md p-4"--}}
-                    {{--                         v-if="!$record->credit_for_order_id && keenDeliveryConnected && ($record->status == 'paid' || $record->status == 'waiting_for_confirmation') && !$record->keen_delivery_shipment_id">--}}
-                    {{--                        <div class="space-y-4 grid" v-if="!keenDelivery.shippingMethod">--}}
-                    {{--                            <h3 class="text-xl font-bold">Kies een verzendmethode om deze order met KeenDelivery--}}
-                    {{--                                te--}}
-                    {{--                                versturen</h3>--}}
-                    {{--                            <a href="#" class="text-primary-500 hover:text-primary-700"--}}
-                    {{--                               v-on:click="keenDelivery.shippingMethod = shippingMethod"--}}
-                    {{--                               v-if="shippingMethod.enabled"--}}
-                    {{--                               v-for="shippingMethod in keenDeliveryShippingMethods">Kies--}}
-                    {{--                                {{ shippingMethod.value }}</a>--}}
-                    {{--                        </div>--}}
-                    {{--                        <div class="space-y-4 grid" v-if="keenDelivery.shippingMethod && !keenDelivery.service">--}}
-                    {{--                            <h3 class="text-xl font-bold">Kies een service</h3>--}}
-                    {{--                            <a href="#" class="text-primary-500 hover:text-primary-700"--}}
-                    {{--                               v-on:click="keenDelivery.service = service"--}}
-                    {{--                               v-for="service in keenDelivery.shippingMethod.services" v-if="service.enabled">Kies--}}
-                    {{--                                {{ service.text }}</a>--}}
-                    {{--                            <a href="#" class="btn-secondary" v-on:click="keenDelivery.shippingMethod = ''">Ga--}}
-                    {{--                                terug</a>--}}
-                    {{--                        </div>--}}
-                    {{--                        <form @submit.prevent="submitKeenDelivery" class="space-y-4 grid"--}}
-                    {{--                              v-if="keenDelivery.shippingMethod && keenDelivery.service">--}}
-                    {{--                            <h3 class="text-xl font-bold">Vul alle verplichte velden in</h3>--}}
-                    {{--                            <text-input v-model="keenDelivery.service.amount" required type="number"--}}
-                    {{--                                        label="Aantal"--}}
-                    {{--                                        min="1"></text-input>--}}
-                    {{--                            <div v-for="option in keenDelivery.service.options">--}}
-                    {{--                                <text-input v-if="option.type == 'textbox'" v-model="option.standard_value"--}}
-                    {{--                                            :required="option.mandatory == 1 ? true : false"--}}
-                    {{--                                            :label="option.text"></text-input>--}}
-                    {{--                                <text-input v-else-if="option.type == 'email'" type="email"--}}
-                    {{--                                            v-model="option.standard_value"--}}
-                    {{--                                            :required="option.mandatory == 1 ? true : false"--}}
-                    {{--                                            :label="option.text"></text-input>--}}
-                    {{--                                <text-input v-else-if="option.type == 'date'" type="date"--}}
-                    {{--                                            v-model="option.standard_value"--}}
-                    {{--                                            :required="option.mandatory == 1 ? true : false"--}}
-                    {{--                                            :label="option.text"></text-input>--}}
-                    {{--                                <div v-else-if="option.type == 'checkbox'" class="flex items-center">--}}
-                    {{--                                    <input :id="option.field" v-model="option.standard_value"--}}
-                    {{--                                           :required="option.mandatory == 1 ? true : false"--}}
-                    {{--                                           type="checkbox"--}}
-                    {{--                                           class="form-checkbox h-4 w-4 text-secondary-600 transition duration-150 ease-in-out">--}}
-                    {{--                                    <label :for="option.field"--}}
-                    {{--                                           class="ml-2 block text-sm leading-5 text-gray-900">--}}
-                    {{--                                        {{ option.text }}--}}
-                    {{--                                    </label>--}}
-                    {{--                                </div>--}}
-                    {{--                                <select-input v-else-if="option.type == 'selectbox'"--}}
-                    {{--                                              v-model="option.standard_value"--}}
-                    {{--                                              :label="option.text"--}}
-                    {{--                                              :required="option.mandatory == 1 ? true : false">--}}
-                    {{--                                    <option v-for="choice in option.choices" :value="choice.value">--}}
-                    {{--                                        {{ choice.text }}--}}
-                    {{--                                    </option>--}}
-                    {{--                                </select-input>--}}
-                    {{--                                <div v-else>--}}
-                    {{--                                    <p>Deze optie bestaat nog niet, vraag dit aan bij Qubiqx!</p>--}}
-                    {{--                                </div>--}}
-                    {{--                            </div>--}}
-                    {{--                            <div class="grid grid-cols-2 gap-4">--}}
-                    {{--                                <a href="#" class="btn-secondary" v-on:click="keenDelivery.service = ''">Ga--}}
-                    {{--                                    terug</a>--}}
-                    {{--                                <loading-button :loading="keenDelivery.processing" class="btn-secondary"--}}
-                    {{--                                                type="submit">Verstuur naar KeenDelivery--}}
-                    {{--                                </loading-button>--}}
-                    {{--                            </div>--}}
-                    {{--                        </form>--}}
-                    {{--                    </div>--}}
+                    @foreach(ecommerce()->widgets('orders') as $widget)
+                        @if($widget['width'] == 'full')
+                            <hr>
+                            <livewire:is :component="$widget['name']" :order="$record"></livewire:is>
+                        @endif
+                    @endforeach
                 </div>
                 <div class="col-span-2 space-y-4">
                     <div class="bg-white rounded-md p-4 space-y-2">
@@ -281,9 +217,11 @@
                                 :order="$record"></livewire:change-order-retour-status>
                         @endif
 
-                        @foreach(ecommerce()->builder('orderSideWidgets') as $widget)
-                            <hr>
-                            <livewire:is :component="$widget['name']" :order="$record"></livewire:is>
+                        @foreach(ecommerce()->widgets('orders') as $widget)
+                            @if($widget['width'] == 'sidebar')
+                                <hr>
+                                <livewire:is :component="$widget['name']" :order="$record"></livewire:is>
+                            @endif
                         @endforeach
                     </div>
                     <div class="bg-white rounded-md p-4">

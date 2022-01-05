@@ -29,16 +29,25 @@ class ListOrders extends ListRecords
             BulkAction::make('downloadInvoices')
                 ->label('Download facturen')
                 ->color('primary')
-                ->action(fn (Collection $records) => function ($records) {
-                    $this->notify('success', 'test');
-
-                    return redirect('/test');
-                    exit;
-
-                    return Storage::download('/exports/invoices/exported-invoice.pdf');
-                })
+                ->action('downloadInvoices')
                 ->deselectRecordsAfterCompletion(),
         ];
+    }
+
+    public function downloadInvoices(){
+        dd('asdf');
+//        dd($this->records);
+//        $this->notify('success', 'test');
+
+//        return redirect('/test');
+//        exit;
+
+//        return Storage::download('/exports/invoices/exported-invoice.pdf');
+    }
+
+    protected function getActions(): array
+    {
+        return array_merge(parent::getActions(), ecommerce()->buttonActions('orders'));
     }
 
     protected function getTableActions(): array

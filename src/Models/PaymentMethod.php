@@ -44,12 +44,8 @@ class PaymentMethod extends Model
 
     protected $table = 'qcommerce__payment_methods';
 
-    public function site()
+    public function orderPayments()
     {
-        foreach (Sites::getSites() as $site) {
-            if ($site['id'] == $this->site_id) {
-                return $site;
-            }
-        }
+        $this->hasMany(OrderPayment::class);
     }
 }

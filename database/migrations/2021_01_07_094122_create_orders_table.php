@@ -52,6 +52,7 @@ class CreateOrdersTable extends Migration
             $table->boolean('invoice_send_to_customer')->default(0);
             $table->string('ga_user_id')->nullable();
             $table->boolean('ga_commerce_hit_send')->default(0);
+            $table->string('order_origin')->default('own');
 
             $table->string('site_id');
             $table->foreignId('user_id')->nullable()->constrained('users');

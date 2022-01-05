@@ -272,7 +272,7 @@
         </div>
         <div
             style="float:right;display:inline-block;"><a
-                href="mailto:{{Customsetting::get('store_to_email')}}">{{Customsetting::get('store_to_email')}}</a>
+                href="mailto:{{Customsetting::get('site_to_email')}}">{{Customsetting::get('site_to_email')}}</a>
         </div>
     </div>
 </div>

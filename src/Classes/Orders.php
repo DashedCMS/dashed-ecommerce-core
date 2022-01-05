@@ -33,7 +33,7 @@ class Orders
         ];
     }
 
-    public static function sendNotification(Order $order, $email = null)
+    public static function sendNotification(Order $order, $email = null): void
     {
         try {
             if ($order->contains_pre_orders) {
