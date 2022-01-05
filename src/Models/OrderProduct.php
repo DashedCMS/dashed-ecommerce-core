@@ -3,9 +3,9 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceEcommerceCore\Classes\TaxHelper;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Qubiqx\QcommerceEcommerceCore\Classes\TaxHelper;
 
 class OrderProduct extends Model
 {
