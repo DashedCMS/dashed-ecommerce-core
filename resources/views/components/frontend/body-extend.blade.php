@@ -1,9 +1,9 @@
 @if(isset($product))
-    <x-qcommerce::frontend.products.schema :product="$product"></x-qcommerce::frontend.products.schema>
+    <x-qcommerce-ecommerce-core::frontend.products.schema :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
 @endif
 @if(isset($products))
     @foreach($products as $product)
-        <x-qcommerce::frontend.products.schema :product="$product"></x-qcommerce::frontend.products.schema>
+        <x-qcommerce-ecommerce-core::frontend.products.schema :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
     @endforeach
 @endif
 
