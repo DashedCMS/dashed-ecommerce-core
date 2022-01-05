@@ -68,6 +68,7 @@
                 "ShippingZones": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ShippingZones",
                 "ProductCategories": "Qubiqx\\QcommerceEcommerceCore\\Classes\\ProductCategories",
                 "Products": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Products",
+                "Product": "Qubiqx\\QcommerceEcommerceCore\\Models\\Product",
                 "Orders": "Qubiqx\\QcommerceEcommerceCore\\Classes\\Orders",
                 "SKUs": "Qubiqx\\QcommerceEcommerceCore\\Classes\\SKUs"
             }
