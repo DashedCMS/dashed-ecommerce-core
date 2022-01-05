@@ -3,13 +3,8 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\PieChartWidget;
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Card;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
 use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 
 class PaymentMethodPieChartWidget extends PieChartWidget
@@ -19,10 +14,10 @@ class PaymentMethodPieChartWidget extends PieChartWidget
         $data = Cache::remember('payment-pie-chart-data', 60 * 60, function () {
             $paymentMethods = OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method');
             $orderPayments = OrderPayment::get();
-            foreach($orderPayments as $orderPayment){
-                if(!$orderPayment->payment_method_id){
+            foreach ($orderPayments as $orderPayment) {
+                if (! $orderPayment->payment_method_id) {
                     $correctPaymentMethod = PaymentMethod::where('psp', $orderPayment->psp)->where('name', 'LIKE', '%' . $orderPayment->payment_method . '%')->first();
-                    if($correctPaymentMethod){
+                    if ($correctPaymentMethod) {
                         $orderPayment->payment_method_id = $correctPaymentMethod->id;
                         $orderPayment->save();
                     }
@@ -33,7 +28,7 @@ class PaymentMethodPieChartWidget extends PieChartWidget
             $pieColors = [];
             $pieLabels = [];
 
-            foreach($paymentMethods as $paymentMethod){
+            foreach ($paymentMethods as $paymentMethod) {
                 $pieData[] = OrderPayment::paid()->where('payment_method', $paymentMethod)->count();
                 $pieLabels[] = $paymentMethod;
                 $pieColors[] = '#' . str_pad(dechex(mt_rand(0, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
@@ -51,9 +46,9 @@ class PaymentMethodPieChartWidget extends PieChartWidget
                 [
                     'data' => $data['pieData'],
                     'backgroundColor' => $data['pieColors'],
-                ]
+                ],
             ],
-            'labels' => $data['pieLabels']
+            'labels' => $data['pieLabels'],
         ];
     }
 

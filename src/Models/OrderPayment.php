@@ -6,7 +6,6 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 
 class OrderPayment extends Model
 {
@@ -76,7 +75,7 @@ class OrderPayment extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false): string
     {
-        if (!$newStatus || $this->status == $newStatus) {
+        if (! $newStatus || $this->status == $newStatus) {
             return '';
         }
 

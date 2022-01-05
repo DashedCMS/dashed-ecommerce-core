@@ -5,7 +5,6 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -46,6 +45,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPag
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
 use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
 use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 
@@ -231,7 +231,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             DailyRevenueStats::class,
             MonthlyRevenueStats::class,
             YearlyRevenueStats::class,
-            PaymentMethodPieChartWidget::class
+            PaymentMethodPieChartWidget::class,
         ]);
     }
 }

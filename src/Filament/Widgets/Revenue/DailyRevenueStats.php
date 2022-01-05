@@ -3,7 +3,6 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Card;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
@@ -54,7 +53,7 @@ class DailyRevenueStats extends StatsOverviewWidget
               'name' => 'Aantal producten verkocht',
               'number' => $statistics['day']['products'],
               'retourNumber' => $statistics['dayReturn']['products'],
-          ]
+          ],
         ];
     }
 }

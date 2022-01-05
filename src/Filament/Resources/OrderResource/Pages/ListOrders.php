@@ -13,7 +13,6 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Actions\ButtonAction;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
-use Illuminate\Database\Eloquent\Collection;
 use Filament\Tables\Filters\MultiSelectFilter;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
@@ -34,7 +33,8 @@ class ListOrders extends ListRecords
         ];
     }
 
-    public function downloadInvoices(){
+    public function downloadInvoices()
+    {
         dd('asdf');
 //        dd($this->records);
 //        $this->notify('success', 'test');
