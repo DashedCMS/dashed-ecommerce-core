@@ -26,7 +26,7 @@ class ViewOrder extends ViewRecord
     {
         return array_merge([
             ButtonAction::make('Bekijk in website')
-                ->url($this->record->url)
+                ->url($this->record->getUrl())
                 ->openUrlInNewTab(),
             ButtonAction::make('Download factuur')
                 ->url($this->record->downloadInvoiceUrl())
