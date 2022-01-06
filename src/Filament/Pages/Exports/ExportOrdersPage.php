@@ -24,6 +24,9 @@ class ExportOrdersPage extends Page implements HasForms
 
     protected static string $view = 'qcommerce-ecommerce-core::exports.pages.export-orders';
 
+    public $start_date;
+    public $end_date;
+
     protected function getFormSchema(): array
     {
         return [
@@ -45,11 +48,11 @@ class ExportOrdersPage extends Page implements HasForms
     {
         $orders = Order::isPaidOrReturn();
 
-        if ($this->form->getState()['start_date'] != null) {
+        if ($this->form->getState()['start_date']) {
             $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
         }
 
-        if ($this->form->getState()['end_date'] != null) {
+        if ($this->form->getState()['end_date']) {
             $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['end_date'])->endOfDay());
         }
 
