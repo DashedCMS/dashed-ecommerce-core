@@ -19,7 +19,7 @@
                     {
                         'sku': '{{$orderProduct->sku}}',
                         'name': '{{$orderProduct->name}}',
-                        'item_id': '{{$orderProduct->product->id}}',
+                        'item_id': '{{$orderProduct->product ? $orderProduct->product->id : ''}}',
                         'price': {{number_format($orderProduct->price, 2, '.', '')}},
                         'quantity': {{$orderProduct->quantity}},
                     }
