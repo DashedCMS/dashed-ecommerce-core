@@ -227,7 +227,7 @@ class CartController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (! $hasAccessToOrder || !$order->downloadInvoiceUrl()) {
+        if (! $hasAccessToOrder || ! $order->downloadInvoiceUrl()) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -244,7 +244,7 @@ class CartController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (! $hasAccessToOrder || !$order->downloadPackingslipUrl()) {
+        if (! $hasAccessToOrder || ! $order->downloadPackingslipUrl()) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
