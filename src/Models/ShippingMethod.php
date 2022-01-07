@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -12,6 +13,7 @@ class ShippingMethod extends Model
 {
     use HasTranslations;
     use LogsActivity;
+    use SoftDeletes;
 
     protected static $logFillable = true;
 

@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -11,6 +12,7 @@ class ShippingZone extends Model
 {
     use HasTranslations;
     use LogsActivity;
+    use SoftDeletes;
 
     protected static $logFillable = true;
 
@@ -33,6 +35,15 @@ class ShippingZone extends Model
         'zones' => 'array',
         'disabled_payment_method_ids' => 'array',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($shippingZone) {
+            $shippingZone->shippingMethods()->delete();
+        });
+    }
 
     public function site()
     {
