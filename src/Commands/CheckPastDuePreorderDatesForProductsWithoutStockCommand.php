@@ -5,8 +5,8 @@ namespace Qubiqx\QcommerceEcommerceCore\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use Qubiqx\QcommerceCore\Classes\Mails;
-use Qubiqx\QcommerceEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
 
 class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
 {
