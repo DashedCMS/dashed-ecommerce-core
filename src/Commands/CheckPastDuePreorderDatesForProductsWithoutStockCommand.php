@@ -3,11 +3,10 @@
 namespace Qubiqx\QcommerceEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
-use Qubiqx\Qcommerce\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
-use Qubiqx\Qcommerce\Models\Product;
-use Qubiqx\Qcommerce\Models\Customsetting;
-use Qubiqx\Qcommerce\Mail\ProductsWithPastDuePreOrderDateMail;
+use Qubiqx\QcommerceCore\Classes\Mails;
+use Qubiqx\QcommerceEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
 
 class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
 {
@@ -48,18 +47,13 @@ class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
                 try {
                     Mail::to('robin@qubiqx.com')->send(new ProductsWithPastDuePreOrderDateMail($products));
                 } catch (\Exception $e) {
-                    dd($e->getMessage());
                 }
             } else {
                 try {
-                    $notificationInvoiceEmails = Customsetting::get('notification_invoice_emails', Sites::getActive(), '[]');
-                    if ($notificationInvoiceEmails) {
-                        foreach (json_decode($notificationInvoiceEmails) as $notificationInvoiceEmail) {
-                            Mail::to($notificationInvoiceEmail)->send(new ProductsWithPastDuePreOrderDateMail($products));
-                        }
+                    foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
+                        Mail::to($notificationInvoiceEmail)->send(new ProductsWithPastDuePreOrderDateMail($products));
                     }
                 } catch (\Exception $e) {
-                    dd($e->getMessage());
                 }
             }
         }
