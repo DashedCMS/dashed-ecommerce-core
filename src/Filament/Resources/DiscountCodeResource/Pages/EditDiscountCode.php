@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
 
 class EditDiscountCode extends EditRecord
@@ -17,6 +18,13 @@ class EditDiscountCode extends EditRecord
             ButtonAction::make('Genereer een code')
                 ->action('generateRandomCode'),
         ]);
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
+
+        return $data;
     }
 
     public function generateRandomCode(): void
