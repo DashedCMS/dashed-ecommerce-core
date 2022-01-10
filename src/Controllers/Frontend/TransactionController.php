@@ -260,7 +260,7 @@ class TransactionController extends FrontendController
 
             if ($depositAmount > 0.00) {
                 $orderPayment->amount = $depositAmount;
-                $orderPayment->psp = $depositPaymentMethod['system'];
+                $orderPayment->psp = $depositPaymentMethod['psp'];
                 $orderPayment->payment_method_id = $depositPaymentMethod['id'];
 
                 $order->has_deposit = true;
