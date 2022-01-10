@@ -572,7 +572,12 @@ class ShoppingCart
     {
         $paymentMethod = PaymentMethod::find($paymentMethodId);
 
-        $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids);
+        $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids)->toArray();
+        foreach ($depositPaymentMethods as &$depositPaymentMethod) {
+            $depositPaymentMethod['name'] = $depositPaymentMethod['name'][App::getLocale()] ?? '';
+            $depositPaymentMethod['additional_info'] = $depositPaymentMethod['additional_info'][App::getLocale()] ?? '';
+            $depositPaymentMethod['payment_instructions'] = $depositPaymentMethod['payment_instructions'][App::getLocale()] ?? '';
+        }
 
         return $depositPaymentMethods;
     }

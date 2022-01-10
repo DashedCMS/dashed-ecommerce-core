@@ -152,12 +152,12 @@ class PaymentMethods
         return $paymentMethods;
     }
 
-    public static function getPaymentMethodsForDeposit($paymentMethodId)
-    {
-        $paymentMethod = PaymentMethod::find($paymentMethodId);
-
-        $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids);
-
-        return $depositPaymentMethods;
-    }
+//    public static function getPaymentMethodsForDeposit($paymentMethodId)
+//    {
+//        $paymentMethod = PaymentMethod::find($paymentMethodId);
+//
+//        $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids);
+//
+//        return $depositPaymentMethods;
+//    }
 }
