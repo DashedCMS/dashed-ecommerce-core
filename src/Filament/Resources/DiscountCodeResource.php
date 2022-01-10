@@ -195,14 +195,12 @@ class DiscountCodeResource extends Resource
                             ->type('number')
                             ->minValue(0)
                             ->maxValue(100000)
-                            ->required()
                             ->rules([
-                                'required',
                                 'numeric',
                                 'min:0',
                                 'max:100000',
                             ])
-                            ->hidden(fn ($get) => ! $get('use_stock')),
+                            ->visible(fn ($get) => $get('use_stock')),
                         Toggle::make('limit_use_per_customer')
                             ->label('Deze kortingscode mag 1x per klant gebruikt worden'),
                         DatePicker::make('start_date')
