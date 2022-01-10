@@ -148,60 +148,16 @@ class PaymentMethods
                 'deposit_calculation' => $paymentMethod->deposit_calculation,
             ];
         }
-        if (Customsetting::get('mollie_connected')) {
-//            foreach (Mollie::getPaymentMethods() as $paymentMethod) {
-//                $paymentMethods[] = [
-//                    'id' => 'mollie_' . $paymentMethod->id,
-//                    'system' => 'mollie',
-//                    'image' => [],
-//                    'name' => $paymentMethod->description,
-//                    'postpay' => false,
-//                    'extra_costs' => Customsetting::get('mollie_payment_method_costs_' . $paymentMethod->id, Sites::getActive(), 0),
-//                    'additional_info' => '',
-//                    'payment_instructions' => '',
-//                    'deposit_calculation' => '',
-//                ];
-//            }
-        }
-        if (Customsetting::get('paynl_connected')) {
-//            foreach (PayNL::getPaymentMethods() as $paymentMethod) {
-//                $paymentMethods[] = [
-//                    'id' => 'paynl_' . $paymentMethod['id'],
-//                    'system' => 'paynl',
-//                    'image' => [
-//                        'original' => 'https://static.pay.nl/' . $paymentMethod['brand']['image'],
-//                        '20' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(20)->url(true),
-//                        '25' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(25)->url(true),
-//                        '50' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(50)->url(true),
-//                        '100' => Thumbnail::src('https://static.pay.nl/' . $paymentMethod['brand']['image'])->widen(100)->url(true),
-//                    ],
-//                    'name' => $paymentMethod['visibleName'],
-//                    'postpay' => $paymentMethod['postpay'],
-//                    'extra_costs' => Customsetting::get('paynl_payment_method_costs_' . $paymentMethod['id'], Sites::getActive(), 0),
-//                    'additional_info' => Customsetting::get('paynl_payment_method_additional_info_' . $paymentMethod['id'], Sites::getActive()),
-//                    'payment_instructions' => Customsetting::get('paynl_payment_method_payment_instructions_' . $paymentMethod['id'], Sites::getActive()),
-//                    'deposit_calculation' => '',
-//                ];
-//            }
-        }
 
         return $paymentMethods;
     }
 
     public static function getPaymentMethodsForDeposit($paymentMethodId)
     {
-        $paymentMethods = self::getAllPaymentMethods();
+        $paymentMethod = PaymentMethod::find($paymentMethodId);
 
-        foreach ($paymentMethods as $key => $paymentMethod) {
-            if ($paymentMethod['system'] == 'own') {
-                unset($paymentMethods[$key]);
-            } else {
-                if (! (Customsetting::get("payment_method_{$paymentMethodId}_deposit_payment_method_{$paymentMethod['id']}") ? true : false)) {
-                    unset($paymentMethods[$key]);
-                }
-            }
-        }
+        $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids);
 
-        return $paymentMethods;
+        return $depositPaymentMethods;
     }
 }
