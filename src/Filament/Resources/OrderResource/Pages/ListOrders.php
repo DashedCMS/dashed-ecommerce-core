@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Forms\Components\MultiSelect;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
@@ -180,14 +181,28 @@ class ListOrders extends ListRecords
 
         return [
             MultiSelectFilter::make('status')
-                ->options([
-                    'paid' => 'Betaald',
-                    'partially_paid' => 'Gedeeltelijk betaald',
-                    'waiting_for_confirmation' => 'Wachten op bevestiging',
-                    'pending' => 'Lopende aankoop',
-                    'cancelled' => 'Geannuleerd',
-                    'return ' => 'Retour',
+                ->form([
+                    MultiSelect::make('values')
+                        ->label('Status')
+                        ->options([
+                            'paid' => 'Betaald',
+                            'partially_paid' => 'Gedeeltelijk betaald',
+                            'waiting_for_confirmation' => 'Wachten op bevestiging',
+                            'pending' => 'Lopende aankoop',
+                            'cancelled' => 'Geannuleerd',
+                            'return ' => 'Retour',
+                        ])
+                        ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
                 ]),
+//            MultiSelectFilter::make('status')
+//                ->options([
+//                    'paid' => 'Betaald',
+//                    'partially_paid' => 'Gedeeltelijk betaald',
+//                    'waiting_for_confirmation' => 'Wachten op bevestiging',
+//                    'pending' => 'Lopende aankoop',
+//                    'cancelled' => 'Geannuleerd',
+//                    'return ' => 'Retour',
+//                ]),
 //            MultiSelectFilter::make('payment_method')
 //                ->options(OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method')->unique()),
             MultiSelectFilter::make('fulfillment_status')
