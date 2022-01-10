@@ -31,7 +31,7 @@ class AdminOrderCancelledMail extends Mailable
      */
     public function build()
     {
-        $invoicePath = storage_path('app/public/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
+        $invoicePath = storage_path('app/public/qcommerce/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
         return $this->view('qcommerce-ecommerce-core::emails.admin-cancelled-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('admin-order-cancelled-email-subject', 'orders', 'Order #:orderId: cancelled', 'text', [

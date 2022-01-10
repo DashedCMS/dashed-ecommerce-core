@@ -159,15 +159,17 @@
                         <td class="">
                             {{Customsetting::get('company_name')}}<br>
                             {{Customsetting::get('company_street')}} {{Customsetting::get('company_street_number')}}<br>
-                                {{Customsetting::get('company_postal_code')}} {{Customsetting::get('company_city')}}<br>
+                            {{Customsetting::get('company_postal_code')}} {{Customsetting::get('company_city')}}<br>
                             {{Customsetting::get('company_country')}}
                             @if(Customsetting::get('company_kvk'))
                                 <br>
-                                {{Translation::get('kvk', 'credit-invoice', 'KVK')}}: {{Customsetting::get('company_kvk')}}
+                                {{Translation::get('kvk', 'credit-invoice', 'KVK')}}
+                                : {{Customsetting::get('company_kvk')}}
                             @endif
                             @if(Customsetting::get('company_btw'))
                                 <br>
-                                {{Translation::get('btw', 'credit-invoice', 'BTW')}}: {{Customsetting::get('company_btw')}}
+                                {{Translation::get('btw', 'credit-invoice', 'BTW')}}
+                                : {{Customsetting::get('company_btw')}}
                             @endif
                         </td>
                     </tr>
@@ -245,25 +247,25 @@
                     </td>
                 </tr>
             @endif
-{{--            <tr>--}}
-{{--                <td>--}}
-{{--                    {{Translation::get('shipping-costs', 'credit-invoice', 'Shipping costs')}}:--}}
-{{--                </td>--}}
-{{--                <td>--}}
-{{--                    @if($order->shipping_costs != 0.00)--}}
-{{--                        {{CurrencyHelper::formatPrice($order->shipping_costs, 'EUR', true)}} @else {{Translation::get('free-shipping', 'credit-invoice', 'Free')}} @endif--}}
-{{--                </td>--}}
-{{--            </tr>--}}
-{{--            @if($order->payment_costs != 0.00)--}}
-{{--                <tr>--}}
-{{--                    <td>--}}
-{{--                        {{Translation::get('payment-costs', 'credit-invoice', 'Betalingsmethode kosten')}}:--}}
-{{--                    </td>--}}
-{{--                    <td>--}}
-{{--                        {{CurrencyHelper::formatPrice($order->payment_costs, 'EUR', true)}}--}}
-{{--                    </td>--}}
-{{--                </tr>--}}
-{{--            @endif--}}
+            {{--            <tr>--}}
+            {{--                <td>--}}
+            {{--                    {{Translation::get('shipping-costs', 'credit-invoice', 'Shipping costs')}}:--}}
+            {{--                </td>--}}
+            {{--                <td>--}}
+            {{--                    @if($order->shipping_costs != 0.00)--}}
+            {{--                        {{CurrencyHelper::formatPrice($order->shipping_costs, 'EUR', true)}} @else {{Translation::get('free-shipping', 'credit-invoice', 'Free')}} @endif--}}
+            {{--                </td>--}}
+            {{--            </tr>--}}
+            {{--            @if($order->payment_costs != 0.00)--}}
+            {{--                <tr>--}}
+            {{--                    <td>--}}
+            {{--                        {{Translation::get('payment-costs', 'credit-invoice', 'Betalingsmethode kosten')}}:--}}
+            {{--                    </td>--}}
+            {{--                    <td>--}}
+            {{--                        {{CurrencyHelper::formatPrice($order->payment_costs, 'EUR', true)}}--}}
+            {{--                    </td>--}}
+            {{--                </tr>--}}
+            {{--            @endif--}}
             @if($order->discount != 0.00)
                 <tr>
                     <td>

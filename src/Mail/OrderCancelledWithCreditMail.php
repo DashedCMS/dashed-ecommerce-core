@@ -31,7 +31,7 @@ class OrderCancelledWithCreditMail extends Mailable
      */
     public function build()
     {
-        $invoicePath = storage_path('app/public/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
+        $invoicePath = storage_path('app/public/qcommerce/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
         $mail = $this->view('qcommerce-ecommerce-core::emails.cancelled-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))

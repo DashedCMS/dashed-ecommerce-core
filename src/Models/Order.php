@@ -183,65 +183,6 @@ class Order extends Model
             ];
         }
 
-        //Todo: extend statusses from other packages
-
-//        if ($this->keen_delivery_shipment_id) {
-//            $labels[] = [
-//                'status' => 'Doorgezet naar KeenDelivery',
-//                'color' => 'green'
-//            ];
-//        }
-
-//        if ($this->keen_delivery_shipment_id && $this->keen_delivery_label_printed) {
-//            $labels[] = [
-//                'status' => 'Label geprint',
-//                'color' => 'green'
-//            ];
-//        } elseif ($this->keen_delivery_shipment_id && !$this->keen_delivery_label_printed) {
-//            $labels[] = [
-//                'status' => 'Label niet geprint',
-//                'color' => 'red'
-//            ];
-//        }
-
-//        if ($this->montaPortalOrder) {
-//            if ($this->montaPortalOrder->pushed_to_montaportal == 0) {
-//                $labels[] = [
-//                    'status' => 'Order nog niet doorgezet naar Montaportal',
-//                    'color' => 'yellow'
-//                ];
-//            } elseif ($this->montaPortalOrder->pushed_to_montaportal == 1) {
-//                $labels[] = [
-//                    'status' => 'Order doorgezet naar Montaportal',
-//                    'color' => 'green'
-//                ];
-//            } elseif ($this->montaPortalOrder->pushed_to_montaportal == 2) {
-//                $labels[] = [
-//                    'status' => 'Order naar Montaportal ging fout',
-//                    'color' => 'red'
-//                ];
-//            }
-//        }
-
-//        if ($this->exactonlineOrder) {
-//            if ($this->exactonlineOrder->pushed == 0) {
-//                $labels[] = [
-//                    'status' => 'Order nog niet doorgezet naar Exactonline',
-//                    'color' => 'yellow'
-//                ];
-//            } elseif ($this->exactonlineOrder->pushed == 1) {
-//                $labels[] = [
-//                    'status' => 'Order doorgezet naar Exactonline',
-//                    'color' => 'green'
-//                ];
-//            } elseif ($this->exactonlineOrder->pushed == 2) {
-//                $labels[] = [
-//                    'status' => 'Order naar Exactonline ging fout',
-//                    'color' => 'red'
-//                ];
-//            }
-//        }
-
         return $labels;
     }
 
@@ -272,13 +213,8 @@ class Order extends Model
 
     public function shippingMethod()
     {
-        return $this->belongsTo(ShippingMethod::class);
+        return $this->belongsTo(ShippingMethod::class)->withTrashed();
     }
-
-//    public function channableOrderConnection()
-//    {
-//        return $this->belongsTo(ChannableOrderConnection::class);
-//    }
 
     public function user()
     {

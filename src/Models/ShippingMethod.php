@@ -50,7 +50,7 @@ class ShippingMethod extends Model
 
     public function shippingZone()
     {
-        return $this->belongsTo(ShippingZone::class);
+        return $this->belongsTo(ShippingZone::class)->withTrashed();
     }
 
     public function shippingMethodClasses()
