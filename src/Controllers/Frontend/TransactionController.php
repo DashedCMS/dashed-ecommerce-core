@@ -290,7 +290,7 @@ class TransactionController extends FrontendController
             return redirect(url(route('qcommerce.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
         } else {
             try {
-                $transaction = ecommerce()->builder('paymentServiceProviders')[$psp]['class']::startTransaction($orderPayment);
+                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
             } catch (\Exception $exception) {
                 throw new \Exception('Cannot start payment: ' . $exception->getMessage());
             }
