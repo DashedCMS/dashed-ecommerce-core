@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Filament\Forms\Components\MultiSelect;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
@@ -14,6 +13,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Actions\ButtonAction;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Placeholder;
 use Filament\Tables\Filters\MultiSelectFilter;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
