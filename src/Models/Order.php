@@ -1128,7 +1128,7 @@ class Order extends Model
 
     public function getUrl()
     {
-        return LaravelLocalization::localizeUrl(route('qcommerce.frontend.checkout.complete') . '?orderId=' . $this->hash . '&paymentId=' . ($this->orderPayments ? $this->orderPayments()->latest()->first()->hash : ''));
+        return LaravelLocalization::localizeUrl(route('qcommerce.frontend.checkout.complete') . '?orderId=' . $this->hash . '&paymentId=' . ($this->orderPayments()->count() ? $this->orderPayments()->latest()->first()->hash : ''));
     }
 
     public function fulfillmentStatus()
