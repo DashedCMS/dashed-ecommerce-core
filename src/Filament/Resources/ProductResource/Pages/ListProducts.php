@@ -160,8 +160,6 @@ class ListProducts extends ListRecords
                     $record->save();
                 })
                 ->hidden(fn($record) => $record->type == 'variable' && !$record->parent_product_id),
-
-//            v-if="product.type == 'simple' || product.type == 'variable' && product.parent_product_id"
         ]);
     }
 
@@ -174,13 +172,13 @@ class ListProducts extends ListRecords
                         ->label('Alleen hoofd producten')
                         ->default(1),
                 ])
-            ->query(function (Builder $query, array $data): Builder {
-                return $query
-                    ->when(
-                        $data['value'],
-                        fn (Builder $query, $value): Builder => $query->topLevel(),
-                    );
-            }),
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['value'],
+                            fn(Builder $query, $value): Builder => $query->topLevel(),
+                        );
+                }),
         ];
     }
 
