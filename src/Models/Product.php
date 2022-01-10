@@ -64,8 +64,6 @@ class Product extends Model
         'meta_image',
         'parent_product_id',
         'order',
-        'efulfillment_shop_id',
-        'efulfillment_shop_error',
         'only_show_parent_product',
         'vat_rate',
     ];

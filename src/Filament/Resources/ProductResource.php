@@ -52,10 +52,14 @@ class ProductResource extends Resource
     public static function getGloballySearchableAttributes(): array
     {
         return [
+            'site_ids',
             'name',
+            'slug',
             'short_description',
             'description',
             'search_terms',
+            'sku',
+            'ean',
             'content',
             'meta_title',
             'meta_description',
@@ -566,10 +570,14 @@ class ProductResource extends Resource
                 TextColumn::make('name')
                     ->label('Naam')
                     ->searchable([
+                        'site_ids',
                         'name',
+                        'slug',
                         'short_description',
                         'description',
                         'search_terms',
+                        'sku',
+                        'ean',
                         'content',
                         'meta_title',
                         'meta_description',
