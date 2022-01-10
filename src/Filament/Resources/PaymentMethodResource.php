@@ -87,7 +87,7 @@ class PaymentMethodResource extends Resource
                 ->rules([
                     'required',
                     'numeric',
-                    'max:255',
+                    'max:100000',
                 ])
             ->required()
             ->default(0),
@@ -96,7 +96,7 @@ class PaymentMethodResource extends Resource
                 ->rules([
                     'required',
                     'numeric',
-                    'max:255',
+                    'max:100000',
                 ])
             ->required()
             ->default(0),
