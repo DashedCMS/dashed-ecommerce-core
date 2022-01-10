@@ -570,19 +570,11 @@ class ShoppingCart
 
     public static function getPaymentMethodsForDeposit($paymentMethodId)
     {
-        $paymentMethods = self::getAllPaymentMethods();
+        $paymentMethod = PaymentMethod::find($paymentMethodId);
 
-        foreach ($paymentMethods as $key => $paymentMethod) {
-            if ($paymentMethod['system'] == 'own') {
-                unset($paymentMethods[$key]);
-            } else {
-                if (! (Customsetting::get("payment_method_{$paymentMethodId}_deposit_payment_method_{$paymentMethod['id']}") ? true : false)) {
-                    unset($paymentMethods[$key]);
-                }
-            }
-        }
+        $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids);
 
-        return $paymentMethods;
+        return $depositPaymentMethods;
     }
 
     public static function removeInvalidItems()
