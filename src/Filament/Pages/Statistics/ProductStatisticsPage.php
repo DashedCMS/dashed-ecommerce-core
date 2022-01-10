@@ -146,9 +146,6 @@ class ProductStatisticsPage extends Page implements HasForms
         return [
             Card::make()
                 ->schema([
-                    TextInput::make('search')
-                        ->label('Zoekterm')
-                        ->reactive(),
                     DatePicker::make('startDate')
                         ->label('Start datum')
                         ->reactive(),
@@ -158,6 +155,9 @@ class ProductStatisticsPage extends Page implements HasForms
                             'nullable',
                             'after:start_date',
                         ])
+                        ->reactive(),
+                    TextInput::make('search')
+                        ->label('Zoekterm')
                         ->reactive(),
                 ])
                 ->columns([

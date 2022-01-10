@@ -165,6 +165,16 @@ class RevenueStatisticsPage extends Page implements HasForms
         return [
             Card::make()
                 ->schema([
+                    DatePicker::make('startDate')
+                        ->label('Start datum')
+                        ->reactive(),
+                    DatePicker::make('endDate')
+                        ->label('Eind datum')
+                        ->rules([
+                            'nullable',
+                            'after:start_date',
+                        ])
+                        ->reactive(),
                     Select::make('status')
                         ->label('Status')
                         ->options([
@@ -207,16 +217,6 @@ class RevenueStatisticsPage extends Page implements HasForms
                         ->options(array_merge([
                             'all' => 'Alles',
                         ], $orderOrigins))
-                        ->reactive(),
-                    DatePicker::make('startDate')
-                        ->label('Start datum')
-                        ->reactive(),
-                    DatePicker::make('endDate')
-                        ->label('Eind datum')
-                        ->rules([
-                            'nullable',
-                            'after:start_date',
-                        ])
                         ->reactive(),
                 ])
                 ->columns([
