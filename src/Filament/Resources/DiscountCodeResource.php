@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -203,13 +204,13 @@ class DiscountCodeResource extends Resource
                             ->visible(fn ($get) => $get('use_stock')),
                         Toggle::make('limit_use_per_customer')
                             ->label('Deze kortingscode mag 1x per klant gebruikt worden'),
-                        DatePicker::make('start_date')
+                        DateTimePicker::make('start_date')
                             ->label('Vul een startdatum in voor de kortingscode')
                             ->rules([
                                 'nullable',
                                 'date',
                             ]),
-                        DatePicker::make('end_date')
+                        DateTimePicker::make('end_date')
                             ->label('Vul een einddatum in voor de kortingscode')
                             ->rules([
                                 'nullable',
