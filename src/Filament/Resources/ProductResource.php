@@ -184,9 +184,9 @@ class ProductResource extends Resource
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
         $productFilterSchema = [];
-        $productFiltersSchema = [];
 
         foreach ($productFilters as $productFilter) {
+            $productFiltersSchema = [];
             $productFilterSchema[] = Toggle::make("product_filter_$productFilter->id")
                 ->label("Filter $productFilter->name")
                 ->reactive()
@@ -205,13 +205,13 @@ class ProductResource extends Resource
                 ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
-                    ->label("$productFilter->name: $productFilterOption->name")
-                    ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
+                    ->label("$productFilter->name: $productFilterOption->name");
             }
             $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
                 ->schema($productFiltersSchema)
                 ->collapsible()
-                ->collapsed();
+                ->collapsed()
+                ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
         }
 
         $schema[] = Section::make('Filters beheren')
@@ -504,7 +504,7 @@ class ProductResource extends Resource
                             ->rules([
                                 'required',
                             ]),
-                        HasManyRepeater::make('productExtraOptions')
+                        HasManyRepeater::make('productExtra.productExtraOptions')
                             ->relationship('productExtraOptions')
                             ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
                                 $relationship = $component->getRelationship();
