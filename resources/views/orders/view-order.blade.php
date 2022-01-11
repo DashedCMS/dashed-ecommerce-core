@@ -98,7 +98,7 @@
                                     <br>
                                     Factuur ID: {{ $record->invoice_id }}
                                     <br>
-                                    Betalingsmethode: {{ $order->paymentMethod ?? 'Niet gevonden' }}
+                                    Betalingsmethode: {{ $record->paymentMethod ?? 'Niet gevonden' }}
                                     @if($record->psp)
                                         (PSP: {{ $record->psp }})
                                     @endif
@@ -107,7 +107,7 @@
                                         PSP ID: {{ $record->psp_id }}
                                         <br>
                                     @endif
-                                    Verzendmethode: {{ $order->shippingMethod->name ?? 'Niet gevonden' }}
+                                    Verzendmethode: {{ $record->shippingMethod->name ?? 'Niet gevonden' }}
                                     <br>
                                     Subtotaal: {{ CurrencyHelper::formatPrice($record->subtotal) }}
                                     <br>
