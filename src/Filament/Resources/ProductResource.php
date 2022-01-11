@@ -550,11 +550,9 @@ class ProductResource extends Resource
                                     ->label('Meerprijs van deze optie')
                                     ->prefix('€')
                                     ->helperText('Voorbeeld: 10.25')
-                                    ->required()
                                     ->rules([
-                                        'required',
                                         'numeric',
-                                        'min:0.01',
+                                        'min:0.00',
                                         'max:10000',
                                     ]),
                                 Toggle::make('calculate_only_1_quantity')
