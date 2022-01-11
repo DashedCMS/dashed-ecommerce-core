@@ -111,8 +111,8 @@
                                     <br>
                                     Subtotaal: {{ CurrencyHelper::formatPrice($record->subtotal) }}
                                     <br>
-                                    Korting: {{ CurrencyHelper::formatPrice($record->discount) }} @if($record->discount_code)
-                                        (Code: {{ $record->discount_code->code }}) @endif
+                                    Korting: {{ CurrencyHelper::formatPrice($record->discount) }} @if($record->discountCode)
+                                        (Code: {{ $record->discountCode->code }}) @endif
                                     <br>
                                     BTW: {{ CurrencyHelper::formatPrice($record->btw) }}
                                     <br>
