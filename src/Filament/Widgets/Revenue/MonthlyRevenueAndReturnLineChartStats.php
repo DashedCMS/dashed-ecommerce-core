@@ -38,33 +38,26 @@ class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
                 [
                     'label' => 'Verkopen',
                     'data' => $statistics['data'],
-                    'backgroundColor' => 'lightgreen',
-                    'borderColor' => "green",
+                    'backgroundColor' => 'rgba(25, 100, 0, 0.5)',
+                    'borderColor' => "rgba(25, 100, 0, 1)",
                     'fill' => 'start',
                 ],
                 [
                     'label' => 'Retouren',
                     'data' => $statistics['returnData'],
-                    'backgroundColor' => 'red',
-                    'borderColor' => "darkred",
+                    'backgroundColor' => 'rgba(168, 0, 0, 0.5)',
+                    'borderColor' => "rgba(168, 0, 0, 1)",
                     'fill' => 'start',
                 ],
                 [
                     'label' => 'Verkopen + retouren',
                     'data' => $statistics['combinedData'],
-                    'backgroundColor' => 'yellow',
-                    'borderColor' => "orange",
+                    'backgroundColor' => 'rgba(250, 255, 0, 0.5)',
+                    'borderColor' => "rgba(250, 255, 0, 1)",
                     'fill' => 'start',
                 ],
             ],
             'labels' => $statistics['labels'],
-            'chartOptions' => [
-                'colors' => [
-                    '#0fd912',
-                    '#d90f0f',
-                    '#F6AD2D',
-                ],
-            ],
         ];
     }
 }
