@@ -51,7 +51,7 @@ class EditProduct extends EditRecord
             $data['slug'] .= Str::random(1);
         }
 
-        $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
+        $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
         $content = $data['content'] ?? [];
         $data['content'] = $this->record->content;

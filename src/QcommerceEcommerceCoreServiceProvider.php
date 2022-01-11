@@ -227,11 +227,11 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         return array_merge(parent::getWidgets(), [
             MonthlyRevenueAndReturnLineChartStats::class,
-            DashboardFunLineChartStats::class,
             DailyRevenueStats::class,
             MonthlyRevenueStats::class,
             YearlyRevenueStats::class,
             PaymentMethodPieChartWidget::class,
+            DashboardFunLineChartStats::class,
         ]);
     }
 }
