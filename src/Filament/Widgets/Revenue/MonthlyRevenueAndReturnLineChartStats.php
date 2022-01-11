@@ -8,6 +8,8 @@ use Qubiqx\QcommerceEcommerceCore\Models\Order;
 
 class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
 {
+    protected static string $view = 'qcommerce-ecommerce-core::widgets.full-width-chart-widget';
+
     protected function getHeading(): string
     {
         return 'Verkopen en retouren';

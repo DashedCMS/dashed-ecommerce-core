@@ -504,7 +504,7 @@ class ProductResource extends Resource
                             ->rules([
                                 'required',
                             ]),
-                        HasManyRepeater::make('productExtra.productExtraOptions')
+                        HasManyRepeater::make('productExtraOptions')
                             ->relationship('productExtraOptions')
                             ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
                                 $relationship = $component->getRelationship();
