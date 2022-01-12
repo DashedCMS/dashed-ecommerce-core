@@ -43,8 +43,8 @@ class DiscountCode extends Model
     ];
 
     protected $dates = [
-        'start_date',
-        'end_date',
+//        'start_date',
+//        'end_date',
         'created_at',
         'updated_at',
         'deleted_at',

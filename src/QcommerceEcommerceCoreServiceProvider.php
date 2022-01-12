@@ -55,6 +55,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
     public function bootingPackage()
     {
+//        dump(now() . '');
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
