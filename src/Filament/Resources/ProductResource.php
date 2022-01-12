@@ -550,7 +550,7 @@ class ProductResource extends Resource
                             ]),
                     ]),
             ])
-            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
+            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
             ->collapsible()
             ->collapsed();
 
