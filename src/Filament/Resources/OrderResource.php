@@ -104,15 +104,15 @@ class OrderResource extends Resource
                     ->colors([
                         'primary' => fn ($state): bool => $state === 'Lopende aankoop',
                         'danger' => fn ($state): bool => $state === 'Geannuleerd',
-                        'warning' => fn ($state): bool => $state === 'Retour',
-                        'success' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Betaald', 'Wachten op bevestiging betaling']),
+                        'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
+                        'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
                     ]),
                 BadgeColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
                     ->getStateUsing(fn ($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
                     ->colors([
                         'danger',
-                        'success' => fn ($state): bool => $state === 'Afgehandeld',
+                        'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
                     ]),
 //                ViewColumn::make('statusLabels')
 //            ->view('filament.tables.columns.multiple-labels')
