@@ -310,8 +310,8 @@ class ProductResource extends Resource
                         'lg' => 2,])
                     ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),])
             ->columns(['default' => 1,
-                'lg' => 2,])
-            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
+                'lg' => 2,]);
+//            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
@@ -552,7 +552,8 @@ class ProductResource extends Resource
                     ]),
             ])
             ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
-            ->collapsible();
+            ->collapsible()
+            ->collapsed();
 
         return $form->schema($schema);
     }
