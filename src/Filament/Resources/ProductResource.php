@@ -523,8 +523,12 @@ class ProductResource extends Resource
                                     $value = [];
                                     $value[$livewire->activeFormLocale] = $itemData['value'];
                                     $itemData['value'] = $value;
-                                    $record = $relationship->create($itemData);
-                                    $childComponentContainers[$itemKey]->model($record)->saveRelationships();
+                                    try{
+                                        $record = $relationship->create($itemData);
+                                        $childComponentContainers[$itemKey]->model($record)->saveRelationships();
+                                    }catch (\Exception $exception){
+
+                                    }
                                 }
                             })
                             ->schema([
