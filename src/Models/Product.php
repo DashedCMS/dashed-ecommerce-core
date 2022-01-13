@@ -803,11 +803,14 @@ class Product extends Model
             ];
         }
 
-        foreach ($this->productCharacteristics as $productCharacteristic) {
-            if ($productCharacteristic->value && ! $productCharacteristic->productCharacteristic->hide_from_public && ! in_array($productCharacteristic->product_characteristic_id, $withoutIds)) {
+        $productCharacteristics = $this->productCharacteristics;
+        $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
+        foreach ($allProductCharacteristics as $productCharacteristic) {
+            $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
+            if ($thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                 $characteristics[] = [
-                    'name' => $productCharacteristic->productCharacteristic->name,
-                    'value' => $productCharacteristic->value,
+                    'name' => $productCharacteristic->name,
+                    'value' => $thisProductCharacteristic->value,
                 ];
             }
         }
