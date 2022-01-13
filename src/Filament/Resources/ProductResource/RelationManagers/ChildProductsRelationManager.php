@@ -2,15 +2,15 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\RelationManagers;
 
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Actions\LinkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Actions\ButtonAction;
 use Filament\Tables\Columns\BooleanColumn;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -57,7 +57,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
             ])
             ->headerActions([
                 ButtonAction::make('Aanmaken')
-                    ->url(fn($record) => route('filament.resources.products.create')),
+                    ->url(fn ($record) => route('filament.resources.products.create')),
             ]);
     }
 
@@ -79,7 +79,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                 ->minValue(1)
                                 ->maxValue(100000)
                                 ->required()
-                                ->default(fn($record) => $record->price)
+                                ->default(fn ($record) => $record->price)
                                 ->rules(['required',
                                     'numeric',
                                     'min:1',
@@ -91,7 +91,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                 ->prefix('€')
                                 ->minValue(1)
                                 ->maxValue(100000)
-                                ->default(fn($record) => $record->new_price)
+                                ->default(fn ($record) => $record->new_price)
                                 ->rules(['numeric',
                                     'min:1',
                                     'max:100000',
@@ -104,11 +104,11 @@ class ChildProductsRelationManager extends HasManyRelationManager
                     Section::make('Voorraad beheren')
                         ->schema([
                             Toggle::make('use_stock')
-                                ->default(fn($record) => $record->use_stock)
+                                ->default(fn ($record) => $record->use_stock)
                                 ->label('Voorraad bijhouden')
                                 ->reactive(),
                             TextInput::make('stock')
-                                ->default(fn($record) => $record->stock)
+                                ->default(fn ($record) => $record->stock)
                                 ->type('number')
                                 ->label('Hoeveel heb je van dit product op voorraad')
                                 ->maxValue(100000)
@@ -118,25 +118,25 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                     'numeric',
                                     'max:100000',
                                 ])
-                                ->hidden(fn(\Closure $get) => !$get('use_stock')),
+                                ->hidden(fn (\Closure $get) => ! $get('use_stock')),
                             Toggle::make('out_of_stock_sellable')
-                                ->default(fn($record) => $record->out_of_stock_sellable)
+                                ->default(fn ($record) => $record->out_of_stock_sellable)
                                 ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                                 ->reactive()
-                                ->hidden(fn(\Closure $get) => !$get('use_stock')),
+                                ->hidden(fn (\Closure $get) => ! $get('use_stock')),
                             DatePicker::make('expected_in_stock_date')
-                                ->default(fn($record) => $record->expected_in_stock_date)
+                                ->default(fn ($record) => $record->expected_in_stock_date)
                                 ->label('Wanneer komt dit product weer op voorraad')
                                 ->reactive()
                                 ->required()
-                                ->hidden(fn(\Closure $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
+                                ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
                             Toggle::make('low_stock_notification')
-                                ->default(fn($record) => $record->low_stock_notification)
+                                ->default(fn ($record) => $record->low_stock_notification)
                                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                                 ->reactive()
-                                ->hidden(fn(\Closure $get) => !$get('use_stock')),
+                                ->hidden(fn (\Closure $get) => ! $get('use_stock')),
                             TextInput::make('low_stock_notification_limit')
-                                ->default(fn($record) => $record->low_stock_notification_limit)
+                                ->default(fn ($record) => $record->low_stock_notification_limit)
                                 ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
                                 ->type('number')
                                 ->reactive()
@@ -151,9 +151,9 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                     'min:1',
                                     'max:100000',
                                 ])
-                                ->hidden(fn(\Closure $get) => !$get('use_stock') || !$get('low_stock_notification')),
+                                ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
                             Select::make('stock_status')
-                                ->default(fn($record) => $record->stock_status)
+                                ->default(fn ($record) => $record->stock_status)
                                 ->label('Is dit product op voorraad')
                                 ->options([
                                     'in_stock' => 'Op voorraad',
@@ -164,13 +164,13 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                 ->rules([
                                     'required',
                                 ])
-                                ->hidden(fn(\Closure $get) => $get('use_stock')),
+                                ->hidden(fn (\Closure $get) => $get('use_stock')),
                             Toggle::make('limit_purchases_per_customer')
-                                ->default(fn($record) => $record->limit_purchases_per_customer)
+                                ->default(fn ($record) => $record->limit_purchases_per_customer)
                                 ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
                                 ->reactive(),
                             TextInput::make('limit_purchases_per_customer_limit')
-                                ->default(fn($record) => $record->limit_purchases_per_customer_limit)
+                                ->default(fn ($record) => $record->limit_purchases_per_customer_limit)
                                 ->type('number')
                                 ->label('Hoeveel mag dit product gekocht worden per bestelling')
                                 ->minValue(1)
@@ -183,7 +183,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                     'min:1',
                                     'max:100000',
                                 ])
-                                ->hidden(fn(\Closure $get) => !$get('limit_purchases_per_customer')),
+                                ->hidden(fn (\Closure $get) => ! $get('limit_purchases_per_customer')),
                         ]),
                 ])
                 ->action(function (Product $record, array $data): void {
@@ -194,7 +194,7 @@ class ChildProductsRelationManager extends HasManyRelationManager
                 }),
             LinkAction::make('edit')
                 ->label('Bewerken')
-                ->url(fn(Product $record) => route('filament.resources.products.edit', [$record])),
+                ->url(fn (Product $record) => route('filament.resources.products.edit', [$record])),
         ]);
     }
 }
