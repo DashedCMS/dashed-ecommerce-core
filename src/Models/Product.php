@@ -752,7 +752,7 @@ class Product extends Model
 
     public function productCharacteristics()
     {
-        return $this->hasMany(ProductCharacteristic::class);
+        return $this->hasMany(ProductCharacteristic::class)->orderBy('order');
     }
 
 //    public function montaPortalProduct()
