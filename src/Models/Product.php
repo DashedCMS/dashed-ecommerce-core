@@ -803,7 +803,6 @@ class Product extends Model
             ];
         }
 
-        $productCharacteristics = $this->productCharacteristics;
         $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
         foreach ($allProductCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
