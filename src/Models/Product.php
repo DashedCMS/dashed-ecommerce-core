@@ -807,7 +807,7 @@ class Product extends Model
         $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
         foreach ($allProductCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if ($thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+            if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                 $characteristics[] = [
                     'name' => $productCharacteristic->name,
                     'value' => $thisProductCharacteristic->value,
