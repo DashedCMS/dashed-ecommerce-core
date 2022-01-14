@@ -2,25 +2,24 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Qubiqx\QcommerceCore\Models\User;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\Rule;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BadgeColumn;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
@@ -262,22 +261,22 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Betaalmethode')
-                    ->getStateUsing(fn($record) => Str::substr($record->payment_method, 0, 10)),
+                    ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
                 BadgeColumn::make('payment_status')
                     ->label('Betaalstatus')
-                    ->getStateUsing(fn($record) => $record->orderStatus()['status'])
+                    ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
                     ->colors([
-                        'primary' => fn($state): bool => $state === 'Lopende aankoop',
-                        'danger' => fn($state): bool => $state === 'Geannuleerd',
-                        'warning' => fn($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
-                        'success' => fn($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
+                        'primary' => fn ($state): bool => $state === 'Lopende aankoop',
+                        'danger' => fn ($state): bool => $state === 'Geannuleerd',
+                        'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
+                        'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
                     ]),
                 BadgeColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
-                    ->getStateUsing(fn($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
+                    ->getStateUsing(fn ($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
                     ->colors([
                         'danger',
-                        'success' => fn($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
+                        'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
                     ]),
 //                ViewColumn::make('statusLabels')
 //            ->view('filament.tables.columns.multiple-labels')
@@ -321,10 +320,10 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('total')
                     ->label('Totaal')
-                    ->getStateUsing(fn($record) => CurrencyHelper::formatPrice($record->total)),
+                    ->getStateUsing(fn ($record) => CurrencyHelper::formatPrice($record->total)),
                 TextColumn::make('created_at')
                     ->label('Aangemaakt op')
-                    ->getStateUsing(fn($record) => $record->created_at->format('d-m-Y H:i'))
+                    ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
                     ->searchable()
                     ->sortable(),
             ])
