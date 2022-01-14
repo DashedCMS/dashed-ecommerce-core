@@ -308,8 +308,10 @@ class ProductResource extends Resource
                     ->columnSpan(['default' => 1,
                         'lg' => 2,])
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),])
-            ->columns(['default' => 1,
-                'lg' => 2,]);
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
+                ]);
 //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Afbeeldingen beheren')

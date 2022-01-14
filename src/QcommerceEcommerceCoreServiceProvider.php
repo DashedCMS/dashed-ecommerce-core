@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Middleware\EcommerceFrontendMiddleware;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -80,6 +81,13 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     public function configurePackage(Package $package): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
+        cms()->builder(
+            'frontendMiddlewares',
+            array_merge(cms()->builder('frontendMiddlewares'), [
+                EcommerceFrontendMiddleware::class,
+            ])
+        );
 
         cms()->builder(
             'routeModels',

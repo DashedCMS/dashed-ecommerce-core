@@ -251,6 +251,7 @@ class TransactionController extends FrontendController
                 }
             }
         }
+
         $orderPayment->psp = $psp;
 
         if (! $paymentMethod) {
