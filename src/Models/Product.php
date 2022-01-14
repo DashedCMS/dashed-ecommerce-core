@@ -777,7 +777,7 @@ class Product extends Model
 
     public function showableCharacteristics($withoutIds = [])
     {
-        return Cache::tags(["product-$this->id"])->rememberForever("product-showable-characteristics-" . $this->id, function ($withoutIds) {
+        return Cache::tags(["product-$this->id"])->rememberForever("product-showable-characteristics-" . $this->id, function () use ($withoutIds) {
             $characteristics = [];
 
             $parentProduct = $this->parentProduct;
