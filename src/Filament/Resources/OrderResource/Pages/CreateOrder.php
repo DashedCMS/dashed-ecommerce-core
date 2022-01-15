@@ -6,8 +6,6 @@ use Carbon\Carbon;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Qubiqx\QcommerceCore\Classes\Helper;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Qubiqx\QcommerceCore\Models\User;
@@ -174,7 +172,7 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
-                    ->required(fn(\Closure $get) => $get('street'))
+                    ->required(fn (\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -182,7 +180,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn(\Closure $get) => $get('street'))
+                    ->required(fn (\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -190,7 +188,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(\Closure $get) => $get('street'))
+                    ->required(fn (\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -224,7 +222,7 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -232,7 +230,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -240,7 +238,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -248,7 +246,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
