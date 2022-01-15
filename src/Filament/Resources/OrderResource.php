@@ -2,25 +2,24 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Qubiqx\QcommerceCore\Models\User;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\Rule;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BadgeColumn;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\User;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
@@ -269,8 +268,8 @@ class OrderResource extends Resource
                     ->colors([
                         'primary' => fn($state): bool => $state === 'Lopende aankoop',
                         'danger' => fn($state): bool => $state === 'Geannuleerd',
-                        'test' => fn($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Wachten op bevestiging betaling', 'Retour']),
-                        'success' => fn($state): bool => in_array($state, ['Betaald']),
+                        'warning' => fn($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
+                        'success' => fn($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
                     ]),
                 BadgeColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
