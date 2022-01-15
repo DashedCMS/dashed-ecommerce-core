@@ -431,11 +431,6 @@ class CreateOrder extends Page implements HasForms
 
     public function updateInfo()
     {
-        $this->notify('success', 'test');
-//        if(!Str::contains($path, ['product', 'discount', 'country', 'payment', 'shipping'])){
-//            return;
-//        }
-
         foreach (\Cart::instance('handorder')->content() as $row) {
             \Cart::remove($row->rowId);
         }
