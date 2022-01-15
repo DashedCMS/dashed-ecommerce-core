@@ -18,6 +18,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Helper;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Models\Customsetting;
@@ -104,6 +105,7 @@ class CreateOrder extends Page implements HasForms
                 Toggle::make('marketing')
                     ->label('De klant accepteer marketing'),
                 TextInput::make('password')
+                    ->label('Wachtwoord')
                     ->type('password')
                     ->rules([
                         'nullable',
@@ -113,6 +115,7 @@ class CreateOrder extends Page implements HasForms
                     ])
                     ->visible(fn(\Closure $get) => !$get('user_id')),
                 TextInput::make('password_confirmation')
+                    ->label('Wachtwoord herhalen')
                     ->type('password')
                     ->rules([
                         'nullable',
@@ -121,12 +124,14 @@ class CreateOrder extends Page implements HasForms
                     ])
                     ->visible(fn(\Closure $get) => !$get('user_id')),
                 TextInput::make('first_name')
+                    ->label('Voornaam')
                     ->rules([
                         'nullable',
                         'min:6',
                         'max:255'
                     ]),
                 TextInput::make('last_name')
+                    ->label('Achternaam')
                     ->required()
                     ->rules([
                         'required',
@@ -134,17 +139,20 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 DatePicker::make('date_of_birth')
+                    ->label('Geboortedatum')
                     ->rules([
                         'nullable',
                         'date'
                     ]),
                 Select::make('gender')
+                    ->label('Geslacht')
                     ->options([
                         '' => 'Niet gekozen',
                         'm' => 'Man',
                         'f' => 'Vrouw'
                     ]),
                 TextInput::make('email')
+                    ->label('Email')
                     ->type('email')
                     ->required()
                     ->rules([
@@ -154,10 +162,12 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('phone_number')
+                    ->label('Telefoon nummer')
                     ->rules([
                         'max:255'
                     ]),
                 TextInput::make('street')
+                    ->label('Straat')
                     ->rules([
                         'nullable',
                         'min:6',
@@ -165,6 +175,7 @@ class CreateOrder extends Page implements HasForms
                     ])
                     ->reactive(),
                 TextInput::make('house_nr')
+                    ->label('Huisnummer')
                     ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
@@ -172,6 +183,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('zip_code')
+                    ->label('Postcode')
                     ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
@@ -179,6 +191,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('city')
+                    ->label('Stad')
                     ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
@@ -186,6 +199,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('country')
+                    ->label('Land')
                     ->required()
                     ->rules([
                         'required',
@@ -193,14 +207,17 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('company_name')
+                    ->label('Bedrijfsnaam')
                     ->rules([
                         'max:255'
                     ]),
                 TextInput::make('btw_id')
+                    ->label('BTW id')
                     ->rules([
                         'max:255'
                     ]),
                 TextInput::make('invoice_street')
+                    ->label('Factuur straat')
                     ->rules([
                         'nullable',
                         'min:6',
@@ -208,6 +225,7 @@ class CreateOrder extends Page implements HasForms
                     ])
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
+                    ->label('Factuur huisnummer')
                     ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
@@ -215,6 +233,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('invoice_zip_code')
+                    ->label('Factuur postcode')
                     ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
@@ -222,6 +241,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('invoice_city')
+                    ->label('Factuur stad')
                     ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
@@ -229,6 +249,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255'
                     ]),
                 TextInput::make('invoice_country')
+                    ->label('Factuur land')
                     ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
@@ -242,7 +263,7 @@ class CreateOrder extends Page implements HasForms
                         'max:1500'
                     ]),
                 TextInput::make('discount_code')
-                    ->label('Kortingscode ')
+                    ->label('Kortingscode')
                     ->rules([
                         'nullable',
                         'max:255'
@@ -388,8 +409,33 @@ class CreateOrder extends Page implements HasForms
         return $schema;
     }
 
-    public function updated($path, $value): void
+    public function updatedProducts($path, $value): void
     {
+        $this->updateInfo();
+    }
+
+    public function updatedCountry($path, $value): void
+    {
+        $this->updateInfo();
+    }
+
+    public function updatedShippingMethodId($path, $value): void
+    {
+        $this->updateInfo();
+    }
+
+    public function updatedPaymentMethodId($path, $value): void
+    {
+        $this->updateInfo();
+    }
+
+    public function updateInfo()
+    {
+        $this->notify('success', 'test');
+//        if(!Str::contains($path, ['product', 'discount', 'country', 'payment', 'shipping'])){
+//            return;
+//        }
+
         foreach (\Cart::instance('handorder')->content() as $row) {
             \Cart::remove($row->rowId);
         }

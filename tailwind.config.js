@@ -13,6 +13,7 @@ module.exports = {
                 primary: colors.orange,
                 success: colors.green,
                 warning: colors.yellow,
+                // test: colors.yellow,
             },
         },
     },
