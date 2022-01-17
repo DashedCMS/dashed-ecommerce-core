@@ -204,7 +204,7 @@
                                 </a>
                                 <hr>
                             @elseif(($record->status == 'paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'partially_paid') && $record->order_origin != 'own')
-                                <a href="#"
+                                <a href="{{ route('filament.resources.orders.cancel', [$record]) }}"
                                    class="inline-flex items-center justify-center font-medium tracking-tight rounded-lg focus:outline-none focus:ring-offset-2 focus:ring-2 focus:ring-inset bg-primary-600 hover:bg-primary-500 focus:bg-primary-700 focus:ring-offset-primary-700 h-9 px-4 text-white shadow focus:ring-white w-full mt-2 w-full">
                                     Annuleer bestelling
                                 </a>
