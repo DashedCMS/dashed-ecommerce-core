@@ -67,6 +67,12 @@ class CancelOrder extends ViewRecord implements HasForms
         }
 
         return [
+            Section::make('Annuleren')
+                ->schema([
+                    Placeholder::make('')
+                        ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
+                ])
+                ->hidden($this->record->order_origin == 'own'),
             Section::make('Retour aanmaken')
                 ->schema([
                     Placeholder::make('')
