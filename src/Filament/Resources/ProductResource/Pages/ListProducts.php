@@ -2,7 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Ramsey\Collection\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;

@@ -14,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Actions\ButtonAction;
 use Filament\Tables\Columns\BooleanColumn;
+use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Filament\Resources\RelationManagers\HasManyRelationManager;
 
