@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -239,6 +240,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             DailyRevenueStats::class,
             MonthlyRevenueStats::class,
             YearlyRevenueStats::class,
+            AlltimeRevenueStats::class,
             PaymentMethodPieChartWidget::class,
             DashboardFunLineChartStats::class,
         ]);
