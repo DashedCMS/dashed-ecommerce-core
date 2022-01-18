@@ -64,6 +64,6 @@ class AlltimeRevenueStats extends StatsOverviewWidget
 
     public static function canView(): bool
     {
-        return Order::where('created_at', '<', now()->suballTime())->count();
+        return Order::where('created_at', '<', now()->startOfYear())->count();
     }
 }
