@@ -14,6 +14,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -386,6 +387,7 @@ class ProductResource extends Resource
                     ->helperText('Vaak gebruikt voor interne herkenning')
                     ->maxLength(255)
                     ->required()
+                    ->default('SKU' . rand(10000, 99999))
                     ->rules(['required',
                         'max:255',]),
                 TextInput::make('ean')
