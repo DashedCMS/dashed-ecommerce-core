@@ -7,6 +7,7 @@ use Filament\Resources\Table;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\LinkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -195,6 +196,47 @@ class ChildProductsRelationManager extends HasManyRelationManager
             LinkAction::make('edit')
                 ->label('Bewerken')
                 ->url(fn (Product $record) => route('filament.resources.products.edit', [$record])),
+        ]);
+    }
+
+    protected function getTableBulkActions(): array
+    {
+        return array_merge(parent::getTableBulkActions(), [
+            BulkAction::make('changePrice')
+                ->color('primary')
+                ->label('Verander prijzen')
+                ->form([
+                    TextInput::make('price')
+                        ->label('Prijs van het product')
+                        ->helperText('Voorbeeld: 10.25')
+                        ->prefix('€')
+                        ->minValue(1)
+                        ->maxValue(100000)
+                        ->required()
+                        ->rules(['required',
+                            'numeric',
+                            'min:1',
+                            'max:100000',
+                        ]),
+                    TextInput::make('new_price')
+                        ->label('Vorige prijs (de hogere prijs)')
+                        ->helperText('Voorbeeld: 14.25')
+                        ->prefix('€')
+                        ->minValue(1)
+                        ->maxValue(100000)
+                        ->rules(['numeric',
+                            'min:1',
+                            'max:100000',
+                        ]),
+                ])
+                ->action(function (Collection $records, array $data): void {
+                    foreach ($records as $record) {
+                        $record->price = $data['price'];
+                        $record->new_price = $data['new_price'];
+                        $record->save();
+                    }
+                })
+                ->deselectRecordsAfterCompletion(),
         ]);
     }
 }
