@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Illuminate\Database\Eloquent\Collection;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -13,6 +12,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Actions\ButtonAction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
