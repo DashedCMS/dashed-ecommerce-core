@@ -238,6 +238,21 @@ class ChildProductsRelationManager extends HasManyRelationManager
                     }
                 })
                 ->deselectRecordsAfterCompletion(),
+            BulkAction::make('changePublicStatus')
+                ->color('primary')
+                ->label('Verander publieke status')
+                ->form([
+                    Toggle::make('public')
+                        ->label('Openbaar')
+                        ->default(1),
+                ])
+                ->action(function (Collection $records, array $data): void {
+                    foreach ($records as $record) {
+                        $record->public = $data['public'];
+                        $record->save();
+                    }
+                })
+                ->deselectRecordsAfterCompletion(),
         ]);
     }
 }
