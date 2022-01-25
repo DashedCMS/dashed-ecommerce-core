@@ -403,7 +403,7 @@ class ShoppingCart
         $vatPercentageOfTotals = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-            $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
+            $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
         }
 
         return [
