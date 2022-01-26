@@ -55,6 +55,7 @@ class EditProduct extends EditRecord
 
         $content = $data['content'] ?? [];
         $data['content'] = $this->record->content;
+        dd($data['content']);
         $data['content'][$this->activeFormLocale] = $content;
 
         $images = $data['images'] ?? [];
