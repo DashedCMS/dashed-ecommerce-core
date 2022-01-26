@@ -45,7 +45,10 @@ class CreateOrderLog extends Component
         $orderLog->save();
 
         if ($orderLog->public_for_customer) {
-            Mail::to($this->order->email)->send(new OrderNoteMail($this->order, $orderLog));
+            try {
+                Mail::to($this->order->email)->send(new OrderNoteMail($this->order, $orderLog));
+            } catch (\Exception $exception) {
+            }
         }
 
         $this->emit('refreshPage');
