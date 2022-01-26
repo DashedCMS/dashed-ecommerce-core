@@ -54,8 +54,7 @@ class EditProduct extends EditRecord
         $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
         $content = $data['content'] ?? [];
-        $data['content'] = $this->record->content;
-        dd($data['content']);
+        $data['content'] = $this->record->content ?: [];
         $data['content'][$this->activeFormLocale] = $content;
 
         $images = $data['images'] ?? [];
