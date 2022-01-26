@@ -269,8 +269,7 @@ class CreateOrder extends Page implements HasForms
             ->columns([
                 'default' => 1,
                 'lg' => 2,
-            ])
-            ->reactive();
+            ]);
 
 //        $schema[] = Section::make('Producten')
 //            ->schema([
