@@ -5,7 +5,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResour
 use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
