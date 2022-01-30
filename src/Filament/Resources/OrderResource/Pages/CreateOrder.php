@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Models\User;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
@@ -80,7 +81,9 @@ class CreateOrder extends Page implements HasForms
     public $payment_method_id;
     public $products = [];
     public $activatedProducts = [];
+
     public $allProducts = [];
+    public $users = [];
 
     public function mount(): void
     {
@@ -89,33 +92,27 @@ class CreateOrder extends Page implements HasForms
         foreach ($this->allProducts as $product) {
             $this->products[$product->id]['stock'] = $product->stock();
             $this->products[$product->id]['price'] = CurrencyHelper::formatPrice($product->price);
+            $this->products[$product->id]['productExtras'] = $product->allProductExtras();
+        }
+
+        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->get();
+        foreach ($allUsers as $user) {
+            $this->users[$user->email] = $user->first_name . ' ' . $user->last_name;
         }
     }
 
     protected function getFormSchema(): array
     {
         $schema = [];
-        $time_start = microtime(true);
-
-//        $users = User::select(['name', 'id'])->get()->toArray();
-        $users = DB::table('users')->select('first_name', 'last_name', 'id')->get();
-        foreach($users as $user){
-            $user->name = $user->first_name . ' ' . $user->last_name;
-        }
-
-        $time_end = microtime(true);
-        $execution_time = ($time_end - $time_start);
-//        dd(($execution_time * 1000) . ' Milliseconds');
-//        echo '<b>Total Execution Time:</b> '.($execution_time*1000).'Milliseconds';
 
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label('Hang de bestelling aan een gebruiker')
+                    ->label(fn(\Closure $get) => 'Hang de bestelling aan een gebruiker ' . $get('user_id'))
                     ->searchable()
                     ->options(array_merge([
                         '' => 'Geen gebruiker',
-                    ], collect($users)->pluck('name', 'id')->toArray()))
+                    ], $this->users))
                     ->reactive(),
                 Toggle::make('marketing')
                     ->label('De klant accepteer marketing'),
@@ -220,7 +217,8 @@ class CreateOrder extends Page implements HasForms
                         'required',
                         'min:6',
                         'max:255',
-                    ]),
+                    ])
+                    ->reactive(),
                 TextInput::make('company_name')
                     ->label('Bedrijfsnaam')
                     ->rules([
@@ -300,12 +298,12 @@ class CreateOrder extends Page implements HasForms
         foreach ($this->allProducts as $product) {
             $productExtras = [];
 
-            foreach ($product->allProductExtras() as $extra) {
-//                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
-//                    ->label($extra->name)
-//                    ->options($extra->productExtraOptions()->pluck('value', 'id')->toArray())
-//                    ->reactive()
-//                    ->required($extra->required);
+            foreach ($product['productExtras'] as $extra) {
+                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
+                    ->label($extra->name)
+                    ->options($extra->productExtraOptions()->pluck('value', 'id')->toArray())
+                    ->reactive()
+                    ->required($extra->required);
             }
 
             $productSchemas[] = Section::make('Product ' . $product->name)
@@ -394,6 +392,11 @@ class CreateOrder extends Page implements HasForms
         $this->updateInfo();
     }
 
+    public function updatedDiscountCode($path, $value): void
+    {
+        $this->updateInfo();
+    }
+
     public function updateInfo()
     {
         foreach (\Cart::instance('handorder')->content() as $row) {
@@ -424,11 +427,11 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 session(['discountCode' => $discountCode->code]);
@@ -570,7 +573,7 @@ class CreateOrder extends Page implements HasForms
         if (isset($user)) {
             $order->user_id = $user->id;
         } else {
-            $order->user_id = $this->user_id;
+            $order->user_id = User::where('email', $this->user_id)->first()->id;
         }
 
         $order->save();
