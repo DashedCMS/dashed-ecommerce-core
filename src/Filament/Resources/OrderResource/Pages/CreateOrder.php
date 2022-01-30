@@ -2,20 +2,16 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
-use Filament\Forms\Components\BelongsToSelect;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Qubiqx\QcommerceCore\Classes\Mails;
 use Qubiqx\QcommerceCore\Models\User;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
@@ -108,7 +104,7 @@ class CreateOrder extends Page implements HasForms
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label(fn(\Closure $get) => 'Hang de bestelling aan een gebruiker ' . $get('user_id'))
+                    ->label(fn (\Closure $get) => 'Hang de bestelling aan een gebruiker ' . $get('user_id'))
                     ->searchable()
                     ->options(array_merge([
                         '' => 'Geen gebruiker',
@@ -125,7 +121,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255',
                         'confirmed',
                     ])
-                    ->visible(fn(\Closure $get) => !$get('user_id')),
+                    ->visible(fn (\Closure $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -134,7 +130,7 @@ class CreateOrder extends Page implements HasForms
                         'min:6',
                         'max:255',
                     ])
-                    ->visible(fn(\Closure $get) => !$get('user_id')),
+                    ->visible(fn (\Closure $get) => ! $get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->rules([
@@ -188,7 +184,7 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
-                    ->required(fn(\Closure $get) => $get('street'))
+                    ->required(fn (\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -196,7 +192,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn(\Closure $get) => $get('street'))
+                    ->required(fn (\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -204,7 +200,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(\Closure $get) => $get('street'))
+                    ->required(fn (\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -239,7 +235,7 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -247,7 +243,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -255,7 +251,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -263,7 +259,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -328,7 +324,7 @@ class CreateOrder extends Page implements HasForms
                         ->label('Prijs')
                         ->disabled(),
                 ], $productExtras))
-                ->visible(fn(\Closure $get) => in_array($product->id, $get('activatedProducts')))
+                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')))
                 ->reactive();
         }
 
@@ -427,11 +423,11 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (!$this->discount_code) {
+        if (! $this->discount_code) {
             session(['discountCode' => '']);
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 session(['discountCode' => $discountCode->code]);
@@ -457,7 +453,7 @@ class CreateOrder extends Page implements HasForms
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             $this->notify('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
 
             return;
@@ -471,7 +467,7 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             $this->notify('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
 
             return;
@@ -485,7 +481,7 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             $this->notify('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
 
             return;
@@ -493,10 +489,10 @@ class CreateOrder extends Page implements HasForms
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             $this->notify('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
@@ -668,7 +664,7 @@ class CreateOrder extends Page implements HasForms
         $orderPayment->psp = $psp;
         $depositAmount = 0;
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
