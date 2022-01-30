@@ -767,12 +767,12 @@ class Product extends Model
 
     public function productExtras()
     {
-        return $this->hasMany(ProductExtra::class);
+        return $this->hasMany(ProductExtra::class)->with(['ProductExtraOptions']);
     }
 
     public function allProductExtras()
     {
-        return ProductExtra::where('product_id', $this->id)->orWhere('product_id', $this->parent_product_id)->get();
+        return ProductExtra::where('product_id', $this->id)->orWhere('product_id', $this->parent_product_id)->with(['ProductExtraOptions'])->get();
     }
 
     public function showableCharacteristics($withoutIds = [])
