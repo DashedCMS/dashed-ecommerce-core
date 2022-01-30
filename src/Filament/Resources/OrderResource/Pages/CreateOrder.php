@@ -573,7 +573,9 @@ class CreateOrder extends Page implements HasForms
         if (isset($user)) {
             $order->user_id = $user->id;
         } else {
-            $order->user_id = User::where('email', $this->user_id)->first()->id;
+            if ($this->user_id) {
+                $order->user_id = User::where('email', $this->user_id)->first()->id;
+            }
         }
 
         $order->save();
