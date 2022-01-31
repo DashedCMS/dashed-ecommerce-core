@@ -9,6 +9,8 @@ use Qubiqx\QcommerceEcommerceCore\Models\Order;
 
 class DashboardFunLineChartStats extends LineChartWidget
 {
+    protected static string $view = 'qcommerce-ecommerce-core::widgets.chart-widget';
+
     protected function getHeading(): string
     {
         return 'Fun stats';
@@ -31,21 +33,19 @@ class DashboardFunLineChartStats extends LineChartWidget
         });
 
         return [
-            'datasets' => [
+            'values' => [
                 [
-                    'label' => 'Nieuwe gebruikers',
+                    'name' => 'Nieuwe gebruikers',
                     'data' => $statistics['newUsers'],
-                    'backgroundColor' => 'rgba(11, 0, 255, 0.5)',
-                    'borderColor' => "rgba(11, 0, 255, 1)",
-                    'fill' => 'start',
                 ],
                 [
-                    'label' => 'Nieuwe bestellingen',
+                    'name' => 'Nieuwe bestellingen',
                     'data' => $statistics['newOrders'],
-                    'backgroundColor' => 'rgba(216, 117, 26, 0.5)',
-                    'borderColor' => "rgba(216, 117, 26, 1)",
-                    'fill' => 'start',
                 ],
+            ],
+            'colors' => [
+                'rgba(11, 0, 255, 1)',
+                'rgba(216, 117, 26, 1)',
             ],
             'labels' => $statistics['labels'],
         ];
