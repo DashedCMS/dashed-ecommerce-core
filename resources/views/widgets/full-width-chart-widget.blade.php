@@ -1,3 +1,5 @@
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+@php($data = $this->getData())
 <x-filament::card class="col-span-full">
     <div class="flex items-center justify-between gap-8">
         <x-filament::card.heading>
@@ -20,35 +22,28 @@
 
     <x-filament::hr />
 
-    <div {!! ($pollingInterval = $this->getPollingInterval()) ? "wire:poll.{$pollingInterval}=\"updateChartData\"" : '' !!}>
-        <canvas
-            height="100"
-            x-data="{
-                chart: null,
+    <div>
+        @php($id = 'chart' . rand(1000,10000))
+        <div id="{{$id}}"></div>
 
-                init: function () {
-                    let chart = this.initChart()
-
-                    $wire.on('updateChartData', async ({ data }) => {
-                        chart.data = data
-                        chart.update('resize')
-                    })
-
-                    $wire.on('filterChartData', async ({ data }) => {
-                        chart.destroy()
-                        chart = this.initChart(data)
-                    })
+        <script>
+            var options = {
+                chart: {
+                    type: 'area',
+                    height: 300,
                 },
-
-                initChart: function (data = null) {
-                    return this.chart = new Chart($el, {
-                        type: '{{ $this->getType() }}',
-                        data: data ?? {{ json_encode($this->getData()) }},
-                        options: {{ json_encode($this->getOptions()) }} ?? {},
-                    })
+                series: @json($data['values']),
+                xaxis: {
+                    categories: @json($data['labels'])
                 },
-            }"
-            wire:ignore
-        ></canvas>
+                colors: @json($data['colors']),
+                dataLabels: {
+                    enabled: false
+                },
+            }
+
+            var chart = new ApexCharts(document.querySelector("#{{$id}}"), options);
+            chart.render();
+        </script>
     </div>
 </x-filament::card>

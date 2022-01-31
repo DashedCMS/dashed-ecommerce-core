@@ -22,9 +22,9 @@ class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
 
             $monthDate = now()->subMonth();
             while ($monthDate < now()) {
-                $data = Order::where('created_at', '>=', $monthDate->copy()->startOfDay())->where('created_at', '<=', $monthDate->copy()->endOfDay())->isPaid()->sum('total');
-                $returnData = Order::where('created_at', '>=', $monthDate->copy()->startOfDay())->where('created_at', '<=', $monthDate->copy()->endOfDay())->isReturn()->sum('total');
-                $combinedData = $data + $returnData;
+                $data = number_format(Order::where('created_at', '>=', $monthDate->copy()->startOfDay())->where('created_at', '<=', $monthDate->copy()->endOfDay())->isPaid()->sum('total'), 2, '.', '');
+                $returnData = number_format(Order::where('created_at', '>=', $monthDate->copy()->startOfDay())->where('created_at', '<=', $monthDate->copy()->endOfDay())->isReturn()->sum('total'), 2, '.', '');
+                $combinedData = number_format($data + $returnData, 2, '.', '');
                 $statistics['data'][] = $data;
                 $statistics['returnData'][] = $returnData;
                 $statistics['combinedData'][] = $combinedData;
@@ -36,28 +36,24 @@ class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
         });
 
         return [
-            'datasets' => [
+            'values' => [
                 [
-                    'label' => 'Verkopen',
+                    'name' => 'Verkopen',
                     'data' => $statistics['data'],
-                    'backgroundColor' => 'rgba(25, 100, 0, 0.5)',
-                    'borderColor' => "rgba(25, 100, 0, 1)",
-                    'fill' => 'start',
                 ],
                 [
-                    'label' => 'Retouren',
+                    'name' => 'Retouren',
                     'data' => $statistics['returnData'],
-                    'backgroundColor' => 'rgba(168, 0, 0, 0.5)',
-                    'borderColor' => "rgba(168, 0, 0, 1)",
-                    'fill' => 'start',
                 ],
                 [
-                    'label' => 'Verkopen + retouren',
+                    'name' => 'Verkopen + retouren',
                     'data' => $statistics['combinedData'],
-                    'backgroundColor' => 'rgba(250, 255, 0, 0.5)',
-                    'borderColor' => "rgba(250, 255, 0, 1)",
-                    'fill' => 'start',
                 ],
+            ],
+            'colors' => [
+                '#196400',
+                '#a80000',
+                'rgba(250, 255, 0, 0.5)'
             ],
             'labels' => $statistics['labels'],
         ];
