@@ -53,7 +53,7 @@ class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
             'colors' => [
                 '#196400',
                 '#a80000',
-                'rgba(250, 255, 0, 0.5)'
+                'rgba(250, 255, 0, 0.5)',
             ],
             'labels' => $statistics['labels'],
         ];
