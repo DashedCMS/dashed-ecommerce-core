@@ -23,11 +23,18 @@ class OrderNoteMail extends Mailable
 
     public function build()
     {
-        return $this->view('qcommerce-ecommerce-core::emails.order-note')->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('order-note-update-email-subject', 'orders', 'Your order #:orderId: has been updated', 'text', [
+        $mail = $this->view('qcommerce-ecommerce-core::emails.order-note')->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('order-note-update-email-subject', 'orders', 'Your order #:orderId: has been updated', 'text', [
             'orderId' => $this->order->invoice_id,
-        ]))->with([
-            'order' => $this->order,
-            'orderLog' => $this->orderLog,
-        ]);
+        ]))
+            ->with([
+                'order' => $this->order,
+                'orderLog' => $this->orderLog,
+            ]);
+
+        foreach($this->orderLog->images as $image){
+            $mail->attachFromStorage($image);
+        }
+
+        return $mail;
     }
 }

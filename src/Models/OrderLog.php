@@ -22,6 +22,11 @@ class OrderLog extends Model
         'tag',
         'public_for_customer',
         'note',
+        'images',
+    ];
+
+    protected $casts = [
+        'images' => 'array',
     ];
 
     public function user()

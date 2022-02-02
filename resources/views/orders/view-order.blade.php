@@ -260,6 +260,19 @@
                                                 </p>
                                             </div>
                                             <p class="text-sm text-gray-500">{{ $log->tag() }}</p>
+                                            @if($log->images)
+                                                <div class="grid">
+                                                    @foreach($log->images as $image)
+                                                        <a class="text-primary-500 hover:text-primary-600" href="{{ url($image) }}" download>
+                                                            @if(!\Illuminate\Support\Str::contains($image, '.pdf'))
+                                                                <img class="h-16 w-auto" src="{{ url($image) }}">
+                                                            @else
+                                                                <span>PDF Bestand</span>
+                                                            @endif
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                             @if($log->public_for_customer)
                                                 <p class="text-sm text-gray-500">
                                                     Klant heeft een email gehad</p>
