@@ -155,13 +155,13 @@ class ChildProductsRelationManager extends HasManyRelationManager
                                 ])
                                 ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
                             Select::make('stock_status')
-                                ->default(fn ($record) => $record->stock_status)
+                                ->default(fn ($record) => $record->stock_status ?: 'in_stock')
                                 ->label('Is dit product op voorraad')
                                 ->options([
                                     'in_stock' => 'Op voorraad',
                                     'out_of_stock' => 'Uitverkocht',
                                 ])
-                                ->default('in_stock')
+//                                ->default('in_stock')
                                 ->required()
                                 ->rules([
                                     'required',
