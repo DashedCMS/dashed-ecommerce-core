@@ -3,9 +3,9 @@
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Livewire\WithFileUploads;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 use Qubiqx\QcommerceEcommerceCore\Mail\OrderNoteMail;
 
@@ -25,8 +25,8 @@ class CreateOrderLog extends Component
             'max:1500',
         ],
         'images.*' => [
-            'mimes:jpg,png,jpeg,pdf'
-        ]
+            'mimes:jpg,png,jpeg,pdf',
+        ],
     ];
 
     public function mount($order)

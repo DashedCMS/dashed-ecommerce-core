@@ -31,7 +31,7 @@ class OrderNoteMail extends Mailable
                 'orderLog' => $this->orderLog,
             ]);
 
-        foreach($this->orderLog->images as $image){
+        foreach ($this->orderLog->images as $image) {
             $mail->attachFromStorage($image);
         }
 
