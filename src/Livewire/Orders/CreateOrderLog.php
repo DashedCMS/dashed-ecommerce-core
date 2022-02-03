@@ -51,7 +51,7 @@ class CreateOrderLog extends Component
         $orderLog->public_for_customer = $this->publicForCustomer ? 1 : 0;
 
         $images = [];
-        foreach ($this->images as $image) {
+        foreach ($this->images ?: [] as $image) {
             $uploadedImage = $image->store('/qcommerce/orders/logs/images');
             $images[] = $uploadedImage;
         }

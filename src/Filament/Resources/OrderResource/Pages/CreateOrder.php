@@ -42,6 +42,8 @@ class CreateOrder extends Page implements HasForms
     protected static ?string $title = 'Bestelling aanmaken';
     protected static string $view = 'qcommerce-ecommerce-core::orders.create-order';
 
+    public $loading = false;
+
     public $subTotal = 0;
     public $discount = 0;
     public $vat = 0;
@@ -104,7 +106,8 @@ class CreateOrder extends Page implements HasForms
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label(fn (\Closure $get) => 'Hang de bestelling aan een gebruiker ' . $get('user_id'))
+                    ->label(fn (\Closure $get) => 'Hang de bestelling aan een gebruiker
+                    ')
                     ->searchable()
                     ->options(array_merge([
                         '' => 'Geen gebruiker',
@@ -395,6 +398,8 @@ class CreateOrder extends Page implements HasForms
 
     public function updateInfo()
     {
+        $this->loading = true;
+
         foreach (\Cart::instance('handorder')->content() as $row) {
             \Cart::remove($row->rowId);
         }
@@ -444,10 +449,12 @@ class CreateOrder extends Page implements HasForms
         $this->total = $checkoutData['totalFormatted'];
 
         $this->notify('success', 'Informatie bijgewerkt');
+        $this->loading = false;
     }
 
     public function submit()
     {
+        $this->loading = true;
         \Cart::instance('handorder')->content();
         ShoppingCart::removeInvalidItems();
 
