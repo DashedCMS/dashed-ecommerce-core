@@ -91,24 +91,18 @@ class DiscountCode extends Model
 
     public function scopeUsable($query)
     {
-        $query->thisSite()->where(function ($query) {
-            $query->where('use_stock', 1)
-                ->where('stock', '>', 0);
-        })->orWhere(function ($query) {
-            $query->where('use_stock', 0);
-        })->where(function ($query) {
-            $query->where('start_date', null);
-            $query->where('end_date', null);
-        })->orWhere(function ($query) {
-            $query->where('start_date', '<=', Carbon::now());
-            $query->where('end_date', null);
-        })->orWhere(function ($query) {
-            $query->where('start_date', null);
-            $query->where('end_date', '>=', Carbon::now());
-        })->orWhere(function ($query) {
-            $query->where('start_date', '<=', Carbon::now());
-            $query->where('end_date', '>=', Carbon::now());
-        });
+        $query->thisSite()
+            ->where(function ($query) {
+                $query->where('use_stock', 0)
+                    ->orWhere('use_stock', 1)
+                    ->where('stock', '>', 0);
+            })->where(function ($query) {
+                $query->where('start_date', null)
+                    ->orWhere('start_date', '<=', now()->format('Y-m-d H:i:s'));
+            })->where(function ($query) {
+                $query->where('end_date', null)
+                    ->orWhere('end_date', '>=', now()->format('Y-m-d H:i:s'));
+            });
     }
 
     public function getDiscountedPriceForProduct($cartItem)
@@ -147,7 +141,8 @@ class DiscountCode extends Model
         return number_format($discountedPrice, 2, '.', '');
     }
 
-    public function siteNames()
+    public
+    function siteNames()
     {
         $sites = [];
         foreach (Sites::getSites() as $site) {
@@ -161,9 +156,10 @@ class DiscountCode extends Model
         return $sites;
     }
 
-    public function getStatusAttribute()
+    public
+    function getStatusAttribute()
     {
-        if (! $this->start_date && ! $this->end_date) {
+        if (!$this->start_date && !$this->end_date) {
             return 'active';
         } else {
             if ($this->start_date && $this->end_date) {
@@ -190,22 +186,26 @@ class DiscountCode extends Model
         }
     }
 
-    public function products(): BelongsToMany
+    public
+    function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'qcommerce__discount_product');
     }
 
-    public function productCategories(): BelongsToMany
+    public
+    function productCategories(): BelongsToMany
     {
         return $this->belongsToMany(ProductCategory::class, 'qcommerce__discount_category');
     }
 
-    public function orders(): HasMany
+    public
+    function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
 
-    public function stock()
+    public
+    function stock()
     {
         if ($this->use_stock) {
             return $this->stock - $this->orders->where('status', 'pending')->count();
@@ -214,7 +214,8 @@ class DiscountCode extends Model
         }
     }
 
-    public function isValidForCart($email = null)
+    public
+    function isValidForCart($email = null)
     {
         $itemsInCart = ShoppingCart::cartItems();
 
@@ -229,7 +230,7 @@ class DiscountCode extends Model
                     $emailIsValid = true;
                 }
             }
-            if (! $emailIsValid) {
+            if (!$emailIsValid) {
                 return false;
             }
         }
