@@ -2,8 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -14,6 +12,7 @@ use Filament\Tables\Columns\BadgeColumn;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\CancelOrder;
