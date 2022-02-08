@@ -54,7 +54,7 @@ class OrderResource extends Resource
 
     public static function getGlobalSearchResultUrl(Model $record): string
     {
-        return route('filament.orders.view', ['order' => $record]);
+        return route('filament.resources.orders.view', ['order' => $record]);
     }
 
     public static function getGloballySearchableAttributes(): array
