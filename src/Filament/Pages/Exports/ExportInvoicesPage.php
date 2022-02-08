@@ -62,13 +62,16 @@ class ExportInvoicesPage extends Page implements HasForms
 
     public function submit()
     {
+        $startDate = $this->form->getState()['start_date'] ? Carbon::parse($this->form->getState()['start_date'])->startOfDay() : null;
+        $endDate = $this->form->getState()['end_date'] ? Carbon::parse($this->form->getState()['end_date'])->endOfDay() : null;
+
         $orders = Order::with(['orderProducts', 'orderProducts.product'])->where('order_origin', 'own')->calculatableForStats();
-        if ($this->form->getState()['start_date'] != null) {
-            $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
+        if ($startDate) {
+            $orders->where('created_at', '>=', $startDate);
         }
 
-        if ($this->form->getState()['end_date'] != null) {
-            $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['end_date'])->endOfDay());
+        if ($endDate) {
+            $orders->where('created_at', '<=', $endDate);
         }
         $orders = $orders->get();
 
@@ -136,7 +139,7 @@ class ExportInvoicesPage extends Page implements HasForms
                 }
             }
 
-            $view = View::make('qcommerce-ecommerce-core::frontend.combined-invoices.pdf', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales'));
+            $view = View::make('qcommerce-ecommerce-core::frontend.combined-invoices.pdf', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
             $contents = $view->render();
             $pdf = App::make('dompdf.wrapper');
             $pdf->loadHTML($contents);

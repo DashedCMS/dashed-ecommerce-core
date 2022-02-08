@@ -329,19 +329,6 @@ class ProductResource extends Resource
                             ->rules([
                                 'max:1000',
                             ]),
-//                        TextInput::make('order')
-//                            ->label('Volgorde')
-//                            ->type('number')
-//                            ->minValue(1)
-//                            ->maxValue(100000)
-//                            ->default(1)
-//                            ->required()
-//                            ->rules([
-//                                'required',
-//                                'numeric',
-//                                'min:1',
-//                                'max:100000',
-//                            ]),
                     ])
                     ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
             ])

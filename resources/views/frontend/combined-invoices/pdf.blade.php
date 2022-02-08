@@ -169,14 +169,14 @@
                 <div style="width:25%; display:inline-block; position:relative;top:0;">
                     <p>
                         {{--                        {{Translation::get('invoice-number', 'invoice', 'Invoice number')}}: <br>--}}
-                        {{Translation::get('invoice-date', 'invoice', 'Invoice date')}}: <br>
+                        {{Translation::get('invoice-date-range', 'invoice', 'Invoice date range')}}: <br>
                     </p>
                 </div>
                 <div style="width:31%;display:inline-block; position:relative;top:0;">
                     <p>
                         {{--                        <span style="position:absolute; right:0;">{{$order->invoice_id}}</span>--}}
                         {{--                        <br>--}}
-                        <span style="position:absolute; right:0;">{{now()->format('d-m-Y')}}</span><br>
+                        <span style="position:absolute; right:0;">{{ $startDate->format('d-m-Y') }} - {{ $endDate->format('d-m-Y') }}</span><br>
                     </p>
                 </div>
             </div>
