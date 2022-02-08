@@ -2,28 +2,18 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Qubiqx\QcommerceCore\Models\User;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ViewColumn;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BadgeColumn;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\CancelOrder;
@@ -50,6 +40,11 @@ class OrderResource extends Resource
     public static function getGlobalSearchResultTitle(Model $record): string
     {
         return "$record->invoice_id - $record->name";
+    }
+
+    protected static function getGlobalSearchEloquentQuery(): EloquentBuilder
+    {
+        return parent::getGlobalSearchEloquentQuery()->isPaid();
     }
 
     public static function getGlobalSearchResultUrl(Model $record): string
