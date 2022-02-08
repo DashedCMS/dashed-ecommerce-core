@@ -52,6 +52,11 @@ class OrderResource extends Resource
         return "$record->invoice_id - $record->name";
     }
 
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return route('filament.orders.view', ['order' => $record]);
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return [
