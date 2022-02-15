@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Qubiqx\QcommerceCore\Classes\Helper;
 use Qubiqx\QcommerceCore\Models\User;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
@@ -87,10 +88,10 @@ class CreateOrder extends Page implements HasForms
     {
         $this->allProducts = Product::handOrderShowable()->with(['childProducts', 'parentProduct'])->get();
 
-        foreach ($this->allProducts as $product) {
+        foreach ($this->allProducts as &$product) {
             $this->products[$product->id]['stock'] = $product->stock();
             $this->products[$product->id]['price'] = CurrencyHelper::formatPrice($product->price);
-            $this->products[$product->id]['productExtras'] = $product->allProductExtras();
+//            $this->products[$product->id]['productExtras'] = $product->allProductExtras();
         }
 
         $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->get();
@@ -106,7 +107,7 @@ class CreateOrder extends Page implements HasForms
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label(fn (\Closure $get) => 'Hang de bestelling aan een gebruiker
+                    ->label(fn(\Closure $get) => 'Hang de bestelling aan een gebruiker
                     ')
                     ->searchable()
                     ->options(array_merge([
@@ -114,7 +115,7 @@ class CreateOrder extends Page implements HasForms
                     ], $this->users))
                     ->reactive(),
                 Toggle::make('marketing')
-                    ->label('De klant accepteer marketing'),
+                    ->label('De klant accepteert marketing'),
                 TextInput::make('password')
                     ->label('Wachtwoord')
                     ->type('password')
@@ -124,7 +125,7 @@ class CreateOrder extends Page implements HasForms
                         'max:255',
                         'confirmed',
                     ])
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                    ->visible(fn(\Closure $get) => !$get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -133,7 +134,7 @@ class CreateOrder extends Page implements HasForms
                         'min:6',
                         'max:255',
                     ])
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                    ->visible(fn(\Closure $get) => !$get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->rules([
@@ -187,7 +188,7 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -195,7 +196,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -203,7 +204,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -238,7 +239,7 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -246,7 +247,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -254,7 +255,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -262,7 +263,7 @@ class CreateOrder extends Page implements HasForms
                     ]),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'min:6',
@@ -297,10 +298,15 @@ class CreateOrder extends Page implements HasForms
         foreach ($this->allProducts as $product) {
             $productExtras = [];
 
-            foreach ($product['productExtras'] as $extra) {
+//            foreach ($product['productExtras'] as $extra) {
+            foreach (ProductExtra::where('product_id', $product->id)->orWhere('product_id', $product->parent_product_id)->with(['productExtraOptions'])->get() as $extra) {
+                $extraOptions = [];
+                foreach ($extra->productExtraOptions as $option) {
+                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+                }
                 $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
                     ->label($extra->name)
-                    ->options($extra->productExtraOptions()->pluck('value', 'id')->toArray())
+                    ->options($extraOptions)
                     ->reactive()
                     ->required($extra->required);
             }
@@ -327,7 +333,7 @@ class CreateOrder extends Page implements HasForms
                         ->label('Prijs')
                         ->disabled(),
                 ], $productExtras))
-                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')))
+                ->visible(fn(\Closure $get) => in_array($product->id, $get('activatedProducts')))
                 ->reactive();
         }
 
@@ -428,11 +434,11 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 session(['discountCode' => $discountCode->code]);
@@ -460,7 +466,7 @@ class CreateOrder extends Page implements HasForms
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             $this->notify('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
 
             return;
@@ -474,7 +480,7 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $this->notify('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
 
             return;
@@ -488,7 +494,7 @@ class CreateOrder extends Page implements HasForms
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->notify('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
 
             return;
@@ -496,10 +502,10 @@ class CreateOrder extends Page implements HasForms
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             $this->notify('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
@@ -671,7 +677,7 @@ class CreateOrder extends Page implements HasForms
         $orderPayment->psp = $psp;
         $depositAmount = 0;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
