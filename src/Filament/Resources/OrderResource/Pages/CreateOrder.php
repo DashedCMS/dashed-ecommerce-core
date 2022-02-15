@@ -81,23 +81,47 @@ class CreateOrder extends Page implements HasForms
     public $products = [];
     public $activatedProducts = [];
 
-    public $allProducts = [];
-    public $users = [];
-
+    //Todo: create extra button to update cart, instead of doing it on change
     public function mount(): void
     {
-        $this->allProducts = Product::handOrderShowable()->with(['childProducts', 'parentProduct'])->get();
+//        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->get();
+//        foreach ($allUsers as $user) {
+//            $this->users[$user->email] = $user->first_name . ' ' . $user->last_name;
+//        }
+    }
 
-        foreach ($this->allProducts as &$product) {
-            $this->products[$product->id]['stock'] = $product->stock();
-            $this->products[$product->id]['price'] = CurrencyHelper::formatPrice($product->price);
-//            $this->products[$product->id]['productExtras'] = $product->allProductExtras();
-        }
-
-        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->get();
+    public function getUsersProperty()
+    {
+        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->orderBy('last_name')->orderBy('email')->get();
+        $users = [];
         foreach ($allUsers as $user) {
-            $this->users[$user->email] = $user->first_name . ' ' . $user->last_name;
+            $users[$user->email] = $user->first_name || $user->last_name ? $user->first_name . ' ' . $user->last_name : $user->email;
         }
+
+        return $users;
+    }
+
+    public function getAllProductsProperty()
+    {
+        $products = Product::handOrderShowable()->with(['childProducts', 'parentProduct'])->get();
+
+        foreach ($products as &$product) {
+            $product['stock'] = $product->stock();
+            $product['price'] = CurrencyHelper::formatPrice($product->price);
+            $product['productExtras'] = $product->allProductExtras();
+        }
+
+        return $products;
+    }
+
+    public function getSearchableUsers($query)
+    {
+        return User::where(DB::raw('lower(first_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(last_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(email)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->get()->pluck('name', 'id');
+    }
+
+    public function getSearchableProducts($query)
+    {
+        return Product::handOrderShowable()->where(DB::raw('lower(name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(content)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->get()->pluck('name', 'id');
     }
 
     protected function getFormSchema(): array
@@ -107,12 +131,10 @@ class CreateOrder extends Page implements HasForms
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label(fn(\Closure $get) => 'Hang de bestelling aan een gebruiker
-                    ')
+                    ->label(fn(\Closure $get) => 'Hang de bestelling aan een gebruiker')
                     ->searchable()
-                    ->options(array_merge([
-                        '' => 'Geen gebruiker',
-                    ], $this->users))
+                    ->getSearchResultsUsing(fn(string $query) => $this->getSearchableUsers($query))
+                    ->getOptionLabelUsing(fn($value): ?string => User::find($value)?->name)
                     ->reactive(),
                 Toggle::make('marketing')
                     ->label('De klant accepteert marketing'),
@@ -292,14 +314,14 @@ class CreateOrder extends Page implements HasForms
 
         $productSchemas[] = MultiSelect::make('activatedProducts')
             ->label('Kies producten')
-            ->options($this->allProducts->pluck('name', 'id')->toArray())
+            ->getSearchResultsUsing(fn(string $query) => $this->getSearchableProducts($query))
+            ->getOptionLabelsUsing(fn($values): ?string => Product::find($values)->pluck('name'))
             ->reactive();
 
-        foreach ($this->allProducts as $product) {
+        foreach ($this->getAllProductsProperty() as $product) {
             $productExtras = [];
 
-//            foreach ($product['productExtras'] as $extra) {
-            foreach (ProductExtra::where('product_id', $product->id)->orWhere('product_id', $product->parent_product_id)->with(['productExtraOptions'])->get() as $extra) {
+            foreach ($product['productExtras'] as $extra) {
                 $extraOptions = [];
                 foreach ($extra->productExtraOptions as $option) {
                     $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
@@ -326,12 +348,10 @@ class CreateOrder extends Page implements HasForms
                             'min:1',
                             'max:1000',
                         ]),
-                    TextInput::make('products.' . $product->id . '.stock')
-                        ->label('Voorraad')
-                        ->disabled(),
-                    TextInput::make('products.' . $product->id . '.price')
-                        ->label('Prijs')
-                        ->disabled(),
+                    Placeholder::make('Voorraad')
+                        ->content($product->stock()),
+                    Placeholder::make('Prijs')
+                        ->content($product->currentPrice),
                 ], $productExtras))
                 ->visible(fn(\Closure $get) => in_array($product->id, $get('activatedProducts')))
                 ->reactive();
@@ -410,9 +430,9 @@ class CreateOrder extends Page implements HasForms
             \Cart::remove($row->rowId);
         }
 
-        foreach ($this->allProducts as $product) {
+        foreach ($this->getAllProductsProperty() as $product) {
             if (($this->products[$product->id]['quantity'] ?? 0) > 0) {
-                $productPrice = $product->currentPrice;
+                $productPrice = $product->getOriginal('price');
                 $options = [];
                 foreach ($this->products[$product->id]['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
                     if ($productExtraOptionId) {
@@ -583,7 +603,7 @@ class CreateOrder extends Page implements HasForms
             $order->user_id = $user->id;
         } else {
             if ($this->user_id) {
-                $order->user_id = User::where('email', $this->user_id)->first()->id;
+                $order->user_id = $this->user_id;
             }
         }
 
