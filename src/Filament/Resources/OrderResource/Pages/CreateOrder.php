@@ -130,10 +130,10 @@ class CreateOrder extends Page implements HasForms
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label(fn(\Closure $get) => 'Hang de bestelling aan een gebruiker')
+                    ->label(fn (\Closure $get) => 'Hang de bestelling aan een gebruiker')
                     ->searchable()
-                    ->getSearchResultsUsing(fn(string $query) => $this->getSearchableUsers($query))
-                    ->getOptionLabelUsing(fn($value): ?string => User::find($value)?->name)
+                    ->getSearchResultsUsing(fn (string $query) => $this->getSearchableUsers($query))
+                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->reactive(),
                 Toggle::make('marketing')
                     ->label('De klant accepteert marketing'),
@@ -313,8 +313,8 @@ class CreateOrder extends Page implements HasForms
 
         $productSchemas[] = MultiSelect::make('activatedProducts')
             ->label('Kies producten')
-            ->getSearchResultsUsing(fn(string $query) => $this->getSearchableProducts($query))
-            ->getOptionLabelsUsing(fn($values): ?string => Product::find($values)->pluck('name'))
+            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
+            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
             ->reactive();
 
         foreach ($this->getAllProductsProperty() as $product) {
