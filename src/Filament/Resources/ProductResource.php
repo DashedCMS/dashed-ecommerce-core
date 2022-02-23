@@ -112,6 +112,7 @@ class ProductResource extends Resource
                 TextInput::make('stock')
                     ->type('number')
                     ->label('Hoeveel heb je van dit product op voorraad')
+                    ->helperText(fn($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
                     ->maxValue(100000)
                     ->required()
                     ->rules([
