@@ -10,10 +10,10 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Qubiqx\QcommerceTranslations\Models\Translation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
+use Qubiqx\QcommerceTranslations\Models\Translation;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Qubiqx\QcommerceEcommerceCore\Events\Products\ProductCreatedEvent;
 

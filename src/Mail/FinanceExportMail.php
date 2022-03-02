@@ -5,8 +5,8 @@ namespace Qubiqx\QcommerceEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
+use Qubiqx\QcommerceTranslations\Models\Translation;
 
 class FinanceExportMail extends Mailable
 {
