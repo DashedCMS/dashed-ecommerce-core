@@ -17,16 +17,16 @@ class AddTaxRateToOrderProducts extends Migration
             if ($orderProduct->product) {
                 $orderProduct->vat_rate = $orderProduct->product->vat_rate;
             } else {
-                if($orderProduct->price > 0.00 && $orderProduct->btw == 0.00){
+                if ($orderProduct->price > 0.00 && $orderProduct->btw == 0.00) {
                     $orderProduct->btw = ($orderProduct->price / 121 * 21);
                     dump($orderProduct->sku);
                 }
                 $orderProduct->vat_rate = $orderProduct->price > 0.00 ? (round($orderProduct->btw / ($orderProduct->price - $orderProduct->btw), 2) * 100) : 0;
             }
-            if(!$orderProduct->sku){
-                if($orderProduct->product){
+            if (!$orderProduct->sku) {
+                if ($orderProduct->product) {
                     $orderProduct->sku = $orderProduct->product->sku;
-                }else{
+                } else {
                     $orderProduct->sku = \Illuminate\Support\Str::slug($orderProduct->name);
                 }
             }

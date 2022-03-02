@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\View;
 use Artesaos\SEOTools\Facades\SEOTools;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Gloudemans\Shoppingcart\Facades\Cart;
-use Qubiqx\QcommerceCore\Models\Translation;
+use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;

@@ -1,20 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
-use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
+use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Middleware\AuthMiddleware;
 use Qubiqx\QcommerceCore\Middleware\FrontendMiddleware;
-use Qubiqx\QcommerceCore\Middleware\GuestMiddleware;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
-use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\AccountController;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\CartController;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
+use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\AccountController;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Qubiqx\QcommerceEcommerceCore\Controllers\Frontend\TransactionController;
+use Qubiqx\QcommerceEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 
 if (!app()->runningInConsole()) {
     //Exchange routes

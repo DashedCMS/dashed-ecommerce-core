@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 class AddImageFieldsToProductCategories extends Migration
 {
@@ -31,7 +31,6 @@ class AddImageFieldsToProductCategories extends Migration
                         try {
                             \Illuminate\Support\Facades\Storage::disk('public')->copy("/qcommerce/uploads/$media->id/$media->file_name", "/qcommerce/product-categories/images/$media->file_name");
                         } catch (Exception $exception) {
-
                         }
                         $productCategory->setTranslation('image', $locale['id'], "/qcommerce/product-categories/images/$media->file_name");
                         $productCategory->save();
@@ -53,7 +52,6 @@ class AddImageFieldsToProductCategories extends Migration
                         try {
                             \Illuminate\Support\Facades\Storage::disk('public')->copy("/qcommerce/uploads/$media->id/$media->file_name", "/qcommerce/product-categories/meta-images/$media->file_name");
                         } catch (Exception $exception) {
-
                         }
                         $productCategory->setTranslation('meta_image', $locale['id'], "/qcommerce/product-categories/meta-images/$media->file_name");
                         $productCategory->save();

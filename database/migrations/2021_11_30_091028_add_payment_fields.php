@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 class AddPaymentFields extends Migration
 {
@@ -29,8 +29,8 @@ class AddPaymentFields extends Migration
             $table->timestamps();
         });
 
-        foreach(\Qubiqx\QcommerceEcommerceCore\Models\Order::get() as $order){
-            if($order->total > 0.00){
+        foreach (\Qubiqx\QcommerceEcommerceCore\Models\Order::get() as $order) {
+            if ($order->total > 0.00) {
                 $order->orderPayments()->create([
                     'psp' => $order->psp,
                     'psp_id' => $order->psp_id,

@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 class MigrateProductCategoriesTable extends Migration
 {
@@ -38,7 +36,7 @@ class MigrateProductCategoriesTable extends Migration
         foreach (\Qubiqx\QcommerceCore\Models\MenuItem::withTrashed()->get() as $menuItem) {
             $menuItem->model = str_replace('Qubiqx\Qcommerce\Models\ProductCategory', 'Qubiqx\QcommerceEcommerceCore\Models\ProductCategory', $menuItem->model);
             $siteIds = [];
-            foreach($menuItem->site_ids as $siteIdKey => $siteId){
+            foreach ($menuItem->site_ids as $siteIdKey => $siteId) {
                 $siteIds[] = $siteIdKey;
             }
             $menuItem->site_ids = $siteIds;

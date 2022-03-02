@@ -10,7 +10,7 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Qubiqx\QcommerceCore\Models\Translation;
+use Qubiqx\QcommerceTranslations\Models\Translation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;

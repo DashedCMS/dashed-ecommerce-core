@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 class MigrateProductsTable extends Migration
 {
@@ -46,7 +46,6 @@ class MigrateProductsTable extends Migration
                         try {
                             \Illuminate\Support\Facades\Storage::disk('public')->copy("/qcommerce/uploads/$media->id/$media->file_name", "/qcommerce/products/meta-images/$media->file_name");
                         } catch (Exception $exception) {
-
                         }
                         $product->setTranslation('meta_image', $locale['id'], "qcommerce/products/meta-images/$media->file_name");
                         $product->save();
@@ -66,7 +65,6 @@ class MigrateProductsTable extends Migration
                         try {
                             \Illuminate\Support\Facades\Storage::disk('public')->copy("/qcommerce/uploads/$media->id/$media->file_name", "/qcommerce/products/images/$media->file_name");
                         } catch (Exception $exception) {
-
                         }
 
                         $images[] = [
@@ -91,7 +89,6 @@ class MigrateProductsTable extends Migration
                             try {
                                 \Illuminate\Support\Facades\Storage::disk('public')->copy("/qcommerce/uploads/$media->id/$media->file_name", "/qcommerce/products/images/$media->file_name");
                             } catch (Exception $exception) {
-
                             }
 
                             $images[] = [
