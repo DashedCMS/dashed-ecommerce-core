@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Support\HtmlString;
 use Qubiqx\QcommerceCore\Models\User;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
@@ -18,12 +19,12 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Placeholder;
-use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
+use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
@@ -351,6 +352,8 @@ class CreateOrder extends Page implements HasForms
                         ->content($product->stock()),
                     Placeholder::make('Prijs')
                         ->content($product->currentPrice),
+                    Placeholder::make('Afbeelding')
+                        ->content(new HtmlString('<img width="300" src="' . $product->firstImageUrl . '">')),
                 ], $productExtras))
                 ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')))
                 ->reactive();
