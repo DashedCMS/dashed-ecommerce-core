@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Qubiqx\QcommerceCore\Models\User;
 use Filament\Forms\Components\Section;
@@ -353,7 +354,7 @@ class CreateOrder extends Page implements HasForms
                     Placeholder::make('Prijs')
                         ->content($product->currentPrice),
                     Placeholder::make('Afbeelding')
-                        ->content(new HtmlString('<img width="300" src="' . $product->firstImageUrl . '">')),
+                        ->content(new HtmlString('<img width="300" src="' . Storage::url($product->firstImageUrl) . '">')),
                 ], $productExtras))
                 ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')))
                 ->reactive();
