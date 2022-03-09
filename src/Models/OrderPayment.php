@@ -91,5 +91,7 @@ class OrderPayment extends Model
                 return 'partially_paid';
             }
         }
+
+        return '';
     }
 }
