@@ -117,12 +117,12 @@ class CreateOrder extends Page implements HasForms
 
     public function getSearchableUsers($query)
     {
-        return User::where(DB::raw('lower(first_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(last_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(email)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->get()->pluck('name', 'id');
+        return User::where(DB::raw('lower(first_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(last_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(email)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
     }
 
     public function getSearchableProducts($query)
     {
-        return Product::handOrderShowable()->where(DB::raw('lower(name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(content)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->get()->pluck('name', 'id');
+        return Product::handOrderShowable()->where(DB::raw('lower(name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(content)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
     }
 
     protected function getFormSchema(): array
