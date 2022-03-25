@@ -333,7 +333,7 @@ class ProductResource extends Resource
                     ])
                     ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
             ])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+//            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
             ->collapsible();
 
         $schema[] = Section::make('Praktische informatie beheren')
