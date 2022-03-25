@@ -21,6 +21,7 @@ class ProductRouteHandler
                 $product->publicShowable();
             }
             $product->where('slug->' . App::getLocale(), $slugComponents[1])->first();
+            dd($product);
 
             if (!$product) {
                 foreach (Product::thisSite()->publicShowable()->get() as $possibleProduct) {
