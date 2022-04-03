@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -404,7 +405,7 @@ class Order extends Model
         if ($this->order_origin == 'own') {
             $this->generateInvoiceId();
             $order = Order::find($this->id);
-            if (! Storage::exists('/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (!Storage::exists('/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce-ecommerce-core::frontend.invoices.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -418,7 +419,7 @@ class Order extends Model
             }
 
             //Todo: change below to a listener for InvoiceCreatedEvent
-            if (! $this->invoice_send_to_customer) {
+            if (!$this->invoice_send_to_customer) {
                 Orders::sendNotification($this);
 
                 if (env('APP_ENV') == 'local') {
@@ -452,7 +453,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (!Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce-ecommerce-core::frontend.packing-slips.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -470,7 +471,7 @@ class Order extends Model
         if ($this->order_origin == 'own' && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (!Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('qcommerce-ecommerce-core::frontend.credit-invoices.pdf', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -563,19 +564,17 @@ class Order extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false)
     {
-        if (! $newStatus || $this->status == $newStatus) {
-            return;
-        }
-
-        if ($newStatus == 'paid') {
-            $this->markAsPaid();
-        } elseif ($newStatus == 'partially_paid') {
-            $this->markAsPartiallyPaid();
-        } elseif ($newStatus == 'cancelled') {
-            $this->markAsCancelled($sendMail);
-        } elseif ($newStatus == 'waiting_for_confirmation') {
-            $this->markAsWaitingForConfirmation();
-        }
+        Cache::lock('order.updateStatus.' . $this->id, 15)
+            ->block(5, function () use ($newStatus) {
+                if ($newStatus && $this->status != $newStatus) {
+                    match ($newStatus) {
+                        'paid' => $this->markAsPaid(),
+                        'partially_paid' => $this->markAsPartiallyPaid(),
+                        'cancelled' => $this->markAsCancelled(),
+                        'waiting_for_confirmation' => $this->markAsWaitingForConfirmation(),
+                    };
+                }
+            });
     }
 
     public function changeFulfillmentStatus($newStatus)
@@ -1004,8 +1003,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
-            if (! Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && !$this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+            if (!Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -1069,7 +1068,7 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (! $this->credit_for_order_id) {
+        if (!$this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
