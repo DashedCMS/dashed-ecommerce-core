@@ -19,7 +19,7 @@ class ProductCategoryRouteHandler
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
-                if (! $productCategory) {
+                if (!$productCategory) {
                     return 'pageNotFound';
                 }
                 $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
@@ -65,7 +65,11 @@ class ProductCategoryRouteHandler
                 if ($productCategory) {
                     array_shift($slugComponents);
                     foreach ($slugComponents as $slugComponent) {
-                        $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
+                        if ($productCategory) {
+                            $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
+                        } else {
+                            return 'pageNotFound';
+                        }
                     }
                     if (View::exists('qcommerce.categories.index') && $productCategory) {
                         SEOTools::setTitle($productCategory->name);
