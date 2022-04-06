@@ -19,7 +19,7 @@ class ProductCategoryRouteHandler
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
-                if (!$productCategory) {
+                if (! $productCategory) {
                     return 'pageNotFound';
                 }
                 $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
