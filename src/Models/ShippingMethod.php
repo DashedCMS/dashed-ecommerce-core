@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
@@ -38,6 +39,11 @@ class ShippingMethod extends Model
     ];
 
     protected $table = 'qcommerce__shipping_methods';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
+    }
 
     public function site()
     {

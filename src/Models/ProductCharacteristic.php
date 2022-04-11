@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -32,6 +33,11 @@ class ProductCharacteristic extends Model
             $productCharacteristic->productCharacteristic()->detach();
             ProductCharacteristic::where('product_characteristic_id', $productCharacteristic->id)->delete();
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 
     public function product()

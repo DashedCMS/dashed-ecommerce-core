@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
@@ -43,6 +44,11 @@ class ShippingZone extends Model
         static::deleting(function ($shippingZone) {
             $shippingZone->shippingMethods()->delete();
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 
     public function site()

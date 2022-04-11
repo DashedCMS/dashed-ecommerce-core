@@ -42,11 +42,6 @@ class Order extends Model
 
     protected static $logFillable = true;
 
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults();
-    }
-
     protected $table = 'qcommerce__orders';
 
     protected $fillable = [
@@ -127,6 +122,11 @@ class Order extends Model
             $order->initials = $order->first_name ? strtoupper($order->first_name[0]) . '.' : '';
             $order->site_id = Sites::getActive();
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 
     public function getNameAttribute(): string

@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -136,6 +137,11 @@ class Product extends Model
             $product->productFilters()->detach();
             $product->activeProductFilters()->detach();
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 
     public function scopeSearch($query)

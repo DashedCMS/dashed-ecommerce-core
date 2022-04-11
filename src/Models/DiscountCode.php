@@ -4,6 +4,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -69,6 +70,11 @@ class DiscountCode extends Model
             }
             $discountCode->code = $code;
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 
     public function scopeSearch($query)

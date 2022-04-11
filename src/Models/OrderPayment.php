@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,6 +39,11 @@ class OrderPayment extends Model
         static::creating(function ($orderPayment) {
             $orderPayment->hash = Str::random(32);
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 
     public function order()
