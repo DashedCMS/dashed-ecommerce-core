@@ -531,10 +531,9 @@
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                         @if(optional($orderProduct->product)->firstImageUrl)
                                                                             <img
-                                                                                src="{{ glide($orderProduct->product->firstImageUrl, [
-                                                                                    'h' => 100,
-                                                                                    'w' => 'auto'
-                                                                                ]) }}"
+                                                                                src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('qcommerce', $orderProduct->product->firstImageUrl, [
+                                                                                    'heighten' => 100
+                                                                                ])}}"
                                                                                 class="products-gallery-image"
                                                                                 style="display: block; width: 80px;"
                                                                                 width="80">@endif </a></td>
