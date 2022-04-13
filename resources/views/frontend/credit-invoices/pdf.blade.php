@@ -129,10 +129,10 @@
                         <td class='logo-parent'>
                             @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                             @if($logo)
-                                <img src="{{glide($logo, [
-    'h' => 100,
-    'w' => 'auto'
-])}}"
+                                <img
+                                    src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('qcommerce', $logo, [
+                                                                                    'heighten' => 100
+                                                                                ])}}"
                                      class="logo">
                             @endif
                         </td>

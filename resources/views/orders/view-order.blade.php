@@ -41,11 +41,12 @@
                             <div class="grid grid-cols-12 gap-4 border-t border-primary py-4">
                                 <div class="flex items-center space-x-4 col-span-12 lg:col-span-6">
                                     @if($orderProduct->product && $orderProduct->product->firstImageUrl)
-                                        <x-glide::image
-                                            :src="$orderProduct->product->firstImageUrl"
-                                            w="100"
-                                            h="auto"
-                                            fit="contain"
+                                        <x-drift::image
+                                            config="qcommerce"
+                                            :path="$orderProduct->product->firstImageUrl"
+                                            :manipulations="[
+                                                'widen' => 100,
+                                            ]"
                                         />
                                     @endif
                                     <div class="">
