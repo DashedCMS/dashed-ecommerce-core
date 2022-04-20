@@ -577,7 +577,7 @@ class Order extends Model
             foreach (Orders::getFulfillmentStatusses() as $key => $fulfillmentStatus) {
                 if ($this->fulfillment_status == $key && Customsetting::get("fulfillment_status_{$key}_enabled", null, false, $this->locale)) {
                     try {
-                        Mail::to($this->email)->send(new OrderFulfillmentStatusChangedMail(Customsetting::get("fulfillment_status_{$key}_email_subject", null, null, $this->locale), Customsetting::get("fulfillment_status_{$key}_email_content", null, null, $this->locale)));
+                        Mail::to($this->email)->send(new OrderFulfillmentStatusChangedMail($this, Customsetting::get("fulfillment_status_{$key}_email_subject", null, null, $this->locale), Customsetting::get("fulfillment_status_{$key}_email_content", null, null, $this->locale)));
                         $orderLog = new OrderLog();
                         $orderLog->order_id = $this->id;
                         $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
