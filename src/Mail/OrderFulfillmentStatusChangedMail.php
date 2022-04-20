@@ -7,7 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceCore\Classes\OrderVariableReplacer;
+use Qubiqx\QcommerceEcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderFulfillmentStatusChangedMail extends Mailable
 {
