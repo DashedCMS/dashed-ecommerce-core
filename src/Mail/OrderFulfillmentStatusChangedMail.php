@@ -5,9 +5,9 @@ namespace Qubiqx\QcommerceEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Classes\OrderVariableReplacer;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Qubiqx\QcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderFulfillmentStatusChangedMail extends Mailable
 {
