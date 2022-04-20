@@ -20,7 +20,7 @@ class OrderFulfillmentStatusChangedMail extends Mailable
 
     public function build()
     {
-        return $this->view('qcommerce-ecommerce-core::emails.notification')
+        return $this->view('qcommerce-core::emails.notification')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject($this->subject)
             ->with([
