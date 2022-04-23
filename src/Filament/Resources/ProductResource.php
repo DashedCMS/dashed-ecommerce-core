@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\RelationshipRepeater;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -25,6 +24,7 @@ use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Forms\Components\HasManyRepeater;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Filament\Forms\Components\RelationshipRepeater;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
 use Filament\Forms\Components\BelongsToManyMultiSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
