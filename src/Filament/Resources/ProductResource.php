@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\RelationshipRepeater;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -14,6 +15,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -433,37 +435,105 @@ class ProductResource extends Resource
             ->schema([
                 HasManyRepeater::make('productExtras')
                     ->relationship('productExtras')
-                    ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
-                        $relationship = $component->getRelationship();
-                        $state = $component->getState();
-
-                        foreach ($relationship->pluck($relationship->getLocalKeyName()) as $keyToCheckForDeletion) {
-                            if (array_key_exists($keyToCheckForDeletion, $state)) {
-                                continue;
-                            }
-
-                            $relationship->find($keyToCheckForDeletion)?->delete();
-                        }
-
-                        $childComponentContainers = $component->getChildComponentContainers();
-
-                        foreach ($state as $itemKey => &$itemData) {
-                            if ($record = ProductExtra::find($itemKey)) {
-                                $name = json_decode($record->getRawOriginal('name'), true);
-                                $name[$livewire->activeFormLocale] = $itemData['name'];
-                                $itemData['name'] = $name;
-                                $record->update($itemData);
-
-                                continue;
-                            }
-
-                            $name = [];
-                            $name[$livewire->activeFormLocale] = $itemData['name'];
-                            $itemData['name'] = $name;
-                            $record = $relationship->create($itemData);
-                            $childComponentContainers[$itemKey]->model($record)->saveRelationships();
-                        }
-                    })
+//                    ->saveRelationshipsUsing(function ($livewire, RelationshipRepeater $component,RelationshipRepeater $relationshipRepeater, ?array $state) {
+//                        if (! is_array($state)) {
+//                            $state = [];
+//                        }
+//                        dd($relationshipRepeater);
+//
+//                        $relationship = $component->getRelationship();
+//                        $localKeyName = $relationship->getLocalKeyName();
+//
+//                        $existingRecords = $component->getCachedExistingRecords();
+//
+//                        $recordsToDelete = [];
+//
+//                        foreach ($existingRecords->pluck($localKeyName) as $keyToCheckForDeletion) {
+//                            if (array_key_exists("record-{$keyToCheckForDeletion}", $state)) {
+//                                continue;
+//                            }
+//
+//                            $recordsToDelete[] = $keyToCheckForDeletion;
+//                        }
+//
+//                        $relationship->whereIn($localKeyName, $recordsToDelete)->get()->each(fn (Model $record) => $record->delete());
+//
+//                        $childComponentContainers = $component->getChildComponentContainers();
+//
+//                        $itemOrder = 1;
+//                        $orderColumn = $component->getOrderColumn();
+//
+//                        foreach ($childComponentContainers as $itemKey => $item) {
+//                            $itemData = $item->getState();
+//
+//                            if ($orderColumn) {
+//                                $itemData[$orderColumn] = $itemOrder;
+//
+//                                $itemOrder++;
+//                            }
+//
+//                            if ($record = ($existingRecords[$itemKey] ?? null)) {
+//                                $name = json_decode($record->getRawOriginal('name'), true);
+//                                $name[$livewire->activeFormLocale] = $itemData['name'];
+//                                $itemData['name'] = $name;
+//                                $record->update($itemData);
+//
+//                                continue;
+//                            }
+//
+//                            $name = [];
+//                            $name[$livewire->activeFormLocale] = $itemData['name'];
+//                            $itemData['name'] = $name;
+//                            $record = $relationship->create($itemData);
+//                            $item->model($record)->saveRelationships();
+//                        }
+//
+//                        $component->clearCachedExistingRecords();
+//
+//                        $component->fillFromRelationship();
+//                    })
+//                    ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
+//                        $relationship = $component->getRelationship();
+//                        $state = $component->getState();
+//
+////                        ray($relationship->getLocalKeyName(), $state);
+//                        foreach ($relationship->pluck($relationship->getLocalKeyName()) as $keyToCheckForDeletion) {
+////                            ray('key: ' . $keyToCheckForDeletion);
+////                            ray(array_keys($state));
+////                            if (array_key_exists('record-' . $keyToCheckForDeletion, $state)) {
+////                                ray('found ' . $keyToCheckForDeletion);
+////                                continue;
+////                            }
+////                            ray('not found ' . $keyToCheckForDeletion);
+//
+////                            $relationship->find($keyToCheckForDeletion)?->productExtraOptions()->forceDelete();
+////                            $relationship->find($keyToCheckForDeletion)?->forceDelete();
+//                        }
+////                        return;
+////                        dd('Done');
+//
+//                        $childComponentContainers = $component->getChildComponentContainers();
+////                        ray($childComponentContainers);
+////
+//                        foreach ($state as $itemKey => &$itemData) {
+//                            ray('Itemkey: ' . $itemKey);
+//                            if ($record = ProductExtra::find($itemKey)) {
+//                                ray('record found');
+//                                $name = json_decode($record->getRawOriginal('name'), true);
+//                                $name[$livewire->activeFormLocale] = $itemData['name'];
+//                                $itemData['name'] = $name;
+//                                $record->update($itemData);
+//
+//                                continue;
+//                            }
+//
+//                            $name = [];
+//                            $name[$livewire->activeFormLocale] = $itemData['name'];
+//                            $itemData['name'] = $name;
+//                            $record = $relationship->create($itemData);
+//                            $childComponentContainers[$itemKey]->model($record)->saveRelationships();
+//                        }
+//                    })
                     ->schema([
                         TextInput::make('name')
                             ->label('Naam')
@@ -488,41 +558,41 @@ class ProductResource extends Resource
                             ]),
                         HasManyRepeater::make('productExtraOptions')
                             ->relationship('productExtraOptions')
-                            ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
-                                $relationship = $component->getRelationship();
-                                $state = $component->getState();
-
-                                foreach ($relationship->pluck($relationship->getLocalKeyName()) as $keyToCheckForDeletion) {
-                                    if (array_key_exists($keyToCheckForDeletion, $state)) {
-                                        continue;
-                                    }
-
-                                    $relationship->find($keyToCheckForDeletion)?->delete();
-                                }
-
-                                $childComponentContainers = $component->getChildComponentContainers();
-
-                                foreach ($state as $itemKey => &$itemData) {
-                                    if ($record = ProductExtraOption::find($itemKey)) {
-                                        $value = json_decode($record->getRawOriginal('value'), true);
-                                        $value[$livewire->activeFormLocale] = $itemData['value'];
-                                        $itemData['value'] = $value;
-                                        $record->update($itemData);
-
-                                        continue;
-                                    }
-
-                                    $value = [];
-                                    $value[$livewire->activeFormLocale] = $itemData['value'];
-                                    $itemData['value'] = $value;
-
-                                    try {
-                                        $record = $relationship->create($itemData);
-                                        $childComponentContainers[$itemKey]->model($record)->saveRelationships();
-                                    } catch (\Exception $exception) {
-                                    }
-                                }
-                            })
+//                            ->saveRelationshipsUsing(function ($record, $state, $livewire, HasManyRepeater $component) {
+//                                $relationship = $component->getRelationship();
+//                                $state = $component->getState();
+//
+//                                foreach ($relationship->pluck($relationship->getLocalKeyName()) as $keyToCheckForDeletion) {
+//                                    if (array_key_exists($keyToCheckForDeletion, $state)) {
+//                                        continue;
+//                                    }
+//
+//                                    $relationship->find($keyToCheckForDeletion)?->delete();
+//                                }
+//
+//                                $childComponentContainers = $component->getChildComponentContainers();
+//
+//                                foreach ($state as $itemKey => &$itemData) {
+//                                    if ($record = ProductExtraOption::find($itemKey)) {
+//                                        $value = json_decode($record->getRawOriginal('value'), true);
+//                                        $value[$livewire->activeFormLocale] = $itemData['value'];
+//                                        $itemData['value'] = $value;
+//                                        $record->update($itemData);
+//
+//                                        continue;
+//                                    }
+//
+//                                    $value = [];
+//                                    $value[$livewire->activeFormLocale] = $itemData['value'];
+//                                    $itemData['value'] = $value;
+//
+//                                    try {
+//                                        $record = $relationship->create($itemData);
+//                                        $childComponentContainers[$itemKey]->model($record)->saveRelationships();
+//                                    } catch (\Exception $exception) {
+//                                    }
+//                                }
+//                            })
                             ->schema([
                                 TextInput::make('value')
                                     ->label('Waarde')
