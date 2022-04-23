@@ -294,6 +294,7 @@ class TransactionController extends FrontendController
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
             } catch (\Exception $exception) {
                 return redirect()->back()->with('error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))->withInput();
+
                 throw new \Exception('Cannot start payment: ' . $exception->getMessage());
             }
 
