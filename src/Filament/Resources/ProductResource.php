@@ -552,7 +552,7 @@ class ProductResource extends Resource
             ])
             ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
         ->collapsible()
-        ->collapsed(false);
+        ->collapsed();
 
         return $form->schema($schema);
     }
