@@ -10,9 +10,9 @@ use Filament\Resources\Pages\EditRecord;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristic;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
@@ -31,10 +31,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->getRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (!$thisRecord->images) {
+            if (! $thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (!$images) {
-                    if (!is_array($images)) {
+                if (! $images) {
+                    if (! is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -69,7 +69,7 @@ class EditProduct extends EditRecord
             if (isset($productExtra['productExtraId']) && $productExtra['productExtraId']) {
                 $newProductExtra = ProductExtra::find($productExtra['productExtraId']);
             } else {
-                $newProductExtra = new ProductExtra;
+                $newProductExtra = new ProductExtra();
             }
             $newProductExtra->product_id = $this->record->id;
             $newProductExtra->type = $productExtra['type'];
@@ -85,7 +85,7 @@ class EditProduct extends EditRecord
                 if (isset($productExtraOption['productExtraOptionId']) && $productExtraOption['productExtraOptionId']) {
                     $newProductExtraOption = ProductExtraOption::find($productExtraOption['productExtraOptionId']);
                 } else {
-                    $newProductExtraOption = new ProductExtraOption;
+                    $newProductExtraOption = new ProductExtraOption();
                 }
                 $newProductExtraOption->product_extra_id = $newProductExtra->id;
                 $newProductExtraOption->setTranslation('value', $this->activeFormLocale, $productExtraOption['value']);
@@ -155,7 +155,7 @@ class EditProduct extends EditRecord
                 'type' => $productExtra->type,
                 'required' => $productExtra->required,
                 'productExtraId' => $productExtra->id,
-                'productExtraOptions' => $productExtraOptions
+                'productExtraOptions' => $productExtraOptions,
             ];
         }
     }
@@ -184,7 +184,7 @@ class EditProduct extends EditRecord
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        if (($this->record->type == 'variable' && !$this->record->parent_product_id) || $this->record->type == 'simple') {
+        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($this->data["product_filter_$productFilter->id"]) {
@@ -213,7 +213,7 @@ class EditProduct extends EditRecord
 
         foreach ($productCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if (!$thisProductCharacteristic) {
+            if (! $thisProductCharacteristic) {
                 $thisProductCharacteristic = new ProductCharacteristic();
                 $thisProductCharacteristic->product_id = $this->record->id;
                 $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -225,7 +225,7 @@ class EditProduct extends EditRecord
 
     protected function getBreadcrumbs(): array
     {
-        if (!$this->record->parentProduct) {
+        if (! $this->record->parentProduct) {
             return parent::getBreadcrumbs();
         }
 
