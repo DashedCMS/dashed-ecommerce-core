@@ -456,7 +456,6 @@ class ProductResource extends Resource
                                 'required',
                             ]),
                         Repeater::make('productExtraOptions')
-//                            ->relationship('productExtraOptions')
                             ->schema([
                                 TextInput::make('value')
                                     ->label('Waarde')
