@@ -32,15 +32,14 @@ class ProductRouteHandler
 
             if ($product) {
                 if (View::exists('qcommerce.products.show')) {
-                    SEOTools::setTitle($product->meta_title ?: $product->name);
-                    SEOTools::setDescription($product->meta_description);
-                    SEOTools::opengraph()->setUrl(url()->current());
+                    frontend()->metaData('metaTitle', $product->meta_title ?: $product->name);
+                    frontend()->metaData('metaDescription', $product->meta_description);
                     $metaImage = $product->meta_image;
                     if (! $metaImage) {
                         $metaImage = $product->firstMediaUrl;
                     }
                     if ($metaImage) {
-                        SEOTools::addImages($metaImage);
+                        frontend()->metaData('metaImage', $metaImage);
                     }
 
                     View::share('product', $product);

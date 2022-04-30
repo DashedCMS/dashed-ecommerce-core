@@ -25,12 +25,10 @@ class ProductCategoryRouteHandler
                 $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
             }
             if (View::exists('qcommerce.categories.show') && $productCategory) {
-                SEOTools::setTitle($productCategory->meta_title ?: $productCategory->name);
-                SEOTools::setDescription($productCategory->meta_description);
-                SEOTools::opengraph()->setUrl(url()->current());
-
+                frontend()->metaData('metaTitle', $productCategory->meta_title ?: $productCategory->name);
+                frontend()->metaData('metaDescription', $productCategory->meta_description);
                 if ($productCategory->meta_image) {
-                    SEOTools::addImages($productCategory->meta_image);
+                    frontend()->metaData('metaImage', $productCategory->meta_image);
                 }
 
                 View::share('productCategory', $productCategory);
@@ -48,8 +46,7 @@ class ProductCategoryRouteHandler
         if ($slugComponents[0] == Translation::get('categories-slug', 'slug', 'categories')) {
             if (count($slugComponents) == 1) {
                 if (View::exists('qcommerce.categories.index')) {
-                    SEOTools::setTitle(Translation::get('all-categories', 'categories', 'All categories'));
-                    SEOTools::opengraph()->setUrl(url()->current());
+                    frontend()->metaData('metaTitle', Translation::get('all-categories', 'categories', 'All categories'));
 
                     View::share('productCategory', null);
                     $childProductCategories = ProductCategories::getTopLevel(1000);
@@ -72,8 +69,7 @@ class ProductCategoryRouteHandler
                         }
                     }
                     if (View::exists('qcommerce.categories.index') && $productCategory) {
-                        SEOTools::setTitle($productCategory->name);
-                        SEOTools::opengraph()->setUrl(url()->current());
+                        frontend()->metaData('metaTitle', $productCategory->name);
 
                         View::share('productCategory', $productCategory);
                         $childProductCategories = $productCategory->getFirstChilds();
