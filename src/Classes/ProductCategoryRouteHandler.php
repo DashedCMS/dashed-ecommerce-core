@@ -4,7 +4,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
-use Artesaos\SEOTools\Facades\SEOTools;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
