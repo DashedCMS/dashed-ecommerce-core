@@ -23,9 +23,8 @@ class CartController extends FrontendController
         ShoppingCart::removeInvalidItems();
 
         if (View::exists('qcommerce.cart.show')) {
-            SEOTools::setTitle(Translation::get('cart-page-meta-title', 'cart', 'Cart'));
-            SEOTools::setDescription(Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
-            SEOTools::opengraph()->setUrl(url()->current());
+            seo()->metaData('metaTitle', Translation::get('cart-page-meta-title', 'cart', 'Cart'));
+            seo()->metaData('metaDescription', Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
 
             return view('qcommerce.cart.show');
         } else {
@@ -38,9 +37,8 @@ class CartController extends FrontendController
         ShoppingCart::removeInvalidItems();
 
         if (View::exists('qcommerce.checkout.show')) {
-            SEOTools::setTitle(Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
-            SEOTools::setDescription(Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
-            SEOTools::opengraph()->setUrl(url()->current());
+            seo()->metaData('metaTitle', Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
+            seo()->metaData('metaDescription', Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
 
             return view('qcommerce.checkout.show');
         } else {
