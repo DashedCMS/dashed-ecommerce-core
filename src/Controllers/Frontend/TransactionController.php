@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
 use Qubiqx\QcommerceCore\Models\User;
-use Artesaos\SEOTools\Facades\SEOTools;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
@@ -349,8 +348,8 @@ class TransactionController extends FrontendController
         }
 
         if (View::exists('qcommerce.checkout.complete')) {
-            SEOTools::setTitle(Translation::get('complete-page-meta-title', 'complete-order', 'Your order'));
-            SEOTools::opengraph()->setUrl(url()->current());
+
+            seo()->metaData('metaTitle', Translation::get('complete-page-meta-title', 'complete-order', 'Your order'));
 
             View::share('order', $order);
 
