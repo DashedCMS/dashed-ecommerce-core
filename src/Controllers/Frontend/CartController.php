@@ -4,7 +4,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
-use Artesaos\SEOTools\Facades\SEOTools;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Models\Customsetting;
