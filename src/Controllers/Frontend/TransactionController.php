@@ -348,7 +348,6 @@ class TransactionController extends FrontendController
         }
 
         if (View::exists('qcommerce.checkout.complete')) {
-
             seo()->metaData('metaTitle', Translation::get('complete-page-meta-title', 'complete-order', 'Your order'));
 
             View::share('order', $order);
