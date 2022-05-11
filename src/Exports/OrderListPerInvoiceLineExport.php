@@ -44,9 +44,9 @@ class OrderListPerInvoiceLineExport implements FromArray
                         $order->psp_id,
                         $order->email,
                         $orderProduct->name,
-                        $orderProduct->price,
-                        $orderProduct->btw,
-                        $orderProduct->price - $orderProduct->btw,
+                        $orderProduct->price / $orderProduct->quantity,
+                        $orderProduct->btw / $orderProduct->quantity,
+                        ($orderProduct->price - $orderProduct->btw) / $orderProduct->quantity,
                     ];
 
                     $quantity--;
