@@ -3,16 +3,16 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Maatwebsite\Excel\Facades\Excel;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Exports\OrderListPerInvoiceLineExport;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Exports\OrderListExport;
+use Qubiqx\QcommerceEcommerceCore\Exports\OrderListPerInvoiceLineExport;
 
 class ExportOrdersPage extends Page implements HasForms
 {
@@ -73,7 +73,7 @@ class ExportOrdersPage extends Page implements HasForms
 
         if ($this->form->getState()['type'] == 'normal') {
             Excel::store(new OrderListExport($orders), '/exports/order-lists/order-list.xlsx');
-        } else if ($this->form->getState()['type'] == 'perInvoiceLine') {
+        } elseif ($this->form->getState()['type'] == 'perInvoiceLine') {
             Excel::store(new OrderListPerInvoiceLineExport($orders), '/exports/order-lists/order-list.xlsx');
         }
 

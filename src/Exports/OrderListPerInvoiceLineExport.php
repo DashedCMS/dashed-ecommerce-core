@@ -32,9 +32,9 @@ class OrderListPerInvoiceLineExport implements FromArray
         ];
 
         foreach ($this->orders as $order) {
-            foreach($order->orderProducts as $orderProduct){
+            foreach ($order->orderProducts as $orderProduct) {
                 $quantity = $orderProduct->quantity;
-                while($quantity > 0){
+                while ($quantity > 0) {
                     $ordersArray[] = [
                         $order->created_at->day,
                         $order->created_at->month,
