@@ -68,8 +68,6 @@ class Order extends Model
         'invoice_city',
         'invoice_country',
         'invoice_id',
-        'psp',
-        'psp_id',
         'payment_method',
         'has_deposit',
         'total',
@@ -157,6 +155,11 @@ class Order extends Model
         } else {
             return $this->name;
         }
+    }
+
+    public function getPspIdAttribute(): ?string
+    {
+        return $this->orderPayments()->first() ? $this->orderPayments()->first()->psp_id : '';
     }
 
     public function getPaymentMethodAttribute(): string

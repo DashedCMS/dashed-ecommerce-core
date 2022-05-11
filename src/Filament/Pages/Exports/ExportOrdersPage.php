@@ -3,12 +3,14 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
+use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
+use Qubiqx\QcommerceEcommerceCore\Exports\OrderListPerInvoiceLineExport;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Exports\OrderListExport;
 
@@ -24,22 +26,33 @@ class ExportOrdersPage extends Page implements HasForms
 
     protected static string $view = 'qcommerce-ecommerce-core::exports.pages.export-orders';
 
-    public $start_date;
-    public $end_date;
+    public $startDate;
+    public $endDate;
+    public $type = 'normal';
 
     protected function getFormSchema(): array
     {
         return [
-            DatePicker::make('start_date')
+            DatePicker::make('startDate')
                 ->label('Start datum')
                 ->rules([
                     'nullable',
                 ]),
-            DatePicker::make('end_date')
+            DatePicker::make('endDate')
                 ->label('Eind datum')
                 ->rules([
                     'nullable',
                     'after:start_date',
+                ]),
+            Select::make('type')
+                ->label('Type export')
+                ->options([
+                    'normal' => 'Normaal',
+                    'perInvoiceLine' => 'Per factuurregel',
+                ])
+                ->required()
+                ->rules([
+                    'required',
                 ]),
         ];
     }
@@ -48,17 +61,21 @@ class ExportOrdersPage extends Page implements HasForms
     {
         $orders = Order::isPaidOrReturn();
 
-        if ($this->form->getState()['start_date']) {
-            $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['start_date'])->startOfDay());
+        if ($this->form->getState()['startDate']) {
+            $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['startDate'])->startOfDay());
         }
 
-        if ($this->form->getState()['end_date']) {
-            $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['end_date'])->endOfDay());
+        if ($this->form->getState()['endDate']) {
+            $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['endDate'])->endOfDay());
         }
 
         $orders = $orders->get();
 
-        Excel::store(new OrderListExport($orders), '/exports/order-lists/order-list.xlsx');
+        if ($this->form->getState()['type'] == 'normal') {
+            Excel::store(new OrderListExport($orders), '/exports/order-lists/order-list.xlsx');
+        } else if ($this->form->getState()['type'] == 'perInvoiceLine') {
+            Excel::store(new OrderListPerInvoiceLineExport($orders), '/exports/order-lists/order-list.xlsx');
+        }
 
         $this->notify('success', 'De export is gedownload');
 
