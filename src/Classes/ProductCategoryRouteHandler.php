@@ -2,14 +2,14 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\View;
-use Qubiqx\QcommerceCore\Classes\Locales;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\View;
+use Qubiqx\QcommerceCore\Classes\Sites;
+use Qubiqx\QcommerceCore\Classes\Locales;
+use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
 class ProductCategoryRouteHandler
 {
