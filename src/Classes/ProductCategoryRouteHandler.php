@@ -4,8 +4,12 @@ namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
+use Qubiqx\QcommerceCore\Classes\Locales;
+use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
 
 class ProductCategoryRouteHandler
 {
@@ -81,5 +85,20 @@ class ProductCategoryRouteHandler
                 }
             }
         }
+    }
+
+    public static function getSitemapUrls(Sitemap $sitemap): Sitemap
+    {
+        foreach (ProductCategory::thisSite()->get() as $productCategory) {
+            foreach (Locales::getLocales() as $locale) {
+                if (in_array($locale['id'], Sites::get()['locales'])) {
+                    Locales::setLocale($locale['id']);
+                    $sitemap
+                        ->add(Url::create($productCategory->getUrl()));
+                }
+            }
+        }
+
+        return $sitemap;
     }
 }
