@@ -82,21 +82,12 @@ class CreateOrder extends Page implements HasForms
     public $products = [];
     public $activatedProducts = [];
 
-    //Todo: create extra button to update cart, instead of doing it on change
-    public function mount(): void
-    {
-//        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->get();
-//        foreach ($allUsers as $user) {
-//            $this->users[$user->email] = $user->first_name . ' ' . $user->last_name;
-//        }
-    }
-
     public function getUsersProperty()
     {
-        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email')->orderBy('last_name')->orderBy('email')->get();
+        $allUsers = DB::table('users')->select('first_name', 'last_name', 'email', 'id')->orderBy('last_name')->orderBy('email')->get();
         $users = [];
         foreach ($allUsers as $user) {
-            $users[$user->email] = $user->first_name || $user->last_name ? $user->first_name . ' ' . $user->last_name : $user->email;
+            $users[$user->id] = $user->first_name || $user->last_name ? "$user->first_name $user->last_name" : $user->email;
         }
 
         return $users;
@@ -132,10 +123,9 @@ class CreateOrder extends Page implements HasForms
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label(fn (\Closure $get) => 'Hang de bestelling aan een gebruiker')
+                    ->label('Hang de bestelling aan een gebruiker')
+                    ->options($this->users)
                     ->searchable()
-                    ->getSearchResultsUsing(fn (string $query) => $this->getSearchableUsers($query))
-                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
                     ->reactive(),
                 Toggle::make('marketing')
                     ->label('De klant accepteert marketing'),
@@ -313,10 +303,16 @@ class CreateOrder extends Page implements HasForms
 
         $productSchemas = [];
 
+//        $productSchemas[] = MultiSelect::make('activatedProducts')
+//            ->label('Kies producten')
+//            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
+//            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
+//            ->reactive();
+
         $productSchemas[] = MultiSelect::make('activatedProducts')
             ->label('Kies producten')
-            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
-            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
+            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+            ->searchable()
             ->reactive();
 
         foreach ($this->getAllProductsProperty() as $product) {
