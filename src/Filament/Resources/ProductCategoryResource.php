@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Select;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -53,8 +54,10 @@ class ProductCategoryResource extends Resource
                         return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->required(),
-                BelongsToSelect::make('parent_product_category_id')
-                    ->relationship('parentProductCategory', 'name')
+                Select::make('parent_product_category_id')
+                    ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
+                    ->searchable()
+//                    ->relationship('parentProductCategory', 'name')
                     ->label('Bovenliggende product categorie'),
                 TextInput::make('name')
                     ->label('Naam')
