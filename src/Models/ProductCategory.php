@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Rennokki\QueryCache\Traits\QueryCacheable;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -119,7 +118,7 @@ class ProductCategory extends Model
 
     public function getUrl()
     {
-        if (!$this->hasChilds()) {
+        if (! $this->hasChilds()) {
             if ($this->products->count() == 1) {
                 return $this->products->first()->getUrl();
             } else {
@@ -144,7 +143,7 @@ class ProductCategory extends Model
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (!$category) {
+            if (! $category) {
                 return;
             }
         }
@@ -164,7 +163,7 @@ class ProductCategory extends Model
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (!$category) {
+            if (! $category) {
                 return;
             }
         }
