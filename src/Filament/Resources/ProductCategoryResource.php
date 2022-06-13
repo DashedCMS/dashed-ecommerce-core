@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Select;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
@@ -15,7 +15,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Resources\Concerns\Translatable;
-use Filament\Forms\Components\BelongsToSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
@@ -54,8 +53,8 @@ class ProductCategoryResource extends Resource
                         return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->required(),
-                Select::make('parent_category_id')
-                    ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
+                Select::make('parent_product_category_id')
+                    ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                     ->searchable()
                     ->label('Bovenliggende product categorie'),
                 TextInput::make('name')
