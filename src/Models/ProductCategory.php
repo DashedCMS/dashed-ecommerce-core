@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Rennokki\QueryCache\Traits\QueryCacheable;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,6 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Rennokki\QueryCache\Traits\QueryCacheable;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
@@ -18,7 +18,6 @@ class ProductCategory extends Model
     use SoftDeletes;
     use HasTranslations;
     use LogsActivity;
-    use QueryCacheable;
 
     protected static $logFillable = true;
 
@@ -120,7 +119,7 @@ class ProductCategory extends Model
 
     public function getUrl()
     {
-        if (! $this->hasChilds()) {
+        if (!$this->hasChilds()) {
             if ($this->products->count() == 1) {
                 return $this->products->first()->getUrl();
             } else {
@@ -145,7 +144,7 @@ class ProductCategory extends Model
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (! $category) {
+            if (!$category) {
                 return;
             }
         }
@@ -165,7 +164,7 @@ class ProductCategory extends Model
         $category = $this;
         while ($category->parent_category_id) {
             $category = self::find($category->parent_category_id);
-            if (! $category) {
+            if (!$category) {
                 return;
             }
         }
@@ -206,9 +205,9 @@ class ProductCategory extends Model
 
     public function getFirstChilds()
     {
-        return Cache::tags(['product-categories', 'products'])->rememberForever("product-category-childs-$this->id", function () {
-            return self::with(['products'])->where('parent_category_id', $this->id)->get();
-        });
+//        return Cache::tags(['product-categories', 'products'])->rememberForever("product-category-childs-$this->id", function () {
+        return self::with(['products'])->where('parent_category_id', $this->id)->get();
+//        });
     }
 
     public function products()
