@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Rennokki\QueryCache\Traits\QueryCacheable;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class ProductCategory extends Model
     use SoftDeletes;
     use HasTranslations;
     use LogsActivity;
+    use QueryCacheable;
 
     protected static $logFillable = true;
 
