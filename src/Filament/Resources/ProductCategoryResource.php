@@ -57,7 +57,6 @@ class ProductCategoryResource extends Resource
                 Select::make('parent_category_id')
                     ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                     ->searchable()
-//                    ->relationship('parentProductCategory', 'name')
                     ->label('Bovenliggende product categorie'),
                 TextInput::make('name')
                     ->label('Naam')
