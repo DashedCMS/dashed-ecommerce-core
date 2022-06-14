@@ -317,7 +317,7 @@ class Product extends Model
 
     public function getAllImagesAttribute()
     {
-        return collect($this->images);
+        return $this->images ? collect($this->images) : collect();
     }
 
     public function getAllImagesExceptFirstAttribute()
