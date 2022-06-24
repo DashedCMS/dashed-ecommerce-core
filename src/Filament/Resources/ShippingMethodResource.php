@@ -114,8 +114,10 @@ class ShippingMethodResource extends Resource
                     TextInput::make('order')
                         ->label('Volgorde van de verzendmethode')
                         ->type('number')
+                        ->required()
                         ->rules([
                             'numeric',
+                            'required',
                         ]),
                 ]),
         ];
