@@ -109,14 +109,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -165,7 +165,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -193,8 +193,12 @@ class Products
         return number_format($highestPrice, 0, '', '');
     }
 
-    public static function getById($productId)
+    public static function getById(int|array $productId)
     {
-        return Product::thisSite()->publicShowable()->where('id', $productId)->with(['productFilters', 'shippingClasses', 'productCategories'])->first();
+        if (is_array($productId)) {
+            return Product::thisSite()->publicShowable()->where('id', $productId)->with(['productFilters', 'shippingClasses', 'productCategories'])->get();
+        } else {
+            return Product::thisSite()->publicShowable()->where('id', $productId)->with(['productFilters', 'shippingClasses', 'productCategories'])->first();
+        }
     }
 }
