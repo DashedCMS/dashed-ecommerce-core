@@ -29,8 +29,7 @@ class EditProduct extends EditRecord
 
     public function mount($record): void
     {
-        $thisRecord = Product::find($record);
-//        $thisRecord = $this->getRecord($record);
+        $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
             if (! $thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
