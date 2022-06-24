@@ -17,11 +17,6 @@ class AddNameToOrderProducts extends Migration
             $table->string('name')->nullable();
             $table->foreignId('product_id')->change()->nullable();
         });
-
-        foreach (\Qubiqx\Qcommerce\Models\OrderProduct::get() as $orderProduct) {
-            $orderProduct->name = $orderProduct->product ? $orderProduct->product->name : 'Product niet gevonden';
-            $orderProduct->save();
-        }
     }
 
     /**
