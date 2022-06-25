@@ -73,8 +73,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('create-order-log', CreateOrderLog::class);
 
         //Frontend components
-        Livewire::component('cart-count', CartCount::class);
-        Livewire::component('toastr-notification', Toastr::class);
+        Livewire::component('cart.cart-count', CartCount::class);
+        Livewire::component('notifications.toastr-notification', Toastr::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
