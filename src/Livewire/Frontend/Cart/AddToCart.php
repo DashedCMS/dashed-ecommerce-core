@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Gloudemans\Shoppingcart\Facades\Cart;
@@ -17,25 +18,34 @@ class AddToCart extends Component
     use CartActions;
 
     public Product $product;
+    public array $filters = [];
+    public ?Collection $extras = null;
     public int $quantity = 1;
 
     public function mount(Product $product)
     {
         $this->product = $product;
+        $this->filters = $this->product->filters();
+        $this->extras = $this->product->allProductExtras();
+
+    }
+
+    public function rules()
+    {
+        return [
+            'extras.*.value' => ['nullable']
+        ];
     }
 
     public function addToCart()
     {
-        $cartItems = ShoppingCart::cartItems();
         $cartUpdated = false;
         $productPrice = $this->product->currentPrice;
         $options = [];
-        foreach ($this->product->allProductExtras() as $productExtra) {
+        foreach ($this->extras as $productExtra) {
             if ($productExtra->type == 'single') {
-                $productValue = $request['product-extra-' . $productExtra->id];
-                if ($productExtra->required && ! $productValue) {
-                    ShoppingCart::removeInvalidItems();
-
+                $productValue = $productExtra['value'] ?? null;
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                 }
 
@@ -46,18 +56,18 @@ class AddToCart extends Component
                         'value' => $productExtraOption->value,
                     ];
                     if ($productExtraOption->calculate_only_1_quantity) {
-                        $productPrice += ($productExtraOption->price / $quantity);
+                        $productPrice += ($productExtraOption->price / $this->quantity);
                     } else {
                         $productPrice += $productExtraOption->price;
                     }
                 }
             } else {
                 foreach ($productExtra->productExtraOptions as $option) {
-                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && ! $productOptionValue) {
-                        ShoppingCart::removeInvalidItems();
-
-                        return redirect()->back()->with('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'))->withInput();
+                    //Todo: fix this and test with real webshop, for example with Russle
+                    $productOptionValue = $option['value'] ?? null;
+//                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
+                    if ($productExtra->required && !$productOptionValue) {
+                        return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                     }
 
                     if ($productOptionValue) {
@@ -66,7 +76,7 @@ class AddToCart extends Component
                             'value' => $option->value,
                         ];
                         if ($option->calculate_only_1_quantity) {
-                            $productPrice = $productPrice + ($option->price / $quantity);
+                            $productPrice = $productPrice + ($option->price / $this->quantity);
                         } else {
                             $productPrice = $productPrice + $option->price;
                         }
@@ -75,19 +85,18 @@ class AddToCart extends Component
             }
         }
 
+        $cartItems = ShoppingCart::cartItems();
         foreach ($cartItems as $cartItem) {
             //Todo: the comparison for options does not work
-            if ($cartItem->model->id == $product->id && $options == $cartItem->options) {
-                $newQuantity = $cartItem->qty + $quantity;
+            if ($cartItem->model->id == $this->product->id && $options == $cartItem->options) {
+                $newQuantity = $cartItem->qty + $this->quantity;
 
-                if ($product->limit_purchases_per_customer && $newQuantity > $product->limit_purchases_per_customer_limit) {
-                    Cart::update($cartItem->rowId, $product->limit_purchases_per_customer_limit);
+                if ($this->product->limit_purchases_per_customer && $newQuantity > $this->product->limit_purchases_per_customer_limit) {
+                    Cart::update($cartItem->rowId, $this->product->limit_purchases_per_customer_limit);
 
-                    ShoppingCart::removeInvalidItems();
-
-                    return redirect()->back()->with('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
-                        'quantity' => $product->limit_purchases_per_customer_limit,
-                    ]))->withInput();
+                    return $this->checkCart('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
+                        'quantity' => $this->product->limit_purchases_per_customer_limit,
+                    ]));
                 }
 
                 Cart::update($cartItem->rowId, $newQuantity);
@@ -95,34 +104,28 @@ class AddToCart extends Component
             }
         }
 
-        if (! $cartUpdated) {
-            if ($product->limit_purchases_per_customer && $quantity > $product->limit_purchases_per_customer_limit) {
-                Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
+        if (!$cartUpdated) {
+            if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
+                Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
-                ShoppingCart::removeInvalidItems();
-
-                return redirect()->back()->with('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
-                    'quantity' => $product->limit_purchases_per_customer_limit,
-                ]))->withInput();
+                return $this->checkCart('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
+                    'quantity' => $this->product->limit_purchases_per_customer_limit,
+                ]));
             }
 
-            Cart::add($product->id, $product->name, $quantity, $productPrice, $options)->associate(Product::class);
+            Cart::add($this->product->id, $this->product->name, $this->quantity, $productPrice, $options)->associate(Product::class);
         }
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
         if ($redirectChoice == 'same') {
-            $redirectUrl = url()->previous();
+            return $this->checkCart('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
         } elseif ($redirectChoice == 'cart') {
-            $redirectUrl = ShoppingCart::getCartUrl();
+            $this->checkCart();
+            return redirect(ShoppingCart::getCartUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
         } elseif ($redirectChoice == 'checkout') {
-            $redirectUrl = ShoppingCart::getCheckoutUrl();
+            $this->checkCart();
+            return redirect(ShoppingCart::getCheckoutUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
         }
-
-        ShoppingCart::removeInvalidItems();
-
-        return redirect($redirectUrl)->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
-
-        $this->checkCart($response['status'], $response['message']);
     }
 
     public function render()

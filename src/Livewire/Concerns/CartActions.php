@@ -6,9 +6,11 @@ use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 
 trait CartActions
 {
-    public function checkCart(string $status, string $message)
+    public function checkCart(?string $status = null, ?string $message = null)
     {
-        $this->emit('showAlert', $status, $message);
+        if ($status) {
+            $this->emit('showAlert', $status, $message);
+        }
 
         ShoppingCart::removeInvalidItems();
 
