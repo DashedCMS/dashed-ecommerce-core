@@ -2,15 +2,15 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Livewire\Component;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
 class AddToCartButton extends Component
 {
@@ -33,7 +33,7 @@ class AddToCartButton extends Component
         foreach ($this->product->allProductExtras() as $productExtra) {
             if ($productExtra->type == 'single') {
                 $productValue = $request['product-extra-' . $productExtra->id];
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     ShoppingCart::removeInvalidItems();
 
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
