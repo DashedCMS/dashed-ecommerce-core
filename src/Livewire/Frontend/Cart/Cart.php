@@ -2,9 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Qubiqx\QcommerceCore\Classes\Sites;
+use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
@@ -31,7 +31,7 @@ class Cart extends Component
     public function rules()
     {
         return [
-            'extras.*.value' => ['nullable']
+            'extras.*.value' => ['nullable'],
         ];
     }
 
@@ -42,7 +42,7 @@ class Cart extends Component
 
     public function updatedQuantity()
     {
-        if (!$this->quantity) {
+        if (! $this->quantity) {
             $this->quantity = 1;
         } elseif ($this->quantity < 1) {
             $this->quantity = 1;
@@ -59,7 +59,7 @@ class Cart extends Component
         foreach ($this->extras as $productExtra) {
             if ($productExtra->type == 'single') {
                 $productValue = $productExtra['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                 }
 
@@ -80,7 +80,7 @@ class Cart extends Component
                     //Todo: fix this and test with real webshop, for example with Russle
                     $productOptionValue = $option['value'] ?? null;
 //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && !$productOptionValue) {
+                    if ($productExtra->required && ! $productOptionValue) {
                         return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                     }
 
@@ -118,7 +118,7 @@ class Cart extends Component
             }
         }
 
-        if (!$cartUpdated) {
+        if (! $cartUpdated) {
             if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
                 Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
@@ -135,9 +135,11 @@ class Cart extends Component
             return $this->checkCart('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
         } elseif ($redirectChoice == 'cart') {
             $this->checkCart();
+
             return redirect(ShoppingCart::getCartUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
         } elseif ($redirectChoice == 'checkout') {
             $this->checkCart();
+
             return redirect(ShoppingCart::getCheckoutUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
         }
     }
