@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Notification;
+namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Notification;
 
 use Livewire\Component;
 

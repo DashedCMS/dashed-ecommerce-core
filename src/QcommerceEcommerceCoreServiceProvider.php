@@ -5,8 +5,8 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Notification\Toastr;
 use Spatie\LaravelPackageTools\Package;
-use App\Http\Livewire\Notification\Toastr;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -74,7 +74,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
         //Frontend components
         Livewire::component('cart-count', CartCount::class);
-        Livewire::component('toastr', Toastr::class);
+        Livewire::component('toastr-notification', Toastr::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
