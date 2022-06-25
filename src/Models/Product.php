@@ -536,6 +536,7 @@ class Product extends Model
         }
 
         foreach ($showableFilters as &$showableFilter) {
+            $correctFilterOptions = 0;
             foreach ($showableFilter['values'] as &$showableFilterValue) {
                 if (! $showableFilterValue['url']) {
                     foreach ($childProducts as $childProduct) {
@@ -570,8 +571,11 @@ class Product extends Model
                             }
                         }
                     }
+                }else{
+                    $correctFilterOptions++;
                 }
             }
+            $showableFilter['correctFilterOptions'] = $correctFilterOptions;
         }
 
         return $showableFilters;
