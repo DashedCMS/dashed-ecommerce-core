@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Livewire\Component;
 
 class CartCount extends Component
@@ -14,7 +15,7 @@ class CartCount extends Component
 
     public function mount()
     {
-        $this->cartCount = \Cart::getTotalQuantity();
+        $this->cartCount = Cart::count();
     }
 
     public function render()
