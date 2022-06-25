@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore;
 
+use App\Http\Livewire\Notification\Toastr;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
@@ -58,10 +59,6 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
     public function bootingPackage()
     {
-        $this->publishes([
-            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
-        ], 'qcommerce-ecommerce-core-views');
-
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
@@ -77,6 +74,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
         //Frontend components
         Livewire::component('cart-count', CartCount::class);
+        Livewire::component('toastr-notification', Toastr::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
@@ -90,6 +88,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'qcommerce-ecommerce-core');
+        $this->publishes([
+            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
+        ], 'qcommerce-ecommerce-core-views');
 
         cms()->builder(
             'frontendMiddlewares',

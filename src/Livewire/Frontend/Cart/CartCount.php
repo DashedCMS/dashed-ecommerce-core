@@ -21,6 +21,5 @@ class CartCount extends Component
     public function render()
     {
         return view('qcommerce-ecommerce-core::frontend.cart.cart-count');
-//        return view('qcommerce.livewire.cart.cart-count');
     }
 }

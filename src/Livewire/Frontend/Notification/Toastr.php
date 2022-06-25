@@ -26,6 +26,6 @@ class Toastr extends Component
 
     public function render()
     {
-        return view('livewire.notification.toastr');
+        return view('qcommerce-ecommerce-core::frontend.notification.toastr');
     }
 }
