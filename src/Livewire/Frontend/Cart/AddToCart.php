@@ -12,7 +12,7 @@ use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
-class AddToCartButton extends Component
+class AddToCart extends Component
 {
     use CartActions;
 
@@ -127,6 +127,6 @@ class AddToCartButton extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.cart.add-to-cart-button');
+        return view('qcommerce-ecommerce-core::frontend.cart.add-to-cart');
     }
 }

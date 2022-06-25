@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\AddToCart;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -74,6 +75,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
         //Frontend components
         Livewire::component('cart.cart-count', CartCount::class);
+        Livewire::component('cart.add-to-cart', AddToCart::class);
         Livewire::component('notification.toastr', Toastr::class);
 
         User::addDynamicRelation('orders', function (User $model) {
