@@ -5,7 +5,6 @@ namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
@@ -13,7 +12,7 @@ use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
-class AddToCart extends Component
+class Cart extends Component
 {
     use CartActions;
 
@@ -145,6 +144,6 @@ class AddToCart extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.cart.add-to-cart');
+        return view('qcommerce-ecommerce-core::frontend.cart.cart');
     }
 }
