@@ -58,6 +58,11 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
     public function bootingPackage()
     {
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'qcommerce-ecommerce-core');
+        $this->publishes([
+            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
+        ]);
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
@@ -85,10 +90,6 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     public function configurePackage(Package $package): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'qcommerce-ecommerce-core');
-        $this->publishes([
-            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
-        ]);
 
         cms()->builder(
             'frontendMiddlewares',
