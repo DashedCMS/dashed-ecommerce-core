@@ -2,15 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
-use Illuminate\Support\Collection;
 use Livewire\Component;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Illuminate\Support\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
 class Cart extends Component
@@ -88,7 +85,7 @@ class Cart extends Component
 
         $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
 
-        if (!$discountCode || !$discountCode->isValidForCart()) {
+        if (! $discountCode || ! $discountCode->isValidForCart()) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->fillPrices();
