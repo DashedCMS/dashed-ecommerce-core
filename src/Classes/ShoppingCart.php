@@ -674,7 +674,7 @@ class ShoppingCart
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption->calculate_only_1_quantity) {
+                                            if (!$productExtraOption || ! $productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
                                             if (! isset($optionsForBothItems[$key])) {
