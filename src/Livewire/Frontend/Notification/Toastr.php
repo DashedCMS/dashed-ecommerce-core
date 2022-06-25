@@ -19,7 +19,7 @@ class Toastr extends Component
             'alert',
             [
                 'type' => $type,
-                'message' => $message
+                'message' => $message,
             ]
         );
     }
