@@ -6,11 +6,10 @@ use Livewire\Component;
 
 class CartCount extends Component
 {
-
     public $cartCount = 0;
 
     protected $listeners = [
-        'refreshCart' => 'mount'
+        'refreshCart' => 'mount',
     ];
 
     public function mount()
