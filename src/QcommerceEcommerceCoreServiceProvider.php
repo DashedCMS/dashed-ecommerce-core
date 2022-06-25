@@ -2,11 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore;
 
-use App\Http\Livewire\Notification\Toastr;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
+use App\Http\Livewire\Notification\Toastr;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
