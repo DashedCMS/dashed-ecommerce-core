@@ -582,7 +582,7 @@ class ShoppingCart
         return $depositPaymentMethods;
     }
 
-    public static function removeInvalidItems()
+    public static function removeInvalidItems(): void
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
