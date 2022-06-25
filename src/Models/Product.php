@@ -568,6 +568,7 @@ class Product extends Model
                                 $showableFilterValue['in_stock'] = $childProduct->inStock();
                                 $showableFilterValue['inStock'] = $childProduct->inStock();
                                 $showableFilterValue['isPreOrder'] = $childProduct->isPreorderable();
+                                $correctFilterOptions++;
                             }
                         }
                     }
