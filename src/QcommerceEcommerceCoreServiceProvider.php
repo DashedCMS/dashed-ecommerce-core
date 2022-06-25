@@ -80,15 +80,16 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();
         });
+
+        $this->publishes([
+            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
+        ]);
     }
 
     public function configurePackage(Package $package): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'qcommerce-ecommerce-core');
-        $this->publishes([
-            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
-        ]);
 
         cms()->builder(
             'frontendMiddlewares',
