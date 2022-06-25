@@ -2,10 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
+use Illuminate\Support\Collection;
 use Livewire\Component;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceCore\Models\Customsetting;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
@@ -16,132 +17,89 @@ class Cart extends Component
 {
     use CartActions;
 
-    public Product $product;
-    public array $filters = [];
-    public ?Collection $extras = null;
-    public string|int $quantity = 1;
+//    public ?Collection $cartItems = null;
+    public string $discountCode = '';
+    public $discount;
+    public $subtotal;
+    public $tax;
+    public $total;
 
     public function mount(Product $product)
     {
-        $this->product = $product;
-        $this->filters = $this->product->filters();
-        $this->extras = $this->product->allProductExtras();
+        $this->discountCode = session('discountCode');
+        $this->checkCart();
+        $this->fillPrices();
+    }
+
+    public function fillPrices()
+    {
+        $this->subtotal = ShoppingCart::subtotal(true);
+        $this->discount = ShoppingCart::totalDiscount(true);
+        $this->tax = ShoppingCart::btw(true);
+        $this->total = ShoppingCart::total(true);
+    }
+
+    public function getCartItemsProperty()
+    {
+        return ShoppingCart::cartItems();
+    }
+
+    public function updated()
+    {
+        $this->fillPrices();
     }
 
     public function rules()
     {
         return [
-            'extras.*.value' => ['nullable'],
+//            'extras.*.value' => ['nullable'],
         ];
     }
 
-    public function setQuantity(int $quantity)
+    public function changeQuantity(string $rowId, int $quantity)
     {
-        $this->quantity = $quantity;
+        if (! $quantity) {
+            if (ShoppingCart::hasCartitemByRowId($rowId)) {
+                \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
+            }
+
+            $this->checkCart('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
+        } else {
+            if (ShoppingCart::hasCartitemByRowId($rowId)) {
+                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
+                \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
+            }
+
+            $this->checkCart('success', Translation::get('product-updated-to-cart', 'cart', 'The product has been updated to your cart'));
+        }
+
+        $this->fillPrices();
     }
 
-    public function updatedQuantity()
+    public function applyDiscountCode()
     {
-        if (! $this->quantity) {
-            $this->quantity = 1;
-        } elseif ($this->quantity < 1) {
-            $this->quantity = 1;
-        } elseif ($this->quantity > $this->product->stock()) {
-            $this->quantity = $product->stock();
-        }
-    }
+        if (! $this->discountCode) {
+            session(['discountCode' => '']);
+            $this->discountCode = '';
+            $this->fillPrices();
 
-    public function addToCart()
-    {
-        $cartUpdated = false;
-        $productPrice = $this->product->currentPrice;
-        $options = [];
-        foreach ($this->extras as $productExtra) {
-            if ($productExtra->type == 'single') {
-                $productValue = $productExtra['value'] ?? null;
-                if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
-                }
-
-                if ($productValue) {
-                    $productExtraOption = ProductExtraOption::find($productValue);
-                    $options[$productExtraOption->id] = [
-                        'name' => $productExtra->name,
-                        'value' => $productExtraOption->value,
-                    ];
-                    if ($productExtraOption->calculate_only_1_quantity) {
-                        $productPrice += ($productExtraOption->price / $this->quantity);
-                    } else {
-                        $productPrice += $productExtraOption->price;
-                    }
-                }
-            } else {
-                foreach ($productExtra->productExtraOptions as $option) {
-                    //Todo: fix this and test with real webshop, for example with Russle
-                    $productOptionValue = $option['value'] ?? null;
-//                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && ! $productOptionValue) {
-                        return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
-                    }
-
-                    if ($productOptionValue) {
-                        $options[$option->id] = [
-                            'name' => $productExtra->name,
-                            'value' => $option->value,
-                        ];
-                        if ($option->calculate_only_1_quantity) {
-                            $productPrice = $productPrice + ($option->price / $this->quantity);
-                        } else {
-                            $productPrice = $productPrice + $option->price;
-                        }
-                    }
-                }
-            }
+            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
         }
 
-        $cartItems = ShoppingCart::cartItems();
-        foreach ($cartItems as $cartItem) {
-            //Todo: the comparison for options does not work
-            if ($cartItem->model->id == $this->product->id && $options == $cartItem->options) {
-                $newQuantity = $cartItem->qty + $this->quantity;
+        $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
 
-                if ($this->product->limit_purchases_per_customer && $newQuantity > $this->product->limit_purchases_per_customer_limit) {
-                    Cart::update($cartItem->rowId, $this->product->limit_purchases_per_customer_limit);
+        if (!$discountCode || !$discountCode->isValidForCart()) {
+            session(['discountCode' => '']);
+            $this->discountCode = '';
+            $this->fillPrices();
 
-                    return $this->checkCart('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
-                        'quantity' => $this->product->limit_purchases_per_customer_limit,
-                    ]));
-                }
-
-                Cart::update($cartItem->rowId, $newQuantity);
-                $cartUpdated = true;
-            }
+            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
         }
 
-        if (! $cartUpdated) {
-            if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
-                Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
+        session(['discountCode' => $discountCode->code]);
+        $this->fillPrices();
 
-                return $this->checkCart('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
-                    'quantity' => $this->product->limit_purchases_per_customer_limit,
-                ]));
-            }
-
-            Cart::add($this->product->id, $this->product->name, $this->quantity, $productPrice, $options)->associate(Product::class);
-        }
-
-        $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
-        if ($redirectChoice == 'same') {
-            return $this->checkCart('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
-        } elseif ($redirectChoice == 'cart') {
-            $this->checkCart();
-
-            return redirect(ShoppingCart::getCartUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
-        } elseif ($redirectChoice == 'checkout') {
-            $this->checkCart();
-
-            return redirect(ShoppingCart::getCheckoutUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
-        }
+        return $this->checkCart('success', Translation::get('discount-code-applied', 'cart', 'The discount code has been applied and discount has been calculated'));
     }
 
     public function render()
