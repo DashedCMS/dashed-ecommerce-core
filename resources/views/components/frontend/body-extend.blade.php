@@ -1,3 +1,4 @@
+@livewireScripts
 @if(isset($product))
     <x-qcommerce-ecommerce-core::frontend.products.schema :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
 @endif
