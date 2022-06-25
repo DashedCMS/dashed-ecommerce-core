@@ -186,7 +186,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
             ->hasRoutes([
                 'frontend',
             ])
-            ->hasViews()
+            ->hasViews([
+                'components',
+            ])
             ->hasAssets()
             ->hasCommands([
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
