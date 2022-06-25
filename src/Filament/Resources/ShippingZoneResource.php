@@ -54,11 +54,11 @@ class ShippingZoneResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(function () {
-                                return ! (Sites::getAmountOfSites() > 1);
+                                return !(Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
+                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -78,7 +78,14 @@ class ShippingZoneResource extends Resource
                             ->label('Verberg BTW op de factuur bij het kiezen van deze verzendzone'),
                         MultiSelect::make('zones')
                             ->label('Geactiveerde regio\'s')
-                            ->options(collect(Countries::getCountries())->pluck('name')->toArray())
+                            ->options(function () {
+                                $countries = [];
+                                foreach (collect(Countries::getCountries()) as $country) {
+                                    $countries[$country['name']] = $country['name'];
+                                }
+
+                                return $countries;
+                            })
                             ->required(),
                         MultiSelect::make('disabled_payment_method_ids')
                             ->label('Deactiveer betalingsmethodes voor deze verzendzone')
@@ -97,7 +104,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
             ])
             ->filters([
