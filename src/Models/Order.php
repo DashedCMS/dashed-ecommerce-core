@@ -415,7 +415,7 @@ class Order extends Model
             $this->generateInvoiceId();
             $order = Order::find($this->id);
             if (! Storage::exists('/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
-                $view = View::make('qcommerce-ecommerce-core::frontend.invoices.pdf', compact('order'));
+                $view = View::make('qcommerce-ecommerce-core::invoices.invoices', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
@@ -452,7 +452,7 @@ class Order extends Model
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
             if (! Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
-                $view = View::make('qcommerce-ecommerce-core::frontend.packing-slips.pdf', compact('order'));
+                $view = View::make('qcommerce-ecommerce-core::invoices.packing-slips', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
@@ -470,7 +470,7 @@ class Order extends Model
             $this->generateInvoiceId();
             $order = $this;
             if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
-                $view = View::make('qcommerce-ecommerce-core::frontend.credit-invoices.pdf', compact('order'));
+                $view = View::make('qcommerce-ecommerce-core::invoices.credit-invoices', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);

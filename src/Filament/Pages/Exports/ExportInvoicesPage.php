@@ -139,7 +139,7 @@ class ExportInvoicesPage extends Page implements HasForms
                 }
             }
 
-            $view = View::make('qcommerce-ecommerce-core::frontend.combined-invoices.pdf', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
+            $view = View::make('qcommerce-ecommerce-core::invoices.combined-invoices', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
             $contents = $view->render();
             $pdf = App::make('dompdf.wrapper');
             $pdf->loadHTML($contents);

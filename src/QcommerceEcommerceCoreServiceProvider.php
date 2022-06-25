@@ -86,9 +86,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'qcommerce-ecommerce-core');
-//        $this->publishes([
-//            __DIR__ . '/../resources/views' => resource_path('views/vendor/courier'),
-//        ]);
+        $this->publishes([
+            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
+        ]);
 
         cms()->builder(
             'frontendMiddlewares',
