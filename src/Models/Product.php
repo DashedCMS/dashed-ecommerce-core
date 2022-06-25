@@ -571,7 +571,7 @@ class Product extends Model
                             }
                         }
                     }
-                }else{
+                } else {
                     $correctFilterOptions++;
                 }
             }
