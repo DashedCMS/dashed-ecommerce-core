@@ -60,8 +60,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->publishes([
             __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
-        ]);
-        dump('asdf');
+        ], 'qcommerce-ecommerce-core-views');
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
