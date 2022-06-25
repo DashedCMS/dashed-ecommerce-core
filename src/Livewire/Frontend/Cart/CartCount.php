@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Livewire\Component;
+use Gloudemans\Shoppingcart\Facades\Cart;
 
 class CartCount extends Component
 {
