@@ -58,6 +58,11 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
     public function bootingPackage()
     {
+        $this->publishes([
+            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
+        ]);
+        dump('asdf');
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
@@ -80,10 +85,6 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();
         });
-
-        $this->publishes([
-            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
-        ]);
     }
 
     public function configurePackage(Package $package): void
@@ -180,18 +181,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
         $package
             ->name('qcommerce-ecommerce-core')
-            ->hasConfigFile([
-//                'filament',
-//                'filament-spatie-laravel-translatable-plugin',
-//                'filesystems',
-//                'laravellocalization',
-//                'media-library',
-//                'qcommerce-core',
-            ])
             ->hasRoutes([
                 'frontend',
             ])
-            ->hasViews()
             ->hasAssets()
             ->hasCommands([
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
