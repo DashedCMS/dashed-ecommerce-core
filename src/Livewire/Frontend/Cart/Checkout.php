@@ -133,7 +133,7 @@ class Checkout extends Component
 
     public function updated($name, $value)
     {
-        if(in_array($name, ['country', 'street', 'houseNr', 'zipCode', 'city'])){
+        if (in_array($name, ['country', 'street', 'houseNr', 'zipCode', 'city'])) {
             $this->retrievePaymentMethods();
             $this->retrieveShippingMethods();
             $this->fillPrices();
