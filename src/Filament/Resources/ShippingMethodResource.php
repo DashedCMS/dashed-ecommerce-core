@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Closure;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -51,7 +52,7 @@ class ShippingMethodResource extends Resource
                         ->label('Hangt onder verzendzone')
                         ->required(),
                 ])
-                ->collapsed(fn ($livewire) => $livewire instanceof EditShippingMethod),
+                ->collapsed(fn($livewire) => $livewire instanceof EditShippingMethod),
             Section::make('Content')
                 ->schema([
                     TextInput::make('name')
@@ -86,7 +87,7 @@ class ShippingMethodResource extends Resource
                         ->rules([
                             'numeric',
                         ])
-                        ->hidden(fn ($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
                     Repeater::make('variables')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Met variable berekening kan je per x aantal items rekenen, we rekenen van boven naar beneden')
@@ -104,14 +105,14 @@ class ShippingMethodResource extends Resource
                                 ]),
                         ])
                         ->nullable()
-                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('variable_static_costs')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
                         ->rules([
                             'max:255',
                         ])
-                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('order')
                         ->label('Volgorde van de verzendmethode')
                         ->type('number')
@@ -122,7 +123,7 @@ class ShippingMethodResource extends Resource
                         ]),
                     Toggle::make('distance_rance_enabled')
                         ->label('Alleen beschikbaar voor aantal KMs vanaf vestiging')
-                    ->helperText('Google API key moet gekoppeld zijn voor dit om te werken'),
+                        ->helperText('Google API key moet gekoppeld zijn voor dit om te werken'),
                     TextInput::make('distance_range')
                         ->label('Aantal KMs vanaf vestiging mogelijk')
                         ->type('number')
@@ -130,7 +131,8 @@ class ShippingMethodResource extends Resource
                         ->rules([
                             'numeric',
                             'required',
-                        ]),
+                        ])
+                        ->visible(fn(Closure $get) => $get('distance_rance_enabled')),
                 ]),
         ];
 
@@ -141,7 +143,7 @@ class ShippingMethodResource extends Resource
                 ->rules([
                     'numeric',
                 ])
-                ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
+                ->hidden(fn($livewire, $record) => !($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
         }
 
         if ($shippingClasses) {
