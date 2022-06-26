@@ -552,6 +552,10 @@ class ShoppingCart
             }
         }
 
+        if(!$shippingZoneIsActive){
+            return [];
+        }
+
         return $paymentMethods;
     }
 

@@ -14,7 +14,6 @@ class Cart extends Component
 {
     use CartActions;
 
-//    public ?Collection $cartItems = null;
     public string $discountCode = '';
     public $discount;
     public $subtotal;

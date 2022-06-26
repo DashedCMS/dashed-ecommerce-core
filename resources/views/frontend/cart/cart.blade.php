@@ -1,4 +1,4 @@
-@if(count($this->cartItems))
+@if($this->cartItems)
     <x-container>
         <div class="grid grid-cols-6 gap-8">
             <div class="col-span-6 lg:col-span-4">
