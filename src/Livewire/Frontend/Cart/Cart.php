@@ -3,7 +3,6 @@
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Illuminate\Support\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;

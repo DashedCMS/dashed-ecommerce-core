@@ -552,7 +552,7 @@ class ShoppingCart
             }
         }
 
-        if(!$shippingZoneIsActive){
+        if (! $shippingZoneIsActive) {
             return [];
         }
 
