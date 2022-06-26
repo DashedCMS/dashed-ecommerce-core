@@ -89,7 +89,9 @@ class Checkout extends Component
         $this->invoiceCountry = optional(auth()->user())->lastOrder()->invoice_country ?? '';
 
         $this->checkCart();
-        $this->updatedCountry();
+        $this->retrievePaymentMethods();
+        $this->retrieveShippingMethods();
+        $this->fillPrices();
     }
 
     public function fillPrices()
@@ -121,17 +123,21 @@ class Checkout extends Component
 
     public function retrieveShippingMethods()
     {
-        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true) : [];
+        $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
+
+        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
         if (! $this->shippingMethod && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods[0]['id'];
         }
     }
 
-    public function updatedCountry()
+    public function updated($name, $value)
     {
-        $this->retrievePaymentMethods();
-        $this->retrieveShippingMethods();
-        $this->fillPrices();
+        if(in_array($name, ['country', 'street', 'houseNr', 'zipCode', 'city'])){
+            $this->retrievePaymentMethods();
+            $this->retrieveShippingMethods();
+            $this->fillPrices();
+        }
     }
 
     public function updatedShippingMethod()
