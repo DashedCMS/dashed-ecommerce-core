@@ -28,7 +28,7 @@ class ShippingMethod extends Model
         'minimum_order_value',
         'maximum_order_value',
         'order',
-        'distance_rance_enabled',
+        'distance_range_enabled',
         'distance_range',
     ];
 

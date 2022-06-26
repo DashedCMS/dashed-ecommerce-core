@@ -121,7 +121,7 @@ class ShippingMethodResource extends Resource
                             'numeric',
                             'required',
                         ]),
-                    Toggle::make('distance_rance_enabled')
+                    Toggle::make('distance_range_enabled')
                         ->label('Alleen beschikbaar voor aantal KMs vanaf vestiging')
                         ->helperText('Google API key moet gekoppeld zijn voor dit om te werken')
                         ->reactive(),
