@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -113,6 +114,17 @@ class ShippingMethodResource extends Resource
                         ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('order')
                         ->label('Volgorde van de verzendmethode')
+                        ->type('number')
+                        ->required()
+                        ->rules([
+                            'numeric',
+                            'required',
+                        ]),
+                    Toggle::make('distance_rance_enabled')
+                        ->label('Alleen beschikbaar voor aantal KMs vanaf vestiging')
+                    ->helperText('Google API key moet gekoppeld zijn voor dit om te werken'),
+                    TextInput::make('distance_range')
+                        ->label('Aantal KMs vanaf vestiging mogelijk')
                         ->type('number')
                         ->required()
                         ->rules([

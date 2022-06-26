@@ -1,4 +1,4 @@
-@if($this->cartItems)
+@if(count($this->cartItems))
     <x-container>
         <form wire:submit.prevent="submit">
             <div class="grid grid-cols-6 gap-8">
