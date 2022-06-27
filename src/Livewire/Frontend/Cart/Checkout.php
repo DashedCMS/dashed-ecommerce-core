@@ -117,7 +117,7 @@ class Checkout extends Component
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
         if (! $this->paymentMethod && count($this->paymentMethods)) {
-            $this->paymentMethod = $this->paymentMethods[0]['id'];
+            $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
 
@@ -127,7 +127,7 @@ class Checkout extends Component
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
         if (! $this->shippingMethod && count($this->shippingMethods)) {
-            $this->shippingMethod = $this->shippingMethods[0]['id'];
+            $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
 

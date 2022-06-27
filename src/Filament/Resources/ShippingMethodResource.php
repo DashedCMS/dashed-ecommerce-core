@@ -133,7 +133,7 @@ class ShippingMethodResource extends Resource
                             'numeric',
                             'required',
                         ])
-                        ->visible(fn (Closure $get) => $get('distance_rance_enabled')),
+                        ->visible(fn (Closure $get) => $get('distance_range_enabled')),
                 ]),
         ];
 
