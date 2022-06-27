@@ -485,11 +485,11 @@ class ShoppingCart
 
                 foreach ($shippingMethods as $key => $shippingMethod) {
                     $shippingMethodValid = true;
-                    if($shippingMethod->distance_range_enabled && $distanceRange > $shippingMethod->distance_range){
+                    if ($shippingMethod->distance_range_enabled && $distanceRange > $shippingMethod->distance_range) {
                         $shippingMethodValid = false;
                     }
 
-                    if($shippingMethodValid){
+                    if ($shippingMethodValid) {
                         $shippingMethod->correctName = $shippingMethod->getTranslation('name', App::getLocale());
                         $costs = $shippingMethod->costsForCart;
                         $cartItems = self::cartItems();
@@ -506,7 +506,7 @@ class ShoppingCart
                         } else {
                             $shippingMethod->costsFormatted = CurrencyHelper::formatPrice($costs);
                         }
-                    }else{
+                    } else {
                         unset($shippingMethods[$key]);
                     }
                 }
