@@ -10,6 +10,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\DB;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\MultiSelect;
@@ -19,6 +20,8 @@ use Filament\Forms\Components\BelongsToManyMultiSelect;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\ListDiscountCodes;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
 class DiscountCodeResource extends Resource
 {
@@ -135,18 +138,20 @@ class DiscountCodeResource extends Resource
                                 'products' => 'Specifieke producten',
                                 'categories' => 'Specifieke categorieën',
                             ]),
-                        BelongsToManyMultiSelect::make('products')
-                            ->relationship('products', 'name')
-                            ->preload()
+                        MultiSelect::make('products')
+                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+//                            ->relationship('products', 'name')
+//                            ->preload()
                             ->label('Selecteer producten waar deze kortingscode voor geldt')
-                            ->required(fn ($get) => $get('valid_for') == 'products')
+                            ->required()
                             ->rules([
                                 'required',
                             ])
                             ->hidden(fn ($get) => $get('valid_for') != 'products'),
-                        BelongsToManyMultiSelect::make('productCategories')
-                            ->relationship('productCategories', 'name')
-                            ->preload()
+                        MultiSelect::make('productCategories')
+                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+//                            ->relationship('productCategories', 'name')
+//                            ->preload()
                             ->label('Selecteer categorieën waar deze kortingscode voor geldt')
                             ->required(fn ($get) => $get('valid_for') == 'categories')
                             ->rules([
