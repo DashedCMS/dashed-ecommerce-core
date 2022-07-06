@@ -186,6 +186,7 @@ class OrderResource extends Resource
                         'max:255',
                     ]),
             ])
+            ->hiddenOn(ViewOrder::class)
             ->columns([
                 'default' => 1,
                 'lg' => 2,
