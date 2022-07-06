@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Pages\Actions\Action;
 use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\ViewRecord;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
@@ -25,15 +26,21 @@ class ViewOrder extends ViewRecord
     protected function getActions(): array
     {
         return array_merge([
-            ButtonAction::make('Bekijk in website')
+            Action::make('Bekijk in website')
+                ->button()
                 ->url($this->record->getUrl())
                 ->openUrlInNewTab(),
-            ButtonAction::make('Download factuur')
+            Action::make('Bewerk bestelling')
+                ->button()
+                ->url(route('filament.resources.orders.edit', ['record' => $this->record])),
+            Action::make('Download factuur')
+                ->button()
                 ->url($this->record->downloadInvoiceUrl())
-                ->hidden(! $this->record->downloadInvoiceUrl()),
-            ButtonAction::make('Download pakbon')
+                ->hidden(!$this->record->downloadInvoiceUrl()),
+            Action::make('Download pakbon')
+                ->button()
                 ->url($this->record->downloadPackingslipUrl())
-                ->hidden(! $this->record->downloadPackingslipUrl()),
+                ->hidden(!$this->record->downloadPackingslipUrl()),
         ], ecommerce()->buttonActions('order'));
     }
 

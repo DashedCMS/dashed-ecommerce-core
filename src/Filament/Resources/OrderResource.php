@@ -2,6 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use App\Models\User;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -9,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\BadgeColumn;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
@@ -89,162 +95,104 @@ class OrderResource extends Resource
     {
         $schema = [];
 
-//        $schema[] = Section::make('Persoonlijke informatie')
-//            ->schema([
-//                Select::make('user_id')
-//                    ->label('Hang de bestelling aan een gebruiker')
-//                    ->searchable()
-//                    ->options(array_merge([
-//                        '' => 'Geen gebruiker'
-//                    ], User::all()->pluck('name', 'id')->toArray()))
-//                    ->reactive(),
-//                Toggle::make('marketing')
-//                    ->label('De klant accepteer marketing'),
-//                TextInput::make('password')
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255',
-//                        'confirmed'
-//                    ])
-//                    ->visible(fn(\Closure $get) => !$get('user_id')),
-//                TextInput::make('password_confirmation')
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ])
-//                    ->visible(fn(\Closure $get) => !$get('user_id')),
-//                TextInput::make('first_name')
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('last_name')
-//                    ->required()
-//                    ->rules([
-//                        'required',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('email')
-//                    ->type('email')
-//                    ->required()
-//                    ->rules([
-//                        'required',
-//                        'email:rfc',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('phone_number')
-//                    ->rules([
-//                        'max:255'
-//                    ]),
-//                TextInput::make('street')
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ])
-//                    ->reactive(),
-//                TextInput::make('house_nr')
-//                    ->required(fn(\Closure $get) => $get('street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('zip_code')
-//                    ->required(fn(\Closure $get) => $get('street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('city')
-//                    ->required(fn(\Closure $get) => $get('street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('country')
-//                    ->required()
-//                    ->rules([
-//                        'required',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('company_name')
-//                    ->rules([
-//                        'max:255'
-//                    ]),
-//                TextInput::make('btw_id')
-//                    ->rules([
-//                        'max:255'
-//                    ]),
-//                TextInput::make('invoice_street')
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ])
-//                    ->reactive(),
-//                TextInput::make('invoice_house_nr')
-//                    ->required(fn(\Closure $get) => $get('invoice_street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('invoice_zip_code')
-//                    ->required(fn(\Closure $get) => $get('invoice_street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('invoice_city')
-//                    ->required(fn(\Closure $get) => $get('invoice_street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                TextInput::make('invoice_country')
-//                    ->required(fn(\Closure $get) => $get('invoice_street'))
-//                    ->rules([
-//                        'nullable',
-//                        'min:6',
-//                        'max:255'
-//                    ]),
-//                Textarea::make('note')
-//                    ->label('Notitie')
-//                    ->rules([
-//                        'nullable',
-//                        'max:1500'
-//                    ]),
-//                TextInput::make('discount_code')
-//                    ->label('Kortingscode ')
-//                    ->rules([
-//                        'nullable',
-//                        'max:255'
-//                    ]),
-//                Repeater::make('orderProducts')
-//                    ->label('Producten')
-//                    ->schema([
-//
-//                    ])
-//                    ->columnSpan([
-//                        'default' => 1,
-//                        'lg' => 2,
-//                    ])
-//            ])
-//            ->columns([
-//                'default' => 1,
-//                'lg' => 2,
-//            ]);
+        $schema[] = Section::make('Persoonlijke informatie')
+            ->schema([
+                TextInput::make('first_name')
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('last_name')
+                    ->required()
+                    ->rules([
+                        'required',
+                        'max:255'
+                    ]),
+                TextInput::make('email')
+                    ->type('email')
+                    ->required()
+                    ->rules([
+                        'required',
+                        'email:rfc',
+                        'max:255'
+                    ]),
+                TextInput::make('phone_number')
+                    ->rules([
+                        'max:255'
+                    ]),
+                TextInput::make('street')
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ])
+                    ->reactive(),
+                TextInput::make('house_nr')
+                    ->required(fn(\Closure $get) => $get('street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('zip_code')
+                    ->required(fn(\Closure $get) => $get('street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('city')
+                    ->required(fn(\Closure $get) => $get('street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('country')
+                    ->required()
+                    ->rules([
+                        'required',
+                        'max:255'
+                    ]),
+                TextInput::make('company_name')
+                    ->rules([
+                        'max:255'
+                    ]),
+                TextInput::make('btw_id')
+                    ->rules([
+                        'max:255'
+                    ]),
+                TextInput::make('invoice_street')
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ])
+                    ->reactive(),
+                TextInput::make('invoice_house_nr')
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('invoice_zip_code')
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('invoice_city')
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+                TextInput::make('invoice_country')
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
+                    ->rules([
+                        'nullable',
+                        'max:255'
+                    ]),
+            ])
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
+            ]);
 
         return $form->schema($schema);
     }
@@ -260,22 +208,22 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Betaalmethode')
-                    ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
+                    ->getStateUsing(fn($record) => Str::substr($record->payment_method, 0, 10)),
                 BadgeColumn::make('payment_status')
                     ->label('Betaalstatus')
-                    ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
+                    ->getStateUsing(fn($record) => $record->orderStatus()['status'])
                     ->colors([
-                        'primary' => fn ($state): bool => $state === 'Lopende aankoop',
-                        'danger' => fn ($state): bool => $state === 'Geannuleerd',
-                        'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
-                        'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
+                        'primary' => fn($state): bool => $state === 'Lopende aankoop',
+                        'danger' => fn($state): bool => $state === 'Geannuleerd',
+                        'warning' => fn($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
+                        'success' => fn($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
                     ]),
                 BadgeColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
-                    ->getStateUsing(fn ($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
+                    ->getStateUsing(fn($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
                     ->colors([
                         'danger',
-                        'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
+                        'success' => fn($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
                     ]),
 //                ViewColumn::make('statusLabels')
 //            ->view('filament.tables.columns.multiple-labels')
@@ -319,10 +267,10 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('total')
                     ->label('Totaal')
-                    ->getStateUsing(fn ($record) => CurrencyHelper::formatPrice($record->total)),
+                    ->getStateUsing(fn($record) => CurrencyHelper::formatPrice($record->total)),
                 TextColumn::make('created_at')
                     ->label('Aangemaakt op')
-                    ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
+                    ->getStateUsing(fn($record) => $record->created_at->format('d-m-Y H:i'))
                     ->searchable()
                     ->sortable(),
             ])
@@ -343,9 +291,19 @@ class OrderResource extends Resource
         return [
             'index' => ListOrders::route('/'),
             'create' => CreateOrder::route('/create'),
-//            'edit' => EditOrder::route('/{record}/edit'),
+            'edit' => EditOrder::route('/{record}/edit'),
             'view' => ViewOrder::route('/{record}/view'),
             'cancel' => CancelOrder::route('/{record}/cancel'),
         ];
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
     }
 }
