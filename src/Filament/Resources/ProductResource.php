@@ -22,7 +22,6 @@ use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Filament\Forms\Components\BelongsToManyMultiSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceCore\Filament\Concerns\HasMetadataTab;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;

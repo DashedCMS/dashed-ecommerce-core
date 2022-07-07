@@ -28,10 +28,10 @@ class ProductCategoryRouteHandler
                 $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
             }
             if (View::exists('qcommerce.categories.show') && $productCategory) {
-                seo()->metaData('metaTitle', $productCategory->meta_title ?: $productCategory->name);
-                seo()->metaData('metaDescription', $productCategory->meta_description);
-                if ($productCategory->meta_image) {
-                    seo()->metaData('metaImage', $productCategory->meta_image);
+                seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
+                seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
+                if ($productCategory->metadata && $productCategory->metadata->image) {
+                    seo()->metaData('metaImage', $productCategory->metadata->image);
                 }
 
                 View::share('productCategory', $productCategory);

@@ -20,14 +20,14 @@ class ProductRouteHandler
 
         if ($slugComponents[0] == Translation::get('products-slug', 'slug', 'products') && count($slugComponents) == 2) {
             $product = Product::thisSite()->where('slug->' . App::getLocale(), $slugComponents[1]);
-            if (! auth()->check() || auth()->user()->role != 'admin') {
+            if (!auth()->check() || auth()->user()->role != 'admin') {
                 $product->publicShowable();
             }
             $product = $product->first();
 
-            if (! $product) {
+            if (!$product) {
                 foreach (Product::thisSite()->publicShowable()->get() as $possibleProduct) {
-                    if (! $product && $possibleProduct->slug == $slugComponents[1]) {
+                    if (!$product && $possibleProduct->slug == $slugComponents[1]) {
                         $product = $possibleProduct;
                     }
                 }
@@ -35,10 +35,10 @@ class ProductRouteHandler
 
             if ($product) {
                 if (View::exists('qcommerce.products.show')) {
-                    seo()->metaData('metaTitle', $product->meta_title ?: $product->name);
-                    seo()->metaData('metaDescription', $product->meta_description);
-                    $metaImage = $product->meta_image;
-                    if (! $metaImage) {
+                    seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $productCategory->name);
+                    seo()->metaData('metaDescription', $product->metadata->description ?? '');
+                    $metaImage = $product->metadata->image ?? '';
+                    if (!$metaImage) {
                         $metaImage = $product->firstMediaUrl;
                     }
                     if ($metaImage) {
