@@ -35,7 +35,7 @@ class ProductRouteHandler
 
             if ($product) {
                 if (View::exists('qcommerce.products.show')) {
-                    seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $productCategory->name);
+                    seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
                     seo()->metaData('metaDescription', $product->metadata->description ?? '');
                     $metaImage = $product->metadata->image ?? '';
                     if (! $metaImage) {
