@@ -2,7 +2,6 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +10,7 @@ use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class ProductCategory extends Model

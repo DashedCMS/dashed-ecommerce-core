@@ -7,7 +7,6 @@ use Filament\Resources\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Builder;
-use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
@@ -15,8 +14,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceCore\Filament\Concerns\HasMetadataTab;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Qubiqx\QcommerceCore\Filament\Concerns\HasMetadataTab;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\CreateProductCategory;
@@ -52,11 +51,11 @@ class ProductCategoryResource extends Resource
                     ->label('Actief op sites')
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                     ->hidden(function () {
-                        return !(Sites::getAmountOfSites() > 1);
+                        return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->required(),
                 Select::make('parent_product_category_id')
-                    ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
+                    ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                     ->searchable()
                     ->label('Bovenliggende product categorie'),
                 TextInput::make('name')
@@ -68,7 +67,7 @@ class ProductCategoryResource extends Resource
                     ]),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->unique('qcommerce__product_categories', 'slug', fn($record) => $record)
+                    ->unique('qcommerce__product_categories', 'slug', fn ($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren')
                     ->required()
                     ->rules([
@@ -99,7 +98,7 @@ class ProductCategoryResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('parentProductCategory.name')
                     ->label('Bovenliggende categorie')

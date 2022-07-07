@@ -3,7 +3,6 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
-use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -16,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
 use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Qubiqx\QcommerceEcommerceCore\Events\Products\ProductCreatedEvent;
 
