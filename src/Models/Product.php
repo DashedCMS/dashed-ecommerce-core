@@ -169,7 +169,7 @@ class Product extends Model
                 ->orWhere('price', 'LIKE', "%$search%")
                 ->orWhere('new_price', 'LIKE', "%$search%")
                 ->orWhere('sku', 'LIKE', "%$search%")
-                ->orWhere('ean', 'LIKE', "%$search%")
+                ->orWhere('ean', 'LIKE', "%$search%");
         });
     }
 
