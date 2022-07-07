@@ -63,9 +63,6 @@ class Product extends Model
         'limit_purchases_per_customer_limit',
         'purchases',
         'content',
-        'meta_title',
-        'meta_description',
-        'meta_image',
         'parent_product_id',
         'order',
         'only_show_parent_product',
@@ -80,9 +77,6 @@ class Product extends Model
         'search_terms',
         'content',
         'images',
-        'meta_title',
-        'meta_description',
-        'meta_image',
     ];
 
     protected $dates = [
@@ -176,8 +170,6 @@ class Product extends Model
                 ->orWhere('new_price', 'LIKE', "%$search%")
                 ->orWhere('sku', 'LIKE', "%$search%")
                 ->orWhere('ean', 'LIKE', "%$search%")
-                ->orWhere('meta_title', 'LIKE', "%$search%")
-                ->orWhere('meta_description', 'LIKE', "%$search%");
         });
     }
 
