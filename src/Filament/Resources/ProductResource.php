@@ -21,6 +21,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
+use Qubiqx\QcommerceCore\Filament\Concerns\HasMetadataTab;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Filament\Forms\Components\BelongsToManyMultiSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
@@ -34,6 +35,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\RelationMan
 class ProductResource extends Resource
 {
     use Translatable;
+    use HasMetadataTab;
 
     protected static ?string $model = Product::class;
 
@@ -58,8 +60,6 @@ class ProductResource extends Resource
             'sku',
             'ean',
             'content',
-            'meta_title',
-            'meta_description',
         ];
     }
 
@@ -274,21 +274,8 @@ class ProductResource extends Resource
                     ->maxLength(2500)
                     ->rules(['max:2500',])
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
-                TextInput::make('meta_title')
-                    ->label('Meta titel')
-                    ->maxLength(100)
-                    ->rules(['max:100',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
-                Textarea::make('meta_description')
-                    ->label('Meta descriptie')
-                    ->rows(2)
-                    ->maxLength(200)
-                    ->rules(['max:200',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
-                FileUpload::make('meta_image')
-                    ->directory('qcommerce/products/meta-images')
-                    ->name('Meta afbeelding')
-                    ->image()
+                Section::make('Meta')
+                ->schema([static::metadataTab()])
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
                 TextInput::make('order')
                     ->label('Volgorde')

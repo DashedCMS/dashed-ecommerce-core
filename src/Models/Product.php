@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -24,6 +25,7 @@ class Product extends Model
     use SoftDeletes;
     use LogsActivity;
     use HasDynamicRelation;
+    use HasMetadata;
 
     protected static $logFillable = true;
 

@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class ProductCategory extends Model
     use SoftDeletes;
     use HasTranslations;
     use LogsActivity;
+    use HasMetadata;
 
     protected static $logFillable = true;
 
