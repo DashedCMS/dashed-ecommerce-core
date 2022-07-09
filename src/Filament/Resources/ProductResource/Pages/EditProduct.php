@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Filament\Pages\Actions\Action;
 use Illuminate\Support\Str;
+use Filament\Pages\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
