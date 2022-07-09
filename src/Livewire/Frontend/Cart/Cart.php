@@ -76,6 +76,7 @@ class Cart extends Component
         if (! $this->discountCode) {
             session(['discountCode' => '']);
             $this->discountCode = '';
+            $this->discount = 0;
             $this->fillPrices();
 
             return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
