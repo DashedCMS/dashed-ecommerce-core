@@ -77,6 +77,9 @@ class Product extends Model
         'search_terms',
         'content',
         'images',
+        'meta_image',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $dates = [
