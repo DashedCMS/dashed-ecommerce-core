@@ -131,6 +131,8 @@ class AddToCart extends Component
             Cart::add($this->product->id, $this->product->name, $this->quantity, $productPrice, $options)->associate(Product::class);
         }
 
+        $this->quantity = 1;
+
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
         if ($redirectChoice == 'same') {
             return $this->checkCart('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
