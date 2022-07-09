@@ -48,7 +48,7 @@ class AddToCart extends Component
         } elseif ($this->quantity < 1) {
             $this->quantity = 1;
         } elseif ($this->quantity > $this->product->stock()) {
-            $this->quantity = $product->stock();
+            $this->quantity = $this->product->stock();
         }
     }
 
