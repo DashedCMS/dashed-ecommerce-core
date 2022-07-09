@@ -6,7 +6,6 @@ use Filament\Pages\Actions\Action;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Qubiqx\QcommerceCore\Classes\Sites;
-use Filament\Pages\Actions\ButtonAction;
 use Filament\Resources\Pages\EditRecord;
 use Qubiqx\QcommerceCore\Classes\Locales;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
