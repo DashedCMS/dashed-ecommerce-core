@@ -2,7 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Filament\Support\Actions\Action;
+use Filament\Pages\Actions\Action;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Qubiqx\QcommerceCore\Classes\Sites;
