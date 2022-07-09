@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Filament\Support\Actions\Action;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Qubiqx\QcommerceCore\Classes\Sites;
@@ -234,10 +235,10 @@ class EditProduct extends EditRecord
         $buttons = [];
 
         if ($this->record->type != 'variable' || $this->record->parent_product_id) {
-            $buttons[] = ButtonAction::make('Bekijk product')
+            $buttons[] = Action::make('Bekijk product')
                 ->url($this->record->getUrl())
                 ->openUrlInNewTab();
-            $buttons[] = ButtonAction::make('Dupliceer product')
+            $buttons[] = Action::make('Dupliceer product')
                 ->action('duplicateProduct')
                 ->color('warning');
         }
