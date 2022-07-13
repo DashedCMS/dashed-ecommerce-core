@@ -501,8 +501,6 @@ class ProductResource extends Resource
                         'sku',
                         'ean',
                         'content',
-                        'meta_title',
-                        'meta_description',
                     ])
                     ->sortable(),
                 TagsColumn::make('site_ids')
