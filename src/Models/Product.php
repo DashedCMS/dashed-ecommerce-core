@@ -507,7 +507,7 @@ class Product extends Model
                         'productId' => ($this->id == $childProduct->id) ? $this->id : '',
                         'in_stock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
                         'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
-                        'directSellableStock' => ($this->id == $childProduct->id) ? $this->hasDirectSellableStock() : false,
+                        'isPreOrder' => ($this->id == $childProduct->id) ? $this->isPreorderable() : false,
                     ];
                     if ($this->id == $childProduct->id) {
                         $activeFiltersValues[$activeFilterId] = [
@@ -519,7 +519,7 @@ class Product extends Model
                             'productId' => ($this->id == $childProduct->id) ? $this->id : '',
                             'in_stock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
                             'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
-                            'directSellableStock' => ($this->id == $childProduct->id) ? $this->hasDirectSellableStock() : false,
+                            'isPreOrder' => ($this->id == $childProduct->id) ? ($this->isPreorderable()) : false,
                         ];
                     }
                 }
