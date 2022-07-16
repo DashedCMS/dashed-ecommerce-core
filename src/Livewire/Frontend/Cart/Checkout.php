@@ -178,7 +178,6 @@ class Checkout extends Component
                 'nullable',
                 'min:6',
                 'max:255',
-                'confirmed',
             ],
             'passwordConfirmation' => [
                 'same:password',
