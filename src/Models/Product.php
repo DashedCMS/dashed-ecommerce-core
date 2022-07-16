@@ -465,7 +465,7 @@ class Product extends Model
         $parentProduct = $this->parentProduct;
 
         if ($parentProduct) {
-            $childProducts = $parentProduct->childProducts()->publicShowable()->get();
+            $childProducts = $parentProduct->childProducts()->publicShowable()->inRandomOrder()->get();
             $activeFilters = $parentProduct->activeProductFiltersForVariations;
         } else {
             $childProducts = [
