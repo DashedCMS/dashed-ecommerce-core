@@ -180,6 +180,9 @@ class Checkout extends Component
                 'max:255',
                 'confirmed',
             ],
+            'passwordConfirmation' => [,
+                'same:password',
+            ],
             'street' => [
                 'required',
                 'max:255',
