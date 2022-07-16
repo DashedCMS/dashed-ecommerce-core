@@ -22,7 +22,6 @@ use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategoryRouteHandler;
 use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Notification\Toastr;
 use Qubiqx\QcommerceEcommerceCore\Middleware\EcommerceFrontendMiddleware;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -80,7 +79,6 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('cart.checkout', Checkout::class);
         Livewire::component('cart.cart-count', CartCount::class);
         Livewire::component('cart.add-to-cart', AddToCart::class);
-        Livewire::component('notification.toastr', Toastr::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
