@@ -465,7 +465,7 @@ class Product extends Model
         $parentProduct = $this->parentProduct;
 
         if ($parentProduct) {
-            $childProducts = $parentProduct->childProducts()->publicShowable()->inRandomOrder()->get();
+            $childProducts = $parentProduct->childProducts()->publicShowable()->get();
             $activeFilters = $parentProduct->activeProductFiltersForVariations;
         } else {
             $childProducts = [
@@ -498,6 +498,7 @@ class Product extends Model
 
                 //If something does not work correct, check if below code makes sure there is a active one
                 if (count($activeFilterOptionIds) && (! array_key_exists($activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
+                    //ActiveFilterId makes the order of the filters values
                     $filterOptionValues[$activeFilterId] = [
                         'id' => $activeFilter->id,
                         'name' => $filterName,
