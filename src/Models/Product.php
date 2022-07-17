@@ -292,7 +292,7 @@ class Product extends Model
     public function getCurrentPriceAttribute()
     {
         if ($this->childProducts()->count()) {
-            return $this->childProducts()->first()->price;
+            return $this->childProducts()->orderBy('price', 'ASC')->first()->price;
         } else {
             return $this->price;
         }
