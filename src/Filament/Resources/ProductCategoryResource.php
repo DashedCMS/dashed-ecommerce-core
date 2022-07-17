@@ -69,7 +69,6 @@ class ProductCategoryResource extends Resource
                     ->label('Slug')
                     ->unique('qcommerce__product_categories', 'slug', fn ($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren')
-                    ->required()
                     ->rules([
                         'max:255',
                     ]),
