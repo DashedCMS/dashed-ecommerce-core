@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->dropForeign('qcommerce__product_characteristic_product_id_foreign');
             $table->dropForeign('product_characteristic_id_foreign');
 
-            $table->unsignedBigInteger('product_characteristic_id');
             $table->foreign('product_characteristic_id', 'product_characteristic_id_foreign')
                 ->references('id')
                 ->on('qcommerce__product_characteristics')
