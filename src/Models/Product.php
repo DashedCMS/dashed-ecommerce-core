@@ -831,7 +831,7 @@ class Product extends Model
         });
     }
 
-    public function getCharacteristicById($id)
+    public function getCharacteristicById(int|array $id): array
     {
         if (is_array($id)) {
             $productCharacteristic = $this->productCharacteristics()->whereIn('product_characteristic_id', $id)->get();
@@ -854,7 +854,7 @@ class Product extends Model
             }
         }
 
-        return;
+        return [];
     }
 
     public function getSuggestedProducts($limit = 4)
