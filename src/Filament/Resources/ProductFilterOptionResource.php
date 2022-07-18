@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Select;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -37,7 +38,7 @@ class ProductFilterOptionResource extends Resource
     {
         return $form
             ->schema([
-                BelongsToSelect::make('product_filter_id')
+                Select::make('product_filter_id')
                     ->relationship('productFilter', 'name')
                     ->label('Filter')
                     ->required()
@@ -57,6 +58,7 @@ class ProductFilterOptionResource extends Resource
                     ->required()
                     ->minValue(1)
                     ->maxValue(10000)
+                    ->default(1)
                     ->rules([
                         'required',
                         'numeric',
