@@ -14,6 +14,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
+use FilamentTiptapEditor\TiptapEditor;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -64,6 +65,8 @@ class ProductResource extends Resource
 
     public static function form(Form $form): Form
     {
+        config(['filament-tiptap-editor.directory' => 'qcommerce/products/images']);
+
         $schema = [];
 
         $schema[] = Section::make('Algemene instellingen')
@@ -249,9 +252,8 @@ class ProductResource extends Resource
                     ->unique('qcommerce__products', 'slug', fn ($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren')
                     ->rules(['max:255',]),
-                TinyEditor::make('description')
+                TiptapEditor::make('description')
                     ->label('Uitgebreide beschrijving')
-                    ->fileAttachmentsDirectory('/qcommerce/products/images')
                     ->rules([
                         'max:10000',
                     ])
