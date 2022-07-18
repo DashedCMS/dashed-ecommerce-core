@@ -50,8 +50,9 @@ class ProductCharacteristicResource extends Resource
                     ]),
                 TextInput::make('order')
                     ->label('Volgorde')
-                    ->type('number')
+                    ->numeric()
                     ->required()
+                    ->default(1)
                     ->minLength(1)
                     ->maxLength(100)
                     ->rules([
