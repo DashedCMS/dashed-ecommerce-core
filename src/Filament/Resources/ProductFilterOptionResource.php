@@ -2,14 +2,13 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Select;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Concerns\Translatable;
-use Filament\Forms\Components\BelongsToSelect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilterOption;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;
