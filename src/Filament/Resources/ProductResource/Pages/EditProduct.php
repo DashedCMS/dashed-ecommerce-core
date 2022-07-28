@@ -250,6 +250,7 @@ class EditProduct extends EditRecord
     public function duplicateProduct()
     {
         $newProduct = $this->record->replicate();
+        $newProduct->purchases = 0;
         $newProduct->sku = 'SKU' . rand(10000, 99999);
         foreach (Locales::getLocales() as $locale) {
             $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']));
