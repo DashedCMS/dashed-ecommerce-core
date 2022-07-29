@@ -8,6 +8,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Actions\ButtonAction;
+use Filament\Pages\Actions\Modal\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -36,7 +37,8 @@ class CancelOrder extends ViewRecord implements HasForms
     protected function getActions(): array
     {
         return [
-            ButtonAction::make('Terug naar bestelling')
+            Action::make('Terug naar bestelling')
+                ->button()
                 ->url(route('filament.resources.orders.view', [$this->record])),
         ];
     }
