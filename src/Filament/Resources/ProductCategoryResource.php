@@ -54,7 +54,7 @@ class ProductCategoryResource extends Resource
                         return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->required(),
-                Select::make('parent_product_category_id')
+                Select::make('parent_category_id')
                     ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                     ->searchable()
                     ->label('Bovenliggende product categorie'),
