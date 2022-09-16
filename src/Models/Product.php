@@ -268,7 +268,7 @@ class Product extends Model
         $productCategory = $this->productCategories()->first();
 
         //Check if has child, to make sure all categories show in breadcrumbs
-        while ($productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first()) {
+        while ($productCategory && $productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first()) {
             $productCategory = $productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first();
         }
 
