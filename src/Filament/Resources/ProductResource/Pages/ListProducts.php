@@ -14,6 +14,7 @@ use Filament\Tables\Actions\ButtonAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
 
@@ -85,23 +86,23 @@ class ListProducts extends ListRecords
                                     'numeric',
                                     'max:100000',
                                 ])
-                                ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                                ->hidden(fn (\Closure $get) => !$get('use_stock')),
                             Toggle::make('out_of_stock_sellable')
                                 ->default(fn ($record) => $record->out_of_stock_sellable)
                                 ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                                 ->reactive()
-                                ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                                ->hidden(fn (\Closure $get) => !$get('use_stock')),
                             DatePicker::make('expected_in_stock_date')
                                 ->default(fn ($record) => $record->expected_in_stock_date)
                                 ->label('Wanneer komt dit product weer op voorraad')
                                 ->reactive()
                                 ->required()
-                                ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
+                                ->hidden(fn (\Closure $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
                             Toggle::make('low_stock_notification')
                                 ->default(fn ($record) => $record->low_stock_notification)
                                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                                 ->reactive()
-                                ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                                ->hidden(fn (\Closure $get) => !$get('use_stock')),
                             TextInput::make('low_stock_notification_limit')
                                 ->default(fn ($record) => $record->low_stock_notification_limit)
                                 ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
@@ -118,7 +119,7 @@ class ListProducts extends ListRecords
                                     'min:1',
                                     'max:100000',
                                 ])
-                                ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
+                                ->hidden(fn (\Closure $get) => !$get('use_stock') || !$get('low_stock_notification')),
                             Select::make('stock_status')
                                 ->default(fn ($record) => $record->stock_status ?: 'in_stock')
                                 ->label('Is dit product op voorraad')
@@ -149,7 +150,7 @@ class ListProducts extends ListRecords
                                     'min:1',
                                     'max:100000',
                                 ])
-                                ->hidden(fn (\Closure $get) => ! $get('limit_purchases_per_customer')),
+                                ->hidden(fn (\Closure $get) => !$get('limit_purchases_per_customer')),
                         ]),
                 ])
                 ->action(function (Product $record, array $data): void {
@@ -158,7 +159,7 @@ class ListProducts extends ListRecords
                     }
                     $record->save();
                 })
-                ->hidden(fn ($record) => $record->type == 'variable' && ! $record->parent_product_id),
+                ->hidden(fn ($record) => $record->type == 'variable' && !$record->parent_product_id),
         ]);
     }
 
@@ -177,6 +178,20 @@ class ListProducts extends ListRecords
                             $data['value'],
                             fn (Builder $query, $value): Builder => $query->topLevel(),
                         );
+                }),
+            Filter::make('categories')
+                ->form([
+                    Select::make('categories')
+                        ->multiple()
+                        ->label('Categorieen')
+                        ->options(ProductCategory::all()->pluck('name', 'id'))
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    if (!$data['categories']) {
+                        return $query;
+                    }
+
+                    return $query->whereHas('productCategories', fn (Builder $query) => $query->whereIn('product_category_id', $data['categories']));
                 }),
         ];
     }

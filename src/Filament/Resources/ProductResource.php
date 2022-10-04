@@ -85,8 +85,12 @@ class ProductResource extends Resource
                     ->options(Product::where('type', 'variable')->where('id', '!=', $record->id ?? 0)->whereNull('parent_product_id')->pluck('name', 'id'))
                     ->reactive()
                     ->searchable()
-                    ->hidden(fn (\Closure $get, $livewire) => $get('type') != 'variable' || $livewire instanceof EditProduct),
-                MultiSelect::make('site_ids')
+                    ->helperText('Als je het bovenliggende product aanpast, moet je alle filters etc controleren.')
+                    ->visible(fn (\Closure $get, $livewire, $record) => $get('type') == 'variable' && ($livewire instanceof CreateProduct || ($livewire instanceof EditProduct && $record->parent_product_id))),
+//                    ->hidden(fn (\Closure $get, $livewire) => $get('type') != 'variable' || $livewire instanceof EditProduct),
+//                    ->hidden(fn (\Closure $get, $livewire) => $get('type') != 'variable'),
+                Select::make('site_ids')
+                    ->multiple()
                     ->label('Actief op sites')
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                     ->default([Sites::getFirstSite()['id']])
