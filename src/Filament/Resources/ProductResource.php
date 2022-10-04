@@ -19,7 +19,6 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
