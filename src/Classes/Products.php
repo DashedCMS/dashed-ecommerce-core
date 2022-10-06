@@ -3,13 +3,14 @@
 namespace Qubiqx\QcommerceEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Cache;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
 class Products
 {
-    public static function get($limit = 4, $orderBy = 'created_at', $order = 'DESC', $topLevelProductOnly = false)
+    public static function get($limit = 4, ?string $orderBy = null, ?string $order = null, $topLevelProductOnly = false)
     {
         //Todo: change these params above into variables to make it flexible
         $orderByRequest = request()->get('sort-by');
@@ -33,6 +34,14 @@ class Products
                 $orderBy = 'order';
                 $order = 'ASC';
             }
+        }
+
+        if (!$orderBy) {
+            $orderBy = Customsetting::get('product_default_order_type', null, 'price');
+        }
+
+        if (!$order) {
+            $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
         $products = Product::search()->thisSite()->publicShowable()->limit($limit)->orderBy($orderBy, $order)->with(['parentProduct']);
@@ -109,14 +118,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -165,7 +174,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }

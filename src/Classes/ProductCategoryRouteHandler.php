@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Qubiqx\QcommerceCore\Classes\Locales;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
@@ -36,7 +37,7 @@ class ProductCategoryRouteHandler
 
                 View::share('productCategory', $productCategory);
 
-                $productsResponse = Products::getAll(request()->get('pagination') ?: 12, request()->get('order-by') ?: 'created_at', request()->get('order') ?: 'desc', $productCategory->id);
+                $productsResponse = Products::getAll(request()->get('pagination') ?: 12, request()->get('order-by') ?: Customsetting::get('product_default_order_type', null, 'price'), request()->get('order') ?: Customsetting::get('product_default_order_sort', null, 'DESC'), $productCategory->id);
                 View::share('products', $productsResponse['products']);
                 View::share('filters', $productsResponse['filters']);
 

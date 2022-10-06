@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -10,7 +11,6 @@ use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Tables\Actions\ButtonAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -32,7 +32,8 @@ class ListProducts extends ListRecords
     protected function getTableActions(): array
     {
         return array_merge(parent::getTableActions(), [
-            ButtonAction::make('quickActions')
+            Action::make('quickActions')
+                ->button()
                 ->label('Quick')
                 ->color('primary')
                 ->modalHeading('Snel bewerken')

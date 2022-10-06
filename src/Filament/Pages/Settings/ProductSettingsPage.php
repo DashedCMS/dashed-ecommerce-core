@@ -32,6 +32,8 @@ class ProductSettingsPage extends Page implements HasForms
             $formData["add_to_cart_redirect_to_{$site['id']}"] = Customsetting::get('add_to_cart_redirect_to', $site['id'], 'same');
             $formData["product_filter_option_order_by_{$site['id']}"] = Customsetting::get('product_filter_option_order_by', $site['id'], 'order');
             $formData["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"] = Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', $site['id'], 1);
+            $formData["product_default_order_type_{$site['id']}"] = Customsetting::get('product_default_order_type', $site['id'], 'price');
+            $formData["product_default_order_sort_{$site['id']}"] = Customsetting::get('product_default_order_sort', $site['id'], 'DESC');
         }
 
         $this->form->fill($formData);
@@ -46,7 +48,8 @@ class ProductSettingsPage extends Page implements HasForms
         foreach ($sites as $site) {
             $schema = [
                 Placeholder::make('label')
-                    ->label("Product instellingen voor {$site['name']}"),
+                    ->label("Product instellingen voor {$site['name']}")
+                    ->columnSpan(2),
                 Select::make("add_to_cart_redirect_to_{$site['id']}")
                     ->options([
                         'same' => 'Zelfde pagina',
@@ -68,6 +71,23 @@ class ProductSettingsPage extends Page implements HasForms
                         '0' => 'Nee',
                     ])
                     ->label('Indien een product doorverkocht kan worden bij 0 voorraad, moet de \'weer op voorraad\' datum dan in de toekomst liggen?')
+                    ->required(),
+                Select::make("product_default_order_type_{$site['id']}")
+                    ->options([
+                        'price' => 'Prijs',
+                        'purchases' => 'Aantal verkopen',
+                        'stock' => 'Vooraad',
+                        'created_at' => 'Aangemaakte op',
+                        'order' => 'Volgorde van producten',
+                    ])
+                    ->label('Producten sorteren op')
+                    ->required(),
+                Select::make("product_default_order_sort_{$site['id']}")
+                    ->options([
+                        'DESC' => 'Aflopend',
+                        'ASC' => 'Oplopend',
+                    ])
+                    ->label('Standaard sortering van producten')
                     ->required(),
             ];
 
@@ -93,6 +113,8 @@ class ProductSettingsPage extends Page implements HasForms
             Customsetting::set('add_to_cart_redirect_to', $this->form->getState()["add_to_cart_redirect_to_{$site['id']}"], $site['id']);
             Customsetting::set('product_filter_option_order_by', $this->form->getState()["product_filter_option_order_by_{$site['id']}"], $site['id']);
             Customsetting::set('product_out_of_stock_sellable_date_should_be_valid', $this->form->getState()["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"], $site['id']);
+            Customsetting::set('product_default_order_type', $this->form->getState()["product_default_order_type_{$site['id']}"], $site['id']);
+            Customsetting::set('product_default_order_sort', $this->form->getState()["product_default_order_sort_{$site['id']}"], $site['id']);
         }
 
         $this->notify('success', 'De product instellingen zijn opgeslagen');
