@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Select;
@@ -34,6 +35,7 @@ class ProductSettingsPage extends Page implements HasForms
             $formData["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"] = Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', $site['id'], 1);
             $formData["product_default_order_type_{$site['id']}"] = Customsetting::get('product_default_order_type', $site['id'], 'price');
             $formData["product_default_order_sort_{$site['id']}"] = Customsetting::get('product_default_order_sort', $site['id'], 'DESC');
+            $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
         }
 
         $this->form->fill($formData);
@@ -89,6 +91,15 @@ class ProductSettingsPage extends Page implements HasForms
                     ])
                     ->label('Standaard sortering van producten')
                     ->required(),
+                TextInput::make("product_default_amount_of_products_{$site['id']}")
+                    ->label('Standaard aantal producten per pagina')
+                    ->numeric()
+                    ->required()
+                    ->rules([
+                        'required',
+                        'numeric'
+                    ])
+                    ->required(),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -115,6 +126,7 @@ class ProductSettingsPage extends Page implements HasForms
             Customsetting::set('product_out_of_stock_sellable_date_should_be_valid', $this->form->getState()["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_order_type', $this->form->getState()["product_default_order_type_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_order_sort', $this->form->getState()["product_default_order_sort_{$site['id']}"], $site['id']);
+            Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
         }
 
         $this->notify('success', 'De product instellingen zijn opgeslagen');

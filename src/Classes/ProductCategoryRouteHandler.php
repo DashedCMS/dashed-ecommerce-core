@@ -37,7 +37,7 @@ class ProductCategoryRouteHandler
 
                 View::share('productCategory', $productCategory);
 
-                $productsResponse = Products::getAll(request()->get('pagination') ?: 12, request()->get('order-by') ?: Customsetting::get('product_default_order_type', null, 'price'), request()->get('order') ?: Customsetting::get('product_default_order_sort', null, 'DESC'), $productCategory->id);
+                $productsResponse = Products::getAll(request()->get('pagination') ?: Customsetting::get('product_default_amount_of_products', null, 12), request()->get('order-by') ?: Customsetting::get('product_default_order_type', null, 'price'), request()->get('order') ?: Customsetting::get('product_default_order_sort', null, 'DESC'), $productCategory->id);
                 View::share('products', $productsResponse['products']);
                 View::share('filters', $productsResponse['filters']);
 
