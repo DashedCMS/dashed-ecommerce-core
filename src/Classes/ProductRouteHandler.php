@@ -39,7 +39,7 @@ class ProductRouteHandler
                     seo()->metaData('metaDescription', $product->metadata->description ?? '');
                     $metaImage = $product->metadata->image ?? '';
                     if (! $metaImage) {
-                        $metaImage = $product->firstMediaUrl;
+                        $metaImage = $product->firstImageUrl;
                     }
                     if ($metaImage) {
                         seo()->metaData('metaImage', $metaImage);
