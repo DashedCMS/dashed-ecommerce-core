@@ -105,6 +105,8 @@ class EditProduct extends EditRecord
             $productExtra->forceDelete();
         }
 
+        Redirect::handleSlugChange($this->record->slug, $data['slug']);
+
         return $data;
     }
 
@@ -311,10 +313,5 @@ class EditProduct extends EditRecord
         }
 
         return redirect(route('filament.resources.products.edit', [$newProduct]));
-    }
-
-    protected function beforeSave(): void
-    {
-        Redirect::handleSlugChange($this->record->slug, $this->data['slug']);
     }
 }

@@ -30,11 +30,8 @@ class EditProductCategory extends EditRecord
         $data['content'] = $this->record->content;
         $data['content'][$this->activeFormLocale] = $content;
 
-        return $data;
-    }
+        Redirect::handleSlugChange($this->record->slug, $data['slug']);
 
-    protected function beforeSave(): void
-    {
-        Redirect::handleSlugChange($this->record->slug, $this->data['slug']);
+        return $data;
     }
 }
