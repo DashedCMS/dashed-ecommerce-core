@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
+use Filament\Pages\Actions\Action;
 use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Pages\Actions\ButtonAction;
@@ -18,7 +19,8 @@ class CreateDiscountCode extends CreateRecord
     protected function getActions(): array
     {
         return array_merge(parent::getActions() ?: [], [
-            ButtonAction::make('Genereer een code')
+            Action::make('Genereer een code')
+                ->button()
                 ->action('generateRandomCode'),
         ]);
     }
@@ -69,8 +71,8 @@ class CreateDiscountCode extends CreateRecord
                 foreach ($this->record->productCategories as $category) {
                     $selectedProductCategoriesIds[] = $category['id'];
                 }
-                $selectedProductCategories = ProductCategories::getFromIdsWithParents($selectedProductCategoriesIds);
-                $discountCode->productCategories()->sync($selectedProductCategories);
+//                $selectedProductCategories = ProductCategories::getFromIdsWithParents($selectedProductCategoriesIds);
+                $discountCode->productCategories()->sync($selectedProductCategoriesIds);
 
                 $selectedProductIds = [];
                 foreach ($this->record->products as $product) {
