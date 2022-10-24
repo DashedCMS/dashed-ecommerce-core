@@ -360,7 +360,7 @@ class CreateOrder extends Page implements HasForms
             ->schema($productSchemas)
             ->columnSpan([
                 'default' => 1,
-                'lg' => 2,
+                'lg' => 1,
             ])
             ->reactive();
 
