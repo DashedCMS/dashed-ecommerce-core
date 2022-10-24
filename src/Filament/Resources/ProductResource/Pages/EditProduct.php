@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
 use Qubiqx\QcommerceCore\Classes\Locales;
+use Qubiqx\QcommerceCore\Models\Redirect;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
@@ -310,5 +311,10 @@ class EditProduct extends EditRecord
         }
 
         return redirect(route('filament.resources.products.edit', [$newProduct]));
+    }
+
+    protected function beforeSave(): void
+    {
+        Redirect::handleSlugChange($this->record->slug, $this->data['slug']);
     }
 }

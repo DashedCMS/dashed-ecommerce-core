@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResour
 use Illuminate\Support\Str;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
+use Qubiqx\QcommerceCore\Models\Redirect;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
@@ -30,5 +31,10 @@ class EditProductCategory extends EditRecord
         $data['content'][$this->activeFormLocale] = $content;
 
         return $data;
+    }
+
+    protected function beforeSave(): void
+    {
+        Redirect::handleSlugChange($this->record->slug, $this->data['slug']);
     }
 }
