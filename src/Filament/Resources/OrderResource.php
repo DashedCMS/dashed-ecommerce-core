@@ -189,7 +189,7 @@ class OrderResource extends Resource
             ->hiddenOn(ViewOrder::class)
             ->columns([
                 'default' => 1,
-                'lg' => 2,
+                'lg' => 1,
             ]);
 
         return $form->schema($schema);
