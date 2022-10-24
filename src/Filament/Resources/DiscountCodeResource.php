@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Select;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -53,7 +54,8 @@ class DiscountCodeResource extends Resource
             ->schema([
                 Section::make('Content')
                     ->schema([
-                        MultiSelect::make('site_ids')
+                        Select::make('site_ids')
+                            ->multiple()
                             ->label('Actief op sites')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
@@ -137,7 +139,9 @@ class DiscountCodeResource extends Resource
                                 'products' => 'Specifieke producten',
                                 'categories' => 'Specifieke categorieën',
                             ]),
-                        MultiSelect::make('products')
+                        Select::make('products')
+                            ->relationship('products', 'name')
+                            ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
 //                            ->relationship('products', 'name')
 //                            ->preload()
@@ -147,7 +151,9 @@ class DiscountCodeResource extends Resource
                                 'required',
                             ])
                             ->hidden(fn ($get) => $get('valid_for') != 'products'),
-                        MultiSelect::make('productCategories')
+                        Select::make('productCategories')
+                            ->relationship('productCategories', 'name')
+                            ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
 //                            ->relationship('productCategories', 'name')
 //                            ->preload()
