@@ -2,13 +2,13 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Builder;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
@@ -63,11 +63,11 @@ class ProductCategoryResource extends Resource
                                 ->label('Actief op sites')
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
-                                    return !(Sites::getAmountOfSites() > 1);
+                                    return ! (Sites::getAmountOfSites() > 1);
                                 })
                                 ->required(),
                             Select::make('parent_category_id')
-                                ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
+                                ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                                 ->searchable()
                                 ->label('Bovenliggende product categorie'),
                             TextInput::make('name')
@@ -79,7 +79,7 @@ class ProductCategoryResource extends Resource
                                 ]),
                             TextInput::make('slug')
                                 ->label('Slug')
-                                ->unique('qcommerce__product_categories', 'slug', fn($record) => $record)
+                                ->unique('qcommerce__product_categories', 'slug', fn ($record) => $record)
                                 ->helperText('Laat leeg om automatisch te laten genereren')
                                 ->rules([
                                     'max:255',
@@ -93,7 +93,7 @@ class ProductCategoryResource extends Resource
                                 ->columnSpan([
                                     'default' => 1,
                                     'lg' => 1,
-                                ])], articles()->builder('blocks')))
+                                ]), ], articles()->builder('blocks')))
                         ->columnSpan([
                             'default' => 1,
                             'sm' => 1,
@@ -143,7 +143,7 @@ class ProductCategoryResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('parentProductCategory.name')
                     ->label('Bovenliggende categorie')
