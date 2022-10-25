@@ -2,6 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -45,44 +47,89 @@ class ProductCategoryResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(array_merge([
-                Select::make('site_ids')
-                    ->multiple()
-                    ->label('Actief op sites')
-                    ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
-                    ->hidden(function () {
-                        return ! (Sites::getAmountOfSites() > 1);
-                    })
-                    ->required(),
-                Select::make('parent_category_id')
-                    ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
-                    ->searchable()
-                    ->label('Bovenliggende product categorie'),
-                TextInput::make('name')
-                    ->label('Naam')
-                    ->required()
-                    ->maxLength(100)
-                    ->rules([
-                        'max:100',
-                    ]),
-                TextInput::make('slug')
-                    ->label('Slug')
-                    ->unique('qcommerce__product_categories', 'slug', fn ($record) => $record)
-                    ->helperText('Laat leeg om automatisch te laten genereren')
-                    ->rules([
-                        'max:255',
-                    ]),
-                FileUpload::make('image')
-                    ->directory('qcommerce/product-categories/images')
-                    ->name('Afbeelding')
-                    ->image(),
-                Builder::make('content')
-                    ->blocks(cms()->builder('blocks'))
-                    ->columnSpan([
+            ->schema([
+                Grid::make([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 1,
+                    'lg' => 1,
+                    'xl' => 6,
+                    '2xl' => 6,
+                ])->schema([
+                    Section::make('Content')
+                        ->schema(array_merge([
+                            Select::make('site_ids')
+                                ->multiple()
+                                ->label('Actief op sites')
+                                ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
+                                ->hidden(function () {
+                                    return !(Sites::getAmountOfSites() > 1);
+                                })
+                                ->required(),
+                            Select::make('parent_category_id')
+                                ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
+                                ->searchable()
+                                ->label('Bovenliggende product categorie'),
+                            TextInput::make('name')
+                                ->label('Naam')
+                                ->required()
+                                ->maxLength(100)
+                                ->rules([
+                                    'max:100',
+                                ]),
+                            TextInput::make('slug')
+                                ->label('Slug')
+                                ->unique('qcommerce__product_categories', 'slug', fn($record) => $record)
+                                ->helperText('Laat leeg om automatisch te laten genereren')
+                                ->rules([
+                                    'max:255',
+                                ]),
+                            FileUpload::make('image')
+                                ->directory('qcommerce/product-categories/images')
+                                ->name('Afbeelding')
+                                ->image(),
+                            Builder::make('content')
+                                ->blocks(cms()->builder('blocks'))
+                                ->columnSpan([
+                                    'default' => 1,
+                                    'lg' => 1,
+                                ])], articles()->builder('blocks')))
+                        ->columnSpan([
+                            'default' => 1,
+                            'sm' => 1,
+                            'md' => 1,
+                            'lg' => 1,
+                            'xl' => 4,
+                            '2xl' => 4,]),
+                    Grid::make([
                         'default' => 1,
-                        'lg' => 2,
-                    ]),
-            ], static::metadataTab()));
+                        'sm' => 1,
+                        'md' => 1,
+                        'lg' => 1,
+                        'xl' => 2,
+                        '2xl' => 2,
+                    ])->schema([
+                        Section::make('Meta Data')
+                            ->schema(static::metadataTab())
+                            ->columnSpan([
+                                'default' => 1,
+                                'sm' => 1,
+                                'md' => 1,
+                                'lg' => 1,
+                                'xl' => 2,
+                                '2xl' => 2,
+                            ]),
+                    ])
+                        ->columnSpan([
+                            'default' => 1,
+                            'sm' => 1,
+                            'md' => 1,
+                            'lg' => 1,
+                            'xl' => 2,
+                            '2xl' => 2,
+                        ]),
+                ]),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -96,7 +143,7 @@ class ProductCategoryResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('parentProductCategory.name')
                     ->label('Bovenliggende categorie')
