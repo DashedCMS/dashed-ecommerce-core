@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Grid;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Builder;
@@ -126,7 +126,7 @@ class ProductResource extends Resource
                         ->blocks(cms()->builder('blocks'))
                         ->columnSpan(['default' => 1,
                             'lg' => 1,])
-                        ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))]))
+                        ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)), ]))
                 ->columnSpan([
                     'default' => 1,
                     'sm' => 1,
@@ -408,156 +408,156 @@ class ProductResource extends Resource
                             'xl' => 2,
                             '2xl' => 2,
                         ]),
-                    ])
+                    ]),
             ]);
 
 
 
 
-            $productFilters = ProductFilter::with(['productFilterOptions'])->get();
-            $productFilterSchema = [];
+        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
+        $productFilterSchema = [];
 
-            foreach ($productFilters as $productFilter) {
-                $productFiltersSchema = [];
-                $productFilterSchema[] = Toggle::make("product_filter_$productFilter->id")
-                    ->label("Filter $productFilter->name")
-                    ->reactive()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
-                $productFilterSchema[] = Toggle::make("product_filter_{$productFilter->id}_use_for_variations")
-                    ->label("$productFilter->name gebruiken voor variaties op de product pagina")
-                    ->hidden(fn (\Closure $get) => ! $get("product_filter_$productFilter->id"))
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
-                foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                    $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
-                        ->label("$productFilter->name: $productFilterOption->name");
-                }
-                $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
-                    ->schema($productFiltersSchema)
-                    ->collapsible()
-                    ->collapsed()
-                    ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
-            }
-
-            $schema[] = Section::make('Filters beheren')
-                ->schema($productFilterSchema)
-                ->columns([
+        foreach ($productFilters as $productFilter) {
+            $productFiltersSchema = [];
+            $productFilterSchema[] = Toggle::make("product_filter_$productFilter->id")
+                ->label("Filter $productFilter->name")
+                ->reactive()
+                ->columnSpan([
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
-                ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
-
-            $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
-            $productCharacteristicSchema = [];
-
-            foreach ($productCharacteristics as $productCharacteristic) {
-                $productCharacteristicSchema[] = TextInput::make("product_characteristic_$productCharacteristic->id")
-                    ->label($productCharacteristic->name);
-            }
-
-            $schema[] = Section::make('Kenmerken beheren')
-                ->schema($productCharacteristicSchema)
-                ->columns([
+                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+            $productFilterSchema[] = Toggle::make("product_filter_{$productFilter->id}_use_for_variations")
+                ->label("$productFilter->name gebruiken voor variaties op de product pagina")
+                ->hidden(fn (\Closure $get) => ! $get("product_filter_$productFilter->id"))
+                ->columnSpan([
                     'default' => 1,
-                    'lg' => 3,
+                    'lg' => 2,
                 ])
-                ->hidden(fn ($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)))
-                ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+            foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
+                    ->label("$productFilter->name: $productFilterOption->name");
+            }
+            $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
+                ->schema($productFiltersSchema)
+                ->collapsible()
+                ->collapsed()
+                ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
+        }
+
+        $schema[] = Section::make('Filters beheren')
+            ->schema($productFilterSchema)
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
+            ])
+            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
+            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+
+        $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
+        $productCharacteristicSchema = [];
+
+        foreach ($productCharacteristics as $productCharacteristic) {
+            $productCharacteristicSchema[] = TextInput::make("product_characteristic_$productCharacteristic->id")
+                ->label($productCharacteristic->name);
+        }
+
+        $schema[] = Section::make('Kenmerken beheren')
+            ->schema($productCharacteristicSchema)
+            ->columns([
+                'default' => 1,
+                'lg' => 3,
+            ])
+            ->hidden(fn ($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)))
+            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
 
 
     //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
-            $schema[] = Section::make('Afbeeldingen beheren')
-                ->schema([
-                    Repeater::make('images')
-                        ->schema([
-                            FileUpload::make('image')
-                                ->directory('qcommerce/products/images')
-                                ->name('Afbeelding')
-                                ->image()
-                                ->required(),
-                            TextInput::make('alt_text')
-                                ->label('Alt tekst')
-                                ->maxLength(1000)
-                                ->rules([
-                                    'max:1000',
-                                ]),
-                        ])
-                        ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
-                ])
+        $schema[] = Section::make('Afbeeldingen beheren')
+            ->schema([
+                Repeater::make('images')
+                    ->schema([
+                        FileUpload::make('image')
+                            ->directory('qcommerce/products/images')
+                            ->name('Afbeelding')
+                            ->image()
+                            ->required(),
+                        TextInput::make('alt_text')
+                            ->label('Alt tekst')
+                            ->maxLength(1000)
+                            ->rules([
+                                'max:1000',
+                            ]),
+                    ])
+                    ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
+            ])
     //            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
-                ->collapsible();
+            ->collapsible();
 
 
 
 
 
-            $schema[] = Section::make('Product extras')
-                ->schema([
-                    Repeater::make('productExtras')
-                        ->schema([
-                            TextInput::make('name')
-                                ->label('Naam')
-                                ->required()
-                                ->maxLength(255)
-                                ->rules([
-                                    'required',
-                                    'max:255',
-                                ]),
-                            TextInput::make('productExtraId')
-                                ->hidden(),
-                            Toggle::make('required')
-                                ->label('Verplicht'),
-                            Select::make('type')
-                                ->label('Naam')
-                                ->options([
-                                    'single' => '1 optie',
-                                    'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
-                                ])
-                                ->default('single')
-                                ->required()
-                                ->rules([
-                                    'required',
-                                ]),
-                            Repeater::make('productExtraOptions')
-                                ->schema([
-                                    TextInput::make('value')
-                                        ->label('Waarde')
-                                        ->required()
-                                        ->maxLength(255)
-                                        ->rules([
-                                            'required',
-                                            'max:255',
-                                        ]),
-                                    TextInput::make('price')
-                                        ->label('Meerprijs van deze optie')
-                                        ->prefix('€')
-                                        ->helperText('Voorbeeld: 10.25')
-                                        ->rules([
-                                            'numeric',
-                                            'min:0.00',
-                                            'max:10000',
-                                        ]),
-                                    Toggle::make('calculate_only_1_quantity')
-                                        ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
-                                ]),
-                        ]),
-                ])
-                ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
-                ->collapsible()
-                ->collapsed();
+        $schema[] = Section::make('Product extras')
+            ->schema([
+                Repeater::make('productExtras')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Naam')
+                            ->required()
+                            ->maxLength(255)
+                            ->rules([
+                                'required',
+                                'max:255',
+                            ]),
+                        TextInput::make('productExtraId')
+                            ->hidden(),
+                        Toggle::make('required')
+                            ->label('Verplicht'),
+                        Select::make('type')
+                            ->label('Naam')
+                            ->options([
+                                'single' => '1 optie',
+                                'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
+                            ])
+                            ->default('single')
+                            ->required()
+                            ->rules([
+                                'required',
+                            ]),
+                        Repeater::make('productExtraOptions')
+                            ->schema([
+                                TextInput::make('value')
+                                    ->label('Waarde')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->rules([
+                                        'required',
+                                        'max:255',
+                                    ]),
+                                TextInput::make('price')
+                                    ->label('Meerprijs van deze optie')
+                                    ->prefix('€')
+                                    ->helperText('Voorbeeld: 10.25')
+                                    ->rules([
+                                        'numeric',
+                                        'min:0.00',
+                                        'max:10000',
+                                    ]),
+                                Toggle::make('calculate_only_1_quantity')
+                                    ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
+                            ]),
+                    ]),
+            ])
+            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
+            ->collapsible()
+            ->collapsed();
 
-            return $form
-                ->schema($schema);
-        }
+        return $form
+            ->schema($schema);
+    }
 
         public static function table(Table $table): Table
         {
