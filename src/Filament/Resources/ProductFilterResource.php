@@ -2,12 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BooleanColumn;
@@ -71,8 +71,8 @@ class ProductFilterResource extends Resource
                                     'xl' => 1,
                                     '2xl' => 1,
                                 ]),
-                        ]))
-                ])
+                        ])),
+                ]),
             ]);
     }
 
@@ -91,7 +91,7 @@ class ProductFilterResource extends Resource
                 TextColumn::make('product_filter_values_amount')
                     ->label('Aantal waardes')
                     ->sortable()
-                    ->getStateUsing(fn($record) => $record->productFilterOptions->count()),
+                    ->getStateUsing(fn ($record) => $record->productFilterOptions->count()),
             ])
             ->filters([
                 //
