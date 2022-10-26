@@ -2,12 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Section;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BooleanColumn;
@@ -42,7 +42,8 @@ class ProductCharacteristicResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
+            ->schema(
+                [
                     Grid::make([
                         'default' => 1,
                         'sm' => 1,
@@ -50,9 +51,11 @@ class ProductCharacteristicResource extends Resource
                         'lg' => 1,
                         'xl' => 1,
                         '2xl' => 1,
-                    ])->schema([
+                    ])->schema(
+                        [
                             Section::make('Content')
-                                ->schema(array_merge([
+                                ->schema(
+                                    array_merge([
                                         TextInput::make('name')
                                             ->label('Naam')
                                             ->required()
@@ -84,8 +87,8 @@ class ProductCharacteristicResource extends Resource
                                                 '2xl' => 1,
                                             ]),
                                     ])
-                                )]
-                    )]
+                                ), ]
+                    ), ]
             );
     }
 
