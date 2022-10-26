@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
+use Filament\Forms\Components\Section;
 use Filament\Pages\Page;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Components\Select;
@@ -33,27 +34,31 @@ class ExportOrdersPage extends Page implements HasForms
     protected function getFormSchema(): array
     {
         return [
-            DatePicker::make('startDate')
-                ->label('Start datum')
-                ->rules([
-                    'nullable',
-                ]),
-            DatePicker::make('endDate')
-                ->label('Eind datum')
-                ->rules([
-                    'nullable',
-                    'after:start_date',
-                ]),
-            Select::make('type')
-                ->label('Type export')
-                ->options([
-                    'normal' => 'Normaal',
-                    'perInvoiceLine' => 'Per factuurregel',
-                ])
-                ->required()
-                ->rules([
-                    'required',
-                ]),
+            Section::make('Exporteer')
+            ->schema([
+                DatePicker::make('startDate')
+                    ->label('Start datum')
+                    ->rules([
+                        'nullable',
+                    ]),
+                DatePicker::make('endDate')
+                    ->label('Eind datum')
+                    ->rules([
+                        'nullable',
+                        'after:start_date',
+                    ]),
+                Select::make('type')
+                    ->label('Type export')
+                    ->options([
+                        'normal' => 'Normaal',
+                        'perInvoiceLine' => 'Per factuurregel',
+                    ])
+                    ->required()
+                    ->rules([
+                        'required',
+                    ]),
+            ])
+
         ];
     }
 
