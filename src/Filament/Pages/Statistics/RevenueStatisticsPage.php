@@ -132,7 +132,7 @@ class RevenueStatisticsPage extends Page implements HasForms
                         'label' => 'Stats',
                         'data' => $graph['data'],
                         'backgroundColor' => 'orange',
-                        'borderColor' => "red",
+                        'borderColor' => "orange",
                         'fill' => 'start',
                     ],
                 ],

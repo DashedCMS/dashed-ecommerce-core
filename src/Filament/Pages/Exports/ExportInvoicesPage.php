@@ -7,6 +7,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
@@ -36,27 +37,31 @@ class ExportInvoicesPage extends Page implements HasForms
     protected function getFormSchema(): array
     {
         return [
-            DatePicker::make('start_date')
-                ->label('Start datum')
-                ->rules([
-                    'nullable',
-                ]),
-            DatePicker::make('end_date')
-                ->label('Eind datum')
-                ->rules([
-                    'nullable',
-                    'after:start_date',
-                ]),
-            Select::make('sort')
-                ->label('Soort export')
-                ->options([
-                    'merged' => 'Alle facturen in 1 PDF',
-                    'combined' => 'Alle orders in 1 factuur',
-                ])
-                ->rules([
-                    'required',
-                ])
-                ->required(),
+            Section::make('Exporteer')
+            ->schema([
+                DatePicker::make('start_date')
+                    ->label('Start datum')
+                    ->rules([
+                        'nullable',
+                    ]),
+                DatePicker::make('end_date')
+                    ->label('Eind datum')
+                    ->rules([
+                        'nullable',
+                        'after:start_date',
+                    ]),
+                Select::make('sort')
+                    ->label('Soort export')
+                    ->options([
+                        'merged' => 'Alle facturen in 1 PDF',
+                        'combined' => 'Alle orders in 1 factuur',
+                    ])
+                    ->rules([
+                        'required',
+                    ])
+                    ->required(),
+            ]),
+
         ];
     }
 
