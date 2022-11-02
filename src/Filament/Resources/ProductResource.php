@@ -85,35 +85,63 @@ class ProductResource extends Resource
                                 ->maxLength(255)
                                 ->required()
                                 ->rules(['required',
-                                    'max:255',]),
+                                    'max:255',])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
+                                ]),
                             TextInput::make('slug')
                                 ->label('Slug')
-                                ->unique('qcommerce__products', 'slug', fn ($record) => $record)
+                                ->unique('qcommerce__products', 'slug', fn($record) => $record)
                                 ->helperText('Laat leeg om automatisch te laten genereren')
-                                ->rules(['max:255',]),
+                                ->rules(['max:255',])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
+                                ]),
                             TiptapEditor::make('description')
                                 ->label('Uitgebreide beschrijving')
                                 ->rules([
                                     'max:10000',
                                 ])
                                 ->columnSpan([
-                                    'default' => 1,
-                                    'lg' => 1,
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
                                 ])
-                                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                             Textarea::make('short_description')
                                 ->label('Korte beschrijving')
                                 ->rows(5)
                                 ->maxLength(2500)
                                 ->rules(['max:2500',])
-                                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ])
+                                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                             Textarea::make('search_terms')
                                 ->label('Zoekwoorden')
                                 ->rows(2)
                                 ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden')
                                 ->maxLength(2500)
                                 ->rules(['max:2500',])
-                                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
                             TextInput::make('order')
                                 ->label('Volgorde')
                                 ->required()
@@ -127,10 +155,18 @@ class ProductResource extends Resource
                                     'max:100000',]),
                             Builder::make('content')
                                 ->blocks(cms()->builder('blocks'))
-                                ->columnSpan(['default' => 1,
-                                    'lg' => 1,])
-                                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
-                        ])->columnSpan([
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ])
+                                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)),
+                        ])
+                        ->columns(2)
+                        ->columnSpan([
                             'default' => 1,
                             'sm' => 1,
                             'md' => 1,
@@ -159,14 +195,14 @@ class ProductResource extends Resource
                                     ->default('simple')
                                     ->required()
                                     ->reactive()
-                                    ->hidden(fn ($record) => $record && $record->parent_product_id),
+                                    ->hidden(fn($record) => $record && $record->parent_product_id),
                                 Select::make('parent_product_id')
                                     ->label('Bovenliggende product')
                                     ->options(Product::where('type', 'variable')->where('id', '!=', $record->id ?? 0)->whereNull('parent_product_id')->pluck('name', 'id'))
                                     ->reactive()
                                     ->searchable()
                                     ->helperText('Als je het bovenliggende product aanpast, moet je alle filters etc controleren.')
-                                    ->visible(fn (\Closure $get, $livewire, $record) => $get('type') == 'variable' && ($livewire instanceof CreateProduct || ($livewire instanceof EditProduct && $record->parent_product_id))),
+                                    ->visible(fn(\Closure $get, $livewire, $record) => $get('type') == 'variable' && ($livewire instanceof CreateProduct || ($livewire instanceof EditProduct && $record->parent_product_id))),
                                 //                    ->hidden(fn (\Closure $get, $livewire) => $get('type') != 'variable' || $livewire instanceof EditProduct),
                                 //                    ->hidden(fn (\Closure $get, $livewire) => $get('type') != 'variable'),
                                 Select::make('site_ids')
@@ -174,17 +210,17 @@ class ProductResource extends Resource
                                     ->label('Actief op sites')
                                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                     ->default([Sites::getFirstSite()['id']])
-                                    ->hidden(fn (\Closure $get) => ! (Sites::getAmountOfSites() > 1) || $get('parent_product_id') && $get('type') == 'variable')
+                                    ->hidden(fn(\Closure $get) => !(Sites::getAmountOfSites() > 1) || $get('parent_product_id') && $get('type') == 'variable')
                                     ->required()
-                                    ->disabled(fn ($record) => $record && $record->parent_product_id),
+                                    ->disabled(fn($record) => $record && $record->parent_product_id),
                                 Toggle::make('public')
                                     ->label('Openbaar')
                                     ->default(1),
                                 Toggle::make('only_show_parent_product')
                                     ->label('Toon 1 variatie op overzichtspagina')
-                                    ->hidden(fn ($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_product_id)),
+                                    ->hidden(fn($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_product_id)),
                             ])
-                            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct)
+                            ->collapsed(fn($livewire) => $livewire instanceof EditProduct)
                             ->columnSpan([
                                 'default' => 1,
                                 'sm' => 1,
@@ -201,7 +237,7 @@ class ProductResource extends Resource
                                 TextInput::make('stock')
                                     ->type('number')
                                     ->label('Hoeveel heb je van dit product op voorraad')
-                                    ->helperText(fn ($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
+                                    ->helperText(fn($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
                                     ->maxValue(100000)
                                     ->required()
                                     ->rules([
@@ -209,20 +245,20 @@ class ProductResource extends Resource
                                         'numeric',
                                         'max:100000',
                                     ])
-                                    ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                                    ->hidden(fn(\Closure $get) => !$get('use_stock')),
                                 Toggle::make('out_of_stock_sellable')
                                     ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                                     ->reactive()
-                                    ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                                    ->hidden(fn(\Closure $get) => !$get('use_stock')),
                                 DatePicker::make('expected_in_stock_date')
                                     ->label('Wanneer komt dit product weer op voorraad')
                                     ->reactive()
                                     ->required()
-                                    ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
+                                    ->hidden(fn(\Closure $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
                                 Toggle::make('low_stock_notification')
                                     ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                                     ->reactive()
-                                    ->hidden(fn (\Closure $get) => ! $get('use_stock')),
+                                    ->hidden(fn(\Closure $get) => !$get('use_stock')),
                                 TextInput::make('low_stock_notification_limit')
                                     ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
                                     ->type('number')
@@ -238,7 +274,7 @@ class ProductResource extends Resource
                                         'min:1',
                                         'max:100000',
                                     ])
-                                    ->hidden(fn (\Closure $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
+                                    ->hidden(fn(\Closure $get) => !$get('use_stock') || !$get('low_stock_notification')),
                                 Select::make('stock_status')
                                     ->label('Is dit product op voorraad')
                                     ->options([
@@ -250,7 +286,7 @@ class ProductResource extends Resource
                                     ->rules([
                                         'required',
                                     ])
-                                    ->hidden(fn (\Closure $get) => $get('use_stock')),
+                                    ->hidden(fn(\Closure $get) => $get('use_stock')),
                                 Toggle::make('limit_purchases_per_customer')
                                     ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
                                     ->reactive(),
@@ -267,9 +303,9 @@ class ProductResource extends Resource
                                         'min:1',
                                         'max:100000',
                                     ])
-                                    ->hidden(fn (\Closure $get) => ! $get('limit_purchases_per_customer')),
+                                    ->hidden(fn(\Closure $get) => !$get('limit_purchases_per_customer')),
                             ])
-                            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+                            ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
                             ->collapsible()
                             ->columnSpan([
                                 'default' => 1,
@@ -281,7 +317,7 @@ class ProductResource extends Resource
                             ]),
                         $schema[] = Section::make('Meta')
                             ->schema(static::metadataTab())
-                            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+                            ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
                             ->collapsible()
                             ->columnSpan([
                                 'default' => 1,
@@ -312,6 +348,14 @@ class ProductResource extends Resource
                                     'numeric',
                                     'min:1',
                                     'max:100000',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             TextInput::make('new_price')
                                 ->label('Vorige prijs (de hogere prijs)')
@@ -322,6 +366,13 @@ class ProductResource extends Resource
                                 ->rules(['numeric',
                                     'min:1',
                                     'max:100000',
+                                ])->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             TextInput::make('vat_rate')
                                 ->label('BTW percentage')
@@ -331,7 +382,15 @@ class ProductResource extends Resource
                                     'min:1',
                                     'max:100',
                                     'required',])
-                                ->default(21),
+                                ->default(21)
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
+                                ]),
                             TextInput::make('sku')
                                 ->label('SKU van het product')
                                 ->helperText('Vaak gebruikt voor interne herkenning')
@@ -339,12 +398,28 @@ class ProductResource extends Resource
                                 ->required()
                                 ->default('SKU' . rand(10000, 99999))
                                 ->rules(['required',
-                                    'max:255',]),
+                                    'max:255',])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
+                                ]),
                             TextInput::make('ean')
                                 ->label('EAN van het product')
                                 ->helperText('Dit is een code die gekoppeld zit aan dit specifieke product')
                                 ->maxLength(255)
-                                ->rules(['max:255',]),
+                                ->rules(['max:255',])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ]),
                             TextInput::make('weight')
                                 ->label('Gewicht')
                                 ->helperText('Berekend in KG')
@@ -352,6 +427,14 @@ class ProductResource extends Resource
                                 ->rules([
                                     'max:100000',
                                     'numeric',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             TextInput::make('length')
                                 ->label('Lengte')
@@ -360,6 +443,14 @@ class ProductResource extends Resource
                                 ->rules([
                                     'max:100000',
                                     'numeric',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             TextInput::make('width')
                                 ->label('Breedte')
@@ -368,6 +459,14 @@ class ProductResource extends Resource
                                 ->rules([
                                     'max:100000',
                                     'numeric',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             TextInput::make('height')
                                 ->label('Hoogte')
@@ -376,10 +475,17 @@ class ProductResource extends Resource
                                 ->rules([
                                     'max:100000',
                                     'numeric',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),])
-                        ->columns(['default' => 1,
-                            'lg' => 1,])
-                        ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+                        ->columns(2)
+                        ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
                         ->collapsible()
                         ->columnSpan([
                             'default' => 1,
@@ -407,7 +513,7 @@ class ProductResource extends Resource
                                 ->preload()
                                 ->relationship('suggestedProducts', 'name')
                                 ->label('Link voorgestelde producten'),])
-                        ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+                        ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id))
                         ->collapsible()
                         ->columnSpan([
                             'default' => 1,
@@ -433,15 +539,15 @@ class ProductResource extends Resource
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
             $productFilterSchema[] = Toggle::make("product_filter_{$productFilter->id}_use_for_variations")
                 ->label("$productFilter->name gebruiken voor variaties op de product pagina")
-                ->hidden(fn (\Closure $get) => ! $get("product_filter_$productFilter->id"))
+                ->hidden(fn(\Closure $get) => !$get("product_filter_$productFilter->id"))
                 ->columnSpan([
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+                ->hidden(fn($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                     ->label("$productFilter->name: $productFilterOption->name");
@@ -450,7 +556,7 @@ class ProductResource extends Resource
                 ->schema($productFiltersSchema)
                 ->collapsible()
                 ->collapsed()
-                ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
+                ->hidden(fn(\Closure $get, $record) => !$get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && !$record->parent_product_id));
         }
 
         $schema[] = Section::make('Filters beheren')
@@ -459,8 +565,8 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 2,
             ])
-            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
+            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
         $productCharacteristicSchema = [];
@@ -476,8 +582,8 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 3,
             ])
-            ->hidden(fn ($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)))
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
+            ->hidden(fn($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (!$record && !$get('parent_product_id') || $record && !$record->parent_product_id)))
+            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
 
         //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
@@ -555,7 +661,7 @@ class ProductResource extends Resource
                             ]),
                     ]),
             ])
-            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
+            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
             ->collapsible()
             ->collapsed();
 
@@ -584,7 +690,7 @@ class ProductResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen'),

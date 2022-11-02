@@ -65,17 +65,41 @@ class ProductCategoryResource extends Resource
                                 ->hidden(function () {
                                     return ! (Sites::getAmountOfSites() > 1);
                                 })
-                                ->required(),
+                                ->required()
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ]),
                             Select::make('parent_category_id')
                                 ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                                 ->searchable()
-                                ->label('Bovenliggende product categorie'),
+                                ->label('Bovenliggende product categorie')
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ]),
                             TextInput::make('name')
                                 ->label('Naam')
                                 ->required()
                                 ->maxLength(100)
                                 ->rules([
                                     'max:100',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             TextInput::make('slug')
                                 ->label('Slug')
@@ -83,17 +107,43 @@ class ProductCategoryResource extends Resource
                                 ->helperText('Laat leeg om automatisch te laten genereren')
                                 ->rules([
                                     'max:255',
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 1,
+                                    '2xl' => 1,
                                 ]),
                             FileUpload::make('image')
                                 ->directory('qcommerce/product-categories/images')
                                 ->name('Afbeelding')
-                                ->image(),
+                                ->image()
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ]),
                             Builder::make('content')
                                 ->blocks(cms()->builder('blocks'))
                                 ->columnSpan([
                                     'default' => 1,
                                     'lg' => 1,
-                                ]), ], articles()->builder('blocks')))
+                                ])
+                                ->columnSpan([
+                                    'default' => 2,
+                                    'sm' => 2,
+                                    'md' => 2,
+                                    'lg' => 2,
+                                    'xl' => 2,
+                                    '2xl' => 2,
+                                ]),
+                            ], articles()->builder('blocks')))
+                        ->columns(2)
                         ->columnSpan([
                             'default' => 1,
                             'sm' => 1,
@@ -138,17 +188,14 @@ class ProductCategoryResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
-                    ->searchable(),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
                 TextColumn::make('parentProductCategory.name')
                     ->label('Bovenliggende categorie')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
             ])
             ->filters([
                 //

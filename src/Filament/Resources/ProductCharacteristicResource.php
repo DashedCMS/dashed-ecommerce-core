@@ -62,6 +62,13 @@ class ProductCharacteristicResource extends Resource
                                             ->maxLength(100)
                                             ->rules([
                                                 'max:100',
+                                            ])->columnSpan([
+                                                'default' => 2,
+                                                'sm' => 2,
+                                                'md' => 2,
+                                                'lg' => 2,
+                                                'xl' => 1,
+                                                '2xl' => 1,
                                             ]),
                                         TextInput::make('order')
                                             ->label('Volgorde')
@@ -75,6 +82,13 @@ class ProductCharacteristicResource extends Resource
                                                 'required',
                                                 'min:1',
                                                 'max:100',
+                                            ])->columnSpan([
+                                                'default' => 2,
+                                                'sm' => 2,
+                                                'md' => 2,
+                                                'lg' => 2,
+                                                'xl' => 1,
+                                                '2xl' => 1,
                                             ]),
                                         Toggle::make('hide_from_public')
                                             ->label('Dit kenmerk verbergen op de website')
@@ -87,7 +101,7 @@ class ProductCharacteristicResource extends Resource
                                                 '2xl' => 1,
                                             ]),
                                     ])
-                                ), ]
+                                )->columns(2), ]
                     ), ]
             );
     }

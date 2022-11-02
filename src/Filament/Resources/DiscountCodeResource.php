@@ -77,6 +77,14 @@ class DiscountCodeResource extends Resource
                                     ->maxLength(100)
                                     ->rules([
                                         'max:100',
+                                    ])
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                        'xl' => 1,
+                                        '2xl' => 1,
                                     ]),
                                 TextInput::make('code')
                                     ->label('Code')
@@ -88,20 +96,45 @@ class DiscountCodeResource extends Resource
                                     ->rules([
                                         'min:3',
                                         'max:100',
+                                    ])
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                        'xl' => 1,
+                                        '2xl' => 1,
                                     ]),
                                 Toggle::make('create_multiple_codes')
                                     ->label('Meerdere codes aanmaken')
                                     ->reactive()
-                                    ->hidden(fn ($livewire) => ! $livewire instanceof CreateDiscountCode),
+                                    ->hidden(fn ($livewire) => ! $livewire instanceof CreateDiscountCode)
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                        'xl' => 2,
+                                        '2xl' => 2,
+                                    ]),
                                 TextInput::make('amount_of_codes')
                                     ->label('Hoeveel kortingscodes moeten er aangemaakt worden')
                                     ->helperText('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
                                     ->type('number')
                                     ->required()
                                     ->maxValue(500)
-                                    ->hidden(fn ($get) => ! $get('create_multiple_codes')),
+                                    ->hidden(fn ($get) => ! $get('create_multiple_codes'))
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                        'xl' => 2,
+                                        '2xl' => 2,
+                                    ]),
                             ])
-                        )->collapsed(fn ($livewire) => $livewire instanceof EditDiscountCode)
+                        )
+                        ->columns(2)
                         ->columnSpan([
                             'default' => 1,
                             'sm' => 1,
