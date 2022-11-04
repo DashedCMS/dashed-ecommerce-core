@@ -32,10 +32,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -100,6 +100,7 @@ class EditProduct extends EditRecord
 
             $newProductExtra->productExtraOptions()->whereNotIn('id', $validProductExtraOptionIds)->forceDelete();
         }
+        unset($data['productExtras']);
 
         foreach ($this->record->productExtras()->whereNotIn('id', $validProductExtraIds)->get() as $productExtra) {
             $productExtra->productExtraOptions()->forceDelete();
@@ -108,8 +109,139 @@ class EditProduct extends EditRecord
 
         Redirect::handleSlugChange($this->record->getTranslation('slug', $this->activeFormLocale), $data['slug']);
 
+        foreach ($this->record->childProducts as $childProduct) {
+            $childProduct->site_ids = $data['site_ids'];
+            $childProduct->save();
+        }
+
+        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
+        if ($this->record->parentProduct) {
+            foreach ($this->record->parentProduct->childProducts as $childProduct) {
+                $childProduct->productCategories()->sync($selectedProductCategories);
+            }
+        } else {
+            $this->record->productCategories()->sync($selectedProductCategories);
+        }
+
+        if ($data['parent_product_id'] ?? false) {
+            foreach (Product::find($data['parent_product_id'])->childProducts as $childProduct) {
+                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
+            }
+        }
+
+        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
+
+        //Only if is simple or variable && parent
+        if ((($data['type'] ?? 'variable') == 'variable' && !($data['parent_product_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
+            $this->record->activeProductFilters()->detach();
+            foreach ($productFilters as $productFilter) {
+                if ($data["product_filter_$productFilter->id"] ?? false) {
+                    $this->record->activeProductFilters()->attach($productFilter->id);
+                    $this->record->activeProductFilters()->updateExistingPivot($productFilter->id, [
+                        'use_for_variations' => $data["product_filter_{$productFilter->id}_use_for_variations"],
+                    ]);
+                }
+            }
+        }
+
+        if ((($data['type'] ?? 'variable') == 'variable' && ($data['parent_product_id'] ?? true)) || ($data['type'] ?? 'variable') == 'simple') {
+            $this->record->productFilters()->detach();
+            foreach ($productFilters as $productFilter) {
+                if ((($data["product_filter_$productFilter->id"] ?? false) && ($this->record->activeProductFilters->contains($productFilter->id)) || (($data['parent_product_id'] ?? false) && Product::find($data['parent_product_id']) && Product::find($data['parent_product_id'])->activeProductFilters->contains($productFilter->id)))) {
+                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                        if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
+                            $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($productFilters as $productFilter) {
+            foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                unset($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]);
+            }
+        }
+
+        $productCharacteristics = ProductCharacteristics::get();
+
+        foreach ($productCharacteristics as $productCharacteristic) {
+            $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+            if (!$thisProductCharacteristic) {
+                $thisProductCharacteristic = new ProductCharacteristic();
+                $thisProductCharacteristic->product_id = $this->record->id;
+                $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
+            }
+            $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $data["product_characteristic_$productCharacteristic->id"]);
+            $thisProductCharacteristic->save();
+            unset($data['product_characteristic_' . $productCharacteristic->id]);
+        }
+
         return $data;
     }
+
+//    public function afterSave(): void
+//    {
+//        foreach ($this->record->childProducts as $childProduct) {
+//            $childProduct->site_ids = $this->record->site_ids;
+//            $childProduct->save();
+//        }
+//
+//        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
+//        if ($this->record->parentProduct) {
+//            foreach ($this->record->parentProduct->childProducts as $childProduct) {
+//                $childProduct->productCategories()->sync($selectedProductCategories);
+//            }
+//        } else {
+//            $this->record->productCategories()->sync($selectedProductCategories);
+//        }
+//
+//        if ($this->record->parentProduct) {
+//            foreach ($this->record->parentProduct->childProducts as $childProduct) {
+//                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
+//            }
+//        }
+//
+//        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
+//
+//        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
+//            $this->record->activeProductFilters()->detach();
+//            foreach ($productFilters as $productFilter) {
+//                if ($this->data["product_filter_$productFilter->id"]) {
+//                    $this->record->activeProductFilters()->attach($productFilter->id);
+//                    $this->record->activeProductFilters()->updateExistingPivot($productFilter->id, [
+//                        'use_for_variations' => $this->data["product_filter_{$productFilter->id}_use_for_variations"],
+//                    ]);
+//                }
+//            }
+//        }
+//
+//        if (($this->record->type == 'variable' && $this->record->parent_product_id) || $this->record->type == 'simple') {
+//            $this->record->productFilters()->detach();
+//            foreach ($productFilters as $productFilter) {
+//                if ($this->data["product_filter_$productFilter->id"] && ($this->record->activeProductFilters->contains($productFilter->id) || ($this->record->parentProduct && $this->record->parentProduct->activeProductFilters->contains($productFilter->id)))) {
+//                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
+//                        if ($this->data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]) {
+//                            $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        $productCharacteristics = ProductCharacteristics::get();
+//
+//        foreach ($productCharacteristics as $productCharacteristic) {
+//            $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+//            if (! $thisProductCharacteristic) {
+//                $thisProductCharacteristic = new ProductCharacteristic();
+//                $thisProductCharacteristic->product_id = $this->record->id;
+//                $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
+//            }
+//            $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $this->data["product_characteristic_$productCharacteristic->id"]);
+//            $thisProductCharacteristic->save();
+//        }
+//    }
 
     public function afterFill(): void
     {
@@ -157,72 +289,9 @@ class EditProduct extends EditRecord
         }
     }
 
-    public function afterSave(): void
-    {
-        foreach ($this->record->childProducts as $childProduct) {
-            $childProduct->site_ids = $this->record->site_ids;
-            $childProduct->save();
-        }
-
-        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
-        if ($this->record->parentProduct) {
-            foreach ($this->record->parentProduct->childProducts as $childProduct) {
-                $childProduct->productCategories()->sync($selectedProductCategories);
-            }
-        } else {
-            $this->record->productCategories()->sync($selectedProductCategories);
-        }
-
-        if ($this->record->parentProduct) {
-            foreach ($this->record->parentProduct->childProducts as $childProduct) {
-                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
-            }
-        }
-
-        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
-
-        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
-            $this->record->activeProductFilters()->detach();
-            foreach ($productFilters as $productFilter) {
-                if ($this->data["product_filter_$productFilter->id"]) {
-                    $this->record->activeProductFilters()->attach($productFilter->id);
-                    $this->record->activeProductFilters()->updateExistingPivot($productFilter->id, [
-                        'use_for_variations' => $this->data["product_filter_{$productFilter->id}_use_for_variations"],
-                    ]);
-                }
-            }
-        }
-
-        if (($this->record->type == 'variable' && $this->record->parent_product_id) || $this->record->type == 'simple') {
-            $this->record->productFilters()->detach();
-            foreach ($productFilters as $productFilter) {
-                if ($this->data["product_filter_$productFilter->id"] && ($this->record->activeProductFilters->contains($productFilter->id) || ($this->record->parentProduct && $this->record->parentProduct->activeProductFilters->contains($productFilter->id)))) {
-                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                        if ($this->data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]) {
-                            $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
-                        }
-                    }
-                }
-            }
-        }
-
-        $productCharacteristics = ProductCharacteristics::get();
-
-        foreach ($productCharacteristics as $productCharacteristic) {
-            $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if (! $thisProductCharacteristic) {
-                $thisProductCharacteristic = new ProductCharacteristic();
-                $thisProductCharacteristic->product_id = $this->record->id;
-                $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
-            }
-            $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $this->data["product_characteristic_$productCharacteristic->id"]);
-            $thisProductCharacteristic->save();
-        }
-    }
-
     protected function getBreadcrumbs(): array
     {
-        if (! $this->record->parentProduct) {
+        if (!$this->record->parentProduct) {
             return parent::getBreadcrumbs();
         }
 
