@@ -19,7 +19,6 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
@@ -279,7 +278,7 @@ class ProductResource extends Resource
                     ->rules(['max:2500',])
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
                 Section::make('Meta')
-                    ->schema([static::metadataTab()])
+                    ->schema(static::metadataTab())
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
                 TextInput::make('order')
                     ->label('Volgorde')
