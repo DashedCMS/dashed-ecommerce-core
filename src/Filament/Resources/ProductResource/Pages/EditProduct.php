@@ -42,6 +42,7 @@ class EditProduct extends EditRecord
                 }
             }
         }
+
         parent::mount($record);
     }
 
