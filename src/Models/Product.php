@@ -105,12 +105,12 @@ class Product extends Model
         return LogOptions::defaults();
     }
 
-    public function scopeSearch($query)
+    public function scopeSearch($query, ?string $search = null)
     {
         $minPrice = request()->get('min-price') ? request()->get('min-price') : null;
         $maxPrice = request()->get('max-price') ? request()->get('max-price') : null;
 
-        $search = request()->get('search');
+        $search = request()->get('search') ?: $search;
 
         if ($minPrice) {
             $query->where('price', '>=', $minPrice);
@@ -127,12 +127,6 @@ class Product extends Model
                 ->orWhereRaw('LOWER(description) like ?', '%' . strtolower($search) . '%')
                 ->orWhereRaw('LOWER(search_terms) like ?', '%' . strtolower($search) . '%')
                 ->orWhere('slug', 'LIKE', "%$search%")
-                ->orWhere('weight', 'LIKE', "%$search%")
-                ->orWhere('length', 'LIKE', "%$search%")
-                ->orWhere('width', 'LIKE', "%$search%")
-                ->orWhere('height', 'LIKE', "%$search%")
-                ->orWhere('price', 'LIKE', "%$search%")
-                ->orWhere('new_price', 'LIKE', "%$search%")
                 ->orWhere('sku', 'LIKE', "%$search%")
                 ->orWhere('ean', 'LIKE', "%$search%");
         });

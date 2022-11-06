@@ -24,18 +24,6 @@ class ProductCategory extends Model
 
     protected $table = 'qcommerce__product_categories';
 
-    protected $fillable = [
-        'parent_category_id',
-        'site_ids',
-        'name',
-        'slug',
-        'content',
-        'image',
-        'meta_image',
-        'meta_title',
-        'meta_description',
-    ];
-
     public $translatable = [
         'name',
         'slug',
@@ -83,16 +71,13 @@ class ProductCategory extends Model
         return LogOptions::defaults();
     }
 
-    public function scopeSearch($query)
+    public function scopeSearch($query, ?string $search = null)
     {
-        if (request()->get('search')) {
-            $search = strtolower(request()->get('search'));
+        if (request()->get('search') ?: $search) {
+            $search = strtolower(request()->get('search') ?: $search);
             $query->where('name', 'LIKE', "%$search%")
                 ->orWhere('slug', 'LIKE', "%$search%")
-                ->orWhere('content', 'LIKE', "%$search%")
-                ->orWhere('meta_title', 'LIKE', "%$search%")
-                ->orWhere('meta_description', 'LIKE', "%$search%")
-                ->orWhere('site_ids', 'LIKE', "%$search%");
+                ->orWhere('content', 'LIKE', "%$search%");
         }
     }
 
