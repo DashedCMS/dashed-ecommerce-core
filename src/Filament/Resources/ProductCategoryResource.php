@@ -63,7 +63,7 @@ class ProductCategoryResource extends Resource
                                 ->label('Actief op sites')
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
-                                    return ! (Sites::getAmountOfSites() > 1);
+                                    return !(Sites::getAmountOfSites() > 1);
                                 })
                                 ->required()
                                 ->columnSpan([
@@ -75,7 +75,7 @@ class ProductCategoryResource extends Resource
                                     '2xl' => 2,
                                 ]),
                             Select::make('parent_category_id')
-                                ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
+                                ->options(fn($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
                                 ->searchable()
                                 ->label('Bovenliggende product categorie')
                                 ->columnSpan([
@@ -103,7 +103,7 @@ class ProductCategoryResource extends Resource
                                 ]),
                             TextInput::make('slug')
                                 ->label('Slug')
-                                ->unique('qcommerce__product_categories', 'slug', fn ($record) => $record)
+                                ->unique('qcommerce__product_categories', 'slug', fn($record) => $record)
                                 ->helperText('Laat leeg om automatisch te laten genereren')
                                 ->rules([
                                     'max:255',
@@ -142,7 +142,7 @@ class ProductCategoryResource extends Resource
                                     'xl' => 2,
                                     '2xl' => 2,
                                 ]),
-                            ])
+                        ])
                         ->columns(2)
                         ->columnSpan([
                             'default' => 1,
@@ -192,7 +192,7 @@ class ProductCategoryResource extends Resource
                 TagsColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1)),
+                    ->hidden(!(Sites::getAmountOfSites() > 1)),
                 TextColumn::make('parentProductCategory.name')
                     ->label('Bovenliggende categorie')
                     ->sortable(),

@@ -166,17 +166,18 @@ class EditProduct extends EditRecord
         }
 
         $productCharacteristics = ProductCharacteristics::get();
-
         foreach ($productCharacteristics as $productCharacteristic) {
-            $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if (! $thisProductCharacteristic) {
-                $thisProductCharacteristic = new ProductCharacteristic();
-                $thisProductCharacteristic->product_id = $this->record->id;
-                $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
+            if(isset($data["product_characteristic_$productCharacteristic->id"])){
+                $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+                if (! $thisProductCharacteristic) {
+                    $thisProductCharacteristic = new ProductCharacteristic();
+                    $thisProductCharacteristic->product_id = $this->record->id;
+                    $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
+                }
+                $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $data["product_characteristic_$productCharacteristic->id"]);
+                $thisProductCharacteristic->save();
+                unset($data['product_characteristic_' . $productCharacteristic->id]);
             }
-            $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $data["product_characteristic_$productCharacteristic->id"]);
-            $thisProductCharacteristic->save();
-            unset($data['product_characteristic_' . $productCharacteristic->id]);
         }
 
         return $data;

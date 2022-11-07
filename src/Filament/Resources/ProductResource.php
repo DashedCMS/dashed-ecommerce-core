@@ -298,6 +298,7 @@ class ProductResource extends Resource
                 'lg' => 2,
             ]);
 //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
+
         $schema[] = Section::make('Meta')
             ->schema(static::metadataTab())
             ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id));
