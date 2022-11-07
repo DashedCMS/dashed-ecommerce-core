@@ -167,7 +167,7 @@ class EditProduct extends EditRecord
 
         $productCharacteristics = ProductCharacteristics::get();
         foreach ($productCharacteristics as $productCharacteristic) {
-            if(isset($data["product_characteristic_$productCharacteristic->id"])){
+            if (isset($data["product_characteristic_$productCharacteristic->id"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
                 if (! $thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
