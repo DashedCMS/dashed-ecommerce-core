@@ -180,8 +180,8 @@ class EditProduct extends EditRecord
             }
         }
 
-        foreach($data as $key => $dataItem){
-            if(str($key)->contains('product_characteristic_')){
+        foreach ($data as $key => $dataItem) {
+            if (str($key)->contains('product_characteristic_')) {
                 unset($data[$key]);
             }
         }
