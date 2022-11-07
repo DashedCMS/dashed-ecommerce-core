@@ -305,6 +305,7 @@ class ProductResource extends Resource
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
                 Repeater::make('images')
+                    ->label('Afbeeldingen')
                     ->schema([
                         FileUpload::make('image')
                             ->directory('qcommerce/products/images')
@@ -318,6 +319,7 @@ class ProductResource extends Resource
                                 'max:1000',
                             ]),
                     ])
+                    ->defaultItems(0)
                     ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
             ])
 //            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
