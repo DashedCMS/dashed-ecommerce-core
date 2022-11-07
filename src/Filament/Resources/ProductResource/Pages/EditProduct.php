@@ -176,7 +176,13 @@ class EditProduct extends EditRecord
                 }
                 $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $data["product_characteristic_$productCharacteristic->id"]);
                 $thisProductCharacteristic->save();
-                unset($data['product_characteristic_' . $productCharacteristic->id]);
+                unset($data["product_characteristic_$productCharacteristic->id"]);
+            }
+        }
+
+        foreach($data as $key => $dataItem){
+            if(str($key)->contains('product_characteristic_')){
+                unset($data[$key]);
             }
         }
 
