@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
@@ -66,6 +67,10 @@ class Product extends Model
     protected static function booted()
     {
         static::created(function ($product) {
+            ProductCreatedEvent::dispatch($product);
+        });
+
+        static::saved(function ($product) {
             Cache::tags(['products', 'product-' . $product->id])->flush();
             if ($product->parentProduct) {
                 Cache::tags(['product-' . $product->parentProduct->id])->flush();
@@ -74,16 +79,10 @@ class Product extends Model
                 }
             }
 
-            ProductCreatedEvent::dispatch($product);
-        });
-
-        static::updated(function ($product) {
-            Cache::tags(['products', 'product-' . $product->id])->flush();
-            if ($product->parentProduct) {
-                Cache::tags(['product-' . $product->parentProduct->id])->flush();
-                foreach ($product->parentProduct->childProducts as $childProduct) {
-                    Cache::tags(['product-' . $childProduct->id])->flush();
-                }
+            if ($product->is_bundle && $product->type == 'variable' && !$product->parent_product_id) {
+                $product->is_bundle = false;
+                $product->save();
+                $product->bundleProducts()->detach();
             }
         });
 
@@ -140,6 +139,16 @@ class Product extends Model
     public function scopePublic($query)
     {
         $query->where('public', 1);
+    }
+
+    public function scopeIsNotBundle($query)
+    {
+        $query->where('is_bundle', 0);
+    }
+
+    public function scopeIsBundle($query)
+    {
+        $query->where('is_bundle', 1);
     }
 
     public function scopeNotParentProduct($query)
@@ -308,7 +317,7 @@ class Product extends Model
 
     public function getUrl($locale = null)
     {
-        if (! $locale) {
+        if (!$locale) {
             $locale = App::getLocale();
         }
 
@@ -365,7 +374,7 @@ class Product extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->public) {
+        if (!$this->public) {
             return false;
         }
 
@@ -374,7 +383,7 @@ class Product extends Model
         }
 
         $active = false;
-        if (! $this->start_date && ! $this->end_date) {
+        if (!$this->start_date && !$this->end_date) {
             $active = true;
         } else {
             if ($this->start_date && $this->end_date) {
@@ -394,7 +403,7 @@ class Product extends Model
             }
         }
         if ($active) {
-            if (! $this->sku || ! $this->price) {
+            if (!$this->sku || !$this->price) {
                 $active = false;
             }
         }
@@ -463,7 +472,7 @@ class Product extends Model
 
                 //If something does not work correct, check if below code makes sure there is a active one
                 //Array key must be string, otherwise Livewire renders it in order of id, instead of order from filter option
-                if (count($activeFilterOptionIds) && (! array_key_exists('filter-' . $activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
+                if (count($activeFilterOptionIds) && (!array_key_exists('filter-' . $activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
                     $filterOptionValues['filter-' . $activeFilterId] = [
                         'id' => $activeFilter->id,
                         'name' => $filterName,
@@ -502,12 +511,12 @@ class Product extends Model
         foreach ($showableFilters as &$showableFilter) {
             $correctFilterOptions = 0;
             foreach ($showableFilter['values'] as &$showableFilterValue) {
-                if (! $showableFilterValue['url']) {
+                if (!$showableFilterValue['url']) {
                     foreach ($childProducts as $childProduct) {
                         if ($childProduct->id != $this->id) {
                             $productIsCorrectForFilter = true;
                             foreach ($showableFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
-                                if (! $childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
+                                if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
                                     $productIsCorrectForFilter = false;
                                 }
                             }
@@ -516,11 +525,11 @@ class Product extends Model
                                     if ($activeFilterValue['id'] != $showableFilterValue['id']) {
                                         $productHasCorrectFilterOption = true;
                                         foreach ($activeFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
-                                            if (! $childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
+                                            if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
                                                 $productHasCorrectFilterOption = false;
                                             }
                                         }
-                                        if (! $productHasCorrectFilterOption) {
+                                        if (!$productHasCorrectFilterOption) {
                                             $productIsCorrectForFilter = false;
                                         }
                                     }
@@ -610,6 +619,17 @@ class Product extends Model
                     return true;
                 }
             }
+        } elseif ($this->is_bundle) {
+            $allBundleProductsInStock = true;
+//            return true;
+
+            foreach ($this->bundleProducts as $bundleProduct) {
+                if (!$bundleProduct->inStock()) {
+                    $allBundleProductsInStock = false;
+                }
+            }
+
+            return $allBundleProductsInStock;
         } else {
             if ($this->type == 'simple') {
                 return $this->stock() > 0;
@@ -633,17 +653,17 @@ class Product extends Model
     {
         //Todo: make editable if expectedInStockDateValid should be checked or not
 
-        if (! $this->use_stock) {
+        if (!$this->use_stock) {
             if ($this->stock_status == 'out_of_stock') {
                 return false;
             }
         }
 
-        if (! $this->out_of_stock_sellable) {
+        if (!$this->out_of_stock_sellable) {
             return false;
         }
 
-        if (Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && ! $this->expectedInStockDateValid()) {
+        if (Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && !$this->expectedInStockDateValid()) {
             return false;
         }
 
@@ -652,7 +672,7 @@ class Product extends Model
 
     public function isPreorderable()
     {
-        return $this->inStock() && ! $this->hasDirectSellableStock() && $this->use_stock;
+        return $this->inStock() && !$this->hasDirectSellableStock() && $this->use_stock;
     }
 
     public function expectedInStockDate()
@@ -668,7 +688,7 @@ class Product extends Model
     public function expectedInStockDateInWeeks()
     {
         $expectedInStockDate = self::expectedInStockDate();
-        if (! $expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
+        if (!$expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
             return 0;
         }
 
@@ -737,16 +757,6 @@ class Product extends Model
         return $this->hasMany(ProductCharacteristic::class);
     }
 
-//    public function montaPortalProduct()
-//    {
-//        return $this->hasOne(MontaportalProduct::class);
-//    }
-
-//    public function exactonlineProduct()
-//    {
-//        return $this->hasOne(ExactonlineProduct::class);
-//    }
-
     public function productExtras()
     {
         return $this->hasMany(ProductExtra::class)->with(['ProductExtraOptions']);
@@ -755,6 +765,11 @@ class Product extends Model
     public function allProductExtras()
     {
         return ProductExtra::where('product_id', $this->id)->orWhere('product_id', $this->parent_product_id)->with(['ProductExtraOptions'])->get();
+    }
+
+    public function bundleProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'qcommerce__product_bundle_products', 'product_id', 'bundle_product_id');
     }
 
     public function showableCharacteristics($withoutIds = [])
@@ -789,7 +804,7 @@ class Product extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,

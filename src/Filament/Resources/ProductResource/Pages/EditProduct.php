@@ -347,6 +347,7 @@ class EditProduct extends EditRecord
         $newProduct->productCategories()->sync($this->record->productCategories);
         $newProduct->shippingClasses()->sync($this->record->shippingClasses);
         $newProduct->activeProductFilters()->sync($this->record->activeProductFilters);
+        $newProduct->bundleProducts()->sync($this->record->bundleProducts);
 
         foreach (DB::table('qcommerce__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
             DB::table('qcommerce__product_characteristic')->insert([
