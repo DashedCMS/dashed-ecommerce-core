@@ -621,7 +621,6 @@ class Product extends Model
             }
         } elseif ($this->is_bundle) {
             $allBundleProductsInStock = true;
-//            return true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
                 if (! $bundleProduct->inStock()) {
