@@ -272,10 +272,14 @@ class Product extends Model
 
     public function getDiscountPriceAttribute()
     {
-        if ($this->new_price) {
-            return $this->new_price;
+        if ($this->childProducts()->count()) {
+            return $this->childProducts()->orderBy('price', 'ASC')->first()->new_price;
         } else {
-            return null;
+            if ($this->new_price) {
+                return $this->new_price;
+            } else {
+                return null;
+            }
         }
     }
 
