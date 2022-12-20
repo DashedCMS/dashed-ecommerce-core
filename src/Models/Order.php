@@ -458,7 +458,7 @@ class Order extends Model
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ? $order->invoice_id : $order->id) . '-' . $order->hash . '.pdf';
+                $invoicePath = '/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
             }
         }
