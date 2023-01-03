@@ -100,8 +100,7 @@ class OrderSettingsPage extends Page implements HasForms
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
                     ->label('Emails om de notificaties van lage voorraad naartoe te sturen')
                     ->placeholder('Voer een email in')
-                    ->reactive()
-                    ->required(),
+                    ->reactive(),
             ];
 
             $tabs[] = Tab::make($site['id'])
