@@ -32,10 +32,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -132,7 +132,7 @@ class EditProduct extends EditRecord
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
         //Only if is simple or variable && parent
-        if ((($data['type'] ?? 'variable') == 'variable' && ! ($data['parent_product_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
+        if ((($data['type'] ?? 'variable') == 'variable' && !($data['parent_product_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($data["product_filter_$productFilter->id"] ?? false) {
@@ -169,7 +169,7 @@ class EditProduct extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_$productCharacteristic->id"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
+                if (!$thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -177,6 +177,12 @@ class EditProduct extends EditRecord
                 $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $data["product_characteristic_$productCharacteristic->id"]);
                 $thisProductCharacteristic->save();
                 unset($data["product_characteristic_$productCharacteristic->id"]);
+            } else {
+                $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+                if ($thisProductCharacteristic) {
+                    $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, null);
+                    $thisProductCharacteristic->save();
+                }
             }
         }
 
@@ -300,7 +306,7 @@ class EditProduct extends EditRecord
 
     protected function getBreadcrumbs(): array
     {
-        if (! $this->record->parentProduct) {
+        if (!$this->record->parentProduct) {
             return parent::getBreadcrumbs();
         }
 
