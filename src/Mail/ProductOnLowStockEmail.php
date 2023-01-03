@@ -24,7 +24,8 @@ class ProductOnLowStockEmail extends Mailable
     public function build()
     {
         return $this->view('qcommerce-ecommerce-core::emails.product-low-stock')
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('product-low-stock-email-subject', 'products', 'Product :productName: low on stock', 'text', [
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->subject(Translation::get('product-low-stock-email-subject', 'products', 'Product :productName: low on stock', 'text', [
                 'productName' => $this->product->name,
             ]));
     }
