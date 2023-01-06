@@ -57,7 +57,7 @@ class ProductCategoryResource extends Resource
                     '2xl' => 6,
                 ])->schema([
                     Section::make('Content')
-                        ->schema(array_merge([
+                        ->schema([
                             Select::make('site_ids')
                                 ->multiple()
                                 ->label('Actief op sites')
@@ -142,7 +142,7 @@ class ProductCategoryResource extends Resource
                                     'xl' => 2,
                                     '2xl' => 2,
                                 ]),
-                            ], articles()->builder('blocks')))
+                        ])
                         ->columns(2)
                         ->columnSpan([
                             'default' => 1,

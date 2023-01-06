@@ -36,7 +36,8 @@ class OrderSettingsPage extends Page implements HasForms
         $sites = Sites::getSites();
         $locales = Locales::getLocales();
         foreach ($sites as $site) {
-            $formData["notification_invoice_emails_{$site['id']}"] = json_decode(Customsetting::get('notification_invoice_emails', $site['id'], '{}'));
+            $formData["notification_invoice_emails_{$site['id']}"] = json_decode(Customsetting::get('notification_invoice_emails', $site['id'], '{}'), true);
+            $formData["notification_low_stock_emails_{$site['id']}"] = json_decode(Customsetting::get('notification_low_stock_emails', $site['id'], '{}'), true);
         }
 
         $formData["order_index_show_other_statuses"] = Customsetting::get('order_index_show_other_statuses', null, true) ? true : false;
@@ -87,13 +88,19 @@ class OrderSettingsPage extends Page implements HasForms
             $schema = [
                 Placeholder::make('label')
                     ->label("Notificaties voor bestellingen op {$site['name']}")
-                    ->content('Stel extra opties in voor de notificaties.'),
+                    ->content('Stel extra opties in voor de notificaties.')
+                    ->columnSpan(2),
                 TagsInput::make("notification_invoice_emails_{$site['id']}")
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
                     ->label('Emails om de bevestigingsmail van een bestelling naar te sturen')
                     ->placeholder('Voer een email in')
                     ->reactive()
                     ->required(),
+                TagsInput::make("notification_low_stock_emails_{$site['id']}")
+                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->label('Emails om de notificaties van lage voorraad naartoe te sturen')
+                    ->placeholder('Voer een email in')
+                    ->reactive(),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -213,6 +220,15 @@ class OrderSettingsPage extends Page implements HasForms
             }
             Customsetting::set('notification_invoice_emails', json_encode($emails), $site['id']);
             $formState["notification_invoice_emails_{$site['id']}"] = $emails;
+
+            $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
+            foreach ($emails as $key => $email) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    unset($emails[$key]);
+                }
+            }
+            Customsetting::set('notification_low_stock_emails', json_encode($emails), $site['id']);
+            $formState["notification_low_stock_emails_{$site['id']}"] = $emails;
         }
 
         Customsetting::set('order_index_show_other_statuses', $this->form->getState()["order_index_show_other_statuses"]);

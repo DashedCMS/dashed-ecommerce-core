@@ -99,6 +99,52 @@ class ProductResource extends Resource
                 Toggle::make('public')
                     ->label('Openbaar')
                     ->default(1),
+                Toggle::make('is_bundle')
+                    ->label('Bundel product')
+                    ->helperText('Bestaat dit product uit meerdere andere producten?')
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && ! $get('parent_product_id'))
+                    ->reactive(),
+                Repeater::make('bundleProducts')
+                    ->relationship('bundleProducts')
+                    ->saveRelationshipsWhenHidden(false)
+                    ->saveRelationshipsUsing(function ($record, $state) {
+                        $bundleProductIds = [];
+
+                        foreach ($state as $bundleProduct) {
+                            if ($bundleProduct['bundle_product_id']) {
+                                $bundleProductIds[] = $bundleProduct['bundle_product_id'];
+                            }
+                        }
+
+                        $record->bundleProducts()->sync($bundleProductIds);
+                    })
+                    ->name('Bundel producten')
+                    ->reactive()
+                    ->schema([
+                        Select::make('bundle_product_id')
+                            ->label('Bundel product')
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $query) => Product::public()->publicShowable()->notParentProduct()->isNotBundle()->where('name', 'like', "%{$query}%")->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Product::find($value)?->name)
+                            ->required(),
+                    ])
+                    ->required()
+                    ->rules([
+                        'required',
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                $bundleProductIds = [];
+                                foreach ($value as $bundleProduct) {
+                                    if (! in_array($bundleProduct['bundle_product_id'], $bundleProductIds)) {
+                                        $bundleProductIds[] = $bundleProduct['bundle_product_id'];
+                                    } else {
+                                        $fail("You cannot add more then 1 of the same product in the bundle products.");
+                                    }
+                                }
+                            };
+                        },
+                    ])
+                    ->visible(fn (\Closure $get) => $get('is_bundle')),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina')
                     ->hidden(fn ($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_product_id)),
@@ -298,6 +344,7 @@ class ProductResource extends Resource
                 'lg' => 2,
             ]);
 //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
+
         $schema[] = Section::make('Meta')
             ->schema(static::metadataTab())
             ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id));
@@ -305,6 +352,7 @@ class ProductResource extends Resource
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
                 Repeater::make('images')
+                    ->label('Afbeeldingen')
                     ->schema([
                         FileUpload::make('image')
                             ->directory('qcommerce/products/images')
@@ -318,6 +366,7 @@ class ProductResource extends Resource
                                 'max:1000',
                             ]),
                     ])
+                    ->defaultItems(0)
                     ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
             ])
 //            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))

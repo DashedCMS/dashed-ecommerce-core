@@ -16,6 +16,7 @@ use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Concerns\HasMetadata;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Qubiqx\QcommerceEcommerceCore\Events\Products\ProductCreatedEvent;
 
@@ -66,6 +67,10 @@ class Product extends Model
     protected static function booted()
     {
         static::created(function ($product) {
+            ProductCreatedEvent::dispatch($product);
+        });
+
+        static::saved(function ($product) {
             Cache::tags(['products', 'product-' . $product->id])->flush();
             if ($product->parentProduct) {
                 Cache::tags(['product-' . $product->parentProduct->id])->flush();
@@ -74,16 +79,10 @@ class Product extends Model
                 }
             }
 
-            ProductCreatedEvent::dispatch($product);
-        });
-
-        static::updated(function ($product) {
-            Cache::tags(['products', 'product-' . $product->id])->flush();
-            if ($product->parentProduct) {
-                Cache::tags(['product-' . $product->parentProduct->id])->flush();
-                foreach ($product->parentProduct->childProducts as $childProduct) {
-                    Cache::tags(['product-' . $childProduct->id])->flush();
-                }
+            if ($product->is_bundle && $product->type == 'variable' && ! $product->parent_product_id) {
+                $product->is_bundle = false;
+                $product->save();
+                $product->bundleProducts()->detach();
             }
         });
 
@@ -105,12 +104,12 @@ class Product extends Model
         return LogOptions::defaults();
     }
 
-    public function scopeSearch($query)
+    public function scopeSearch($query, ?string $search = null)
     {
         $minPrice = request()->get('min-price') ? request()->get('min-price') : null;
         $maxPrice = request()->get('max-price') ? request()->get('max-price') : null;
 
-        $search = request()->get('search');
+        $search = request()->get('search') ?: $search;
 
         if ($minPrice) {
             $query->where('price', '>=', $minPrice);
@@ -127,12 +126,6 @@ class Product extends Model
                 ->orWhereRaw('LOWER(description) like ?', '%' . strtolower($search) . '%')
                 ->orWhereRaw('LOWER(search_terms) like ?', '%' . strtolower($search) . '%')
                 ->orWhere('slug', 'LIKE', "%$search%")
-                ->orWhere('weight', 'LIKE', "%$search%")
-                ->orWhere('length', 'LIKE', "%$search%")
-                ->orWhere('width', 'LIKE', "%$search%")
-                ->orWhere('height', 'LIKE', "%$search%")
-                ->orWhere('price', 'LIKE', "%$search%")
-                ->orWhere('new_price', 'LIKE', "%$search%")
                 ->orWhere('sku', 'LIKE', "%$search%")
                 ->orWhere('ean', 'LIKE', "%$search%");
         });
@@ -146,6 +139,16 @@ class Product extends Model
     public function scopePublic($query)
     {
         $query->where('public', 1);
+    }
+
+    public function scopeIsNotBundle($query)
+    {
+        $query->where('is_bundle', 0);
+    }
+
+    public function scopeIsBundle($query)
+    {
+        $query->where('is_bundle', 1);
     }
 
     public function scopeNotParentProduct($query)
@@ -269,10 +272,14 @@ class Product extends Model
 
     public function getDiscountPriceAttribute()
     {
-        if ($this->new_price) {
-            return $this->new_price;
+        if ($this->childProducts()->count()) {
+            return $this->childProducts()->orderBy('price', 'ASC')->first()->new_price;
         } else {
-            return null;
+            if ($this->new_price) {
+                return $this->new_price;
+            } else {
+                return null;
+            }
         }
     }
 
@@ -616,6 +623,16 @@ class Product extends Model
                     return true;
                 }
             }
+        } elseif ($this->is_bundle) {
+            $allBundleProductsInStock = true;
+
+            foreach ($this->bundleProducts as $bundleProduct) {
+                if (! $bundleProduct->inStock()) {
+                    $allBundleProductsInStock = false;
+                }
+            }
+
+            return $allBundleProductsInStock;
         } else {
             if ($this->type == 'simple') {
                 return $this->stock() > 0;
@@ -743,16 +760,6 @@ class Product extends Model
         return $this->hasMany(ProductCharacteristic::class);
     }
 
-//    public function montaPortalProduct()
-//    {
-//        return $this->hasOne(MontaportalProduct::class);
-//    }
-
-//    public function exactonlineProduct()
-//    {
-//        return $this->hasOne(ExactonlineProduct::class);
-//    }
-
     public function productExtras()
     {
         return $this->hasMany(ProductExtra::class)->with(['ProductExtraOptions']);
@@ -761,6 +768,11 @@ class Product extends Model
     public function allProductExtras()
     {
         return ProductExtra::where('product_id', $this->id)->orWhere('product_id', $this->parent_product_id)->with(['ProductExtraOptions'])->get();
+    }
+
+    public function bundleProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'qcommerce__product_bundle_products', 'product_id', 'bundle_product_id');
     }
 
     public function showableCharacteristics($withoutIds = [])

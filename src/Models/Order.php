@@ -458,7 +458,7 @@ class Order extends Model
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ? $order->invoice_id : $order->id) . '-' . $order->hash . '.pdf';
+                $invoicePath = '/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
             }
         }
@@ -499,8 +499,8 @@ class Order extends Model
         foreach (Product::whereIn('id', $this->orderProducts->pluck('product_id'))->get() as $product) {
             if ($product->low_stock_notification && $product->use_stock && $product->stock() < $product->low_stock_notification_limit) {
                 try {
-                    foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
-                        Mail::to($notificationInvoiceEmail)->send(new ProductOnLowStockEmail($product));
+                    foreach (Mails::getAdminLowStockNotificationEmails() as $lowStockNotificationEmail) {
+                        Mail::to($lowStockNotificationEmail)->send(new ProductOnLowStockEmail($product));
                     }
                 } catch (\Exception $e) {
                 }

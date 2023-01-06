@@ -200,6 +200,25 @@ class TransactionController extends FrontendController
             }
 
             $orderProduct->save();
+
+            foreach ($cartItem->model->bundleProducts as $bundleProduct) {
+                $orderProduct = new OrderProduct();
+                $orderProduct->price = 0;
+                $orderProduct->discount = 0;
+                $orderProduct->quantity = $cartItem->qty;
+                $orderProduct->product_id = $bundleProduct->id;
+                $orderProduct->order_id = $order->id;
+                $orderProduct->name = $bundleProduct->name;
+                $orderProduct->sku = $bundleProduct->sku;
+
+                if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
+                    $orderProduct->is_pre_order = true;
+                    $orderProduct->pre_order_restocked_date = $bundleProduct->expected_in_stock_date;
+                    $orderContainsPreOrders = true;
+                }
+
+                $orderProduct->save();
+            }
         }
 
         if ($paymentCosts) {
