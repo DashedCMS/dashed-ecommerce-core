@@ -93,7 +93,7 @@
                                     <br>
                                     IP: {{ $record->ip }}
                                     <br>
-                                    Notitie: {{ $record->note ?: 'Geen notitie') }}
+                                    Notitie: {{ $record->note ?: 'Geen notitie' }}
                                     <br>
                                     Marketing geaccepteerd: {{ $record->marketing ? 'Ja' : 'Nee' }}
                                     <br>
