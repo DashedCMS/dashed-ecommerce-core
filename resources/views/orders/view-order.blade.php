@@ -93,7 +93,7 @@
                                     <br>
                                     IP: {{ $record->ip }}
                                     <br>
-                                    Notitie: {{ \Illuminate\Support\Str::limit($record->note ?: 'Geen notitie', 20, $end='...') }}
+                                    Notitie: {{ $record->note ?: 'Geen notitie') }}
                                     <br>
                                     Marketing geaccepteerd: {{ $record->marketing ? 'Ja' : 'Nee' }}
                                     <br>
