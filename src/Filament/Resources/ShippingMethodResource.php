@@ -74,11 +74,14 @@ class ShippingMethodResource extends Resource
                         ->required(),
                     TextInput::make('minimum_order_value')
                         ->label('Vanaf hoeveel € moet deze verzendmethode geldig zijn')
+                        ->numeric()
                         ->rules([
                             'numeric',
                         ]),
                     TextInput::make('maximum_order_value')
                         ->label('Tot hoeveel € moet deze verzendmethode geldig zijn (zet op 100000 voor oneindig)')
+                        ->numeric()
+                        ->maxValue(100000)
                         ->rules([
                             'numeric',
                         ]),
