@@ -2,13 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceTranslations\Models\Translation;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
