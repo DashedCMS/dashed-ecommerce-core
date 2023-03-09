@@ -3,17 +3,17 @@
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\View;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 use Qubiqx\QcommerceEcommerceCore\Classes\Products;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 
 class ProductCategory extends Model
 {
@@ -139,6 +139,7 @@ class ProductCategory extends Model
     {
         return $this->belongsToMany(Product::class, 'qcommerce__product_category');
     }
+
     public static function resolveRoute($parameters = [])
     {
         $slug = $parameters['slug'] ?? '';
