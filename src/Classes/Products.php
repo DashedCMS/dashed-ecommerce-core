@@ -44,7 +44,7 @@ class Products
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        $products = Product::search()->thisSite()->publicShowable()->limit($limit)->orderBy($orderBy, $order)->with(['parentProduct']);
+        $products = Product::search()->publicShowable()->limit($limit)->orderBy($orderBy, $order)->with(['parent']);
         if ($topLevelProductOnly) {
             //publicShowable stops the childProducts from showing
             $products->topLevel();

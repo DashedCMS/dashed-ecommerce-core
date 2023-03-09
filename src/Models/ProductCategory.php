@@ -119,7 +119,7 @@ class ProductCategory extends Model
                 $childProductCategoryIds[] = $childProductCategory->id;
                 $childs[] = $childProductCategory;
             }
-            $childProductCategories = self::with(['products'])->whereIn('parent_category_id', $childProductCategoryIds)->get();
+            $childProductCategories = self::with(['products'])->whereIn('parent_id', $childProductCategoryIds)->get();
         }
 
         return $childs;
@@ -127,7 +127,7 @@ class ProductCategory extends Model
 
     public function getFirstChilds()
     {
-        return self::with(['products'])->where('parent_category_id', $this->id)->get();
+        return self::with(['products'])->where('parent_id', $this->id)->get();
     }
 
     public function products()
