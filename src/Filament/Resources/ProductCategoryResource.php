@@ -9,12 +9,14 @@ use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Concerns\Translatable;
+use Qubiqx\QcommerceCore\Filament\Concerns\HasVisitableTab;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceCore\Filament\Concerns\HasMetadataTab;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
@@ -24,7 +26,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pag
 class ProductCategoryResource extends Resource
 {
     use Translatable;
-    use HasMetadataTab;
+    use HasVisitableTab;
 
     protected static ?string $model = ProductCategory::class;
 
@@ -58,34 +60,6 @@ class ProductCategoryResource extends Resource
                 ])->schema([
                     Section::make('Content')
                         ->schema([
-                            Select::make('site_ids')
-                                ->multiple()
-                                ->label('Actief op sites')
-                                ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
-                                ->hidden(function () {
-                                    return ! (Sites::getAmountOfSites() > 1);
-                                })
-                                ->required()
-                                ->columnSpan([
-                                    'default' => 2,
-                                    'sm' => 2,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                    'xl' => 2,
-                                    '2xl' => 2,
-                                ]),
-                            Select::make('parent_category_id')
-                                ->options(fn ($record) => ProductCategory::where('id', '!=', $record->id ?? 0)->pluck('name', 'id'))
-                                ->searchable()
-                                ->label('Bovenliggende product categorie')
-                                ->columnSpan([
-                                    'default' => 2,
-                                    'sm' => 2,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                    'xl' => 2,
-                                    '2xl' => 2,
-                                ]),
                             TextInput::make('name')
                                 ->label('Naam')
                                 ->required()
@@ -159,7 +133,17 @@ class ProductCategoryResource extends Resource
                         'xl' => 2,
                         '2xl' => 2,
                     ])->schema([
-                        Section::make('Meta Data')
+                        Section::make('Algemene informatie')
+                            ->schema(static::publishTab())
+                            ->columnSpan([
+                                'default' => 1,
+                                'sm' => 1,
+                                'md' => 1,
+                                'lg' => 1,
+                                'xl' => 2,
+                                '2xl' => 2,
+                            ]),
+                        Section::make('Meta data')
                             ->schema(static::metadataTab())
                             ->columnSpan([
                                 'default' => 1,
@@ -185,18 +169,11 @@ class ProductCategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
+            ->columns(array_merge([
                 TextColumn::make('name')
                     ->label('Naam')
                     ->searchable(),
-                TagsColumn::make('site_ids')
-                    ->label('Actief op site(s)')
-                    ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1)),
-                TextColumn::make('parentProductCategory.name')
-                    ->label('Bovenliggende categorie')
-                    ->sortable(),
-            ])
+            ], static::visitableTableColumns()))
             ->filters([
                 //
             ]);

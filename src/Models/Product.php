@@ -68,7 +68,7 @@ class Product extends Model
                 }
             }
 
-            if ($product->is_bundle && $product->type == 'variable' && ! $product->parent_product_id) {
+            if ($product->is_bundle && $product->type == 'variable' && ! $product->parent_id) {
                 $product->is_bundle = false;
                 $product->save();
                 $product->bundleProducts()->detach();
@@ -133,7 +133,7 @@ class Product extends Model
             $query->where('type', '!=', 'variable');
         })->orWhere(function ($query) {
             $query->where('type', 'variable')
-                ->where('parent_product_id', '!=', null);
+                ->where('parent_id', '!=', null);
         });
     }
 
@@ -168,7 +168,7 @@ class Product extends Model
                     ->public();
             })->orWhere(function ($query) {
                 $query->where('type', 'variable')
-                    ->where('parent_product_id', '!=', null)
+                    ->where('parent_id', '!=', null)
                     ->where('sku', '!=', null)
                     ->where('price', '!=', null)
                     ->public();
@@ -185,7 +185,7 @@ class Product extends Model
 
     public function scopeTopLevel($query)
     {
-        $query->where('parent_product_id', null);
+        $query->where('parent_id', null);
     }
 
     public function scopeAvailableForShoppingFeed($query)
@@ -690,7 +690,7 @@ class Product extends Model
 
     public function allProductExtras()
     {
-        return ProductExtra::where('product_id', $this->id)->orWhere('product_id', $this->parent_product_id)->with(['ProductExtraOptions'])->get();
+        return ProductExtra::where('product_id', $this->id)->orWhere('product_id', $this->parent_id)->with(['ProductExtraOptions'])->get();
     }
 
     public function bundleProducts(): BelongsToMany
