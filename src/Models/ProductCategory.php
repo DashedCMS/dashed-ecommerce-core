@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -16,9 +17,7 @@ use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 class ProductCategory extends Model
 {
     use SoftDeletes;
-    use HasTranslations;
-    use LogsActivity;
-    use HasMetadata;
+    use IsVisitable;
 
     protected static $logFillable = true;
 
