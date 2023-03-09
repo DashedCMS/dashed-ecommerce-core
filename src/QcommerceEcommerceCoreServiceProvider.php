@@ -111,14 +111,12 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
                     'pluralName' => 'Products',
                     'class' => Product::class,
                     'nameField' => 'name',
-                    'routeHandler' => ProductRouteHandler::class,
                 ],
                 'productCategory' => [
                     'name' => 'Product categorie',
                     'pluralName' => 'Product categorieën',
                     'class' => ProductCategory::class,
                     'nameField' => 'name',
-                    'routeHandler' => ProductCategoryRouteHandler::class,
                 ],
             ])
         );

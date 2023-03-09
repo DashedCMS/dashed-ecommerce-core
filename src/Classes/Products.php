@@ -144,7 +144,7 @@ class Products
             }
         }
 
-        $products = Product::whereIn('id', $correctProductIds)->search()->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'shippingClasses', 'productCategories', 'parentProduct'])->paginate($pagination)->withQueryString();
+        $products = Product::whereIn('id', $correctProductIds)->search()->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])->paginate($pagination)->withQueryString();
 
         foreach ($products as $product) {
             if ($product->parentProduct && $product->parentProduct->only_show_parent_product) {
