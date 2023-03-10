@@ -160,7 +160,7 @@ class ListProducts extends ListRecords
                     }
                     $record->save();
                 })
-                ->hidden(fn ($record) => $record->type == 'variable' && ! $record->parent_product_id),
+                ->hidden(fn ($record) => $record->type == 'variable' && ! $record->parent_id),
         ]);
     }
 

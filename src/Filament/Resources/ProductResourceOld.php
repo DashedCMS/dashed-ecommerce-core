@@ -83,10 +83,10 @@ class ProductResourceOld extends Resource
                     ->default('simple')
                     ->required()
                     ->reactive()
-                    ->hidden(fn ($record) => $record && $record->parent_product_id),
-                Select::make('parent_product_id')
+                    ->hidden(fn ($record) => $record && $record->parent_id),
+                Select::make('parent_id')
                     ->label('Bovenliggende product')
-                    ->options(Product::where('type', 'variable')->whereNull('parent_product_id')->pluck('name', 'id'))
+                    ->options(Product::where('type', 'variable')->whereNull('parent_id')->pluck('name', 'id'))
                     ->reactive()
                     ->searchable()
                     ->hidden(fn (\Closure $get, $livewire) => $get('type') != 'variable' || $livewire instanceof EditProduct),
@@ -94,15 +94,15 @@ class ProductResourceOld extends Resource
                     ->label('Actief op sites')
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                     ->default([Sites::getFirstSite()['id']])
-                    ->hidden(fn (\Closure $get) => ! (Sites::getAmountOfSites() > 1) || $get('parent_product_id') && $get('type') == 'variable')
+                    ->hidden(fn (\Closure $get) => ! (Sites::getAmountOfSites() > 1) || $get('parent_id') && $get('type') == 'variable')
                     ->required()
-                    ->disabled(fn ($record) => $record && $record->parent_product_id),
+                    ->disabled(fn ($record) => $record && $record->parent_id),
                 Toggle::make('public')
                     ->label('Openbaar')
                     ->default(1),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina')
-                    ->hidden(fn ($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') != 'variable' || ($record && $record->parent_id)),
             ])
             ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
 
@@ -182,7 +182,7 @@ class ProductResourceOld extends Resource
                     ])
                     ->hidden(fn (\Closure $get) => ! $get('limit_purchases_per_customer')),
             ])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id))
             ->collapsible();
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
@@ -197,7 +197,7 @@ class ProductResourceOld extends Resource
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_id);
             $productFilterSchema[] = Toggle::make("product_filter_{$productFilter->id}_use_for_variations")
                 ->label("$productFilter->name gebruiken voor variaties op de product pagina")
                 ->hidden(fn (\Closure $get) => ! $get("product_filter_$productFilter->id"))
@@ -205,7 +205,7 @@ class ProductResourceOld extends Resource
                     'default' => 1,
                     'lg' => 2,
                 ])
-                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_product_id);
+                ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && $record && $record->parent_id);
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                     ->label("$productFilter->name: $productFilterOption->name");
@@ -214,7 +214,7 @@ class ProductResourceOld extends Resource
                 ->schema($productFiltersSchema)
                 ->collapsible()
                 ->collapsed()
-                ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_product_id));
+                ->hidden(fn (\Closure $get, $record) => ! $get("product_filter_$productFilter->id") || ($get('type') == 'variable' && $record && ! $record->parent_id));
         }
 
         $schema[] = Section::make('Filters beheren')
@@ -240,7 +240,7 @@ class ProductResourceOld extends Resource
                 'default' => 1,
                 'lg' => 3,
             ])
-            ->hidden(fn ($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)))
+            ->hidden(fn ($livewire, \Closure $get, $record) => $livewire instanceof CreateProduct || ($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)))
             ->collapsed(fn ($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Content beheren')
@@ -265,36 +265,36 @@ class ProductResourceOld extends Resource
                         'default' => 1,
                         'lg' => 2,
                     ])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 Textarea::make('short_description')
                     ->label('Korte beschrijving')
                     ->rows(5)
                     ->maxLength(2500)
                     ->rules(['max:2500',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 Textarea::make('search_terms')
                     ->label('Zoekwoorden')
                     ->rows(2)
                     ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden')
                     ->maxLength(2500)
                     ->rules(['max:2500',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 TextInput::make('meta_title')
                     ->label('Meta titel')
                     ->maxLength(100)
                     ->rules(['max:100',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 Textarea::make('meta_description')
                     ->label('Meta descriptie')
                     ->rows(2)
                     ->maxLength(200)
                     ->rules(['max:200',])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 FileUpload::make('meta_image')
                     ->directory('qcommerce/products/meta-images')
                     ->name('Meta afbeelding')
                     ->image()
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 TextInput::make('order')
                     ->label('Volgorde')
                     ->required()
@@ -310,7 +310,7 @@ class ProductResourceOld extends Resource
                     ->blocks(cms()->builder('blocks'))
                     ->columnSpan(['default' => 1,
                         'lg' => 2,])
-                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id)),])
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),])
             ->columns([
                 'default' => 1,
                 'lg' => 2,
@@ -335,7 +335,7 @@ class ProductResourceOld extends Resource
                     ])
                     ->createItemButtonLabel('Nieuwe afbeelding toevoegen'),
             ])
-//            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+//            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id))
             ->collapsible();
 
         $schema[] = Section::make('Praktische informatie beheren')
@@ -406,7 +406,7 @@ class ProductResourceOld extends Resource
                     ->rules(['max:255',]),])
             ->columns(['default' => 1,
                 'lg' => 2,])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id))
             ->collapsible();
 
         $schema[] = Section::make('Linkjes beheren')
@@ -428,7 +428,7 @@ class ProductResourceOld extends Resource
                 'default' => 1,
                 'lg' => 2,
             ])
-            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_product_id') || $record && ! $record->parent_product_id))
+            ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id))
             ->collapsible();
 
         $schema[] = Section::make('Product extras')

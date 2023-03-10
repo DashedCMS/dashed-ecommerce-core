@@ -24,7 +24,7 @@ class CreateProduct extends CreateRecord
             $data['slug'] .= Str::random(1);
         }
 
-        $data['site_ids'] = $data['site_ids'] ?? (isset($data['parent_product_id']) && $data['parent_product_id'] ? Product::find($data['parent_product_id'])->site_ids : [Sites::getFirstSite()['id']]);
+        $data['site_ids'] = $data['site_ids'] ?? (isset($data['parent_id']) && $data['parent_id'] ? Product::find($data['parent_id'])->site_ids : [Sites::getFirstSite()['id']]);
 //        $content = $data['content'] ?? [];
 //        $data['content'] = null;
 //        $data['content'][$this->activeFormLocale] = $content;

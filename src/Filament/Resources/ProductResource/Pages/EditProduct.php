@@ -123,8 +123,8 @@ class EditProduct extends EditRecord
             $this->record->productCategories()->sync($selectedProductCategories);
         }
 
-        if ($data['parent_product_id'] ?? false) {
-            foreach (Product::find($data['parent_product_id'])->childProducts as $childProduct) {
+        if ($data['parent_id'] ?? false) {
+            foreach (Product::find($data['parent_id'])->childProducts as $childProduct) {
                 $childProduct->shippingClasses()->sync($this->record->shippingClasses);
             }
         }
@@ -132,7 +132,7 @@ class EditProduct extends EditRecord
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
         //Only if is simple or variable && parent
-        if ((($data['type'] ?? 'variable') == 'variable' && ! ($data['parent_product_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
+        if ((($data['type'] ?? 'variable') == 'variable' && ! ($data['parent_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($data["product_filter_$productFilter->id"] ?? false) {
@@ -144,10 +144,10 @@ class EditProduct extends EditRecord
             }
         }
 
-        if ((($data['type'] ?? 'variable') == 'variable' && ($data['parent_product_id'] ?? true)) || ($data['type'] ?? 'variable') == 'simple') {
+        if ((($data['type'] ?? 'variable') == 'variable' && ($data['parent_id'] ?? true)) || ($data['type'] ?? 'variable') == 'simple') {
             $this->record->productFilters()->detach();
             foreach ($productFilters as $productFilter) {
-                if ((($data["product_filter_$productFilter->id"] ?? false) && ($this->record->activeProductFilters->contains($productFilter->id)) || (($data['parent_product_id'] ?? false) && Product::find($data['parent_product_id']) && Product::find($data['parent_product_id'])->activeProductFilters->contains($productFilter->id)))) {
+                if ((($data["product_filter_$productFilter->id"] ?? false) && ($this->record->activeProductFilters->contains($productFilter->id)) || (($data['parent_id'] ?? false) && Product::find($data['parent_id']) && Product::find($data['parent_id'])->activeProductFilters->contains($productFilter->id)))) {
                     foreach ($productFilter->productFilterOptions as $productFilterOption) {
                         if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
                             $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
@@ -219,7 +219,7 @@ class EditProduct extends EditRecord
 //
 //        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 //
-//        if (($this->record->type == 'variable' && ! $this->record->parent_product_id) || $this->record->type == 'simple') {
+//        if (($this->record->type == 'variable' && ! $this->record->parent_id) || $this->record->type == 'simple') {
 //            $this->record->activeProductFilters()->detach();
 //            foreach ($productFilters as $productFilter) {
 //                if ($this->data["product_filter_$productFilter->id"]) {
@@ -231,7 +231,7 @@ class EditProduct extends EditRecord
 //            }
 //        }
 //
-//        if (($this->record->type == 'variable' && $this->record->parent_product_id) || $this->record->type == 'simple') {
+//        if (($this->record->type == 'variable' && $this->record->parent_id) || $this->record->type == 'simple') {
 //            $this->record->productFilters()->detach();
 //            foreach ($productFilters as $productFilter) {
 //                if ($this->data["product_filter_$productFilter->id"] && ($this->record->activeProductFilters->contains($productFilter->id) || ($this->record->parentProduct && $this->record->parentProduct->activeProductFilters->contains($productFilter->id)))) {
@@ -321,7 +321,7 @@ class EditProduct extends EditRecord
     {
         $buttons = [];
 
-        if ($this->record->type != 'variable' || $this->record->parent_product_id) {
+        if ($this->record->type != 'variable' || $this->record->parent_id) {
             $buttons[] = Action::make('Bekijk product')
                 ->url($this->record->getUrl())
                 ->openUrlInNewTab();
