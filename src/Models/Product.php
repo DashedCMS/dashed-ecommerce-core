@@ -138,9 +138,9 @@ class Product extends Model
         });
     }
 
-    public function scopePublicShowable($query)
+    public function scopePublicShowable($query, bool $overridePublic = false)
     {
-        if (auth()->guest() || (auth()->check() && auth()->user()->role !== 'admin')) {
+        if (auth()->guest() || (auth()->check() && auth()->user()->role !== 'admin') && $overridePublic) {
             $query
                 ->public()
                 ->thisSite()
@@ -794,12 +794,12 @@ class Product extends Model
         if ($slugComponents[0] == Translation::get('products-slug', 'slug', 'products') && count($slugComponents) == 2) {
             $product = Product::thisSite()->where('slug->' . App::getLocale(), $slugComponents[1]);
             if (! auth()->check() || auth()->user()->role != 'admin') {
-                $product->publicShowable();
+                $product->publicShowable(true);
             }
             $product = $product->first();
 
             if (! $product) {
-                foreach (Product::thisSite()->publicShowable()->get() as $possibleProduct) {
+                foreach (Product::thisSite()->publicShowable(true)->get() as $possibleProduct) {
                     if (! $product && $possibleProduct->slug == $slugComponents[1]) {
                         $product = $possibleProduct;
                     }
