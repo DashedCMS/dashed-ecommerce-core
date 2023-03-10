@@ -399,7 +399,7 @@ class ProductResource extends Resource
                     ->helperText('21%, 9%, 0% of anders')
                     ->required()
                     ->rules(['numeric',
-                        'min:1',
+                        'min:0',
                         'max:100',
                         'required',])
                     ->default(21),
