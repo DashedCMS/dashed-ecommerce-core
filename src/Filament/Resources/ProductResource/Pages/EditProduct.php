@@ -115,8 +115,8 @@ class EditProduct extends EditRecord
         }
 
         $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
-        if ($this->record->parentProduct) {
-            foreach ($this->record->parentProduct->childProducts as $childProduct) {
+        if ($this->record->parent) {
+            foreach ($this->record->parent->childProducts as $childProduct) {
                 $childProduct->productCategories()->sync($selectedProductCategories);
             }
         } else {
@@ -203,16 +203,16 @@ class EditProduct extends EditRecord
 //        }
 //
 //        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
-//        if ($this->record->parentProduct) {
-//            foreach ($this->record->parentProduct->childProducts as $childProduct) {
+//        if ($this->record->parent) {
+//            foreach ($this->record->parent->childProducts as $childProduct) {
 //                $childProduct->productCategories()->sync($selectedProductCategories);
 //            }
 //        } else {
 //            $this->record->productCategories()->sync($selectedProductCategories);
 //        }
 //
-//        if ($this->record->parentProduct) {
-//            foreach ($this->record->parentProduct->childProducts as $childProduct) {
+//        if ($this->record->parent) {
+//            foreach ($this->record->parent->childProducts as $childProduct) {
 //                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
 //            }
 //        }
@@ -234,7 +234,7 @@ class EditProduct extends EditRecord
 //        if (($this->record->type == 'variable' && $this->record->parent_id) || $this->record->type == 'simple') {
 //            $this->record->productFilters()->detach();
 //            foreach ($productFilters as $productFilter) {
-//                if ($this->data["product_filter_$productFilter->id"] && ($this->record->activeProductFilters->contains($productFilter->id) || ($this->record->parentProduct && $this->record->parentProduct->activeProductFilters->contains($productFilter->id)))) {
+//                if ($this->data["product_filter_$productFilter->id"] && ($this->record->activeProductFilters->contains($productFilter->id) || ($this->record->parent && $this->record->parent->activeProductFilters->contains($productFilter->id)))) {
 //                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
 //                        if ($this->data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]) {
 //                            $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
@@ -262,8 +262,8 @@ class EditProduct extends EditRecord
     {
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        if ($this->record->parentProduct) {
-            $activeProductFilters = $this->record->parentProduct->activeProductFilters;
+        if ($this->record->parent) {
+            $activeProductFilters = $this->record->parent->activeProductFilters;
         } else {
             $activeProductFilters = $this->record->activeProductFilters;
         }
@@ -306,12 +306,12 @@ class EditProduct extends EditRecord
 
     protected function getBreadcrumbs(): array
     {
-        if (! $this->record->parentProduct) {
+        if (! $this->record->parent) {
             return parent::getBreadcrumbs();
         }
 
         $breadcrumbs = parent::getBreadcrumbs();
-        $breadcrumbs = array_merge([route('filament.resources.products.edit', [$this->record->parentProduct->id]) => "{$this->record->parentProduct->name}"], $breadcrumbs);
+        $breadcrumbs = array_merge([route('filament.resources.products.edit', [$this->record->parent->id]) => "{$this->record->parent->name}"], $breadcrumbs);
         $breadcrumbs = array_merge([route('filament.resources.products.index') => "Producten"], $breadcrumbs);
 
         return $breadcrumbs;

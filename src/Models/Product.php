@@ -62,9 +62,9 @@ class Product extends Model
 
         static::saved(function ($product) {
             Cache::tags(['products', 'product-' . $product->id])->flush();
-            if ($product->parentProduct) {
-                Cache::tags(['product-' . $product->parentProduct->id])->flush();
-                foreach ($product->parentProduct->childProducts as $childProduct) {
+            if ($product->parent) {
+                Cache::tags(['product-' . $product->parent->id])->flush();
+                foreach ($product->parent->childProducts as $childProduct) {
                     Cache::tags(['product-' . $childProduct->id])->flush();
                 }
             }
@@ -336,8 +336,8 @@ class Product extends Model
             }
         }
         if ($active) {
-            if ($this->parentProduct) {
-                $active = $this->parentProduct->public;
+            if ($this->parent) {
+                $active = $this->parent->public;
             }
         }
 
@@ -362,7 +362,7 @@ class Product extends Model
 
     public function filters()
     {
-        $parentProduct = $this->parentProduct;
+        $parentProduct = $this->parent;
 
         if ($parentProduct) {
             $childProducts = $parentProduct->childProducts()->publicShowable()->get();
@@ -561,7 +561,7 @@ class Product extends Model
             if ($this->type == 'simple') {
                 return $this->stock() > 0;
             } elseif ($this->type == 'variable') {
-                if ($this->parentProduct) {
+                if ($this->parent) {
                     return $this->stock() > 0;
                 } else {
                     foreach ($this->childProducts() as $childProduct) {
@@ -704,7 +704,7 @@ class Product extends Model
         return Cache::tags(["product-$this->id"])->rememberForever("product-showable-characteristics-" . $this->id, function () use ($withoutIds) {
             $characteristics = [];
 
-            $parentProduct = $this->parentProduct;
+            $parentProduct = $this->parent;
 
             if ($parentProduct) {
                 $activeFilters = $parentProduct->activeProductFilters;

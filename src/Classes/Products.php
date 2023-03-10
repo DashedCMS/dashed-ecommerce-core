@@ -52,8 +52,8 @@ class Products
         $products = $products->get();
 
         foreach ($products as $product) {
-            if ($product->parentProduct && $product->parentProduct->only_show_parent_product) {
-                $product->name = $product->parentProduct->name;
+            if ($product->parent && $product->parent->only_show_parent_product) {
+                $product->name = $product->parent->name;
             }
         }
 
@@ -131,11 +131,11 @@ class Products
                 }
             }
 
-            if ($productIsValid && $product->parentProduct && $product->parentProduct->only_show_parent_product) {
-                if (in_array($product->parentProduct->id, $onlyShowParentIds)) {
+            if ($productIsValid && $product->parent && $product->parent->only_show_parent_product) {
+                if (in_array($product->parent->id, $onlyShowParentIds)) {
                     $productIsValid = false;
                 } else {
-                    $onlyShowParentIds[] = $product->parentProduct->id;
+                    $onlyShowParentIds[] = $product->parent->id;
                 }
             }
 
@@ -147,8 +147,8 @@ class Products
         $products = Product::whereIn('id', $correctProductIds)->search()->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])->paginate($pagination)->withQueryString();
 
         foreach ($products as $product) {
-            if ($product->parentProduct && $product->parentProduct->only_show_parent_product) {
-                $product->name = $product->parentProduct->name;
+            if ($product->parent && $product->parent->only_show_parent_product) {
+                $product->name = $product->parent->name;
             }
         }
 
