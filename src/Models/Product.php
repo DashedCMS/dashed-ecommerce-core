@@ -221,7 +221,7 @@ class Product extends Model
                     'name' => $productCategory->name,
                     'url' => $productCategory->getUrl(),
                 ];
-                $productCategory = ProductCategory::find($productCategory->parent_category_id);
+                $productCategory = ProductCategory::find($productCategory->parent_id);
             }
         }
 

@@ -23,10 +23,10 @@ class ProductCategories
     {
         $selectedProductCategories = ProductCategory::find($selectedProductCategoriesIds);
         foreach ($selectedProductCategories as $selectedProductCategory) {
-            $parentProductCategory = ProductCategory::find($selectedProductCategory->parent_category_id);
+            $parentProductCategory = ProductCategory::find($selectedProductCategory->parent_id);
             while ($parentProductCategory) {
                 $selectedProductCategoriesIds[] = $parentProductCategory->id;
-                $parentProductCategory = ProductCategory::find($parentProductCategory->parent_category_id);
+                $parentProductCategory = ProductCategory::find($parentProductCategory->parent_id);
             }
         }
 

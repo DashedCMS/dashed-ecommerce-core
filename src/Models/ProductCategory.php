@@ -72,7 +72,7 @@ class ProductCategory extends Model
 
     public function parentProductCategory()
     {
-        return $this->belongsTo(self::class, 'parent_category_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function getProductsUrl()
@@ -117,7 +117,7 @@ class ProductCategory extends Model
     public function getChilds()
     {
         $childs = [];
-        $childProductCategories = self::where('parent_category_id', $this->id)->get();
+        $childProductCategories = self::where('parent_id', $this->id)->get();
         while ($childProductCategories->count()) {
             $childProductCategoryIds = [];
             foreach ($childProductCategories as $childProductCategory) {
@@ -152,7 +152,7 @@ class ProductCategory extends Model
                 if (! $productCategory) {
                     return 'pageNotFound';
                 }
-                $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
+                $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_id', $productCategory->id)->first();
             }
             if (View::exists('qcommerce.categories.show') && $productCategory) {
                 seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
@@ -193,7 +193,7 @@ class ProductCategory extends Model
                     array_shift($slugComponents);
                     foreach ($slugComponents as $slugComponent) {
                         if ($productCategory) {
-                            $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_category_id', $productCategory->id)->first();
+                            $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_id', $productCategory->id)->first();
                         } else {
                             return 'pageNotFound';
                         }
