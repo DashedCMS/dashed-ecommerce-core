@@ -45,8 +45,6 @@ class ChildProductsRelationManager extends HasManyRelationManager
                         'description',
                         'search_terms',
                         'content',
-                        'meta_title',
-                        'meta_description',
                     ])
                     ->sortable(),
                 TextColumn::make('total_purchases')
