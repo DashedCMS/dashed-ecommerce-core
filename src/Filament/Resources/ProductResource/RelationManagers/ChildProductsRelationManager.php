@@ -7,6 +7,7 @@ use Filament\Resources\Table;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Support\Actions\Modal\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\LinkAction;
 use Filament\Tables\Columns\TextColumn;
@@ -56,7 +57,8 @@ class ChildProductsRelationManager extends HasManyRelationManager
                 //
             ])
             ->headerActions([
-                ButtonAction::make('Aanmaken')
+                Action::make('Aanmaken')
+                    ->button()
                     ->url(fn ($record) => route('filament.resources.products.create')),
             ]);
     }
@@ -64,7 +66,8 @@ class ChildProductsRelationManager extends HasManyRelationManager
     protected function getTableActions(): array
     {
         return array_merge(parent::getTableActions(), [
-            ButtonAction::make('quickActions')
+            Action::make('quickActions')
+                ->button()
                 ->label('Quick')
                 ->color('primary')
                 ->modalHeading('Snel bewerken')
