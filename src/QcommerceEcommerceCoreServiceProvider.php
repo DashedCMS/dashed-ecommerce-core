@@ -62,7 +62,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
-//            $schedule->command(RecalculatePurchasesCommand::class)->weekly();
+            //            $schedule->command(RecalculatePurchasesCommand::class)->weekly();
             $schedule->command(CancelOldOrders::class)->everyFifteenMinutes();
         });
 

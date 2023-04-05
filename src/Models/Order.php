@@ -357,9 +357,9 @@ class Order extends Model
 
     public function labelPrinted()
     {
-//        if ($this->keen_delivery_label_printed) {
-//            return true;
-//        }
+        //        if ($this->keen_delivery_label_printed) {
+        //            return true;
+        //        }
 
         return false;
     }
@@ -875,11 +875,11 @@ class Order extends Model
         if ($sendCustomerEmail) {
             try {
                 $createCreditInvoice ? Mail::to($this->email)->send(new OrderCancelledWithCreditMail($newOrder)) : Mail::to($this->email)->send(new OrderCancelledMail($newOrder));
-//                if ($createCreditInvoice) {
-//                    Mail::to($this->email)->send(new OrderCancelledWithCreditMail($newOrder));
-//                } else {
-//                    Mail::to($this->email)->send(new OrderCancelledMail($newOrder));
-//                }
+                //                if ($createCreditInvoice) {
+                //                    Mail::to($this->email)->send(new OrderCancelledWithCreditMail($newOrder));
+                //                } else {
+                //                    Mail::to($this->email)->send(new OrderCancelledMail($newOrder));
+                //                }
                 $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send' : 'order.cancelled.mail.send';
             } catch (\Exception $e) {
                 $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send.failed' : 'order.cancelled.mail.send.failed';
@@ -898,9 +898,9 @@ class Order extends Model
         //Always send the invoice to admins
         if ($createCreditInvoice) {
             try {
-//                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
+                //                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                 Mail::to(Mails::getAdminNotificationEmails())->send(new AdminOrderCancelledMail($newOrder));
-//                }
+                //                }
             } catch (\Exception $e) {
             }
         }
@@ -1006,7 +1006,7 @@ class Order extends Model
                 ];
             }
         }
-//        return Orders::getFulfillmentStatusses()[$this->fulfillment_status]['name'] ?? '';
+        //        return Orders::getFulfillmentStatusses()[$this->fulfillment_status]['name'] ?? '';
     }
 
     public function orderStatus()

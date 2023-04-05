@@ -303,11 +303,11 @@ class CreateOrder extends Page implements HasForms
 
         $productSchemas = [];
 
-//        $productSchemas[] = MultiSelect::make('activatedProducts')
-//            ->label('Kies producten')
-//            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
-//            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
-//            ->reactive();
+        //        $productSchemas[] = MultiSelect::make('activatedProducts')
+        //            ->label('Kies producten')
+        //            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
+        //            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
+        //            ->reactive();
 
         $productSchemas[] = MultiSelect::make('activatedProducts')
             ->label('Kies producten')
@@ -703,8 +703,8 @@ class CreateOrder extends Page implements HasForms
 
             if ($depositAmount > 0.00) {
                 $orderPayment->amount = $depositAmount;
-//                $orderPayment->psp = $depositPaymentMethod['psp'];
-//                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
+                //                $orderPayment->psp = $depositPaymentMethod['psp'];
+                //                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
 
                 $order->has_deposit = true;
                 $order->save();
@@ -741,20 +741,20 @@ class CreateOrder extends Page implements HasForms
             return redirect($transaction['redirectUrl'], 303);
         }
 
-//        if ($paymentMethod['system'] == 'own' && $orderPayment->status == 'paid') {
-//            $newStatus = 'waiting_for_confirmation';
-//            $order->changeStatus($newStatus);
-//            return redirect(route('qcommerce.orders.edit', [$order]));
-//        } elseif ($paymentMethod['system'] == 'mollie' || (Mollie::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
-//            $transaction = Mollie::startTransaction($order, $orderPayment);
-//
-//            return redirect($transaction->getCheckoutUrl(), 303);
-//        } elseif ($paymentMethod['system'] == 'paynl' || (PayNL::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
-//            $transaction = PayNL::startTransaction($order, $orderPayment);
-//
-//            return redirect($transaction->getRedirectUrl(), 303);
-//        } else {
-//            throw new \Exception('Cannot start payment');
-//        }
+        //        if ($paymentMethod['system'] == 'own' && $orderPayment->status == 'paid') {
+        //            $newStatus = 'waiting_for_confirmation';
+        //            $order->changeStatus($newStatus);
+        //            return redirect(route('qcommerce.orders.edit', [$order]));
+        //        } elseif ($paymentMethod['system'] == 'mollie' || (Mollie::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
+        //            $transaction = Mollie::startTransaction($order, $orderPayment);
+        //
+        //            return redirect($transaction->getCheckoutUrl(), 303);
+        //        } elseif ($paymentMethod['system'] == 'paynl' || (PayNL::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
+        //            $transaction = PayNL::startTransaction($order, $orderPayment);
+        //
+        //            return redirect($transaction->getRedirectUrl(), 303);
+        //        } else {
+        //            throw new \Exception('Cannot start payment');
+        //        }
     }
 }

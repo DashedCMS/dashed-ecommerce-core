@@ -8,86 +8,86 @@ use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
 class PaymentMethods
 {
     //Todo: 2 functions below must be 1 function inside ShoppingCart class
-//    public static function getAvailablePaymentMethods($countryName)
-//    {
-//        $paymentMethods = self::getPaymentMethods();
-//        $shippingZones = ShippingZone::get();
-//        foreach ($shippingZones as $shippingZone) {
-//            $shippingZoneIsActive = false;
-//            foreach (json_decode($shippingZone->zones, true) as $zone) {
-//                foreach (Countries::getCountries() as $country) {
-//                    if ($country['name'] == $zone['id']) {
-//                        if (strtolower($country['name']) == strtolower($countryName)) {
-//                            $shippingZoneIsActive = true;
-//                        }
-//                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
-//                            $shippingZoneIsActive = true;
-//                        }
-//                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
-//                            $shippingZoneIsActive = true;
-//                        }
-//                        if (strtolower($country['demonym']) == strtolower($countryName)) {
-//                            $shippingZoneIsActive = true;
-//                        }
-//                        foreach ($country['altSpellings'] as $altSpelling) {
-//                            if (strlen($countryName) > 5) {
-//                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
-//                                    $shippingZoneIsActive = true;
-//                                }
-//                            } else {
-//                                if (strtolower($altSpelling) == strtolower($countryName)) {
-//                                    $shippingZoneIsActive = true;
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
-//                $searchFields = explode(',', $shippingZone->search_fields);
-//                foreach ($searchFields as $searchField) {
-//                    if (strtolower($searchField) == strtolower($countryName)) {
-//                        $shippingZoneIsActive = true;
-//                    }
-//                }
-//            }
-//
-//            if ($shippingZoneIsActive && $shippingZone->disabled_payment_method_ids) {
-//                $disabledPaymentMethodIds = json_decode($shippingZone->disabled_payment_method_ids, true);
-//                if (is_array($disabledPaymentMethodIds)) {
-//                    foreach ($disabledPaymentMethodIds as $disabledPaymentMethod) {
-//                        foreach ($paymentMethods as $key => $paymentMethod) {
-//                            if ($disabledPaymentMethod['id'] == $paymentMethod['id']) {
-//                                unset($paymentMethods[$key]);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        return $paymentMethods;
-//    }
-//
-//    public static function getPaymentMethods()
-//    {
-//        $paymentMethods = [];
-//        foreach (PaymentMethod::where('available_from_amount', '<', self::total())->get() as $paymentMethod) {
-//            $paymentMethods[] = [
-//                'id' => $paymentMethod->id,
-//                'system' => 'own',
-//                'name' => $paymentMethod->name,
-//                'image' => [],
-//                'postpay' => false,
-//                'extra_costs' => $paymentMethod->extra_costs,
-//                'additional_info' => $paymentMethod->additional_info,
-//                'payment_instructions' => $paymentMethod->payment_instructions,
-//                'deposit_calculation' => $paymentMethod->deposit_calculation
-//            ];
-//        }
-//
-//        if (Customsetting::get('mollie_connected')) {
+    //    public static function getAvailablePaymentMethods($countryName)
+    //    {
+    //        $paymentMethods = self::getPaymentMethods();
+    //        $shippingZones = ShippingZone::get();
+    //        foreach ($shippingZones as $shippingZone) {
+    //            $shippingZoneIsActive = false;
+    //            foreach (json_decode($shippingZone->zones, true) as $zone) {
+    //                foreach (Countries::getCountries() as $country) {
+    //                    if ($country['name'] == $zone['id']) {
+    //                        if (strtolower($country['name']) == strtolower($countryName)) {
+    //                            $shippingZoneIsActive = true;
+    //                        }
+    //                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+    //                            $shippingZoneIsActive = true;
+    //                        }
+    //                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+    //                            $shippingZoneIsActive = true;
+    //                        }
+    //                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+    //                            $shippingZoneIsActive = true;
+    //                        }
+    //                        foreach ($country['altSpellings'] as $altSpelling) {
+    //                            if (strlen($countryName) > 5) {
+    //                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+    //                                    $shippingZoneIsActive = true;
+    //                                }
+    //                            } else {
+    //                                if (strtolower($altSpelling) == strtolower($countryName)) {
+    //                                    $shippingZoneIsActive = true;
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //
+    //            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+    //                $searchFields = explode(',', $shippingZone->search_fields);
+    //                foreach ($searchFields as $searchField) {
+    //                    if (strtolower($searchField) == strtolower($countryName)) {
+    //                        $shippingZoneIsActive = true;
+    //                    }
+    //                }
+    //            }
+    //
+    //            if ($shippingZoneIsActive && $shippingZone->disabled_payment_method_ids) {
+    //                $disabledPaymentMethodIds = json_decode($shippingZone->disabled_payment_method_ids, true);
+    //                if (is_array($disabledPaymentMethodIds)) {
+    //                    foreach ($disabledPaymentMethodIds as $disabledPaymentMethod) {
+    //                        foreach ($paymentMethods as $key => $paymentMethod) {
+    //                            if ($disabledPaymentMethod['id'] == $paymentMethod['id']) {
+    //                                unset($paymentMethods[$key]);
+    //                            }
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //
+    //        return $paymentMethods;
+    //    }
+    //
+    //    public static function getPaymentMethods()
+    //    {
+    //        $paymentMethods = [];
+    //        foreach (PaymentMethod::where('available_from_amount', '<', self::total())->get() as $paymentMethod) {
+    //            $paymentMethods[] = [
+    //                'id' => $paymentMethod->id,
+    //                'system' => 'own',
+    //                'name' => $paymentMethod->name,
+    //                'image' => [],
+    //                'postpay' => false,
+    //                'extra_costs' => $paymentMethod->extra_costs,
+    //                'additional_info' => $paymentMethod->additional_info,
+    //                'payment_instructions' => $paymentMethod->payment_instructions,
+    //                'deposit_calculation' => $paymentMethod->deposit_calculation
+    //            ];
+    //        }
+    //
+    //        if (Customsetting::get('mollie_connected')) {
     ////            foreach (Mollie::getPaymentMethods() as $paymentMethod) {
     ////                if ($paymentMethod->active) {
     ////                    $paymentMethods[] = [
@@ -103,9 +103,9 @@ class PaymentMethods
     ////                    ];
     ////                }
     ////            }
-//        }
-//
-//        if (Customsetting::get('paynl_connected')) {
+    //        }
+    //
+    //        if (Customsetting::get('paynl_connected')) {
     ////            foreach (PayNL::getPaymentMethods() as $paymentMethod) {
     ////                if ($paymentMethod['active'] && ($paymentMethod['min_amount'] / 100) <= self::total() && ($paymentMethod['max_amount'] / 100) >= self::total()) {
     ////                    $paymentMethods[] = [
@@ -127,10 +127,10 @@ class PaymentMethods
     ////                    ];
     ////                }
     ////            }
-//        }
-//
-//        return $paymentMethods;
-//    }
+    //        }
+    //
+    //        return $paymentMethods;
+    //    }
 
     public static function get()
     {

@@ -80,7 +80,7 @@ class AddToCart extends Component
                 foreach ($productExtra->productExtraOptions as $option) {
                     //Todo: fix this and test with real webshop, for example with Russle
                     $productOptionValue = $option['value'] ?? null;
-//                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
+                    //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
                     if ($productExtra->required && ! $productOptionValue) {
                         return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                     }

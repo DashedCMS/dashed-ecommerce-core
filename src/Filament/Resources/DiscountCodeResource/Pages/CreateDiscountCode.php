@@ -70,7 +70,7 @@ class CreateDiscountCode extends CreateRecord
                 foreach ($this->record->productCategories as $category) {
                     $selectedProductCategoriesIds[] = $category['id'];
                 }
-//                $selectedProductCategories = ProductCategories::getFromIdsWithParents($selectedProductCategoriesIds);
+                //                $selectedProductCategories = ProductCategories::getFromIdsWithParents($selectedProductCategoriesIds);
                 $discountCode->productCategories()->sync($selectedProductCategoriesIds);
 
                 $selectedProductIds = [];

@@ -315,7 +315,7 @@ class ProductResourceOld extends Resource
                 'default' => 1,
                 'lg' => 2,
                 ]);
-//            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
+        //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([

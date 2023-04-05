@@ -25,13 +25,13 @@ class CreateProduct extends CreateRecord
         }
 
         $data['site_ids'] = $data['site_ids'] ?? (isset($data['parent_id']) && $data['parent_id'] ? Product::find($data['parent_id'])->site_ids : [Sites::getFirstSite()['id']]);
-//        $content = $data['content'] ?? [];
-//        $data['content'] = null;
-//        $data['content'][$this->activeFormLocale] = $content;
+        //        $content = $data['content'] ?? [];
+        //        $data['content'] = null;
+        //        $data['content'][$this->activeFormLocale] = $content;
 
-//        $images = $data['images'] ?? [];
-//        $data['images'] = null;
-//        $data['images'][$this->activeFormLocale] = $images;
+        //        $images = $data['images'] ?? [];
+        //        $data['images'] = null;
+        //        $data['images'][$this->activeFormLocale] = $images;
 
         return $data;
     }

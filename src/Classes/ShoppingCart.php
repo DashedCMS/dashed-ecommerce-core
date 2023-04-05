@@ -210,52 +210,52 @@ class ShoppingCart
 
         $taxTotal = $baseVatInfo['taxTotal'];
 
-//        if ($calculateDiscount) {
-//            $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
-//
-//            if (!$discountCode || !$discountCode->isValidForCart()) {
-//                session(['discountCode' => '']);
-//                $discountCode = null;
-//            }
-//        } else {
-//            $discountCode = null;
-//        }
-//
-//        $totalAmountForVats = [];
-//
-//        $totalPriceForProducts = 0;
-//
-//        foreach (self::cartItems() as $cartItem) {
-//            if ($cartItem->model) {
-//                if ($discountCode && $discountCode->type == 'percentage') {
-//                    $price = $discountCode->getDiscountedPriceForProduct($cartItem);
-//                } else {
-//                    $price = $cartItem->price * $cartItem->qty;
-//                }
-//
-//                $totalPriceForProducts += $price;
-//
-//                if ($calculateInclusiveTax) {
-//                    $price = $price / (100 + $cartItem->model->vat_rate) * $cartItem->model->vat_rate;
-//                } else {
-//                    $price = $price / 100 * $cartItem->model->vat_rate;
-//                }
-//
-//                $taxTotal += $price;
-//                if ($cartItem->model->vat_rate > 0) {
-//                    if (!isset($totalAmountForVats[$cartItem->model->vat_rate])) {
-//                        $totalAmountForVats[$cartItem->model->vat_rate] = 0;
-//                    }
-//                    $totalAmountForVats[$cartItem->model->vat_rate] += ($cartItem->price * $cartItem->qty);
-//                }
-//            }
-//        }
-//
-//        $vatPercentageOfTotals = [];
-//
-//        foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-//            $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
-//        }
+        //        if ($calculateDiscount) {
+        //            $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
+        //
+        //            if (!$discountCode || !$discountCode->isValidForCart()) {
+        //                session(['discountCode' => '']);
+        //                $discountCode = null;
+        //            }
+        //        } else {
+        //            $discountCode = null;
+        //        }
+        //
+        //        $totalAmountForVats = [];
+        //
+        //        $totalPriceForProducts = 0;
+        //
+        //        foreach (self::cartItems() as $cartItem) {
+        //            if ($cartItem->model) {
+        //                if ($discountCode && $discountCode->type == 'percentage') {
+        //                    $price = $discountCode->getDiscountedPriceForProduct($cartItem);
+        //                } else {
+        //                    $price = $cartItem->price * $cartItem->qty;
+        //                }
+        //
+        //                $totalPriceForProducts += $price;
+        //
+        //                if ($calculateInclusiveTax) {
+        //                    $price = $price / (100 + $cartItem->model->vat_rate) * $cartItem->model->vat_rate;
+        //                } else {
+        //                    $price = $price / 100 * $cartItem->model->vat_rate;
+        //                }
+        //
+        //                $taxTotal += $price;
+        //                if ($cartItem->model->vat_rate > 0) {
+        //                    if (!isset($totalAmountForVats[$cartItem->model->vat_rate])) {
+        //                        $totalAmountForVats[$cartItem->model->vat_rate] = 0;
+        //                    }
+        //                    $totalAmountForVats[$cartItem->model->vat_rate] += ($cartItem->price * $cartItem->qty);
+        //                }
+        //            }
+        //        }
+        //
+        //        $vatPercentageOfTotals = [];
+        //
+        //        foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
+        //            $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
+        //        }
 
         if ($discountCode && $discountCode->type == 'amount') {
             if ($calculateInclusiveTax) {
@@ -275,22 +275,22 @@ class ShoppingCart
 
         if ($shippingMethodId) {
             $taxTotal += self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount);
-//            $shippingMethod = ShippingMethod::find($shippingMethodId);
-//            if ($shippingMethod) {
-//                if ($calculateInclusiveTax) {
-//                    foreach ($vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-//                        if ($vatPercentageOfTotal) {
-//                            $taxTotal += (($shippingMethod->costs * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
-//                        }
-//                    }
-//                } else {
-//                    foreach ($vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-//                        if ($vatPercentageOfTotal) {
-//                            $taxTotal += (($shippingMethod->costs * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
-//                        }
-//                    }
-//                }
-//            }
+            //            $shippingMethod = ShippingMethod::find($shippingMethodId);
+            //            if ($shippingMethod) {
+            //                if ($calculateInclusiveTax) {
+            //                    foreach ($vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
+            //                        if ($vatPercentageOfTotal) {
+            //                            $taxTotal += (($shippingMethod->costs * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
+            //                        }
+            //                    }
+            //                } else {
+            //                    foreach ($vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
+            //                        if ($vatPercentageOfTotal) {
+            //                            $taxTotal += (($shippingMethod->costs * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
+            //                        }
+            //                    }
+            //                }
+            //            }
         }
 
         if ($paymentMethodId) {
@@ -731,16 +731,16 @@ class ShoppingCart
                                     }
 
 
-//                                $newQuantity = $cartItem->qty + $quantity;
-//
-//                                if ($product->limit_purchases_per_customer && $newQuantity > $cartItem->model->limit_purchases_per_customer_limit) {
-//                                    Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
-//
-//                                    ShoppingCart::removeInvalidItems();
-//                                    return redirect()->back()->with('error', Translation::get('product-only-1-purchase-per-customer', 'cart', 'You can only purchase one of this product'))->withInput();
-//                                }
-//
-//                                Cart::update($cartItem->rowId, $newQuantity);
+                                    //                                $newQuantity = $cartItem->qty + $quantity;
+                                    //
+                                    //                                if ($product->limit_purchases_per_customer && $newQuantity > $cartItem->model->limit_purchases_per_customer_limit) {
+                                    //                                    Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
+                                    //
+                                    //                                    ShoppingCart::removeInvalidItems();
+                                    //                                    return redirect()->back()->with('error', Translation::get('product-only-1-purchase-per-customer', 'cart', 'You can only purchase one of this product'))->withInput();
+                                    //                                }
+                                    //
+                                    //                                Cart::update($cartItem->rowId, $newQuantity);
                                 }
                             }
                         }

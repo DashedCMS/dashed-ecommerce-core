@@ -341,7 +341,7 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 2,
             ]);
-//            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
+        //            ->collapsed(fn($livewire) => $livewire instanceof EditProduct);
 
         $schema[] = Section::make('Meta')
             ->schema(static::metadataTab())

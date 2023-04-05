@@ -14,9 +14,9 @@ class ProductCategories
 
     public static function getTopLevel($limit = 4, $orderBy = 'created_at', $order = 'DESC')
     {
-//        return Cache::tags(['product-categories'])->rememberForever("product-categories-top-level-$limit-$orderBy-$order", function () use ($limit, $orderBy, $order) {
+        //        return Cache::tags(['product-categories'])->rememberForever("product-categories-top-level-$limit-$orderBy-$order", function () use ($limit, $orderBy, $order) {
         return ProductCategory::with(['products'])->where('parent_id', null)->limit($limit)->orderBy($orderBy, $order)->get();
-//        });
+        //        });
     }
 
     public static function getFromIdsWithParents($selectedProductCategoriesIds)

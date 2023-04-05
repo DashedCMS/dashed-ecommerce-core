@@ -23,10 +23,10 @@ class CancelOrder extends ViewRecord implements HasForms
 
     protected static string $view = 'qcommerce-ecommerce-core::orders.cancel-order';
 
-//    protected $listeners = [
-//        'refreshPage' => 'render',
-//        'notify' => 'message',
-//    ];
+    //    protected $listeners = [
+    //        'refreshPage' => 'render',
+    //        'notify' => 'message',
+    //    ];
 
     protected function getTitle(): string
     {
@@ -139,8 +139,8 @@ class CancelOrder extends ViewRecord implements HasForms
                 $createCreditInvoice = true;
             }
             $restock = $this->form->getState()['restock'];
-//            $refundShippingCosts = $request->refundShippingCosts;
-//            $refundPaymentCosts = $request->refundPaymentCosts;
+            //            $refundShippingCosts = $request->refundShippingCosts;
+            //            $refundPaymentCosts = $request->refundPaymentCosts;
             $refundDiscountCosts = $this->form->getState()['refund_discount_costs'];
 
             $cancelledProductsQuantity = 0;

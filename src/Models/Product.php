@@ -663,9 +663,9 @@ class Product extends Model
 
     public function productFilters()
     {
-//        return Cache::tags(["product-$this->id"])->rememberForever("product-filters-" . $this->id, function () {
-//            return $this->productFiltersRelation();
-//        });
+        //        return Cache::tags(["product-$this->id"])->rememberForever("product-filters-" . $this->id, function () {
+        //            return $this->productFiltersRelation();
+        //        });
         return $this->belongsToMany(ProductFilter::class, 'qcommerce__product_filter')->orderBy('created_at')->withPivot(['product_filter_option_id']);
     }
 

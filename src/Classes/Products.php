@@ -63,7 +63,7 @@ class Products
     public static function getAll($pagination = 12, $orderBy = 'created_at', $order = 'DESC', $categoryId = null)
     {
         $orderByRequest = request()->get('sort-by');
-//        return Cache::tags(['products'])->rememberForever("products-all-$pagination-$orderBy-$order-$categoryId-$orderByRequest-" . request()->get('page', 1), function () use ($pagination, $orderBy, $order, $categoryId, $orderByRequest) {
+        //        return Cache::tags(['products'])->rememberForever("products-all-$pagination-$orderBy-$order-$categoryId-$orderByRequest-" . request()->get('page', 1), function () use ($pagination, $orderBy, $order, $categoryId, $orderByRequest) {
         if ($orderByRequest) {
             if ($orderByRequest == 'price-asc') {
                 $orderBy = 'price';
@@ -156,7 +156,7 @@ class Products
             'products' => $products,
             'filters' => self::getFilters($allProducts->pluck('id')),
         ];
-//        });
+        //        });
     }
 
     public static function getFilters($products = [])

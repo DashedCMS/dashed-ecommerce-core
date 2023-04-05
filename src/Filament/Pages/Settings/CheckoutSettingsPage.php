@@ -35,7 +35,7 @@ class CheckoutSettingsPage extends Page implements HasForms
             $formData["checkout_account_{$site['id']}"] = Customsetting::get('checkout_account', $site['id'], 'optional');
             $formData["checkout_form_name_{$site['id']}"] = Customsetting::get('checkout_form_name', $site['id'], 'last');
             $formData["checkout_form_company_name_{$site['id']}"] = Customsetting::get('checkout_form_company_name', $site['id'], 'hidden');
-//            $formData["checkout_form_address_line_2_{$site['id']}"] = Customsetting::get('checkout_form_address_line_2', $site['id'], 'optional');
+            //            $formData["checkout_form_address_line_2_{$site['id']}"] = Customsetting::get('checkout_form_address_line_2', $site['id'], 'optional');
             $formData["checkout_form_phone_number_delivery_address_{$site['id']}"] = Customsetting::get('checkout_form_phone_number_delivery_address', $site['id'], 'hidden');
             $formData["checkout_delivery_address_standard_invoice_address_{$site['id']}"] = Customsetting::get('checkout_delivery_address_standard_invoice_address', $site['id'], 1);
             $formData["checkout_autofill_address_{$site['id']}"] = Customsetting::get('checkout_autofill_address', $site['id'], 1);
@@ -136,7 +136,7 @@ class CheckoutSettingsPage extends Page implements HasForms
             Customsetting::set('checkout_account', $this->form->getState()["checkout_account_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_form_name', $this->form->getState()["checkout_form_name_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_form_company_name', $this->form->getState()["checkout_form_company_name_{$site['id']}"], $site['id']);
-//            Customsetting::set('checkout_form_address_line_2', $this->form->getState()["checkout_form_address_line_2_{$site['id']}"], $site['id']);
+            //            Customsetting::set('checkout_form_address_line_2', $this->form->getState()["checkout_form_address_line_2_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_form_phone_number_delivery_address', $this->form->getState()["checkout_form_phone_number_delivery_address_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_delivery_address_standard_invoice_address', $this->form->getState()["checkout_delivery_address_standard_invoice_address_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_autofill_address', $this->form->getState()["checkout_autofill_address_{$site['id']}"], $site['id']);

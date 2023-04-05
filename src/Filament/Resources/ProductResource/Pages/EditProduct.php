@@ -24,7 +24,7 @@ class EditProduct extends EditRecord
     use Translatable;
 
     protected static string $resource = ProductResource::class;
-//    protected static string $view = 'qcommerce-ecommerce-core::products.edit-product';
+    //    protected static string $view = 'qcommerce-ecommerce-core::products.edit-product';
 
     protected static ?string $title = 'Bewerk product';
 
@@ -56,13 +56,13 @@ class EditProduct extends EditRecord
 
         $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
-//        $content = $data['content'] ?? [];
-//        $data['content'] = $this->record->content ?: [];
-//        $data['content'][$this->activeFormLocale] = $content;
+        //        $content = $data['content'] ?? [];
+        //        $data['content'] = $this->record->content ?: [];
+        //        $data['content'][$this->activeFormLocale] = $content;
 
-//        $images = $data['images'] ?? [];
-//        $data['images'] = $this->record->images;
-//        $data['images'][$this->activeFormLocale] = $images;
+        //        $images = $data['images'] ?? [];
+        //        $data['images'] = $this->record->images;
+        //        $data['images'][$this->activeFormLocale] = $images;
 
 
         $validProductExtraIds = [];
