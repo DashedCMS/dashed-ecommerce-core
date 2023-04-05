@@ -140,7 +140,7 @@ class Product extends Model
 
     public function scopePublicShowable($query, bool $overridePublic = false)
     {
-        if (auth()->guest() || (auth()->check() && auth()->user()->role !== 'admin') && $overridePublic) {
+        if (auth()->guest() || (auth()->check() && auth()->user()->role !== 'admin' && $overridePublic)) {
             $query
                 ->public()
                 ->thisSite()
