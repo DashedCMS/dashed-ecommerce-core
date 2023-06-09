@@ -28,7 +28,7 @@ class EditShippingMethod extends EditRecord
     protected function mutateFormDataBeforeSave($data): array
     {
         foreach (ShippingClass::get() as $shippingClass) {
-//            dump($shippingClass->id);
+            //            dump($shippingClass->id);
             if (isset($data["shipping_class_costs_$shippingClass->id"])) {
                 $value = $data["shipping_class_costs_$shippingClass->id"];
 
@@ -42,10 +42,10 @@ class EditShippingMethod extends EditRecord
 
                 $shippingMethodClass->costs = $value;
                 $shippingMethodClass->save();
-//                $this->form->getState()["shipping_class_costs_$shippingClass->id"] = null;
+                //                $this->form->getState()["shipping_class_costs_$shippingClass->id"] = null;
                 unset($data["shipping_class_costs_$shippingClass->id"]);
-//                dump($this->form->getState()["shipping_class_costs_$shippingClass->id"]);
-//                unset($this->form->getState()["shipping_class_costs_$shippingClass->id"]);
+                //                dump($this->form->getState()["shipping_class_costs_$shippingClass->id"]);
+                //                unset($this->form->getState()["shipping_class_costs_$shippingClass->id"]);
             }
         }
 
