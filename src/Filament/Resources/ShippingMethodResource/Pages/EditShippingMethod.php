@@ -25,11 +25,12 @@ class EditShippingMethod extends EditRecord
         }
     }
 
-    protected function afterSave(): void
+    protected function mutateFormDataBeforeSave($data): array
     {
         foreach (ShippingClass::get() as $shippingClass) {
-            if (isset($this->form->getState()["shipping_class_costs_$shippingClass->id"])) {
-                $value = $this->form->getState()["shipping_class_costs_$shippingClass->id"];
+//            dump($shippingClass->id);
+            if (isset($data["shipping_class_costs_$shippingClass->id"])) {
+                $value = $data["shipping_class_costs_$shippingClass->id"];
 
                 $shippingMethodClass = $this->record->shippingMethodClasses()->where('shipping_class_id', $shippingClass->id)->first();
 
@@ -41,7 +42,13 @@ class EditShippingMethod extends EditRecord
 
                 $shippingMethodClass->costs = $value;
                 $shippingMethodClass->save();
+//                $this->form->getState()["shipping_class_costs_$shippingClass->id"] = null;
+                unset($data["shipping_class_costs_$shippingClass->id"]);
+//                dump($this->form->getState()["shipping_class_costs_$shippingClass->id"]);
+//                unset($this->form->getState()["shipping_class_costs_$shippingClass->id"]);
             }
         }
+
+        return $data;
     }
 }
