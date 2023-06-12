@@ -95,7 +95,7 @@ class CreateOrder extends Page implements HasForms
 
     public function getAllProductsProperty()
     {
-        $products = Product::handOrderShowable()->with(['childProducts', 'parentProduct'])->get();
+        $products = Product::handOrderShowable()->with(['childProducts', 'parent'])->get();
 
         foreach ($products as &$product) {
             $product['stock'] = $product->stock();
