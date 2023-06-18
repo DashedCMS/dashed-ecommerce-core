@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Qubiqx\QcommerceEcommerceCore\Events\Products\ProductCreatedEvent;
 
