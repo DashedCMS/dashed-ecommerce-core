@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Qubiqx\QcommerceCore\Classes\Sites;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
 use Qubiqx\QcommerceTranslations\Models\Translation;
@@ -22,6 +23,7 @@ class Product extends Model
     use SoftDeletes;
     use HasDynamicRelation;
     use IsVisitable;
+    use HasCustomBlocks;
 
     protected $table = 'qcommerce__products';
 
