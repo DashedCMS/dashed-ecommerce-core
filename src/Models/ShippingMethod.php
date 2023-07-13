@@ -37,7 +37,7 @@ class ShippingMethod extends Model
     ];
 
     protected $casts = [
-      'variables' => 'array',
+        'variables' => 'array',
     ];
 
     protected $table = 'qcommerce__shipping_methods';
@@ -74,17 +74,21 @@ class ShippingMethod extends Model
             $shippingCosts = 0;
             $cartItemsCount = ShoppingCart::cartItemsCount();
 
-            foreach ($this->variables as $variable) {
+            foreach (collect($this->variables)->sortByDesc('amount_of_items') as $variable) {
                 while ($cartItemsCount >= $variable['amount_of_items']) {
+//                    dump($cartItemsCount, $variable['amount_of_items']);
                     $cartItemsCount -= $variable['amount_of_items'];
                     $shippingCosts += $variable['costs'];
                 }
             }
 
             $variableStaticCosts = $this->variable_static_costs;
-            $variableStaticCosts = str_replace('{SHIPPING_COSTS}', $shippingCosts, $variableStaticCosts);
+            if ($variableStaticCosts != '{SHIPPING_COSTS}') {
+                $variableStaticCosts = str_replace('{SHIPPING_COSTS}', $shippingCosts, $variableStaticCosts);
 
-            $shippingCosts += eval('return ' . $variableStaticCosts . ';');
+                $shippingCosts += eval('return ' . $variableStaticCosts . ';');
+            }
+
 
             return $shippingCosts;
         } else {
