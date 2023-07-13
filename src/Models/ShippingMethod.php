@@ -76,7 +76,7 @@ class ShippingMethod extends Model
 
             foreach (collect($this->variables)->sortByDesc('amount_of_items') as $variable) {
                 while ($cartItemsCount >= $variable['amount_of_items']) {
-//                    dump($cartItemsCount, $variable['amount_of_items']);
+                    //                    dump($cartItemsCount, $variable['amount_of_items']);
                     $cartItemsCount -= $variable['amount_of_items'];
                     $shippingCosts += $variable['costs'];
                 }

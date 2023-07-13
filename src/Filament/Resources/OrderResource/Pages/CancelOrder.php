@@ -42,13 +42,13 @@ class CancelOrder extends ViewRecord implements HasForms
         ];
     }
 
-//    public function mount($record): void
-//    {
-//        $this->record = $this->getRecord($record);
-//        foreach ($this->record->orderProducts as $orderProduct) {
-//            $this->data["order_product_$orderProduct->id_quantity"] = 0;
-//        }
-//    }
+    //    public function mount($record): void
+    //    {
+    //        $this->record = $this->getRecord($record);
+    //        foreach ($this->record->orderProducts as $orderProduct) {
+    //            $this->data["order_product_$orderProduct->id_quantity"] = 0;
+    //        }
+    //    }
 
     protected function getFormSchema(): array
     {

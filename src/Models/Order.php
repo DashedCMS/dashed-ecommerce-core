@@ -241,20 +241,20 @@ class Order extends Model
         return $this->hasMany(self::class, 'credit_for_order_id');
     }
 
-//    public function montaPortalOrder()
-//    {
-//        return $this->hasOne(MontaportalOrder::class);
-//    }
+    //    public function montaPortalOrder()
+    //    {
+    //        return $this->hasOne(MontaportalOrder::class);
+    //    }
 
-//    public function exactonlineOrder()
-//    {
-//        return $this->hasOne(ExactonlineOrder::class);
-//    }
+    //    public function exactonlineOrder()
+    //    {
+    //        return $this->hasOne(ExactonlineOrder::class);
+    //    }
 
-//    public function eboekhoudenOrderConnection()
-//    {
-//        return $this->belongsTo(EboekhoudenOrderConnection::class);
-//    }
+    //    public function eboekhoudenOrderConnection()
+    //    {
+    //        return $this->belongsTo(EboekhoudenOrderConnection::class);
+    //    }
 
     public function isPaidFor()
     {
@@ -300,20 +300,20 @@ class Order extends Model
         return $query->where('fulfillment_status', '!=', 'handled')->isPaid();
     }
 
-//    public function scopePushableToEfulfillmentShop($query)
-//    {
-//        return $query->where('pushable_to_efulfillment_shop', 1)->where('pushed_to_efulfillment_shop', 0)->isPaid()->thisSite();
-//    }
-//
-//    public function scopePushedToEfulfillmentShop($query)
-//    {
-//        return $query->where('pushable_to_efulfillment_shop', 1)->where('pushed_to_efulfillment_shop', 1)->isPaid()->thisSite();
-//    }
-//
-//    public function scopePushableToEboekhouden($query)
-//    {
-//        return $query->where('pushable_to_eboekhouden', 1)->where('pushed_to_eboekhouden', 0);
-//    }
+    //    public function scopePushableToEfulfillmentShop($query)
+    //    {
+    //        return $query->where('pushable_to_efulfillment_shop', 1)->where('pushed_to_efulfillment_shop', 0)->isPaid()->thisSite();
+    //    }
+    //
+    //    public function scopePushedToEfulfillmentShop($query)
+    //    {
+    //        return $query->where('pushable_to_efulfillment_shop', 1)->where('pushed_to_efulfillment_shop', 1)->isPaid()->thisSite();
+    //    }
+    //
+    //    public function scopePushableToEboekhouden($query)
+    //    {
+    //        return $query->where('pushable_to_eboekhouden', 1)->where('pushed_to_eboekhouden', 0);
+    //    }
 
     public function scopeSearch($query)
     {
