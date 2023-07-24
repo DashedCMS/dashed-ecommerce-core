@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    @if($productCategory)
-        <x-blocks :content="$productCategory->content"></x-blocks>
+    @if($singleProductCategory)
+        <x-blocks :content="$singleProductCategory->content"></x-blocks>
     @endif
 </div>

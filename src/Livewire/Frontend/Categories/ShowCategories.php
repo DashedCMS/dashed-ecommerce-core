@@ -10,12 +10,12 @@ use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 class ShowCategories extends Component
 {
     public ?Collection $productCategories = null;
-    public ?ProductCategory $productCategory = null;
+    public ?ProductCategory $singleProductCategory = null;
 
     public function mount(?Collection $productCategories = null, ?ProductCategory $productCategory = null)
     {
         $this->productCategories = $productCategories ?: ProductCategories::getTopLevel(100);
-        $this->productCategory = $productCategory;
+        $this->singleProductCategory = $productCategory;
     }
 
     public function render()
