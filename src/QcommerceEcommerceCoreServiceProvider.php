@@ -5,6 +5,7 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProducts;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -79,6 +80,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('cart.cart-count', CartCount::class);
         Livewire::component('cart.add-to-cart', AddToCart::class);
         Livewire::component('categories.show-categories', ShowCategories::class);
+        Livewire::component('products.show-products', ShowProducts::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
