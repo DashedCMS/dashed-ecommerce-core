@@ -2,10 +2,10 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Categories;
 
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
+use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 
 class ShowCategories extends Component
 {
