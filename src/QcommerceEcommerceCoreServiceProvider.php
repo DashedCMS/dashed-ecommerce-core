@@ -5,13 +5,14 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Cart;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Cart;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Checkout;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
@@ -77,6 +78,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('cart.checkout', Checkout::class);
         Livewire::component('cart.cart-count', CartCount::class);
         Livewire::component('cart.add-to-cart', AddToCart::class);
+        Livewire::component('categories.show-categories', ShowCategories::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
