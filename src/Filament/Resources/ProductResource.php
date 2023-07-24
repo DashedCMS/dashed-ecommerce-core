@@ -503,6 +503,8 @@ class ProductResource extends Resource
                             ->options([
                                 'single' => '1 optie',
                                 'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
+                                'input' => 'Invulveld (mogelijk nog niet ondersteund door jouw webshop)',
+                                'image' => 'Upload afbeelding (mogelijk nog niet ondersteund door jouw webshop)',
                             ])
                             ->default('single')
                             ->required()
@@ -510,6 +512,7 @@ class ProductResource extends Resource
                                 'required',
                             ]),
                         Repeater::make('productExtraOptions')
+                            ->label('Opties van deze product extra')
                             ->schema([
                                 TextInput::make('value')
                                     ->label('Waarde')
