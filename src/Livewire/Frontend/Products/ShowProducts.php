@@ -45,7 +45,7 @@ class ShowProducts extends Component
 
     public function loadProducts()
     {
-        if (!$this->products) {
+        if (! $this->products) {
 
             $activeFilterQuery = [];
 
