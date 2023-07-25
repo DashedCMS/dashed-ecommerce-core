@@ -47,7 +47,7 @@ class AddToCart extends Component
 
     public function updatedQuantity()
     {
-        if (!$this->quantity) {
+        if (! $this->quantity) {
             $this->quantity = 1;
         } elseif ($this->quantity < 1) {
             $this->quantity = 1;
@@ -64,7 +64,7 @@ class AddToCart extends Component
         foreach ($this->extras as $productExtra) {
             if ($productExtra->type == 'single') {
                 $productValue = $productExtra['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                 }
 
@@ -80,9 +80,9 @@ class AddToCart extends Component
                         $productPrice += $productExtraOption->price;
                     }
                 }
-            } else if ($productExtra->type == 'checkbox') {
+            } elseif ($productExtra->type == 'checkbox') {
                 $productValue = $productExtra['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                 }
 
@@ -98,9 +98,9 @@ class AddToCart extends Component
                         $productPrice += $productExtraOption->price;
                     }
                 }
-            } else if ($productExtra->type == 'input') {
+            } elseif ($productExtra->type == 'input') {
                 $productValue = $productExtra['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                 }
 
@@ -110,9 +110,9 @@ class AddToCart extends Component
                         'value' => $productValue,
                     ];
                 }
-            } else if ($productExtra->type == 'file') {
+            } elseif ($productExtra->type == 'file') {
                 $productValue = $this->files[$productExtra->id] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                 }
 
@@ -130,7 +130,7 @@ class AddToCart extends Component
                     //Todo: fix this and test with real webshop, for example with Russle
                     $productOptionValue = $option['value'] ?? null;
                     //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && !$productOptionValue) {
+                    if ($productExtra->required && ! $productOptionValue) {
                         return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
                     }
 
@@ -168,7 +168,7 @@ class AddToCart extends Component
             }
         }
 
-        if (!$cartUpdated) {
+        if (! $cartUpdated) {
             if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
                 Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
