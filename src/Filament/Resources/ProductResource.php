@@ -515,8 +515,9 @@ class ProductResource extends Resource
                             ]),
                         Repeater::make('productExtraOptions')
                             ->label('Opties van deze product extra')
-                            ->visible(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple')
-                            ->required(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple')
+                            ->when(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
+                            ->required(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
+                            ->maxItems(fn(\Closure $get) => $get('type') == 'checkbox' ? 1 : 10)
                             ->schema([
                                 TextInput::make('value')
                                     ->label('Waarde')
