@@ -487,6 +487,7 @@ class ProductResource extends Resource
                 Repeater::make('productExtras')
                     ->relationship('productExtras')
                     ->columns(2)
+                    ->cloneable()
                     ->schema(array_merge([
                         TextInput::make('name')
                             ->label('Naam')
@@ -496,8 +497,6 @@ class ProductResource extends Resource
                                 'required',
                                 'max:255',
                             ]),
-//                        TextInput::make('productExtraId')
-//                            ->hidden(),
                         Select::make('type')
                             ->label('Type')
                             ->options([
@@ -539,6 +538,7 @@ class ProductResource extends Resource
                             ->label('Verplicht'),
                         Repeater::make('productExtraOptions')
                             ->relationship('productExtraOptions')
+                            ->cloneable()
                             ->label('Opties van deze product extra')
                             ->when(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
                             ->required(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
