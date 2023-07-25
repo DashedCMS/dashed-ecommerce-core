@@ -2,12 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products;
 
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 use Qubiqx\QcommerceEcommerceCore\Classes\Products;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
