@@ -93,12 +93,17 @@
                             {{$extra->name}}{{$extra->required ? '*' : ''}}:
                         </label>
                         <div class="relative flex items-start">
-                            <input type="text"
+                            <input type="{{ $extra->input_type }}"
+                                   @if($extra->input_type == 'numeric')
+                                       min="{{ $extra->min_length }}" max="{{ $extra->max_length }}"
+                                   @else
+                                       minlength="{{ $extra->min_length }}" maxlength="{{ $extra->max_length }}"
+                                   @endif
                                    @if($extra->required) required @endif
                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-primary-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
                                    id="product-extra-{{$extra->id}}"
                                    name="product-extra-{{$extra->id}}"
-                                   wire:model="extras.{{ $extraKey }}.value">
+                                   wire:model.debounce.500ms="extras.{{ $extraKey }}.value">
                         </div>
                     </div>
                 @elseif($extra->type == 'file')
@@ -121,26 +126,6 @@
         </div>
     @endif
     <div class="mt-4 grid gap-4 max-w-sm">
-        @if($product->inStock())
-            <div>
-                <div
-                    class="inline-flex items-center h-10 overflow-hidden border border-gray-200">
-                    <div wire:click="setQuantity('{{$quantity + 1}}')"
-                         class="flex items-center justify-center w-10 h-10 bg-gray-50 text-primary-500 cursor-pointer">
-                        +
-                    </div>
-                    <input class="w-16 h-10 text-center text-primary-500 font-bold" type="number"
-                           wire:model.debounce.500ms="quantity"
-                           required
-                           min="1" max="{{$product->stock()}}">
-                    <div wire:click="setQuantity('{{$quantity - 1}}')"
-                         class="flex items-center justify-center w-10 h-10 bg-gray-50 text-primary-500 cursor-pointer">
-                        -
-                    </div>
-                </div>
-            </div>
-        @endif
-
         @if($product->inStock())
             <button type="submit"
                     class="h-10 w-full text-base button button-white-on-primary">{{Translation::get('add-to-cart', 'product', 'Add to cart')}}</button>

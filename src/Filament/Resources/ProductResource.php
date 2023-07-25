@@ -513,6 +513,28 @@ class ProductResource extends Resource
                             ->rules([
                                 'required',
                             ]),
+                        Select::make('input_type')
+                            ->label('Input type')
+                            ->options([
+                                'text' => 'Tekst',
+                                'numeric' => 'Getal',
+                                'date' => 'Datum',
+                                'dateTime' => 'Datum + tijd',
+                            ])
+                            ->default('text')
+                            ->when(fn (\Closure $get) => $get('type') == 'input')
+                            ->required(fn (\Closure $get) => $get('type') == 'input'),
+                        TextInput::make('min_length')
+                            ->label('Minimale lengte/waarde')
+                            ->numeric()
+                            ->when(fn (\Closure $get) => $get('type') == 'input')
+                            ->required(fn (\Closure $get) => $get('type') == 'input'),
+                        TextInput::make('max_length')
+                            ->label('Maximale lengte/waarde')
+                            ->numeric()
+                            ->when(fn (\Closure $get) => $get('type') == 'input')
+                            ->required(fn (\Closure $get) => $get('type') == 'input')
+                            ->reactive(),
                         Toggle::make('required')
                             ->label('Verplicht'),
                         Repeater::make('productExtraOptions')
