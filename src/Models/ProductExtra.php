@@ -2,12 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
-use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
 
 class ProductExtra extends Model
 {
