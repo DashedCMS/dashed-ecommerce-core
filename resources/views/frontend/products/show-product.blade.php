@@ -1,4 +1,4 @@
-a<div>
+<div>
     <x-blocks.breadcrumbs :breadcrumbs="$product->breadcrumbs()"/>
     <div class="mt-8">
         <x-container>

@@ -505,7 +505,7 @@ class ProductResource extends Resource
                                 'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
                                 'checkbox' => 'Checkbox (mogelijk nog niet ondersteund door jouw webshop)',
                                 'input' => 'Invulveld (mogelijk nog niet ondersteund door jouw webshop)',
-                                'image' => 'Upload afbeelding (mogelijk nog niet ondersteund door jouw webshop)',
+                                'file' => 'Upload bestand (mogelijk nog niet ondersteund door jouw webshop)',
                             ])
                             ->default('single')
                             ->required()

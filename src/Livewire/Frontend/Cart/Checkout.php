@@ -450,7 +450,7 @@ class Checkout extends Component
                     'id' => $optionId,
                     'name' => $option['name'],
                     'value' => $option['value'],
-                    'price' => ProductExtraOption::find($optionId)->price,
+                    'price' => str($optionId)->contains('product-extra-') ? 0 : ProductExtraOption::find($optionId)->price,
                 ];
             }
             $orderProduct->product_extras = $productExtras;
