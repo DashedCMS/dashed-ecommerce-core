@@ -11,7 +11,7 @@ use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
 use Qubiqx\QcommerceEcommerceCore\Classes\Products;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
 
-class ShowProducts extends Component
+class ShowProduct extends Component
 {
     use WithPagination;
 
