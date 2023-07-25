@@ -503,6 +503,7 @@ class ProductResource extends Resource
                             ->options([
                                 'single' => '1 optie',
                                 'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
+                                'checkbox' => 'Checkbox (mogelijk nog niet ondersteund door jouw webshop)',
                                 'input' => 'Invulveld (mogelijk nog niet ondersteund door jouw webshop)',
                                 'image' => 'Upload afbeelding (mogelijk nog niet ondersteund door jouw webshop)',
                             ])

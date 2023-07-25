@@ -11,6 +11,7 @@ use Qubiqx\QcommerceCore\Classes\Sites;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
+use Qubiqx\QcommercePages\Models\Page;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -228,6 +229,14 @@ class Product extends Model
                 ];
                 $productCategory = ProductCategory::find($productCategory->parent_id);
             }
+        }
+
+        $homePage = Page::isHome()->publicShowable()->first();
+        if ($homePage) {
+            $breadcrumbs[] = [
+                'name' => $homePage->name,
+                'url' => $homePage->getUrl(),
+            ];
         }
 
         return array_reverse($breadcrumbs);
