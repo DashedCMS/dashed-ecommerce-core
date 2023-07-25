@@ -499,7 +499,7 @@ class ProductResource extends Resource
                         Toggle::make('required')
                             ->label('Verplicht'),
                         Select::make('type')
-                            ->label('Naam')
+                            ->label('Type')
                             ->options([
                                 'single' => '1 optie',
                                 'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
