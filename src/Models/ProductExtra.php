@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Models;
 
+use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
@@ -13,6 +14,7 @@ class ProductExtra extends Model
     use HasTranslations;
     use SoftDeletes;
     use LogsActivity;
+    use HasCustomBlocks;
 
     protected static $logFillable = true;
 

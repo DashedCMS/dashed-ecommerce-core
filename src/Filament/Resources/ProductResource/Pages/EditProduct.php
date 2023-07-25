@@ -67,50 +67,50 @@ class EditProduct extends EditRecord
 
         $validProductExtraIds = [];
 
-        foreach ($data['productExtras'] as $productExtraKey => $productExtra) {
-            if (isset($productExtra['productExtraId']) && $productExtra['productExtraId']) {
-                $newProductExtra = ProductExtra::find($productExtra['productExtraId']);
-            } else {
-                $newProductExtra = new ProductExtra();
-            }
-            $newProductExtra->product_id = $this->record->id;
-            $newProductExtra->type = $productExtra['type'];
-            $newProductExtra->required = $productExtra['required'];
-            $newProductExtra->setTranslation('name', $this->activeFormLocale, $productExtra['name']);
-            $newProductExtra->save();
-            $validProductExtraIds[] = $newProductExtra->id;
-            $data['productExtras'][$productExtraKey]['productExtraId'] = $newProductExtra->id;
+//        foreach ($data['productExtras'] as $productExtraKey => $productExtra) {
+//            if (isset($productExtra['productExtraId']) && $productExtra['productExtraId']) {
+//                $newProductExtra = ProductExtra::find($productExtra['productExtraId']);
+//            } else {
+//                $newProductExtra = new ProductExtra();
+//            }
+//            $newProductExtra->product_id = $this->record->id;
+//            $newProductExtra->type = $productExtra['type'];
+//            $newProductExtra->required = $productExtra['required'];
+//            $newProductExtra->setTranslation('name', $this->activeFormLocale, $productExtra['name']);
+//            $newProductExtra->save();
+//            $validProductExtraIds[] = $newProductExtra->id;
+//            $data['productExtras'][$productExtraKey]['productExtraId'] = $newProductExtra->id;
+//
+//            $validProductExtraOptionIds = [];
+//
+//            foreach ($productExtra['productExtraOptions'] as $productExtraOptionKey => $productExtraOption) {
+//                if (! $productExtraOption['value'] && ! $productExtraOption['price']) {
+//                    continue;
+//                }
+//
+//                if (isset($productExtraOption['productExtraOptionId']) && $productExtraOption['productExtraOptionId']) {
+//                    $newProductExtraOption = ProductExtraOption::find($productExtraOption['productExtraOptionId']);
+//                } else {
+//                    $newProductExtraOption = new ProductExtraOption();
+//                }
+//                $newProductExtraOption->product_extra_id = $newProductExtra->id;
+//                $newProductExtraOption->setTranslation('value', $this->activeFormLocale, $productExtraOption['value']);
+//                $newProductExtraOption->price = $productExtraOption['price'];
+//                $newProductExtraOption->calculate_only_1_quantity = $productExtraOption['calculate_only_1_quantity'];
+//                $newProductExtraOption->save();
+//                $data['productExtras'][$productExtraKey]['productExtraOptions'][$productExtraOptionKey]['productExtraOptionId'] = $newProductExtraOption->id;
+//                $validProductExtraOptionIds[] = $newProductExtraOption->id;
+//            }
+//
+//            $newProductExtra->productExtraOptions()->whereNotIn('id', $validProductExtraOptionIds)->forceDelete();
+//        }
 
-            $validProductExtraOptionIds = [];
+//        unset($data['productExtras']);
 
-            foreach ($productExtra['productExtraOptions'] as $productExtraOptionKey => $productExtraOption) {
-                if (! $productExtraOption['value'] && ! $productExtraOption['price']) {
-                    continue;
-                }
-
-                if (isset($productExtraOption['productExtraOptionId']) && $productExtraOption['productExtraOptionId']) {
-                    $newProductExtraOption = ProductExtraOption::find($productExtraOption['productExtraOptionId']);
-                } else {
-                    $newProductExtraOption = new ProductExtraOption();
-                }
-                $newProductExtraOption->product_extra_id = $newProductExtra->id;
-                $newProductExtraOption->setTranslation('value', $this->activeFormLocale, $productExtraOption['value']);
-                $newProductExtraOption->price = $productExtraOption['price'];
-                $newProductExtraOption->calculate_only_1_quantity = $productExtraOption['calculate_only_1_quantity'];
-                $newProductExtraOption->save();
-                $data['productExtras'][$productExtraKey]['productExtraOptions'][$productExtraOptionKey]['productExtraOptionId'] = $newProductExtraOption->id;
-                $validProductExtraOptionIds[] = $newProductExtraOption->id;
-            }
-
-            $newProductExtra->productExtraOptions()->whereNotIn('id', $validProductExtraOptionIds)->forceDelete();
-        }
-
-        unset($data['productExtras']);
-
-        foreach ($this->record->productExtras()->whereNotIn('id', $validProductExtraIds)->get() as $productExtra) {
-            $productExtra->productExtraOptions()->forceDelete();
-            $productExtra->forceDelete();
-        }
+//        foreach ($this->record->productExtras()->whereNotIn('id', $validProductExtraIds)->get() as $productExtra) {
+//            $productExtra->productExtraOptions()->forceDelete();
+//            $productExtra->forceDelete();
+//        }
 
         Redirect::handleSlugChange($this->record->getTranslation('slug', $this->activeFormLocale), $data['slug']);
 
@@ -200,69 +200,6 @@ class EditProduct extends EditRecord
         return $data;
     }
 
-    //    public function afterSave(): void
-    //    {
-    //        foreach ($this->record->childProducts as $childProduct) {
-    //            $childProduct->site_ids = $this->record->site_ids;
-    //            $childProduct->save();
-    //        }
-    //
-    //        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
-    //        if ($this->record->parent) {
-    //            foreach ($this->record->parent->childProducts as $childProduct) {
-    //                $childProduct->productCategories()->sync($selectedProductCategories);
-    //            }
-    //        } else {
-    //            $this->record->productCategories()->sync($selectedProductCategories);
-    //        }
-    //
-    //        if ($this->record->parent) {
-    //            foreach ($this->record->parent->childProducts as $childProduct) {
-    //                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
-    //            }
-    //        }
-    //
-    //        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
-    //
-    //        if (($this->record->type == 'variable' && ! $this->record->parent_id) || $this->record->type == 'simple') {
-    //            $this->record->activeProductFilters()->detach();
-    //            foreach ($productFilters as $productFilter) {
-    //                if ($this->data["product_filter_$productFilter->id"]) {
-    //                    $this->record->activeProductFilters()->attach($productFilter->id);
-    //                    $this->record->activeProductFilters()->updateExistingPivot($productFilter->id, [
-    //                        'use_for_variations' => $this->data["product_filter_{$productFilter->id}_use_for_variations"],
-    //                    ]);
-    //                }
-    //            }
-    //        }
-    //
-    //        if (($this->record->type == 'variable' && $this->record->parent_id) || $this->record->type == 'simple') {
-    //            $this->record->productFilters()->detach();
-    //            foreach ($productFilters as $productFilter) {
-    //                if ($this->data["product_filter_$productFilter->id"] && ($this->record->activeProductFilters->contains($productFilter->id) || ($this->record->parent && $this->record->parent->activeProductFilters->contains($productFilter->id)))) {
-    //                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
-    //                        if ($this->data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]) {
-    //                            $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
-    //                        }
-    //                    }
-    //                }
-    //            }
-    //        }
-    //
-    //        $productCharacteristics = ProductCharacteristics::get();
-    //
-    //        foreach ($productCharacteristics as $productCharacteristic) {
-    //            $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-    //            if (! $thisProductCharacteristic) {
-    //                $thisProductCharacteristic = new ProductCharacteristic();
-    //                $thisProductCharacteristic->product_id = $this->record->id;
-    //                $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
-    //            }
-    //            $thisProductCharacteristic->setTranslation('value', $this->activeFormLocale, $this->data["product_characteristic_$productCharacteristic->id"]);
-    //            $thisProductCharacteristic->save();
-    //        }
-    //    }
-
     public function afterFill(): void
     {
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
@@ -288,25 +225,25 @@ class EditProduct extends EditRecord
             $this->data["product_characteristic_$productCharacteristic->id"] = $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->exists() ? $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first()->getTranslation('value', $this->activeFormLocale) : null;
         }
 
-        foreach ($this->record->productExtras as $productExtra) {
-            $productExtraOptions = [];
-            foreach ($productExtra->productExtraOptions as $productExtraOption) {
-                $productExtraOptions[] = [
-                    'value' => $productExtraOption->getTranslation('value', $this->activeFormLocale),
-                    'price' => $productExtraOption->price,
-                    'calculate_only_1_quantity' => $productExtraOption->calculate_only_1_quantity,
-                    'productExtraOptionId' => $productExtraOption->id,
-                ];
-            }
-
-            $this->data['productExtras'][] = [
-                'name' => $productExtra->getTranslation('name', $this->activeFormLocale),
-                'type' => $productExtra->type,
-                'required' => $productExtra->required,
-                'productExtraId' => $productExtra->id,
-                'productExtraOptions' => $productExtraOptions,
-            ];
-        }
+//        foreach ($this->record->productExtras as $productExtra) {
+//            $productExtraOptions = [];
+//            foreach ($productExtra->productExtraOptions as $productExtraOption) {
+//                $productExtraOptions[] = [
+//                    'value' => $productExtraOption->getTranslation('value', $this->activeFormLocale),
+//                    'price' => $productExtraOption->price,
+//                    'calculate_only_1_quantity' => $productExtraOption->calculate_only_1_quantity,
+//                    'productExtraOptionId' => $productExtraOption->id,
+//                ];
+//            }
+//
+//            $this->data['productExtras'][] = [
+//                'name' => $productExtra->getTranslation('name', $this->activeFormLocale),
+//                'type' => $productExtra->type,
+//                'required' => $productExtra->required,
+//                'productExtraId' => $productExtra->id,
+//                'productExtraOptions' => $productExtraOptions,
+//            ];
+//        }
     }
 
     protected function getBreadcrumbs(): array
