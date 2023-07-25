@@ -65,7 +65,9 @@ class AddToCart extends Component
             if ($productExtra->type == 'single') {
                 $productValue = $productExtra['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
+                    return $this->checkCart('error', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
+                        'optionName' => $productExtra->name,
+                    ]));
                 }
 
                 if ($productValue) {
@@ -83,7 +85,9 @@ class AddToCart extends Component
             } elseif ($productExtra->type == 'checkbox') {
                 $productValue = $productExtra['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
+                    return $this->checkCart('error', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
+                        'optionName' => $productExtra->name,
+                    ]));
                 }
 
                 if ($productValue) {
@@ -101,7 +105,9 @@ class AddToCart extends Component
             } elseif ($productExtra->type == 'input') {
                 $productValue = $productExtra['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
+                    return $this->checkCart('error', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
+                        'optionName' => $productExtra->name,
+                    ]));
                 }
 
                 if ($productValue) {
@@ -113,7 +119,9 @@ class AddToCart extends Component
             } elseif ($productExtra->type == 'file') {
                 $productValue = $this->files[$productExtra->id] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
+                    return $this->checkCart('error', Translation::get('file-upload-option-for-product-extra', 'products', 'Upload an file for option :optionName:', 'text', [
+                        'optionName' => $productExtra->name,
+                    ]));
                 }
 
                 $value = $productValue['value']->getClientOriginalName();
@@ -127,11 +135,12 @@ class AddToCart extends Component
                 }
             } else {
                 foreach ($productExtra->productExtraOptions as $option) {
-                    //Todo: fix this and test with real webshop, for example with Russle
                     $productOptionValue = $option['value'] ?? null;
                     //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
                     if ($productExtra->required && ! $productOptionValue) {
-                        return $this->checkCart('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'));
+                        return $this->checkCart('error', Translation::get('select-multiple-options-for-product-extra', 'products', 'Select one or more options for :optionName:', 'text', [
+                            'optionName' => $productExtra->name,
+                        ]));
                     }
 
                     if ($productOptionValue) {
@@ -151,7 +160,6 @@ class AddToCart extends Component
 
         $cartItems = ShoppingCart::cartItems();
         foreach ($cartItems as $cartItem) {
-            //Todo: the comparison for options does not work
             if ($cartItem->model->id == $this->product->id && $options == $cartItem->options) {
                 $newQuantity = $cartItem->qty + $this->quantity;
 
