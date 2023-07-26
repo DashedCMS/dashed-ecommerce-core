@@ -2,24 +2,11 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Auth;
 
-use Carbon\Carbon;
+use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Gloudemans\Shoppingcart\Facades\Cart;
-use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceCore\Mail\PasswordResetMail;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
 class ResetPassword extends Component
 {
