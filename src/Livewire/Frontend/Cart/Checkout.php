@@ -609,6 +609,26 @@ class Checkout extends Component
         }
     }
 
+    public function changeQuantity(string $rowId, int $quantity)
+    {
+        if (! $quantity) {
+            if (ShoppingCart::hasCartitemByRowId($rowId)) {
+                \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
+            }
+
+            $this->checkCart('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
+        } else {
+            if (ShoppingCart::hasCartitemByRowId($rowId)) {
+                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
+                \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
+            }
+
+            $this->checkCart('success', Translation::get('product-updated-to-cart', 'cart', 'The product has been updated to your cart'));
+        }
+
+        $this->fillPrices();
+    }
+
     public function render()
     {
         return view('qcommerce-ecommerce-core::frontend.cart.checkout');
