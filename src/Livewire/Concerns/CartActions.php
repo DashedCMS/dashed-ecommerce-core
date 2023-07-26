@@ -2,9 +2,9 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Concerns;
 
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
 use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 
 trait CartActions
 {
