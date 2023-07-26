@@ -41,6 +41,7 @@ class CheckoutSettingsPage extends Page implements HasForms
             $formData["checkout_autofill_address_{$site['id']}"] = Customsetting::get('checkout_autofill_address', $site['id'], 1);
             $formData["checkout_extra_scripts_{$site['id']}"] = Customsetting::get('checkout_extra_scripts', $site['id']);
             $formData["checkout_google_api_key_{$site['id']}"] = Customsetting::get('checkout_google_api_key', $site['id']);
+            $formData["checkout_postnl_api_key_{$site['id']}"] = Customsetting::get('checkout_postnl_api_key', $site['id']);
             $formData["checkout_bcc_email_{$site['id']}"] = Customsetting::get('checkout_bcc_email', $site['id']);
             $formData["checkout_force_checkout_page_{$site['id']}"] = Customsetting::get('checkout_force_checkout_page', $site['id'], false);
         }
@@ -98,7 +99,7 @@ class CheckoutSettingsPage extends Page implements HasForms
                     ->helperText('Reduceer het aantal velden dat is vereist om af te rekenen. Het factuuradres kan nog steeds worden bewerkt.'),
                 Toggle::make("checkout_autofill_address_{$site['id']}")
                     ->label('Automatisch aanvullen van adresgegevens inschakelen')
-                    ->helperText('Hiermee wordt het adres van klanten automatisch aangevuld op basis van de Google API om zo het invullen soepeler te laten verlopen.'),
+                    ->helperText('Hiermee wordt het adres van klanten automatisch aangevuld op basis van de Google API of PostNL API om zo het invullen soepeler te laten verlopen.'),
                 Textarea::make("checkout_extra_scripts_{$site['id']}")
                     ->label('Aanvullende scripts')
                     ->rows(5)
@@ -109,7 +110,10 @@ class CheckoutSettingsPage extends Page implements HasForms
                     ]),
                 TextInput::make("checkout_google_api_key_{$site['id']}")
                     ->label('Google Maps API key')
-                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant.'),
+                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een oude versie checkout.'),
+                TextInput::make("checkout_postnl_api_key_{$site['id']}")
+                    ->label('PostNL API key')
+                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.'),
                 TextInput::make("checkout_bcc_email_{$site['id']}")
                     ->email()
                     ->label('BCC email om de bevestigingsmail naar te sturen'),
@@ -146,6 +150,7 @@ class CheckoutSettingsPage extends Page implements HasForms
             Customsetting::set('checkout_autofill_address', $this->form->getState()["checkout_autofill_address_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_extra_scripts', $this->form->getState()["checkout_extra_scripts_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_google_api_key', $this->form->getState()["checkout_google_api_key_{$site['id']}"], $site['id']);
+            Customsetting::set('checkout_postnl_api_key', $this->form->getState()["checkout_postnl_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_bcc_email', $this->form->getState()["checkout_bcc_email_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
         }
