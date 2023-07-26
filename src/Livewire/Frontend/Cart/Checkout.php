@@ -123,12 +123,13 @@ class Checkout extends Component
 
     public function updated($name, $value)
     {
+        if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'])) {
+            $this->updateInvoiceAddressByApi();
+        }
+
         if (in_array($name, ['country', 'street', 'houseNr', 'zipCode', 'city'])) {
             if (in_array($name, ['houseNr', 'zipCode'])) {
                 $this->updateAddressByApi();
-            }
-            if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'])) {
-                $this->updateInvoiceAddressByApi();
             }
 
             $this->retrievePaymentMethods();
