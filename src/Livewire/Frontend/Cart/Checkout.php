@@ -159,7 +159,7 @@ class Checkout extends Component
     public function getAddresInfoByApi(?string $zipCode = null, ?string $houseNr = null): array
     {
         $postNLApikey = Customsetting::get('checkout_postnl_api_key');
-        if ($postNLApikey && $this->zipCode && $this->houseNr) {
+        if ($postNLApikey && $zipCode && $houseNr) {
             try {
                 $response = Http::withHeaders([
                     'Content-Type' => 'Application/json',
@@ -167,8 +167,8 @@ class Checkout extends Component
                 ])
 //                    ->retry(3, 1000)
                     ->post('https://api.postnl.nl/address/national/v1/validate', [
-                        'PostalCode' => $this->zipCode,
-                        'HouseNumber' => $this->houseNr,
+                        'PostalCode' => $zipCode,
+                        'HouseNumber' => $houseNr,
                     ])
                     ->json()[0] ?? [];
             } catch (Exception $exception) {
@@ -177,6 +177,8 @@ class Checkout extends Component
 
             return $response;
         }
+
+        return [];
     }
 
     public function updatedShippingMethod()
