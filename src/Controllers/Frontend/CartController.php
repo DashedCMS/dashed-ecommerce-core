@@ -19,6 +19,10 @@ class CartController extends FrontendController
 {
     public function cart()
     {
+        if (Customsetting::get('checkout_force_checkout_page')) {
+            return redirect()->to(ShoppingCart::getCheckoutUrl());
+        }
+
         ShoppingCart::removeInvalidItems();
 
         if (View::exists('qcommerce.cart.show')) {

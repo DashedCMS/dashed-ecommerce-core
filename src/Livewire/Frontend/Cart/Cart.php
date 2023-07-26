@@ -25,10 +25,6 @@ class Cart extends Component
         $this->discountCode = session('discountCode');
         $this->checkCart();
         $this->fillPrices();
-
-        if (Customsetting::get('checkout_force_checkout_page')) {
-            return redirect()->to(ShoppingCart::getCheckoutUrl());
-        }
     }
 
     public function fillPrices()
