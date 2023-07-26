@@ -2,20 +2,12 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Auth;
 
+use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use Qubiqx\QcommerceCore\Classes\Sites;
-use Gloudemans\Shoppingcart\Facades\Cart;
-use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
 class ResetPassword extends Component
 {
@@ -29,7 +21,8 @@ class ResetPassword extends Component
 
     public function login()
     {
-        $this->validate([
+        $this->validate(
+            [
             'loginEmail' => [
                 'required',
                 'email',
@@ -41,19 +34,21 @@ class ResetPassword extends Component
                 'min:6',
                 'max:255',
             ],
-        ], [],
+        ],
+            [],
             [
                 'loginEmail' => Translation::get('email', 'validation-attributes', 'email'),
                 'loginPassword' => Translation::get('password', 'validation - attributes', 'password'),
-            ]);
+            ]
+        );
 
         $user = User::where('email', $this->loginEmail)->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->back()->with('error', Translation::get('no-user-found', 'login', 'We could not find a user matching these criteria'));
         }
 
-        if (!Hash::check($this->loginPassword, $user->password)) {
+        if (! Hash::check($this->loginPassword, $user->password)) {
             return redirect()->back()->with('error', Translation::get('no-user-found', 'login', 'We could not find a user matching these criteria'));
         }
 
@@ -68,7 +63,8 @@ class ResetPassword extends Component
 
     public function register()
     {
-        $this->validate([
+        $this->validate(
+            [
             'registerEmail' => [
                 'unique:users,email',
                 'required',
@@ -81,12 +77,14 @@ class ResetPassword extends Component
                 'required_with:registerPasswordConfirmation',
                 'same:registerPasswordConfirmation',
             ],
-        ], [],
+        ],
+            [],
             [
                 'registerEmail' => Translation::get('email', 'validation-attributes', 'email'),
                 'registerPassword' => Translation::get('password', 'validation - attributes', 'password'),
                 'registerPasswordConfirmation' => Translation::get('password-confirmation', 'validation - attributes', 'password confirmation'),
-            ]);
+            ]
+        );
 
         $user = new User();
         $user->email = $this->registerEmail;
