@@ -27,7 +27,7 @@ class Cart extends Component
         $this->fillPrices();
 
         if (Customsetting::get('checkout_force_checkout_page')) {
-            return redirect(ShoppingCart::getCheckoutUrl());
+            return redirect()->to(ShoppingCart::getCheckoutUrl());
         }
     }
 
