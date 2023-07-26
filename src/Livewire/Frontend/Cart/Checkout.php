@@ -106,7 +106,7 @@ class Checkout extends Component
     public function retrievePaymentMethods()
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
-        if (! $this->paymentMethod && count($this->paymentMethods)) {
+        if (!$this->paymentMethod && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
@@ -116,7 +116,7 @@ class Checkout extends Component
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
-        if (! $this->shippingMethod && count($this->shippingMethods)) {
+        if (!$this->shippingMethod && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
@@ -127,6 +127,9 @@ class Checkout extends Component
             if (in_array($name, ['houseNr', 'zipCode'])) {
                 $this->updateAddressByApi();
             }
+            if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'])) {
+                $this->updateInvoiceAddressByApi();
+            }
 
             $this->retrievePaymentMethods();
             $this->retrieveShippingMethods();
@@ -135,6 +138,24 @@ class Checkout extends Component
     }
 
     public function updateAddressByApi(): void
+    {
+        $response = $this->getAddresInfoByApi($this->zipCode, $this->houseNr);
+        if ($response) {
+            $this->city = $response['City'];
+            $this->street = $response['Street'];
+        }
+    }
+
+    public function updateInvoiceAddressByApi(): void
+    {
+        $response = $this->getAddresInfoByApi($this->invoiceZipCode, $this->invoiceHouseNr);
+        if ($response) {
+            $this->invoiceCity = $response['City'];
+            $this->invoiceStreet = $response['Street'];
+        }
+    }
+
+    public function getAddresInfoByApi(?string $zipCode = null, ?string $houseNr = null): array
     {
         $postNLApikey = Customsetting::get('checkout_postnl_api_key');
         if ($postNLApikey && $this->zipCode && $this->houseNr) {
@@ -153,10 +174,7 @@ class Checkout extends Component
                 $response = [];
             }
 
-            if ($response) {
-                $this->city = $response['City'];
-                $this->street = $response['Street'];
-            }
+            return $response;
         }
     }
 
@@ -194,7 +212,7 @@ class Checkout extends Component
                 'max:255',
             ],
             'password' => [
-                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && ! auth()->check()),
+                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && !auth()->check()),
                 'nullable',
                 'min:6',
                 'max:255',
@@ -304,7 +322,7 @@ class Checkout extends Component
 
         $cartItems = $this->cartItems;
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             return $this->emit('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
         }
 
@@ -317,13 +335,13 @@ class Checkout extends Component
         }
 
         $paymentMethodPresent = (bool)$paymentMethod;
-        if (! $paymentMethodPresent) {
+        if (!$paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $paymentMethodPresent = true;
                 }
             }
-            if (! $paymentMethodPresent) {
+            if (!$paymentMethodPresent) {
                 return $this->emit('showAlert', 'error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
             }
         }
@@ -336,7 +354,7 @@ class Checkout extends Component
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             return $this->emit('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
@@ -359,17 +377,17 @@ class Checkout extends Component
                 }
             }
 
-            if (! $depositPaymentMethod) {
+            if (!$depositPaymentMethod) {
                 return $this->emit('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             return $this->emit('showAlert', 'error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
@@ -554,7 +572,7 @@ class Checkout extends Component
 
         $orderPayment->psp = $psp;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
