@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
-use Carbon\Carbon;
 use Exception;
+use Carbon\Carbon;
 use Livewire\Component;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -138,7 +138,7 @@ class Checkout extends Component
     {
         $postNLApikey = Customsetting::get('checkout_postnl_api_key');
         if ($postNLApikey && $this->zipCode && $this->houseNr) {
-            try{
+            try {
                 $response = Http::withHeaders([
                     'Content-Type' => 'Application/json',
                     'apikey' => $postNLApikey,
@@ -149,7 +149,7 @@ class Checkout extends Component
                         'HouseNumber' => $this->houseNr,
                     ])
                     ->json()[0] ?? [];
-            }catch (Exception $exception){
+            } catch (Exception $exception) {
                 $response = [];
             }
 
