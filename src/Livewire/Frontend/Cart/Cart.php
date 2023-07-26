@@ -58,7 +58,7 @@ class Cart extends Component
 
     public function changeQuantity(string $rowId, int $quantity)
     {
-        if (!$quantity) {
+        if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
             }
@@ -78,7 +78,7 @@ class Cart extends Component
 
     public function applyDiscountCode()
     {
-        if (!$this->discountCode) {
+        if (! $this->discountCode) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->discount = 0;
@@ -89,7 +89,7 @@ class Cart extends Component
 
         $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
 
-        if (!$discountCode || !$discountCode->isValidForCart()) {
+        if (! $discountCode || ! $discountCode->isValidForCart()) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->fillPrices();
