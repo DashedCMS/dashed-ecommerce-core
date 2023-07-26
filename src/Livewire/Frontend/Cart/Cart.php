@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
@@ -24,6 +25,10 @@ class Cart extends Component
         $this->discountCode = session('discountCode');
         $this->checkCart();
         $this->fillPrices();
+
+        if (Customsetting::get('checkout_force_checkout_page')) {
+            return redirect(ShoppingCart::getCheckoutUrl());
+        }
     }
 
     public function fillPrices()
@@ -53,7 +58,7 @@ class Cart extends Component
 
     public function changeQuantity(string $rowId, int $quantity)
     {
-        if (! $quantity) {
+        if (!$quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
             }
@@ -73,7 +78,7 @@ class Cart extends Component
 
     public function applyDiscountCode()
     {
-        if (! $this->discountCode) {
+        if (!$this->discountCode) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->discount = 0;
@@ -84,7 +89,7 @@ class Cart extends Component
 
         $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->fillPrices();

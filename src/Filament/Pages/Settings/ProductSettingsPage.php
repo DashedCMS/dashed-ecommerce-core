@@ -55,7 +55,7 @@ class ProductSettingsPage extends Page implements HasForms
                 Select::make("add_to_cart_redirect_to_{$site['id']}")
                     ->options([
                         'same' => 'Zelfde pagina',
-                        'cart' => 'Winkelwagen (Hier bekijk je je mandje)',
+                        'cart' => 'Winkelwagen (Hier bekijk je je winkelmand)',
                         'checkout' => 'Checkout (Hier ga je afrekenen)',
                     ])
                     ->label('Waar moet de pagina naartoe gaan als je een item in je winkelmand toevoegd')

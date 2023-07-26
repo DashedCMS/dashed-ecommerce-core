@@ -42,6 +42,7 @@ class CheckoutSettingsPage extends Page implements HasForms
             $formData["checkout_extra_scripts_{$site['id']}"] = Customsetting::get('checkout_extra_scripts', $site['id']);
             $formData["checkout_google_api_key_{$site['id']}"] = Customsetting::get('checkout_google_api_key', $site['id']);
             $formData["checkout_bcc_email_{$site['id']}"] = Customsetting::get('checkout_bcc_email', $site['id']);
+            $formData["checkout_force_checkout_page_{$site['id']}"] = Customsetting::get('checkout_force_checkout_page', $site['id'], false);
         }
 
         $this->form->fill($formData);
@@ -112,6 +113,9 @@ class CheckoutSettingsPage extends Page implements HasForms
                 TextInput::make("checkout_bcc_email_{$site['id']}")
                     ->email()
                     ->label('BCC email om de bevestigingsmail naar te sturen'),
+                Toggle::make("checkout_force_checkout_page{$site['id']}")
+                    ->label('Forceer checkout pagina vanaf de winkelwagen pagina')
+                    ->helperText('Hiermee wordt de klant direct naar de checkout pagina gestuurd als ze naar de winkelwagen pagina gaan.'),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -143,6 +147,7 @@ class CheckoutSettingsPage extends Page implements HasForms
             Customsetting::set('checkout_extra_scripts', $this->form->getState()["checkout_extra_scripts_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_google_api_key', $this->form->getState()["checkout_google_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_bcc_email', $this->form->getState()["checkout_bcc_email_{$site['id']}"], $site['id']);
+            Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
         }
 
         $this->notify('success', 'De afreken instellingen zijn opgeslagen');
