@@ -2,98 +2,59 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Auth;
 
-use Livewire\Component;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Qubiqx\QcommerceCore\Classes\Sites;
+use Gloudemans\Shoppingcart\Facades\Cart;
+use Illuminate\Database\Eloquent\Collection;
+use Qubiqx\QcommerceCore\Mail\PasswordResetMail;
+use Qubiqx\QcommerceCore\Models\Customsetting;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceTranslations\Models\Translation;
 use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
 class ResetPassword extends Component
 {
-    public ?string $loginEmail = '';
-    public ?string $loginPassword = '';
-    public ?bool $loginRememberMe = false;
-    public ?string $registerEmail = '';
-    public ?string $registerPassword = '';
-    public ?string $registerPasswordConfirmation = '';
-    public ?bool $registerRememberMe = false;
+    public User $user;
+    public ?string $password = '';
+    public ?string $passwordConfirmation = '';
 
-    public function login()
+    public function mount(string$passwordResetToken)
     {
-        $this->validate(
-            [
-            'loginEmail' => [
-                'required',
-                'email',
-                'min:3',
-                'max:255',
-            ],
-            'loginPassword' => [
-                'required',
-                'min:6',
-                'max:255',
-            ],
-        ],
-            [],
-            [
-                'loginEmail' => Translation::get('email', 'validation-attributes', 'email'),
-                'loginPassword' => Translation::get('password', 'validation - attributes', 'password'),
-            ]
-        );
-
-        $user = User::where('email', $this->loginEmail)->first();
-
-        if (! $user) {
-            return redirect()->back()->with('error', Translation::get('no-user-found', 'login', 'We could not find a user matching these criteria'));
-        }
-
-        if (! Hash::check($this->loginPassword, $user->password)) {
-            return redirect()->back()->with('error', Translation::get('no-user-found', 'login', 'We could not find a user matching these criteria'));
-        }
-
-        Auth::login($user, $this->loginRememberMe);
-
-        if (ShoppingCart::cartItemsCount() > 0) {
-            return redirect(ShoppingCart::getCartUrl())->with('success', Translation::get('succesfully-logged-in', 'login', 'You are logged in!'));
-        } else {
-            return redirect(route('qcommerce.frontend.account'))->with('success', Translation::get('succesfully-logged-in', 'login', 'You are logged in!'));
+        $this->user = User::where('password_reset_token', $passwordResetToken)->first();
+        if (! $this->user) {
+            abort(404);
         }
     }
 
-    public function register()
+    public function submit()
     {
-        $this->validate(
-            [
-            'registerEmail' => [
-                'unique:users,email',
-                'required',
-                'email:rfc',
-                'max:255',
-            ],
-            'registerPassword' => [
+        $this->validate([
+            'password' => [
                 'min:6',
                 'max:255',
-                'required_with:registerPasswordConfirmation',
-                'same:registerPasswordConfirmation',
+                'confirmed',
+                'required_with:passwordConfirmation',
+                'same:passwordConfirmation',
             ],
-        ],
-            [],
-            [
-                'registerEmail' => Translation::get('email', 'validation-attributes', 'email'),
-                'registerPassword' => Translation::get('password', 'validation - attributes', 'password'),
-                'registerPasswordConfirmation' => Translation::get('password-confirmation', 'validation - attributes', 'password confirmation'),
-            ]
-        );
+        ]);
 
-        $user = new User();
-        $user->email = $this->registerEmail;
-        $user->password = Hash::make($this->registerPassword);
-        $user->save();
+        $this->user->password_reset_token = null;
+        $this->user->password_reset_requested = null;
+        $this->user->password = Hash::make($this->password);
+        $this->user->save();
 
-        Auth::login($user, $this->registerRememberMe);
+        Auth::login($user);
 
-        return redirect(route('qcommerce.frontend.account'))->with('success', Translation::get('succesfully-logged-in', 'login', 'You are logged in!'));
+        $this->emit('showAlert', 'success', Translation::get('reset-password-post-success', 'login', 'Your password has been reset!'));
     }
 
     public function render()
