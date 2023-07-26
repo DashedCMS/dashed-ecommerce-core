@@ -91,7 +91,9 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('auth.reset-password', ResetPassword::class);
 
         User::addDynamicRelation('orders', function (User $model) {
-            return $model->hasMany(Order::class)->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])->orderBy('created_at', 'DESC');
+            return $model->hasMany(Order::class)
+                ->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid'])
+                ->orderBy('created_at', 'DESC');
         });
         User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();

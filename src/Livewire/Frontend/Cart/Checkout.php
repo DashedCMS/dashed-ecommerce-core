@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
 
 use Carbon\Carbon;
+use Exception;
 use Livewire\Component;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -84,6 +85,7 @@ class Checkout extends Component
         $this->city = optional(auth()->user())->lastOrder()->city ?? '';
         $this->company = optional(auth()->user())->lastOrder()->company_name ?? '';
         $this->taxId = optional(auth()->user())->lastOrder()->btw_id ?? '';
+        $this->phoneNumber = optional(auth()->user())->lastOrder()->phone_number ?? '';
         $this->invoiceStreet = optional(auth()->user())->lastOrder()->invoice_street ?? '';
         $this->invoiceHouseNr = optional(auth()->user())->lastOrder()->invoice_house_nr ?? '';
         $this->invoiceZipCode = optional(auth()->user())->lastOrder()->invoice_zip_code ?? '';
@@ -136,16 +138,20 @@ class Checkout extends Component
     {
         $postNLApikey = Customsetting::get('checkout_postnl_api_key');
         if ($postNLApikey && $this->zipCode && $this->houseNr) {
-            $response = Http::withHeaders([
-                'Content-Type' => 'Application/json',
-                'apikey' => $postNLApikey,
-            ])
-                ->retry(3, 1000)
-                ->post('https://api.postnl.nl/address/national/v1/validate', [
-                    'PostalCode' => $this->zipCode,
-                    'HouseNumber' => $this->houseNr,
+            try{
+                $response = Http::withHeaders([
+                    'Content-Type' => 'Application/json',
+                    'apikey' => $postNLApikey,
                 ])
-                ->json()[0] ?? [];
+//                    ->retry(3, 1000)
+                    ->post('https://api.postnl.nl/address/national/v1/validate', [
+                        'PostalCode' => $this->zipCode,
+                        'HouseNumber' => $this->houseNr,
+                    ])
+                    ->json()[0] ?? [];
+            }catch (Exception $exception){
+                $response = [];
+            }
 
             if ($response) {
                 $this->city = $response['City'];
