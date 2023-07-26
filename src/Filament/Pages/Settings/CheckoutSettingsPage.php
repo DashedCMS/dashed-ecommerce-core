@@ -113,7 +113,7 @@ class CheckoutSettingsPage extends Page implements HasForms
                 TextInput::make("checkout_bcc_email_{$site['id']}")
                     ->email()
                     ->label('BCC email om de bevestigingsmail naar te sturen'),
-                Toggle::make("checkout_force_checkout_page{$site['id']}")
+                Toggle::make("checkout_force_checkout_page_{$site['id']}")
                     ->label('Forceer checkout pagina vanaf de winkelwagen pagina')
                     ->helperText('Hiermee wordt de klant direct naar de checkout pagina gestuurd als ze naar de winkelwagen pagina gaan.'),
             ];
