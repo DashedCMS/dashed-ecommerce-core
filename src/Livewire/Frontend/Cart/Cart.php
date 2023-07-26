@@ -18,6 +18,13 @@ class Cart extends Component
     public $subtotal;
     public $tax;
     public $total;
+    public $paymentCosts;
+    public $shippingCosts;
+    public $depositAmount;
+    public bool $postpayPaymentMethod = false;
+    public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
+    public array $paymentMethods = [];
+    public array $depositPaymentMethods = [];
 
     public function mount(Product $product)
     {
@@ -49,53 +56,6 @@ class Cart extends Component
         return [
 //            'extras.*.value' => ['nullable'],
         ];
-    }
-
-    public function changeQuantity(string $rowId, int $quantity)
-    {
-        if (! $quantity) {
-            if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
-            }
-
-            $this->checkCart('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
-        } else {
-            if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
-                \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
-            }
-
-            $this->checkCart('success', Translation::get('product-updated-to-cart', 'cart', 'The product has been updated to your cart'));
-        }
-
-        $this->fillPrices();
-    }
-
-    public function applyDiscountCode()
-    {
-        if (! $this->discountCode) {
-            session(['discountCode' => '']);
-            $this->discountCode = '';
-            $this->discount = 0;
-            $this->fillPrices();
-
-            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
-        }
-
-        $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
-
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
-            session(['discountCode' => '']);
-            $this->discountCode = '';
-            $this->fillPrices();
-
-            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
-        }
-
-        session(['discountCode' => $discountCode->code]);
-        $this->fillPrices();
-
-        return $this->checkCart('success', Translation::get('discount-code-applied', 'cart', 'The discount code has been applied and discount has been calculated'));
     }
 
     public function render()

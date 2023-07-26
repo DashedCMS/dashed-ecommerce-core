@@ -29,6 +29,7 @@ class Checkout extends Component
     public $shippingMethod;
     public $paymentMethod;
     public $depositPaymentMethod;
+    public string $discountCode = '';
     public bool $invoiceAddress = false;
     public bool $isCompany = false;
     public string $note = '';
@@ -93,20 +94,6 @@ class Checkout extends Component
         $this->retrievePaymentMethods();
         $this->retrieveShippingMethods();
         $this->fillPrices();
-    }
-
-    public function fillPrices()
-    {
-        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod);
-        $this->subtotal = $checkoutData['subTotal'];
-        $this->discount = $checkoutData['discount'];
-        $this->tax = $checkoutData['btw'];
-        $this->total = $checkoutData['total'];
-        $this->shippingCosts = $checkoutData['shippingCosts'];
-        $this->paymentCosts = $checkoutData['paymentCosts'];
-        $this->depositAmount = $checkoutData['depositAmount'];
-        $this->depositPaymentMethods = $checkoutData['depositPaymentMethods'];
-        $this->postpayPaymentMethod = $checkoutData['postpayPaymentMethod'];
     }
 
     public function getCartItemsProperty()
@@ -607,26 +594,6 @@ class Checkout extends Component
 
             return redirect($transaction['redirectUrl'], 303);
         }
-    }
-
-    public function changeQuantity(string $rowId, int $quantity)
-    {
-        if (! $quantity) {
-            if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
-            }
-
-            $this->checkCart('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
-        } else {
-            if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
-                \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
-            }
-
-            $this->checkCart('success', Translation::get('product-updated-to-cart', 'cart', 'The product has been updated to your cart'));
-        }
-
-        $this->fillPrices();
     }
 
     public function render()
