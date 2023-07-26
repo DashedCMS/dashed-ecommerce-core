@@ -587,10 +587,137 @@
                 </div>
             </div>
         </form>
+
+        @if(Customsetting::get('checkout_google_api_key'))
+            <script
+                src="https://maps.googleapis.com/maps/api/js?key={{Customsetting::get('checkout_google_api_key')}}&callback=initAutocomplete&libraries=places&v=weekly"
+                defer></script>
+
+            <script>
+                let placeSearch;
+                let autocomplete;
+                let autocompleteInvoice;
+
+                const componentForm = {
+                    street_number: "short_name",
+                    route: "long_name",
+                    locality: "long_name",
+                    country: "long_name",
+                    postal_code: "short_name",
+                };
+
+                function initAutocomplete() {
+                    autocomplete = new google.maps.places.Autocomplete(
+                        document.getElementById("street"), {
+                            types: ["geocode"]
+                        }
+                    );
+                    autocomplete.setFields(["address_component"]);
+                    autocomplete.addListener("place_changed", fillInAddress);
+
+
+                }
+
+                function initAutocompleteInvoice() {
+                    setTimeout(function () {
+                        autocompleteInvoice = new google.maps.places.Autocomplete(
+                            document.getElementById("invoice_street"), {
+                                types: ["geocode"]
+                            }
+                        );
+                        autocompleteInvoice.setFields(["address_component"]);
+                        autocompleteInvoice.addListener("place_changed", fillInAddressInvoice);
+                    }, 300);
+                }
+
+                function fillInAddress() {
+                    const place = autocomplete.getPlace();
+
+                    // for (const component in componentForm) {
+                    document.getElementById('house_nr').value = "";
+                    document.getElementById('street').value = "";
+                    document.getElementById('city').value = "";
+                    document.getElementById('country').value = "";
+                    document.getElementById('zip_code').value = "";
+                    // document.getElementById(component).value = "";
+                    // document.getElementById(component).disabled = false;
+                    // }
+
+                    for (const component of place.address_components) {
+                        const addressType = component.types[0];
+
+                        if (componentForm[addressType]) {
+                            const val = component[componentForm[addressType]];
+                            if (addressType == 'street_number') {
+                                document.getElementById('house_nr').value = val;
+                            } else if (addressType == 'route') {
+                                document.getElementById('street').value = val;
+                            } else if (addressType == 'locality') {
+                                document.getElementById('city').value = val;
+                            } else if (addressType == 'country') {
+                                app.country = val;
+                            } else if (addressType == 'postal_code') {
+                                document.getElementById('zip_code').value = val;
+                            }
+                        }
+                    }
+                }
+
+                function fillInAddressInvoice() {
+                    const place = autocompleteInvoice.getPlace();
+
+                    // for (const component in componentForm) {
+                    document.getElementById('invoice_house_nr').value = "";
+                    document.getElementById('invoice_street').value = "";
+                    document.getElementById('invoice_city').value = "";
+                    document.getElementById('invoice_country').value = "";
+                    document.getElementById('invoice_zip_code').value = "";
+                    // document.getElementById(component).value = "";
+                    // document.getElementById(component).disabled = false;
+                    // }
+
+                    for (const component of place.address_components) {
+                        const addressType = component.types[0];
+
+                        if (componentForm[addressType]) {
+                            const val = component[componentForm[addressType]];
+                            if (addressType == 'street_number') {
+                                document.getElementById('invoice_house_nr').value = val;
+                            } else if (addressType == 'route') {
+                                document.getElementById('invoice_street').value = val;
+                            } else if (addressType == 'locality') {
+                                document.getElementById('invoice_city').value = val;
+                            } else if (addressType == 'country') {
+                                document.getElementById('invoice_country').value = val;
+                            } else if (addressType == 'postal_code') {
+                                document.getElementById('invoice_zip_code').value = val;
+                            }
+                        }
+                    }
+                }
+
+                function geolocate() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            const geolocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                            };
+                            const circle = new google.maps.Circle({
+                                center: geolocation,
+                                radius: position.coords.accuracy,
+                            });
+                            autocomplete.setBounds(circle.getBounds());
+                        });
+                    }
+                }
+
+            </script>
+        @endif
     </x-container>
 @else
     <x-container>
-        <h1 class="text-2xl font-bold">{{Translation::get('no-items-in-cart', 'cart', 'Geen items in je winkelwagen?')}}</h1>
-        <p>{{Translation::get('go-shop-furter', 'cart', 'Ga snel verder shoppen!')}}</p>
+        <h1 class="text-2xl font-bold">{{Translation::get('no-items-in-cart', 'cart', 'No items in your cart?')}}</h1>
+        <p>{{Translation::get('go-shop-furter', 'cart', 'Continue shopping!')}}</p>
     </x-container>
 @endif
