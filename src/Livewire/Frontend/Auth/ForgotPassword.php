@@ -17,7 +17,7 @@ use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
 use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 
-class Login extends Component
+class ForgotPassword extends Component
 {
     public ?string $loginEmail = '';
     public ?string $loginPassword = '';
@@ -100,6 +100,6 @@ class Login extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.auth.login');
+        return view('qcommerce-ecommerce-core::frontend.auth.forgot-password');
     }
 }
