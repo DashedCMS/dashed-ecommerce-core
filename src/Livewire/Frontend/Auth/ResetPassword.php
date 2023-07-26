@@ -28,7 +28,6 @@ class ResetPassword extends Component
             'password' => [
                 'min:6',
                 'max:255',
-                'confirmed',
                 'required_with:passwordConfirmation',
                 'same:passwordConfirmation',
             ],
@@ -39,9 +38,9 @@ class ResetPassword extends Component
         $this->user->password = Hash::make($this->password);
         $this->user->save();
 
-        Auth::login($user);
+        Auth::login($this->user);
 
-        $this->emit('showAlert', 'success', Translation::get('reset-password-post-success', 'login', 'Your password has been reset!'));
+        return redirect(route('qcommerce.frontend.account'))->with('success', Translation::get('reset-password-post-success', 'login', 'Your password has been reset!'));
     }
 
     public function render()

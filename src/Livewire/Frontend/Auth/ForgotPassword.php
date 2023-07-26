@@ -32,6 +32,8 @@ class ForgotPassword extends Component
             Mail::to($user->email)->send(new PasswordResetMail($user));
         }
 
+        $this->reset('email');
+
         $this->emit('showAlert', 'success', Translation::get('forgot-password-post-success', 'login', 'If we can find an account with your email you will receive a email to reset your password.'));
     }
 
