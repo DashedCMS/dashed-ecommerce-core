@@ -5,6 +5,8 @@ namespace Qubiqx\QcommerceEcommerceCore;
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
 use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account\Account;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account\Orders;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
@@ -89,6 +91,8 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('auth.login', Login::class);
         Livewire::component('auth.forgot-password', ForgotPassword::class);
         Livewire::component('auth.reset-password', ResetPassword::class);
+        Livewire::component('account.account', Account::class);
+        Livewire::component('account.orders', Orders::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)
