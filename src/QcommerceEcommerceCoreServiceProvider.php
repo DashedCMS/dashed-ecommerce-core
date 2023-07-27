@@ -88,10 +88,6 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
-        Livewire::component('auth.login', Login::class);
-        Livewire::component('auth.forgot-password', ForgotPassword::class);
-        Livewire::component('auth.reset-password', ResetPassword::class);
-        Livewire::component('account.account', Account::class);
         Livewire::component('account.orders', Orders::class);
 
         User::addDynamicRelation('orders', function (User $model) {
