@@ -366,12 +366,12 @@ class TransactionController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-status-cancelled', 'checkout', 'Your order is cancelled'));
         }
 
-        if (View::exists('qcommerce.checkout.complete')) {
+        if (view()->exists('qcommerce.checkout.complete') || view()->exists('qcommerce.orders.view-order')) {
             seo()->metaData('metaTitle', Translation::get('complete-page-meta-title', 'complete-order', 'Your order'));
 
             View::share('order', $order);
 
-            return view('qcommerce.checkout.complete');
+            return view()->exists('qcommerce.orders.view-order') ? view('qcommerce.orders.view-order') : view('qcommerce.checkout.complete');
         } else {
             return $this->pageNotFound();
         }
