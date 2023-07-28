@@ -3,16 +3,16 @@
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
 use Closure;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 use Qubiqx\QcommerceEcommerceCore\Mail\OrderNoteMail;
@@ -44,11 +44,11 @@ class CreateOrderLog extends Component implements HasForms
             Toggle::make('sendEmailToCustomer')
                 ->label('Moet de klant een notificatie van deze notitie ontvangen?')
                 ->default(false)
-                ->visible(fn(Closure $get) => $get('publicForCustomer'))
+                ->visible(fn (Closure $get) => $get('publicForCustomer'))
                 ->reactive(),
             TextInput::make('emailSubject')
                 ->label('Onderwerp van de mail')
-                ->visible(fn(Closure $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
+                ->visible(fn (Closure $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
             FileUpload::make('images')
                 ->name('Bestanden')
                 ->multiple()
