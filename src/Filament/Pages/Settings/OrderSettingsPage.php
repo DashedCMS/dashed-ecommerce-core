@@ -94,8 +94,7 @@ class OrderSettingsPage extends Page implements HasForms
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
                     ->label('Emails om de bevestigingsmail van een bestelling naar te sturen')
                     ->placeholder('Voer een email in')
-                    ->reactive()
-                    ->required(),
+                    ->reactive(),
                 TagsInput::make("notification_low_stock_emails_{$site['id']}")
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
                     ->label('Emails om de notificaties van lage voorraad naartoe te sturen')
@@ -118,7 +117,8 @@ class OrderSettingsPage extends Page implements HasForms
         foreach ($locales as $locale) {
             $schema = [
                 Placeholder::make('label')
-                    ->label("Fulfillment notificaties voor {$locale['name']}"),
+                    ->label("Fulfillment notificaties voor {$locale['name']}")
+                    ->helperText('Je kan de volgende variablen gebruiken in de mails: :firstName:, :lastName:, :email:, :phoneNumber:, :street:, :houseNr:, :zipCode:, :city:, :country:, :companyName:, :total:'),
                 Checkbox::make("fulfillment_status_unhandled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" actie')
                     ->reactive()
@@ -128,11 +128,11 @@ class OrderSettingsPage extends Page implements HasForms
                     ]),
                 TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 TinyEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
                     ->fileAttachmentsDirectory('/qcommerce/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Checkbox::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" actie')
                     ->reactive()
@@ -142,11 +142,11 @@ class OrderSettingsPage extends Page implements HasForms
                     ]),
                 TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 TinyEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail inhoud')
                     ->fileAttachmentsDirectory('/qcommerce/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Checkbox::make("fulfillment_status_packed_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" actie')
                     ->reactive()
@@ -156,11 +156,11 @@ class OrderSettingsPage extends Page implements HasForms
                     ]),
                 TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 TinyEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail inhoud')
                     ->fileAttachmentsDirectory('/qcommerce/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Checkbox::make("fulfillment_status_shipped_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" actie')
                     ->reactive()
@@ -170,11 +170,11 @@ class OrderSettingsPage extends Page implements HasForms
                     ]),
                 TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 TinyEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail inhoud')
                     ->fileAttachmentsDirectory('/qcommerce/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Checkbox::make("fulfillment_status_handled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" actie')
                     ->reactive()
@@ -184,11 +184,11 @@ class OrderSettingsPage extends Page implements HasForms
                     ]),
                 TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
                 TinyEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail inhoud')
                     ->fileAttachmentsDirectory('/qcommerce/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
 
             $tabs[] = Tab::make($locale['id'])
@@ -214,7 +214,7 @@ class OrderSettingsPage extends Page implements HasForms
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
             foreach ($emails as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -223,7 +223,7 @@ class OrderSettingsPage extends Page implements HasForms
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
             foreach ($emails as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
