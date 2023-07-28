@@ -216,28 +216,29 @@ class Order extends Model
         return $this->belongsTo(DiscountCode::class);
     }
 
-    public function parentCreditOrder()
+    public function parentCreditOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'credit_for_order_id');
     }
 
-    public function shippingMethod()
+    public function shippingMethod(): BelongsTo
     {
-        return $this->belongsTo(ShippingMethod::class)->withTrashed();
+        return $this->belongsTo(ShippingMethod::class)
+            ->withTrashed();
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function logs()
+    public function logs(): HasMany
     {
         return $this->hasMany(OrderLog::class);
     }
-    public function publicLogs()
+    public function publicLogs(): HasMany
     {
-        return $this->logs()
+        return $this->hasMany(OrderLog::class)
             ->where('public_for_customer', 1);
     }
 

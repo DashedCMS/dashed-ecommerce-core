@@ -15,7 +15,7 @@ class ViewOrder extends Component
     {
         $this->order = $order;
         $this->orderProducts = $order->orderProducts;
-        $this->notes = $order->notes;
+        $this->notes = $order->publicLogs;
     }
 
     public function render()
