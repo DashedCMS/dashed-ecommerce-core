@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Orders;
 
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
+use Illuminate\Database\Eloquent\Collection;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 
 class ViewOrder extends Component
