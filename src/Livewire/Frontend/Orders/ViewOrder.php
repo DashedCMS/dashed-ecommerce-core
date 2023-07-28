@@ -10,6 +10,7 @@ class ViewOrder extends Component
 {
     public Order $order;
     public Collection $orderProducts;
+    public Collection $notes;
 
     public function mount(Order $order)
     {
