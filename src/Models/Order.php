@@ -235,6 +235,11 @@ class Order extends Model
     {
         return $this->hasMany(OrderLog::class);
     }
+    public function publicLogs()
+    {
+        return $this->logs()
+            ->where('public_for_customer', 1);
+    }
 
     public function creditOrders()
     {
