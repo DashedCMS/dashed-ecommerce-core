@@ -1,27 +1,27 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
+namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Checkout;
 
-use Exception;
 use Carbon\Carbon;
-use Livewire\Component;
-use Illuminate\Validation\Rule;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Qubiqx\QcommerceCore\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceTranslations\Models\Translation;
+use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
 use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
+use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
+use Qubiqx\QcommerceTranslations\Models\Translation;
 
 class Checkout extends Component
 {
@@ -625,6 +625,6 @@ class Checkout extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.cart.checkout');
+        return view('qcommerce-ecommerce-core::frontend.checkout.checkout');
     }
 }

@@ -2,60 +2,61 @@
 
 namespace Qubiqx\QcommerceEcommerceCore;
 
-use Livewire\Livewire;
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceCore\Models\User;
-use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
+use Livewire\Livewire;
+use Qubiqx\QcommerceCore\Models\User;
+use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
+use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
+use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
+use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account\Orders;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\AddToCart;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Cart;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\CartCount;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Checkout\Checkout;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProducts;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
+use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
+use Qubiqx\QcommerceEcommerceCore\Middleware\EcommerceFrontendMiddleware;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Models\Product;
 use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Cart;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Checkout;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account\Orders;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\AddToCart;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\CartCount;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
-use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use Qubiqx\QcommerceEcommerceCore\Middleware\EcommerceFrontendMiddleware;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProducts;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
-use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
+use Spatie\LaravelPackageTools\Package;
 
 class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 {
@@ -78,13 +79,14 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
 
         //Frontend components
         Livewire::component('cart.cart', Cart::class);
-        Livewire::component('cart.checkout', Checkout::class);
         Livewire::component('cart.cart-count', CartCount::class);
         Livewire::component('cart.add-to-cart', AddToCart::class);
+        Livewire::component('checkout.checkout', Checkout::class);
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
         Livewire::component('account.orders', Orders::class);
+        Livewire::component('order.view', ViewOrder::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)
