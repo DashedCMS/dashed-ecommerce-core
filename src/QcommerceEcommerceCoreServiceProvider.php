@@ -86,7 +86,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
         Livewire::component('account.orders', Orders::class);
-        Livewire::component('order.view', ViewOrder::class);
+        Livewire::component('orders.view-order', ViewOrder::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)
