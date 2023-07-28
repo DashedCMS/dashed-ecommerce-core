@@ -24,6 +24,7 @@ class OrderFulfillmentStatusChangedMail extends Mailable
     public function build()
     {
         $notification = $this->notification;
+        $subject = $this->subject;
 
         $variables = [
             'first_name',
@@ -41,11 +42,12 @@ class OrderFulfillmentStatusChangedMail extends Mailable
 
         foreach ($variables as $variable) {
             $notification = str($notification)->replace(":" . str($variable)->camel() . ":", $this->order[$variable]);
+            $subject = str($subject)->replace(":" . str($variable)->camel() . ":", $this->order[$variable]);
         }
 
         return $this->view('qcommerce-core::emails.notification')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
-            ->subject($this->subject)
+            ->subject($subject)
             ->with([
                 'notification' => $notification,
             ]);
