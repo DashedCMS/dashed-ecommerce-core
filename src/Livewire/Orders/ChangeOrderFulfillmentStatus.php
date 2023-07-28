@@ -24,6 +24,14 @@ class ChangeOrderFulfillmentStatus extends Component
 
     public function update()
     {
+        if ($this->order->fulfillment_status == $this->fulfillmentStatus) {
+            $this->emit('notify', [
+                'status' => 'error',
+                'message' => 'Bestelling heeft al deze fulfillment status',
+            ]);
+            return;
+        }
+
         $this->order->changeFulfillmentStatus($this->fulfillmentStatus);
 
         $orderLog = new OrderLog();
