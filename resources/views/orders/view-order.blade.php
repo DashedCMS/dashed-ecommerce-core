@@ -276,7 +276,13 @@
                                             @endif
                                             @if($log->public_for_customer)
                                                 <p class="text-sm text-gray-500">
-                                                    Klant heeft een email gehad</p>
+                                                    Notitie is zichtbaar voor de klant
+                                                </p>
+                                            @endif
+                                            @if($log->send_email_to_customer)
+                                                <p class="text-sm text-gray-500">
+                                                    Klant heeft een mail gehad van deze notitie
+                                                </p>
                                             @endif
                                             @if($log->note)
                                                 <p class="text-sm text-gray-900">{!! nl2br($log->note) !!}</p>
