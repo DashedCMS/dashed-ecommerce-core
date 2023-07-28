@@ -29,6 +29,7 @@ class ChangeOrderFulfillmentStatus extends Component
                 'status' => 'error',
                 'message' => 'Bestelling heeft al deze fulfillment status',
             ]);
+
             return;
         }
 
