@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Pages\Actions\Action;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
@@ -11,12 +12,9 @@ use Filament\Tables\Actions\BulkAction;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Tables\Actions\ButtonAction;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Placeholder;
-use Filament\Tables\Filters\MultiSelectFilter;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
@@ -122,7 +120,8 @@ class ListOrders extends ListRecords
     protected function getTableActions(): array
     {
         return array_merge(parent::getTableActions(), [
-            ButtonAction::make('quickActions')
+            Action::make('quickActions')
+                ->button()
                 ->label('Quick')
                 ->color('primary')
                 ->modalHeading('Snel bewerken')
@@ -181,10 +180,12 @@ class ListOrders extends ListRecords
         }
 
         return [
-            MultiSelectFilter::make('status')
+            SelectFilter::make('status')
+                ->multiple()
                 ->form([
-                    MultiSelect::make('values')
+                    Select::make('values')
                         ->label('Status')
+                        ->multiple()
                         ->options([
                             'paid' => 'Betaald',
                             'partially_paid' => 'Gedeeltelijk betaald',
