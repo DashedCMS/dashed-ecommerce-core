@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
@@ -133,14 +134,14 @@ class ListOrders extends ListRecords
                                 ->label('Fulfillment status')
                                 ->options(Orders::getFulfillmentStatusses())
                                 ->required()
-                                ->default(fn ($record) => $record->fulfillment_status)
-                                ->hidden(fn ($record) => $record->credit_for_order_id),
+                                ->default(fn($record) => $record->fulfillment_status)
+                                ->hidden(fn($record) => $record->credit_for_order_id),
                             Select::make('retour_status')
                                 ->label('Retour status')
                                 ->options(Orders::getReturnStatusses())
                                 ->required()
-                                ->default(fn ($record) => $record->retour_status)
-                                ->hidden(fn ($record) => ! $record->credit_for_order_id),
+                                ->default(fn($record) => $record->retour_status)
+                                ->hidden(fn($record) => !$record->credit_for_order_id),
                         ])
                         ->columns([
                             'default' => 1,
@@ -150,10 +151,10 @@ class ListOrders extends ListRecords
                         ->schema([
                             Placeholder::make('shippingAddress')
                                 ->label('Verzendadres')
-                                ->content(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
+                                ->content(fn($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
                             Placeholder::make('shippingAddress')
                                 ->label('Factuuradres')
-                                ->content(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->invoice_street $record->invoice_house_nr<br>$record->invoice_city $record->invoice_zip_code<br>$record->invoice_country")),
+                                ->content(fn($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->invoice_street $record->invoice_house_nr<br>$record->invoice_city $record->invoice_zip_code<br>$record->invoice_country")),
                         ])
                         ->columns([
                             'default' => 1,
@@ -205,11 +206,14 @@ class ListOrders extends ListRecords
 //                ]),
 //            MultiSelectFilter::make('payment_method')
 //                ->options(OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method')->unique()),
-            MultiSelectFilter::make('fulfillment_status')
+            SelectFilter::make('fulfillment_status')
+                ->multiple()
                 ->options(Orders::getFulfillmentStatusses()),
-            MultiSelectFilter::make('retour_status')
+            SelectFilter::make('retour_status')
+                ->multiple()
                 ->options(Orders::getReturnStatusses()),
-            MultiSelectFilter::make('order_origin')
+            SelectFilter::make('order_origin')
+                ->multiple()
                 ->options($orderOrigins),
             Filter::make('start_date')
                 ->form([
@@ -220,7 +224,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['start_date'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
+                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
                         );
                 }),
             Filter::make('end_date')
@@ -232,7 +236,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['end_date'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
+                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
                         );
                 }),
         ];
