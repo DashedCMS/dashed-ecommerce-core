@@ -11,7 +11,7 @@ class Orders extends Component
 
     public function mount()
     {
-        $this->orders = auth()->user()->orders()->with('products')->get();
+        $this->orders = auth()->user()->orders()->get();
     }
 
     public function render()
