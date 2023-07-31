@@ -242,4 +242,9 @@ class ListOrders extends ListRecords
     {
         return 4;
     }
+
+    protected function shouldPersistTableFiltersInSession(): bool
+    {
+        return true;
+    }
 }
