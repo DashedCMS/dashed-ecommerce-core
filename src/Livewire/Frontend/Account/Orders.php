@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account;
 
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
+use Illuminate\Database\Eloquent\Collection;
 
 class Orders extends Component
 {
