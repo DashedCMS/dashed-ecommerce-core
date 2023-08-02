@@ -22,6 +22,7 @@ use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 class ListOrders extends ListRecords
 {
     protected static string $resource = OrderResource::class;
+    protected ?string $maxContentWidth = 'full';
 
     protected function getFilteredTableQuery(): Builder
     {
