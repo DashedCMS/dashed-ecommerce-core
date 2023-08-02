@@ -3,6 +3,7 @@
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
 use Closure;
+use Filament\Notifications\Notification;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
@@ -101,10 +102,10 @@ class CreateOrderLog extends Component implements HasForms
         }
 
         $this->emit('refreshPage');
-        $this->emit('notify', [
-            'status' => 'success',
-            'message' => 'De notificatie is aangemaakt',
-        ]);
+        Notification::make()
+            ->success()
+            ->title('De notificatie is aangemaakt')
+            ->send();
 
         $this->reset([
             'publicForCustomer',

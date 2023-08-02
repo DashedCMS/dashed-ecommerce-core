@@ -2,6 +2,7 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
+use Filament\Notifications\Notification;
 use Livewire\Component;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 
@@ -35,9 +36,9 @@ class SendOrderConfirmationToEmail extends Component
         Orders::sendNotification($this->order, $this->email);
 
         $this->emit('refreshPage');
-        $this->emit('notify', [
-            'status' => 'success',
-            'message' => 'De notificatie is verstuurd',
-        ]);
+        Notification::make()
+            ->success()
+            ->title('De notificatie is verstuurd')
+            ->send();
     }
 }
