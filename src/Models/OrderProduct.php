@@ -34,6 +34,15 @@ class OrderProduct extends Model
         'product_extras' => 'array',
     ];
 
+    public function scopeSearch($query, ?string $search)
+    {
+        if (request()->get('search', $search)) {
+            $search = strtolower(request()->get('search', $search));
+            $query->where('name', 'LIKE', "%$search%")
+                ->orWhereRaw('LOWER(product_extras) LIKE ?', ["%{$search}%"]);
+        }
+    }
+
     public static function boot()
     {
         parent::boot();

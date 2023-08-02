@@ -17,10 +17,44 @@ use Filament\Forms\Components\Placeholder;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
 
 class ListOrders extends ListRecords
 {
     protected static string $resource = OrderResource::class;
+
+    protected function getFilteredTableQuery(): Builder
+    {
+        $query = parent::getTableQuery();
+        $this->applyColumnSearchToTableQuery($query);
+        $this->applyGlobalSearchToTableQuery($query);
+        $orderIds = $query->pluck('id')->toArray();
+        $orderProductOrderIds = OrderProduct::search($this->getTableSearchQuery())->pluck('order_id')->toArray();
+
+        $query = Order::whereIn('id', array_merge($orderIds, $orderProductOrderIds));
+
+        $query = $this->applyFiltersToTableQuery($query);
+        $query = $this->applySearchToTableQuery($query);
+
+        foreach ($this->getCachedTableColumns() as $column) {
+            $query = $column->applyEagerLoading($query);
+            $query = $column->applyRelationshipAggregates($query);
+        }
+
+        return $query;
+    }
+
+    protected function applySearchToTableQuery(Builder $query): Builder
+    {
+        $originalQuery = clone $query;
+        $orderIds = OrderProduct::search($this->getTableSearchQuery())->pluck('order_id')->toArray();
+
+        $this->applyColumnSearchToTableQuery($query);
+        $this->applyGlobalSearchToTableQuery($query);
+        $orderIds = array_merge($orderIds, $query->pluck('id')->toArray());
+
+        return $originalQuery->whereIn('id', $orderIds);
+    }
 
     protected function getTableBulkActions(): array
     {
