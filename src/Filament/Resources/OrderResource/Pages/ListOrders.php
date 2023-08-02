@@ -120,7 +120,7 @@ class ListOrders extends ListRecords
     protected function getTableActions(): array
     {
         return array_merge(parent::getTableActions(), [
-            Action::make('quickActions')
+            \Filament\Tables\Actions\Action::make('quickActions')
                 ->button()
                 ->label('Quick')
                 ->color('primary')

@@ -23,6 +23,9 @@ class ShowProducts extends Component
 
     public array $activeFilters = [];
     public array $activeFilterQuery = [];
+    public array $usableFilters = [];
+
+    public $event = [];
 
     public function getQueryString()
     {
@@ -30,46 +33,68 @@ class ShowProducts extends Component
             'search' => ['except' => ''],
             'sortBy' => ['except' => ''],
             'page' => ['except' => 1],
-        ], $this->activeFilterQuery);
+            'activeFilters' => $this->activeFilters,
+        ], []);
     }
 
     public function mount(?ProductCategory $productCategory = null)
     {
         $this->productCategory = $productCategory;
 
-        $this->pagination = request()->get('pagination');
-        $this->orderBy = request()->get('order-by');
-        $this->order = request()->get('order');
-        $this->sortBy = request()->get('sort-by');
+        $this->pagination = request()->get('pagination', Customsetting::get('product_default_amount_of_products', null, 12));
+        $this->orderBy = request()->get('order-by', Customsetting::get('product_default_order_type', null, 'price'));
+        $this->order = request()->get('order', Customsetting::get('product_default_order_sort', null, 'DESC'));
+        $this->sortBy = request()->get('sortBy', 'default');
+
+        $activeFilters = request()->get('activeFilters', []);
+        foreach ($activeFilters as $filterKey => $activeFilter) {
+            foreach ($activeFilter as $optionKey => $value) {
+                if (!$value) {
+                    unset($activeFilters[$filterKey][$optionKey]);
+                }
+            }
+        }
+        $this->activeFilters = $activeFilters;
+
+        $this->loadProducts();
+    }
+
+    public function updated()
+    {
+        $this->loadProducts();
     }
 
     public function loadProducts()
     {
-        if (! $this->products) {
+//        if (!$this->products) {
 
-            $activeFilterQuery = [];
-
-            foreach($this->activeFilters as $key => $value) {
-                $activeFilterQuery['activeFilters'][$key] = ['except' => ''];
+        $activeFilterQuery = [];
+        $usableFilters = [];
+        foreach ($this->activeFilters as $filterKey => $filterValues) {
+            foreach ($filterValues as $valueKey => $valueActivated) {
+                if ($valueActivated) {
+                    $activeFilterQuery['activeFilters'][$valueKey] = ['except' => ''];
+                }
             }
-
-            $this->activeFilterQuery = $activeFilterQuery;
-
-            request()->replace(array_merge([
-                'search' => $this->search,
-                'sort-by' => $this->sortBy,
-                'page' => request()->get('page'),
-            ], $this->activeFilters));
-
-            $response = Products::getAll($this->pagination ?: Customsetting::get('product_default_amount_of_products', null, 12), $this->orderBy ?: Customsetting::get('product_default_order_type', null, 'price'), $this->order ?: Customsetting::get('product_default_order_sort', null, 'DESC'), $productCategory->id ?? null);
-            $this->products = $response['products'];
-            $this->filters = $response['filters'];
         }
+
+        $this->activeFilterQuery = $activeFilterQuery;
+
+        request()->replace(array_merge([
+            'search' => $this->search,
+            'sortBy' => $this->sortBy,
+            'page' => request()->get('page'),
+            'activeFilters' => $this->activeFilters,
+        ], []));
+
+        $response = Products::getAllV2($this->pagination, $this->sortBy, $productCategory->id ?? null, $this->search, $this->activeFilters);
+        $this->products = $response['products'];
+        $this->filters = $response['filters'];
+//        }
     }
 
     public function render()
     {
-        $this->loadProducts();
 
         return view('qcommerce-ecommerce-core::frontend.products.show-products', [
             'products' => $this->products,

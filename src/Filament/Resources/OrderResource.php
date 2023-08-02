@@ -261,6 +261,7 @@ class OrderResource extends Resource
                         'discount',
                         'status',
                         'site_id',
+                        'order_products.name'
                     ])
                     ->sortable(),
                 TextColumn::make('total')

@@ -36,11 +36,11 @@ class Products
             }
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -60,7 +60,7 @@ class Products
         return $products;
     }
 
-    public static function getAll($pagination = 12, $orderBy = 'created_at', $order = 'DESC', $categoryId = null)
+    public static function getAll($pagination = 12, $orderBy = 'created_at', $order = 'DESC', $categoryId = null, ?string $search = null)
     {
         $orderByRequest = request()->get('sort-by');
         //        return Cache::tags(['products'])->rememberForever("products-all-$pagination-$orderBy-$order-$categoryId-$orderByRequest-" . request()->get('page', 1), function () use ($pagination, $orderBy, $order, $categoryId, $orderByRequest) {
@@ -103,9 +103,9 @@ class Products
 
         $correctProductIds = [];
         if ($categoryId && $category = ProductCategory::with(['products'])->findOrFail($categoryId)) {
-            $allProducts = $category->products()->search()->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'productCategories'])->get();
+            $allProducts = $category->products()->search($search)->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'productCategories'])->get();
         } else {
-            $allProducts = Product::search()->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'productCategories'])->get();
+            $allProducts = Product::search($search)->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'productCategories'])->get();
         }
 
         $onlyShowParentIds = [];
@@ -118,14 +118,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -144,7 +144,7 @@ class Products
             }
         }
 
-        $products = Product::whereIn('id', $correctProductIds)->search()->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])->paginate($pagination)->withQueryString();
+        $products = Product::whereIn('id', $correctProductIds)->search($search)->thisSite()->publicShowable()->orderBy($orderBy, $order)->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])->paginate($pagination)->withQueryString();
 
         foreach ($products as $product) {
             if ($product->parent && $product->parent->only_show_parent_product) {
@@ -161,7 +161,11 @@ class Products
 
     public static function getFilters($products = [])
     {
-        $productFilters = ProductFilter::with(['productFilterOptions', 'productFilterOptions.products'])->where('hide_filter_on_overview_page', 0)->orderBy('created_at')->get();
+        $productFilters = ProductFilter::with(['productFilterOptions', 'productFilterOptions.products'])
+            ->where('hide_filter_on_overview_page', 0)
+            ->orderBy('created_at')
+            ->get();
+
         foreach ($productFilters as $productFilter) {
             $filterHasActiveOptions = false;
             $results = request()->get(str_replace(' ', '_', $productFilter->name));
@@ -174,7 +178,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -209,5 +213,147 @@ class Products
         } else {
             return Product::thisSite()->publicShowable()->where('id', $productId)->with(['productFilters', 'shippingClasses', 'productCategories'])->first();
         }
+    }
+
+    public static function getAllV2($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [])
+    {
+        if ($sortBy == 'price-asc') {
+            $orderBy = 'price';
+            $order = 'ASC';
+        } elseif ($sortBy == 'price-desc') {
+            $orderBy = 'price';
+            $order = 'DESC';
+        } elseif ($sortBy == 'most-sold') {
+            $orderBy = 'purchases';
+            $order = 'DESC';
+        } elseif ($sortBy == 'stock') {
+            $orderBy = 'stock';
+            $order = 'DESC';
+        } elseif ($sortBy == 'newest') {
+            $orderBy = 'created_at';
+            $order = 'DESC';
+        } else {
+            $orderBy = 'order';
+            $order = 'ASC';
+        }
+
+//        dump($activeFilters);
+        $productFilters = self::getFiltersV2([], $activeFilters);
+//        dump($productFilters);
+        $hasActiveFilters = false;
+        foreach ($productFilters as $productFilter) {
+            foreach ($productFilter->productFilterOptions as $option) {
+                if ($option->checked) {
+                    $hasActiveFilters = true;
+                }
+            }
+        }
+//        dump($hasActiveFilters);
+
+        $correctProductIds = [];
+        if ($categoryId && $category = ProductCategory::with(['products'])
+                ->findOrFail($categoryId)) {
+            $allProducts = $category->products()
+                ->search($search)
+                ->thisSite()
+                ->publicShowable()
+                ->orderBy($orderBy, $order)
+                ->with(['productFilters', 'productCategories'])
+                ->get();
+        } else {
+            $allProducts = Product::search($search)
+                ->thisSite()
+                ->publicShowable()
+                ->orderBy($orderBy, $order)
+                ->with(['productFilters', 'productCategories'])
+                ->get();
+        }
+
+        $onlyShowParentIds = [];
+        foreach ($allProducts as $product) {
+            $productIsValid = true;
+            if ($hasActiveFilters) {
+                foreach ($productFilters as $productFilter) {
+                    $productValidForFilter = false;
+                    $filterIsActive = false;
+                    foreach ($productFilter->productFilterOptions as $option) {
+                        if ($option->checked) {
+//                            dump($option->name);
+                            $filterIsActive = true;
+                            if (!$productValidForFilter) {
+                                if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
+                                    $productValidForFilter = true;
+                                }
+                            }
+                        }
+                    }
+                    if ($filterIsActive && !$productValidForFilter) {
+                        $productIsValid = false;
+                    }
+                }
+            }
+
+            if ($productIsValid && $product->parent && $product->parent->only_show_parent_product) {
+                if (in_array($product->parent->id, $onlyShowParentIds)) {
+                    $productIsValid = false;
+                } else {
+                    $onlyShowParentIds[] = $product->parent->id;
+                }
+            }
+
+            if ($productIsValid) {
+                $correctProductIds[] = $product->id;
+            }
+        }
+
+        $products = Product::whereIn('id', $correctProductIds)
+            ->search($search)
+            ->thisSite()
+            ->publicShowable()
+            ->orderBy($orderBy, $order)
+            ->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])
+            ->paginate($pagination)
+            ->withQueryString();
+
+        foreach ($products as $product) {
+            if ($product->parent && $product->parent->only_show_parent_product) {
+                $product->name = $product->parent->name;
+            }
+        }
+
+        return [
+            'products' => $products,
+            'filters' => self::getFiltersV2($allProducts->pluck('id'), $activeFilters),
+        ];
+    }
+
+    public static function getFiltersV2($products = [], array $activeFilters = [])
+    {
+        $productFilters = ProductFilter::with(['productFilterOptions', 'productFilterOptions.products'])
+            ->where('hide_filter_on_overview_page', 0)
+            ->orderBy('created_at')
+            ->get();
+
+        foreach ($productFilters as $productFilter) {
+            $filterHasActiveOptions = false;
+            $results = $activeFilters[$productFilter->name] ?? [];
+            foreach ($productFilter->productFilterOptions as $option) {
+                if ($results && array_key_exists($option->name, $results) && $results[$option->name]) {
+                    $option->checked = true;
+                } else {
+                    $option->checked = false;
+                }
+                $option->resultCount = 0;
+                if ($products) {
+                    $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                        $filterHasActiveOptions = true;
+                    }
+                }
+            }
+            $productFilter->hasActiveOptions = $filterHasActiveOptions;
+        }
+
+        return $productFilters;
     }
 }
