@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
 use Qubiqx\QcommerceEcommerceCore\Models\Order;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
+use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
 
 class ListOrders extends ListRecords
 {
