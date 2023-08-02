@@ -36,11 +36,11 @@ class Products
             }
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -118,14 +118,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (!$productValidForFilter) {
+                            if (! $productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && !$productValidForFilter) {
+                    if ($filterIsActive && ! $productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -178,7 +178,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -237,9 +237,9 @@ class Products
             $order = 'ASC';
         }
 
-//        dump($activeFilters);
+        //        dump($activeFilters);
         $productFilters = self::getFiltersV2([], $activeFilters);
-//        dump($productFilters);
+        //        dump($productFilters);
         $hasActiveFilters = false;
         foreach ($productFilters as $productFilter) {
             foreach ($productFilter->productFilterOptions as $option) {
@@ -248,7 +248,7 @@ class Products
                 }
             }
         }
-//        dump($hasActiveFilters);
+        //        dump($hasActiveFilters);
 
         $correctProductIds = [];
         if ($categoryId && $category = ProductCategory::with(['products'])
@@ -278,16 +278,16 @@ class Products
                     $filterIsActive = false;
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
-//                            dump($option->name);
+                            //                            dump($option->name);
                             $filterIsActive = true;
-                            if (!$productValidForFilter) {
+                            if (! $productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && !$productValidForFilter) {
+                    if ($filterIsActive && ! $productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -346,7 +346,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }

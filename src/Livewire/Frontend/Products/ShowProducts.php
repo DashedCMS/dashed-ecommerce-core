@@ -49,7 +49,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (!$value) {
+                if (! $value) {
                     unset($activeFilters[$filterKey][$optionKey]);
                 }
             }
@@ -66,7 +66,7 @@ class ShowProducts extends Component
 
     public function loadProducts()
     {
-//        if (!$this->products) {
+        //        if (!$this->products) {
 
         $activeFilterQuery = [];
         $usableFilters = [];
@@ -90,7 +90,7 @@ class ShowProducts extends Component
         $response = Products::getAllV2($this->pagination, $this->sortBy, $productCategory->id ?? null, $this->search, $this->activeFilters);
         $this->products = $response['products'];
         $this->filters = $response['filters'];
-//        }
+        //        }
     }
 
     public function render()
