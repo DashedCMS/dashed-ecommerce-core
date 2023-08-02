@@ -2,8 +2,8 @@
 
 namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
 
-use Filament\Notifications\Notification;
 use Livewire\Component;
+use Filament\Notifications\Notification;
 use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
 
 class SendOrderConfirmationToEmail extends Component

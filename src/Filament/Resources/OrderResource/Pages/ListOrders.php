@@ -153,11 +153,11 @@ class ListOrders extends ListRecords
 
     protected function getTableActions(): array
     {
-//        $quickOrderProducts = [];
+        //        $quickOrderProducts = [];
 
-//        foreach(fn($record) => $record->orderProducts as $orderProduct){
-//            dd($orderProduct);
-//        }
+        //        foreach(fn($record) => $record->orderProducts as $orderProduct){
+        //            dd($orderProduct);
+        //        }
 
         return array_merge(parent::getTableActions(), [
             \Filament\Tables\Actions\Action::make('quickActions')
@@ -166,7 +166,7 @@ class ListOrders extends ListRecords
                 ->color('primary')
                 ->modalHeading('Snel bewerken')
                 ->modalButton('Opslaan')
-                ->modalFooter(fn($record) => view('qcommerce-ecommerce-core::orders.quick-view-order', ['record' => $record]))
+                ->modalFooter(fn ($record) => view('qcommerce-ecommerce-core::orders.quick-view-order', ['record' => $record]))
                 ->form([
 //                    Section::make('Status')
 //                        ->schema([
@@ -191,10 +191,10 @@ class ListOrders extends ListRecords
                         ->schema([
                             Placeholder::make('shippingAddress')
                                 ->label('Verzendadres')
-                                ->content(fn($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
+                                ->content(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
                             Placeholder::make('shippingAddress')
                                 ->label('Factuuradres')
-                                ->content(fn($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->invoice_street $record->invoice_house_nr<br>$record->invoice_city $record->invoice_zip_code<br>$record->invoice_country")),
+                                ->content(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . ' < br>' : '') . "$record->name<br>$record->invoice_street $record->invoice_house_nr<br>$record->invoice_city $record->invoice_zip_code<br>$record->invoice_country")),
                         ])
                         ->columns([
                             'default' => 1,
@@ -266,7 +266,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['start_date'],
-                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
                         );
                 }),
             Filter::make('end_date')
@@ -278,7 +278,7 @@ class ListOrders extends ListRecords
                     return $query
                         ->when(
                             $data['end_date'],
-                            fn(Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
                         );
                 }),
         ];
