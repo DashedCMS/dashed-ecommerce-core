@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Commands;
+namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
-use Qubiqx\Qcommerce\Models\Order;
-use Qubiqx\Qcommerce\Models\Product;
+use Dashed\Dashed\Models\Order;
+use Dashed\Dashed\Models\Product;
 
 class RecalculatePurchasesCommand extends Command
 {
@@ -13,7 +13,7 @@ class RecalculatePurchasesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'qcommerce:recalculate-purchases';
+    protected $signature = 'dashed:recalculate-purchases';
 
     /**
      * The console command description.

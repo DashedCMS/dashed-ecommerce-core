@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages;
 
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
 
 class EditShippingZone extends EditRecord
 {

@@ -13,10 +13,10 @@ class AddIsPreOrderToOrders extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->boolean('contains_pre_orders')->default(0);
         });
-        Schema::table('qcommerce__order_products', function (Blueprint $table) {
+        Schema::table('dashed__order_products', function (Blueprint $table) {
             $table->boolean('is_pre_order')->default(0);
             $table->date('pre_order_restocked_date')->nullable();
         });

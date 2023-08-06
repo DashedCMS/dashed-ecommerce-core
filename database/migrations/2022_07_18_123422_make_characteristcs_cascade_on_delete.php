@@ -12,18 +12,18 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::table('qcommerce__product_characteristic', function (Blueprint $table) {
-            $table->dropForeign('qcommerce__product_characteristic_product_id_foreign');
+        Schema::table('dashed__product_characteristic', function (Blueprint $table) {
+            $table->dropForeign('dashed__product_characteristic_product_id_foreign');
             $table->dropForeign('product_characteristic_id_foreign');
 
             $table->foreign('product_characteristic_id', 'product_characteristic_id_foreign')
                 ->references('id')
-                ->on('qcommerce__product_characteristics')
+                ->on('dashed__product_characteristics')
                 ->cascadeOnDelete();
 
             $table->foreignId('product_id')
                 ->change()
-                ->constrained('qcommerce__products')
+                ->constrained('dashed__products')
                 ->cascadeOnDelete();
         });
     }

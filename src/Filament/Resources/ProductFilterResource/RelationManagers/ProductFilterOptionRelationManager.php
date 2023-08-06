@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Tables\Actions\LinkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\ButtonAction;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilterOption;
+use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Filament\Resources\RelationManagers\HasManyRelationManager;
 
 class ProductFilterOptionRelationManager extends HasManyRelationManager

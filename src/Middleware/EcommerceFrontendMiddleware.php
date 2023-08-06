@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Middleware;
+namespace Dashed\DashedEcommerceCore\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

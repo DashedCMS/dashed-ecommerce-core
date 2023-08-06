@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Orders;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Orders;
 
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 class ViewOrder extends Component
 {
@@ -21,6 +21,6 @@ class ViewOrder extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.orders.view-order');
+        return view('dashed-ecommerce-core::frontend.orders.view-order');
     }
 }

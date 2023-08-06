@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -9,13 +9,13 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
+use Dashed\DashedEcommerceCore\Models\ShippingClass;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
 
 class ShippingClassResource extends Resource
 {

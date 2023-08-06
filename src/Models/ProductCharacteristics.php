@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +24,7 @@ class ProductCharacteristics extends Model
         'name',
     ];
 
-    protected $table = 'qcommerce__product_characteristics';
+    protected $table = 'dashed__product_characteristics';
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -41,7 +41,7 @@ class ProductCharacteristics extends Model
 
     public function productCharacteristic()
     {
-        return $this->belongsToMany(Product::class, 'qcommerce__product_characteristic', 'product_characteristic_id');
+        return $this->belongsToMany(Product::class, 'dashed__product_characteristic', 'product_characteristic_id');
     }
 
     public function product()

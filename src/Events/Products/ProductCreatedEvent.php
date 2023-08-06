@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Events\Products;
+namespace Dashed\DashedEcommerceCore\Events\Products;
 
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 class ProductCreatedEvent
 {

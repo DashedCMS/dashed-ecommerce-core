@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -15,7 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -23,18 +23,18 @@ use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Forms\Components\HasManyRepeater;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Forms\Components\RelationshipRepeater;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Filament\Forms\Components\BelongsToManyMultiSelect;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Mohamedsabil83\FilamentFormsTinyeditor\Components\TinyEditor;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\RelationManagers\ChildProductsRelationManager;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\RelationManagers\ChildProductsRelationManager;
 
 class ProductResourceOld extends Resource
 {
@@ -252,12 +252,12 @@ class ProductResourceOld extends Resource
                     'max:255',]),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->unique('qcommerce__products', 'slug', fn ($record) => $record)
+                    ->unique('dashed__products', 'slug', fn ($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren')
                     ->rules(['max:255',]),
                 TinyEditor::make('description')
                     ->label('Uitgebreide beschrijving')
-                    ->fileAttachmentsDirectory('/qcommerce/products/images')
+                    ->fileAttachmentsDirectory('/dashed/products/images')
                     ->rules([
                         'max:10000',
                     ])
@@ -291,7 +291,7 @@ class ProductResourceOld extends Resource
                     ->rules(['max:200',])
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
                 FileUpload::make('meta_image')
-                    ->directory('qcommerce/products/meta-images')
+                    ->directory('dashed/products/meta-images')
                     ->name('Meta afbeelding')
                     ->image()
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)),
@@ -322,7 +322,7 @@ class ProductResourceOld extends Resource
                 Repeater::make('images')
                     ->schema([
                         FileUpload::make('image')
-                            ->directory('qcommerce/products/images')
+                            ->directory('dashed/products/images')
                             ->name('Afbeelding')
                             ->image()
                             ->required(),

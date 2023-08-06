@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 
 class ProductExtra extends Model
 {
@@ -29,7 +29,7 @@ class ProductExtra extends Model
         'name',
     ];
 
-    protected $table = 'qcommerce__product_extras';
+    protected $table = 'dashed__product_extras';
 
     public static function boot()
     {

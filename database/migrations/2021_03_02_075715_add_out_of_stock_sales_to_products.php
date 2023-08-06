@@ -13,7 +13,7 @@ class AddOutOfStockSalesToProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__products', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->boolean('out_of_stock_sellable')->default(0);
             $table->date('expected_in_stock_date')->nullable();
         });

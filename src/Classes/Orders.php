@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderConfirmationMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\PreOrderConfirmationMail;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail;
+use Dashed\DashedEcommerceCore\Mail\PreOrderConfirmationMail;
 
 class Orders
 {

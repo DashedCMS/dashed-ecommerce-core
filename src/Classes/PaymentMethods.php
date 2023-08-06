@@ -1,9 +1,9 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 
 class PaymentMethods
 {

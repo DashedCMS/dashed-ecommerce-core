@@ -13,7 +13,7 @@ class AddFieldsToOrder extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->date('date_of_birth')->nullable();
             $table->string('initials')->nullable();
             $table->string('gender')->nullable();

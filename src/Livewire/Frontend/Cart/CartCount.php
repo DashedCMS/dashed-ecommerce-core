@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
 use Gloudemans\Shoppingcart\Facades\Cart;
@@ -20,6 +20,6 @@ class CartCount extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.cart.cart-count');
+        return view('dashed-ecommerce-core::frontend.cart.cart-count');
     }
 }

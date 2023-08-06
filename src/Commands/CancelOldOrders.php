@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Commands;
+namespace Dashed\DashedEcommerceCore\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 class CancelOldOrders extends Command
 {
@@ -13,7 +13,7 @@ class CancelOldOrders extends Command
      *
      * @var string
      */
-    protected $signature = 'qcommerce:canceloldorders';
+    protected $signature = 'dashed:canceloldorders';
 
     /**
      * The console command description.

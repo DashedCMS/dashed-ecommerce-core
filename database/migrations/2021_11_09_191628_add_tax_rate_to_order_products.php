@@ -13,7 +13,7 @@ class AddTaxRateToOrderProducts extends Migration
      */
     public function up()
     {
-//        foreach (\Qubiqx\Qcommerce\Models\OrderProduct::latest()->get() as $orderProduct) {
+//        foreach (\Dashed\Dashed\Models\OrderProduct::latest()->get() as $orderProduct) {
 //            if ($orderProduct->product) {
 //                $orderProduct->vat_rate = $orderProduct->product->vat_rate;
 //            } else {

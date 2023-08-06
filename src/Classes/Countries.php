@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Str;
 

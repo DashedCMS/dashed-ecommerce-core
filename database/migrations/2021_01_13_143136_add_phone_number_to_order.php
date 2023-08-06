@@ -13,7 +13,7 @@ class AddPhoneNumberToOrder extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->string('phone_number')->nullable();
         });
     }

@@ -13,7 +13,7 @@ class AddHideFromPublicAtProductCharacteristics extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__product_characteristics', function (Blueprint $table) {
+        Schema::table('dashed__product_characteristics', function (Blueprint $table) {
             $table->boolean('hide_from_public')->default(0);
         });
     }

@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,7 +30,7 @@ class ShippingZone extends Model
         'name',
     ];
 
-    protected $table = 'qcommerce__shipping_zones';
+    protected $table = 'dashed__shipping_zones';
 
     protected $casts = [
         'zones' => 'array',

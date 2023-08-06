@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -12,11 +12,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers\ProductFilterOptionRelationManager;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers\ProductFilterOptionRelationManager;
 
 class ProductFilterResource extends Resource
 {

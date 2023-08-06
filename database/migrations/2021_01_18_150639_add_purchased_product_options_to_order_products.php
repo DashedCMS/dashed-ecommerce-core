@@ -13,7 +13,7 @@ class AddPurchasedProductOptionsToOrderProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__order_products', function (Blueprint $table) {
+        Schema::table('dashed__order_products', function (Blueprint $table) {
             $table->integer('quantity')->default(1);
             $table->json('product_extras')->nullable();
         });

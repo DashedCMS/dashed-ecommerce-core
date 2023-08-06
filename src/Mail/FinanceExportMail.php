@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Mail;
+namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedTranslations\Models\Translation;
 
 class FinanceExportMail extends Mailable
 {
@@ -31,7 +31,7 @@ class FinanceExportMail extends Mailable
     {
         $invoicePath = storage_path('app/invoices/exported-invoice.pdf');
 
-        return $this->view('qcommerce-ecommerce-core::emails.exported-invoice')
+        return $this->view('dashed-ecommerce-core::emails.exported-invoice')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
             ->attach($invoicePath, [

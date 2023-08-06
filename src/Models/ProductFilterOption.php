@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +24,7 @@ class ProductFilterOption extends Model
         'name',
     ];
 
-    protected $table = 'qcommerce__product_filter_options';
+    protected $table = 'dashed__product_filter_options';
 
     protected static function booted()
     {
@@ -45,6 +45,6 @@ class ProductFilterOption extends Model
 
     public function products()
     {
-        return $this->belongsToMany(ProductFilter::class, 'qcommerce__product_filter')->withPivot(['product_id']);
+        return $this->belongsToMany(ProductFilter::class, 'dashed__product_filter')->withPivot(['product_id']);
     }
 }

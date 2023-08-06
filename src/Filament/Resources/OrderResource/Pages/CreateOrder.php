@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
 use Filament\Resources\Pages\Page;
@@ -10,31 +10,31 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Qubiqx\QcommerceCore\Models\User;
+use Dashed\DashedCore\Models\User;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Support\Facades\Storage;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Placeholder;
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Dashed\DashedCore\Models\Customsetting;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class CreateOrder extends Page implements HasForms
 {
@@ -42,7 +42,7 @@ class CreateOrder extends Page implements HasForms
 
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
-    protected static string $view = 'qcommerce-ecommerce-core::orders.create-order';
+    protected static string $view = 'dashed-ecommerce-core::orders.create-order';
 
     public $loading = false;
 
@@ -744,7 +744,7 @@ class CreateOrder extends Page implements HasForms
         //        if ($paymentMethod['system'] == 'own' && $orderPayment->status == 'paid') {
         //            $newStatus = 'waiting_for_confirmation';
         //            $order->changeStatus($newStatus);
-        //            return redirect(route('qcommerce.orders.edit', [$order]));
+        //            return redirect(route('dashed.orders.edit', [$order]));
         //        } elseif ($paymentMethod['system'] == 'mollie' || (Mollie::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
         //            $transaction = Mollie::startTransaction($order, $orderPayment);
         //

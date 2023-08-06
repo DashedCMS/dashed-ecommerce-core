@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
+namespace Dashed\DashedEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
@@ -11,9 +11,9 @@ use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Exports\OrderListExport;
-use Qubiqx\QcommerceEcommerceCore\Exports\OrderListPerInvoiceLineExport;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Exports\OrderListExport;
+use Dashed\DashedEcommerceCore\Exports\OrderListPerInvoiceLineExport;
 
 class ExportOrdersPage extends Page implements HasForms
 {
@@ -25,7 +25,7 @@ class ExportOrdersPage extends Page implements HasForms
     protected static ?string $title = 'Exporteer bestellingen';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'qcommerce-ecommerce-core::exports.pages.export-orders';
+    protected static string $view = 'dashed-ecommerce-core::exports.pages.export-orders';
 
     public $startDate;
     public $endDate;

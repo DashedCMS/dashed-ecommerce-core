@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Commands;
+namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
-use Qubiqx\QcommerceCore\Classes\Mails;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
+use Dashed\DashedCore\Classes\Mails;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
 
 class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
 {
@@ -15,7 +15,7 @@ class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'qcommerce:checkpastduepreorderdatesforproductswithoutstockcommand';
+    protected $signature = 'dashed:checkpastduepreorderdatesforproductswithoutstockcommand';
 
     /**
      * The console command description.
@@ -45,7 +45,7 @@ class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
         if ($products->count()) {
             if (env('APP_ENV') == 'local') {
                 try {
-                    Mail::to('robin@qubiqx.com')->send(new ProductsWithPastDuePreOrderDateMail($products));
+                    Mail::to('robin@dashed.nl')->send(new ProductsWithPastDuePreOrderDateMail($products));
                 } catch (\Exception $e) {
                 }
             } else {

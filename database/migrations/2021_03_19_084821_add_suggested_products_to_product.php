@@ -13,14 +13,14 @@ class AddSuggestedProductsToProduct extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__product_suggested_product', function (Blueprint $table) {
+        Schema::create('dashed__product_suggested_product', function (Blueprint $table) {
             $table->id();
 
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('suggested_product_id');
 
-            $table->foreign('product_id', 'product_id')->references('id')->on('qcommerce__products');
-            $table->foreign('suggested_product_id', 'sug_product_id')->references('id')->on('qcommerce__products');
+            $table->foreign('product_id', 'product_id')->references('id')->on('dashed__products');
+            $table->foreign('suggested_product_id', 'sug_product_id')->references('id')->on('dashed__products');
 
             //Pivot
             $table->integer('order')->default(1);

@@ -13,7 +13,7 @@ class AddCheckboxOptionsToProductExtras extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__product_extra_options', function (Blueprint $table) {
+        Schema::table('dashed__product_extra_options', function (Blueprint $table) {
             $table->boolean('calculate_only_1_quantity')->default(0)->after('price');
         });
     }

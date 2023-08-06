@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class Products
 {

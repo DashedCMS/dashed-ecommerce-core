@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Mail;
+namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedTranslations\Models\Translation;
 
 class OrderCancelledMail extends Mailable
 {
@@ -31,7 +31,7 @@ class OrderCancelledMail extends Mailable
      */
     public function build()
     {
-        $mail = $this->view('qcommerce-ecommerce-core::emails.cancelled-order')
+        $mail = $this->view('dashed-ecommerce-core::emails.cancelled-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('order-cancelled-email-subject', 'orders', 'Order #:orderId: has been cancelled', 'text', [
                 'orderId' => $this->order->parentCreditOrder->invoice_id,

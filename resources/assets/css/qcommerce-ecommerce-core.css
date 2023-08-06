@@ -1,4 +1,4 @@
-@import '../../../../qcommerce-core/vendor/filament/forms/dist/module.esm.css';
+@import '../../../../dashed-core/vendor/filament/forms/dist/module.esm.css';
 
 @tailwind base;
 @tailwind components;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +25,7 @@ class ProductCharacteristic extends Model
         'value',
     ];
 
-    protected $table = 'qcommerce__product_characteristic';
+    protected $table = 'dashed__product_characteristic';
 
     protected static function booted()
     {

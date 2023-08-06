@@ -1,58 +1,58 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
 use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Http;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Gloudemans\Shoppingcart\Facades\Cart;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class ShoppingCart
 {
     public static function getApplyDiscountCodeUrl()
     {
-        return url(route('qcommerce.frontend.cart.apply-discount-code'));
+        return url(route('dashed.frontend.cart.apply-discount-code'));
     }
 
     public static function getAddToCartUrl(Product $product)
     {
-        return url(route('qcommerce.frontend.cart.add-to-cart', ['product' => $product]));
+        return url(route('dashed.frontend.cart.add-to-cart', ['product' => $product]));
     }
 
     public static function getRemoveFromCartUrl($item)
     {
-        return url(route('qcommerce.frontend.cart.remove-from-cart', ['rowId' => $item->rowId]));
+        return url(route('dashed.frontend.cart.remove-from-cart', ['rowId' => $item->rowId]));
     }
 
     public static function getUpdateToCartUrl($item)
     {
-        return url(route('qcommerce.frontend.cart.update-to-cart', ['rowId' => $item->rowId]));
+        return url(route('dashed.frontend.cart.update-to-cart', ['rowId' => $item->rowId]));
     }
 
     public static function getCartUrl()
     {
-        return LaravelLocalization::localizeUrl(route('qcommerce.frontend.cart'));
+        return LaravelLocalization::localizeUrl(route('dashed.frontend.cart'));
     }
 
     public static function getCheckoutUrl()
     {
-        return LaravelLocalization::localizeUrl(route('qcommerce.frontend.checkout'));
+        return LaravelLocalization::localizeUrl(route('dashed.frontend.checkout'));
     }
 
     public static function getStartTransactionUrl()
     {
-        return url(route('qcommerce.frontend.start-transaction'));
+        return url(route('dashed.frontend.start-transaction'));
     }
 
     public static function cartItems()

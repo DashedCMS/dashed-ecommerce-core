@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Checkout;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
 use Exception;
 use Carbon\Carbon;
@@ -9,19 +9,19 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Qubiqx\QcommerceCore\Models\User;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Validator;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class Checkout extends Component
 {
@@ -609,7 +609,7 @@ class Checkout extends Component
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
 
-            return redirect(url(route('qcommerce.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
+            return redirect(url(route('dashed.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
         } else {
             try {
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
@@ -625,6 +625,6 @@ class Checkout extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.checkout.checkout');
+        return view('dashed-ecommerce-core::frontend.checkout.checkout');
     }
 }

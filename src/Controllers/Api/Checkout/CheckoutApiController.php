@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Controllers\Api\Checkout;
+namespace Dashed\DashedEcommerceCore\Controllers\Api\Checkout;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 class CheckoutApiController extends Controller
 {

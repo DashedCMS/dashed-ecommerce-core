@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Account;
 
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,6 +16,6 @@ class Orders extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.account.orders');
+        return view('dashed-ecommerce-core::frontend.account.orders');
     }
 }

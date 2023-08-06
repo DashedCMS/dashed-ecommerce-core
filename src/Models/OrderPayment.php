@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
@@ -14,7 +14,7 @@ class OrderPayment extends Model
 
     protected static $logFillable = true;
 
-    protected $table = 'qcommerce__order_payments';
+    protected $table = 'dashed__order_payments';
 
     protected $fillable = [
         'order_id',

@@ -1,9 +1,9 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
-use Qubiqx\QcommerceCore\Models\User;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +15,7 @@ class OrderLog extends Model
 
     protected static $logFillable = true;
 
-    protected $table = 'qcommerce__order_logs';
+    protected $table = 'dashed__order_logs';
 
     protected $fillable = [
         'order_id',

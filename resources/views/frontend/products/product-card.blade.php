@@ -1,13 +1,13 @@
 <div>
     <div class="relative">
-        <x-qcommerce-ecommerce-core::frontend.products.schema
-                :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
+        <x-dashed-ecommerce-core::frontend.products.schema
+                :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
         <div class="relative h-72 w-full overflow-hidden rounded-lg">
             @if($product->firstImageUrl)
                 <a href="{{$product->getUrl()}}">
                     <x-drift::image
                             class="h-full w-full object-cover object-center"
-                            config="qcommerce"
+                            config="dashed"
                             :path="$product->firstImageUrl"
                             :alt=" $product->name"
                             :manipulations="[

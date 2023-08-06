@@ -12,9 +12,9 @@ return new class extends Migration {
      */
     public function up()
     {
-        foreach (\Qubiqx\QcommerceEcommerceCore\Models\ProductCategory::get() as $model) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ProductCategory::get() as $model) {
             $content = [];
-            foreach (\Qubiqx\QcommerceCore\Classes\Locales::getLocales() as $locale) {
+            foreach (\Dashed\DashedCore\Classes\Locales::getLocales() as $locale) {
                 $content['title'][$locale['id']] = $model->getTranslation('meta_title', $locale['id']);
                 $content['description'][$locale['id']] = $model->getTranslation('meta_description', $locale['id']);
                 $content['image'][$locale['id']] = $model->getTranslation('meta_image', $locale['id']);
@@ -22,15 +22,15 @@ return new class extends Migration {
             $model->metadata()->updateOrCreate([], $content);
         }
 
-        Schema::table('qcommerce__product_categories', function (Blueprint $table) {
+        Schema::table('dashed__product_categories', function (Blueprint $table) {
             $table->dropColumn('meta_title');
             $table->dropColumn('meta_description');
             $table->dropColumn('meta_image');
         });
 
-        foreach (\Qubiqx\QcommerceEcommerceCore\Models\Product::get() as $model) {
+        foreach (\Dashed\DashedEcommerceCore\Models\Product::get() as $model) {
             $content = [];
-            foreach (\Qubiqx\QcommerceCore\Classes\Locales::getLocales() as $locale) {
+            foreach (\Dashed\DashedCore\Classes\Locales::getLocales() as $locale) {
                 $content['title'][$locale['id']] = $model->getTranslation('meta_title', $locale['id']);
                 $content['description'][$locale['id']] = $model->getTranslation('meta_description', $locale['id']);
                 $content['image'][$locale['id']] = $model->getTranslation('meta_image', $locale['id']);
@@ -38,7 +38,7 @@ return new class extends Migration {
             $model->metadata()->updateOrCreate([], $content);
         }
 
-        Schema::table('qcommerce__products', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->dropColumn('meta_title');
             $table->dropColumn('meta_description');
             $table->dropColumn('meta_image');

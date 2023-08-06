@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::table('qcommerce__shipping_methods', function (Blueprint $table) {
+        Schema::table('dashed__shipping_methods', function (Blueprint $table) {
             $table->boolean('distance_range_enabled')->default(0);
             $table->integer('distance_range')->default(0);
         });

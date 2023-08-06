@@ -12,7 +12,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::table('qcommerce__discount_codes', function (Blueprint $table) {
+        Schema::table('dashed__discount_codes', function (Blueprint $table) {
             $table->boolean('create_multiple_codes')
                 ->default(false);
             $table->integer('amount_of_codes')

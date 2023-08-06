@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +18,7 @@ class ShippingMethodClass extends Model
         'costs',
     ];
 
-    protected $table = 'qcommerce__shipping_method_class';
+    protected $table = 'dashed__shipping_method_class';
 
     public function getActivitylogOptions(): LogOptions
     {

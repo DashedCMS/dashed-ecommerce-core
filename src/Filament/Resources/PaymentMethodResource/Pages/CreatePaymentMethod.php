@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages;
 
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
 
 class CreatePaymentMethod extends CreateRecord
 {

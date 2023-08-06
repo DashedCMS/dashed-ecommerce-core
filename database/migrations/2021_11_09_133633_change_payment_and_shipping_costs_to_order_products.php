@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Str;
-use Qubiqx\Qcommerce\Models\Order;
+use Dashed\Dashed\Models\Order;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-use Qubiqx\Qcommerce\Models\OrderProduct;
+use Dashed\Dashed\Models\OrderProduct;
 use Illuminate\Database\Migrations\Migration;
 
 class ChangePaymentAndShippingCostsToOrderProducts extends Migration
@@ -16,7 +16,7 @@ class ChangePaymentAndShippingCostsToOrderProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__order_products', function (Blueprint $table) {
+        Schema::table('dashed__order_products', function (Blueprint $table) {
             $table->decimal('vat_rate')->after('btw')->nullable();
             $table->string('sku')->nullable()->after('product_id');
         });
@@ -62,7 +62,7 @@ class ChangePaymentAndShippingCostsToOrderProducts extends Migration
 //            }
 //        }
 
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->dropColumn('payment_costs');
             $table->dropColumn('shipping_costs');
         });

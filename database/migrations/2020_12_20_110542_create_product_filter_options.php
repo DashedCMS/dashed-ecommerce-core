@@ -13,10 +13,10 @@ class CreateProductFilterOptions extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__product_filter_options', function (Blueprint $table) {
+        Schema::create('dashed__product_filter_options', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_filter_id')->constrained('qcommerce__product_filters');
+            $table->foreignId('product_filter_id')->constrained('dashed__product_filters');
             $table->json('name');
 
             $table->softDeletes();
@@ -31,6 +31,6 @@ class CreateProductFilterOptions extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__product_parameters_options');
+        Schema::dropIfExists('dashed__product_parameters_options');
     }
 }

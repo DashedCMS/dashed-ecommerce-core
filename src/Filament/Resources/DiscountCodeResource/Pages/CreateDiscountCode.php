@@ -1,15 +1,15 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\Action;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 
 class CreateDiscountCode extends CreateRecord
 {

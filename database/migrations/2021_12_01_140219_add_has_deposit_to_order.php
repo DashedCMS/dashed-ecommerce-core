@@ -13,7 +13,7 @@ class AddHasDepositToOrder extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->boolean('has_deposit')->default(0);
         });
     }

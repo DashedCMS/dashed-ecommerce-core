@@ -13,10 +13,10 @@ class AddExtraOptionsToProducts extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__product_extras', function (Blueprint $table) {
+        Schema::create('dashed__product_extras', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('product_id')->constrained('dashed__products');
             $table->json('name');
             $table->string('type')->default('single');
             $table->boolean('required')->default(1);
@@ -25,10 +25,10 @@ class AddExtraOptionsToProducts extends Migration
             $table->timestamps();
         });
 
-        Schema::create('qcommerce__product_extra_options', function (Blueprint $table) {
+        Schema::create('dashed__product_extra_options', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_extra_id')->constrained('qcommerce__product_extras');
+            $table->foreignId('product_extra_id')->constrained('dashed__product_extras');
             $table->json('value');
             $table->decimal('price');
 

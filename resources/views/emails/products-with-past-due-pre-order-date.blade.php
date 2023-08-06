@@ -239,7 +239,7 @@
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('qcommerce', $logo, [
+                                                                             src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('dashed', $logo, [
                                                                                     'heighten' => 100
                                                                                 ])}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
@@ -351,7 +351,7 @@
                                                                     {{Translation::get('products-with-past-due-pre-order-date-email-content', 'products-with-past-due-pre-order-date', 'There are products that require attention. The pre-order date has been passed but the stock is below 1.', 'textarea')}}
                                                                     <br><br>
                                                                     @foreach($products as $product)
-                                                                        <a href="{{ route('qcommerce.products.edit', [$product, Locales::getFirstLocale()['id']]) }}">{{$product->name}}</a>
+                                                                        <a href="{{ route('dashed.products.edit', [$product, Locales::getFirstLocale()['id']]) }}">{{$product->name}}</a>
                                                                         <br>
                                                                     @endforeach
                                                                 </div>

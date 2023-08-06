@@ -13,7 +13,7 @@ class CreateVariableCostsForShippingMethods extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__shipping_methods', function (Blueprint $table) {
+        Schema::table('dashed__shipping_methods', function (Blueprint $table) {
             $table->string('sort')->change();
             $table->json('variables')->after('sort')->nullable();
         });

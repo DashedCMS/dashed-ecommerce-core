@@ -1,16 +1,16 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class ViewOrder extends ViewRecord
 {
     protected static string $resource = OrderResource::class;
 
-    protected static string $view = 'qcommerce-ecommerce-core::orders.view-order';
+    protected static string $view = 'dashed-ecommerce-core::orders.view-order';
 
     protected $listeners = [
         'refreshPage' => 'renderPage',

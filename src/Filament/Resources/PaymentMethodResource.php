@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -10,17 +10,17 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
+use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
+use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
 
 class PaymentMethodResource extends Resource
 {
@@ -80,7 +80,7 @@ class PaymentMethodResource extends Resource
                 ]),
             FileUpload::make('image')
                 ->label('Afbeelding / icon')
-                ->directory('qcommerce/payment-methods')
+                ->directory('dashed/payment-methods')
                 ->image(),
             TextInput::make('extra_costs')
                 ->label('Extra kosten wanneer deze betalingsmethode wordt gekozen')

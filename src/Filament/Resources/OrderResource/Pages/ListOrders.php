@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
@@ -14,10 +14,10 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class ListOrders extends ListRecords
 {
@@ -96,7 +96,7 @@ class ListOrders extends ListRecords
         foreach ($records as $order) {
             $url = $order->downloadInvoiceUrl();
             if ($url) {
-                $invoicePath = storage_path('app/public/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                $invoicePath = storage_path('app/public/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
                 $pdfMerger->addPDF($invoicePath, 'all');
                 $hasPdf = true;
             }
@@ -105,7 +105,7 @@ class ListOrders extends ListRecords
         if ($hasPdf) {
             $pdfMerger->merge();
 
-            $invoicePath = '/qcommerce/exports/invoices/exported-invoice.pdf';
+            $invoicePath = '/dashed/exports/invoices/exported-invoice.pdf';
             Storage::put($invoicePath, '');
             $pdfMerger->save(storage_path('app/public' . $invoicePath));
             $this->notify('success', 'De export is gedownload');
@@ -124,7 +124,7 @@ class ListOrders extends ListRecords
         foreach ($records as $order) {
             $url = $order->downloadPackingSlipUrl();
             if ($url) {
-                $packingSlipPath = storage_path('app/public/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
+                $packingSlipPath = storage_path('app/public/dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
                 if (file_exists($packingSlipPath)) {
                     $pdfMerger->addPdf($packingSlipPath, 'all');
                     $hasPdf = true;
@@ -135,7 +135,7 @@ class ListOrders extends ListRecords
         if ($hasPdf) {
             $pdfMerger->merge();
 
-            $invoicePath = '/qcommerce/exports/packing-slips/exported-packing-slip.pdf';
+            $invoicePath = '/dashed/exports/packing-slips/exported-packing-slip.pdf';
             Storage::put($invoicePath, '');
             $pdfMerger->save(storage_path('app/public' . $invoicePath));
             $this->notify('success', 'De export is gedownload');
@@ -166,7 +166,7 @@ class ListOrders extends ListRecords
                 ->color('primary')
                 ->modalHeading('Snel bewerken')
                 ->modalButton('Opslaan')
-                ->modalFooter(fn ($record) => view('qcommerce-ecommerce-core::orders.quick-view-order', ['record' => $record]))
+                ->modalFooter(fn ($record) => view('dashed-ecommerce-core::orders.quick-view-order', ['record' => $record]))
                 ->form([
 //                    Section::make('Status')
 //                        ->schema([

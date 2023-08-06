@@ -13,7 +13,7 @@ class AddSoftdeleteToPaymentMethod extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__payment_methods', function (Blueprint $table) {
+        Schema::table('dashed__payment_methods', function (Blueprint $table) {
             $table->softDeletes();
         });
     }

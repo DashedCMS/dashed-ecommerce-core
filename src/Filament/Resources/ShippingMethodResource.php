@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
 use Filament\Resources\Form;
@@ -14,11 +14,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Forms\Components\BelongsToSelect;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
+use Dashed\DashedEcommerceCore\Models\ShippingClass;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
 
 class ShippingMethodResource extends Resource
 {

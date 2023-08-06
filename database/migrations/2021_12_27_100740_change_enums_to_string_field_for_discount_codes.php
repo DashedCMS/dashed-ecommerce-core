@@ -13,7 +13,7 @@ class ChangeEnumsToStringFieldForDiscountCodes extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__discount_codes', function (Blueprint $table) {
+        Schema::table('dashed__discount_codes', function (Blueprint $table) {
             $table->string('valid_for')->nullable()->change();
             $table->string('minimal_requirements')->nullable()->change();
         });

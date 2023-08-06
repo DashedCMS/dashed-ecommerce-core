@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -13,15 +13,15 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DateTimePicker;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\ListDiscountCodes;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\ListDiscountCodes;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
 
 class DiscountCodeResource extends Resource
 {
@@ -90,7 +90,7 @@ class DiscountCodeResource extends Resource
                                     ->label('Code')
                                     ->helperText('Deze code vullen mensen in om af te rekenen.')
                                     ->required()
-                                    ->unique('qcommerce__discount_codes', 'code', fn ($record) => $record)
+                                    ->unique('dashed__discount_codes', 'code', fn ($record) => $record)
                                     ->minLength(3)
                                     ->maxLength(100)
                                     ->rules([

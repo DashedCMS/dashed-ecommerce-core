@@ -13,11 +13,11 @@ class AddActiveFiltersToProduct extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__active_product_filter', function (Blueprint $table) {
+        Schema::create('dashed__active_product_filter', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_filter_id')->constrained('qcommerce__product_filters');
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('product_filter_id')->constrained('dashed__product_filters');
+            $table->foreignId('product_id')->constrained('dashed__products');
         });
     }
 

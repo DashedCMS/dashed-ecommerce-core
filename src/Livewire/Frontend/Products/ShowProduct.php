@@ -1,9 +1,9 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
 use Livewire\Component;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 class ShowProduct extends Component
 {
@@ -20,6 +20,6 @@ class ShowProduct extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.products.show-product');
+        return view('dashed-ecommerce-core::frontend.products.show-product');
     }
 }

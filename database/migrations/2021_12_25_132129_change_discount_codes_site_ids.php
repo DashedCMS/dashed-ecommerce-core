@@ -11,7 +11,7 @@ class ChangeDiscountCodesSiteIds extends Migration
      */
     public function up()
     {
-        foreach (\Qubiqx\QcommerceEcommerceCore\Models\DiscountCode::get() as $discountCode) {
+        foreach (\Dashed\DashedEcommerceCore\Models\DiscountCode::get() as $discountCode) {
             $activeSiteIds = [];
             foreach ($discountCode->site_ids as $key => $site_id) {
                 $activeSiteIds[] = $key;

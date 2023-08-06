@@ -1,10 +1,10 @@
 @livewireScripts
 @if(isset($product))
-    <x-qcommerce-ecommerce-core::frontend.products.schema :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
+    <x-dashed-ecommerce-core::frontend.products.schema :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
 @endif
 @if(isset($products))
     @foreach($products as $product)
-        <x-qcommerce-ecommerce-core::frontend.products.schema :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
+        <x-dashed-ecommerce-core::frontend.products.schema :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
     @endforeach
 @endif
 

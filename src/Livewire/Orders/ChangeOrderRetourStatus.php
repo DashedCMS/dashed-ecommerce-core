@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
+namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 
 class ChangeOrderRetourStatus extends Component
 {
@@ -19,7 +19,7 @@ class ChangeOrderRetourStatus extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::orders.components.change-retour-status');
+        return view('dashed-ecommerce-core::orders.components.change-retour-status');
     }
 
     public function update()

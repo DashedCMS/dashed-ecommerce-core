@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Mail;
+namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedTranslations\Models\Translation;
 
 class OrderListExportMail extends Mailable
 {
@@ -31,7 +31,7 @@ class OrderListExportMail extends Mailable
     {
         $orderListPath = storage_path('app/order-lists/order-list.xlsx');
 
-        return $this->view('qcommerce-ecommerce-core::emails.exported-order-list')
+        return $this->view('dashed-ecommerce-core::emails.exported-order-list')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-order-list-email-subject', 'orders', 'Exported order list'))
             ->attach($orderListPath, [

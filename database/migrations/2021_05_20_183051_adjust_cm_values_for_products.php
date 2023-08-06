@@ -13,7 +13,7 @@ class AdjustCmValuesForProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__products', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->float('weight')->change()->nullable();
             $table->float('length')->change()->nullable();
             $table->float('width')->change()->nullable();

@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\RelationManagers;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\RelationManagers;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -14,13 +14,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\BooleanColumn;
 use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Resources\RelationManagers\HasManyRelationManager;
 
 class ChildProductsRelationManager extends HasManyRelationManager
 {
     protected static string $relationship = 'childProducts';
-    protected static string $view = 'qcommerce-ecommerce-core::products.child-products.table';
+    protected static string $view = 'dashed-ecommerce-core::products.child-products.table';
 
     protected static ?string $recordTitleAttribute = 'name';
 

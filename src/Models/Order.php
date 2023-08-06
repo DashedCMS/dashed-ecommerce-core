@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
@@ -9,30 +9,30 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceCore\Models\User;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Qubiqx\QcommerceCore\Classes\Mails;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Mails;
+use Dashed\DashedCore\Classes\Sites;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
-use Qubiqx\QcommerceEcommerceCore\Classes\Countries;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledMail;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Qubiqx\QcommerceEcommerceCore\Mail\ProductOnLowStockEmail;
-use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderCancelledMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\AdminOrderConfirmationMail;
-use Qubiqx\QcommerceEcommerceCore\Events\Orders\InvoiceCreatedEvent;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderCancelledWithCreditMail;
-use Qubiqx\QcommerceEcommerceCore\Mail\AdminPreOrderConfirmationMail;
-use Qubiqx\QcommerceEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
+use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
+use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
+use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
 
 class Order extends Model
 {
@@ -42,7 +42,7 @@ class Order extends Model
 
     protected static $logFillable = true;
 
-    protected $table = 'qcommerce__orders';
+    protected $table = 'dashed__orders';
 
     protected $fillable = [
         'hash',
@@ -376,7 +376,7 @@ class Order extends Model
         if ($this->order_origin == 'own' && ($this->invoice_id == 'PROFORMA' || $this->invoice_id == 'RETURN')) {
             if (Customsetting::get('random_invoice_number')) {
                 $invoiceNumber = '';
-                foreach (str_split(Customsetting::get('invoice_id_replacement', config('qcommerce.currentSite'), '*****')) as $codeCharacter) {
+                foreach (str_split(Customsetting::get('invoice_id_replacement', config('dashed.currentSite'), '*****')) as $codeCharacter) {
                     if ($codeCharacter == '*') {
                         $codeCharacter = strtoupper(Str::random(1));
                     }
@@ -386,7 +386,7 @@ class Order extends Model
                 $invoiceId = Customsetting::get('invoice_id_prefix') . $invoiceNumber . Customsetting::get('invoice_id_suffix');
                 while (Order::where('invoice_id', $invoiceId)->count()) {
                     $invoiceNumber = '';
-                    foreach (str_split(Customsetting::get('invoice_id_replacement', config('qcommerce.currentSite'), '*****')) as $codeCharacter) {
+                    foreach (str_split(Customsetting::get('invoice_id_replacement', config('dashed.currentSite'), '*****')) as $codeCharacter) {
                         if ($codeCharacter == '*') {
                             $codeCharacter = strtoupper(Str::random(1));
                         }
@@ -396,7 +396,7 @@ class Order extends Model
                     $invoiceId = Customsetting::get('invoice_id_prefix') . $invoiceNumber . Customsetting::get('invoice_id_suffix');
                 }
             } else {
-                $invoiceNumber = Customsetting::get('current_invoice_number', config('qcommerce.currentSite'), 1000) + 1;
+                $invoiceNumber = Customsetting::get('current_invoice_number', config('dashed.currentSite'), 1000) + 1;
                 $invoiceId = Customsetting::get('invoice_id_prefix') . $invoiceNumber . Customsetting::get('invoice_id_suffix');
                 Customsetting::set('current_invoice_number', $invoiceNumber);
             }
@@ -421,14 +421,14 @@ class Order extends Model
         if ($this->order_origin == 'own') {
             $this->generateInvoiceId();
             $order = Order::find($this->id);
-            if (! Storage::exists('/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
-                $view = View::make('qcommerce-ecommerce-core::invoices.invoice', compact('order'));
+            if (! Storage::exists('/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+                $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+                $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
@@ -459,13 +459,13 @@ class Order extends Model
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
             if (! Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
-                $view = View::make('qcommerce-ecommerce-core::invoices.packing-slip', compact('order'));
+                $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf';
+                $invoicePath = '/dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
             }
         }
@@ -477,13 +477,13 @@ class Order extends Model
             $this->generateInvoiceId();
             $order = $this;
             if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
-                $view = View::make('qcommerce-ecommerce-core::invoices.credit-invoice', compact('order'));
+                $view = View::make('dashed-ecommerce-core::invoices.credit-invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+                $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
@@ -963,8 +963,8 @@ class Order extends Model
     {
         $this->createInvoice();
 
-        if (file_exists(storage_path('app/public/qcommerce/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
-            return route('qcommerce.frontend.download-invoice', ['orderHash' => $this->hash]);
+        if (file_exists(storage_path('app/public/dashed/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
+            return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
         } else {
             return '';
         }
@@ -974,8 +974,8 @@ class Order extends Model
     {
         $this->createPackingSlip();
 
-        if (file_exists(storage_path('app/public/qcommerce/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
-            return route('qcommerce.frontend.download-packing-slip', ['orderHash' => $this->hash]);
+        if (file_exists(storage_path('app/public/dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
+            return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         } else {
             return '';
         }
@@ -983,7 +983,7 @@ class Order extends Model
 
     public function getUrl()
     {
-        return LaravelLocalization::localizeUrl(route('qcommerce.frontend.checkout.complete') . '?orderId=' . $this->hash . '&paymentId=' . ($this->orderPayments()->count() ? $this->orderPayments()->latest()->first()->hash : ''));
+        return LaravelLocalization::localizeUrl(route('dashed.frontend.checkout.complete') . '?orderId=' . $this->hash . '&paymentId=' . ($this->orderPayments()->count() ? $this->orderPayments()->latest()->first()->hash : ''));
     }
 
     public function fulfillmentStatus()

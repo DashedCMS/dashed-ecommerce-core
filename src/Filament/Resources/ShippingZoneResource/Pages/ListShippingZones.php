@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages;
 
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
 
 class ListShippingZones extends ListRecords
 {

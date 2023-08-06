@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class Cart extends Component
 {
@@ -58,6 +58,6 @@ class Cart extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.cart.cart');
+        return view('dashed-ecommerce-core::frontend.cart.cart');
     }
 }

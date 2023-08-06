@@ -1,16 +1,16 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
+namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
 use Illuminate\Support\Facades\Cache;
 use Filament\Widgets\StatsOverviewWidget;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class YearlyRevenueStats extends StatsOverviewWidget
 {
-    protected static string $view = 'qcommerce-ecommerce-core::widgets.revenue-stats-widget';
+    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
 
     protected function getCards(): array
     {

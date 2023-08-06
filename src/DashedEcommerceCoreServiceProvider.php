@@ -1,66 +1,66 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore;
+namespace Dashed\DashedEcommerceCore;
 
 use Livewire\Livewire;
 use Filament\PluginServiceProvider;
-use Qubiqx\QcommerceCore\Models\User;
+use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Commands\CancelOldOrders;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\Cart;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\CreateOrderLog;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Account\Orders;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\AddToCart;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart\CartCount;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\AddPaymentToOrder;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Checkout\Checkout;
-use Qubiqx\QcommerceEcommerceCore\Commands\RecalculatePurchasesCommand;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use Qubiqx\QcommerceEcommerceCore\Middleware\EcommerceFrontendMiddleware;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products\ShowProducts;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\PaymentMethodResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingClassResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
-use Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
-use Qubiqx\QcommerceEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
+use Dashed\DashedEcommerceCore\Livewire\Orders\CreateOrderLog;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddToCart;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartCount;
+use Dashed\DashedEcommerceCore\Livewire\Orders\AddPaymentToOrder;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
+use Dashed\DashedEcommerceCore\Commands\RecalculatePurchasesCommand;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProducts;
+use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
+use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
+use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
+use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 
-class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
+class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
 {
-    public static string $name = 'qcommerce-ecommerce-core';
+    public static string $name = 'dashed-ecommerce-core';
 
     public function bootingPackage()
     {
@@ -101,10 +101,10 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     public function configurePackage(Package $package): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'qcommerce-ecommerce-core');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'dashed-ecommerce-core');
         $this->publishes([
-            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/qcommerce-ecommerce-core/frontend'),
-        ], 'qcommerce-ecommerce-core-views');
+            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/dashed-ecommerce-core/frontend'),
+        ], 'dashed-ecommerce-core-views');
 
         cms()->builder(
             'frontendMiddlewares',
@@ -192,7 +192,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
         );
 
         $package
-            ->name('qcommerce-ecommerce-core')
+            ->name('dashed-ecommerce-core')
             ->hasRoutes([
                 'frontend',
             ])
@@ -207,7 +207,7 @@ class QcommerceEcommerceCoreServiceProvider extends PluginServiceProvider
     protected function getStyles(): array
     {
         return array_merge(parent::getStyles(), [
-            'qcommerce-ecommerce-core' => str_replace('/vendor/qubiqx/qcommerce-ecommerce-core/src', '', str_replace('/packages/qubiqx/qcommerce-ecommerce-core/src', '', __DIR__)) . '/vendor/qubiqx/qcommerce-ecommerce-core/resources/dist/css/qcommerce-ecommerce-core.css',
+            'dashed-ecommerce-core' => str_replace('/vendor/Dashed-DEV/dashed-ecommerce-core/src', '', str_replace('/packages/Dashed-DEV/dashed-ecommerce-core/src', '', __DIR__)) . '/vendor/Dashed-DEV/dashed-ecommerce-core/resources/dist/css/dashed-ecommerce-core.css',
         ]);
     }
 

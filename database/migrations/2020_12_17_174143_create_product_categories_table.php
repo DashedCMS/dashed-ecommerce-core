@@ -13,10 +13,10 @@ class CreateProductCategoriesTable extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__product_categories', function (Blueprint $table) {
+        Schema::create('dashed__product_categories', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('parent_category_id')->nullable()->constrained('qcommerce__product_categories');
+            $table->foreignId('parent_category_id')->nullable()->constrained('dashed__product_categories');
             $table->json('site_ids');
             $table->json('name');
             $table->json('slug');

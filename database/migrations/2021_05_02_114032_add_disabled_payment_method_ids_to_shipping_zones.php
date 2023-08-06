@@ -13,7 +13,7 @@ class AddDisabledPaymentMethodIdsToShippingZones extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__shipping_zones', function (Blueprint $table) {
+        Schema::table('dashed__shipping_zones', function (Blueprint $table) {
             $table->json('disabled_payment_method_ids')->nullable();
         });
     }

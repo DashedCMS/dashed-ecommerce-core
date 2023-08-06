@@ -13,7 +13,7 @@ class AddNameToOrderProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__order_products', function (Blueprint $table) {
+        Schema::table('dashed__order_products', function (Blueprint $table) {
             $table->string('name')->nullable();
             $table->foreignId('product_id')->change()->nullable();
         });

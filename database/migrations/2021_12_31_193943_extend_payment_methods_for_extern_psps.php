@@ -13,7 +13,7 @@ class ExtendPaymentMethodsForExternPsps extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__payment_methods', function (Blueprint $table) {
+        Schema::table('dashed__payment_methods', function (Blueprint $table) {
             $table->boolean('active')->default(1);
             $table->boolean('postpay')->default(0);
             $table->string('psp')->default('own');

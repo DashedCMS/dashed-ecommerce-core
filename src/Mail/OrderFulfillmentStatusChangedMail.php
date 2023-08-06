@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Mail;
+namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Classes\OrderVariableReplacer;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderFulfillmentStatusChangedMail extends Mailable
 {
@@ -45,7 +45,7 @@ class OrderFulfillmentStatusChangedMail extends Mailable
             $subject = str($subject)->replace(":" . str($variable)->camel() . ":", $this->order[$variable]);
         }
 
-        return $this->view('qcommerce-core::emails.notification')
+        return $this->view('dashed-core::emails.notification')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject($subject)
             ->with([

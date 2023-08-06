@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
+namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 
 class ChangeOrderFulfillmentStatus extends Component
 {
@@ -21,7 +21,7 @@ class ChangeOrderFulfillmentStatus extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::orders.components.change-fulfillment-status');
+        return view('dashed-ecommerce-core::orders.components.change-fulfillment-status');
     }
 
     public function submit()

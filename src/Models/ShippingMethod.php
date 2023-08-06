@@ -1,14 +1,14 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 class ShippingMethod extends Model
 {
@@ -40,7 +40,7 @@ class ShippingMethod extends Model
         'variables' => 'array',
     ];
 
-    protected $table = 'qcommerce__shipping_methods';
+    protected $table = 'dashed__shipping_methods';
 
     public function getActivitylogOptions(): LogOptions
     {

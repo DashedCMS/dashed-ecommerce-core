@@ -1,6 +1,6 @@
 <?php
 
-use Qubiqx\QcommerceEcommerceCore\EcommerceManager;
+use Dashed\DashedEcommerceCore\EcommerceManager;
 
 if (! function_exists('ecommerce')) {
     function ecommerce(): EcommerceManager

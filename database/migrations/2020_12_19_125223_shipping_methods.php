@@ -13,7 +13,7 @@ class ShippingMethods extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__shipping_zones', function (Blueprint $table) {
+        Schema::create('dashed__shipping_zones', function (Blueprint $table) {
             $table->id();
 
             $table->string('site_id');
@@ -24,10 +24,10 @@ class ShippingMethods extends Migration
             $table->timestamps();
         });
 
-        Schema::create('qcommerce__shipping_methods', function (Blueprint $table) {
+        Schema::create('dashed__shipping_methods', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('shipping_zone_id')->constrained('qcommerce__shipping_zones');
+            $table->foreignId('shipping_zone_id')->constrained('dashed__shipping_zones');
             $table->json('name');
             $table->decimal('costs')->default(0);
             $table->enum('sort', ['free_delivery', 'static_amount', 'take_away']);
@@ -39,11 +39,11 @@ class ShippingMethods extends Migration
             $table->timestamps();
         });
 
-        Schema::create('qcommerce__shipping_method_class', function (Blueprint $table) {
+        Schema::create('dashed__shipping_method_class', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('shipping_method_id')->constrained('qcommerce__shipping_methods');
-            $table->foreignId('shipping_class_id')->constrained('qcommerce__shipping_classes');
+            $table->foreignId('shipping_method_id')->constrained('dashed__shipping_methods');
+            $table->foreignId('shipping_class_id')->constrained('dashed__shipping_classes');
             $table->decimal('costs')->default(0);
 
             $table->softDeletes();
@@ -58,6 +58,6 @@ class ShippingMethods extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__shipping_methods');
+        Schema::dropIfExists('dashed__shipping_methods');
     }
 }

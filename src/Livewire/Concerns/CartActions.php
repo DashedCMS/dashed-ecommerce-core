@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Concerns;
+namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 trait CartActions
 {

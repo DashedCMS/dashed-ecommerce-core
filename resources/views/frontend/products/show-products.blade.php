@@ -100,7 +100,7 @@
                             </div>
                         @endforeach
                         <div class="col-span-6 mx-auto overflow-x-scroll">
-                            {!! $products->onEachSide(0)->links('qcommerce.partials.pagination') !!}
+                            {!! $products->onEachSide(0)->links('dashed.partials.pagination') !!}
                         </div>
                     </div>
                 @else

@@ -1,24 +1,24 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Controllers\Frontend;
+namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
-use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
-use Qubiqx\QcommerceEcommerceCore\Requests\Frontend\StartTransactionRequest;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedCore\Controllers\Frontend\FrontendController;
+use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 
 class TransactionController extends FrontendController
 {
@@ -306,7 +306,7 @@ class TransactionController extends FrontendController
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
 
-            return redirect(url(route('qcommerce.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
+            return redirect(url(route('dashed.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
         } else {
             try {
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
@@ -366,12 +366,12 @@ class TransactionController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-status-cancelled', 'checkout', 'Your order is cancelled'));
         }
 
-        if (view()->exists('qcommerce.checkout.complete') || view()->exists('qcommerce.orders.view-order')) {
+        if (view()->exists('dashed.checkout.complete') || view()->exists('dashed.orders.view-order')) {
             seo()->metaData('metaTitle', Translation::get('complete-page-meta-title', 'complete-order', 'Your order'));
 
             View::share('order', $order);
 
-            return view()->exists('qcommerce.orders.view-order') ? view('qcommerce.orders.view-order') : view('qcommerce.checkout.complete');
+            return view()->exists('dashed.orders.view-order') ? view('dashed.orders.view-order') : view('dashed.checkout.complete');
         } else {
             return $this->pageNotFound();
         }

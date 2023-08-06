@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -26,7 +26,7 @@ class ShippingClass extends Model
         'description',
     ];
 
-    protected $table = 'qcommerce__shipping_classes';
+    protected $table = 'dashed__shipping_classes';
 
     public function getActivitylogOptions(): LogOptions
     {

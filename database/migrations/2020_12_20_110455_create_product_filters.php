@@ -13,7 +13,7 @@ class CreateProductFilters extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__product_filters', function (Blueprint $table) {
+        Schema::create('dashed__product_filters', function (Blueprint $table) {
             $table->id();
 
             $table->json('name');
@@ -30,6 +30,6 @@ class CreateProductFilters extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__product_parameters');
+        Schema::dropIfExists('dashed__product_parameters');
     }
 }

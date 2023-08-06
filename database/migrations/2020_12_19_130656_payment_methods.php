@@ -13,7 +13,7 @@ class PaymentMethods extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__payment_methods', function (Blueprint $table) {
+        Schema::create('dashed__payment_methods', function (Blueprint $table) {
             $table->id();
             $table->string('site_id');
             $table->json('name');
@@ -30,6 +30,6 @@ class PaymentMethods extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__payment_methods');
+        Schema::dropIfExists('dashed__payment_methods');
     }
 }

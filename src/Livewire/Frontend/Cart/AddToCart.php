@@ -1,18 +1,18 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Cart;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class AddToCart extends Component
 {
@@ -125,7 +125,7 @@ class AddToCart extends Component
                 }
 
                 $value = $productValue['value']->getClientOriginalName();
-                $path = $productValue['value']->store('qcommerce/product-extras', 'public');
+                $path = $productValue['value']->store('dashed/product-extras', 'public');
                 if ($value && $path) {
                     $options['product-extra-file-' . $productExtra->id] = [
                         'name' => $productExtra->name,
@@ -206,6 +206,6 @@ class AddToCart extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.cart.add-to-cart');
+        return view('dashed-ecommerce-core::frontend.cart.add-to-cart');
     }
 }

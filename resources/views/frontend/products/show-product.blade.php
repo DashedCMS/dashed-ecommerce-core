@@ -2,8 +2,8 @@
     <x-blocks.breadcrumbs :breadcrumbs="$product->breadcrumbs()"/>
     <div class="mt-8">
         <x-container>
-            <x-qcommerce-ecommerce-core::frontend.products.schema
-                :product="$product"></x-qcommerce-ecommerce-core::frontend.products.schema>
+            <x-dashed-ecommerce-core::frontend.products.schema
+                :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
             <div class="mx-auto max-w-2xl lg:max-w-none">
                 <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
                     <div class="flex flex-col-reverse">
@@ -11,7 +11,7 @@
                             @if($product->firstImageUrl)
                                 <x-drift::image
                                     class="h-full w-full object-cover object-center sm:rounded-lg"
-                                    config="qcommerce"
+                                    config="dashed"
                                     :path="$product->firstImageUrl"
                                     :alt=" $product->name"
                                     :manipulations="[

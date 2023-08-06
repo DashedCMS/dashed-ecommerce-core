@@ -1,16 +1,16 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Settings;
+namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Placeholder;
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Dashed\DashedCore\Models\Customsetting;
 use Filament\Forms\Concerns\InteractsWithForms;
 
 class ProductSettingsPage extends Page implements HasForms
@@ -23,7 +23,7 @@ class ProductSettingsPage extends Page implements HasForms
     protected static ?string $navigationGroup = 'Overige';
     protected static ?string $title = 'Product instellingen';
 
-    protected static string $view = 'qcommerce-core::settings.pages.default-settings';
+    protected static string $view = 'dashed-core::settings.pages.default-settings';
 
     public function mount(): void
     {

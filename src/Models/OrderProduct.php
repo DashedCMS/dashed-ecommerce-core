@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceEcommerceCore\Classes\TaxHelper;
+use Dashed\DashedEcommerceCore\Classes\TaxHelper;
 
 class OrderProduct extends Model
 {
@@ -15,7 +15,7 @@ class OrderProduct extends Model
 
     protected static $logFillable = true;
 
-    protected $table = 'qcommerce__order_products';
+    protected $table = 'dashed__order_products';
 
     protected $fillable = [
         'quantity',

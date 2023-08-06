@@ -1,8 +1,8 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
 
 class ShippingZones
 {

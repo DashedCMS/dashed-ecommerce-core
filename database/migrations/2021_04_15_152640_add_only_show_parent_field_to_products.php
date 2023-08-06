@@ -13,7 +13,7 @@ class AddOnlyShowParentFieldToProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__products', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->boolean('only_show_parent_product')->default(0);
         });
     }

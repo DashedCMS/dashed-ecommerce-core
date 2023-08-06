@@ -13,7 +13,7 @@ class AddUseFilterForVariationsToActiveProductFilters extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__active_product_filter', function (Blueprint $table) {
+        Schema::table('dashed__active_product_filter', function (Blueprint $table) {
             $table->boolean('use_for_variations')->default(1);
         });
     }

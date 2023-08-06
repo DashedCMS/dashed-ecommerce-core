@@ -13,7 +13,7 @@ class CreateProductsTable extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__products', function (Blueprint $table) {
+        Schema::create('dashed__products', function (Blueprint $table) {
             $table->id();
 
             $table->json('site_ids')->nullable();
@@ -52,34 +52,34 @@ class CreateProductsTable extends Migration
             $table->json('meta_title')->nullable();
             $table->json('meta_description')->nullable();
 
-            $table->foreignId('parent_product_id')->nullable()->constrained('qcommerce__products');
+            $table->foreignId('parent_product_id')->nullable()->constrained('dashed__products');
 
             $table->timestamps();
             $table->softDeletes();
         });
 
-        Schema::create('qcommerce__product_category', function (Blueprint $table) {
+        Schema::create('dashed__product_category', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_category_id')->constrained('qcommerce__product_categories');
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('product_category_id')->constrained('dashed__product_categories');
+            $table->foreignId('product_id')->constrained('dashed__products');
         });
 
-        Schema::create('qcommerce__product_shipping_class', function (Blueprint $table) {
+        Schema::create('dashed__product_shipping_class', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('shipping_class_id')->constrained('qcommerce__shipping_classes');
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('shipping_class_id')->constrained('dashed__shipping_classes');
+            $table->foreignId('product_id')->constrained('dashed__products');
         });
 
-        Schema::create('qcommerce__product_filter', function (Blueprint $table) {
+        Schema::create('dashed__product_filter', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_filter_id')->constrained('qcommerce__product_filters');
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('product_filter_id')->constrained('dashed__product_filters');
+            $table->foreignId('product_id')->constrained('dashed__products');
 
             //Pivot
-            $table->foreignId('product_filter_option_id')->constrained('qcommerce__product_filter_options');
+            $table->foreignId('product_filter_option_id')->constrained('dashed__product_filter_options');
         });
     }
 
@@ -90,6 +90,6 @@ class CreateProductsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__products');
+        Schema::dropIfExists('dashed__products');
     }
 }

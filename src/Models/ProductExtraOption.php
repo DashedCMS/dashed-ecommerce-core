@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -27,7 +27,7 @@ class ProductExtraOption extends Model
         'value',
     ];
 
-    protected $table = 'qcommerce__product_extra_options';
+    protected $table = 'dashed__product_extra_options';
 
     public function getActivitylogOptions(): LogOptions
     {

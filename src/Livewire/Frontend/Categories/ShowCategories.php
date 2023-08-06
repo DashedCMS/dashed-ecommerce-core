@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Categories;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Categories;
 
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 
 class ShowCategories extends Component
 {
@@ -20,6 +20,6 @@ class ShowCategories extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::frontend.categories.show-categories');
+        return view('dashed-ecommerce-core::frontend.categories.show-categories');
     }
 }

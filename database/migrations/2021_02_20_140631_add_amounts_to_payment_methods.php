@@ -13,7 +13,7 @@ class AddAmountsToPaymentMethods extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__payment_methods', function (Blueprint $table) {
+        Schema::table('dashed__payment_methods', function (Blueprint $table) {
             $table->decimal('extra_costs')->default(0);
             $table->decimal('available_from_amount')->default(0);
         });

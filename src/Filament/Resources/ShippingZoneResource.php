@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -9,16 +9,16 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Classes\Countries;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingZone;
-use Qubiqx\QcommerceEcommerceCore\Classes\PaymentMethods;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\EditShippingZone;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\ListShippingZones;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\CreateShippingZone;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
+use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\EditShippingZone;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\ListShippingZones;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\CreateShippingZone;
 
 class ShippingZoneResource extends Resource
 {

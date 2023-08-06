@@ -13,10 +13,10 @@ class CreateOrderLogsTable extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__order_logs', function (Blueprint $table) {
+        Schema::create('dashed__order_logs', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('order_id')->constrained('qcommerce__orders');
+            $table->foreignId('order_id')->constrained('dashed__orders');
             $table->foreignId('user_id')->nullable()->constrained('users');
             $table->string('tag');
             $table->text('note')->nullable();

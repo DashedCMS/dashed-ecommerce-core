@@ -13,7 +13,7 @@ class AddImagesToOrderLogs extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__order_logs', function (Blueprint $table) {
+        Schema::table('dashed__order_logs', function (Blueprint $table) {
             $table->json('images')->nullable();
         });
     }

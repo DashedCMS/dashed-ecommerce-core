@@ -13,7 +13,7 @@ class AddPaymentCostsToOrder extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->decimal('payment_costs')->default(0);
         });
     }

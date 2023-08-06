@@ -17,7 +17,7 @@
                             <div class="flex items-center space-x-4 col-span-12 lg:col-span-6">
                                 @if($orderProduct->product && $orderProduct->product->firstImageUrl)
                                     <x-drift::image
-                                        config="qcommerce"
+                                        config="dashed"
                                         :path="$orderProduct->product->firstImageUrl"
                                         :manipulations="[
                                                 'widen' => 100,

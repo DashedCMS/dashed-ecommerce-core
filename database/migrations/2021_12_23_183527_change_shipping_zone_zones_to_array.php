@@ -11,7 +11,7 @@ class ChangeShippingZoneZonesToArray extends Migration
      */
     public function up()
     {
-        foreach (\Qubiqx\QcommerceEcommerceCore\Models\ShippingZone::get() as $shippingZone) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ShippingZone::get() as $shippingZone) {
             $shippingZoneZones = [];
             foreach ($shippingZone->zones as $shippingZoneZone) {
                 $shippingZoneZones[] = $shippingZoneZone['id'];

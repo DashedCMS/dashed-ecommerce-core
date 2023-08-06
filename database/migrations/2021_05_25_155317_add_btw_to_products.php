@@ -13,11 +13,11 @@ class AddBtwToProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__order_products', function (Blueprint $table) {
+        Schema::table('dashed__order_products', function (Blueprint $table) {
             $table->decimal('btw')->after('price')->default(0);
         });
 
-//        foreach (\Qubiqx\QcommerceEcommerceCore\Models\OrderProduct::get() as $orderProduct) {
+//        foreach (\Dashed\DashedEcommerceCore\Models\OrderProduct::get() as $orderProduct) {
 //            $vatPrice = $orderProduct->price / (100 + ($orderProduct->product->vat_rate ?? 21)) * ($orderProduct->product->vat_rate ?? 21);
 //            $orderProduct->btw = $vatPrice;
 //            $orderProduct->save();

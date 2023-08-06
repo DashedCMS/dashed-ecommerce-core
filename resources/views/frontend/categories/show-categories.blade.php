@@ -14,7 +14,7 @@
                                     @if($productCategory->image)
                                         <x-drift::image
                                             class="h-full w-full object-cover object-center"
-                                            config="qcommerce"
+                                            config="dashed"
                                             :path="$productCategory->image"
                                             :alt="$productCategory->name"
                                             :manipulations="[

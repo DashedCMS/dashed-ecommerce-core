@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -12,11 +12,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
-use Qubiqx\QcommerceCore\Filament\Concerns\HasVisitableTab;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\CreateProductCategory;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\CreateProductCategory;
 
 class ProductCategoryResource extends Resource
 {
@@ -72,7 +72,7 @@ class ProductCategoryResource extends Resource
                                 ]),
                             TextInput::make('slug')
                                 ->label('Slug')
-                                ->unique('qcommerce__product_categories', 'slug', fn ($record) => $record)
+                                ->unique('dashed__product_categories', 'slug', fn ($record) => $record)
                                 ->helperText('Laat leeg om automatisch te laten genereren')
                                 ->rules([
                                     'max:255',
@@ -86,7 +86,7 @@ class ProductCategoryResource extends Resource
                                     '2xl' => 1,
                                 ]),
                             FileUpload::make('image')
-                                ->directory('qcommerce/product-categories/images')
+                                ->directory('dashed/product-categories/images')
                                 ->name('Afbeelding')
                                 ->image()
                                 ->columnSpan([

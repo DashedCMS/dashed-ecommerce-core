@@ -1,30 +1,30 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\Action;
 use Illuminate\Support\Facades\DB;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceCore\Classes\Locales;
-use Qubiqx\QcommerceCore\Models\Redirect;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtra;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedCore\Classes\Locales;
+use Dashed\DashedCore\Models\Redirect;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristic;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord
 {
     use Translatable;
 
     protected static string $resource = ProductResource::class;
-    //    protected static string $view = 'qcommerce-ecommerce-core::products.edit-product';
+    //    protected static string $view = 'dashed-ecommerce-core::products.edit-product';
 
     protected static ?string $title = 'Bewerk product';
 
@@ -297,31 +297,31 @@ class EditProduct extends EditRecord
         $newProduct->activeProductFilters()->sync($this->record->activeProductFilters);
         $newProduct->bundleProducts()->sync($this->record->bundleProducts);
 
-        foreach (DB::table('qcommerce__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
-            DB::table('qcommerce__product_characteristic')->insert([
+        foreach (DB::table('dashed__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
+            DB::table('dashed__product_characteristic')->insert([
                 'product_id' => $newProduct->id,
                 'product_characteristic_id' => $productCharacteristic->product_characteristic_id,
                 'value' => $productCharacteristic->value,
             ]);
         }
 
-        foreach (DB::table('qcommerce__product_filter')->where('product_id', $this->record->id)->get() as $productFilter) {
-            DB::table('qcommerce__product_filter')->insert([
+        foreach (DB::table('dashed__product_filter')->where('product_id', $this->record->id)->get() as $productFilter) {
+            DB::table('dashed__product_filter')->insert([
                 'product_id' => $newProduct->id,
                 'product_filter_id' => $productFilter->product_filter_id,
                 'product_filter_option_id' => $productFilter->product_filter_option_id,
             ]);
         }
 
-        foreach (DB::table('qcommerce__product_suggested_product')->where('product_id', $this->record->id)->get() as $suggestedProduct) {
-            DB::table('qcommerce__product_suggested_product')->insert([
+        foreach (DB::table('dashed__product_suggested_product')->where('product_id', $this->record->id)->get() as $suggestedProduct) {
+            DB::table('dashed__product_suggested_product')->insert([
                 'product_id' => $newProduct->id,
                 'suggested_product_id' => $suggestedProduct->suggested_product_id,
                 'order' => $suggestedProduct->order,
             ]);
         }
 
-        foreach (DB::table('qcommerce__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
+        foreach (DB::table('dashed__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
             $newProductExtra = new ProductExtra();
             $newProductExtra->product_id = $newProduct->id;
             foreach (json_decode($productExtra->name, true) as $locale => $name) {
@@ -331,8 +331,8 @@ class EditProduct extends EditRecord
             $newProductExtra->required = $productExtra->required;
             $newProductExtra->save();
 
-            foreach (DB::table('qcommerce__product_extra_options')->where('product_extra_id', $productExtra->id)->whereNull('deleted_at')->get() as $productExtraOption) {
-                DB::table('qcommerce__product_extra_options')->insert([
+            foreach (DB::table('dashed__product_extra_options')->where('product_extra_id', $productExtra->id)->whereNull('deleted_at')->get() as $productExtraOption) {
+                DB::table('dashed__product_extra_options')->insert([
                     'product_extra_id' => $newProductExtra->id,
                     'value' => $productExtraOption->value,
                     'price' => $productExtraOption->price,

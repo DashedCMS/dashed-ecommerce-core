@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -14,20 +14,20 @@ use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilter;
-use Qubiqx\QcommerceCore\Filament\Concerns\HasVisitableTab;
-use Qubiqx\QcommerceCore\Filament\Concerns\HasCustomBlocksTab;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\RelationManagers\ChildProductsRelationManager;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
+use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\RelationManagers\ChildProductsRelationManager;
 
 class ProductResource extends Resource
 {
@@ -63,7 +63,7 @@ class ProductResource extends Resource
 
     public static function form(Form $form): Form
     {
-        config(['filament-tiptap-editor.directory' => 'qcommerce/products/images']);
+        config(['filament-tiptap-editor.directory' => 'dashed/products/images']);
 
         $schema = [];
 
@@ -298,7 +298,7 @@ class ProductResource extends Resource
                         'max:255',]),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->unique('qcommerce__products', 'slug', fn ($record) => $record)
+                    ->unique('dashed__products', 'slug', fn ($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren')
                     ->rules(['max:255',]),
                 TiptapEditor::make('description')
@@ -357,7 +357,7 @@ class ProductResource extends Resource
                     ->label('Afbeeldingen')
                     ->schema([
                         FileUpload::make('image')
-                            ->directory('qcommerce/products/images')
+                            ->directory('dashed/products/images')
                             ->name('Afbeelding')
                             ->image()
                             ->required(),

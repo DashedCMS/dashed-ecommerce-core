@@ -13,7 +13,7 @@ class AddFulfillmentStatusToOrder extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->dropColumn('handled');
             $table->string('fulfillment_status')->default('unhandled');
         });

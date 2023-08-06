@@ -45,7 +45,7 @@
                                         @if($orderProduct->product && $orderProduct->product->firstImageUrl)
                                             <x-drift::image
                                                 class="object-cover h-16"
-                                                config="qcommerce"
+                                                config="dashed"
                                                 :path="$orderProduct->product->firstImageUrl"
                                                 :alt=" $orderProduct->product->name"
                                                 :manipulations="[

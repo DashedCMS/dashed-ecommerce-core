@@ -1,19 +1,19 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Classes\Products;
-use Qubiqx\QcommerceTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Classes\Products;
+use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
+use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Qubiqx\QcommerceEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 
 class ProductCategory extends Model
 {
@@ -22,7 +22,7 @@ class ProductCategory extends Model
 
     protected static $logFillable = true;
 
-    protected $table = 'qcommerce__product_categories';
+    protected $table = 'dashed__product_categories';
 
     public $translatable = [
         'name',
@@ -137,7 +137,7 @@ class ProductCategory extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'qcommerce__product_category');
+        return $this->belongsToMany(Product::class, 'dashed__product_category');
     }
 
     public static function resolveRoute($parameters = [])
@@ -154,7 +154,7 @@ class ProductCategory extends Model
                 }
                 $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_id', $productCategory->id)->first();
             }
-            if (View::exists('qcommerce.categories.show') && $productCategory) {
+            if (View::exists('dashed.categories.show') && $productCategory) {
                 seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
                 seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
                 if ($productCategory->metadata && $productCategory->metadata->image) {
@@ -167,7 +167,7 @@ class ProductCategory extends Model
                 View::share('products', $productsResponse['products']);
                 View::share('filters', $productsResponse['filters']);
 
-                return view('qcommerce.categories.show');
+                return view('dashed.categories.show');
             } else {
                 return 'pageNotFound';
             }
@@ -175,14 +175,14 @@ class ProductCategory extends Model
 
         if ($slugComponents[0] == Translation::get('categories-slug', 'slug', 'categories')) {
             if (count($slugComponents) == 1) {
-                if (View::exists('qcommerce.categories.index')) {
+                if (View::exists('dashed.categories.index')) {
                     seo()->metaData('metaTitle', Translation::get('all-categories', 'categories', 'All categories'));
 
                     View::share('productCategory', null);
                     $childProductCategories = ProductCategories::getTopLevel(1000);
                     View::share('childProductCategories', $childProductCategories);
 
-                    return view('qcommerce.categories.index');
+                    return view('dashed.categories.index');
                 } else {
                     return 'pageNotFound';
                 }
@@ -198,14 +198,14 @@ class ProductCategory extends Model
                             return 'pageNotFound';
                         }
                     }
-                    if (View::exists('qcommerce.categories.index') && $productCategory) {
+                    if (View::exists('dashed.categories.index') && $productCategory) {
                         seo()->metaData('metaTitle', $productCategory->name);
 
                         View::share('productCategory', $productCategory);
                         $childProductCategories = $productCategory->getFirstChilds();
                         View::share('childProductCategories', $childProductCategories);
 
-                        return view('qcommerce.categories.index');
+                        return view('dashed.categories.index');
                     } else {
                         return 'pageNotFound';
                     }

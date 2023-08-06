@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
 
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceEcommerceCore\Models\ShippingClass;
+use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 
 class EditShippingMethod extends EditRecord
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
+namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
 
@@ -28,7 +28,7 @@ class AddPaymentToOrder extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::orders.components.add-payment-to-order');
+        return view('dashed-ecommerce-core::orders.components.add-payment-to-order');
     }
 
     public function submit()

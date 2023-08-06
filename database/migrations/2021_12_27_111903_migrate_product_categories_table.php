@@ -11,7 +11,7 @@ class MigrateProductCategoriesTable extends Migration
      */
     public function up()
     {
-        foreach (\Qubiqx\QcommerceEcommerceCore\Models\ProductCategory::get() as $productCategory) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ProductCategory::get() as $productCategory) {
             $activeSiteIds = [];
             foreach ($productCategory->site_ids as $key => $site_id) {
                 $activeSiteIds[] = $key;
@@ -19,7 +19,7 @@ class MigrateProductCategoriesTable extends Migration
             $productCategory->site_ids = $activeSiteIds;
 
             $newContent = [];
-            foreach (\Qubiqx\QcommerceCore\Classes\Locales::getLocales() as $locale) {
+            foreach (\Dashed\DashedCore\Classes\Locales::getLocales() as $locale) {
                 $newBlocks = [];
                 foreach (json_decode($productCategory->getTranslation('content', $locale['id']), true) ?: [] as $block) {
                     $newBlocks[\Illuminate\Support\Str::orderedUuid()->toString()] = [
@@ -33,8 +33,8 @@ class MigrateProductCategoriesTable extends Migration
             $productCategory->save();
         }
 
-//        foreach (\Qubiqx\QcommerceCore\Models\MenuItem::withTrashed()->get() as $menuItem) {
-//            $menuItem->model = str_replace('Qubiqx\Qcommerce\Models\ProductCategory', 'Qubiqx\QcommerceEcommerceCore\Models\ProductCategory', $menuItem->model);
+//        foreach (\Dashed\DashedCore\Models\MenuItem::withTrashed()->get() as $menuItem) {
+//            $menuItem->model = str_replace('Dashed\Dashed\Models\ProductCategory', 'Dashed\DashedEcommerceCore\Models\ProductCategory', $menuItem->model);
 //            $siteIds = [];
 //            foreach ($menuItem->site_ids as $siteIdKey => $siteId) {
 //                $siteIds[] = $siteIdKey;

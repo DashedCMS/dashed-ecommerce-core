@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
+namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
 use Filament\Notifications\Notification;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 
 class SendOrderConfirmationToEmail extends Component
 {
@@ -26,7 +26,7 @@ class SendOrderConfirmationToEmail extends Component
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::orders.components.send-order-confirmation-to-email');
+        return view('dashed-ecommerce-core::orders.components.send-order-confirmation-to-email');
     }
 
     public function submit()

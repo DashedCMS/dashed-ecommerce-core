@@ -26,7 +26,7 @@
                                         @if($item->model->firstImageUrl)
                                             <x-drift::image
                                                 class="h-36 flex-none rounded-md object-cover object-center"
-                                                config="qcommerce"
+                                                config="dashed"
                                                 :path="$item->model->firstImageUrl"
                                                 :alt=" $item->model->name"
                                                 :manipulations="[

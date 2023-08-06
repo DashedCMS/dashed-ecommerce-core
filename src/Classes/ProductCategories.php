@@ -1,9 +1,9 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class ProductCategories
 {

@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
 
 use Illuminate\Support\Str;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
 
 class CreateProductCategory extends CreateRecord
 {

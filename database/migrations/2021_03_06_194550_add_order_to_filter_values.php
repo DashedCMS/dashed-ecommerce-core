@@ -13,7 +13,7 @@ class AddOrderToFilterValues extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__product_filter_options', function (Blueprint $table) {
+        Schema::table('dashed__product_filter_options', function (Blueprint $table) {
             $table->integer('order')->default(1);
         });
     }

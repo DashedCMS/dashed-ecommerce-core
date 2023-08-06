@@ -13,7 +13,7 @@ class DropUniqueForInvoiceIdOnOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->dropUnique(['invoice_id']);
         });
     }

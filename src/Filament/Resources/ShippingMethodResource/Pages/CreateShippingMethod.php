@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 
 class CreateShippingMethod extends CreateRecord
 {

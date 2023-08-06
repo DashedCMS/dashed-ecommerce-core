@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__order_logs', function (Blueprint $table) {
+        Schema::table('dashed__order_logs', function (Blueprint $table) {
             $table->boolean('send_email_to_customer')
                 ->default(0);
             $table->string('email_subject')

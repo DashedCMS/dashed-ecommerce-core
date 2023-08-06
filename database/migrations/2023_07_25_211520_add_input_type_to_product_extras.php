@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__product_extras', function (Blueprint $table) {
+        Schema::table('dashed__product_extras', function (Blueprint $table) {
             $table->string('input_type')
                 ->default('text');
             $table->integer('min_length')

@@ -13,7 +13,7 @@ class CreateOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__orders', function (Blueprint $table) {
+        Schema::create('dashed__orders', function (Blueprint $table) {
             $table->id();
 
             $table->ipAddress('ip');
@@ -56,19 +56,19 @@ class CreateOrdersTable extends Migration
 
             $table->string('site_id');
             $table->foreignId('user_id')->nullable()->constrained('users');
-            $table->foreignId('discount_code_id')->nullable()->constrained('qcommerce__discount_codes');
-            $table->foreignId('shipping_method_id')->nullable()->constrained('qcommerce__shipping_methods');
-            $table->foreignId('payment_method_id')->nullable()->constrained('qcommerce__payment_methods');
+            $table->foreignId('discount_code_id')->nullable()->constrained('dashed__discount_codes');
+            $table->foreignId('shipping_method_id')->nullable()->constrained('dashed__shipping_methods');
+            $table->foreignId('payment_method_id')->nullable()->constrained('dashed__payment_methods');
 
             $table->timestamps();
             $table->softDeletes();
         });
 
-        Schema::create('qcommerce__order_products', function (Blueprint $table) {
+        Schema::create('dashed__order_products', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('order_id')->constrained('qcommerce__orders');
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('order_id')->constrained('dashed__orders');
+            $table->foreignId('product_id')->constrained('dashed__products');
 
             $table->decimal('price')->nullable();
             $table->decimal('discount')->nullable();

@@ -13,7 +13,7 @@ class ShippingMethodClasses extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__shipping_classes', function (Blueprint $table) {
+        Schema::create('dashed__shipping_classes', function (Blueprint $table) {
             $table->id();
 
             $table->string('site_id');
@@ -33,6 +33,6 @@ class ShippingMethodClasses extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__shipping_methods');
+        Schema::dropIfExists('dashed__shipping_methods');
     }
 }

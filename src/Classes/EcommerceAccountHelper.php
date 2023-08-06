@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Auth;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -10,9 +10,9 @@ class EcommerceAccountHelper
     public static function getAccountOrdersUrl()
     {
         if (Auth::check()) {
-            return LaravelLocalization::localizeUrl(route('qcommerce.frontend.account.orders'));
+            return LaravelLocalization::localizeUrl(route('dashed.frontend.account.orders'));
         } else {
-            return LaravelLocalization::localizeUrl(route('qcommerce.frontend.auth.login'));
+            return LaravelLocalization::localizeUrl(route('dashed.frontend.auth.login'));
         }
     }
 }

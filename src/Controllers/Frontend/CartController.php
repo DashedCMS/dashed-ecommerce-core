@@ -1,19 +1,19 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Controllers\Frontend;
+namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Gloudemans\Shoppingcart\Facades\Cart;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductExtraOption;
-use Qubiqx\QcommerceCore\Controllers\Frontend\FrontendController;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedCore\Controllers\Frontend\FrontendController;
 
 class CartController extends FrontendController
 {
@@ -25,11 +25,11 @@ class CartController extends FrontendController
 
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists('qcommerce.cart.show')) {
+        if (View::exists('dashed.cart.show')) {
             seo()->metaData('metaTitle', Translation::get('cart-page-meta-title', 'cart', 'Cart'));
             seo()->metaData('metaDescription', Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
 
-            return view('qcommerce.cart.show');
+            return view('dashed.cart.show');
         } else {
             return $this->pageNotFound();
         }
@@ -39,11 +39,11 @@ class CartController extends FrontendController
     {
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists('qcommerce.checkout.show')) {
+        if (View::exists('dashed.checkout.show')) {
             seo()->metaData('metaTitle', Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
             seo()->metaData('metaDescription', Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
 
-            return view('qcommerce.checkout.show');
+            return view('dashed.checkout.show');
         } else {
             return $this->pageNotFound();
         }
@@ -232,7 +232,7 @@ class CartController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return response()->download(storage_path('app/public/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf'));
+        return response()->download(storage_path('app/public/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf'));
     }
 
     public function downloadPackingSlip(Request $request, $orderHash)
@@ -249,6 +249,6 @@ class CartController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return response()->download(storage_path('app/public/qcommerce/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf'));
+        return response()->download(storage_path('app/public/dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf'));
     }
 }

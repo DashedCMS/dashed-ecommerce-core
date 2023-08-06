@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore;
+namespace Dashed\DashedEcommerceCore;
 
 class EcommerceManager
 {

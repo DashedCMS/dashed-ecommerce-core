@@ -1,16 +1,16 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Qubiqx\QcommerceEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class DiscountCode extends Model
@@ -20,7 +20,7 @@ class DiscountCode extends Model
 
     protected static $logFillable = true;
 
-    protected $table = 'qcommerce__discount_codes';
+    protected $table = 'dashed__discount_codes';
 
     protected $fillable = [
         'site_ids',
@@ -192,12 +192,12 @@ class DiscountCode extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'qcommerce__discount_product');
+        return $this->belongsToMany(Product::class, 'dashed__discount_product');
     }
 
     public function productCategories(): BelongsToMany
     {
-        return $this->belongsToMany(ProductCategory::class, 'qcommerce__discount_category');
+        return $this->belongsToMany(ProductCategory::class, 'dashed__discount_category');
     }
 
     public function orders(): HasMany

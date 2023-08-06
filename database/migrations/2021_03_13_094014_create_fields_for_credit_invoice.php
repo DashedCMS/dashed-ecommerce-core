@@ -13,8 +13,8 @@ class CreateFieldsForCreditInvoice extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
-            $table->foreignId('credit_for_order_id')->nullable()->constrained('qcommerce__orders');
+        Schema::table('dashed__orders', function (Blueprint $table) {
+            $table->foreignId('credit_for_order_id')->nullable()->constrained('dashed__orders');
             $table->string('retour_status')->nullable();
         });
     }

@@ -13,7 +13,7 @@ class DiscountCodes extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__discount_codes', function (Blueprint $table) {
+        Schema::create('dashed__discount_codes', function (Blueprint $table) {
             $table->id();
 
             $table->json('site_ids');
@@ -39,18 +39,18 @@ class DiscountCodes extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('qcommerce__discount_category', function (Blueprint $table) {
+        Schema::create('dashed__discount_category', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_category_id')->constrained('qcommerce__product_categories');
-            $table->foreignId('discount_code_id')->constrained('qcommerce__discount_codes');
+            $table->foreignId('product_category_id')->constrained('dashed__product_categories');
+            $table->foreignId('discount_code_id')->constrained('dashed__discount_codes');
         });
 
-        Schema::create('qcommerce__discount_product', function (Blueprint $table) {
+        Schema::create('dashed__discount_product', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_id')->constrained('qcommerce__products');
-            $table->foreignId('discount_code_id')->constrained('qcommerce__discount_codes');
+            $table->foreignId('product_id')->constrained('dashed__products');
+            $table->foreignId('discount_code_id')->constrained('dashed__discount_codes');
         });
     }
 
@@ -61,6 +61,6 @@ class DiscountCodes extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('qcommerce__discount_codes');
+        Schema::dropIfExists('dashed__discount_codes');
     }
 }

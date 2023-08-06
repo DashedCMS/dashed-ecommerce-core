@@ -1,5 +1,5 @@
 <?php
-// config for Qubiqx/QcommerceEcommerceCore
+// config for Dashed/DashedEcommerceCore
 return [
 
 ];

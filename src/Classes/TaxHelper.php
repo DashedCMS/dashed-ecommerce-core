@@ -1,8 +1,8 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Classes;
+namespace Dashed\DashedEcommerceCore\Classes;
 
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Dashed\DashedCore\Models\Customsetting;
 
 class TaxHelper
 {

@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
+namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\PieChartWidget;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 
 class PaymentMethodPieChartWidget extends PieChartWidget
 {

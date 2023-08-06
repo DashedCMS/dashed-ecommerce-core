@@ -13,7 +13,7 @@ class AddCharacteristicsToProducts extends Migration
      */
     public function up()
     {
-        Schema::create('qcommerce__product_characteristics', function (Blueprint $table) {
+        Schema::create('dashed__product_characteristics', function (Blueprint $table) {
             $table->id();
 
             $table->json('name');
@@ -23,12 +23,12 @@ class AddCharacteristicsToProducts extends Migration
             $table->timestamps();
         });
 
-        Schema::create('qcommerce__product_characteristic', function (Blueprint $table) {
+        Schema::create('dashed__product_characteristic', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_id')->constrained('qcommerce__products');
+            $table->foreignId('product_id')->constrained('dashed__products');
             $table->unsignedBigInteger('product_characteristic_id');
-            $table->foreign('product_characteristic_id', 'product_characteristic_id_foreign')->references('id')->on('qcommerce__product_characteristics');
+            $table->foreign('product_characteristic_id', 'product_characteristic_id_foreign')->references('id')->on('dashed__product_characteristics');
             $table->json('value');
 
             $table->softDeletes();

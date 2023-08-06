@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -12,10 +12,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\BooleanColumn;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCharacteristics;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\EditProductCharacteristic;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\ListProductCharacteristic;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\CreateProductCharacteristic;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\EditProductCharacteristic;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\ListProductCharacteristic;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\CreateProductCharacteristic;
 
 class ProductCharacteristicResource extends Resource
 {

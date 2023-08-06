@@ -1,9 +1,9 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class EditOrder extends EditRecord
 {

@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Mail;
+namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedTranslations\Models\Translation;
 
 class ProductsWithPastDuePreOrderDateMail extends Mailable
 {
@@ -20,7 +20,7 @@ class ProductsWithPastDuePreOrderDateMail extends Mailable
 
     public function build()
     {
-        return $this->view('qcommerce-ecommerce-core::emails.products-with-past-due-pre-order-date')->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('products-with-past-due-pre-order-date-email-subject', 'products-with-past-due-pre-order-date', 'There are products that require attention'))->with([
+        return $this->view('dashed-ecommerce-core::emails.products-with-past-due-pre-order-date')->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('products-with-past-due-pre-order-date-email-subject', 'products-with-past-due-pre-order-date', 'There are products that require attention'))->with([
             'products' => $this->products,
         ]);
     }

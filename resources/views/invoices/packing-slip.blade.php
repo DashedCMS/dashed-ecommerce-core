@@ -130,7 +130,7 @@
                             @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                             @if($logo)
                                 <img
-                                    src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('qcommerce', $logo, [
+                                    src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('dashed', $logo, [
                                                                                     'heighten' => 100
                                                                                 ])}}"
                                      class="logo">
@@ -221,7 +221,7 @@
     @endif
     <div>
         <table class="border-product">
-            @foreach($order->orderProducts()->whereNotIn('sku', \Qubiqx\QcommerceEcommerceCore\Classes\SKUs::hideOnPackingSlip())->get() as $orderProduct)
+            @foreach($order->orderProducts()->whereNotIn('sku', \Dashed\DashedEcommerceCore\Classes\SKUs::hideOnPackingSlip())->get() as $orderProduct)
                 <tr>
                     <td>
                         {{$orderProduct->name}}

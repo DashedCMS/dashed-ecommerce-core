@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
@@ -13,10 +13,10 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class ListProducts extends ListRecords
 {

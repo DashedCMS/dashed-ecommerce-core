@@ -13,7 +13,7 @@ class AddCheckboxForProductFilters extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__product_filters', function (Blueprint $table) {
+        Schema::table('dashed__product_filters', function (Blueprint $table) {
             $table->boolean('hide_filter_on_overview_page')->default(0);
         });
     }

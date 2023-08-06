@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Frontend\Products;
+namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceEcommerceCore\Classes\Products;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Classes\Products;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class ShowProducts extends Component
 {
@@ -96,7 +96,7 @@ class ShowProducts extends Component
     public function render()
     {
 
-        return view('qcommerce-ecommerce-core::frontend.products.show-products', [
+        return view('dashed-ecommerce-core::frontend.products.show-products', [
             'products' => $this->products,
             'filters' => $this->filters,
             'activeFilters' => $this->activeFilters,

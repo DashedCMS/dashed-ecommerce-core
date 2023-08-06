@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Exports;
+namespace Dashed\DashedEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
@@ -12,8 +12,8 @@ use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 class ExportInvoicesPage extends Page implements HasForms
 {
@@ -25,7 +25,7 @@ class ExportInvoicesPage extends Page implements HasForms
     protected static ?string $title = 'Exporteer facturen';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'qcommerce-ecommerce-core::exports.pages.export-invoices';
+    protected static string $view = 'dashed-ecommerce-core::exports.pages.export-invoices';
 
     public function mount(): void
     {
@@ -86,7 +86,7 @@ class ExportInvoicesPage extends Page implements HasForms
             foreach ($orders as $order) {
                 $url = $order->downloadInvoiceUrl();
                 if ($url) {
-                    $invoicePath = storage_path('app/public/qcommerce/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                    $invoicePath = storage_path('app/public/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
                     $pdfMerger->addPDF($invoicePath, 'all');
                 }
             }
@@ -144,7 +144,7 @@ class ExportInvoicesPage extends Page implements HasForms
                 }
             }
 
-            $view = View::make('qcommerce-ecommerce-core::invoices.combined-invoices', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
+            $view = View::make('dashed-ecommerce-core::invoices.combined-invoices', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
             $contents = $view->render();
             $pdf = App::make('dompdf.wrapper');
             $pdf->loadHTML($contents);

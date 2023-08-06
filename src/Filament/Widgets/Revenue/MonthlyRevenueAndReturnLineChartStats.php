@@ -1,14 +1,14 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
+namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
 {
-    protected static string $view = 'qcommerce-ecommerce-core::widgets.full-width-chart-widget';
+    protected static string $view = 'dashed-ecommerce-core::widgets.full-width-chart-widget';
 
     protected function getHeading(): string
     {

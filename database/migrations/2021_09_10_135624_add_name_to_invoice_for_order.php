@@ -13,7 +13,7 @@ class AddNameToInvoiceForOrder extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__orders', function (Blueprint $table) {
+        Schema::table('dashed__orders', function (Blueprint $table) {
             $table->string('invoice_first_name')->nullable()->after('hash');
             $table->string('invoice_last_name')->nullable()->after('hash');
         });

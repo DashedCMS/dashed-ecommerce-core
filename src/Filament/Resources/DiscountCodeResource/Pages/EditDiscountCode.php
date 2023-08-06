@@ -1,12 +1,12 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
 use Illuminate\Support\Str;
 use Filament\Pages\Actions\Action;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 
 class EditDiscountCode extends EditRecord
 {

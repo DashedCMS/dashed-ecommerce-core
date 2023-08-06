@@ -1,23 +1,23 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommercePages\Models\Page;
+use Dashed\DashedPages\Models\Page;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Qubiqx\QcommerceCore\Models\Customsetting;
-use Qubiqx\QcommerceCore\Traits\HasDynamicRelation;
-use Qubiqx\QcommerceTranslations\Models\Translation;
-use Qubiqx\QcommerceCore\Models\Concerns\IsVisitable;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Qubiqx\QcommerceCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Qubiqx\QcommerceEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 
 class Product extends Model
 {
@@ -26,7 +26,7 @@ class Product extends Model
     use IsVisitable;
     use HasCustomBlocks;
 
-    protected $table = 'qcommerce__products';
+    protected $table = 'dashed__products';
 
     public $translatable = [
         'name',
@@ -669,17 +669,17 @@ class Product extends Model
 
     public function productCategories()
     {
-        return $this->belongsToMany(ProductCategory::class, 'qcommerce__product_category');
+        return $this->belongsToMany(ProductCategory::class, 'dashed__product_category');
     }
 
     public function suggestedProducts()
     {
-        return $this->belongsToMany(Product::class, 'qcommerce__product_suggested_product', 'product_id', 'suggested_product_id');
+        return $this->belongsToMany(Product::class, 'dashed__product_suggested_product', 'product_id', 'suggested_product_id');
     }
 
     public function shippingClasses()
     {
-        return $this->belongsToMany(ShippingClass::class, 'qcommerce__product_shipping_class');
+        return $this->belongsToMany(ShippingClass::class, 'dashed__product_shipping_class');
     }
 
     public function productFilters()
@@ -687,17 +687,17 @@ class Product extends Model
         //        return Cache::tags(["product-$this->id"])->rememberForever("product-filters-" . $this->id, function () {
         //            return $this->productFiltersRelation();
         //        });
-        return $this->belongsToMany(ProductFilter::class, 'qcommerce__product_filter')->orderBy('created_at')->withPivot(['product_filter_option_id']);
+        return $this->belongsToMany(ProductFilter::class, 'dashed__product_filter')->orderBy('created_at')->withPivot(['product_filter_option_id']);
     }
 
     public function activeProductFilters()
     {
-        return $this->belongsToMany(ProductFilter::class, 'qcommerce__active_product_filter')->orderBy('created_at')->withPivot(['use_for_variations']);
+        return $this->belongsToMany(ProductFilter::class, 'dashed__active_product_filter')->orderBy('created_at')->withPivot(['use_for_variations']);
     }
 
     public function activeProductFiltersForVariations()
     {
-        return $this->belongsToMany(ProductFilter::class, 'qcommerce__active_product_filter')->orderBy('created_at')->wherePivot('use_for_variations', 1)->withPivot(['use_for_variations']);
+        return $this->belongsToMany(ProductFilter::class, 'dashed__active_product_filter')->orderBy('created_at')->wherePivot('use_for_variations', 1)->withPivot(['use_for_variations']);
     }
 
     public function productCharacteristics()
@@ -717,7 +717,7 @@ class Product extends Model
 
     public function bundleProducts(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'qcommerce__product_bundle_products', 'product_id', 'bundle_product_id');
+        return $this->belongsToMany(Product::class, 'dashed__product_bundle_products', 'product_id', 'bundle_product_id');
     }
 
     public function showableCharacteristics($withoutIds = [])
@@ -828,7 +828,7 @@ class Product extends Model
             }
 
             if ($product) {
-                if (View::exists('qcommerce.products.show')) {
+                if (View::exists('dashed.products.show')) {
                     seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
                     seo()->metaData('metaDescription', $product->metadata->description ?? '');
                     $metaImage = $product->metadata->image ?? '';
@@ -841,7 +841,7 @@ class Product extends Model
 
                     View::share('product', $product);
 
-                    return view('qcommerce.products.show');
+                    return view('dashed.products.show');
                 } else {
                     return 'pageNotFound';
                 }

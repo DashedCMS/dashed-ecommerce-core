@@ -13,7 +13,7 @@ class AddLimitPurchasesToProduct extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__products', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->integer('limit_purchases_per_customer_limit')->default(1);
         });
     }

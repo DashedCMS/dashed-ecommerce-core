@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Livewire\Orders;
+namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Closure;
 use Livewire\Component;
@@ -14,9 +14,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderLog;
-use Qubiqx\QcommerceEcommerceCore\Mail\OrderNoteMail;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 
 class CreateOrderLog extends Component implements HasForms
 {
@@ -57,7 +57,7 @@ class CreateOrderLog extends Component implements HasForms
                 ->enableOpen()
                 ->enableReordering()
                 ->acceptedFileTypes(['image/*', 'application/pdf'])
-                    ->directory('qcommerce/orders/logs/images')
+                    ->directory('dashed/orders/logs/images')
                 ->maxSize(50000),
             Textarea::make('note')
                 ->label('Notitie')
@@ -71,7 +71,7 @@ class CreateOrderLog extends Component implements HasForms
 
     public function render()
     {
-        return view('qcommerce-ecommerce-core::orders.components.create-order-log');
+        return view('dashed-ecommerce-core::orders.components.create-order-log');
     }
 
     public function submit()
@@ -87,7 +87,7 @@ class CreateOrderLog extends Component implements HasForms
 
         $images = [];
         foreach ($this->images ?: [] as $image) {
-            $uploadedImage = $image->store('/qcommerce/orders/logs/images');
+            $uploadedImage = $image->store('/dashed/orders/logs/images');
             $images[] = $uploadedImage;
         }
 

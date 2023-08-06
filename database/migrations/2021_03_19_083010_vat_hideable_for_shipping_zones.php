@@ -13,7 +13,7 @@ class VatHideableForShippingZones extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__shipping_zones', function (Blueprint $table) {
+        Schema::table('dashed__shipping_zones', function (Blueprint $table) {
             $table->boolean('hide_vat_on_invoice')->default(0);
         });
     }

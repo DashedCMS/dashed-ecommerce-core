@@ -1,11 +1,11 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Requests\Frontend;
+namespace Dashed\DashedEcommerceCore\Requests\Frontend;
 
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Http\FormRequest;
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Dashed\DashedCore\Models\Customsetting;
 
 class StartTransactionRequest extends FormRequest
 {

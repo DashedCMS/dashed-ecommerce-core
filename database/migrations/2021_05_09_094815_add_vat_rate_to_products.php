@@ -13,7 +13,7 @@ class AddVatRateToProducts extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__products', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->integer('vat_rate')->default(21);
         });
     }

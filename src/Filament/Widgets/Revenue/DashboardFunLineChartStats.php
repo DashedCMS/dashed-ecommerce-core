@@ -1,15 +1,15 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Widgets\Revenue;
+namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Cache;
-use Qubiqx\QcommerceCore\Models\User;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 class DashboardFunLineChartStats extends LineChartWidget
 {
-    protected static string $view = 'qcommerce-ecommerce-core::widgets.chart-widget';
+    protected static string $view = 'dashed-ecommerce-core::widgets.chart-widget';
 
     protected function getHeading(): string
     {

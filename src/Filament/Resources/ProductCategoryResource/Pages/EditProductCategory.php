@@ -1,14 +1,14 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
 
 use Illuminate\Support\Str;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
-use Qubiqx\QcommerceCore\Models\Redirect;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Models\Redirect;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
 
 class EditProductCategory extends EditRecord
 {

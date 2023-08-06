@@ -13,7 +13,7 @@ class RemoveExcessFromOtherPackagesFromOrder extends Migration
      */
     public function up()
     {
-//        Schema::table('qcommerce__orders', function (Blueprint $table) {
+//        Schema::table('dashed__orders', function (Blueprint $table) {
 //            $table->dropColumn('keen_delivery_shipment_id');
 //            $table->dropColumn('keen_delivery_label');
 //            $table->dropColumn('keen_delivery_label_url');
@@ -27,7 +27,7 @@ class RemoveExcessFromOtherPackagesFromOrder extends Migration
 //            $table->dropColumn('efulfillment_shop_sale_id');
 //            $table->dropColumn('efulfillment_shop_track_and_trace');
 //            $table->dropColumn('efulfillment_shop_fulfillment_status');
-//            $table->dropForeign('qcommerce__orders_channable_order_connection_id_foreign');
+//            $table->dropForeign('dashed__orders_channable_order_connection_id_foreign');
 //            $table->dropColumn('channable_order_connection_id');
 //        });
     }

@@ -13,7 +13,7 @@ class RemoveSlugFromShippingClasses extends Migration
      */
     public function up()
     {
-        Schema::table('qcommerce__shipping_classes', function (Blueprint $table) {
+        Schema::table('dashed__shipping_classes', function (Blueprint $table) {
             $table->dropColumn('slug');
         });
     }

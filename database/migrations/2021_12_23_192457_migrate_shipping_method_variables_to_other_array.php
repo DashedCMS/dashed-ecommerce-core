@@ -14,7 +14,7 @@ class MigrateShippingMethodVariablesToOtherArray extends Migration
      */
     public function up()
     {
-        foreach (\Qubiqx\QcommerceEcommerceCore\Models\ShippingMethod::get() as $shippingMethod) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ShippingMethod::get() as $shippingMethod) {
             if ($shippingMethod->variables) {
                 $newVariables = [];
                 foreach ($shippingMethod->variables as $variable) {

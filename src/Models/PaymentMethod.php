@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -42,7 +42,7 @@ class PaymentMethod extends Model
         'deposit_calculation_payment_method_ids' => 'array',
     ];
 
-    protected $table = 'qcommerce__payment_methods';
+    protected $table = 'dashed__payment_methods';
 
     public function getActivitylogOptions(): LogOptions
     {

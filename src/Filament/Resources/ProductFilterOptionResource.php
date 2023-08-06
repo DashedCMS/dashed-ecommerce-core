@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources;
+namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -9,9 +9,9 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Models\ProductFilterOption;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;
+use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;
 
 class ProductFilterOptionResource extends Resource
 {

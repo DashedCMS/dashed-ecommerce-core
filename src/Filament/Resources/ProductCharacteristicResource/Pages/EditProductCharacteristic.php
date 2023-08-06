@@ -1,10 +1,10 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages;
 
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\ProductCharacteristicResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 
 class EditProductCharacteristic extends EditRecord
 {

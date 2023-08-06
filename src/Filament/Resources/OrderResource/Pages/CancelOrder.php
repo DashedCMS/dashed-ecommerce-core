@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource\Pages;
+namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Pages\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -11,9 +11,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Classes\Orders;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
-use Qubiqx\QcommerceEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class CancelOrder extends ViewRecord implements HasForms
 {
@@ -21,7 +21,7 @@ class CancelOrder extends ViewRecord implements HasForms
 
     protected static string $resource = OrderResource::class;
 
-    protected static string $view = 'qcommerce-ecommerce-core::orders.cancel-order';
+    protected static string $view = 'dashed-ecommerce-core::orders.cancel-order';
 
     //    protected $listeners = [
     //        'refreshPage' => 'render',

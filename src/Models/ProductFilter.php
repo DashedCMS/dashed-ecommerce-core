@@ -1,13 +1,13 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Models;
+namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Qubiqx\QcommerceCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Sites;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Qubiqx\QcommerceCore\Models\Customsetting;
+use Dashed\DashedCore\Models\Customsetting;
 
 class ProductFilter extends Model
 {
@@ -25,7 +25,7 @@ class ProductFilter extends Model
         'name',
     ];
 
-    protected $table = 'qcommerce__product_filters';
+    protected $table = 'dashed__product_filters';
 
     protected static function booted()
     {
@@ -56,6 +56,6 @@ class ProductFilter extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'qcommerce__product_filter')->withPivot(['product_filter_option_id']);
+        return $this->belongsToMany(Product::class, 'dashed__product_filter')->withPivot(['product_filter_option_id']);
     }
 }

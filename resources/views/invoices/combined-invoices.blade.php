@@ -130,7 +130,7 @@
                             @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                             @if($logo)
                                 <img
-                                    src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('qcommerce', $logo, [
+                                    src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('dashed', $logo, [
                                                                                     'heighten' => 100
                                                                                 ])}}"
                                      class="logo">

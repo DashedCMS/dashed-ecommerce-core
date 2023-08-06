@@ -1,6 +1,6 @@
 <?php
 
-namespace Qubiqx\QcommerceEcommerceCore\Filament\Pages\Statistics;
+namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
@@ -9,12 +9,12 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Qubiqx\QcommerceEcommerceCore\Models\Order;
-use Qubiqx\QcommerceEcommerceCore\Models\DiscountCode;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderPayment;
-use Qubiqx\QcommerceEcommerceCore\Models\OrderProduct;
-use Qubiqx\QcommerceEcommerceCore\Models\PaymentMethod;
-use Qubiqx\QcommerceEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class DiscountStatisticsPage extends Page implements HasForms
 {
@@ -26,7 +26,7 @@ class DiscountStatisticsPage extends Page implements HasForms
     protected static ?string $title = 'Korting statistieken';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'qcommerce-ecommerce-core::statistics.pages.discount-statistics';
+    protected static string $view = 'dashed-ecommerce-core::statistics.pages.discount-statistics';
 
     public $discountCode;
     public $status;
