@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\
 
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedCore\Models\Redirect;
+use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;

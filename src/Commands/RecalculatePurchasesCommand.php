@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Illuminate\Console\Command;
 use Dashed\Dashed\Models\Order;
+use Illuminate\Console\Command;
 use Dashed\Dashed\Models\Product;
 
 class RecalculatePurchasesCommand extends Command

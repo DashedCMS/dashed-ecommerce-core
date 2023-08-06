@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Livewire\Livewire;
-use Filament\PluginServiceProvider;
 use Dashed\DashedCore\Models\User;
+use Filament\PluginServiceProvider;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;

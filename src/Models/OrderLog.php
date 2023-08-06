@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Models\User;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;

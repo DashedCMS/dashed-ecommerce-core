@@ -6,8 +6,8 @@ use Filament\Pages\Page;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Exports\ProductListExport;
 
 class ExportProductsPage extends Page implements HasForms

@@ -3,19 +3,19 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Dashed\DashedPages\Models\Page;
 use Illuminate\Support\Facades\App;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
-use Dashed\DashedPages\Models\Page;
 use Illuminate\Database\Eloquent\Model;
-use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Models\Customsetting;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 

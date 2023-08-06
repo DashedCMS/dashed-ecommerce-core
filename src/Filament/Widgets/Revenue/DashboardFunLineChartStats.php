@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
+use Dashed\DashedCore\Models\User;
 use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Cache;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
 
 class DashboardFunLineChartStats extends LineChartWidget

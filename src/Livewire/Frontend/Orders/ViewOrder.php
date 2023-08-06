@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Orders;
 
 use Livewire\Component;
-use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
 
 class ViewOrder extends Component
 {

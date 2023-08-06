@@ -6,17 +6,17 @@ use Illuminate\Support\Str;
 use Filament\Pages\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedCore\Models\Redirect;
+use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord

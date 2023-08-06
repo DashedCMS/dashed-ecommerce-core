@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 use Dashed\DashedCore\Classes\Mails;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
 

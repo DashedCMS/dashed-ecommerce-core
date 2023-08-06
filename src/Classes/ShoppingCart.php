@@ -5,8 +5,8 @@ namespace Dashed\DashedEcommerceCore\Classes;
 use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Http;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Http;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -15,8 +15,8 @@ use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class ShoppingCart
 {

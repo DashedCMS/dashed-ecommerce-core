@@ -3,11 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Spatie\Activitylog\LogOptions;
-use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Dashed\DashedCore\Models\Customsetting;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ProductFilter extends Model
 {

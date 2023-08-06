@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Models\Customsetting;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\Products;
 use Dashed\DashedTranslations\Models\Translation;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class ProductCategory extends Model
 {

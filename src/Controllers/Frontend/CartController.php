@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\View;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;

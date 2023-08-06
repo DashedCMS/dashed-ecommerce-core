@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Events\Products;
 
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Dashed\DashedEcommerceCore\Models\Product;
 
 class ProductCreatedEvent
 {

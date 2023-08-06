@@ -3,16 +3,16 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
 use Filament\Pages\Page;
+use Dashed\DashedCore\Models\User;
 use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Tabs;
-use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Tabs\Tab;
-use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
-use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Forms\Concerns\InteractsWithForms;
