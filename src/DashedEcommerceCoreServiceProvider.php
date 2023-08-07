@@ -207,7 +207,7 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
     protected function getStyles(): array
     {
         return array_merge(parent::getStyles(), [
-            'dashed-ecommerce-core' => str_replace('/vendor/Dashed-DEV/dashed-ecommerce-core/src', '', str_replace('/packages/Dashed-DEV/dashed-ecommerce-core/src', '', __DIR__)) . '/vendor/Dashed-DEV/dashed-ecommerce-core/resources/dist/css/dashed-ecommerce-core.css',
+            'dashed-ecommerce-core' => str_replace('/vendor/dashed/dashed-ecommerce-core/src', '', str_replace('/packages/dashed/dashed-ecommerce-core/src', '', __DIR__)) . '/vendor/dashed/dashed-ecommerce-core/resources/dist/css/dashed-ecommerce-core.css',
         ]);
     }
 
