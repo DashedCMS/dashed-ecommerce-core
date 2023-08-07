@@ -13,7 +13,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::table('dashed__product_characteristic', function (Blueprint $table) {
-            $table->dropForeign('dashed__product_characteristic_product_id_foreign');
+            $table->dropForeign('qcommerce__product_characteristic_product_id_foreign');
             $table->dropForeign('product_characteristic_id_foreign');
 
             $table->foreign('product_characteristic_id', 'product_characteristic_id_foreign')
