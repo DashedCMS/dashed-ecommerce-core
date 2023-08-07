@@ -28,7 +28,7 @@ class TransactionController extends FrontendController
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             return redirect()->back()->with('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))->withInput();
         }
 
@@ -41,13 +41,13 @@ class TransactionController extends FrontendController
         }
 
         $paymentMethodPresent = (bool)$paymentMethod;
-        if (!$paymentMethodPresent) {
+        if (! $paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $paymentMethodPresent = true;
                 }
             }
-            if (!$paymentMethodPresent) {
+            if (! $paymentMethodPresent) {
                 return redirect()->back()->with('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))->withInput();
             }
         }
@@ -60,7 +60,7 @@ class TransactionController extends FrontendController
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             return redirect()->back()->with('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))->withInput();
         }
 
@@ -77,17 +77,17 @@ class TransactionController extends FrontendController
                 }
             }
 
-            if (!$depositPaymentMethod) {
+            if (! $depositPaymentMethod) {
                 return redirect()->back()->with('error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))->withInput();
             }
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($request->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($request->email)) {
             session(['discountCode' => '']);
 
             return redirect()->back()->with('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))->withInput();
@@ -272,7 +272,7 @@ class TransactionController extends FrontendController
 
         $orderPayment->psp = $psp;
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
@@ -333,7 +333,7 @@ class TransactionController extends FrontendController
         $orderPayment = null;
 
         foreach ($possibleIdValues as $possibleIdValue) {
-            if (!$orderPayment) {
+            if (! $orderPayment) {
                 $paymentId = $request->get($possibleIdValue);
                 if ($paymentId) {
                     $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
@@ -341,7 +341,7 @@ class TransactionController extends FrontendController
             }
         }
 
-        if (!$orderPayment) {
+        if (! $orderPayment) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -353,7 +353,7 @@ class TransactionController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (!$hasAccessToOrder) {
+        if (! $hasAccessToOrder) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -401,7 +401,7 @@ class TransactionController extends FrontendController
         $orderPayment = null;
 
         foreach ($possibleIdValues as $possibleIdValue) {
-            if (!$orderPayment) {
+            if (! $orderPayment) {
                 $paymentId = $request->get($possibleIdValue);
                 if ($paymentId) {
                     $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
@@ -409,7 +409,7 @@ class TransactionController extends FrontendController
             }
         }
 
-        if (!$orderPayment) {
+        if (! $orderPayment) {
             return 'order not found';
         }
 
