@@ -18,7 +18,7 @@ return new class extends Migration {
         });
 
         Schema::table('dashed__product_categories', function (Blueprint $table) {
-            $table->dropForeign('dashed__product_categories_parent_category_id_foreign');
+            $table->dropForeign('qcommerce__product_categories_parent_category_id_foreign');
             $table->renameColumn('parent_category_id', 'parent_id');
         });
 
@@ -31,7 +31,7 @@ return new class extends Migration {
         });
 
         Schema::table('dashed__products', function (Blueprint $table) {
-            $table->dropForeign('dashed__products_parent_product_id_foreign');
+            $table->dropForeign('qcommerce__products_parent_product_id_foreign');
             $table->renameColumn('parent_product_id', 'parent_id');
         });
 

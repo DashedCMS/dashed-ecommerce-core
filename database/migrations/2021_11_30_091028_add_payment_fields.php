@@ -46,7 +46,7 @@ class AddPaymentFields extends Migration
             $table->dropColumn('psp');
             $table->dropColumn('psp_id');
             $table->dropColumn('payment_method');
-            $table->dropForeign('dashed__orders_payment_method_id_foreign');
+            $table->dropForeign('qcommerce__orders_payment_method_id_foreign');
             $table->dropColumn('payment_method_id');
         });
     }

@@ -27,7 +27,7 @@ class RemoveExcessFromOtherPackagesFromOrder extends Migration
 //            $table->dropColumn('efulfillment_shop_sale_id');
 //            $table->dropColumn('efulfillment_shop_track_and_trace');
 //            $table->dropColumn('efulfillment_shop_fulfillment_status');
-//            $table->dropForeign('dashed__orders_channable_order_connection_id_foreign');
+//            $table->dropForeign('qcommerce__orders_channable_order_connection_id_foreign');
 //            $table->dropColumn('channable_order_connection_id');
 //        });
     }
