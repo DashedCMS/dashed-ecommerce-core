@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Toggle;
 use Filament\Pages\Page;
 use Dashed\DashedCore\Models\User;
 use Filament\Forms\Components\Card;
@@ -9,7 +10,6 @@ use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
@@ -41,6 +41,7 @@ class OrderSettingsPage extends Page implements HasForms
         }
 
         $formData["order_index_show_other_statuses"] = Customsetting::get('order_index_show_other_statuses', null, true) ? true : false;
+        $formData["order_index_show_order_products"] = Customsetting::get('order_index_show_order_products', null, false) ? true : false;
 
         foreach ($locales as $locale) {
             $formData["fulfillment_status_unhandled_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_unhandled_enabled', null, false, $locale['id']) ? true : false;
@@ -72,8 +73,10 @@ class OrderSettingsPage extends Page implements HasForms
         $schema = [
             Placeholder::make('label')
                 ->label("Algemene instelling voor bestellingen"),
-            Checkbox::make("order_index_show_other_statuses")
+            Toggle::make("order_index_show_other_statuses")
                 ->label('Toon de extra statussen op het bestellingsoverzicht'),
+            Toggle::make("order_index_show_order_products")
+                ->label('Toon de bestelde producten op het bestellingsoverzicht'),
         ];
 
         $tabGroups[] = Card::make()
@@ -119,7 +122,7 @@ class OrderSettingsPage extends Page implements HasForms
                 Placeholder::make('label')
                     ->label("Fulfillment notificaties voor {$locale['name']}")
                     ->helperText('Je kan de volgende variablen gebruiken in de mails: :firstName:, :lastName:, :email:, :phoneNumber:, :street:, :houseNr:, :zipCode:, :city:, :country:, :companyName:, :total:'),
-                Checkbox::make("fulfillment_status_unhandled_enabled_{$locale['id']}")
+                Toggle::make("fulfillment_status_unhandled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" actie')
                     ->reactive()
                     ->columnSpan([
@@ -133,7 +136,7 @@ class OrderSettingsPage extends Page implements HasForms
                     ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
                     ->fileAttachmentsDirectory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
-                Checkbox::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
+                Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" actie')
                     ->reactive()
                     ->columnSpan([
@@ -147,7 +150,7 @@ class OrderSettingsPage extends Page implements HasForms
                     ->label('Fulfillment status "In behandeling" mail inhoud')
                     ->fileAttachmentsDirectory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
-                Checkbox::make("fulfillment_status_packed_enabled_{$locale['id']}")
+                Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" actie')
                     ->reactive()
                     ->columnSpan([
@@ -161,7 +164,7 @@ class OrderSettingsPage extends Page implements HasForms
                     ->label('Fulfillment status "Ingepakt" mail inhoud')
                     ->fileAttachmentsDirectory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
-                Checkbox::make("fulfillment_status_shipped_enabled_{$locale['id']}")
+                Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" actie')
                     ->reactive()
                     ->columnSpan([
@@ -175,7 +178,7 @@ class OrderSettingsPage extends Page implements HasForms
                     ->label('Fulfillment status "Verzonden" mail inhoud')
                     ->fileAttachmentsDirectory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
-                Checkbox::make("fulfillment_status_handled_enabled_{$locale['id']}")
+                Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" actie')
                     ->reactive()
                     ->columnSpan([
@@ -232,6 +235,7 @@ class OrderSettingsPage extends Page implements HasForms
         }
 
         Customsetting::set('order_index_show_other_statuses', $this->form->getState()["order_index_show_other_statuses"]);
+        Customsetting::set('order_index_show_order_products', $this->form->getState()["order_index_show_order_products"]);
 
         foreach ($locales as $locale) {
             Customsetting::set('fulfillment_status_unhandled_enabled', $this->form->getState()["fulfillment_status_unhandled_enabled_{$locale['id']}"], null, $locale['id']);

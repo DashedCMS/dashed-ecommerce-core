@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Support\Str;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
@@ -124,19 +125,19 @@ class OrderResource extends Resource
                     ])
                     ->reactive(),
                 TextInput::make('house_nr')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'max:255',
                     ]),
                 TextInput::make('zip_code')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'max:255',
                     ]),
                 TextInput::make('city')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn(\Closure $get) => $get('street'))
                     ->rules([
                         'nullable',
                         'max:255',
@@ -162,25 +163,25 @@ class OrderResource extends Resource
                     ])
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'max:255',
                     ]),
                 TextInput::make('invoice_zip_code')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'max:255',
                     ]),
                 TextInput::make('invoice_city')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'max:255',
                     ]),
                 TextInput::make('invoice_country')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn(\Closure $get) => $get('invoice_street'))
                     ->rules([
                         'nullable',
                         'max:255',
@@ -206,22 +207,22 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Betaalmethode')
-                    ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
+                    ->getStateUsing(fn($record) => Str::substr($record->payment_method, 0, 10)),
                 BadgeColumn::make('payment_status')
                     ->label('Betaalstatus')
-                    ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
+                    ->getStateUsing(fn($record) => $record->orderStatus()['status'])
                     ->colors([
-                        'primary' => fn ($state): bool => $state === 'Lopende aankoop',
-                        'danger' => fn ($state): bool => $state === 'Geannuleerd',
-                        'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
-                        'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
+                        'primary' => fn($state): bool => $state === 'Lopende aankoop',
+                        'danger' => fn($state): bool => $state === 'Geannuleerd',
+                        'warning' => fn($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
+                        'success' => fn($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
                     ]),
                 BadgeColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
-                    ->getStateUsing(fn ($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
+                    ->getStateUsing(fn($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
                     ->colors([
                         'danger',
-                        'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
+                        'success' => fn($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
                     ]),
 //                ViewColumn::make('statusLabels')
 //            ->view('filament.tables.columns.multiple-labels')
@@ -261,14 +262,19 @@ class OrderResource extends Resource
                         'discount',
                         'status',
                         'site_id',
+//                        'orderProducts.name',
                     ])
                     ->sortable(),
                 TextColumn::make('total')
                     ->label('Totaal')
-                    ->getStateUsing(fn ($record) => CurrencyHelper::formatPrice($record->total)),
+                    ->getStateUsing(fn($record) => CurrencyHelper::formatPrice($record->total)),
+                TextColumn::make('orderProducts.name')
+                    ->label('Bestelde producten')
+                    ->searchable()
+                    ->visible(Customsetting::get('order_index_show_order_products', null, false)),
                 TextColumn::make('created_at')
                     ->label('Aangemaakt op')
-                    ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
+                    ->getStateUsing(fn($record) => $record->created_at->format('d-m-Y H:i'))
                     ->searchable()
                     ->sortable(),
             ])
