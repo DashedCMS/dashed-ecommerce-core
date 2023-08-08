@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Filament\Forms\Components\Toggle;
 use Filament\Pages\Page;
 use Dashed\DashedCore\Models\User;
 use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
