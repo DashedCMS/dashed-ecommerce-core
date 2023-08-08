@@ -34,18 +34,15 @@ class ProductCategory extends Model
         'meta_description',
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
-
     protected $with = [
         'parentProductCategory',
     ];
     protected $casts = [
         'site_ids' => 'array',
         'content' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     protected static function booted()

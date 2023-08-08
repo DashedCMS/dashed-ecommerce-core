@@ -38,15 +38,6 @@ class Product extends Model
         'images',
     ];
 
-    protected $dates = [
-        'start_date',
-        'end_date',
-        'expected_in_stock_date',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
-
     protected $with = [
         'productFilters',
         'parent',
@@ -55,6 +46,12 @@ class Product extends Model
     protected $casts = [
         'site_ids' => 'array',
         'images' => 'array',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'expected_in_stock_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     protected static function booted()

@@ -43,17 +43,12 @@ class DiscountCode extends Model
         'end_date',
     ];
 
-    protected $dates = [
-//        'start_date',
-//        'end_date',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
-
     protected $casts = [
         'site_ids' => 'array',
         'valid_customers' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public static function boot()
