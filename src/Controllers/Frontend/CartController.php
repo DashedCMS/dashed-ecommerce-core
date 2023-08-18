@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -233,7 +233,7 @@ class CartController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return response()->download(Storage::disk('dashed')->get('dashed/invoices/invoice-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf'));
+        return Storage::disk('dashed')->download('dashed/invoices/invoice-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
     }
 
     public function downloadPackingSlip(Request $request, $orderHash)
@@ -250,6 +250,6 @@ class CartController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return response()->download(Storage::disk('dashed')->get('dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf'));
+        return Storage::disk('dashed')->get('dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
     }
 }

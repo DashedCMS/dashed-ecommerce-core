@@ -34,7 +34,7 @@ class OrderListExportMail extends Mailable
         return $this->view('dashed-ecommerce-core::emails.exported-order-list')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-order-list-email-subject', 'orders', 'Exported order list'))
-            ->attach($orderListPath, [
+            ->attachFromStorageDisk('dashed', $orderListPath, null, [
                 'as' => Customsetting::get('company_name') . ' - exported order list.xlsx',
                 'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);

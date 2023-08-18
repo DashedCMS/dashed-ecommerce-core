@@ -34,7 +34,7 @@ class ProductListExportMail extends Mailable
         return $this->view('dashed-ecommerce-core::emails.exported-product-list')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-product-list-email-subject', 'products', 'Exported product list'))
-            ->attach($productListPath, [
+            ->attachFromStorageDisk('dashed', $productListPath, null, [
                 'as' => Customsetting::get('company_name') . ' - exported product list.xlsx',
                 'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);
