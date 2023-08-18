@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Exports;
 
+use Dashed\DashedEcommerceCore\Jobs\ExportOrdersJob;
+use Dashed\DashedEcommerceCore\Jobs\ExportProductsJob;
 use Filament\Pages\Page;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Contracts\HasForms;
@@ -30,15 +32,7 @@ class ExportProductsPage extends Page implements HasForms
 
     public function submit()
     {
-        $products = Product::notParentProduct()
-            ->search()
-            ->latest()
-            ->get();
-
-        Excel::store(new ProductListExport($products), '/exports/product-lists/product-list.xlsx');
-
-        $this->notify('success', 'De export is gedownload');
-
-        return Storage::download('/exports/product-lists/product-list.xlsx');
+        ExportProductsJob::dispatch(auth()->user()->email);
+        $this->notify('success', 'De export wordt klaargemaakt en naar je toe gemaild');
     }
 }

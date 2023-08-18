@@ -3,6 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Exports;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Jobs\ExportInvoicesJob;
+use Dashed\DashedEcommerceCore\Jobs\ExportOrdersJob;
 use Filament\Pages\Page;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Components\Select;
@@ -64,26 +66,7 @@ class ExportOrdersPage extends Page implements HasForms
 
     public function submit()
     {
-        $orders = Order::isPaidOrReturn();
-
-        if ($this->form->getState()['startDate']) {
-            $orders->where('created_at', '>=', Carbon::parse($this->form->getState()['startDate'])->startOfDay());
-        }
-
-        if ($this->form->getState()['endDate']) {
-            $orders->where('created_at', '<=', Carbon::parse($this->form->getState()['endDate'])->endOfDay());
-        }
-
-        $orders = $orders->get();
-
-        if ($this->form->getState()['type'] == 'normal') {
-            Excel::store(new OrderListExport($orders), '/exports/order-lists/order-list.xlsx');
-        } elseif ($this->form->getState()['type'] == 'perInvoiceLine') {
-            Excel::store(new OrderListPerInvoiceLineExport($orders), '/exports/order-lists/order-list.xlsx');
-        }
-
-        $this->notify('success', 'De export is gedownload');
-
-        return Storage::download('/exports/order-lists/order-list.xlsx');
+        ExportOrdersJob::dispatch($this->form->getState()['startDate'], $this->form->getState()['endDate'], $this->form->getState()['type'], auth()->user()->email);
+        $this->notify('success', 'De export wordt klaargemaakt en naar je toe gemaild');
     }
 }

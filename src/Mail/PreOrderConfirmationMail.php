@@ -8,6 +8,7 @@ use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
+use Illuminate\Support\Facades\Storage;
 
 class PreOrderConfirmationMail extends Mailable
 {
@@ -31,7 +32,7 @@ class PreOrderConfirmationMail extends Mailable
      */
     public function build()
     {
-        $invoicePath = storage_path('app/public/dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
+        $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
         $mail = $this->view('dashed-ecommerce-core::emails.confirm-pre-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
@@ -40,7 +41,7 @@ class PreOrderConfirmationMail extends Mailable
             ]))
             ->with([
                 'order' => $this->order,
-            ])->attachFromStorageDisk('dashed', $invoicePath, null, [
+            ])->attach($invoicePath, [
                 'as' => Customsetting::get('company_name').' - '.$this->order->invoice_id.'.pdf',
                 'mime' => 'application/pdf',
             ]);
