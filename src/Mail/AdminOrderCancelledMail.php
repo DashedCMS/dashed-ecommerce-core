@@ -39,7 +39,7 @@ class AdminOrderCancelledMail extends Mailable
             ]))
             ->with([
                 'order' => $this->order,
-            ])->attach($invoicePath, [
+            ])->attachFromStorageDisk('dashed', $invoicePath, null, [
                 'as' => Customsetting::get('company_name').' - '.$this->order->invoice_id.'.pdf',
                 'mime' => 'application/pdf',
             ]);
