@@ -3,11 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Exception;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -594,7 +594,7 @@ class ShoppingCart
         $paymentMethods = PaymentMethod::where('available_from_amount', '<', self::total())->where('site_id', Sites::getActive())->where('active', 1)->get()->toArray();
 
         foreach ($paymentMethods as &$paymentMethod) {
-            $paymentMethod['full_image_path'] = Storage::disk('dashed')->url($paymentMethod['image']);
+            $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';
             $paymentMethod['name'] = $paymentMethod['name'][App::getLocale()] ?? '';
             $paymentMethod['additional_info'] = $paymentMethod['additional_info'][App::getLocale()] ?? '';
             $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][App::getLocale()] ?? '';
@@ -609,7 +609,7 @@ class ShoppingCart
 
         $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids)->toArray();
         foreach ($depositPaymentMethods as &$depositPaymentMethod) {
-            $depositPaymentMethod['full_image_path'] = Storage::disk('dashed')->url($depositPaymentMethod['image']);
+            $depositPaymentMethod['full_image_path'] = $depositPaymentMethod['image'] ? Storage::disk('dashed')->url($depositPaymentMethod['image']) : '';
             $depositPaymentMethod['name'] = $depositPaymentMethod['name'][App::getLocale()] ?? '';
             $depositPaymentMethod['additional_info'] = $depositPaymentMethod['additional_info'][App::getLocale()] ?? '';
             $depositPaymentMethod['payment_instructions'] = $depositPaymentMethod['payment_instructions'][App::getLocale()] ?? '';
