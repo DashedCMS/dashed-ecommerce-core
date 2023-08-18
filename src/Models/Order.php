@@ -963,7 +963,7 @@ class Order extends Model
     {
         $this->createInvoice();
 
-        if(Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')){
+        if(Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
             return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
         }
 
@@ -974,7 +974,7 @@ class Order extends Model
     {
         $this->createPackingSlip();
 
-        if(Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')){
+        if(Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
             return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         }
 
