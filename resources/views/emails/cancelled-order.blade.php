@@ -239,7 +239,7 @@
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('dashed', $logo, [
+                                                                             src="{{app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $logo, [
                                                                                     'heighten' => 100
                                                                                 ])}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
@@ -514,7 +514,7 @@
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                         @if(optional($orderProduct->product)->firstImageUrl)
                                                                             <img
-                                                                                src="{{app(\Flowframe\Drift\UrlBuilder::class)->url('dashed', $orderProduct->product->firstImageUrl, [
+                                                                                src="{{app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $orderProduct->product->firstImageUrl, [
                                                                                     'heighten' => 100
                                                                                 ])}}"
                                                                                 class="products-gallery-image"
