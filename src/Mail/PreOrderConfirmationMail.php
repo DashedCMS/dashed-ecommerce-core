@@ -5,10 +5,10 @@ namespace Dashed\DashedEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
-use Illuminate\Support\Facades\Storage;
 
 class PreOrderConfirmationMail extends Mailable
 {

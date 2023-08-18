@@ -2,15 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Exports;
 
-use Dashed\DashedEcommerceCore\Jobs\ExportOrdersJob;
-use Dashed\DashedEcommerceCore\Jobs\ExportProductsJob;
 use Filament\Pages\Page;
-use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Contracts\HasForms;
-use Illuminate\Support\Facades\Storage;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Dashed\DashedEcommerceCore\Exports\ProductListExport;
+use Dashed\DashedEcommerceCore\Jobs\ExportProductsJob;
 
 class ExportProductsPage extends Page implements HasForms
 {
