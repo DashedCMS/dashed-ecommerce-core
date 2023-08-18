@@ -421,7 +421,7 @@ class Order extends Model
         if ($this->order_origin == 'own') {
             $this->generateInvoiceId();
             $order = Order::find($this->id);
-            if (! Storage::exists('/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -429,7 +429,7 @@ class Order extends Model
                 $output = $pdf->output();
 
                 $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
-                Storage::put($invoicePath, $output);
+                Storage::disk('dashed')->put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
             }
@@ -458,7 +458,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -466,7 +466,7 @@ class Order extends Model
                 $output = $pdf->output();
 
                 $invoicePath = '/dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf';
-                Storage::put($invoicePath, $output);
+                Storage::disk('dashed')->put($invoicePath, $output);
             }
         }
     }
@@ -476,7 +476,7 @@ class Order extends Model
         if ($this->order_origin == 'own' && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (! Storage::exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.credit-invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -484,7 +484,7 @@ class Order extends Model
                 $output = $pdf->output();
 
                 $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
-                Storage::put($invoicePath, $output);
+                Storage::disk('dashed')->put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
             }
@@ -959,26 +959,26 @@ class Order extends Model
         }
     }
 
-    public function downloadInvoiceUrl()
+    public function downloadInvoiceUrl(): ?string
     {
         $this->createInvoice();
 
-        if (file_exists(storage_path('app/public/dashed/invoices/invoice-' . $this->invoice_id . '-' . $this->hash . '.pdf'))) {
+        if(Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')){
             return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
-        } else {
-            return '';
         }
+
+        return null;
     }
 
-    public function downloadPackingslipUrl()
+    public function downloadPackingslipUrl(): ?string
     {
         $this->createPackingSlip();
 
-        if (file_exists(storage_path('app/public/dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf'))) {
+        if(Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')){
             return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
-        } else {
-            return '';
         }
+
+        return null;
     }
 
     public function getUrl()
