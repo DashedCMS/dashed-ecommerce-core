@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Exception;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
@@ -593,6 +594,7 @@ class ShoppingCart
         $paymentMethods = PaymentMethod::where('available_from_amount', '<', self::total())->where('site_id', Sites::getActive())->where('active', 1)->get()->toArray();
 
         foreach ($paymentMethods as &$paymentMethod) {
+            $paymentMethod['full_image_path'] = Storage::disk('dashed')->url($paymentMethod['image']);
             $paymentMethod['name'] = $paymentMethod['name'][App::getLocale()] ?? '';
             $paymentMethod['additional_info'] = $paymentMethod['additional_info'][App::getLocale()] ?? '';
             $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][App::getLocale()] ?? '';
