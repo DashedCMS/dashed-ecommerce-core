@@ -34,7 +34,7 @@ class FinanceExportMail extends Mailable
         return $this->view('dashed-ecommerce-core::emails.exported-invoice')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
-            ->attach($invoicePath, [
+            ->attachFromStorageDisk('dashed', $invoicePath, null, [
                 'as' => Customsetting::get('company_name') . ' - exported invoice.pdf',
                 'mime' => 'application/pdf',
             ]);
