@@ -107,7 +107,7 @@ class ProductResource extends Resource
                 Toggle::make('use_bundle_product_price')
                     ->label('Gebruik onderliggend bundel product prijs')
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && ! $get('parent_id'))
-                    ->visible(fn($get) => $get('is_bundle'))
+                    ->visible(fn ($get) => $get('is_bundle'))
                     ->reactive(),
 //                Toggle::make('use_bundle_product_tax')
 //                    ->label('Gebruik onderliggend bundel product BTW')
