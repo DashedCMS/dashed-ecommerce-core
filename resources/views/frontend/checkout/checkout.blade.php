@@ -41,7 +41,7 @@
                                                 <p>{{$option['name']}}: {{$option['value']}}</p>
                                             @endforeach
                                         </div>
-                                        <p class="flex-none text-base font-medium text-white">{{CurrencyHelper::formatPrice($item->price * $item->qty)}}</p>
+                                        <p class="flex-none text-base font-medium text-white">{{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}</p>
                                         <button
                                             wire:click="changeQuantity('{{ $item->rowId }}', '0')"
                                             class="border-2 border-primary text-primary-500 hover:text-white hover:bg-primary-500">

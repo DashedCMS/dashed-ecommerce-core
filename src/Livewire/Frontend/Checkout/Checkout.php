@@ -106,7 +106,7 @@ class Checkout extends Component
     public function retrievePaymentMethods()
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
-        if (! $this->paymentMethod && count($this->paymentMethods)) {
+        if (!$this->paymentMethod && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
@@ -116,7 +116,7 @@ class Checkout extends Component
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
-        if (! $this->shippingMethod && count($this->shippingMethods)) {
+        if (!$this->shippingMethod && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
@@ -200,7 +200,7 @@ class Checkout extends Component
     {
         return [
             'generalCondition' => [
-                'required',
+                'accepted',
             ],
             'firstName' => [
                 'max:255',
@@ -215,7 +215,7 @@ class Checkout extends Component
                 'max:255',
             ],
             'password' => [
-                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && ! auth()->check()),
+                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && !auth()->check()),
                 'nullable',
                 'min:6',
                 'max:255',
@@ -325,7 +325,7 @@ class Checkout extends Component
 
         $cartItems = $this->cartItems;
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             return $this->emit('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
         }
 
@@ -338,13 +338,13 @@ class Checkout extends Component
         }
 
         $paymentMethodPresent = (bool)$paymentMethod;
-        if (! $paymentMethodPresent) {
+        if (!$paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $paymentMethodPresent = true;
                 }
             }
-            if (! $paymentMethodPresent) {
+            if (!$paymentMethodPresent) {
                 return $this->emit('showAlert', 'error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
             }
         }
@@ -357,7 +357,7 @@ class Checkout extends Component
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             return $this->emit('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
@@ -380,17 +380,17 @@ class Checkout extends Component
                 }
             }
 
-            if (! $depositPaymentMethod) {
+            if (!$depositPaymentMethod) {
                 return $this->emit('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             return $this->emit('showAlert', 'error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
@@ -471,18 +471,26 @@ class Checkout extends Component
 
         $orderContainsPreOrders = false;
         foreach ($cartItems as $cartItem) {
+            $isBundleItemWithIndividualPricing = false;
+            if ($cartItem->model->is_bundle && $cartItem->model->use_bundle_product_price) {
+                $isBundleItemWithIndividualPricing = true;
+            }
+
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = $cartItem->qty;
             $orderProduct->product_id = $cartItem->model->id;
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
-            if ($discountCode) {
-                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem);
+            if ($isBundleItemWithIndividualPricing) {
+                $orderProduct->price = 0;
+                $orderProduct->discount = 0;
+            } elseif ($discountCode) {
+                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
                 $orderProduct->price = $discountedPrice;
-                $orderProduct->discount = ($cartItem->price * $orderProduct->quantity) - $discountedPrice;
+                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             } else {
-                $orderProduct->price = $cartItem->price * $orderProduct->quantity;
+                $orderProduct->price = $cartItem->model->currentPrice * $orderProduct->quantity;
                 $orderProduct->discount = 0;
             }
             $productExtras = [];
@@ -505,14 +513,27 @@ class Checkout extends Component
             $orderProduct->save();
 
             foreach ($cartItem->model->bundleProducts as $bundleProduct) {
+
                 $orderProduct = new OrderProduct();
-                $orderProduct->price = 0;
-                $orderProduct->discount = 0;
                 $orderProduct->quantity = $cartItem->qty;
                 $orderProduct->product_id = $bundleProduct->id;
                 $orderProduct->order_id = $order->id;
                 $orderProduct->name = $bundleProduct->name;
                 $orderProduct->sku = $bundleProduct->sku;
+
+                if ($isBundleItemWithIndividualPricing) {
+                    if ($discountCode) {
+                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
+                        $orderProduct->price = $discountedPrice;
+                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
+                    } else {
+                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
+                        $orderProduct->discount = 0;
+                    }
+                } else {
+                    $orderProduct->price = 0;
+                    $orderProduct->discount = 0;
+                }
 
                 if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
                     $orderProduct->is_pre_order = true;
@@ -575,7 +596,7 @@ class Checkout extends Component
 
         $orderPayment->psp = $psp;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
@@ -623,7 +644,8 @@ class Checkout extends Component
         }
     }
 
-    public function render()
+    public
+    function render()
     {
         return view('dashed-ecommerce-core::frontend.checkout.checkout');
     }

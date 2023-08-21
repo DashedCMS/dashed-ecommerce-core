@@ -104,6 +104,16 @@ class ProductResource extends Resource
                     ->helperText('Bestaat dit product uit meerdere andere producten?')
                     ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && ! $get('parent_id'))
                     ->reactive(),
+                Toggle::make('use_bundle_product_price')
+                    ->label('Gebruik onderliggend bundel product prijs')
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && ! $get('parent_id'))
+                    ->visible(fn($get) => $get('is_bundle'))
+                    ->reactive(),
+//                Toggle::make('use_bundle_product_tax')
+//                    ->label('Gebruik onderliggend bundel product BTW')
+//                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && ! $get('parent_id'))
+//                    ->visible(fn($get) => $get('is_bundle'))
+//                    ->reactive(),
                 Repeater::make('bundleProducts')
                     ->relationship('bundleProducts')
                     ->saveRelationshipsWhenHidden(false)
@@ -144,6 +154,7 @@ class ProductResource extends Resource
                             };
                         },
                     ])
+                    ->hidden(fn ($record, \Closure $get) => $get('type') == 'variable' && ! $get('parent_id'))
                     ->visible(fn (\Closure $get) => $get('is_bundle')),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina')

@@ -158,6 +158,20 @@ class AddToCart extends Component
             }
         }
 
+//        if($this->product->is_bundle){
+//            $bundleProducts = [];
+//
+//            foreach($this->product->bundleProducts as $bundleProduct){
+//                $bundleProducts[] = [
+//                    'id' => $bundleProduct->id,
+//                    'price' => $bundleProduct->currentPrice,
+//                    'vat_rate' => $bundleProduct->vat_rate,
+//                ];
+//            }
+//
+//            $options['bundleProducts'] = $bundleProducts;
+//        }
+
         $cartItems = ShoppingCart::cartItems();
         foreach ($cartItems as $cartItem) {
             if ($cartItem->model->id == $this->product->id && $options == $cartItem->options) {

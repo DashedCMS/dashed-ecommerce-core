@@ -56,7 +56,7 @@
                                 </div>
                             </div>
                             <div class="col-span-4 lg:col-span-2 flex items-center">
-                                {{CurrencyHelper::formatPrice($item->price * $item->qty)}}
+                                {{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}
                             </div>
                         </div>
                     @endforeach

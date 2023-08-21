@@ -617,11 +617,11 @@ class CreateOrder extends Page implements HasForms
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
             if ($discountCode) {
-                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem);
+                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
                 $orderProduct->price = $discountedPrice;
-                $orderProduct->discount = ($cartItem->price * $orderProduct->quantity) - $discountedPrice;
+                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             } else {
-                $orderProduct->price = $cartItem->price * $orderProduct->quantity;
+                $orderProduct->price = $cartItem->model->currentPrice * $orderProduct->quantity;
                 $orderProduct->discount = 0;
             }
             $productExtras = [];

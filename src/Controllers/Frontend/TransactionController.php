@@ -168,18 +168,26 @@ class TransactionController extends FrontendController
 
         $orderContainsPreOrders = false;
         foreach ($cartItems as $cartItem) {
+            $isBundleItemWithIndividualPricing = false;
+            if ($cartItem->model->is_bundle && $cartItem->model->use_bundle_product_price) {
+                $isBundleItemWithIndividualPricing = true;
+            }
+
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = $cartItem->qty;
             $orderProduct->product_id = $cartItem->model->id;
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
-            if ($discountCode) {
-                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem);
+            if ($isBundleItemWithIndividualPricing) {
+                $orderProduct->price = 0;
+                $orderProduct->discount = 0;
+            } elseif ($discountCode) {
+                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
                 $orderProduct->price = $discountedPrice;
-                $orderProduct->discount = ($cartItem->price * $orderProduct->quantity) - $discountedPrice;
+                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             } else {
-                $orderProduct->price = $cartItem->price * $orderProduct->quantity;
+                $orderProduct->price = $cartItem->model->currentPrice * $orderProduct->quantity;
                 $orderProduct->discount = 0;
             }
             $productExtras = [];
@@ -202,14 +210,27 @@ class TransactionController extends FrontendController
             $orderProduct->save();
 
             foreach ($cartItem->model->bundleProducts as $bundleProduct) {
+
                 $orderProduct = new OrderProduct();
-                $orderProduct->price = 0;
-                $orderProduct->discount = 0;
                 $orderProduct->quantity = $cartItem->qty;
                 $orderProduct->product_id = $bundleProduct->id;
                 $orderProduct->order_id = $order->id;
                 $orderProduct->name = $bundleProduct->name;
                 $orderProduct->sku = $bundleProduct->sku;
+
+                if ($isBundleItemWithIndividualPricing) {
+                    if ($discountCode) {
+                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
+                        $orderProduct->price = $discountedPrice;
+                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
+                    } else {
+                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
+                        $orderProduct->discount = 0;
+                    }
+                } else {
+                    $orderProduct->price = 0;
+                    $orderProduct->discount = 0;
+                }
 
                 if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
                     $orderProduct->is_pre_order = true;

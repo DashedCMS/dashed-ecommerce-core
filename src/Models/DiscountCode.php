@@ -106,10 +106,9 @@ class DiscountCode extends Model
             });
     }
 
-    public function getDiscountedPriceForProduct($cartItem)
+    public function getDiscountedPriceForProduct(Product $product, int $quantity = 0)
     {
-        $product = $cartItem->model;
-        $discountedPrice = $cartItem->price * $cartItem->qty;
+        $discountedPrice = $product->currentPrice * $quantity;
         if ($this->type == 'amount') {
             return $discountedPrice;
         }
@@ -129,7 +128,7 @@ class DiscountCode extends Model
 
         if ($discountValidForProduct) {
             if ($this->type == 'percentage') {
-                $discountedPrice = round(($discountedPrice / $cartItem->qty / 100) * (100 - $this->discount_percentage), 2) * $cartItem->qty;
+                $discountedPrice = round(($discountedPrice / $quantity / 100) * (100 - $this->discount_percentage), 2) * $quantity;
             } elseif ($this->type == 'amount') {
                 $discountedPrice = $discountedPrice - $this->discount_amount;
             }
@@ -238,7 +237,7 @@ class DiscountCode extends Model
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
                 if ($this->productCategories()->whereIn('product_category_id', $item->model->productCategories()->pluck('product_category_id'))->exists()) {
-                    $amountOfCart = $amountOfCart + ($item->price * $item->qty);
+                    $amountOfCart = $amountOfCart + ($item->model->currentPrice * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
             }
@@ -261,7 +260,7 @@ class DiscountCode extends Model
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
                 if ($this->products()->where('product_id', $item->model->id)->exists()) {
-                    $amountOfCart = $amountOfCart + ($item->price * $item->qty);
+                    $amountOfCart = $amountOfCart + ($item->model->currentPrice * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
             }
