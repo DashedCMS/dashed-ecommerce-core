@@ -14,6 +14,7 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Placeholder;
+use Illuminate\Support\Str;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -90,13 +91,17 @@ class ListOrders extends ListRecords
 
     public function downloadInvoices(Collection $records)
     {
+        $hash = Str::random();
         $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
 
         $hasPdf = false;
         foreach ($records as $order) {
             $url = $order->downloadInvoiceUrl();
+
             if ($url) {
-                $invoicePath = storage_path('app/public/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                $invoice = Storage::disk('dashed')->get('dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                Storage::disk('public')->put('/dashed/tmp-exports/' . $hash . '/invoices-to-export/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf', $invoice);
+                $invoicePath = storage_path('app/public/dashed/tmp-exports/' . $hash . '/invoices-to-export/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
                 $pdfMerger->addPDF($invoicePath, 'all');
                 $hasPdf = true;
             }
@@ -105,12 +110,12 @@ class ListOrders extends ListRecords
         if ($hasPdf) {
             $pdfMerger->merge();
 
-            $invoicePath = '/dashed/exports/invoices/exported-invoice.pdf';
-            Storage::put($invoicePath, '');
+            $invoicePath = '/dashed/tmp-exports/' . $hash . '/invoices/exported-invoice.pdf';
+            Storage::disk('public')->put($invoicePath, '');
             $pdfMerger->save(storage_path('app/public' . $invoicePath));
             $this->notify('success', 'De export is gedownload');
 
-            return Storage::download($invoicePath);
+            return Storage::disk('public')->download($invoicePath);
         } else {
             $this->notify('error', 'Geen facturen om te downloaden');
         }
@@ -118,29 +123,31 @@ class ListOrders extends ListRecords
 
     public function downloadPackingSlips(Collection $records)
     {
+        $hash = Str::random();
         $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
 
         $hasPdf = false;
         foreach ($records as $order) {
             $url = $order->downloadPackingSlipUrl();
+
             if ($url) {
-                $packingSlipPath = storage_path('app/public/dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
-                if (file_exists($packingSlipPath)) {
-                    $pdfMerger->addPdf($packingSlipPath, 'all');
-                    $hasPdf = true;
-                }
+                $packingSlip = Storage::disk('dashed')->get('dashed/packing-slips/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                Storage::disk('public')->put('/dashed/tmp-exports/' . $hash . '/packing-slips-to-export/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf', $packingSlip);
+                $packingSlipPath = storage_path('app/public/dashed/tmp-exports/' . $hash . '/packing-slips-to-export/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                $pdfMerger->addPDF($packingSlipPath, 'all');
+                $hasPdf = true;
             }
         }
 
         if ($hasPdf) {
             $pdfMerger->merge();
 
-            $invoicePath = '/dashed/exports/packing-slips/exported-packing-slip.pdf';
-            Storage::put($invoicePath, '');
+            $invoicePath = '/dashed/tmp-exports/' . $hash . '/packing-slips/exported-packing-slip.pdf';
+            Storage::disk('public')->put($invoicePath, '');
             $pdfMerger->save(storage_path('app/public' . $invoicePath));
             $this->notify('success', 'De export is gedownload');
 
-            return Storage::download($invoicePath);
+            return Storage::disk('public')->download($invoicePath);
         } else {
             $this->notify('error', 'Geen pakbonnen om te downloaden');
         }
