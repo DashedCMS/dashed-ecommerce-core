@@ -210,7 +210,7 @@ class ShoppingCart
         $discountCode = $baseVatInfo['discountCode'];
 
         $taxTotal = $baseVatInfo['taxTotal'];
-//        dd($taxTotal);
+        //        dd($taxTotal);
 
         //        if ($calculateDiscount) {
         //            $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
@@ -393,9 +393,9 @@ class ShoppingCart
                         $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
                     } else {
                         $price = $cartProduct->currentPrice * $cartItem->qty;
-//                        $price = ($isBundleItemWithIndividualPricing ? $cartProduct->currentPrice : $cartItem->currentPrice) * $cartItem->qty;
+                        //                        $price = ($isBundleItemWithIndividualPricing ? $cartProduct->currentPrice : $cartItem->currentPrice) * $cartItem->qty;
                     }
-//                    dump($isBundleItemWithIndividualPricing, $price);
+                    //                    dump($isBundleItemWithIndividualPricing, $price);
 
                     $totalPriceForProducts += $price;
 
