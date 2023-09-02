@@ -849,9 +849,9 @@ class Product extends Model
                 $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                 if ($thisProductExtraOption) {
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
-                        $price += ($thisProductExtraOption->price / $quantity);
-                    } else {
                         $price += $thisProductExtraOption->price;
+                    } else {
+                        $price += ($thisProductExtraOption->price * $quantity);
                     }
                 }
             }
