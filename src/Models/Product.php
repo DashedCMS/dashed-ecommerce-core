@@ -837,7 +837,6 @@ class Product extends Model
 
     public function getShoppingCartItemPrice(CartItem $cartItem)
     {
-        return 100;
         $quantity = $cartItem->qty;
         $options = $cartItem->options;
 
