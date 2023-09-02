@@ -82,7 +82,8 @@ class ShoppingCart
 
                     foreach ($itemsInCart as $item) {
                         $discountedPrice = $discountCode->getDiscountedPriceForProduct($item->model, $item->qty);
-                        $totalDiscount = $totalDiscount + (($item->model->currentPrice * $item->qty) - $discountedPrice);
+                        $totalDiscount = $totalDiscount + ($item->model->getShoppingCartItemPrice($item) - $discountedPrice);
+//                        $totalDiscount = $totalDiscount + (($item->model->currentPrice * $item->qty) - $discountedPrice);
                     }
                 } elseif ($discountCode->type == 'amount') {
                     $totalDiscount = $discountCode->discount_amount;
@@ -118,7 +119,8 @@ class ShoppingCart
 
         $cartTotal = 0;
         foreach (self::cartItems() as $cartItem) {
-            $cartTotal = $cartTotal + ($cartItem->model->currentPrice * $cartItem->qty);
+            $cartTotal += $cartItem->model->getShoppingCartItemPrice($cartItem);
+//            $cartTotal = $cartTotal + ($cartItem->model->currentPrice * $cartItem->qty);
         }
 
         if ($shippingMethodId) {
@@ -147,7 +149,8 @@ class ShoppingCart
     {
         $cartTotal = 0;
         foreach (self::cartItems() as $cartItem) {
-            $cartTotal = $cartTotal + ($cartItem->model->currentPrice * $cartItem->qty);
+            $cartTotal += $cartItem->model->getShoppingCartItemPrice($cartItem);
+//            $cartTotal = $cartTotal + ($cartItem->model->currentPrice * $cartItem->qty);
         }
 
         if ($calculateDiscount) {
@@ -210,7 +213,7 @@ class ShoppingCart
         $discountCode = $baseVatInfo['discountCode'];
 
         $taxTotal = $baseVatInfo['taxTotal'];
-        //        dd($taxTotal);
+//        dd($taxTotal);
 
         //        if ($calculateDiscount) {
         //            $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
@@ -381,10 +384,10 @@ class ShoppingCart
 
         foreach (self::cartItems() as $cartItem) {
             if ($cartItem->model) {
-                $isBundleItemWithIndividualPricing = false;
+//                $isBundleItemWithIndividualPricing = false;
                 $cartProducts = [$cartItem->model];
                 if ($cartItem->model->is_bundle && $cartItem->model->use_bundle_product_price) {
-                    $isBundleItemWithIndividualPricing = true;
+//                    $isBundleItemWithIndividualPricing = true;
                     $cartProducts = $cartItem->model->bundleProducts;
                 }
 
@@ -392,10 +395,11 @@ class ShoppingCart
                     if ($discountCode && $discountCode->type == 'percentage') {
                         $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
                     } else {
-                        $price = $cartProduct->currentPrice * $cartItem->qty;
-                        //                        $price = ($isBundleItemWithIndividualPricing ? $cartProduct->currentPrice : $cartItem->currentPrice) * $cartItem->qty;
+//                        $price = $cartProduct->currentPrice * $cartItem->qty;
+                        $price = $cartProduct->getShoppingCartItemPrice($cartItem);
+//                        $price = ($isBundleItemWithIndividualPricing ? $cartProduct->currentPrice : $cartItem->currentPrice) * $cartItem->qty;
                     }
-                    //                    dump($isBundleItemWithIndividualPricing, $price);
+//                    dump($isBundleItemWithIndividualPricing, $price);
 
                     $totalPriceForProducts += $price;
 
@@ -410,7 +414,8 @@ class ShoppingCart
                         if (! isset($totalAmountForVats[$cartProduct->vat_rate])) {
                             $totalAmountForVats[$cartProduct->vat_rate] = 0;
                         }
-                        $totalAmountForVats[$cartProduct->vat_rate] += (($isBundleItemWithIndividualPricing ? $cartProduct->currentPrice : $cartItem->model->currentPrice) * $cartItem->qty);
+                        $totalAmountForVats[$cartProduct->vat_rate] += $cartProduct->getShoppingCartItemPrice($cartItem);
+//                        $totalAmountForVats[$cartProduct->vat_rate] += (($isBundleItemWithIndividualPricing ? $cartProduct->currentPrice : $cartItem->model->currentPrice) * $cartItem->qty);
                         $vatRates += $cartProduct->vat_rate * $cartItem->qty;
                         $vatRatesCount += $cartItem->qty;
                     }
@@ -654,7 +659,7 @@ class ShoppingCart
             }
 
             if (! $cartItemDeleted) {
-                $productPrice = $cartItem->model->currentPrice;
+                $productPrice = $cartItem->model->getShoppingCartItemPrice($cartItem);
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
@@ -667,11 +672,11 @@ class ShoppingCart
                                     'name' => $productExtraOption['name'],
                                     'value' => $thisProductExtraOption->value,
                                 ];
-                                if ($thisProductExtraOption->calculate_only_1_quantity) {
-                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
-                                } else {
-                                    $productPrice = $productPrice + $thisProductExtraOption->price;
-                                }
+//                                if ($thisProductExtraOption->calculate_only_1_quantity) {
+//                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
+//                                } else {
+//                                    $productPrice = $productPrice + $thisProductExtraOption->price;
+//                                }
                             } elseif ($thisProductExtraOption) {
                                 Cart::remove($cartItem->rowId);
                                 $cartItemDeleted = true;
@@ -680,7 +685,7 @@ class ShoppingCart
                     }
                 }
                 if (! $cartItemDeleted) {
-                    $cartItem->model->currentPrice = $productPrice;
+//                    $cartItem->model->currentPrice = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
                         try {
