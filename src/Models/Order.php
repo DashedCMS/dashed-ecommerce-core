@@ -563,7 +563,7 @@ class Order extends Model
     public function changeStatus($newStatus = null, $sendMail = false)
     {
         Cache::lock('order.updateStatus.' . $this->id)
-            ->block(5, function () use ($newStatus) {
+            ->block(15, function () use ($newStatus) {
                 if ($newStatus && $this->status != $newStatus) {
                     match ($newStatus) {
                         'paid' => $this->markAsPaid(),
