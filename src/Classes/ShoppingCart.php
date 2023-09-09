@@ -81,9 +81,8 @@ class ShoppingCart
                     $itemsInCart = self::cartItems();
 
                     foreach ($itemsInCart as $item) {
-                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($item->model, $item->qty);
-                        $totalDiscount = $totalDiscount + ($item->model->getShoppingCartItemPrice($item) - $discountedPrice);
-                        //                        $totalDiscount = $totalDiscount + (($item->model->currentPrice * $item->qty) - $discountedPrice);
+//                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($item->model, $item->qty);
+                        $totalDiscount += $item->model->getShoppingCartItemPrice($item) - $item->model->getShoppingCartItemPrice($item, $discountCode);
                     }
                 } elseif ($discountCode->type == 'amount') {
                     $totalDiscount = $discountCode->discount_amount;

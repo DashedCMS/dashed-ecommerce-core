@@ -179,14 +179,14 @@ class TransactionController extends FrontendController
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
-            if ($discountCode) {
-                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
-                $orderProduct->price = $discountedPrice;
-                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
-            } else {
-                $orderProduct->price = $cartItem->model->getShoppingCartItemPrice($cartItem);
-                $orderProduct->discount = 0;
-            }
+//            if ($discountCode) {
+//                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
+//                $orderProduct->price = $discountedPrice;
+//                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
+//            } else {
+                $orderProduct->price = $cartItem->model->getShoppingCartItemPrice($cartItem, $discountCode ?? null);
+                $orderProduct->discount = $cartItem->model->getShoppingCartItemPrice($cartItem) - $orderProduct->price;
+//            }
             $productExtras = [];
             foreach ($cartItem->options as $optionId => $option) {
                 $productExtras[] = [
