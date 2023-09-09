@@ -19,6 +19,7 @@ use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use function PHPUnit\Framework\isInstanceOf;
 
 class Product extends Model
 {
@@ -835,8 +836,12 @@ class Product extends Model
         return Product::thisSite()->publicShowable()->whereIn('id', $suggestedProductIds)->limit($limit)->inRandomOrder()->get();
     }
 
-    public function getShoppingCartItemPrice(CartItem $cartItem, ?DiscountCode $discountCode = null)
+    public function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
     {
+        if($discountCode && is_string($discountCode)){
+            $discountCode = null;
+        }
+
         $quantity = $cartItem->qty;
         $options = $cartItem->options;
 
