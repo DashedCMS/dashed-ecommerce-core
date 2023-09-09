@@ -518,19 +518,19 @@ class Checkout extends Component
                 $orderProduct->name = $bundleProduct->name;
                 $orderProduct->sku = $bundleProduct->sku;
 
-//                if ($isBundleItemWithIndividualPricing) {
-//                    if ($discountCode) {
-//                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
-//                        $orderProduct->price = $discountedPrice;
-//                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
-//                    } else {
-//                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
-//                        $orderProduct->discount = 0;
-//                    }
-//                } else {
-                    $orderProduct->price = 0;
-                    $orderProduct->discount = 0;
-//                }
+                //                if ($isBundleItemWithIndividualPricing) {
+                //                    if ($discountCode) {
+                //                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
+                //                        $orderProduct->price = $discountedPrice;
+                //                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
+                //                    } else {
+                //                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
+                //                        $orderProduct->discount = 0;
+                //                    }
+                //                } else {
+                $orderProduct->price = 0;
+                $orderProduct->discount = 0;
+                //                }
 
                 if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
                     $orderProduct->is_pre_order = true;
