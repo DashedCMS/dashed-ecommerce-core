@@ -482,15 +482,12 @@ class Checkout extends Component
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
-            if ($isBundleItemWithIndividualPricing) {
-                $orderProduct->price = 0;
-                $orderProduct->discount = 0;
-            } elseif ($discountCode) {
+            if ($discountCode) {
                 $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
                 $orderProduct->price = $discountedPrice;
                 $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             } else {
-                $orderProduct->price = $cartItem->model->currentPrice * $orderProduct->quantity;
+                $orderProduct->price = $cartItem->model->getShoppingCartItemPrice($cartItem);
                 $orderProduct->discount = 0;
             }
             $productExtras = [];
@@ -521,19 +518,19 @@ class Checkout extends Component
                 $orderProduct->name = $bundleProduct->name;
                 $orderProduct->sku = $bundleProduct->sku;
 
-                if ($isBundleItemWithIndividualPricing) {
-                    if ($discountCode) {
-                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
-                        $orderProduct->price = $discountedPrice;
-                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
-                    } else {
-                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
-                        $orderProduct->discount = 0;
-                    }
-                } else {
+//                if ($isBundleItemWithIndividualPricing) {
+//                    if ($discountCode) {
+//                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
+//                        $orderProduct->price = $discountedPrice;
+//                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
+//                    } else {
+//                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
+//                        $orderProduct->discount = 0;
+//                    }
+//                } else {
                     $orderProduct->price = 0;
                     $orderProduct->discount = 0;
-                }
+//                }
 
                 if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
                     $orderProduct->is_pre_order = true;
