@@ -19,7 +19,6 @@ use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
-use function PHPUnit\Framework\isInstanceOf;
 
 class Product extends Model
 {
@@ -838,7 +837,7 @@ class Product extends Model
 
     public function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
     {
-        if($discountCode && is_string($discountCode)){
+        if($discountCode && is_string($discountCode)) {
             $discountCode = null;
         }
 
