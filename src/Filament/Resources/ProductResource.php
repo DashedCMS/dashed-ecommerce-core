@@ -134,7 +134,7 @@ class ProductResource extends Resource
                         Select::make('bundle_product_id')
                             ->label('Bundel product')
                             ->searchable()
-                            ->getSearchResultsUsing(fn (string $query) => Product::public()->publicShowable()->notParentProduct()->isNotBundle()->where('name', 'like', "%{$query}%")->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $query) => Product::notParentProduct()->isNotBundle()->where('name', 'like', "%{$query}%")->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelUsing(fn ($value): ?string => Product::find($value)?->name)
                             ->required(),
                     ])
