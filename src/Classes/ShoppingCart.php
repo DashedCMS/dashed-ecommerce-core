@@ -393,7 +393,7 @@ class ShoppingCart
                 foreach ($cartProducts as $cartProduct) {
                     if ($discountCode && $discountCode->type == 'percentage') {
                         $price = $cartProduct->getShoppingCartItemPrice($cartItem, $discountCode);
-//                        $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
+                        //                        $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
                     } else {
                         //                        $price = $cartProduct->currentPrice * $cartItem->qty;
                         $price = $cartProduct->getShoppingCartItemPrice($cartItem);
@@ -429,7 +429,7 @@ class ShoppingCart
             $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
         }
 
-//        dd($taxTotal);
+        //        dd($taxTotal);
         return [
             'vatPercentageOfTotals' => $vatPercentageOfTotals,
             'vatRates' => $vatRates,
