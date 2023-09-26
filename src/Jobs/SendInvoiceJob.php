@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\Mail;
@@ -28,13 +29,15 @@ class SendInvoiceJob implements ShouldQueue
     public bool $sendToCustomer = true;
     public bool $sendToAdmin = true;
     public bool $overrideCurrentStatus = false;
+    public ?User $sendByUser = null;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(Order $order, bool $sendToCustomer = true, $sendToAdmin = true, $overrideCurrentStatus = false)
+    public function __construct(Order $order, ?User $sendByUser = null, bool $sendToCustomer = true, $sendToAdmin = true, $overrideCurrentStatus = false)
     {
         $this->order = $order;
+        $this->sendByUser = $sendByUser;
         $this->sendToCustomer = $sendToCustomer;
         $this->sendToAdmin = $sendToAdmin;
         $this->overrideCurrentStatus = $overrideCurrentStatus;
@@ -45,14 +48,14 @@ class SendInvoiceJob implements ShouldQueue
      */
     public function handle(): void
     {
-        if (! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
+        if (!$this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
             if ($this->sendToCustomer) {
-                Orders::sendNotification($this->order);
+                Orders::sendNotification($this->order, null, $this->sendByUser);
                 $this->order->invoice_send_to_customer = 1;
                 $this->order->save();
             }
 
-            if($this->sendToAdmin) {
+            if ($this->sendToAdmin) {
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                         if ($this->order->contains_pre_orders) {

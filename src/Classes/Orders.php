@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -33,7 +34,7 @@ class Orders
         ];
     }
 
-    public static function sendNotification(Order $order, $email = null): void
+    public static function sendNotification(Order $order, $email = null, ?User $mailSendByUser): void
     {
         try {
             if ($order->contains_pre_orders) {
@@ -41,7 +42,7 @@ class Orders
             } else {
                 Mail::to($email ?: $order->email)->send(new OrderConfirmationMail($order));
             }
-            if (app()->runningInConsole()) {
+            if (app()->runningInConsole() && !$mailSendByUser) {
                 $orderLog = new OrderLog();
                 $orderLog->order_id = $order->id;
                 $orderLog->user_id = null;
@@ -50,7 +51,7 @@ class Orders
             } else {
                 $orderLog = new OrderLog();
                 $orderLog->order_id = $order->id;
-                $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                $orderLog->user_id = Auth::check() ? Auth::user()->id : ($mailSendByUser->id ?? null);
                 $orderLog->tag = 'order.paid.invoice.mail.send';
                 $orderLog->save();
             }

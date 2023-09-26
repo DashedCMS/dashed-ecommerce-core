@@ -433,7 +433,7 @@ class Order extends Model
                 InvoiceCreatedEvent::dispatch($this);
             }
 
-            SendInvoiceJob::dispatch($this);
+            SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
         }
     }
 
