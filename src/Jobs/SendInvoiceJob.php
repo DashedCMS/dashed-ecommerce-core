@@ -2,24 +2,17 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Mails;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
-use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
-use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\App;
+use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\View;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
+use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 
 class SendInvoiceJob implements ShouldQueue
 {
@@ -52,14 +45,14 @@ class SendInvoiceJob implements ShouldQueue
      */
     public function handle(): void
     {
-        if (!$this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
+        if (! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
             if ($this->sendToCustomer) {
                 Orders::sendNotification($this->order);
                 $this->order->invoice_send_to_customer = 1;
                 $this->order->save();
             }
 
-            if($this->sendToAdmin){
+            if($this->sendToAdmin) {
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                         if ($this->order->contains_pre_orders) {

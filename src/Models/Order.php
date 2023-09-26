@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
 use Spatie\Activitylog\LogOptions;
@@ -21,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,10 +28,8 @@ use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
 use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
-use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
 
