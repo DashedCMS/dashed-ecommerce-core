@@ -448,10 +448,13 @@ class TransactionController extends FrontendController
 
         if ($order->status == 'paid') {
             echo "TRUE| Paid";
+            echo '\n';
         } elseif ($order->status == 'cancelled') {
             echo "TRUE| Canceled";
+            echo '\n';
         } else {
             echo "TRUE| Pending";
+            echo '\n';
         }
 
         return $order->status;

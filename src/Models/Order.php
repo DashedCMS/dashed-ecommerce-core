@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
 use Spatie\Activitylog\LogOptions;
@@ -434,23 +435,7 @@ class Order extends Model
                 InvoiceCreatedEvent::dispatch($this);
             }
 
-            //Todo: change below to a listener for InvoiceCreatedEvent
-            if (! $this->invoice_send_to_customer) {
-                Orders::sendNotification($this);
-
-                try {
-                    foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
-                        if ($this->contains_pre_orders) {
-                            Mail::to($notificationInvoiceEmail)->send(new AdminPreOrderConfirmationMail($this));
-                        } else {
-                            Mail::to($notificationInvoiceEmail)->send(new AdminOrderConfirmationMail($this));
-                        }
-                    }
-                } catch (\Exception $e) {
-                }
-                $this->invoice_send_to_customer = 1;
-                $this->save();
-            }
+            SendInvoiceJob::dispatch($this);
         }
     }
 
