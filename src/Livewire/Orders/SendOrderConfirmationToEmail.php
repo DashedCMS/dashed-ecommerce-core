@@ -33,7 +33,7 @@ class SendOrderConfirmationToEmail extends Component
     {
         $this->validate();
 
-        Orders::sendNotification($this->order, $this->email);
+        Orders::sendNotification($this->order, $this->email, auth()->user());
 
         $this->emit('refreshPage');
         Notification::make()
