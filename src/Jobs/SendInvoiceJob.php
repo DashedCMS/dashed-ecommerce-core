@@ -48,7 +48,7 @@ class SendInvoiceJob implements ShouldQueue
      */
     public function handle(): void
     {
-        if (!$this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
+        if (! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
             if ($this->sendToCustomer) {
                 Orders::sendNotification($this->order, null, $this->sendByUser);
                 $this->order->invoice_send_to_customer = 1;

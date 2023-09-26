@@ -42,7 +42,7 @@ class Orders
             } else {
                 Mail::to($email ?: $order->email)->send(new OrderConfirmationMail($order));
             }
-            if (app()->runningInConsole() && !$mailSendByUser) {
+            if (app()->runningInConsole() && ! $mailSendByUser) {
                 $orderLog = new OrderLog();
                 $orderLog->order_id = $order->id;
                 $orderLog->user_id = null;
