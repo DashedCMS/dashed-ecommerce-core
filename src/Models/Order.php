@@ -545,8 +545,8 @@ class Order extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false)
     {
-//        Cache::lock('order.updateStatus.' . $this->id, 10)
-//            ->block(15, function () use ($newStatus) {
+        //        Cache::lock('order.updateStatus.' . $this->id, 10)
+        //            ->block(15, function () use ($newStatus) {
         if ($newStatus && $this->status != $newStatus) {
             match ($newStatus) {
                 'paid' => $this->markAsPaid(),
@@ -555,7 +555,7 @@ class Order extends Model
                 'waiting_for_confirmation' => $this->markAsWaitingForConfirmation(),
             };
         }
-//            });
+        //            });
     }
 
     public function changeFulfillmentStatus($newStatus)
