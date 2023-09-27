@@ -457,7 +457,6 @@ class TransactionController extends FrontendController
                         if ($orderPayment->psp == $pspId) {
                             $newStatus = $psp['class']::getOrderStatus($orderPayment);
                             $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-                            dump($newStatus, $newPaymentStatus);
                             $order->changeStatus($newPaymentStatus);
                         }
                     }
