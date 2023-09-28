@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -38,6 +39,9 @@ class FinanceExportMail extends Mailable
         return $this->view('dashed-ecommerce-core::emails.exported-invoice')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
+            ->with([
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
+            ])
             ->attach($invoicePath, [
                 'as' => Customsetting::get('company_name') . ' - exported invoice.pdf',
                 'mime' => 'application/pdf',

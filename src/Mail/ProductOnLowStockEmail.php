@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -27,6 +28,9 @@ class ProductOnLowStockEmail extends Mailable
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('product-low-stock-email-subject', 'products', 'Product :productName: low on stock', 'text', [
                 'productName' => $this->product->name,
-            ]));
+            ]))
+            ->with([
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
+            ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -41,6 +42,7 @@ class OrderConfirmationMail extends Mailable
             ]))
             ->with([
                 'order' => $this->order,
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
             ])->attach($invoicePath, [
                 'as' => Customsetting::get('company_name').' - '.$this->order->invoice_id.'.pdf',
                 'mime' => 'application/pdf',

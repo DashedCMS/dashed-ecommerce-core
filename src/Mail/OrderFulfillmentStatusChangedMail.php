@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -49,6 +50,7 @@ class OrderFulfillmentStatusChangedMail extends Mailable
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject($subject)
             ->with([
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
                 'notification' => $notification,
             ]);
     }

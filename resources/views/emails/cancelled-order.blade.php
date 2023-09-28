@@ -232,7 +232,6 @@
                                                            style="border-collapse:collapse;border-spacing:0px;">
                                                         <tbody>
                                                         <tr>
-                                                            @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                                                             @if($logo)
                                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;width: 160px;"
                                                                     width="160"><a href="{{url('/')}}" target="_blank"

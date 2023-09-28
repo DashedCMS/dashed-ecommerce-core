@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -31,6 +32,7 @@ class OrderNoteMail extends Mailable
             ->with([
                 'order' => $this->order,
                 'orderLog' => $this->orderLog,
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
             ]);
 
         foreach ($this->orderLog->images as $image) {
