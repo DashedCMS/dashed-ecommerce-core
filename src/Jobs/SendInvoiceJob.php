@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Jobs;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Dashed\DashedCore\Classes\Mails;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -15,7 +16,7 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
 use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 
-class SendInvoiceJob implements ShouldQueue
+class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable;
     use InteractsWithQueue;
@@ -24,12 +25,18 @@ class SendInvoiceJob implements ShouldQueue
 
     public $tries = 3;
     public $timeout = 30;
+    public $uniqueFor = 5;
 
     public Order $order;
     public bool $sendToCustomer = true;
     public bool $sendToAdmin = true;
     public bool $overrideCurrentStatus = false;
     public ?User $sendByUser = null;
+
+    public function uniqueId(): string
+    {
+        return $this->order->id;
+    }
 
     /**
      * Create a new job instance.
