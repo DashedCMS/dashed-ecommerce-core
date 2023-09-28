@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
@@ -26,7 +26,7 @@ class ProductsWithPastDuePreOrderDateMail extends Mailable
             ->subject(Translation::get('products-with-past-due-pre-order-date-email-subject', 'products-with-past-due-pre-order-date', 'There are products that require attention'))
             ->with([
                 'products' => $this->products,
-                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
     }
 }

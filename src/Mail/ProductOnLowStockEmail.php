@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -30,7 +30,7 @@ class ProductOnLowStockEmail extends Mailable
                 'productName' => $this->product->name,
             ]))
             ->with([
-                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
     }
 }

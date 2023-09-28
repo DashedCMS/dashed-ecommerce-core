@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
@@ -40,7 +40,7 @@ class OrderListExportMail extends Mailable
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-order-list-email-subject', 'orders', 'Exported order list'))
             ->with([
-                'logo' => Customsetting::get('site_logo', Sites::getActive(), '')
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])
             ->attach($orderListPath, [
                 'as' => Customsetting::get('company_name') . ' - exported order list.xlsx',
