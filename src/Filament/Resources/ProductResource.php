@@ -553,7 +553,7 @@ class ProductResource extends Resource
                             ->label('Opties van deze product extra')
                             ->when(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
                             ->required(fn (\Closure $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
-                            ->maxItems(fn (\Closure $get) => $get('type') == 'checkbox' ? 1 : 10)
+                            ->maxItems(fn (\Closure $get) => $get('type') == 'checkbox' ? 1 : 50)
                             ->schema([
                                 TextInput::make('value')
                                     ->label('Waarde')
