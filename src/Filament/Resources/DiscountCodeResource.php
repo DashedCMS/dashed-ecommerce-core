@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Form;
 use Filament\Resources\Table;
 use Filament\Resources\Resource;
@@ -131,6 +132,18 @@ class DiscountCodeResource extends Resource
                                         'lg' => 2,
                                         'xl' => 2,
                                         '2xl' => 2,
+                                    ]),
+                                Textarea::make('note')
+                                    ->label('Notitie')
+                                    ->helperText('Notitie voor intern gebruik')
+                                    ->maxLength(5000)
+                                    ->columnSpan([
+                                        'default' => 2,
+                                        'sm' => 2,
+                                        'md' => 2,
+                                        'lg' => 2,
+                                        'xl' => 1,
+                                        '2xl' => 1,
                                     ]),
                             ])
                         )
