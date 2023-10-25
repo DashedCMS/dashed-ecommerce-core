@@ -137,14 +137,7 @@ class DiscountCodeResource extends Resource
                                     ->label('Notitie')
                                     ->helperText('Notitie voor intern gebruik')
                                     ->maxLength(5000)
-                                    ->columnSpan([
-                                        'default' => 2,
-                                        'sm' => 2,
-                                        'md' => 2,
-                                        'lg' => 2,
-                                        'xl' => 1,
-                                        '2xl' => 1,
-                                    ]),
+                                    ->columnSpanFull(),
                             ])
                         )
                         ->columns(2)
