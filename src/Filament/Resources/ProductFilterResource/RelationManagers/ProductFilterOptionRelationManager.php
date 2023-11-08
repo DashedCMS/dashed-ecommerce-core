@@ -2,21 +2,21 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
-use Filament\Tables\Actions\LinkAction;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\ButtonAction;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
-use Filament\Resources\RelationManagers\HasManyRelationManager;
 
-class ProductFilterOptionRelationManager extends HasManyRelationManager
+class ProductFilterOptionRelationManager extends RelationManager
 {
     protected static string $relationship = 'productFilterOptions';
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    public static function form(Form $form): Form
+    public function form(Form $form): Form
     {
         return $form
             ->schema([
@@ -24,7 +24,7 @@ class ProductFilterOptionRelationManager extends HasManyRelationManager
             ]);
     }
 
-    public static function table(Table $table): Table
+    public function table(Table $table): Table
     {
         return $table
             ->columns([
@@ -36,18 +36,17 @@ class ProductFilterOptionRelationManager extends HasManyRelationManager
             ->filters([
                 //
             ])
+            ->actions([
+                Action::make('edit')
+                    ->label('Bewerken')
+                    ->icon('heroicon-o-pencil-square')
+                    ->url(fn (ProductFilterOption $record) => route('filament.dashed.resources.product-filter-options.edit', [$record])),
+                DeleteAction::make(),
+            ])
             ->headerActions([
-                ButtonAction::make('Aanmaken')
-                    ->url(fn ($record) => route('filament.resources.product-filter-options.create') . '?productFilterId=' . $record),
+                Action::make('Aanmaken')
+                    ->button()
+                    ->url(fn ($livewire) => route('filament.dashed.resources.product-filter-options.create') . '?productFilterId=' . $livewire->ownerRecord->id),
             ]);
-    }
-
-    protected function getTableActions(): array
-    {
-        return array_merge(parent::getTableActions(), [
-            LinkAction::make('edit')
-                ->label('Bewerken')
-                ->url(fn (ProductFilterOption $record) => route('filament.resources.product-filter-options.edit', [$record])),
-        ]);
     }
 }

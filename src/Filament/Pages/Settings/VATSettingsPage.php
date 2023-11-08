@@ -6,23 +6,22 @@ use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Filament\Forms\Concerns\InteractsWithForms;
 
-class VATSettingsPage extends Page implements HasForms
+class VATSettingsPage extends Page
 {
-    use InteractsWithForms;
-
-    protected static ?string $navigationIcon = 'heroicon-o-receipt-tax';
+    protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'BTW instellingen';
     protected static ?string $navigationGroup = 'Overige';
     protected static ?string $title = 'BTW instellingen';
 
     protected static string $view = 'dashed-core::settings.pages.default-settings';
+
+    public array $data = [];
 
     public function mount(): void
     {
@@ -65,6 +64,11 @@ class VATSettingsPage extends Page implements HasForms
         return $tabGroups;
     }
 
+    public function getFormStatePath(): ?string
+    {
+        return 'data';
+    }
+
     public function submit()
     {
         $sites = Sites::getSites();
@@ -73,6 +77,9 @@ class VATSettingsPage extends Page implements HasForms
             Customsetting::set('taxes_prices_include_taxes', $this->form->getState()["taxes_prices_include_taxes_{$site['id']}"], $site['id']);
         }
 
-        $this->notify('success', 'De BTW instellingen zijn opgeslagen');
+        Notification::make()
+            ->title('De BTW instellingen zijn opgeslagen')
+            ->success()
+            ->send();
     }
 }

@@ -33,15 +33,15 @@ class MigrateProductCategoriesTable extends Migration
             $productCategory->save();
         }
 
-//        foreach (\Dashed\DashedCore\Models\MenuItem::withTrashed()->get() as $menuItem) {
-//            $menuItem->model = str_replace('Dashed\Dashed\Models\ProductCategory', 'Dashed\DashedEcommerceCore\Models\ProductCategory', $menuItem->model);
-//            $siteIds = [];
-//            foreach ($menuItem->site_ids as $siteIdKey => $siteId) {
-//                $siteIds[] = $siteIdKey;
-//            }
-//            $menuItem->site_ids = $siteIds;
-//            $menuItem->save();
-//        }
+        //        foreach (\Dashed\DashedCore\Models\MenuItem::withTrashed()->get() as $menuItem) {
+        //            $menuItem->model = str_replace('Dashed\Dashed\Models\ProductCategory', 'Dashed\DashedEcommerceCore\Models\ProductCategory', $menuItem->model);
+        //            $siteIds = [];
+        //            foreach ($menuItem->site_ids as $siteIdKey => $siteId) {
+        //                $siteIds[] = $siteIdKey;
+        //            }
+        //            $menuItem->site_ids = $siteIds;
+        //            $menuItem->save();
+        //        }
     }
 
     /**

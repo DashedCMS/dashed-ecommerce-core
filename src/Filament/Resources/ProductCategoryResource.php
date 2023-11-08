@@ -2,17 +2,21 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
@@ -45,119 +49,30 @@ class ProductCategoryResource extends Resource
     {
         return $form
             ->schema([
-                Grid::make([
-                    'default' => 1,
-                    'sm' => 1,
-                    'md' => 1,
-                    'lg' => 1,
-                    'xl' => 6,
-                    '2xl' => 6,
-                ])->schema([
-                    Section::make('Content')
-                        ->schema([
-                            TextInput::make('name')
-                                ->label('Naam')
-                                ->required()
-                                ->maxLength(100)
-                                ->rules([
-                                    'max:100',
-                                ])
-                                ->columnSpan([
-                                    'default' => 2,
-                                    'sm' => 2,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                    'xl' => 1,
-                                    '2xl' => 1,
-                                ]),
-                            TextInput::make('slug')
-                                ->label('Slug')
-                                ->unique('dashed__product_categories', 'slug', fn ($record) => $record)
-                                ->helperText('Laat leeg om automatisch te laten genereren')
-                                ->rules([
-                                    'max:255',
-                                ])
-                                ->columnSpan([
-                                    'default' => 2,
-                                    'sm' => 2,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                    'xl' => 1,
-                                    '2xl' => 1,
-                                ]),
-                            FileUpload::make('image')
-                                ->directory('dashed/product-categories/images')
-                                ->name('Afbeelding')
-                                ->image()
-                                ->columnSpan([
-                                    'default' => 2,
-                                    'sm' => 2,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                    'xl' => 2,
-                                    '2xl' => 2,
-                                ]),
-                            Builder::make('content')
-                                ->blocks(cms()->builder('blocks'))
-                                ->columnSpan([
-                                    'default' => 1,
-                                    'lg' => 1,
-                                ])
-                                ->columnSpan([
-                                    'default' => 2,
-                                    'sm' => 2,
-                                    'md' => 2,
-                                    'lg' => 2,
-                                    'xl' => 2,
-                                    '2xl' => 2,
-                                ]),
-                        ])
-                        ->columns(2)
-                        ->columnSpan([
-                            'default' => 1,
-                            'sm' => 1,
-                            'md' => 1,
-                            'lg' => 1,
-                            'xl' => 4,
-                            '2xl' => 4,]),
-                    Grid::make([
-                        'default' => 1,
-                        'sm' => 1,
-                        'md' => 1,
-                        'lg' => 1,
-                        'xl' => 2,
-                        '2xl' => 2,
-                    ])->schema([
-                        Section::make('Algemene informatie')
-                            ->schema(static::publishTab())
-                            ->columnSpan([
-                                'default' => 1,
-                                'sm' => 1,
-                                'md' => 1,
-                                'lg' => 1,
-                                'xl' => 2,
-                                '2xl' => 2,
-                            ]),
-                        Section::make('Meta data')
-                            ->schema(static::metadataTab())
-                            ->columnSpan([
-                                'default' => 1,
-                                'sm' => 1,
-                                'md' => 1,
-                                'lg' => 1,
-                                'xl' => 2,
-                                '2xl' => 2,
-                            ]),
+                Section::make('Content')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Naam')
+                            ->required()
+                            ->maxLength(100),
+                        TextInput::make('slug')
+                            ->label('Slug')
+                            ->unique('dashed__product_categories', 'slug', fn ($record) => $record)
+                            ->helperText('Laat leeg om automatisch te laten genereren')
+                            ->maxLength(255),
+                        FileUpload::make('image')
+                            ->directory('dashed/product-categories/images')
+                            ->name('Afbeelding')
+                            ->image(),
+                        Builder::make('content')
+                            ->blocks(cms()->builder('blocks'))
+                            ->columnSpanFull(),
                     ])
-                        ->columnSpan([
-                            'default' => 1,
-                            'sm' => 1,
-                            'md' => 1,
-                            'lg' => 1,
-                            'xl' => 2,
-                            '2xl' => 2,
-                        ]),
-                ]),
+                    ->columns(2),
+                Section::make('Algemene informatie')
+                    ->schema(static::publishTab()),
+                Section::make('Meta data')
+                    ->schema(static::metadataTab()),
             ]);
     }
 
@@ -167,8 +82,18 @@ class ProductCategoryResource extends Resource
             ->columns(array_merge([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable(),
+                    ->searchable(query: SearchQuery::make()),
             ], static::visitableTableColumns()))
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->filters([
                 //
             ]);

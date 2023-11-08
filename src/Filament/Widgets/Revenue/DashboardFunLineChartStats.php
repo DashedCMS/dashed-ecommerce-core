@@ -2,16 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
+use Filament\Widgets\ChartWidget;
 use Dashed\DashedCore\Models\User;
-use Filament\Widgets\LineChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
 
-class DashboardFunLineChartStats extends LineChartWidget
+class DashboardFunLineChartStats extends ChartWidget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.chart-widget';
-
-    protected function getHeading(): string
+    public function getHeading(): string
     {
         return 'Fun stats';
     }
@@ -33,21 +31,26 @@ class DashboardFunLineChartStats extends LineChartWidget
         });
 
         return [
-            'values' => [
+            'datasets' => [
                 [
-                    'name' => 'Nieuwe gebruikers',
+                    'label' => 'Nieuwe gebruikers',
                     'data' => $statistics['newUsers'],
+                    'backgroundColor' => 'rgba(0, 210, 205, 1)',
+                    'borderColor' => 'rgba(0, 210, 205, 1)',
                 ],
                 [
                     'name' => 'Nieuwe bestellingen',
                     'data' => $statistics['newOrders'],
+                    'backgroundColor' => 'rgba(216, 255, 51, 1)',
+                    'borderColor' => 'rgba(216, 255, 51, 1)',
                 ],
-            ],
-            'colors' => [
-                'rgba(11, 0, 255, 1)',
-                'rgba(216, 117, 26, 1)',
             ],
             'labels' => $statistics['labels'],
         ];
+    }
+
+    protected function getType(): string
+    {
+        return 'line';
     }
 }

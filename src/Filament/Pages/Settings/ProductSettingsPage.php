@@ -6,17 +6,14 @@ use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Filament\Forms\Concerns\InteractsWithForms;
 
-class ProductSettingsPage extends Page implements HasForms
+class ProductSettingsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Product instellingen';
@@ -24,6 +21,7 @@ class ProductSettingsPage extends Page implements HasForms
     protected static ?string $title = 'Product instellingen';
 
     protected static string $view = 'dashed-core::settings.pages.default-settings';
+    public array $data = [];
 
     public function mount(): void
     {
@@ -94,11 +92,6 @@ class ProductSettingsPage extends Page implements HasForms
                 TextInput::make("product_default_amount_of_products_{$site['id']}")
                     ->label('Standaard aantal producten per pagina')
                     ->numeric()
-                    ->required()
-                    ->rules([
-                        'required',
-                        'numeric',
-                    ])
                     ->required(),
             ];
 
@@ -116,6 +109,11 @@ class ProductSettingsPage extends Page implements HasForms
         return $tabGroups;
     }
 
+    public function getFormStatePath(): ?string
+    {
+        return 'data';
+    }
+
     public function submit()
     {
         $sites = Sites::getSites();
@@ -129,6 +127,9 @@ class ProductSettingsPage extends Page implements HasForms
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
         }
 
-        $this->notify('success', 'De product instellingen zijn opgeslagen');
+        Notification::make()
+            ->title('De product instellingen zijn opgeslagen')
+            ->success()
+            ->send();
     }
 }

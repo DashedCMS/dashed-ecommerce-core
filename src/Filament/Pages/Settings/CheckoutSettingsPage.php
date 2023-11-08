@@ -7,18 +7,15 @@ use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Filament\Forms\Concerns\InteractsWithForms;
 
-class CheckoutSettingsPage extends Page implements HasForms
+class CheckoutSettingsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Afreken instellingen';
@@ -26,6 +23,7 @@ class CheckoutSettingsPage extends Page implements HasForms
     protected static ?string $title = 'Afreken instellingen';
 
     protected static string $view = 'dashed-core::settings.pages.default-settings';
+    public array $data = [];
 
     public function mount(): void
     {
@@ -136,6 +134,11 @@ class CheckoutSettingsPage extends Page implements HasForms
         return $tabGroups;
     }
 
+    public function getFormStatePath(): ?string
+    {
+        return 'data';
+    }
+
     public function submit()
     {
         $sites = Sites::getSites();
@@ -144,7 +147,6 @@ class CheckoutSettingsPage extends Page implements HasForms
             Customsetting::set('checkout_account', $this->form->getState()["checkout_account_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_form_name', $this->form->getState()["checkout_form_name_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_form_company_name', $this->form->getState()["checkout_form_company_name_{$site['id']}"], $site['id']);
-            //            Customsetting::set('checkout_form_address_line_2', $this->form->getState()["checkout_form_address_line_2_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_form_phone_number_delivery_address', $this->form->getState()["checkout_form_phone_number_delivery_address_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_delivery_address_standard_invoice_address', $this->form->getState()["checkout_delivery_address_standard_invoice_address_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_autofill_address', $this->form->getState()["checkout_autofill_address_{$site['id']}"], $site['id']);
@@ -155,6 +157,9 @@ class CheckoutSettingsPage extends Page implements HasForms
             Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
         }
 
-        $this->notify('success', 'De afreken instellingen zijn opgeslagen');
+        Notification::make()
+            ->title('De afreken instellingen zijn opgeslagen')
+            ->success()
+            ->send();
     }
 }

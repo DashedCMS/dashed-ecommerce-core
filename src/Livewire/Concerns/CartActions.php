@@ -11,12 +11,12 @@ trait CartActions
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
-            $this->emit('showAlert', $status, $message);
+            $this->dispatch('showAlert', $status, $message);
         }
 
         ShoppingCart::removeInvalidItems();
 
-        $this->emit('refreshCart');
+        $this->dispatch('refreshCart');
     }
 
     public function changeQuantity(string $rowId, int $quantity)

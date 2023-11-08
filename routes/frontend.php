@@ -8,10 +8,10 @@ use Dashed\DashedCore\Middleware\FrontendMiddleware;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 
 if (!app()->runningInConsole()) {

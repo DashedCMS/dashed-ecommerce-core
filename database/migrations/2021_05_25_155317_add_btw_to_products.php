@@ -17,11 +17,11 @@ class AddBtwToProducts extends Migration
             $table->decimal('btw')->after('price')->default(0);
         });
 
-//        foreach (\Dashed\DashedEcommerceCore\Models\OrderProduct::get() as $orderProduct) {
-//            $vatPrice = $orderProduct->price / (100 + ($orderProduct->product->vat_rate ?? 21)) * ($orderProduct->product->vat_rate ?? 21);
-//            $orderProduct->btw = $vatPrice;
-//            $orderProduct->save();
-//        }
+        //        foreach (\Dashed\DashedEcommerceCore\Models\OrderProduct::get() as $orderProduct) {
+        //            $vatPrice = $orderProduct->price / (100 + ($orderProduct->product->vat_rate ?? 21)) * ($orderProduct->product->vat_rate ?? 21);
+        //            $orderProduct->btw = $vatPrice;
+        //            $orderProduct->save();
+        //        }
     }
 
     /**

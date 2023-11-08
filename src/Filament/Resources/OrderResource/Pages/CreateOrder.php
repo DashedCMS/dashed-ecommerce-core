@@ -3,8 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
+use Filament\Forms\Get;
+use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
-use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
@@ -16,17 +17,15 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
@@ -38,10 +37,8 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CreateOrder extends Page implements HasForms
+class CreateOrder extends Page
 {
-    use InteractsWithForms;
-
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
     protected static string $view = 'dashed-ecommerce-core::orders.create-order';
@@ -117,6 +114,16 @@ class CreateOrder extends Page implements HasForms
         return $products;
     }
 
+    //    public function getSearchableUsers($query)
+    //    {
+    //        return User::where(DB::raw('lower(first_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(last_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(email)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
+    //    }
+
+    //    public function getSearchableProducts($query)
+    //    {
+    //        return Product::handOrderShowable()->where(DB::raw('lower(name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(content)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
+    //    }
+
     protected function getFormSchema(): array
     {
         $schema = [];
@@ -137,7 +144,7 @@ class CreateOrder extends Page implements HasForms
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                    ->visible(fn (Get $get) => !$get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -145,7 +152,7 @@ class CreateOrder extends Page implements HasForms
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                    ->visible(fn (Get $get) => !$get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->nullable()
@@ -157,7 +164,8 @@ class CreateOrder extends Page implements HasForms
                     ->maxLength(255),
                 DatePicker::make('date_of_birth')
                     ->label('Geboortedatum')
-                    ->nullable(),
+                    ->nullable()
+                    ->date(),
                 Select::make('gender')
                     ->label('Geslacht')
                     ->options([
@@ -189,16 +197,16 @@ class CreateOrder extends Page implements HasForms
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('country')
@@ -220,22 +228,22 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
             ])
@@ -292,7 +300,7 @@ class CreateOrder extends Page implements HasForms
                     Placeholder::make('Afbeelding')
                         ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
                 ], $productExtras))
-                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')));
+                ->visible(fn (Get $get) => in_array($product->id, $get('activatedProducts')));
         }
 
         $schema[] = Wizard\Step::make('Producten')
@@ -333,286 +341,8 @@ class CreateOrder extends Page implements HasForms
     >
         Bestelling aanmaken
     </x-filament::button>
-BLADE))),
+BLADE)))
         ];
-
-        //Old
-        $schema = [];
-
-        $schema[] = Section::make('Persoonlijke informatie')
-            ->schema([
-                Select::make('user_id')
-                    ->label('Hang de bestelling aan een gebruiker')
-                    ->options($this->users)
-                    ->searchable()
-                    ->reactive(),
-                Toggle::make('marketing')
-                    ->label('De klant accepteert marketing'),
-                TextInput::make('password')
-                    ->label('Wachtwoord')
-                    ->type('password')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                        'confirmed',
-                    ])
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
-                TextInput::make('password_confirmation')
-                    ->label('Wachtwoord herhalen')
-                    ->type('password')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
-                TextInput::make('first_name')
-                    ->label('Voornaam')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('last_name')
-                    ->label('Achternaam')
-                    ->required()
-                    ->rules([
-                        'required',
-                        'min:6',
-                        'max:255',
-                    ]),
-                DatePicker::make('date_of_birth')
-                    ->label('Geboortedatum')
-                    ->rules([
-                        'nullable',
-                        'date',
-                    ]),
-                Select::make('gender')
-                    ->label('Geslacht')
-                    ->options([
-                        '' => 'Niet gekozen',
-                        'm' => 'Man',
-                        'f' => 'Vrouw',
-                    ]),
-                TextInput::make('email')
-                    ->label('Email')
-                    ->type('email')
-                    ->required()
-                    ->rules([
-                        'required',
-                        'email:rfc',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('phone_number')
-                    ->label('Telefoon nummer')
-                    ->rules([
-                        'max:255',
-                    ]),
-                TextInput::make('street')
-                    ->label('Straat')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->reactive(),
-                TextInput::make('house_nr')
-                    ->label('Huisnummer')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('zip_code')
-                    ->label('Postcode')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('city')
-                    ->label('Stad')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('country')
-                    ->label('Land')
-                    ->required()
-                    ->rules([
-                        'required',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->reactive(),
-                TextInput::make('company_name')
-                    ->label('Bedrijfsnaam')
-                    ->rules([
-                        'max:255',
-                    ]),
-                TextInput::make('btw_id')
-                    ->label('BTW id')
-                    ->rules([
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_street')
-                    ->label('Factuur straat')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->reactive(),
-                TextInput::make('invoice_house_nr')
-                    ->label('Factuur huisnummer')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_zip_code')
-                    ->label('Factuur postcode')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_city')
-                    ->label('Factuur stad')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_country')
-                    ->label('Factuur land')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                Textarea::make('note')
-                    ->label('Notitie')
-                    ->rules([
-                        'nullable',
-                        'max:1500',
-                    ]),
-                TextInput::make('discount_code')
-                    ->label('Kortingscode')
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ])
-                    ->reactive(),
-            ])
-            ->columns([
-                'default' => 1,
-                'lg' => 2,
-            ]);
-
-        $productSchemas = [];
-
-        //        $productSchemas[] = MultiSelect::make('activatedProducts')
-        //            ->label('Kies producten')
-        //            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
-        //            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
-        //            ->reactive();
-
-        $productSchemas[] = MultiSelect::make('activatedProducts')
-            ->label('Kies producten')
-            ->options(Product::handOrderShowable()->pluck('name', 'id'))
-            ->searchable()
-            ->reactive();
-
-        foreach ($this->getAllProductsProperty() as $product) {
-            $productExtras = [];
-
-            foreach ($product['productExtras'] as $extra) {
-                $extraOptions = [];
-                foreach ($extra->productExtraOptions as $option) {
-                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
-                }
-                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
-                    ->label($extra->name)
-                    ->options($extraOptions)
-                    ->reactive()
-                    ->required($extra->required);
-            }
-
-            $productSchemas[] = Section::make('Product ' . $product->name)
-                ->schema(array_merge([
-                    TextInput::make('products.' . $product->id . '.quantity')
-                        ->label('Aantal')
-                        ->type('number')
-                        ->required()
-                        ->minValue(0)
-                        ->maxValue(1000)
-                        ->default(0)
-                        ->rules([
-                            'required',
-                            'numeric',
-                            'min:1',
-                            'max:1000',
-                        ]),
-                    Placeholder::make('Voorraad')
-                        ->content($product->stock()),
-                    Placeholder::make('Prijs')
-                        ->content($product->currentPrice),
-                    Placeholder::make('Afbeelding')
-                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
-                ], $productExtras))
-                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')))
-                ->reactive();
-        }
-
-        $schema[] = Section::make('Producten')
-            ->schema($productSchemas)
-            ->columnSpan([
-                'default' => 1,
-                'lg' => 1,
-            ])
-            ->reactive();
-
-        $schema[] = Section::make('Overige informatie')
-            ->schema([
-                Select::make('payment_method_id')
-                    ->label('Betaalmethode')
-                    ->required()
-                    ->options(PaymentMethod::where('available_from_amount', '<', $this->totalUnformatted)->where('psp', 'own')->where('site_id', Sites::getActive())->where('active', 1)->pluck('name', 'id')->toArray()),
-                Select::make('shipping_method_id')
-                    ->label('Verzendmethode')
-                    ->required()
-                    ->options(collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray()),
-            ])
-            ->columns([
-                'default' => 1,
-                'lg' => 2,
-            ])
-            ->reactive();
-
-        $schema[] = Section::make('Bestelling')
-            ->schema([
-                Placeholder::make('')
-                    ->content('Subtotaal: ' . $this->subTotal),
-                Placeholder::make('')
-                    ->content('Korting: ' . $this->discount),
-                Placeholder::make('')
-                    ->content('BTW: ' . $this->vat),
-                Placeholder::make('')
-                    ->content('Totaal: ' . $this->total),
-            ]);
-
-        return $schema;
     }
 
     //    public function updatedProducts($path, $value): void
@@ -672,11 +402,11 @@ BLADE))),
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 session(['discountCode' => $discountCode->code]);
@@ -692,7 +422,10 @@ BLADE))),
         $this->subTotal = $checkoutData['subTotalFormatted'];
         $this->total = $checkoutData['totalFormatted'];
 
-        $this->notify('success', 'Informatie bijgewerkt');
+        Notification::make()
+            ->title('Informatie bijgewerkt')
+            ->success()
+            ->send();
         $this->loading = false;
     }
 
@@ -704,8 +437,11 @@ BLADE))),
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (! $cartItems) {
-            $this->notify('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
+        if (!$cartItems) {
+            Notification::make()
+                ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
+                ->danger()
+                ->send();
 
             return;
         }
@@ -718,8 +454,11 @@ BLADE))),
             }
         }
 
-        if (! $paymentMethod) {
-            $this->notify('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
+        if (!$paymentMethod) {
+            Notification::make()
+                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
+                ->danger()
+                ->send();
 
             return;
         }
@@ -732,28 +471,37 @@ BLADE))),
             }
         }
 
-        if (! $shippingMethod) {
-            $this->notify('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
+        if (!$shippingMethod) {
+            Notification::make()
+                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+                ->danger()
+                ->send();
 
             return;
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
-            $this->notify('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
+            Notification::make()
+                ->title(Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))
+                ->danger()
+                ->send();
 
             return;
         }
 
         if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
-                $this->notify('error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
+                Notification::make()
+                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
+                    ->danger()
+                    ->send();
 
                 return;
             }
@@ -909,7 +657,7 @@ BLADE))),
         $orderPayment->psp = $psp;
         $depositAmount = 0;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
@@ -943,7 +691,7 @@ BLADE))),
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
 
-            return redirect(url(route('filament.resources.orders.view', [$order])));
+            return redirect(url(route('filament.dashed.resources.orders.view', [$order])));
         } else {
             try {
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
@@ -953,21 +701,5 @@ BLADE))),
 
             return redirect($transaction['redirectUrl'], 303);
         }
-
-        //        if ($paymentMethod['system'] == 'own' && $orderPayment->status == 'paid') {
-        //            $newStatus = 'waiting_for_confirmation';
-        //            $order->changeStatus($newStatus);
-        //            return redirect(route('dashed.orders.edit', [$order]));
-        //        } elseif ($paymentMethod['system'] == 'mollie' || (Mollie::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
-        //            $transaction = Mollie::startTransaction($order, $orderPayment);
-        //
-        //            return redirect($transaction->getCheckoutUrl(), 303);
-        //        } elseif ($paymentMethod['system'] == 'paynl' || (PayNL::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
-        //            $transaction = PayNL::startTransaction($order, $orderPayment);
-        //
-        //            return redirect($transaction->getRedirectUrl(), 303);
-        //        } else {
-        //            throw new \Exception('Cannot start payment');
-        //        }
     }
 }

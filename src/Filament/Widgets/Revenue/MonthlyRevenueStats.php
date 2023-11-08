@@ -10,8 +10,6 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class MonthlyRevenueStats extends StatsOverviewWidget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
-
     protected function getCards(): array
     {
         $statistics = Cache::remember('monthly-revenue-stats', 60 * 60, function () {
@@ -39,26 +37,14 @@ class MonthlyRevenueStats extends StatsOverviewWidget
         });
 
         return [
-            [
-                'name' => 'Aantal bestellingen (deze maand)',
-                'number' => $statistics['month']['orders'],
-                'retourNumber' => $statistics['monthReturn']['orders'],
-            ],
-            [
-                'name' => 'Totaal bedrag',
-                'number' => $statistics['month']['orderAmount'],
-                'retourNumber' => $statistics['monthReturn']['orderAmount'],
-            ],
-            [
-                'name' => 'Gemiddelde waarde per order',
-                'number' => $statistics['month']['averageOrderAmount'],
-                'retourNumber' => $statistics['monthReturn']['averageOrderAmount'],
-            ],
-            [
-                'name' => 'Aantal producten verkocht',
-                'number' => $statistics['month']['products'],
-                'retourNumber' => $statistics['monthReturn']['products'],
-            ],
+            StatsOverviewWidget\Stat::make('Aantal bestellingen (deze maand)', $statistics['month']['orders'])
+                ->description($statistics['monthReturn']['orders'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['month']['orderAmount'])
+                ->description($statistics['monthReturn']['orderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['month']['averageOrderAmount'])
+                ->description($statistics['monthReturn']['averageOrderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['month']['products'])
+                ->description($statistics['monthReturn']['products'] . ' retour'),
         ];
     }
 }
