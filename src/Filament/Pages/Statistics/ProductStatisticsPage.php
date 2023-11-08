@@ -171,7 +171,7 @@ class ProductStatisticsPage extends Page
     public function getWidgetData(): array
     {
         return [
-            'graphData' => $this->graphData
+            'graphData' => $this->graphData,
         ];
     }
 }

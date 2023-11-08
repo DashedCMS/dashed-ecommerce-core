@@ -100,23 +100,23 @@ class ChildProductsRelationManager extends RelationManager
                                     ->maxValue(100000)
                                     ->required()
                                     ->numeric()
-                                    ->hidden(fn (Get $get) => !$get('use_stock')),
+                                    ->hidden(fn (Get $get) => ! $get('use_stock')),
                                 Toggle::make('out_of_stock_sellable')
                                     ->default(fn ($record) => $record->out_of_stock_sellable)
                                     ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                                     ->reactive()
-                                    ->hidden(fn (Get $get) => !$get('use_stock')),
+                                    ->hidden(fn (Get $get) => ! $get('use_stock')),
                                 DatePicker::make('expected_in_stock_date')
                                     ->default(fn ($record) => $record->expected_in_stock_date)
                                     ->label('Wanneer komt dit product weer op voorraad')
                                     ->reactive()
                                     ->required()
-                                    ->hidden(fn (Get $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
+                                    ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
                                 Toggle::make('low_stock_notification')
                                     ->default(fn ($record) => $record->low_stock_notification)
                                     ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                                     ->reactive()
-                                    ->hidden(fn (Get $get) => !$get('use_stock')),
+                                    ->hidden(fn (Get $get) => ! $get('use_stock')),
                                 TextInput::make('low_stock_notification_limit')
                                     ->default(fn ($record) => $record->low_stock_notification_limit)
                                     ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
@@ -127,7 +127,7 @@ class ChildProductsRelationManager extends RelationManager
                                     ->maxValue(100000)
                                     ->default(1)
                                     ->numeric()
-                                    ->hidden(fn (Get $get) => !$get('use_stock') || !$get('low_stock_notification')),
+                                    ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
                                 Select::make('stock_status')
                                     ->default(fn ($record) => $record->stock_status ?: 'in_stock')
                                     ->label('Is dit product op voorraad')
@@ -151,7 +151,7 @@ class ChildProductsRelationManager extends RelationManager
                                     ->default(1)
                                     ->numeric()
                                     ->required()
-                                    ->hidden(fn (Get $get) => !$get('limit_purchases_per_customer')),
+                                    ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
                             ]),
                     ])
                     ->action(function (Product $record, array $data): void {

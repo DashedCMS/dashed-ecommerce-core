@@ -38,10 +38,10 @@ class LogsList extends Component implements HasForms, HasInfolists
                         TextEntry::make('logs')
                             ->view('dashed-ecommerce-core::orders.components.infolists.logs-list-items')
                             ->viewData([
-                                'order' => $this->order
+                                'order' => $this->order,
                             ]),
                     ])
-                    ->columns(1)
+                    ->columns(1),
             ]);
     }
 

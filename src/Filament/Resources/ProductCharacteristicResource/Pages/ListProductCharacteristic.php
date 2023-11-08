@@ -18,7 +18,7 @@ class ListProductCharacteristic extends ListRecords
     {
         return [
             LocaleSwitcher::make(),
-            CreateAction::make()
+            CreateAction::make(),
         ];
     }
 }

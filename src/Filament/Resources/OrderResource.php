@@ -44,14 +44,13 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrde
 
 class OrderResource extends Resource
 {
+    use WithFileUploads;
     protected static ?string $model = Order::class;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'E-commerce';
-
-    use WithFileUploads;
 
     public static function getNavigationLabel(): string
     {
@@ -336,13 +335,14 @@ class OrderResource extends Resource
                                     ->options(Orders::getFulfillmentStatusses())
                                     ->required(),
                             ])
-                            ->visible(fn ($record) => !$record->credit_for_order_id)
+                            ->visible(fn ($record) => ! $record->credit_for_order_id)
                             ->action(function ($record, $data) {
                                 if ($record->fulfillment_status == $data['fulfillmentStatus']) {
                                     Notification::make()
                                         ->danger()
                                         ->title('Bestelling heeft al deze fulfillment status')
                                         ->send();
+
                                     return;
                                 }
 

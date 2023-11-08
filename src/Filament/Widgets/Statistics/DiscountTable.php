@@ -35,7 +35,7 @@ class DiscountTable extends TableWidget
             ->query(function () {
                 if ($this->graphData['filters']['discountCode'] && $this->graphData['filters']['discountCode'] != 'all') {
                     $discountCode = DiscountCode::where('code', $this->graphData['filters']['discountCode'])->first();
-                    if (!$discountCode) {
+                    if (! $discountCode) {
                         return Order::where('id', 0);
                     }
                 }

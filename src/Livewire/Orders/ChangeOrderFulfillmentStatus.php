@@ -49,6 +49,7 @@ class ChangeOrderFulfillmentStatus extends Component implements HasForms, HasAct
                         ->danger()
                         ->title('Bestelling heeft al deze fulfillment status')
                         ->send();
+
                     return;
                 }
 

@@ -14,7 +14,7 @@ class ListOrders extends ListRecords
     protected function getHeaderActions(): array
     {
         return array_merge([
-            CreateAction::make()
+            CreateAction::make(),
         ], ecommerce()->buttonActions('orders'));
     }
 }
