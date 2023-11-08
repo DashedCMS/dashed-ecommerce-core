@@ -144,7 +144,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn (Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -152,7 +152,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn (Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->nullable()
@@ -341,7 +341,7 @@ class CreateOrder extends Page
     >
         Bestelling aanmaken
     </x-filament::button>
-BLADE)))
+BLADE))),
         ];
     }
 
@@ -402,11 +402,11 @@ BLADE)))
             }
         }
 
-        if (!$this->discount_code) {
+        if (! $this->discount_code) {
             session(['discountCode' => '']);
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 session(['discountCode' => $discountCode->code]);
@@ -437,7 +437,7 @@ BLADE)))
 
         $cartItems = ShoppingCart::cartItems();
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -454,7 +454,7 @@ BLADE)))
             }
         }
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             Notification::make()
                 ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
                 ->danger()
@@ -471,7 +471,7 @@ BLADE)))
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             Notification::make()
                 ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
                 ->danger()
@@ -482,10 +482,10 @@ BLADE)))
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -657,7 +657,7 @@ BLADE)))
         $orderPayment->psp = $psp;
         $depositAmount = 0;
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];

@@ -56,6 +56,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                                 foreach ($orderProduct->product_extras as $productExtra) {
                                     $productExtras .= $productExtra['name'] . ': ' . $productExtra['value'] . ' <br/>';
                                 }
+
                                 return new HtmlString($productExtras);
                             })
                             ->size('xs'),

@@ -88,13 +88,13 @@ class CancelOrder extends Page implements HasForms
                 ->schema(array_merge($orderProductSchema, [
                     TextInput::make('extra_order_line_name')
                         ->required()
-                        ->hidden(fn ($get) => !$get('extra_order_line')),
+                        ->hidden(fn ($get) => ! $get('extra_order_line')),
                     TextInput::make('extra_order_line_price')
                         ->required()
                         ->numeric()
                         ->minValue(0.01)
                         ->maxValue(100000)
-                        ->hidden(fn ($get) => !$get('extra_order_line')),
+                        ->hidden(fn ($get) => ! $get('extra_order_line')),
                 ]))
                 ->columns([
                     'default' => 1,
@@ -150,7 +150,7 @@ class CancelOrder extends Page implements HasForms
             $extraOrderLineName = $this->form->getState()['extra_order_line_name'] ?? '';
             $extraOrderLinePrice = $this->form->getState()['extra_order_line_price'] ?? '';
 
-            if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
+            if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
                 Notification::make()
                     ->title('Je moet tenminste 1 product laten retourneren.')
                     ->danger()
@@ -163,7 +163,7 @@ class CancelOrder extends Page implements HasForms
                 $createCreditInvoice = true;
             }
 
-            if (!$createCreditInvoice) {
+            if (! $createCreditInvoice) {
                 $this->order->changeStatus('cancelled', $sendCustomerEmail);
 
                 Notification::make()

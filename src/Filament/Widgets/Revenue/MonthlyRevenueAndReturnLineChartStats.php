@@ -10,6 +10,7 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 {
     protected int | string | array $columnSpan = 'full';
     protected static ?string $maxHeight = '300px';
+
     public function getHeading(): string
     {
         return 'Verkopen en retouren';

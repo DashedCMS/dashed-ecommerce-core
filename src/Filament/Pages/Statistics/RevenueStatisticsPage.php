@@ -242,7 +242,7 @@ class RevenueStatisticsPage extends Page
     public function getWidgetData(): array
     {
         return [
-            'graphData' => $this->graphData
+            'graphData' => $this->graphData,
         ];
     }
 }

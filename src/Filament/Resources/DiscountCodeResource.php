@@ -63,7 +63,7 @@ class DiscountCodeResource extends Resource
                                 ->label('Actief op sites')
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
-                                    return !(Sites::getAmountOfSites() > 1);
+                                    return ! (Sites::getAmountOfSites() > 1);
                                 })
                                 ->required(),
                             TextInput::make('name')
@@ -80,14 +80,14 @@ class DiscountCodeResource extends Resource
                             Toggle::make('create_multiple_codes')
                                 ->label('Meerdere codes aanmaken')
                                 ->reactive()
-                                ->hidden(fn ($livewire) => !$livewire instanceof CreateDiscountCode),
+                                ->hidden(fn ($livewire) => ! $livewire instanceof CreateDiscountCode),
                             TextInput::make('amount_of_codes')
                                 ->label('Hoeveel kortingscodes moeten er aangemaakt worden')
                                 ->helperText('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
                                 ->type('number')
                                 ->required()
                                 ->maxValue(500)
-                                ->hidden(fn ($get) => !$get('create_multiple_codes')),
+                                ->hidden(fn ($get) => ! $get('create_multiple_codes')),
                             Textarea::make('note')
                                 ->label('Notitie')
                                 ->helperText('Notitie voor intern gebruik')
@@ -194,7 +194,7 @@ class DiscountCodeResource extends Resource
                             ->visible(fn ($get) => $get('use_stock')),
                         Toggle::make('limit_use_per_customer')
                             ->label('Deze kortingscode mag 1x per klant gebruikt worden'),
-                    ]))
+                    ])),
             ]);
     }
 
@@ -214,7 +214,7 @@ class DiscountCodeResource extends Resource
                     ->label('Actief op site(s)')
                     ->sortable()
                     ->badge()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('amount_of_uses')
                     ->label('Aantal gebruiken')

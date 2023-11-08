@@ -57,12 +57,12 @@ class DiscountStatisticsPage extends Page
 
         if ($this->discountCode && $this->discountCode != 'all') {
             $discountCode = DiscountCode::where('code', $this->discountCode)->first();
-            if (!$discountCode) {
+            if (! $discountCode) {
                 $orders = Order::where('id', 0)->get();
             }
         }
 
-        if (!isset($orders)) {
+        if (! isset($orders)) {
             $orders = Order::query()
                 ->where('created_at', '>=', $beginDate)
                 ->where('created_at', '<=', $endDate);
@@ -196,7 +196,7 @@ class DiscountStatisticsPage extends Page
     public function getWidgetData(): array
     {
         return [
-            'graphData' => $this->graphData
+            'graphData' => $this->graphData,
         ];
     }
 }

@@ -57,10 +57,10 @@ class ShippingZoneResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(!(Sites::getAmountOfSites() > 1))
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')
                     ->schema([
@@ -104,7 +104,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1)),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //
