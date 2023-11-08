@@ -9,12 +9,14 @@ use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedCore\Models\Concerns\HasSearchScope;
 
 class ShippingMethod extends Model
 {
     use HasTranslations;
     use LogsActivity;
     use SoftDeletes;
+    use HasSearchScope;
 
     protected static $logFillable = true;
 

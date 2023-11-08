@@ -29,14 +29,12 @@ class ProductCategory extends Model
         'slug',
         'content',
         'image',
-        'meta_image',
-        'meta_title',
-        'meta_description',
     ];
 
     protected $with = [
         'parentProductCategory',
     ];
+
     protected $casts = [
         'site_ids' => 'array',
         'content' => 'array',

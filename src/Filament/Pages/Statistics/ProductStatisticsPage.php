@@ -4,22 +4,21 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Card;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
 
-class ProductStatisticsPage extends Page implements HasForms
+class ProductStatisticsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Product statistieken';
     protected static ?string $navigationGroup = 'Statistics';
@@ -31,6 +30,7 @@ class ProductStatisticsPage extends Page implements HasForms
     public $search;
     public $startDate;
     public $endDate;
+    public $graphData;
 
     public function mount(): void
     {
@@ -38,6 +38,13 @@ class ProductStatisticsPage extends Page implements HasForms
             'startDate' => now()->subMonth(),
             'endDate' => now(),
         ]);
+
+        $this->getStatisticsProperty();
+    }
+
+    public function updated()
+    {
+        $this->getStatisticsProperty();
     }
 
     public function getStatisticsProperty()
@@ -48,19 +55,6 @@ class ProductStatisticsPage extends Page implements HasForms
         $search = $this->search;
         $products = Product::notParentProduct()
             ->whereRaw('LOWER(name) like ?', '%' . strtolower($search) . '%')
-//            ->orWhereRaw('LOWER(content) like ?', '%' . strtolower($search) . '%')
-//            ->orWhereRaw('LOWER(short_description) like ?', '%' . strtolower($search) . '%')
-//            ->orWhereRaw('LOWER(description) like ?', '%' . strtolower($search) . '%')
-//            ->orWhereRaw('LOWER(search_terms) like ?', '%' . strtolower($search) . '%')
-//            ->orWhere('slug', 'LIKE', "%$search%")
-//            ->orWhere('weight', 'LIKE', "%$search%")
-//            ->orWhere('length', 'LIKE', "%$search%")
-//            ->orWhere('width', 'LIKE', "%$search%")
-//            ->orWhere('height', 'LIKE', "%$search%")
-//            ->orWhere('price', 'LIKE', "%$search%")
-//            ->orWhere('new_price', 'LIKE', "%$search%")
-//            ->orWhere('sku', 'LIKE', "%$search%")
-//            ->orWhere('ean', 'LIKE', "%$search%")
             ->latest()
             ->get();
 
@@ -80,8 +74,6 @@ class ProductStatisticsPage extends Page implements HasForms
             $product->amountSold = $orderProducts->where('product_id', $product->id)->sum('price');
             $totalQuantitySold += $product->quantitySold;
             $totalAmountSold += $product->amountSold;
-            $product->amountSold = CurrencyHelper::formatPrice($product->amountSold);
-            $product->currentStock = $product->use_stock ? $product->stock : ($product->stock_status == 'in_stock' ? 100000 : 0);
         }
 
         if ($totalQuantitySold) {
@@ -108,21 +100,25 @@ class ProductStatisticsPage extends Page implements HasForms
                 'datasets' => [
                     [
                         'label' => 'Stats',
-                        'data' => $graph['data'],
+                        'data' => $graph['data'] ?? [],
                         'backgroundColor' => 'orange',
                         'borderColor' => "orange",
                         'fill' => 'start',
                     ],
                 ],
-                'labels' => $graph['labels'],
+                'labels' => $graph['labels'] ?? [],
+            ],
+            'filters' => [
+                'search' => $search,
+                'beginDate' => $beginDate,
+                'endDate' => $endDate,
             ],
             'data' => $statistics,
             'products' => $products,
         ];
 
-        $this->emit('updatedStatistics', $graphData);
-
-        return $graphData;
+        $this->dispatch('updateGraphData', $graphData);
+        $this->graphData = $graphData;
     }
 
     protected function getFormSchema(): array
@@ -142,17 +138,15 @@ class ProductStatisticsPage extends Page implements HasForms
         }
 
         return [
-            Card::make()
+            Section::make()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
                         ->reactive(),
                     DatePicker::make('endDate')
                         ->label('Eind datum')
-                        ->rules([
-                            'nullable',
-                            'after:start_date',
-                        ])
+                        ->nullable()
+                        ->after('startDate')
                         ->reactive(),
                     TextInput::make('search')
                         ->label('Zoekterm')
@@ -165,8 +159,19 @@ class ProductStatisticsPage extends Page implements HasForms
         ];
     }
 
-    public function submit()
+    protected function getFooterWidgets(): array
     {
-        $this->notify('success', 'De export is gedownload');
+        return [
+            ProductChart::make(),
+            ProductCards::make(),
+            ProductTable::make(),
+        ];
+    }
+
+    public function getWidgetData(): array
+    {
+        return [
+            'graphData' => $this->graphData
+        ];
     }
 }

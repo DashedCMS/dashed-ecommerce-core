@@ -2,15 +2,15 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
-use Filament\Widgets\LineChartWidget;
+use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
 
-class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
+class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.full-width-chart-widget';
-
-    protected function getHeading(): string
+    protected int | string | array $columnSpan = 'full';
+    protected static ?string $maxHeight = '300px';
+    public function getHeading(): string
     {
         return 'Verkopen en retouren';
     }
@@ -36,26 +36,32 @@ class MonthlyRevenueAndReturnLineChartStats extends LineChartWidget
         });
 
         return [
-            'values' => [
+            'datasets' => [
                 [
-                    'name' => 'Verkopen',
+                    'label' => 'Verkopen',
                     'data' => $statistics['data'],
+                    'backgroundColor' => '#196400',
+                    'borderColor' => '#196400',
                 ],
                 [
-                    'name' => 'Retouren',
+                    'label' => 'Retouren',
                     'data' => $statistics['returnData'],
+                    'backgroundColor' => '#a80000',
+                    'borderColor' => '#a80000',
                 ],
                 [
-                    'name' => 'Verkopen + retouren',
+                    'label' => 'Verkopen + retouren',
                     'data' => $statistics['combinedData'],
+                    'backgroundColor' => '#ffbb00',
+                    'borderColor' => '#ffbb00',
                 ],
-            ],
-            'colors' => [
-                '#196400',
-                '#a80000',
-                'rgba(250, 255, 0, 0.5)',
             ],
             'labels' => $statistics['labels'],
         ];
+    }
+
+    protected function getType(): string
+    {
+        return 'line';
     }
 }

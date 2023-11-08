@@ -6,11 +6,13 @@ use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Dashed\DashedCore\Models\Concerns\HasSearchScope;
 
 class ProductCharacteristics extends Model
 {
     use HasTranslations;
     use LogsActivity;
+    use HasSearchScope;
 
     protected static $logFillable = true;
 
@@ -29,14 +31,6 @@ class ProductCharacteristics extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
-    }
-
-    public function scopeSearch($query)
-    {
-        if (request()->get('search')) {
-            $search = strtolower(request()->get('search'));
-            $query->where('name', 'LIKE', "%$search%");
-        }
     }
 
     public function productCharacteristic()

@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Dashed\DashedCore\Models\Concerns\HasSearchScope;
 
 class ShippingZone extends Model
 {
     use HasTranslations;
+    use HasSearchScope;
     use LogsActivity;
     use SoftDeletes;
 

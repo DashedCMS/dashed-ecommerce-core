@@ -393,7 +393,7 @@ class ShoppingCart
                 foreach ($cartProducts as $cartProduct) {
                     if ($discountCode && $discountCode->type == 'percentage') {
                         $price = $cartProduct->getShoppingCartItemPrice($cartItem, $discountCode);
-                        //                        $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
+                    //                        $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
                     } else {
                         //                        $price = $cartProduct->currentPrice * $cartItem->qty;
                         $price = $cartProduct->getShoppingCartItemPrice($cartItem);
@@ -673,11 +673,11 @@ class ShoppingCart
                                     'name' => $productExtraOption['name'],
                                     'value' => $thisProductExtraOption->value,
                                 ];
-                                //                                if ($thisProductExtraOption->calculate_only_1_quantity) {
-                                //                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
-                                //                                } else {
-                                //                                    $productPrice = $productPrice + $thisProductExtraOption->price;
-                                //                                }
+                            //                                if ($thisProductExtraOption->calculate_only_1_quantity) {
+                            //                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
+                            //                                } else {
+                            //                                    $productPrice = $productPrice + $thisProductExtraOption->price;
+                            //                                }
                             } elseif ($thisProductExtraOption) {
                                 Cart::remove($cartItem->rowId);
                                 $cartItemDeleted = true;

@@ -52,7 +52,7 @@ class PaymentMethodPieChartWidget extends PieChartWidget
         ];
     }
 
-    protected function getHeading(): ?string
+    public function getHeading(): ?string
     {
         return 'Gebruikte betaalmethodes';
     }

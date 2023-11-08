@@ -3,40 +3,67 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
+use Filament\Actions\Action;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
+use Filament\Actions\Contracts\HasActions;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Actions\Concerns\InteractsWithActions;
 
-class ChangeOrderRetourStatus extends Component
+class ChangeOrderRetourStatus extends Component implements HasForms, HasActions
 {
-    public $order;
-    public $retourStatus;
+    use InteractsWithForms;
+    use InteractsWithActions;
 
-    public function mount($order)
+    public Order $order;
+
+    public function mount(Order $order)
     {
         $this->order = $order;
-        $this->retourStatus = $order->retour_status;
+    }
+
+    public function action(): Action
+    {
+        return Action::make('action')
+            ->label('Verander retour status')
+            ->color('primary')
+            ->fillForm(function () {
+                return [
+                    'retourStatus' => $this->order->retour_status,
+                ];
+            })
+            ->form([
+                Select::make('retourStatus')
+                    ->label('Verander retour status')
+                    ->options(Orders::getReturnStatusses())
+                    ->required(),
+            ])
+            ->action(function ($data) {
+                $this->order->retour_status = $data['retourStatus'];
+                $this->order->save();
+
+                $orderLog = new OrderLog();
+                $orderLog->order_id = $this->order->id;
+                $orderLog->user_id = Auth::user()->id;
+                $orderLog->tag = 'order.changed-retour-status-to-' . $data['retourStatus'];
+                $orderLog->save();
+
+                Notification::make()
+                    ->success()
+                    ->title('Bestelling retour status aangepast')
+                    ->send();
+
+                $this->dispatch('refreshData');
+            });
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.change-retour-status');
-    }
-
-    public function update()
-    {
-        $this->order->retour_status = $this->retourStatus;
-        $this->order->save();
-
-        $orderLog = new OrderLog();
-        $orderLog->order_id = $this->order->id;
-        $orderLog->user_id = Auth::user()->id;
-        $orderLog->tag = 'order.changed-retour-status-to-' . $this->retourStatus;
-        $orderLog->save();
-
-        $this->emit('refreshPage');
-        $this->emit('notify', [
-            'status' => 'success',
-            'message' => 'Bestelling retour status aangepast',
-        ]);
+        return view('dashed-ecommerce-core::orders.components.plain-action');
     }
 }

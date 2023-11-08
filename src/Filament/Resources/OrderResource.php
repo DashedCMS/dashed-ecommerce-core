@@ -2,24 +2,44 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Get;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Illuminate\Support\Str;
-use Filament\Resources\Form;
-use Filament\Resources\Table;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\BadgeColumn;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Livewire\Features\SupportFileUploads\WithFileUploads;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CancelOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrder;
 
 class OrderResource extends Resource
@@ -28,12 +48,19 @@ class OrderResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-cash';
+    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'E-commerce';
 
-    protected static function getNavigationLabel(): string
+    use WithFileUploads;
+
+    public static function getNavigationLabel(): string
     {
-        return 'Bestellingen (' . Order::unhandled()->count() . ')';
+        return 'Bestellingen';
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return Order::unhandled()->count();
     }
 
     protected static ?string $label = 'Bestelling';
@@ -45,14 +72,14 @@ class OrderResource extends Resource
         return "$record->invoice_id - $record->name";
     }
 
-    protected static function getGlobalSearchEloquentQuery(): EloquentBuilder
+    public static function getGlobalSearchEloquentQuery(): EloquentBuilder
     {
         return parent::getGlobalSearchEloquentQuery()->isPaid();
     }
 
     public static function getGlobalSearchResultUrl(Model $record): string
     {
-        return route('filament.resources.orders.view', ['record' => $record]);
+        return route('filament.dashed.resources.orders.view', ['record' => $record]);
     }
 
     public static function getGloballySearchableAttributes(): array
@@ -96,96 +123,51 @@ class OrderResource extends Resource
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 TextInput::make('first_name')
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->nullable()
+                    ->maxLength(255),
                 TextInput::make('last_name')
                     ->required()
-                    ->rules([
-                        'required',
-                        'max:255',
-                    ]),
+                    ->maxLength(255),
                 TextInput::make('email')
-                    ->type('email')
                     ->required()
-                    ->rules([
-                        'required',
-                        'email:rfc',
-                        'max:255',
-                    ]),
+                    ->maxLength(255)
+                    ->email(),
                 TextInput::make('phone_number')
-                    ->rules([
-                        'max:255',
-                    ]),
+                    ->maxLength(255),
                 TextInput::make('street')
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ])
+                    ->maxLength(255)
                     ->reactive(),
                 TextInput::make('house_nr')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('street'))
+                    ->maxLength(255),
                 TextInput::make('zip_code')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('street'))
+                    ->maxLength(255),
                 TextInput::make('city')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('street'))
+                    ->maxLength(255),
                 TextInput::make('country')
                     ->required()
-                    ->rules([
-                        'required',
-                        'max:255',
-                    ]),
+                    ->maxLength(255),
                 TextInput::make('company_name')
-                    ->rules([
-                        'max:255',
-                    ]),
+                    ->maxLength(255),
                 TextInput::make('btw_id')
-                    ->rules([
-                        'max:255',
-                    ]),
+                    ->maxLength(255),
                 TextInput::make('invoice_street')
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ])
+                    ->maxLength(255)
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
                 TextInput::make('invoice_zip_code')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
                 TextInput::make('invoice_city')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
                 TextInput::make('invoice_country')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ]),
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
             ])
             ->hiddenOn(ViewOrder::class)
             ->columns([
@@ -198,18 +180,23 @@ class OrderResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $orderOrigins = [];
+        foreach (Order::distinct('order_origin')->pluck('order_origin')->unique() as $orderOrigin) {
+            $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
+        }
+
         return $table
             ->columns([
                 TextColumn::make('invoice_id')
-//                    ->getStateUsing('')
                     ->label('Bestelling ID')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Betaalmethode')
                     ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
-                BadgeColumn::make('payment_status')
+                TextColumn::make('payment_status')
                     ->label('Betaalstatus')
+                    ->badge()
                     ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
                     ->colors([
                         'primary' => fn ($state): bool => $state === 'Lopende aankoop',
@@ -217,20 +204,14 @@ class OrderResource extends Resource
                         'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
                         'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
                     ]),
-                BadgeColumn::make('fulfillment_status')
+                TextColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
-                    ->getStateUsing(fn ($record) => Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? '')
+                    ->badge()
+                    ->getStateUsing(fn ($record) => $record->credit_for_order_id ? (Orders::getReturnStatusses()[$record->retour_status] ?? '') : (Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? ''))
                     ->colors([
                         'danger',
                         'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
                     ]),
-//                ViewColumn::make('statusLabels')
-//            ->view('filament.tables.columns.multiple-labels')
-//                    ->hidden(Customsetting::get('order_index_show_other_statuses', Sites::getActive(), true) ? false : true),
-//                TagsColumn::make('statusLabels')
-//                    ->label('Andere statussen')
-//                    ->getStateUsing(fn($record) => $record->statusLabels)
-//                    ->hidden(Customsetting::get('order_index_show_other_statuses', Sites::getActive(), true) ? false : true),
                 TextColumn::make('name')
                     ->label('Klant')
                     ->searchable([
@@ -262,7 +243,6 @@ class OrderResource extends Resource
                         'discount',
                         'status',
                         'site_id',
-//                        'orderProducts.name',
                     ])
                     ->sortable(),
                 TextColumn::make('total')
@@ -280,14 +260,343 @@ class OrderResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                //
-            ]);
-    }
+                SelectFilter::make('status')
+                    ->multiple()
+                    ->form([
+                        Select::make('values')
+                            ->label('Status')
+                            ->multiple()
+                            ->options([
+                                'paid' => 'Betaald',
+                                'partially_paid' => 'Gedeeltelijk betaald',
+                                'waiting_for_confirmation' => 'Wachten op bevestiging',
+                                'pending' => 'Lopende aankoop',
+                                'cancelled' => 'Geannuleerd',
+                                'return ' => 'Retour',
+                            ])
+                            ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
+                    ]),
+                SelectFilter::make('fulfillment_status')
+                    ->multiple()
+                    ->options(Orders::getFulfillmentStatusses()),
+                SelectFilter::make('retour_status')
+                    ->multiple()
+                    ->options(Orders::getReturnStatusses()),
+                SelectFilter::make('order_origin')
+                    ->multiple()
+                    ->options($orderOrigins),
+                Filter::make('start_date')
+                    ->form([
+                        DatePicker::make('start_date')
+                            ->label('Startdatum'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['start_date'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
+                            );
+                    }),
+                Filter::make('end_date')
+                    ->form([
+                        DatePicker::make('end_date')
+                            ->label('Einddatum'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['end_date'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
+                            );
+                    }),
+            ])
+            ->actions([
+                ViewAction::make(),
+                EditAction::make(),
+                Action::make('quickActions')
+                    ->button()
+                    ->label('Acties')
+                    ->color('primary')
+                    ->modalContent(fn (Order $record): View => view(
+                        'dashed-ecommerce-core::orders.quick-view-order',
+                        ['order' => $record],
+                    ))
+                    ->extraModalFooterActions([
+                        Action::make('changeFulfillmentStatus')
+                            ->label('Verander fulfillment status')
+                            ->color('primary')
+                            ->fillForm(function ($record) {
+                                return [
+                                    'fulfillmentStatus' => $record->fulfillment_status,
+                                ];
+                            })
+                            ->form([
+                                Select::make('fulfillmentStatus')
+                                    ->label('Verander fulfilment status')
+                                    ->options(Orders::getFulfillmentStatusses())
+                                    ->required(),
+                            ])
+                            ->visible(fn ($record) => !$record->credit_for_order_id)
+                            ->action(function ($record, $data) {
+                                if ($record->fulfillment_status == $data['fulfillmentStatus']) {
+                                    Notification::make()
+                                        ->danger()
+                                        ->title('Bestelling heeft al deze fulfillment status')
+                                        ->send();
+                                    return;
+                                }
 
-    public static function getRelations(): array
-    {
-        return [
-        ];
+                                $record->changeFulfillmentStatus($data['fulfillmentStatus']);
+
+                                $orderLog = new OrderLog();
+                                $orderLog->order_id = $record->id;
+                                $orderLog->user_id = Auth::user()->id;
+                                $orderLog->tag = 'order.changed-fulfillment-status-to-' . $data['fulfillmentStatus'];
+                                $orderLog->save();
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('Bestelling fulfillment status aangepast')
+                                    ->send();
+                            }),
+                        Action::make('changeRetourFulfillmentStatus')
+                            ->label('Verander retour fulfillment status')
+                            ->color('primary')
+                            ->fillForm(function ($record) {
+                                return [
+                                    'retourStatus' => $record->retour_status,
+                                ];
+                            })
+                            ->form([
+                                Select::make('retourStatus')
+                                    ->label('Verander retour status')
+                                    ->options(Orders::getReturnStatusses())
+                                    ->required(),
+                            ])
+                            ->visible(fn ($record) => $record->credit_for_order_id)
+                            ->action(function ($record, $data) {
+                                if ($record->retour_status == $data['retourStatus']) {
+                                    Notification::make()
+                                        ->danger()
+                                        ->title('Bestelling heeft al deze retour status')
+                                        ->send();
+
+                                    return;
+                                }
+
+                                $record->retour_status = $data['retourStatus'];
+                                $record->save();
+
+                                $orderLog = new OrderLog();
+                                $orderLog->order_id = $record->id;
+                                $orderLog->user_id = Auth::user()->id;
+                                $orderLog->tag = 'order.changed-retour-status-to-' . $data['retourStatus'];
+                                $orderLog->save();
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('Bestelling retour status aangepast')
+                                    ->send();
+                            }),
+                        Action::make('sendConfirmationEmail')
+                            ->label('Stuur bevestigingsmail')
+                            ->color('primary')
+                            ->fillForm(function ($record) {
+                                return [
+                                    'email' => $record->email,
+                                ];
+                            })
+                            ->form([
+                                TextInput::make('email')
+                                    ->label('Stuur de email naar')
+                                    ->email()
+                                    ->required(),
+                            ])
+                            ->action(function ($record, $data) {
+                                Orders::sendNotification($record, $data['email'], auth()->user());
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('De bevestigingsmail is verstuurd')
+                                    ->send();
+                            }),
+                        Action::make('createOrderLog')
+                            ->label('Maak bestellings notitie')
+                            ->color('primary')
+                            ->fillForm(function ($record) {
+                                return [
+                                    'emailSubject' => 'Je bestelling is bijgewerkt',
+                                ];
+                            })
+                            ->form([
+                                Toggle::make('publicForCustomer')
+                                    ->label('Zichtbaar voor klant')
+                                    ->default(false)
+                                    ->reactive(),
+                                Toggle::make('sendEmailToCustomer')
+                                    ->label('Moet de klant een notificatie van deze notitie ontvangen?')
+                                    ->default(false)
+                                    ->visible(fn (Get $get) => $get('publicForCustomer'))
+                                    ->reactive(),
+                                TextInput::make('emailSubject')
+                                    ->label('Onderwerp van de mail')
+                                    ->visible(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
+                                FileUpload::make('images')
+                                    ->name('Bestanden')
+                                    ->multiple()
+                                    ->downloadable()
+                                    ->openable()
+                                    ->reorderable()
+                                    ->acceptedFileTypes(['image/*', 'application/pdf'])
+                                    ->directory('dashed/orders/logs/images')
+                                    ->maxSize(50000),
+                                Textarea::make('note')
+                                    ->label('Notitie')
+                                    ->placeholder('Typ hier je notitie')
+                                    ->required()
+                                    ->minLength(3)
+                                    ->maxLength(1500)
+                                    ->rows(3),
+                            ])
+                            ->action(function ($record, $data) {
+                                $orderLog = new OrderLog();
+                                $orderLog->order_id = $record->id;
+                                $orderLog->user_id = Auth::user()->id;
+                                $orderLog->tag = 'order.note.created';
+                                $orderLog->note = $data['note'];
+                                $orderLog->public_for_customer = $data['publicForCustomer'];
+                                $orderLog->send_email_to_customer = $data['publicForCustomer'] && $data['sendEmailToCustomer'];
+                                $orderLog->email_subject = $data['emailSubject'] ?? 'Je bestelling is bijgewerkt';
+
+                                $orderLog->images = $data['images'];
+                                $orderLog->save();
+
+                                if ($orderLog->send_email_to_customer) {
+                                    try {
+                                        Mail::to($record->email)->send(new OrderNoteMail($record, $orderLog));
+                                    } catch (\Exception $exception) {
+                                    }
+                                }
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('De notitie is aangemaakt')
+                                    ->send();
+                            }),
+                    ])
+                    ->modalHeading('Bestelling bekijken')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Sluiten')
+                    ->action(function (Order $record, array $data): void {
+                        if (isset($data['fulfillment_status'])) {
+                            $record->fulfillment_status = $data['fulfillment_status'];
+                        }
+                        if (isset($data['retour_status'])) {
+                            $record->retour_status = $data['retour_status'];
+                        }
+                        $record->save();
+                    }),
+            ])
+            ->bulkActions([
+                BulkAction::make('downloadInvoices')
+                    ->label('Download facturen')
+                    ->color('primary')
+                    ->action(function (Collection $records, array $data) {
+                        $hash = Str::random();
+                        $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
+
+                        $hasPdf = false;
+                        foreach ($records as $order) {
+                            $url = $order->downloadInvoiceUrl();
+
+                            if ($url) {
+                                $invoice = Storage::disk('dashed')->get('dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                                Storage::disk('public')->put('/dashed/tmp-exports/' . $hash . '/invoices-to-export/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf', $invoice);
+                                $invoicePath = storage_path('app/public/dashed/tmp-exports/' . $hash . '/invoices-to-export/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                                $pdfMerger->addPDF($invoicePath, 'all');
+                                $hasPdf = true;
+                            }
+                        }
+
+                        if ($hasPdf) {
+                            $pdfMerger->merge();
+
+                            $invoicePath = '/dashed/tmp-exports/' . $hash . '/invoices/exported-invoice.pdf';
+                            Storage::disk('public')->put($invoicePath, '');
+                            $pdfMerger->save(storage_path('app/public' . $invoicePath));
+                            Notification::make()
+                                ->title('De export is gedownload')
+                                ->success()
+                                ->send();
+
+                            return Storage::disk('public')->download($invoicePath);
+                        } else {
+                            Notification::make()
+                                ->title('Geen facturen om te downloaden')
+                                ->success()
+                                ->send();
+                        }
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                BulkAction::make('downloadPackingSlips')
+                    ->label('Download pakbonnen')
+                    ->color('primary')
+                    ->action(function (Collection $records, array $data) {
+                        $hash = Str::random();
+                        $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
+
+                        $hasPdf = false;
+                        foreach ($records as $order) {
+                            $url = $order->downloadPackingSlipUrl();
+
+                            if ($url) {
+                                $packingSlip = Storage::disk('dashed')->get('dashed/packing-slips/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                                Storage::disk('public')->put('/dashed/tmp-exports/' . $hash . '/packing-slips-to-export/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf', $packingSlip);
+                                $packingSlipPath = storage_path('app/public/dashed/tmp-exports/' . $hash . '/packing-slips-to-export/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                                $pdfMerger->addPDF($packingSlipPath, 'all');
+                                $hasPdf = true;
+                            }
+                        }
+
+                        if ($hasPdf) {
+                            $pdfMerger->merge();
+
+                            $invoicePath = '/dashed/tmp-exports/' . $hash . '/packing-slips/exported-packing-slip.pdf';
+                            Storage::disk('public')->put($invoicePath, '');
+                            $pdfMerger->save(storage_path('app/public' . $invoicePath));
+                            Notification::make()
+                                ->title('De export is gedownload')
+                                ->success()
+                                ->send();
+
+                            return Storage::disk('public')->download($invoicePath);
+                        } else {
+                            Notification::make()
+                                ->title('Geen pakbonnen om te downloaden')
+                                ->success()
+                                ->send();
+                        }
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                BulkAction::make('changeFulfillmentStatus')
+                    ->color('primary')
+                    ->label('Fulfillment status')
+                    ->form([
+                        Select::make('fulfillment_status')
+                            ->label('Veranderd fulfillment status naar')
+                            ->options(Orders::getFulfillmentStatusses())
+                            ->required(),
+                    ])
+                    ->action(function (Collection $records, array $data): void {
+                        foreach ($records as $record) {
+                            $record->changeFulfillmentStatus($data['fulfillment_status']);
+                        }
+                    })
+                    ->deselectRecordsAfterCompletion(),
+            ])
+            ->filtersFormColumns(4)
+            ->persistColumnSearchesInSession()
+            ->persistFiltersInSession();
     }
 
     public static function getPages(): array
@@ -297,7 +606,6 @@ class OrderResource extends Resource
             'create' => CreateOrder::route('/create'),
             'edit' => EditOrder::route('/{record}/edit'),
             'view' => ViewOrder::route('/{record}/view'),
-            'cancel' => CancelOrder::route('/{record}/cancel'),
         ];
     }
 

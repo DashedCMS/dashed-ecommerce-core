@@ -54,6 +54,8 @@ class OrderLog extends Model
             return ' heeft de bestelling betaald.';
         } elseif ($this->tag == 'order.paid.invoice.mail.send') {
             return ' heeft de bestellings mail laten versturen.';
+        } elseif ($this->tag == 'order.paid.invoice.mail.send.failed') {
+            return ' heeft de bestellings mail NIET laten versturen.';
         } elseif ($this->tag == 'order.system.paid.invoice.mail.send') {
             return 'Systeem heeft de bestellings mail laten versturen.';
         } elseif ($this->tag == 'order.waiting_for_confirmation') {

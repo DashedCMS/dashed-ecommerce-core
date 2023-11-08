@@ -188,7 +188,7 @@ class Order extends Model
         if ($this->contains_pre_orders) {
             $labels[] = [
                 'status' => 'Bevat pre-orders',
-                'color' => 'yellow',
+                'color' => 'warning',
             ];
         }
 
@@ -975,24 +975,24 @@ class Order extends Model
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
-                    'color' => 'red',
+                    'color' => 'danger',
                 ];
             } else {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
-                    'color' => 'green',
+                    'color' => 'success',
                 ];
             }
         } else {
             if ($this->retour_status == 'unhandled') {
                 return [
                     'status' => $this->retourStatus(),
-                    'color' => 'red',
+                    'color' => 'danger',
                 ];
             } else {
                 return [
                     'status' => $this->retourStatus(),
-                    'color' => 'green',
+                    'color' => 'success',
                 ];
             }
         }
@@ -1004,12 +1004,12 @@ class Order extends Model
         if ($this->status == 'pending') {
             return [
                 'status' => 'Lopende aankoop',
-                'color' => 'blue',
+                'color' => 'primary',
             ];
         } elseif ($this->status == 'cancelled') {
             return [
                 'status' => 'Geannuleerd',
-                'color' => 'red',
+                'color' => 'danger',
             ];
         } elseif ($this->status == 'waiting_for_confirmation') {
             return [
@@ -1019,17 +1019,17 @@ class Order extends Model
         } elseif ($this->status == 'return') {
             return [
                 'status' => 'Retour',
-                'color' => 'yellow',
+                'color' => 'warning',
             ];
         } elseif ($this->status == 'partially_paid') {
             return [
                 'status' => 'Gedeeltelijk betaald',
-                'color' => 'yellow',
+                'color' => 'warning',
             ];
         } else {
             return [
                 'status' => 'Betaald',
-                'color' => 'green',
+                'color' => 'success',
             ];
         }
     }

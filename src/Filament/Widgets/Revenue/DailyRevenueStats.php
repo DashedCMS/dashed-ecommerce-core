@@ -9,7 +9,7 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class DailyRevenueStats extends StatsOverviewWidget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
+    //    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
 
     protected function getCards(): array
     {
@@ -34,26 +34,14 @@ class DailyRevenueStats extends StatsOverviewWidget
         $statistics['dayReturn']['orderAmount'] = CurrencyHelper::formatPrice($statistics['dayReturn']['orderAmount']);
 
         return [
-          [
-              'name' => 'Aantal bestellingen (vandaag)',
-              'number' => $statistics['day']['orders'],
-              'retourNumber' => $statistics['dayReturn']['orders'],
-          ],
-          [
-              'name' => 'Totaal bedrag',
-              'number' => $statistics['day']['orderAmount'],
-              'retourNumber' => $statistics['dayReturn']['orderAmount'],
-          ],
-          [
-              'name' => 'Gemiddelde waarde per order',
-              'number' => $statistics['day']['averageOrderAmount'],
-              'retourNumber' => $statistics['dayReturn']['averageOrderAmount'],
-          ],
-          [
-              'name' => 'Aantal producten verkocht',
-              'number' => $statistics['day']['products'],
-              'retourNumber' => $statistics['dayReturn']['products'],
-          ],
+            StatsOverviewWidget\Stat::make('Aantal bestellingen (vandaag)', $statistics['day']['orders'])
+                ->description($statistics['dayReturn']['orders'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['day']['orderAmount'])
+                ->description($statistics['dayReturn']['orderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['day']['averageOrderAmount'])
+                ->description($statistics['dayReturn']['averageOrderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['day']['products'])
+                ->description($statistics['dayReturn']['products'] . ' retour'),
         ];
     }
 }

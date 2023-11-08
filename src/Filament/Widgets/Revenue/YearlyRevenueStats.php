@@ -10,8 +10,6 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class YearlyRevenueStats extends StatsOverviewWidget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
-
     protected function getCards(): array
     {
         $statistics = Cache::remember('yearly-revenue-stats', 60 * 60, function () {
@@ -39,26 +37,14 @@ class YearlyRevenueStats extends StatsOverviewWidget
         });
 
         return [
-            [
-                'name' => 'Aantal bestellingen (dit jaar)',
-                'number' => $statistics['year']['orders'],
-                'retourNumber' => $statistics['yearReturn']['orders'],
-            ],
-            [
-                'name' => 'Totaal bedrag',
-                'number' => $statistics['year']['orderAmount'],
-                'retourNumber' => $statistics['yearReturn']['orderAmount'],
-            ],
-            [
-                'name' => 'Gemiddelde waarde per order',
-                'number' => $statistics['year']['averageOrderAmount'],
-                'retourNumber' => $statistics['yearReturn']['averageOrderAmount'],
-            ],
-            [
-                'name' => 'Aantal producten verkocht',
-                'number' => $statistics['year']['products'],
-                'retourNumber' => $statistics['yearReturn']['products'],
-            ],
+            StatsOverviewWidget\Stat::make('Aantal bestellingen (dit jaar)', $statistics['year']['orders'])
+                ->description($statistics['yearReturn']['orders'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['year']['orderAmount'])
+                ->description($statistics['yearReturn']['orderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['year']['averageOrderAmount'])
+                ->description($statistics['yearReturn']['averageOrderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['year']['products'])
+                ->description($statistics['yearReturn']['products'] . ' retour'),
         ];
     }
 }

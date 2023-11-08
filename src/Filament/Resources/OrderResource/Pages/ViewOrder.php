@@ -2,7 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Filament\Pages\Actions\Action;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
@@ -17,7 +18,7 @@ class ViewOrder extends ViewRecord
         'notify' => 'message',
     ];
 
-    protected function getTitle(): string
+    public function getTitle(): string
     {
         return "Bestelling {$this->record->invoice_id} van {$this->record->name}";
     }
@@ -31,25 +32,28 @@ class ViewOrder extends ViewRecord
                 ->openUrlInNewTab(),
             Action::make('Bewerk bestelling')
                 ->button()
-                ->url(route('filament.resources.orders.edit', ['record' => $this->record])),
+                ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
             Action::make('Download factuur')
                 ->button()
                 ->url($this->record->downloadInvoiceUrl())
-                ->hidden(! $this->record->downloadInvoiceUrl()),
+                ->visible($this->record->downloadInvoiceUrl()),
             Action::make('Download pakbon')
                 ->button()
                 ->url($this->record->downloadPackingslipUrl())
-                ->hidden(! $this->record->downloadPackingslipUrl()),
+                ->visible($this->record->downloadPackingslipUrl()),
         ], ecommerce()->buttonActions('order'));
     }
 
     public function renderPage()
     {
-        $this->redirect(route('filament.resources.orders.view', [$this->record]));
+        $this->redirect(route('filament.dashed.resources.orders.view', [$this->record]));
     }
 
     public function message($notify)
     {
-        $this->notify($notify['status'], $notify['message']);
+        Notification::make()
+            ->title($notify['message'])
+            ->{$notify['status']}()
+            ->send();
     }
 }

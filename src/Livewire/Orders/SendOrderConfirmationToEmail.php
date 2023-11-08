@@ -3,42 +3,58 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
+use Filament\Actions\Action;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Actions\Contracts\HasActions;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Actions\Concerns\InteractsWithActions;
 
-class SendOrderConfirmationToEmail extends Component
+class SendOrderConfirmationToEmail extends Component implements HasForms, HasActions
 {
-    public $order;
-    public $email;
+    use InteractsWithForms;
+    use InteractsWithActions;
 
-    protected $rules = [
-      'email' => [
-          'required',
-          'email:rfc',
-      ],
-    ];
+    public Order $order;
 
-    public function mount($order)
+    public function mount(Order $order)
     {
         $this->order = $order;
-        $this->email = $order->email;
+    }
+
+    public function action(): Action
+    {
+        return Action::make('action')
+            ->label('Stuur email bevestiging')
+            ->color('primary')
+            ->fillForm(function () {
+                return [
+                    'email' => $this->order->email,
+                ];
+            })
+            ->form([
+                TextInput::make('email')
+                    ->label('Bestel bevestiging versturen naar')
+                    ->required()
+                    ->email(),
+            ])
+            ->action(function ($data) {
+                Orders::sendNotification($this->order, $data['email'], auth()->user());
+
+                Notification::make()
+                    ->success()
+                    ->title('De notificatie is verstuurd')
+                    ->send();
+
+                $this->dispatch('refreshData');
+            });
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.send-order-confirmation-to-email');
-    }
-
-    public function submit()
-    {
-        $this->validate();
-
-        Orders::sendNotification($this->order, $this->email, auth()->user());
-
-        $this->emit('refreshPage');
-        Notification::make()
-            ->success()
-            ->title('De notificatie is verstuurd')
-            ->send();
+        return view('dashed-ecommerce-core::orders.components.plain-action');
     }
 }

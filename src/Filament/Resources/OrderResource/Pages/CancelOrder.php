@@ -2,20 +2,22 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Filament\Pages\Actions\Action;
+use Filament\Actions\Action;
+use Filament\Resources\Pages\Page;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
-use Filament\Resources\Pages\ViewRecord;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CancelOrder extends ViewRecord implements HasForms
+class CancelOrder extends Page implements HasForms
 {
     use InteractsWithForms;
 
@@ -23,14 +25,21 @@ class CancelOrder extends ViewRecord implements HasForms
 
     protected static string $view = 'dashed-ecommerce-core::orders.cancel-order';
 
+    public Order $order;
+
     //    protected $listeners = [
     //        'refreshPage' => 'render',
     //        'notify' => 'message',
     //    ];
 
-    protected function getTitle(): string
+    public function mount($record)
     {
-        return "Bestelling {$this->record->invoice_id} annuleren van {$this->record->name}";
+        $this->order = Order::find($record);
+    }
+
+    public function getTitle(): string
+    {
+        return "Bestelling {$this->order->invoice_id} annuleren van {$this->order->name}";
     }
 
     protected function getActions(): array
@@ -38,14 +47,14 @@ class CancelOrder extends ViewRecord implements HasForms
         return [
             Action::make('Terug naar bestelling')
                 ->button()
-                ->url(route('filament.resources.orders.view', [$this->record])),
+                ->url(route('filament.dashed.resources.orders.view', [$this->order])),
         ];
     }
 
     //    public function mount($record): void
     //    {
-    //        $this->record = $this->getRecord($record);
-    //        foreach ($this->record->orderProducts as $orderProduct) {
+    //        $this->order = $this->getRecord($record);
+    //        foreach ($this->order->orderProducts as $orderProduct) {
     //            $this->data["order_product_$orderProduct->id_quantity"] = 0;
     //        }
     //    }
@@ -53,17 +62,12 @@ class CancelOrder extends ViewRecord implements HasForms
     protected function getFormSchema(): array
     {
         $orderProductSchema = [];
-        foreach ($this->record->orderProducts as $orderProduct) {
+        foreach ($this->order->orderProducts as $orderProduct) {
             $orderProductSchema[] = TextInput::make("order_product_$orderProduct->id")
                 ->label("$orderProduct->name retourneren")
-                ->type('number')
+                ->numeric()
                 ->minValue(0)
                 ->maxValue($orderProduct->quantity)
-                ->rules([
-                    'numeric',
-                    'max:' . $orderProduct->quantity,
-                    'min:0',
-                ])
                 ->helperText("{$orderProduct->quantity}x besteld voor " . CurrencyHelper::formatPrice($orderProduct->price));
         }
 
@@ -73,36 +77,30 @@ class CancelOrder extends ViewRecord implements HasForms
                     Placeholder::make('')
                         ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
                 ])
-                ->hidden($this->record->order_origin == 'own'),
+                ->hidden($this->order->order_origin == 'own'),
             Section::make('Retour aanmaken')
                 ->schema([
                     Placeholder::make('')
                         ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
                 ])
-                ->hidden($this->record->order_origin != 'own'),
+                ->hidden($this->order->order_origin != 'own'),
             Section::make('Bestelde producten')
                 ->schema(array_merge($orderProductSchema, [
                     TextInput::make('extra_order_line_name')
                         ->required()
-                        ->rules([
-                            'required',
-                        ])
-                        ->hidden(fn ($get) => ! $get('extra_order_line')),
+                        ->hidden(fn ($get) => !$get('extra_order_line')),
                     TextInput::make('extra_order_line_price')
                         ->required()
-                        ->rules([
-                            'numeric',
-                            'required',
-                            'min:0.01',
-                            'max:100000',
-                        ])
-                        ->hidden(fn ($get) => ! $get('extra_order_line')),
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->maxValue(100000)
+                        ->hidden(fn ($get) => !$get('extra_order_line')),
                 ]))
                 ->columns([
                     'default' => 1,
                     'lg' => 3,
                 ])
-                ->hidden($this->record->order_origin != 'own'),
+                ->hidden($this->order->order_origin != 'own'),
             Section::make('Overige opties')
                 ->schema([
                     Select::make('fulfillment_status')
@@ -118,20 +116,20 @@ class CancelOrder extends ViewRecord implements HasForms
                     Toggle::make('restock')
                         ->label('Moet de voorraad weer terug geboekt worden?'),
                     Toggle::make('refund_discount_costs')
-                        ->label('Korting terugvorderen? (' . CurrencyHelper::formatPrice($this->record->discount) . ') (Dit geldt alleen voor vaste korting, ex. €40,-, procentuele korting is op product niveau en wordt altijd terug gevorderd)'),
+                        ->label('Korting terugvorderen? (' . CurrencyHelper::formatPrice($this->order->discount) . ') (Dit geldt alleen voor vaste korting, ex. €40,-, procentuele korting is op product niveau en wordt altijd terug gevorderd)'),
                     Toggle::make('extra_order_line')
                         ->label('Extra regel voor de factuur (Gebruik voor bijv. apart gekochte producten, of een
                                     aparte teruggave van een bedrag. Wil je alleen deze regel, zet de retour producten
                                     dan op 0 hierboven)')
                         ->reactive(),
                 ])
-                ->hidden($this->record->order_origin != 'own'),
+                ->hidden($this->order->order_origin != 'own'),
         ];
     }
 
     public function submit()
     {
-        if ($this->record->order_origin == 'own') {
+        if ($this->order->order_origin == 'own') {
             $sendCustomerEmail = $this->form->getState()['send_customer_email'];
             $createCreditInvoice = $this->form->getState()['create_credit_invoice'];
             $productsMustBeReturned = $this->form->getState()['products_must_be_returned'];
@@ -139,12 +137,10 @@ class CancelOrder extends ViewRecord implements HasForms
                 $createCreditInvoice = true;
             }
             $restock = $this->form->getState()['restock'];
-            //            $refundShippingCosts = $request->refundShippingCosts;
-            //            $refundPaymentCosts = $request->refundPaymentCosts;
             $refundDiscountCosts = $this->form->getState()['refund_discount_costs'];
 
             $cancelledProductsQuantity = 0;
-            $orderProducts = $this->record->orderProducts;
+            $orderProducts = $this->order->orderProducts;
             foreach ($orderProducts as $orderProduct) {
                 $cancelledProductsQuantity += $this->form->getState()["order_product_$orderProduct->id"] ?? 0;
                 $orderProduct->refundQuantity = $this->form->getState()["order_product_$orderProduct->id"] ?? 0;
@@ -154,33 +150,47 @@ class CancelOrder extends ViewRecord implements HasForms
             $extraOrderLineName = $this->form->getState()['extra_order_line_name'] ?? '';
             $extraOrderLinePrice = $this->form->getState()['extra_order_line_price'] ?? '';
 
-            if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
-                $this->notify('danger', 'Je moet tenminste 1 product laten retourneren.');
+            if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
+                Notification::make()
+                    ->title('Je moet tenminste 1 product laten retourneren.')
+                    ->danger()
+                    ->send();
 
                 return;
             }
 
-            if ($productsMustBeReturned || $this->record->invoice_id != 'PROFORMA') {
+            if ($productsMustBeReturned || $this->order->invoice_id != 'PROFORMA') {
                 $createCreditInvoice = true;
             }
 
-            if (! $createCreditInvoice) {
-                $this->record->changeStatus('cancelled', $sendCustomerEmail);
+            if (!$createCreditInvoice) {
+                $this->order->changeStatus('cancelled', $sendCustomerEmail);
 
-                $this->notify('success', 'Bestelling gemarkeerd als geannuleerd');
+                Notification::make()
+                    ->title('Bestelling gemarkeerd als geannuleerd')
+                    ->success()
+                    ->send();
 
-                return redirect(route('filament.resources.orders.view', [$this->record]));
+                return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
             } else {
-                $newOrder = $this->record->markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $this->form->getState()['fulfillment_status']);
-                $this->notify('success', 'Bestelling gemarkeerd als geannuleerd');
+                $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $this->form->getState()['fulfillment_status']);
 
-                return redirect(route('filament.resources.orders.view', [$newOrder]));
+                Notification::make()
+                    ->title('Bestelling gemarkeerd als geannuleerd')
+                    ->success()
+                    ->send();
+
+                return redirect(route('filament.dashed.resources.orders.view', [$newOrder]));
             }
         } else {
-            $this->record->changeStatus('cancelled');
-            $this->notify('success', 'Bestelling gemarkeerd als geannuleerd');
+            $this->order->changeStatus('cancelled');
 
-            return redirect(route('filament.resources.orders.view', [$this->record]));
+            Notification::make()
+                ->title('Bestelling gemarkeerd als geannuleerd')
+                ->success()
+                ->send();
+
+            return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
         }
     }
 }

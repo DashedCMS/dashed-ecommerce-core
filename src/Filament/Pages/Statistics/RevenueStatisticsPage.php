@@ -4,21 +4,19 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
 
-class RevenueStatisticsPage extends Page implements HasForms
+class RevenueStatisticsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Omzet statistieken';
     protected static ?string $navigationGroup = 'Statistics';
@@ -34,6 +32,7 @@ class RevenueStatisticsPage extends Page implements HasForms
     public $orderOrigin;
     public $startDate;
     public $endDate;
+    public $graphData;
 
     public function mount(): void
     {
@@ -46,6 +45,13 @@ class RevenueStatisticsPage extends Page implements HasForms
             'startDate' => now()->subMonth(),
             'endDate' => now(),
         ]);
+
+        $this->getStatisticsProperty();
+    }
+
+    public function updated()
+    {
+        $this->getStatisticsProperty();
     }
 
     public function getStatisticsProperty()
@@ -130,20 +136,19 @@ class RevenueStatisticsPage extends Page implements HasForms
                 'datasets' => [
                     [
                         'label' => 'Stats',
-                        'data' => $graph['data'],
+                        'data' => $graph['data'] ?? [],
                         'backgroundColor' => 'orange',
                         'borderColor' => "orange",
                         'fill' => 'start',
                     ],
                 ],
-                'labels' => $graph['labels'],
+                'labels' => $graph['labels'] ?? [],
             ],
             'data' => $statistics,
         ];
 
-        $this->emit('updatedStatistics', $graphData);
-
-        return $graphData;
+        $this->graphData = $graphData;
+        $this->dispatch('updateGraphData', $graphData);
     }
 
     protected function getFormSchema(): array
@@ -163,17 +168,15 @@ class RevenueStatisticsPage extends Page implements HasForms
         }
 
         return [
-            Card::make()
+            Section::make()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
                         ->reactive(),
                     DatePicker::make('endDate')
                         ->label('Eind datum')
-                        ->rules([
-                            'nullable',
-                            'after:start_date',
-                        ])
+                        ->nullable()
+                        ->after('startDate')
                         ->reactive(),
                     Select::make('status')
                         ->label('Status')
@@ -221,13 +224,25 @@ class RevenueStatisticsPage extends Page implements HasForms
                 ])
                 ->columns([
                     'default' => 1,
-                    'lg' => 7,
+                    'sm' => 2,
+                    'md' => 3,
+                    'lg' => 4,
                 ]),
         ];
     }
 
-    public function submit()
+    protected function getFooterWidgets(): array
     {
-        $this->notify('success', 'De export is gedownload');
+        return [
+            RevenueChart::make(),
+            RevenueCards::make(),
+        ];
+    }
+
+    public function getWidgetData(): array
+    {
+        return [
+            'graphData' => $this->graphData
+        ];
     }
 }

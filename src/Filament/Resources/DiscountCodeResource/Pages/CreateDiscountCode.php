@@ -3,12 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
 use Illuminate\Support\Str;
-use Filament\Pages\Actions\Action;
+use Filament\Actions\Action;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 
 class CreateDiscountCode extends CreateRecord
@@ -17,11 +16,11 @@ class CreateDiscountCode extends CreateRecord
 
     protected function getActions(): array
     {
-        return array_merge(parent::getActions() ?: [], [
+        return [
             Action::make('Genereer een code')
                 ->button()
                 ->action('generateRandomCode'),
-        ]);
+        ];
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
@@ -70,7 +69,6 @@ class CreateDiscountCode extends CreateRecord
                 foreach ($this->record->productCategories as $category) {
                     $selectedProductCategoriesIds[] = $category['id'];
                 }
-                //                $selectedProductCategories = ProductCategories::getFromIdsWithParents($selectedProductCategoriesIds);
                 $discountCode->productCategories()->sync($selectedProductCategoriesIds);
 
                 $selectedProductIds = [];
