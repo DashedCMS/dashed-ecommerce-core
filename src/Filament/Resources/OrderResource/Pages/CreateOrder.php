@@ -4,10 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
 use Dashed\DashedCore\Models\User;
-use Filament\Forms\Components\Wizard;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
@@ -15,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Wizard;
+use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Textarea;
@@ -615,30 +615,30 @@ BLADE))),
         return $schema;
     }
 
-//    public function updatedProducts($path, $value): void
-//    {
-//        $this->updateInfo();
-//    }
-//
-//    public function updatedCountry($path, $value): void
-//    {
-//        $this->updateInfo();
-//    }
-//
-//    public function updatedShippingMethodId($path, $value): void
-//    {
-//        $this->updateInfo();
-//    }
-//
-//    public function updatedPaymentMethodId($path, $value): void
-//    {
-//        $this->updateInfo();
-//    }
-//
-//    public function updatedDiscountCode($path, $value): void
-//    {
-//        $this->updateInfo();
-//    }
+    //    public function updatedProducts($path, $value): void
+    //    {
+    //        $this->updateInfo();
+    //    }
+    //
+    //    public function updatedCountry($path, $value): void
+    //    {
+    //        $this->updateInfo();
+    //    }
+    //
+    //    public function updatedShippingMethodId($path, $value): void
+    //    {
+    //        $this->updateInfo();
+    //    }
+    //
+    //    public function updatedPaymentMethodId($path, $value): void
+    //    {
+    //        $this->updateInfo();
+    //    }
+    //
+    //    public function updatedDiscountCode($path, $value): void
+    //    {
+    //        $this->updateInfo();
+    //    }
 
     public function updateInfo()
     {
