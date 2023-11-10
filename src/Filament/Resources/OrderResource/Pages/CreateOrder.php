@@ -4,7 +4,10 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
 use Dashed\DashedCore\Models\User;
+use Filament\Forms\Components\Wizard;
+use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
@@ -81,6 +84,15 @@ class CreateOrder extends Page implements HasForms
     public $products = [];
     public $activatedProducts = [];
 
+    protected function getActions(): array
+    {
+        return [
+            Action::make('updateInfo')
+                ->label('Gegevens bijwerken')
+                ->action(fn () => $this->updateInfo()),
+        ];
+    }
+
     public function getUsersProperty()
     {
         $allUsers = DB::table('users')->select('first_name', 'last_name', 'email', 'id')->orderBy('last_name')->orderBy('email')->get();
@@ -105,18 +117,226 @@ class CreateOrder extends Page implements HasForms
         return $products;
     }
 
-    public function getSearchableUsers($query)
-    {
-        return User::where(DB::raw('lower(first_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(last_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(email)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
-    }
-
-    public function getSearchableProducts($query)
-    {
-        return Product::handOrderShowable()->where(DB::raw('lower(name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(content)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
-    }
-
     protected function getFormSchema(): array
     {
+        $schema = [];
+
+        $schema[] = Wizard\Step::make('Persoonlijke informatie')
+            ->schema([
+                Select::make('user_id')
+                    ->label('Hang de bestelling aan een gebruiker')
+                    ->options($this->users)
+                    ->searchable()
+                    ->reactive(),
+                Toggle::make('marketing')
+                    ->label('De klant accepteert marketing'),
+                TextInput::make('password')
+                    ->label('Wachtwoord')
+                    ->type('password')
+                    ->nullable()
+                    ->minLength(6)
+                    ->maxLength(255)
+                    ->confirmed()
+                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                TextInput::make('password_confirmation')
+                    ->label('Wachtwoord herhalen')
+                    ->type('password')
+                    ->nullable()
+                    ->minLength(6)
+                    ->maxLength(255)
+                    ->confirmed()
+                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                TextInput::make('first_name')
+                    ->label('Voornaam')
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('last_name')
+                    ->label('Achternaam')
+                    ->required()
+                    ->nullable()
+                    ->maxLength(255),
+                DatePicker::make('date_of_birth')
+                    ->label('Geboortedatum')
+                    ->nullable(),
+                Select::make('gender')
+                    ->label('Geslacht')
+                    ->options([
+                        '' => 'Niet gekozen',
+                        'm' => 'Man',
+                        'f' => 'Vrouw',
+                    ]),
+                TextInput::make('email')
+                    ->label('Email')
+                    ->type('email')
+                    ->required()
+                    ->email()
+                    ->minLength(4)
+                    ->maxLength(255),
+                TextInput::make('phone_number')
+                    ->label('Telefoon nummer')
+                    ->maxLength(255),
+            ])
+            ->columns(2);
+
+        $schema[] = Wizard\Step::make('Adres')
+            ->schema([
+                TextInput::make('street')
+                    ->label('Straat')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->lazy()
+                    ->reactive(),
+                TextInput::make('house_nr')
+                    ->label('Huisnummer')
+                    ->nullable()
+                    ->required(fn (\Closure $get) => $get('street'))
+                    ->maxLength(255),
+                TextInput::make('zip_code')
+                    ->label('Postcode')
+                    ->required(fn (\Closure $get) => $get('street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('city')
+                    ->label('Stad')
+                    ->required(fn (\Closure $get) => $get('street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('country')
+                    ->label('Land')
+                    ->required()
+                    ->nullable()
+                    ->maxLength(255)
+                    ->lazy(),
+                TextInput::make('company_name')
+                    ->label('Bedrijfsnaam')
+                    ->maxLength(255),
+                TextInput::make('btw_id')
+                    ->label('BTW id')
+                    ->maxLength(255),
+                TextInput::make('invoice_street')
+                    ->label('Factuur straat')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->reactive(),
+                TextInput::make('invoice_house_nr')
+                    ->label('Factuur huisnummer')
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('invoice_zip_code')
+                    ->label('Factuur postcode')
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('invoice_city')
+                    ->label('Factuur stad')
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('invoice_country')
+                    ->label('Factuur land')
+                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+            ])
+            ->columns(2);
+
+        $schema[] = Wizard\Step::make('Overige informatie')
+            ->schema([
+                Textarea::make('note')
+                    ->label('Notitie')
+                    ->nullable()
+                    ->maxLength(1500),
+                TextInput::make('discount_code')
+                    ->label('Kortingscode')
+                    ->nullable()
+                    ->maxLength(255),
+            ]);
+
+        $productSchemas = [];
+
+        $productSchemas[] = Select::make('activatedProducts')
+            ->label('Kies producten')
+            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+            ->searchable()
+            ->multiple()
+            ->reactive();
+
+        foreach ($this->getAllProductsProperty() as $product) {
+            $productExtras = [];
+
+            foreach ($product['productExtras'] as $extra) {
+                $extraOptions = [];
+                foreach ($extra->productExtraOptions as $option) {
+                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+                }
+                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
+                    ->label($extra->name)
+                    ->options($extraOptions)
+                    ->required($extra->required);
+            }
+
+            $productSchemas[] = Section::make('Product ' . $product->name)
+                ->schema(array_merge([
+                    TextInput::make('products.' . $product->id . '.quantity')
+                        ->label('Aantal')
+                        ->numeric()
+                        ->required()
+                        ->minValue(0)
+                        ->maxValue(1000)
+                        ->default(0),
+                    Placeholder::make('Voorraad')
+                        ->content($product->stock()),
+                    Placeholder::make('Prijs')
+                        ->content($product->currentPrice),
+                    Placeholder::make('Afbeelding')
+                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
+                ], $productExtras))
+                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')));
+        }
+
+        $schema[] = Wizard\Step::make('Producten')
+            ->schema($productSchemas)
+            ->columnSpan(2);
+
+        $schema[] = Wizard\Step::make('Betaal & verzendmethode')
+            ->schema([
+                Select::make('payment_method_id')
+                    ->label('Betaalmethode')
+                    ->required()
+                    ->options(PaymentMethod::where('available_from_amount', '<', $this->totalUnformatted)->where('psp', 'own')->where('site_id', Sites::getActive())->where('active', 1)->pluck('name', 'id')->toArray()),
+                Select::make('shipping_method_id')
+                    ->label('Verzendmethode')
+                    ->required()
+                    ->options(collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray()),
+            ])
+            ->columns(2);
+
+        $schema[] = Wizard\Step::make('Bestelling')
+            ->schema([
+                Placeholder::make('')
+                    ->content('Subtotaal: ' . $this->subTotal),
+                Placeholder::make('')
+                    ->content('Korting: ' . $this->discount),
+                Placeholder::make('')
+                    ->content('BTW: ' . $this->vat),
+                Placeholder::make('')
+                    ->content('Totaal: ' . $this->total),
+            ]);
+
+        return [
+            Wizard::make($schema)
+                ->submitAction(new HtmlString(Blade::render(<<<BLADE
+    <x-filament::button
+        type="submit"
+        size="sm"
+    >
+        Bestelling aanmaken
+    </x-filament::button>
+BLADE))),
+        ];
+
+        //Old
         $schema = [];
 
         $schema[] = Section::make('Persoonlijke informatie')
@@ -395,30 +615,30 @@ class CreateOrder extends Page implements HasForms
         return $schema;
     }
 
-    public function updatedProducts($path, $value): void
-    {
-        $this->updateInfo();
-    }
-
-    public function updatedCountry($path, $value): void
-    {
-        $this->updateInfo();
-    }
-
-    public function updatedShippingMethodId($path, $value): void
-    {
-        $this->updateInfo();
-    }
-
-    public function updatedPaymentMethodId($path, $value): void
-    {
-        $this->updateInfo();
-    }
-
-    public function updatedDiscountCode($path, $value): void
-    {
-        $this->updateInfo();
-    }
+//    public function updatedProducts($path, $value): void
+//    {
+//        $this->updateInfo();
+//    }
+//
+//    public function updatedCountry($path, $value): void
+//    {
+//        $this->updateInfo();
+//    }
+//
+//    public function updatedShippingMethodId($path, $value): void
+//    {
+//        $this->updateInfo();
+//    }
+//
+//    public function updatedPaymentMethodId($path, $value): void
+//    {
+//        $this->updateInfo();
+//    }
+//
+//    public function updatedDiscountCode($path, $value): void
+//    {
+//        $this->updateInfo();
+//    }
 
     public function updateInfo()
     {
