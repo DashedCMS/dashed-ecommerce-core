@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Filament\Notifications\Notification;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
@@ -65,7 +66,7 @@ class AddToCart extends Component
             if ($productExtra->type == 'single') {
                 $productValue = $productExtra['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
+                    return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
                 }
@@ -85,7 +86,7 @@ class AddToCart extends Component
             } elseif ($productExtra->type == 'checkbox') {
                 $productValue = $productExtra['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
+                    return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
                 }
@@ -105,7 +106,7 @@ class AddToCart extends Component
             } elseif ($productExtra->type == 'input') {
                 $productValue = $productExtra['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
+                    return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
                 }
@@ -119,7 +120,7 @@ class AddToCart extends Component
             } elseif ($productExtra->type == 'file') {
                 $productValue = $this->files[$productExtra->id] ?? null;
                 if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('error', Translation::get('file-upload-option-for-product-extra', 'products', 'Upload an file for option :optionName:', 'text', [
+                    return $this->checkCart('danger', Translation::get('file-upload-option-for-product-extra', 'products', 'Upload an file for option :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
                 }
@@ -138,7 +139,7 @@ class AddToCart extends Component
                     $productOptionValue = $option['value'] ?? null;
                     //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
                     if ($productExtra->required && ! $productOptionValue) {
-                        return $this->checkCart('error', Translation::get('select-multiple-options-for-product-extra', 'products', 'Select one or more options for :optionName:', 'text', [
+                        return $this->checkCart('danger', Translation::get('select-multiple-options-for-product-extra', 'products', 'Select one or more options for :optionName:', 'text', [
                             'optionName' => $productExtra->name,
                         ]));
                     }
@@ -180,7 +181,7 @@ class AddToCart extends Component
                 if ($this->product->limit_purchases_per_customer && $newQuantity > $this->product->limit_purchases_per_customer_limit) {
                     Cart::update($cartItem->rowId, $this->product->limit_purchases_per_customer_limit);
 
-                    return $this->checkCart('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
+                    return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
                         'quantity' => $this->product->limit_purchases_per_customer_limit,
                     ]));
                 }
@@ -194,7 +195,7 @@ class AddToCart extends Component
             if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
                 Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
-                return $this->checkCart('error', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
+                return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', 'cart', 'You can only purchase :quantity: of this product', 'text', [
                     'quantity' => $this->product->limit_purchases_per_customer_limit,
                 ]));
             }
@@ -210,11 +211,19 @@ class AddToCart extends Component
         } elseif ($redirectChoice == 'cart') {
             $this->checkCart();
 
-            return redirect(ShoppingCart::getCartUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
+            Notification::make()
+                ->success()
+                ->title(Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'))
+                ->send();
+            return redirect(ShoppingCart::getCartUrl());
         } elseif ($redirectChoice == 'checkout') {
             $this->checkCart();
 
-            return redirect(ShoppingCart::getCheckoutUrl())->with('success', Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'));
+            Notification::make()
+                ->success()
+                ->title(Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'))
+                ->send();
+            return redirect(ShoppingCart::getCheckoutUrl());
         }
     }
 

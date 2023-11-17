@@ -5,13 +5,21 @@ namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Filament\Notifications\Notification;
 
 trait CartActions
 {
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
-            $this->dispatch('showAlert', $status, $message);
+            if($status == 'error'){
+                $status = 'danger';
+            }
+
+            Notification::make()
+                ->$status()
+                ->title($message)
+                ->send();
         }
 
         ShoppingCart::removeInvalidItems();
@@ -47,7 +55,7 @@ trait CartActions
             $this->discount = 0;
             $this->fillPrices();
 
-            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
+            return $this->checkCart('danger', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
         }
 
         $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
@@ -57,7 +65,7 @@ trait CartActions
             $this->discountCode = '';
             $this->fillPrices();
 
-            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
+            return $this->checkCart('danger', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
         }
 
         session(['discountCode' => $discountCode->code]);
