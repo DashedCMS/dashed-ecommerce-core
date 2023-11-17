@@ -22,7 +22,8 @@ class AddToCart extends Component
 
     public Product $product;
     public array $filters = [];
-    public ?Collection $extras = null;
+    public ?Collection $productExtras = null;
+    public ?array $extras = [];
     public string|int $quantity = 1;
     public array $files = [];
 
@@ -30,7 +31,8 @@ class AddToCart extends Component
     {
         $this->product = $product;
         $this->filters = $this->product->filters();
-        $this->extras = $this->product->allProductExtras();
+        $this->productExtras = $this->product->allProductExtras();
+        $this->extras = $this->product->allProductExtras()->toArray();
     }
 
     public function rules()
@@ -62,9 +64,9 @@ class AddToCart extends Component
         $cartUpdated = false;
         $productPrice = $this->product->currentPrice;
         $options = [];
-        foreach ($this->extras as $productExtra) {
+        foreach ($this->productExtras as $extraKey => $productExtra) {
             if ($productExtra->type == 'single') {
-                $productValue = $productExtra['value'] ?? null;
+                $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
@@ -84,7 +86,7 @@ class AddToCart extends Component
                     }
                 }
             } elseif ($productExtra->type == 'checkbox') {
-                $productValue = $productExtra['value'] ?? null;
+                $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
@@ -104,7 +106,7 @@ class AddToCart extends Component
                     }
                 }
             } elseif ($productExtra->type == 'input') {
-                $productValue = $productExtra['value'] ?? null;
+                $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
@@ -158,20 +160,6 @@ class AddToCart extends Component
                 }
             }
         }
-
-        //        if($this->product->is_bundle){
-        //            $bundleProducts = [];
-        //
-        //            foreach($this->product->bundleProducts as $bundleProduct){
-        //                $bundleProducts[] = [
-        //                    'id' => $bundleProduct->id,
-        //                    'price' => $bundleProduct->currentPrice,
-        //                    'vat_rate' => $bundleProduct->vat_rate,
-        //                ];
-        //            }
-        //
-        //            $options['bundleProducts'] = $bundleProducts;
-        //        }
 
         $cartItems = ShoppingCart::cartItems();
         foreach ($cartItems as $cartItem) {
