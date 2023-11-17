@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Filament\Notifications\Notification;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Notifications\Notification;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
@@ -215,6 +215,7 @@ class AddToCart extends Component
                 ->success()
                 ->title(Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'))
                 ->send();
+
             return redirect(ShoppingCart::getCartUrl());
         } elseif ($redirectChoice == 'checkout') {
             $this->checkCart();
@@ -223,6 +224,7 @@ class AddToCart extends Component
                 ->success()
                 ->title(Translation::get('product-added-to-cart', 'cart', 'The product has been added to your cart'))
                 ->send();
+
             return redirect(ShoppingCart::getCheckoutUrl());
         }
     }
