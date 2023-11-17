@@ -25,6 +25,10 @@ class ProductCharacteristic extends Model
         'value',
     ];
 
+    protected $casts = [
+      'value' => 'array',
+    ];
+
     protected $table = 'dashed__product_characteristic';
 
     protected static function booted()
