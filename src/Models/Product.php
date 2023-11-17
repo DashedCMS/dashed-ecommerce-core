@@ -106,7 +106,7 @@ class Product extends Model
         $query->where(function ($query) use ($search) {
             $loop = 1;
             foreach (self::getTranslatableAttributes() as $attribute) {
-                if(!method_exists($this, $attribute)){
+                if(! method_exists($this, $attribute)) {
                     if ($loop == 1) {
                         $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
                     } else {
