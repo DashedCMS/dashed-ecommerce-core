@@ -2,17 +2,17 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Filament\Notifications\Notification;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Filament\Notifications\Notification;
 
 trait CartActions
 {
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
-            if($status == 'error'){
+            if($status == 'error') {
                 $status = 'danger';
             }
 
