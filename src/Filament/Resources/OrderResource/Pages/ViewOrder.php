@@ -36,11 +36,11 @@ class ViewOrder extends ViewRecord
             Action::make('Download factuur')
                 ->button()
                 ->url($this->record->downloadInvoiceUrl())
-                ->visible($this->record->downloadInvoiceUrl()),
+                ->visible((bool)$this->record->downloadInvoiceUrl()),
             Action::make('Download pakbon')
                 ->button()
                 ->url($this->record->downloadPackingslipUrl())
-                ->visible($this->record->downloadPackingslipUrl()),
+                ->visible((bool)$this->record->downloadPackingslipUrl()),
         ], ecommerce()->buttonActions('order'));
     }
 
