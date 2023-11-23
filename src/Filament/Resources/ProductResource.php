@@ -429,17 +429,20 @@ class ProductResource extends Resource
                     ->multiple()
                     ->preload()
                     ->relationship('productCategories', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link aan categorieeën')
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd'),
                 Select::make('shippingClasses')
                     ->multiple()
                     ->preload()
                     ->relationship('shippingClasses', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link verzendklasses'),
                 Select::make('suggestedProducts')
                     ->multiple()
                     ->preload()
                     ->relationship('suggestedProducts', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link voorgestelde producten'),])
             ->columns([
                 'default' => 1,
