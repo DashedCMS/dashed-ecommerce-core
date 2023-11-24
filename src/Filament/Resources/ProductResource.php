@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Closure;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -148,7 +149,7 @@ class ProductResource extends Resource
                     ->rules([
                         'required',
                         function () {
-                            return function (string $attribute, $value, Get $fail) {
+                            return function (string $attribute, $value, Closure $fail) {
                                 $bundleProductIds = [];
                                 foreach ($value as $bundleProduct) {
                                     if (! in_array($bundleProduct['bundle_product_id'], $bundleProductIds)) {
