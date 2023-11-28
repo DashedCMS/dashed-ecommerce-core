@@ -275,13 +275,13 @@ class CreateOrder extends Page
 
             foreach ($product['productExtras'] as $extra) {
                 $extraOptions = [];
-                foreach ($extra->productExtraOptions as $option) {
-                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+                foreach ($extra['productExtraOptions'] ?? [] as $option) {
+                    $extraOptions[$option['id']] = $option['value'] . ' (+ ' . CurrencyHelper::formatPrice($option['price']) . ')';
                 }
-                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
-                    ->label($extra->name)
+                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra['id'])
+                    ->label($extra['name'][array_key_first($extra['name'])])
                     ->options($extraOptions)
-                    ->required($extra->required);
+                    ->required($extra['required']);
             }
 
             $productSchemas[] = Section::make('Product ' . $product->name)
