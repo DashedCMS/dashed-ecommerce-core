@@ -39,7 +39,7 @@ class CustomerInformationBlockList extends Component implements HasForms, HasInf
                 Fieldset::make('Klant')
                     ->schema([
                         ImageEntry::make('image')
-                            ->getStateUsing(fn($record) => Helper::getProfilePicture($record->email))
+                            ->getStateUsing(fn ($record) => Helper::getProfilePicture($record->email))
                             ->circular()
                             ->hiddenLabel()
                             ->size('md'),
@@ -50,7 +50,7 @@ class CustomerInformationBlockList extends Component implements HasForms, HasInf
                                     ->hiddenLabel(),
                                 TextEntry::make('phone_number')
                                     ->label('Telefoonnummer')
-                                    ->url(fn($record) => 'tel:' . $record->phone_number)
+                                    ->url(fn ($record) => 'tel:' . $record->phone_number)
                                     ->badge()
                                     ->icon('heroicon-o-phone')
                                     ->hiddenLabel(),
@@ -59,7 +59,7 @@ class CustomerInformationBlockList extends Component implements HasForms, HasInf
                             ->columns(1),
                         TextEntry::make('email')
                             ->label('Email')
-                            ->url(fn($record) => 'mailto:' . $record->email)
+                            ->url(fn ($record) => 'mailto:' . $record->email)
                             ->badge()
                             ->columnSpanFull()
                             ->icon('heroicon-o-envelope')
