@@ -20,6 +20,7 @@
             </div>
         </div>
         <div class="md:col-span-2 flex flex-col gap-2">
+            @livewire('order-customer-information-block-list', ['order' => $record])
             @if(!$record->credit_for_order_id)
                 @livewire('change-order-fulfillment-status', ['order' => $record])
                 @if($record->status == 'pending' || $record->status == 'partially_paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'cancelled')
@@ -36,7 +37,6 @@
                     <livewire:is :component="$widget['name']" :order="$record"></livewire:is>
                 @endif
             @endforeach
-            @livewire('order-customer-information-block-list', ['order' => $record])
             @livewire('order-logs-list', ['order' => $record])
         </div>
     </div>
