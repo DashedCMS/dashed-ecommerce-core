@@ -28,7 +28,7 @@ class AddPaymentToOrder extends Component implements HasForms, HasActions
     {
 
         return Action::make('action')
-            ->label('Voeg betaling toe')
+            ->label("Voeg betaling toe (al voldaan: {$this->order->paidAmount})")
             ->color('primary')
             ->fillForm(function () {
                 $paymentAmount = $this->order->total - $this->order->orderPayments->where('status', 'paid')->sum('amount');
