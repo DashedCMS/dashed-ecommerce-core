@@ -34,7 +34,7 @@ class PaymentsList extends Component implements HasForms, HasInfolists
 
         foreach ($this->order->orderPayments as $orderPayment) {
             $paymentsSchema[] =
-                Fieldset::make('#' . $orderPayment->id)
+                Fieldset::make('Betaling van ' . $orderPayment->created_at->format('d-m-Y H:i'))
                     ->schema([
                         TextEntry::make('psp')
                             ->label('PSP')
