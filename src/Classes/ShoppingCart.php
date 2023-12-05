@@ -66,11 +66,13 @@ class ShoppingCart
         return Cart::count();
     }
 
-    public static function totalDiscount($formatResult = false)
+    public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null)
     {
         $totalDiscount = 0;
 
-        $discountCode = session('discountCode');
+//        ray('session ' . session('discountCode'));
+        $discountCode = $discountCodeToUse ?: session('discountCode');
+//        ray($discountCode);
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
