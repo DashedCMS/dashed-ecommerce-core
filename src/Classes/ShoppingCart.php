@@ -70,9 +70,9 @@ class ShoppingCart
     {
         $totalDiscount = 0;
 
-//        ray('session ' . session('discountCode'));
+        //        ray('session ' . session('discountCode'));
         $discountCode = $discountCodeToUse ?: session('discountCode');
-//        ray($discountCode);
+        //        ray($discountCode);
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 

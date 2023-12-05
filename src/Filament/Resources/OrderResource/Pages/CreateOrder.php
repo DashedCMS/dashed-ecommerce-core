@@ -87,7 +87,7 @@ class CreateOrder extends Page
         return [
             Action::make('updateInfo')
                 ->label('Gegevens bijwerken')
-                ->action(fn() => $this->updateInfo()),
+                ->action(fn () => $this->updateInfo()),
         ];
     }
 
@@ -145,7 +145,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn(Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -153,7 +153,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn(Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->nullable()
@@ -198,16 +198,16 @@ class CreateOrder extends Page
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('country')
@@ -229,22 +229,22 @@ class CreateOrder extends Page
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
             ])
@@ -292,7 +292,7 @@ class CreateOrder extends Page
                     Placeholder::make('Afbeelding')
                         ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
                 ], $productExtras))
-                ->visible(fn(Get $get) => in_array($product->id, $get('activatedProducts')));
+                ->visible(fn (Get $get) => in_array($product->id, $get('activatedProducts')));
         }
 
         $schema[] = Wizard\Step::make('Producten')
@@ -318,15 +318,15 @@ class CreateOrder extends Page
                     ->label('Verzendmethode')
                     ->required()
                     ->options(function () {
-//                        ray(ShoppingCart::getAvailableShippingMethods($this->country, true));
+                        //                        ray(ShoppingCart::getAvailableShippingMethods($this->country, true));
                         return collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray();
                     }),
             ]);
 
-//        $schema[] = Wizard\Step::make('Betaal & verzendmethode')
-//            ->schema([
-//            ])
-//            ->columns(2);
+        //        $schema[] = Wizard\Step::make('Betaal & verzendmethode')
+        //            ->schema([
+        //            ])
+        //            ->columns(2);
 
         $schema[] = Wizard\Step::make('Bestelling')
             ->schema([
@@ -389,12 +389,12 @@ BLADE
             }
         }
 
-        if (!$this->discount_code) {
+        if (! $this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -420,7 +420,7 @@ BLADE
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -450,11 +450,11 @@ BLADE
         ShoppingCart::removeInvalidItems();
 
         $cartItems = ShoppingCart::cartItems();
-//        ray($cartItems);
+        //        ray($cartItems);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
-//        ray($checkoutData);
+        //        ray($checkoutData);
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -463,22 +463,22 @@ BLADE
             return;
         }
 
-//        $paymentMethods = ShoppingCart::getPaymentMethods();
-//        $paymentMethod = '';
-//        foreach ($paymentMethods as $thisPaymentMethod) {
-//            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
-//                $paymentMethod = $thisPaymentMethod;
-//            }
-//        }
+        //        $paymentMethods = ShoppingCart::getPaymentMethods();
+        //        $paymentMethod = '';
+        //        foreach ($paymentMethods as $thisPaymentMethod) {
+        //            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
+        //                $paymentMethod = $thisPaymentMethod;
+        //            }
+        //        }
 
-//        if (!$paymentMethod) {
-//            Notification::make()
-//                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
-//                ->danger()
-//                ->send();
-//
-//            return;
-//        }
+        //        if (!$paymentMethod) {
+        //            Notification::make()
+        //                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
+        //                ->danger()
+        //                ->send();
+        //
+        //            return;
+        //        }
 
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
         ray($shippingMethods);
@@ -489,12 +489,12 @@ BLADE
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             ray($this->shipping_method_id);
-//            Notification::make()
-//                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
-//                ->danger()
-//                ->send();
+            //            Notification::make()
+            //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
+            //                ->danger()
+            //                ->send();
             Notification::make()
                 ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
                 ->danger()
@@ -505,10 +505,10 @@ BLADE
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -561,15 +561,15 @@ BLADE
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $this->discount_code]);
-//        ray($this->discount_code);
+        //        ray($this->discount_code);
         $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $discount = ShoppingCart::totalDiscount(false, $this->discount_code);
-//        ray($discount);
+        //        ray($discount);
         $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $shippingCosts = 0;
         $paymentCosts = 0;
-//        ray('ss');
+        //        ray('ss');
 
         if ($shippingMethod->costs > 0) {
             $shippingCosts = $shippingMethod->costs;
@@ -668,45 +668,45 @@ BLADE
             $order->save();
         }
 
-//        $orderPayment = new OrderPayment();
-//        $orderPayment->amount = $order->total;
-//        $orderPayment->order_id = $order->id;
-//        if ($paymentMethod) {
-//            $psp = $paymentMethod['psp'];
-//        } else {
-//            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
-//                if ($ecommercePSP['class']::isConnected()) {
-//                    $psp = $pspId;
-//                }
-//            }
-//        }
+        //        $orderPayment = new OrderPayment();
+        //        $orderPayment->amount = $order->total;
+        //        $orderPayment->order_id = $order->id;
+        //        if ($paymentMethod) {
+        //            $psp = $paymentMethod['psp'];
+        //        } else {
+        //            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
+        //                if ($ecommercePSP['class']::isConnected()) {
+        //                    $psp = $pspId;
+        //                }
+        //            }
+        //        }
 
-//        $orderPayment->psp = $psp;
-//        $depositAmount = 0;
+        //        $orderPayment->psp = $psp;
+        //        $depositAmount = 0;
 
-//        if (!$paymentMethod) {
-//            $orderPayment->payment_method = $psp;
-//        } elseif ($orderPayment->psp == 'own') {
-//            $orderPayment->payment_method_id = $paymentMethod['id'];
-//
-//            if ($depositAmount > 0.00) {
-//                $orderPayment->amount = $depositAmount;
-//                //                $orderPayment->psp = $depositPaymentMethod['psp'];
-//                //                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
-//
-//                $order->has_deposit = true;
-//                $order->save();
-//            } else {
-//                $orderPayment->amount = 0;
-//                $orderPayment->status = 'paid';
-//            }
-//        } else {
-//            $orderPayment->payment_method = $paymentMethod['name'];
-//            $orderPayment->payment_method_id = $paymentMethod['id'];
-//        }
-//
-//        $orderPayment->save();
-//        $orderPayment->refresh();
+        //        if (!$paymentMethod) {
+        //            $orderPayment->payment_method = $psp;
+        //        } elseif ($orderPayment->psp == 'own') {
+        //            $orderPayment->payment_method_id = $paymentMethod['id'];
+        //
+        //            if ($depositAmount > 0.00) {
+        //                $orderPayment->amount = $depositAmount;
+        //                //                $orderPayment->psp = $depositPaymentMethod['psp'];
+        //                //                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
+        //
+        //                $order->has_deposit = true;
+        //                $order->save();
+        //            } else {
+        //                $orderPayment->amount = 0;
+        //                $orderPayment->status = 'paid';
+        //            }
+        //        } else {
+        //            $orderPayment->payment_method = $paymentMethod['name'];
+        //            $orderPayment->payment_method_id = $paymentMethod['id'];
+        //        }
+        //
+        //        $orderPayment->save();
+        //        $orderPayment->refresh();
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
@@ -714,19 +714,19 @@ BLADE
         $orderLog->tag = 'order.created.by.admin';
         $orderLog->save();
 
-//        if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
+        //        if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
         $newPaymentStatus = 'waiting_for_confirmation';
         $order->changeStatus($newPaymentStatus);
 
         return redirect(url(route('filament.dashed.resources.orders.view', [$order])));
-//        } else {
-//            try {
-//                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
-//            } catch (\Exception $exception) {
-//                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
-//            }
-//
-//            return redirect($transaction['redirectUrl'], 303);
-//        }
+        //        } else {
+        //            try {
+        //                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
+        //            } catch (\Exception $exception) {
+        //                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
+        //            }
+        //
+        //            return redirect($transaction['redirectUrl'], 303);
+        //        }
     }
 }
