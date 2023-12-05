@@ -166,7 +166,7 @@ class Order extends Model
         return $this->orderPayments()->first() ? $this->orderPayments()->first()->payment_method_name : 'Geen methode beschikbaar';
     }
 
-    public function getPaymentMethodInstructionsAttribute(): string
+    public function getPaymentMethodInstructionsAttribute(): ?string
     {
         return $this->orderPayments()->first() ? $this->orderPayments()->first()->paymentMethodInstructions : '';
     }
