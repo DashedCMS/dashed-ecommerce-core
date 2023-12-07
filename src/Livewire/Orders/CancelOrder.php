@@ -32,10 +32,12 @@ class CancelOrder extends Component implements HasForms, HasActions
 
     public function action(): Action
     {
-
         return Action::make('action')
             ->label('Annuleer bestelling')
             ->color('primary')
+            ->fillForm([
+                'fulfillment_status' => $this->order->fulfillment_status,
+            ])
             ->form(function () {
                 $orderProductSchema = [];
                 foreach ($this->order->orderProducts as $orderProduct) {
@@ -81,6 +83,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                         ->schema([
                             Select::make('fulfillment_status')
                                 ->label('Verander fulfillment status naar')
+                                ->required()
                                 ->options(Orders::getFulfillmentStatusses()),
                             Toggle::make('send_customer_email')
                                 ->label('Moet de klant een mail krijgen van deze annulering/retournering?'),
