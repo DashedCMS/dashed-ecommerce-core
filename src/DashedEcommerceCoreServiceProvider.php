@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -99,6 +100,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
+        Livewire::component('products.searchbar', Searchbar::class);
         Livewire::component('account.orders', Orders::class);
         Livewire::component('orders.view-order', ViewOrder::class);
 
