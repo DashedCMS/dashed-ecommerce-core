@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
-use Dashed\DashedEcommerceCore\Classes\Products;
 use Livewire\Component;
 use Illuminate\Database\Eloquent\Collection;
+use Dashed\DashedEcommerceCore\Classes\Products;
 
 class Searchbar extends Component
 {
