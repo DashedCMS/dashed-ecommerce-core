@@ -433,6 +433,7 @@ class Product extends Model
                         'name' => $filterName,
                         'order' => $activeFilterOptions[0]->order,
                         'activeFilterOptionIds' => $activeFilterOptionIds,
+                        'value' => implode('-', $activeFilterOptionIds),
                         'active' => $this->id == $childProduct->id,
                         'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
                         'productId' => ($this->id == $childProduct->id) ? $this->id : '',
@@ -445,6 +446,7 @@ class Product extends Model
                             'id' => $activeFilter->id,
                             'name' => $filterName,
                             'activeFilterOptionIds' => $activeFilterOptionIds,
+                            'value' => implode('-', $activeFilterOptionIds),
                             'active' => $this->id == $childProduct->id,
                             'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
                             'productId' => ($this->id == $childProduct->id) ? $this->id : '',
@@ -452,6 +454,8 @@ class Product extends Model
                             'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
                             'isPreOrder' => ($this->id == $childProduct->id) ? ($this->isPreorderable()) : false,
                         ];
+
+                        $activeFilterValue = implode('-', $activeFilterOptionIds);
                     }
                 }
             }
@@ -459,6 +463,7 @@ class Product extends Model
             $showableFilters[] = [
                 'id' => $activeFilter->id,
                 'name' => $activeFilter->name,
+                'active' => $activeFilterValue ?? null,
                 'values' => $filterOptionValues,
             ];
         }
