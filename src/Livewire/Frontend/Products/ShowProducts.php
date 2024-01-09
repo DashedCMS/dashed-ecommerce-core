@@ -87,7 +87,7 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        $response = Products::getAllV2($this->pagination, $this->sortBy, $productCategory->id ?? null, $this->search, $this->activeFilters);
+        $response = Products::getAllV2($this->pagination, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters);
         $this->products = $response['products'];
         $this->filters = $response['filters'];
         //        }
