@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
 
+use Filament\Actions\Action;
 use Illuminate\Support\Str;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
@@ -22,6 +23,11 @@ class EditProductCategory extends EditRecord
     {
         return [
             LocaleSwitcher::make(),
+            Action::make('viewCategory')
+                ->button()
+                ->label('Bekijk categorie')
+                ->url($this->record->getUrl())
+                ->openUrlInNewTab(),
             DeleteAction::make(),
         ];
     }
