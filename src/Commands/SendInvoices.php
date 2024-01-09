@@ -2,10 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Console\Command;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 
 class SendInvoices extends Command
 {
