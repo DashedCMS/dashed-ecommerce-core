@@ -50,7 +50,7 @@ class AddToCart extends Component
 
     public function updatedQuantity()
     {
-        if (!$this->quantity) {
+        if (! $this->quantity) {
             $this->quantity = 1;
         } elseif ($this->quantity < 1) {
             $this->quantity = 1;
@@ -80,7 +80,7 @@ class AddToCart extends Component
         foreach ($this->productExtras as $extraKey => $productExtra) {
             if ($productExtra->type == 'single') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -100,7 +100,7 @@ class AddToCart extends Component
                 }
             } elseif ($productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -120,7 +120,7 @@ class AddToCart extends Component
                 }
             } elseif ($productExtra->type == 'input') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -134,7 +134,7 @@ class AddToCart extends Component
                 }
             } elseif ($productExtra->type == 'file') {
                 $productValue = $this->files[$productExtra->id] ?? null;
-                if ($productExtra->required && !$productValue) {
+                if ($productExtra->required && ! $productValue) {
                     return $this->checkCart('danger', Translation::get('file-upload-option-for-product-extra', 'products', 'Upload an file for option :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -153,7 +153,7 @@ class AddToCart extends Component
                 foreach ($productExtra->productExtraOptions as $option) {
                     $productOptionValue = $option['value'] ?? null;
                     //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && !$productOptionValue) {
+                    if ($productExtra->required && ! $productOptionValue) {
                         return $this->checkCart('danger', Translation::get('select-multiple-options-for-product-extra', 'products', 'Select one or more options for :optionName:', 'text', [
                             'optionName' => $productExtra->name,
                         ]));
@@ -192,7 +192,7 @@ class AddToCart extends Component
             }
         }
 
-        if (!$cartUpdated) {
+        if (! $cartUpdated) {
             if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
                 Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
