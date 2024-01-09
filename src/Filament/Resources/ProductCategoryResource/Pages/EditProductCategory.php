@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
 
-use Filament\Actions\Action;
 use Illuminate\Support\Str;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
