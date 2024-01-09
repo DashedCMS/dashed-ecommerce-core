@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -220,6 +221,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
                 RecalculatePurchasesCommand::class,
                 CancelOldOrders::class,
+                SendInvoices::class,
             ]);
     }
 }
