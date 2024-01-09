@@ -73,10 +73,10 @@ class ProductCategory extends Model
     public function getProductsUrl()
     {
         $url = $this->slug;
-        $parentCategory = $this->parentCategory;
+        $parentCategory = $this->parent;
         while ($parentCategory) {
             $url = $parentCategory->slug . '/' . $url;
-            $parentCategory = $parentCategory->parentCategory;
+            $parentCategory = $parentCategory->parent;
         }
 
         return url($url);
@@ -93,10 +93,10 @@ class ProductCategory extends Model
         }
 
         $url = $this->slug;
-        $parentCategory = $this->parentCategory;
+        $parentCategory = $this->parent;
         while ($parentCategory) {
             $url = $parentCategory->slug . '/' . $url;
-            $parentCategory = $parentCategory->parentCategory;
+            $parentCategory = $parentCategory->parent;
         }
 
         $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
