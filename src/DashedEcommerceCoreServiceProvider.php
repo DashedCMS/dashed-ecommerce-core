@@ -2,13 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
