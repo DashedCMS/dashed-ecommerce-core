@@ -1,4 +1,4 @@
-<div class="relative mt-2 z-50"  x-data="{ showSearchBarOverview: true, showSearchbar: @entangle('showSearchbar').live }">
+<div class="relative mt-2 z-50"  x-data="{ showSearchBarOverview: false, showSearchbar: @entangle('showSearchbar').live }">
     <div x-cloak x-show="showSearchBarOverview" class="fixed right-0 top-5 w-full sm:w-auto px-2 sm:px-0 sm:absolute sm:-right-2 sm:-top-6">
         <div class="z-30">
             <form method="get" action="{{ \Dashed\DashedEcommerceCore\Models\Product::getOverviewPage() }}" @class([
