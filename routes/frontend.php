@@ -14,11 +14,9 @@ use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
 use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 
-if (!app()->runningInConsole()) {
-    //Exchange routes
-    Route::get('/' . config('filament.path') . '/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
-    Route::post('/' . config('filament.path') . '/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange.post');
-}
+//Exchange routes
+Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
+Route::post('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange.post');
 
 Route::group(
     [
