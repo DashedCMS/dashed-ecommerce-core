@@ -321,12 +321,20 @@ class Checkout extends Component
         ], $this->rules());
 
         if ($validator->fails()) {
+            Notification::make()
+                ->danger()
+                ->title(collect($validator->errors())->first()[0])
+                ->send();
             return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
         }
 
         $cartItems = $this->cartItems;
 
         if (! $cartItems) {
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
+                ->send();
             return $this->dispatch('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
         }
 
@@ -346,6 +354,10 @@ class Checkout extends Component
                 }
             }
             if (! $paymentMethodPresent) {
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
+                    ->send();
                 return $this->dispatch('showAlert', 'error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
             }
         }
@@ -359,6 +371,10 @@ class Checkout extends Component
         }
 
         if (! $shippingMethod) {
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+                ->send();
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
@@ -371,6 +387,10 @@ class Checkout extends Component
             ]);
 
             if ($validator->fails()) {
+                Notification::make()
+                    ->danger()
+                    ->title(collect($validator->errors())->first()[0])
+                    ->send();
                 return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
             }
 
@@ -382,6 +402,10 @@ class Checkout extends Component
             }
 
             if (! $depositPaymentMethod) {
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))
+                    ->send();
                 return $this->dispatch('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
         }
@@ -394,11 +418,20 @@ class Checkout extends Component
         } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))
+                ->send();
             return $this->dispatch('showAlert', 'error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
         }
 
         if (Customsetting::get('checkout_account') != 'disabled' && auth()->guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
+
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
+                    ->send();
                 return $this->dispatch('showAlert', 'error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
             }
 
