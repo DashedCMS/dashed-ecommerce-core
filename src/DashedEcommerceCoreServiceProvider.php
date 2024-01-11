@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Commands\UpdateProductInformations;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -222,6 +223,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 RecalculatePurchasesCommand::class,
                 CancelOldOrders::class,
                 SendInvoices::class,
+                UpdateProductInformations::class,
             ]);
     }
 }
