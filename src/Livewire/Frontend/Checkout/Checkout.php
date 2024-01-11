@@ -376,7 +376,7 @@ class Checkout extends Component
         if (! $shippingMethod) {
             Notification::make()
                 ->danger()
-                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid shipping method'))
                 ->send();
 
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
