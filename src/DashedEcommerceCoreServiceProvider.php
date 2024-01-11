@@ -65,8 +65,13 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
     {
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
-            $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
-            $schedule->command(CancelOldOrders::class)->everyFifteenMinutes();
+            $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
+                ->daily();
+            $schedule->command(CancelOldOrders::class)
+                ->everyFifteenMinutes();
+            $schedule->command(UpdateProductInformations::class)
+                ->everyFifteenMinutes()
+                ->withoutOverlapping();
         });
 
         //Stats components
