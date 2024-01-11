@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Console\Command;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class UpdateProductInformations extends Command
 {
