@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\TaxHelper;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class OrderProduct extends Model
 {
@@ -53,7 +53,7 @@ class OrderProduct extends Model
                 $orderProduct->vat_rate = $orderProduct->product->vat_rate;
                 $orderProduct->btw = $orderProduct->price / (100 + ($orderProduct->vat_rate ?? 21)) * ($orderProduct->vat_rate ?? 21);
             } else {
-                if (!$orderProduct->vat_rate && $orderProduct->btw > 0.00) {
+                if (! $orderProduct->vat_rate && $orderProduct->btw > 0.00) {
                     $orderProduct->vat_rate = round($orderProduct->btw / ($orderProduct->price - $orderProduct->btw), 2) * 100;
                 }
                 if ($orderProduct->btw == 0.00 && $orderProduct->vat_rate > 0.00) {
