@@ -42,7 +42,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                         ImageEntry::make('image')
                             ->hiddenLabel()
                             ->visible($orderProduct->product && $orderProduct->product->firstImageUrl)
-                            ->getStateUsing(fn() => app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $orderProduct->product->firstImageUrl, [
+                            ->getStateUsing(fn () => app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $orderProduct->product->firstImageUrl, [
                                 'widen' => 600,
                             ]))
                             ->disk('dashed')
@@ -69,19 +69,19 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                             ->badge()
                             ->color('primary')
                             ->weight('bold')
-                            ->getStateUsing(fn() => $orderProduct->quantity)
+                            ->getStateUsing(fn () => $orderProduct->quantity)
                             ->suffix('x'),
                         TextEntry::make('preOrder')
                             ->hiddenLabel()
                             ->badge()
                             ->color('warning')
                             ->weight('bold')
-                            ->getStateUsing(fn() => 'Is pre-order')
+                            ->getStateUsing(fn () => 'Is pre-order')
                             ->visible($orderProduct->is_pre_order),
                         TextEntry::make('price')
                             ->hiddenLabel()
-                            ->getStateUsing(fn() => $orderProduct->price)
-                            ->helperText(fn() => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
+                            ->getStateUsing(fn () => $orderProduct->price)
+                            ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
                             ->money('EUR'),
                     ])
                     ->columns(5)
