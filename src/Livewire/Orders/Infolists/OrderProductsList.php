@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Filament\Infolists\Infolist;
 use Illuminate\Support\HtmlString;
@@ -54,8 +55,8 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                             ->getStateUsing(function () use ($orderProduct) {
                                 $productExtras = '';
                                 foreach ($orderProduct->product_extras as $productExtra) {
-                                    if ($productExtra['path']) {
-                                        $productExtras .= $productExtra['name'] . ': <a target="_blank" href="' . $productExtra['path'] . '">' . $productExtra['value'] . '</a> <br/>';
+                                    if ($productExtra['path'] ?? false) {
+                                        $productExtras .= $productExtra['name'] . ': <a class="hover:text-primary-500" target="_blank" href="' . Storage::disk('dashed')->url($productExtra['path']) . '">' . $productExtra['value'] . '</a> <br/>';
                                     } else {
                                         $productExtras .= $productExtra['name'] . ': ' . $productExtra['value'] . ' <br/>';
                                     }
