@@ -141,7 +141,7 @@ class AddToCart extends Component
                 }
 
                 $value = $productValue['value']->getClientOriginalName();
-                $path = $productValue['value']->store('dashed/product-extras', 'public');
+                $path = $productValue['value']->storeAs('dashed/product-extras', $value, 'dashed');
                 if ($value && $path) {
                     $options['product-extra-file-' . $productExtra->id] = [
                         'name' => $productExtra->name,
