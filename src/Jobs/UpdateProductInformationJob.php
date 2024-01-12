@@ -35,34 +35,38 @@ class UpdateProductInformationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        foreach($this->product->childProducts as $childProduct) {
+        foreach ($this->product->childProducts as $childProduct) {
             $childProduct->calculateStock();
         }
 
         $this->product->calculateStock();
 
-        if($this->product->parent) {
+        if ($this->product->parent) {
             $this->product->parent->calculateStock();
         }
 
-        foreach(DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
+        foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
             $bundleParentProduct = Product::find($productId);
-            $bundleParentProduct->calculateStock();
+            if ($bundleParentProduct) {
+                $bundleParentProduct->calculateStock();
+            }
         }
 
-        foreach($this->product->childProducts as $childProduct) {
+        foreach ($this->product->childProducts as $childProduct) {
             $childProduct->calculateInStock();
         }
 
         $this->product->calculateInStock();
 
-        if($this->product->parent) {
+        if ($this->product->parent) {
             $this->product->parent->calculateInStock();
         }
 
-        foreach(DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
+        foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
             $bundleParentProduct = Product::find($productId);
-            $bundleParentProduct->calculateInStock();
+            if ($bundleParentProduct) {
+                $bundleParentProduct->calculateInStock();
+            }
         }
     }
 }
