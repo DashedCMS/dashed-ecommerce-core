@@ -70,9 +70,5 @@ class UpdateProductInformationJob implements ShouldQueue
                 $bundleParentProduct->calculateInStock();
             }
         }
-
-        foreach (Locales::getLocales() as $locale) {
-            Cache::forget('product-' . $this->product->id . '-url-' . $locale['id']);
-        }
     }
 }
