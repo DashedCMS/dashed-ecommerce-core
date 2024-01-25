@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -67,6 +69,10 @@ class UpdateProductInformationJob implements ShouldQueue
             if ($bundleParentProduct) {
                 $bundleParentProduct->calculateInStock();
             }
+        }
+
+        foreach (Locales::getLocales() as $locale) {
+            Cache::forget('product-' . $this->product->id . '-url-' . $locale['id']);
         }
     }
 }
