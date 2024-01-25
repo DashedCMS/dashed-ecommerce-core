@@ -67,7 +67,7 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
-            Cache::tags(['products', 'product-' . $product->id])->flush();
+            Cache::tags(['product-' . $product->id])->flush();
             if ($product->parent) {
                 Cache::tags(['product-' . $product->parent->id])->flush();
                 foreach ($product->parent->childProducts as $childProduct) {
@@ -308,7 +308,7 @@ class Product extends Model
 
     public function getUrl($locale = null)
     {
-        return Cache::remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
+        return Cache::tags(['product-' . $this->id])->remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
             if (! $locale) {
                 $locale = App::getLocale();
             }
