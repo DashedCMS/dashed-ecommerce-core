@@ -216,9 +216,9 @@ class DiscountCodeResource extends Resource
                     ->badge()
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
-                TextColumn::make('amount_of_uses')
+                TextColumn::make('amountOfUses')
                     ->label('Aantal gebruiken')
-                    ->formatStateUsing(function ($record) {
+                    ->getStateUsing(function ($record) {
                         return "{$record->stock_used}x gebruikt / " . ($record->use_stock ? $record->stock . ' gebruiken over' : 'geen limiet');
                     }),
                 TextColumn::make('status')
