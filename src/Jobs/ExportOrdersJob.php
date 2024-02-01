@@ -63,13 +63,13 @@ class ExportOrdersJob implements ShouldQueue
         $orders = $orders->get();
 
         if ($this->sort == 'normal') {
-            Excel::store(new OrderListExport($orders), '/dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx', 'public');
+            Excel::store(new OrderListExport($orders), '/dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx', 'dashed');
         } elseif ($this->sort == 'perInvoiceLine') {
-            Excel::store(new OrderListPerInvoiceLineExport($orders), '/dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx', 'public');
+            Excel::store(new OrderListPerInvoiceLineExport($orders), '/dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx', 'dashed');
         }
 
         Mail::to($this->email)->send(new OrderListExportMail($this->hash));
 
-        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
+        Storage::disk('dashed')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }
