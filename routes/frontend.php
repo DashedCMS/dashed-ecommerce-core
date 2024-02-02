@@ -17,6 +17,8 @@ use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
 Route::post('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange.post');
+Route::get('/dashed/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.dashed.exchange');
+Route::post('/dashed/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.dashed.exchange.post');
 
 Route::group(
     [
