@@ -106,7 +106,7 @@ class DiscountCodeResource extends Resource
                             ->label('Vul een einddatum in voor de kortingscode')
                             ->nullable()
                             ->date()
-                            ->after(fn($get) => $get('start_date') ? 'start_date' : null),
+                            ->after(fn ($get) => $get('start_date') ? 'start_date' : null),
                     ]),
                 Section::make('Informatie')
                     ->schema(array_merge([
