@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -293,6 +294,8 @@ class EditProduct extends EditRecord
                 ]);
             }
         }
+
+        UpdateProductInformationJob::dispatch($newProduct);
 
         return redirect(route('filament.dashed.resources.products.edit', [$newProduct]));
     }
