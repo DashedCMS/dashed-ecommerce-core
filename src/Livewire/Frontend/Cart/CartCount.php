@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Livewire\Component;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 class CartCount extends Component
 {
