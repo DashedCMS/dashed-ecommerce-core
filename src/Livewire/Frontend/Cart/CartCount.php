@@ -2,19 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Livewire\Component;
 use Gloudemans\Shoppingcart\Facades\Cart;
 
 class CartCount extends Component
 {
     public $cartCount = 0;
+    public string $cartType = 'default';
 
     protected $listeners = [
-        'refreshCart' => 'mount',
+        'refreshCart',
     ];
 
-    public function mount()
+    public function mount($cartType = 'default')
     {
+        $this->cartType = $cartType;
+        $this->refreshCart();
+    }
+
+    public function refreshCart()
+    {
+        ShoppingCart::setInstance($this->cartType);
         $this->cartCount = Cart::count();
     }
 
