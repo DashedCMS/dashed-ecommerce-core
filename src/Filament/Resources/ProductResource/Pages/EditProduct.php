@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -19,6 +18,7 @@ use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord
