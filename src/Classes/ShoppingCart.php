@@ -66,6 +66,11 @@ class ShoppingCart
         return Cart::count();
     }
 
+    public static function setInstance($cartType = 'default')
+    {
+        Cart::instance($cartType);
+    }
+
     public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null)
     {
         $totalDiscount = 0;

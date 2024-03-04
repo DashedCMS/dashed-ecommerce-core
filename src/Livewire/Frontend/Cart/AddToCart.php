@@ -26,6 +26,7 @@ class AddToCart extends Component
     public ?array $extras = [];
     public string|int $quantity = 1;
     public array $files = [];
+    public string $cartType = 'default';
 
     public function mount(Product $product)
     {
@@ -62,7 +63,7 @@ class AddToCart extends Component
     public function checkFilters()
     {
         foreach ($this->filters as $filter) {
-            if ($filter['active'] && $filter['defaultActive'] != $filter['active']) {
+            if ($filter['active'] && $filter['defaultActive'] != $filter['active']){
                 foreach ($filter['values'] as $filterValue) {
                     if ($filterValue['value'] == $filter['active']) {
                         return redirect($filterValue['url']);
@@ -74,6 +75,7 @@ class AddToCart extends Component
 
     public function addToCart()
     {
+        ShoppingCart::setInstance($this->cartType);
         $cartUpdated = false;
         $productPrice = $this->product->currentPrice;
         $options = [];
