@@ -471,6 +471,7 @@ class Product extends Model
                 'id' => $activeFilter->id,
                 'name' => $activeFilter->name,
                 'active' => $activeFilterValue ?? null,
+                'defaultActive' => $activeFilterValue ?? null,
                 'values' => $filterOptionValues,
             ];
         }
