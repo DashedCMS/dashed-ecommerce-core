@@ -13,6 +13,6 @@ class CurrencyHelper
             return '';
         }
 
-        return CurrencyShowTypes::from(Customsetting::get('currency_format_type', null, 'type1'))->getValue($currency, $amount);
+        return CurrencyShowTypes::from(Customsetting::get('currency_format_type', null, 'type1'))->getValue($amount);
     }
 }
