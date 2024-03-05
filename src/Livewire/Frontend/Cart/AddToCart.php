@@ -63,7 +63,7 @@ class AddToCart extends Component
     public function checkFilters()
     {
         foreach ($this->filters as $filter) {
-            if ($filter['active'] && $filter['defaultActive'] != $filter['active']){
+            if ($filter['active'] && $filter['defaultActive'] != $filter['active']) {
                 foreach ($filter['values'] as $filterValue) {
                     if ($filterValue['value'] == $filter['active']) {
                         return redirect($filterValue['url']);
