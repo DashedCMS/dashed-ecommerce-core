@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Dashed\DashedEcommerceCore\Enums\CurrencyShowTypes;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -42,6 +43,8 @@ class CheckoutSettingsPage extends Page
             $formData["checkout_postnl_api_key_{$site['id']}"] = Customsetting::get('checkout_postnl_api_key', $site['id']);
             $formData["checkout_bcc_email_{$site['id']}"] = Customsetting::get('checkout_bcc_email', $site['id']);
             $formData["checkout_force_checkout_page_{$site['id']}"] = Customsetting::get('checkout_force_checkout_page', $site['id'], false);
+            $formData["currency_format_type_{$site['id']}"] = Customsetting::get('currency_format_type', $site['id'], 'type1');
+            $formData["show_currency_symbol_{$site['id']}"] = Customsetting::get('show_currency_symbol', $site['id'], true);
         }
 
         $this->form->fill($formData);
@@ -118,6 +121,20 @@ class CheckoutSettingsPage extends Page
                 Toggle::make("checkout_force_checkout_page_{$site['id']}")
                     ->label('Forceer checkout pagina vanaf de winkelwagen pagina')
                     ->helperText('Hiermee wordt de klant direct naar de checkout pagina gestuurd als ze naar de winkelwagen pagina gaan.'),
+                Radio::make("currency_format_type_{$site['id']}")
+                    ->label('Bedragen weergeven als')
+                    ->options(function(){
+                        $options = [];
+
+                        foreach(CurrencyShowTypes::cases() as $currencyShowType) {
+                            $options[$currencyShowType->value] = $currencyShowType->getValue(10);
+                        }
+
+                        return $options;
+                    })
+                    ->required(),
+                Toggle::make("show_currency_symbol_{$site['id']}")
+                    ->label('Laat valutasymbool zien'),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -155,6 +172,8 @@ class CheckoutSettingsPage extends Page
             Customsetting::set('checkout_postnl_api_key', $this->form->getState()["checkout_postnl_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_bcc_email', $this->form->getState()["checkout_bcc_email_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
+            Customsetting::set('currency_format_type', $this->form->getState()["currency_format_type_{$site['id']}"], $site['id']);
+            Customsetting::set('show_currency_symbol', $this->form->getState()["show_currency_symbol_{$site['id']}"], $site['id']);
         }
 
         Notification::make()
