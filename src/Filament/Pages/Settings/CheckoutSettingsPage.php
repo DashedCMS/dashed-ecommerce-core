@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\DashedEcommerceCore\Enums\CurrencyShowTypes;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -14,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Enums\CurrencyShowTypes;
 
 class CheckoutSettingsPage extends Page
 {
@@ -123,7 +123,7 @@ class CheckoutSettingsPage extends Page
                     ->helperText('Hiermee wordt de klant direct naar de checkout pagina gestuurd als ze naar de winkelwagen pagina gaan.'),
                 Radio::make("currency_format_type_{$site['id']}")
                     ->label('Bedragen weergeven als')
-                    ->options(function(){
+                    ->options(function () {
                         $options = [];
 
                         foreach(CurrencyShowTypes::cases() as $currencyShowType) {
