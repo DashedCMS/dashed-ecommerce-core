@@ -22,13 +22,15 @@ trait CartActions
                 ->send();
         }
 
-        ShoppingCart::removeInvalidItems();
+        ShoppingCart::removeInvalidItems($this->cartType);
 
         $this->dispatch('refreshCart');
     }
 
     public function changeQuantity(string $rowId, int $quantity)
     {
+        ShoppingCart::setInstance($this->cartType);
+
         if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
@@ -49,6 +51,8 @@ trait CartActions
 
     public function applyDiscountCode()
     {
+        ShoppingCart::setInstance($this->cartType);
+
         if (! $this->discountCode) {
             session(['discountCode' => '']);
             $this->discountCode = '';
@@ -76,6 +80,8 @@ trait CartActions
 
     public function fillPrices()
     {
+        ShoppingCart::setInstance($this->cartType);
+
         $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod);
         $this->subtotal = $checkoutData['subTotal'];
         $this->discount = $checkoutData['discount'];
