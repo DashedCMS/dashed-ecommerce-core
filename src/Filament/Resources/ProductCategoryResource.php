@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -26,6 +27,7 @@ class ProductCategoryResource extends Resource
 {
     use Translatable;
     use HasVisitableTab;
+    use HasCustomBlocksTab;
 
     protected static ?string $model = ProductCategory::class;
 
@@ -50,14 +52,14 @@ class ProductCategoryResource extends Resource
         return $form
             ->schema([
                 Section::make('Content')
-                    ->schema([
+                    ->schema(array_merge([
                         TextInput::make('name')
                             ->label('Naam')
                             ->required()
                             ->maxLength(100),
                         TextInput::make('slug')
                             ->label('Slug')
-                            ->unique('dashed__product_categories', 'slug', fn ($record) => $record)
+                            ->unique('dashed__product_categories', 'slug', fn($record) => $record)
                             ->helperText('Laat leeg om automatisch te laten genereren')
                             ->maxLength(255),
                         FileUpload::make('image')
@@ -67,7 +69,7 @@ class ProductCategoryResource extends Resource
                         Builder::make('content')
                             ->blocks(cms()->builder('blocks'))
                             ->columnSpanFull(),
-                    ])
+                    ], static::customBlocksTab(cms()->builder('productCategoryBlocks'))))
                     ->columns(2),
                 Section::make('Algemene informatie')
                     ->schema(static::publishTab()),
