@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
-use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
+use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class ShowProduct extends Component
 {

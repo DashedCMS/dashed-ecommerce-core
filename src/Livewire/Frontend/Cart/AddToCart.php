@@ -4,15 +4,8 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Dashed\DashedCore\Classes\Sites;
-use Filament\Notifications\Notification;
-use Gloudemans\Shoppingcart\Facades\Cart;
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class AddToCart extends Component
