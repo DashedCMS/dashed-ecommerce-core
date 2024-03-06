@@ -473,7 +473,7 @@ class Product extends Model
                 'active' => $activeFilterValue ?? null,
                 'defaultActive' => $activeFilterValue ?? null,
                 'values' => $filterOptionValues,
-                'contentBlocks' => $activeFilter->contentBlocks
+                'contentBlocks' => $activeFilter->contentBlocks,
             ];
         }
 
