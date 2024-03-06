@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +9,7 @@ use Spatie\Translatable\HasTranslations;
 use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Dashed\DashedCore\Models\Concerns\HasSearchScope;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 
 class ProductFilter extends Model
 {
