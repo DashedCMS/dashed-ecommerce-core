@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
@@ -19,6 +20,7 @@ class ProductCategory extends Model
 {
     use SoftDeletes;
     use IsVisitable;
+    use HasCustomBlocks;
 
     protected static $logFillable = true;
 

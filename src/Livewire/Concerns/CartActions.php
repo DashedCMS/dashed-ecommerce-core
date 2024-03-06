@@ -102,6 +102,7 @@ trait CartActions
     public function setQuantity(int $quantity)
     {
         $this->quantity = $quantity;
+        $this->updatedQuantity();
     }
 
     public function updatedQuantity()
