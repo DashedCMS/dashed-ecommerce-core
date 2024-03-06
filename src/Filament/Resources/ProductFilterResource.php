@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -25,6 +26,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Relation
 class ProductFilterResource extends Resource
 {
     use Translatable;
+    use HasCustomBlocksTab;
 
     protected static ?string $model = ProductFilter::class;
 
@@ -47,7 +49,7 @@ class ProductFilterResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
+            ->schema(array_merge([
                 Section::make('Content')
                     ->schema(array_merge([
                         Toggle::make('hide_filter_on_overview_page')
@@ -57,7 +59,7 @@ class ProductFilterResource extends Resource
                             ->required()
                             ->maxLength(100),
                     ])),
-            ]);
+            ], static::customBlocksTab(cms()->builder('productFilterBlocks'))));
     }
 
     public static function table(Table $table): Table

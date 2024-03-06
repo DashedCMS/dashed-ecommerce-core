@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,7 @@ class ProductFilter extends Model
     use HasTranslations;
     use LogsActivity;
     use HasSearchScope;
+    use HasCustomBlocks;
 
     protected static $logFillable = true;
 
