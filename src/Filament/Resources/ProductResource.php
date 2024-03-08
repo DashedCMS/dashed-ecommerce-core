@@ -369,7 +369,7 @@ class ProductResource extends Resource
                     ->label('Prijs van het product')
                     ->helperText('Voorbeeld: 10.25')
                     ->prefix('€')
-                    ->minValue(1)
+                    ->minValue(0)
                     ->maxValue(100000)
                     ->required()
                     ->numeric(),
@@ -377,7 +377,7 @@ class ProductResource extends Resource
                     ->label('Vorige prijs (de hogere prijs)')
                     ->helperText('Voorbeeld: 14.25')
                     ->prefix('€')
-                    ->minValue(1)
+                    ->minValue(0)
                     ->maxValue(100000)
                     ->numeric(),
                 TextInput::make('vat_rate')
@@ -665,7 +665,7 @@ class ProductResource extends Resource
                                 ->helperText('Voorbeeld: 10.25')
                                 ->prefix('€')
                                 ->numeric()
-                                ->minValue(1)
+                                ->minValue(0)
                                 ->maxValue(100000)
                                 ->required(),
                             TextInput::make('new_price')
@@ -673,7 +673,7 @@ class ProductResource extends Resource
                                 ->helperText('Voorbeeld: 14.25')
                                 ->prefix('€')
                                 ->numeric()
-                                ->minValue(1)
+                                ->minValue(0)
                                 ->maxValue(100000),
                         ])
                         ->action(function (Collection $records, array $data): void {
