@@ -559,7 +559,7 @@ class ProductResource extends Resource
                                     ->label('Prijs van het product')
                                     ->helperText('Voorbeeld: 10.25')
                                     ->prefix('€')
-                                    ->minValue(1)
+                                    ->minValue(0)
                                     ->maxValue(100000)
                                     ->required()
                                     ->default(fn ($record) => $record->price),
@@ -567,7 +567,7 @@ class ProductResource extends Resource
                                     ->label('Vorige prijs (de hogere prijs)')
                                     ->helperText('Voorbeeld: 14.25')
                                     ->prefix('€')
-                                    ->minValue(1)
+                                    ->minValue(0)
                                     ->maxValue(100000)
                                     ->default(fn ($record) => $record->new_price),
                             ])
