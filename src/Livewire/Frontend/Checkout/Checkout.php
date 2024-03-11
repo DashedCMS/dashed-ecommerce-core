@@ -69,6 +69,7 @@ class Checkout extends Component
     public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
+    public string $cartType = 'default';
 
     public function mount(Product $product)
     {
