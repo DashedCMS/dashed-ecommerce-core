@@ -41,18 +41,18 @@ class UpdateProductInformationJob implements ShouldQueue
         }
 
         $this->product->calculateStock();
-        $childProduct->calculateTotalPurchases();
+        $this->product->calculateTotalPurchases();
 
         if ($this->product->parent) {
             $this->product->parent->calculateStock();
-            $childProduct->calculateTotalPurchases();
+            $this->product->parent->calculateTotalPurchases();
         }
 
         foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
             $bundleParentProduct = Product::find($productId);
             if ($bundleParentProduct) {
                 $bundleParentProduct->calculateStock();
-                $childProduct->calculateTotalPurchases();
+                $bundleParentProduct->calculateTotalPurchases();
             }
         }
 
@@ -62,18 +62,18 @@ class UpdateProductInformationJob implements ShouldQueue
         }
 
         $this->product->calculateInStock();
-        $childProduct->calculateTotalPurchases();
+        $this->product->calculateTotalPurchases();
 
         if ($this->product->parent) {
             $this->product->parent->calculateInStock();
-            $childProduct->calculateTotalPurchases();
+            $this->product->parent->calculateTotalPurchases();
         }
 
         foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
             $bundleParentProduct = Product::find($productId);
             if ($bundleParentProduct) {
                 $bundleParentProduct->calculateInStock();
-                $childProduct->calculateTotalPurchases();
+                $bundleParentProduct->calculateInStock();
             }
         }
     }
