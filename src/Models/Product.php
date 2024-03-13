@@ -249,17 +249,6 @@ class Product extends Model
         return array_reverse($breadcrumbs);
     }
 
-    public function getTotalPurchasesAttribute()
-    {
-        $purchases = $this->purchases;
-
-        foreach ($this->childProducts as $childProduct) {
-            $purchases = $purchases + $childProduct->purchases;
-        }
-
-        return $purchases;
-    }
-
     public function getCurrentPriceAttribute()
     {
         if ($this->is_bundle && $this->use_bundle_product_price) {
@@ -653,6 +642,18 @@ class Product extends Model
         }
 
         $this->in_stock = $inStock;
+        $this->saveQuietly();
+    }
+
+    public function calculateTotalPurchases(): void
+    {
+        $purchases = $this->purchases;
+
+        foreach ($this->childProducts as $childProduct) {
+            $purchases = $purchases + $childProduct->purchases;
+        }
+
+        $this->total_purchases = $purchases;
         $this->saveQuietly();
     }
 
