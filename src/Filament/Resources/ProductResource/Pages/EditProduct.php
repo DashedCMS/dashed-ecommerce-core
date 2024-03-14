@@ -223,10 +223,11 @@ class EditProduct extends EditRecord
     {
         $buttons = [];
 
+        $buttons[] = Action::make('Bekijk product')
+            ->url($this->record->getUrl())
+            ->openUrlInNewTab();
+
         if ($this->record->type != 'variable' || $this->record->parent_id) {
-            $buttons[] = Action::make('Bekijk product')
-                ->url($this->record->getUrl())
-                ->openUrlInNewTab();
             $buttons[] = Action::make('Dupliceer product')
                 ->action('duplicateProduct')
                 ->color('warning');
