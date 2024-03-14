@@ -2,12 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 use Livewire\Component;
-use Livewire\WithFileUploads;
-use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 
 class AddToCart extends Component
 {
