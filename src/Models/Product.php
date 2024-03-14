@@ -302,7 +302,7 @@ class Product extends Model
                 $locale = App::getLocale();
             }
 
-            if (!Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
+            if (! Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
                 foreach ($this->childProducts as $childProduct) {
                     if ($childProduct->inStock() && ! isset($url)) {
                         $url = $childProduct->getUrl();
@@ -526,7 +526,7 @@ class Product extends Model
             $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
 
             if (count($filterOptions)) {
-                foreach($filterOptions as &$filterOption){
+                foreach($filterOptions as &$filterOption) {
                     $filterOption['name'] = $filterOption['name'][App::getLocale()] ?? $filterOption['name'][0];
                 }
 
