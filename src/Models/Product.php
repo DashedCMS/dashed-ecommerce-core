@@ -547,7 +547,6 @@ class Product extends Model
     {
         foreach ($this->childProducts as $childProduct) {
             $arrayToCheck = &$array;
-            //            if (count($arrayToCheck) == $childProduct->productFilters->count()) {
             foreach ($childProduct->productFilters as $filter) {
                 $key = array_search($filter->pivot->product_filter_option_id, $arrayToCheck);
                 if ($key !== false) {
@@ -557,7 +556,6 @@ class Product extends Model
             if (count($arrayToCheck) == 0) {
                 return true;
             }
-            //            }
         }
 
         return false;
