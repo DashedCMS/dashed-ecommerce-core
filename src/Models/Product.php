@@ -302,7 +302,7 @@ class Product extends Model
                 $locale = App::getLocale();
             }
 
-            if ($this->childProducts()->count()) {
+            if (!Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
                 foreach ($this->childProducts as $childProduct) {
                     if ($childProduct->inStock() && ! isset($url)) {
                         $url = $childProduct->getUrl();
@@ -383,6 +383,7 @@ class Product extends Model
         return $result;
     }
 
+    //Only used for old method/style
     public function filters()
     {
         $parentProduct = $this->parent;
@@ -515,6 +516,30 @@ class Product extends Model
         }
 
         return $showableFilters;
+    }
+
+    public function simpleFilters(): array
+    {
+        $filters = [];
+
+        foreach ($this->activeProductFilters as $filter) {
+            $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
+
+            if (count($filterOptions)) {
+                foreach($filterOptions as &$filterOption){
+                    $filterOption['name'] = $filterOption['name'][App::getLocale()] ?? $filterOption['name'][0];
+                }
+
+                $filters[] = [
+                    'id' => $filter->id,
+                    'name' => $filter['name'],
+                    'options' => $filterOptions,
+                    'active' => null,
+                ];
+            }
+        }
+
+        return $filters;
     }
 
     public function possibleVariations(): array

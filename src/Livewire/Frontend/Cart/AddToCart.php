@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Database\Eloquent\Collection;
@@ -10,27 +11,18 @@ use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class AddToCart extends Component
 {
-    use CartActions;
-    use WithFileUploads;
-
-    public Product $product;
-    public array $filters = [];
-    public ?Collection $productExtras = null;
-    public ?array $extras = [];
-    public string|int $quantity = 1;
-    public array $files = [];
-    public string $cartType = 'default';
-    public $price = 0;
-    public $discountPrice = 0;
+    use ProductCartActions;
 
     public function mount(Product $product)
     {
-        $this->product = $product;
-        $this->filters = $this->product->filters();
-        $this->productExtras = $this->product->allProductExtras();
-        $this->extras = $this->product->allProductExtras()->toArray();
-        $this->price = $this->product->currentPrice;
-        $this->discountPrice = $this->product->discountPrice;
+        $this->originalProduct = $product;
+
+        $this->fillInformation(true);
+    }
+
+    public function updated()
+    {
+        $this->fillInformation();
     }
 
     public function rules()
