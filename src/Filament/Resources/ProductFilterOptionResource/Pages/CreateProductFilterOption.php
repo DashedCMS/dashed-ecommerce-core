@@ -19,11 +19,4 @@ class CreateProductFilterOption extends CreateRecord
             LocaleSwitcher::make(),
         ];
     }
-
-    protected function mutateFormDataBeforeFill($data)
-    {
-        $data['product_filter_id'] = request()->get('productFilterId');
-
-        return $data;
-    }
 }

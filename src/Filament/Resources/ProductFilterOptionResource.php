@@ -43,6 +43,7 @@ class ProductFilterOptionResource extends Resource
             ->schema([
                 Select::make('product_filter_id')
                     ->relationship('productFilter', 'name')
+                    ->default(request()->get('productFilterId'))
                     ->label('Filter')
                     ->required()
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name),

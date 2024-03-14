@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Dashed\DashedEcommerceCore\Jobs\CreateMissingProductVariationsJob;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -33,10 +35,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -82,7 +84,7 @@ class EditProduct extends EditRecord
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
         //        Only if is simple or variable && parent
-        if ((($data['type'] ?? 'variable') == 'variable' && ! ($data['parent_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
+        if ((($data['type'] ?? 'variable') == 'variable' && !($data['parent_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
             $this->record->activeProductFilters()->detach();
             foreach ($productFilters as $productFilter) {
                 if ($data["product_filter_$productFilter->id"] ?? false) {
@@ -95,11 +97,15 @@ class EditProduct extends EditRecord
 
         if ((($data['type'] ?? 'variable') == 'variable' && ($data['parent_id'] ?? true)) || ($data['type'] ?? 'variable') == 'simple') {
             $this->record->productFilters()->detach();
+            $this->record->enabledProductFilterOptions()->detach();
             foreach ($productFilters as $productFilter) {
                 if ((($data["product_filter_$productFilter->id"] ?? false) && ($this->record->activeProductFilters->contains($productFilter->id)) || (($data['parent_id'] ?? false) && Product::find($data['parent_id']) && Product::find($data['parent_id'])->activeProductFilters->contains($productFilter->id)))) {
                     foreach ($productFilter->productFilterOptions as $productFilterOption) {
                         if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
                             $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
+                        }
+                        if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}_enabled"] ?? false) {
+                            $this->record->enabledProductFilterOptions()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
                         }
                     }
                 }
@@ -111,6 +117,7 @@ class EditProduct extends EditRecord
             unset($data["product_filter_{$productFilter->id}_use_for_variations"]);
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 unset($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]);
+                unset($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}_enabled"]);
             }
         }
 
@@ -118,7 +125,7 @@ class EditProduct extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
+                if (!$thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -160,6 +167,7 @@ class EditProduct extends EditRecord
 
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] = $this->record->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
+                $data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}_enabled"] = $this->record->enabledProductFilterOptions()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
             }
         }
 
@@ -202,7 +210,7 @@ class EditProduct extends EditRecord
 
     public function getBreadcrumbs(): array
     {
-        if (! $this->record->parent) {
+        if (!$this->record->parent) {
             return parent::getBreadcrumbs();
         }
 
