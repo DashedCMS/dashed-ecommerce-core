@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Toggle;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -34,6 +35,7 @@ class ProductSettingsPage extends Page
             $formData["product_default_order_type_{$site['id']}"] = Customsetting::get('product_default_order_type', $site['id'], 'price');
             $formData["product_default_order_sort_{$site['id']}"] = Customsetting::get('product_default_order_sort', $site['id'], 'DESC');
             $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
+            $formData["product_use_simple_variation_style_{$site['id']}"] = Customsetting::get('product_use_simple_variation_style', $site['id'], false);
         }
 
         $this->form->fill($formData);
@@ -93,6 +95,9 @@ class ProductSettingsPage extends Page
                     ->label('Standaard aantal producten per pagina')
                     ->numeric()
                     ->required(),
+                Toggle::make("product_use_simple_variation_style_{$site['id']}")
+                    ->label('Gebruik product variaties op de simpele manier')
+                    ->helperText('Dit refreshed niet meer de pagina, maar veranderd de prijs direct'),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -125,6 +130,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('product_default_order_type', $this->form->getState()["product_default_order_type_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_order_sort', $this->form->getState()["product_default_order_sort_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
+            Customsetting::set('product_use_simple_variation_style', $this->form->getState()["product_use_simple_variation_style_{$site['id']}"], $site['id']);
         }
 
         Notification::make()
