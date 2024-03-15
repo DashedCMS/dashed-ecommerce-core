@@ -385,10 +385,10 @@ class Products
         $products = Product::whereIn('id', $correctProductIds)
             ->search($search);
 
-        if($priceRange['min'] ?? false){
+        if($priceRange['min'] ?? false) {
             $products = $products->where('price', '>=', $priceRange['min']);
         }
-        if($priceRange['max'] ?? false){
+        if($priceRange['max'] ?? false) {
             $products = $products->where('price', '<=', $priceRange['max']);
         }
 
