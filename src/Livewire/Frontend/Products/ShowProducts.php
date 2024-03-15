@@ -39,7 +39,7 @@ class ShowProducts extends Component
         ], []);
     }
 
-    public function mount(?ProductCategory $productCategory = null)
+    public function mount($productCategory = null)
     {
         $this->productCategory = $productCategory;
 
