@@ -397,8 +397,21 @@ class Products
             }
         }
 
+        $minPrice = Product::whereIn('id', $correctProductIds)
+            ->search($search)
+            ->thisSite()
+            ->publicShowable()
+            ->min('price');
+        $maxPrice = Product::whereIn('id', $correctProductIds)
+            ->search($search)
+            ->thisSite()
+            ->publicShowable()
+            ->max('price');
+
         return [
             'products' => $products,
+            'minPrice' => $minPrice,
+            'maxPrice' => $maxPrice,
             'filters' => self::getFiltersV2($allProducts->pluck('id'), $activeFilters),
         ];
     }
