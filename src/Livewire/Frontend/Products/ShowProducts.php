@@ -96,11 +96,11 @@ class ShowProducts extends Component
         $this->defaultSliderOptions = [
             'start' => [
                 (float)$response['minPrice'],
-                (float)$response['maxPrice']
+                (float)$response['maxPrice'],
             ],
             'range' => [
-                'min' =>  [(float)$response['minPrice']],
-                'max' => [(float)$response['maxPrice']]
+                'min' => [(float)$response['minPrice']],
+                'max' => [(float)$response['maxPrice']],
             ],
             'connect' => true,
             'behaviour' => 'tap-drag',
