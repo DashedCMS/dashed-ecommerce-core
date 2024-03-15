@@ -20,6 +20,8 @@ class ShowProducts extends Component
     public ?string $order = null;
     public ?string $sortBy = null;
     public ?string $search = '';
+    public array $priceSlider = [];
+    public array $defaultSliderOptions = [];
 
     public array $activeFilters = [];
     public array $activeFilterQuery = [];
@@ -90,6 +92,21 @@ class ShowProducts extends Component
         $response = Products::getAllV2($this->pagination, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters);
         $this->products = $response['products'];
         $this->filters = $response['filters'];
+
+        $this->defaultSliderOptions = [
+            'start' => [
+                (float)$response['minPrice'],
+                (float)$response['maxPrice']
+            ],
+            'range' => [
+                'min' =>  [(float)$response['minPrice']],
+                'max' => [(float)$response['maxPrice']]
+            ],
+            'connect' => true,
+            'behaviour' => 'tap-drag',
+            'tooltips' => true,
+            'step' => 1,
+        ];
         //        }
     }
 
