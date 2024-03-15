@@ -291,7 +291,7 @@ class Products
         return $products;
     }
 
-    public static function getAllV2($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [])
+    public static function getAllV2($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
     {
         if ($sortBy == 'price-asc') {
             $orderBy = 'price';
@@ -383,7 +383,16 @@ class Products
         }
 
         $products = Product::whereIn('id', $correctProductIds)
-            ->search($search)
+            ->search($search);
+
+        if($priceRange['min'] ?? false){
+            $products = $products->where('price', '>=', $priceRange['min']);
+        }
+        if($priceRange['max'] ?? false){
+            $products = $products->where('price', '<=', $priceRange['max']);
+        }
+
+        $products = $products
             ->thisSite()
             ->publicShowable()
             ->orderBy($orderBy, $order)

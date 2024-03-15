@@ -89,18 +89,18 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        $response = Products::getAllV2($this->pagination, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters);
+        $response = Products::getAllV2($this->pagination, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider);
         $this->products = $response['products'];
         $this->filters = $response['filters'];
 
         $this->defaultSliderOptions = [
             'start' => [
                 (float)$response['minPrice'],
-                (float)$response['maxPrice'],
+                (float)$response['maxPrice']
             ],
             'range' => [
-                'min' => [(float)$response['minPrice']],
-                'max' => [(float)$response['maxPrice']],
+                'min' =>  [(float)$response['minPrice']],
+                'max' => [(float)$response['maxPrice']]
             ],
             'connect' => true,
             'behaviour' => 'tap-drag',
