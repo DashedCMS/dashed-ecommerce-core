@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Get;
 use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
@@ -82,12 +83,17 @@ class CreateOrder extends Page
     public $products = [];
     public $activatedProducts = [];
 
+    public function mount()
+    {
+        ShoppingCart::setInstance('handorder');
+    }
+
     protected function getActions(): array
     {
         return [
             Action::make('updateInfo')
                 ->label('Gegevens bijwerken')
-                ->action(fn () => $this->updateInfo()),
+                ->action(fn() => $this->updateInfo()),
         ];
     }
 
@@ -115,15 +121,24 @@ class CreateOrder extends Page
         return $products;
     }
 
-    //    public function getSearchableUsers($query)
-    //    {
-    //        return User::where(DB::raw('lower(first_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(last_name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(email)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
-    //    }
+    public function getProductExtrasSchema(Product $product): array
+    {
+        $productExtras = [];
 
-    //    public function getSearchableProducts($query)
-    //    {
-    //        return Product::handOrderShowable()->where(DB::raw('lower(name)'), 'LIKE', '%' . strtolower($query) . '%')->orWhere(DB::raw('lower(content)'), 'LIKE', '%' . strtolower($query) . '%')->limit(50)->pluck('name', 'id');
-    //    }
+        foreach ($product->allProductExtras() as $extra) {
+            $extraOptions = [];
+            foreach ($extra->ProductExtraOptions as $option) {
+                $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+            }
+
+            $productExtras[] = Select::make('extra.' . $extra['id'])
+                ->label($extra->name)
+                ->options($extraOptions)
+                ->required($extra['required']);
+        }
+
+        return $productExtras;
+    }
 
     protected function getFormSchema(): array
     {
@@ -250,54 +265,84 @@ class CreateOrder extends Page
             ])
             ->columns(2);
 
-        $productSchemas = [];
-
-        $productSchemas[] = Select::make('activatedProducts')
-            ->label('Kies producten')
-            ->helperText('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.')
-            ->options(Product::handOrderShowable()->pluck('name', 'id'))
-            ->searchable()
-            ->multiple()
-            ->reactive();
-
-        foreach ($this->getAllProductsProperty() as $product) {
-            $productExtras = [];
-
-            foreach ($product['productExtras'] as $extra) {
-                $extraOptions = [];
-                foreach ($extra['product_extra_options'] ?? [] as $option) {
-                    $option = ProductExtraOption::find($option['id']);
-                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
-                }
-
-                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra['id'])
-                    ->label($extra['name'][array_key_first($extra['name'])])
-                    ->options($extraOptions)
-                    ->required($extra['required']);
-            }
-
-            $productSchemas[] = Section::make('Product ' . $product->name)
-                ->schema(array_merge([
-                    TextInput::make('products.' . $product->id . '.quantity')
-                        ->label('Aantal')
-                        ->numeric()
-                        ->required()
-                        ->minValue(0)
-                        ->maxValue(1000)
-                        ->default(0),
-                    Placeholder::make('Voorraad')
-                        ->content($product->stock()),
-                    Placeholder::make('Prijs')
-                        ->content($product->currentPrice),
-                    Placeholder::make('Afbeelding')
-                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
-                ], $productExtras))
-                ->visible(fn (Get $get) => in_array($product->id, $get('activatedProducts')));
-        }
-
         $schema[] = Wizard\Step::make('Producten')
-            ->schema($productSchemas)
+            ->schema([
+                Repeater::make('products')
+                    ->label('Kies producten')
+                    ->helperText('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.')
+                    ->schema([
+                        Select::make('product')
+                            ->label('Kies product')
+                            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+                            ->searchable()
+                            ->reactive(),
+                        TextInput::make('quantity')
+                            ->label('Aantal')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0)
+                            ->maxValue(1000)
+                            ->default(0),
+                        Placeholder::make('Voorraad')
+                            ->content(fn(Get $get) => $get('product') ? Product::find($get('product'))->stock() : 'Kies een product'),
+                        Placeholder::make('Prijs')
+                            ->content(fn(Get $get) => $get('product') ? Product::find($get('product'))->currentPrice : 'Kies een product'),
+                        Placeholder::make('Afbeelding')
+                            ->content(fn(Get $get) => $get('product') ? new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', Product::find($get('product'))->firstImageUrl, []) . '">') : 'Kies een product'),
+                        Section::make('Extra\'s')
+                            ->schema(fn(Get $get) => $get('product') ? $this->getProductExtrasSchema(Product::find($get('product'))) : []),
+                    ])
+            ])
             ->columnSpan(2);
+
+//        $productSchemas = [];
+//
+//        $productSchemas[] = Select::make('activatedProducts')
+//            ->label('Kies producten')
+//            ->helperText('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.')
+//            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+//            ->searchable()
+//            ->multiple()
+//            ->reactive();
+//
+//        foreach ($this->getAllProductsProperty() as $product) {
+//            $productExtras = [];
+
+//            foreach ($product['productExtras'] as $extra) {
+//                $extraOptions = [];
+//                foreach ($extra['product_extra_options'] ?? [] as $option) {
+//                    $option = ProductExtraOption::find($option['id']);
+//                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+//                }
+//
+//                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra['id'])
+//                    ->label($extra['name'][array_key_first($extra['name'])])
+//                    ->options($extraOptions)
+//                    ->required($extra['required']);
+//            }
+
+//            $productSchemas[] = Section::make('Product ' . $product->name)
+//                ->schema(array_merge([
+//                    TextInput::make('products.' . $product->id . '.quantity')
+//                        ->label('Aantal')
+//                        ->numeric()
+//                        ->required()
+//                        ->minValue(0)
+//                        ->maxValue(1000)
+//                        ->default(0),
+//                    Placeholder::make('Voorraad')
+//                        ->content($product->stock()),
+//                    Placeholder::make('Prijs')
+//                        ->content($product->currentPrice),
+//                    Placeholder::make('Afbeelding')
+//                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
+//                ], $productExtras))
+//                ->visible(fn(Get $get) => in_array($product->id, $get('activatedProducts')));
+//        }
+//
+//        $schema[] = Wizard\Step::make('Producten')
+//            ->schema($productSchemas)
+//            ->columnSpan(2);
 
         $schema[] = Wizard\Step::make('Overige informatie')
             ->schema([
@@ -310,23 +355,13 @@ class CreateOrder extends Page
                     ->nullable()
                     ->maxLength(255)
                     ->reactive(),
-//                Select::make('payment_method_id')
-//                    ->label('Betaalmethode')
-//                    ->required()
-//                    ->options(PaymentMethod::where('available_from_amount', '<', $this->totalUnformatted)->where('psp', 'own')->where('site_id', Sites::getActive())->where('active', 1)->pluck('name', 'id')->toArray()),
                 Select::make('shipping_method_id')
                     ->label('Verzendmethode')
                     ->required()
                     ->options(function () {
-                        //                        ray(ShoppingCart::getAvailableShippingMethods($this->country, true));
                         return collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray();
                     }),
             ]);
-
-        //        $schema[] = Wizard\Step::make('Betaal & verzendmethode')
-        //            ->schema([
-        //            ])
-        //            ->columns(2);
 
         $schema[] = Wizard\Step::make('Bestelling')
             ->schema([
@@ -357,19 +392,21 @@ BLADE
 
     public function updateInfo($showNotification = true)
     {
-        \Cart::instance('handorder')->content();
+        ShoppingCart::setInstance('handorder');
+        ShoppingCart::emptyMyCart();
 
         $this->loading = true;
 
-        foreach (\Cart::instance('handorder')->content() as $row) {
-            \Cart::remove($row->rowId);
-        }
+//        foreach (\Cart::instance('handorder')->content() as $row) {
+//            \Cart::remove($row->rowId);
+//        }
 
-        foreach ($this->getAllProductsProperty() as $product) {
-            if (($this->products[$product->id]['quantity'] ?? 0) > 0) {
+        foreach ($this->products as $chosenProduct) {
+            $product = Product::find($chosenProduct['product']);
+            if (($chosenProduct['quantity'] ?? 0) > 0) {
                 $productPrice = $product->getOriginal('price');
                 $options = [];
-                foreach ($this->products[$product->id]['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
+                foreach ($chosenProduct['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
                     if ($productExtraOptionId) {
                         $thisProductExtra = ProductExtra::find($productExtraId);
                         $thisOption = ProductExtraOption::find($productExtraOptionId);
@@ -385,16 +422,16 @@ BLADE
                     }
                 }
 
-                \Cart::instance('handorder')->add($product->id, $product->name, $this->products[$product->id]['quantity'], $productPrice, $options)->associate(Product::class);
+                \Cart::instance('handorder')->add($product->id, $product->name, $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -420,7 +457,7 @@ BLADE
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -454,7 +491,7 @@ BLADE
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
         //        ray($checkoutData);
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -489,7 +526,7 @@ BLADE
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             ray($this->shipping_method_id);
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
@@ -505,10 +542,10 @@ BLADE
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
