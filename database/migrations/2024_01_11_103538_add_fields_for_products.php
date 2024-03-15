@@ -18,10 +18,6 @@ return new class extends Migration {
             $table->integer('total_stock')
                 ->default(0);
         });
-
-        foreach(Product::withTrashed()->get() as $product){
-            UpdateProductInformationJob::dispatch($product);
-        }
     }
 
     /**
