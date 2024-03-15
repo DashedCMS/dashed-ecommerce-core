@@ -812,8 +812,6 @@ class ShoppingCart
 
     public static function getCheckoutData($shippingMethodId, $paymentMethodId)
     {
-        ShoppingCart::setInstance();
-
         $subTotal = ShoppingCart::subtotal(false, $shippingMethodId, $paymentMethodId);
         $discount = ShoppingCart::totalDiscount();
         $btw = ShoppingCart::btw(false, true, $shippingMethodId, $paymentMethodId);
