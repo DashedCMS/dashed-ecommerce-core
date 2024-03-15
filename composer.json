@@ -19,8 +19,8 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^2.0.1",
         "daltcore/lara-pdf-merger": "^2.0",
+        "dashed/livewire-range-slider": "^1.0",
         "hardevine/shoppingcart": "^3.2",
-        "jantinnerezo/livewire-range-slider": "dev-main",
         "maatwebsite/excel": "^3.1",
         "spatie/laravel-package-tools": "^1.15"
     },
