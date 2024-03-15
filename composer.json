@@ -32,9 +32,6 @@
         "phpunit/phpunit": "^10.2",
         "spatie/laravel-ray": "^1.32"
     },
-    "repositories": [
-        { "type": "vcs", "url": "https://github.com/Santoshjena840/livewire-range-slider.git" }
-    ],
     "autoload": {
         "psr-4": {
             "Dashed\\DashedEcommerceCore\\": "src",
