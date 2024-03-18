@@ -45,9 +45,8 @@ class ShowProducts extends Component
         $this->productCategory = $productCategory;
 
         $this->pagination = request()->get('pagination', Customsetting::get('product_default_amount_of_products', null, 12));
-        $this->orderBy = request()->get('order-by', Customsetting::get('product_default_order_type', null, 'price'));
+        $this->sortBy = request()->get('sort-by', Customsetting::get('product_default_order_type', null, 'price'));
         $this->order = request()->get('order', Customsetting::get('product_default_order_sort', null, 'DESC'));
-        $this->sortBy = request()->get('sortBy', 'default');
         $this->search = request()->get('search');
 
         $activeFilters = request()->get('activeFilters', []);
@@ -97,7 +96,7 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider);
+        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider);
         $this->products = $response['products'];
         $this->filters = $response['filters'];
 

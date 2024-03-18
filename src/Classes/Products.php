@@ -291,24 +291,24 @@ class Products
         return $products;
     }
 
-    public static function getAllV2(int $pagination = 12, int $page = 1, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
+    public static function getAllV2(int $pagination = 12, int $page = 1, string $orderBy = 'order', $order = 'DESC', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
     {
-        if ($sortBy == 'price-asc') {
+        if ($orderBy == 'price-asc') {
             $orderBy = 'price';
             $order = 'ASC';
-        } elseif ($sortBy == 'price-desc') {
+        } elseif ($orderBy == 'price-desc') {
             $orderBy = 'price';
             $order = 'DESC';
-        } elseif ($sortBy == 'most-sold') {
+        } elseif ($orderBy == 'most-sold') {
             $orderBy = 'purchases';
             $order = 'DESC';
-        } elseif ($sortBy == 'stock') {
+        } elseif ($orderBy == 'stock') {
             $orderBy = 'stock';
             $order = 'DESC';
-        } elseif ($sortBy == 'newest') {
+        } elseif ($orderBy == 'newest') {
             $orderBy = 'created_at';
             $order = 'DESC';
-        } else {
+        } elseif($orderBy == 'order') {
             $orderBy = 'order';
             $order = 'ASC';
         }
