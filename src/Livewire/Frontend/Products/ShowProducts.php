@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCategory;
 class ShowProducts extends Component
 {
     use WithPagination;
+
     private $products = null;
     private $filters = null;
     public ?ProductCategory $productCategory = null;
@@ -21,6 +22,7 @@ class ShowProducts extends Component
     public ?string $search = '';
     public array $priceSlider = [];
     public array $defaultSliderOptions = [];
+    public int $page = 1;
 
     public array $activeFilters = [];
     public array $activeFilterQuery = [];
@@ -51,7 +53,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (! $value) {
+                if (!$value) {
                     unset($activeFilters[$filterKey][$optionKey]);
                 }
             }
@@ -63,6 +65,12 @@ class ShowProducts extends Component
 
     public function updated()
     {
+        $this->loadProducts();
+    }
+
+    public function updatedPage($page)
+    {
+        $this->page = $page;
         $this->loadProducts();
     }
 
@@ -89,7 +97,7 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        $response = Products::getAllV2($this->pagination, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider);
+        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider);
         $this->products = $response['products'];
         $this->filters = $response['filters'];
 
@@ -112,7 +120,6 @@ class ShowProducts extends Component
 
     public function render()
     {
-
         return view('dashed-ecommerce-core::frontend.products.show-products', [
             'products' => $this->products,
             'filters' => $this->filters,

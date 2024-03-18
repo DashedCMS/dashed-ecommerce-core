@@ -291,7 +291,7 @@ class Products
         return $products;
     }
 
-    public static function getAllV2($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
+    public static function getAllV2(int $pagination = 12, int $page = 1, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
     {
         if ($sortBy == 'price-asc') {
             $orderBy = 'price';
@@ -397,7 +397,7 @@ class Products
             ->publicShowable()
             ->orderBy($orderBy, $order)
             ->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])
-            ->paginate($pagination)
+            ->paginate($pagination, ['*'], 'page', $page)
             ->withQueryString();
 
         foreach ($products as $product) {
