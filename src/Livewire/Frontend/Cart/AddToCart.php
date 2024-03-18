@@ -12,6 +12,7 @@ class AddToCart extends Component
 
     public function mount(Product $product)
     {
+        $this->parentProduct = $product->parent ? $product->parent : $product;
         $this->originalProduct = $product;
 
         $this->fillInformation(true);
