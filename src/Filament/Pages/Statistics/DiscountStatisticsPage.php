@@ -4,22 +4,21 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
 
-class DiscountStatisticsPage extends Page implements HasForms
+class DiscountStatisticsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Korting statistieken';
     protected static ?string $navigationGroup = 'Statistics';
@@ -32,13 +31,23 @@ class DiscountStatisticsPage extends Page implements HasForms
     public $status;
     public $startDate;
     public $endDate;
+    public $graphData;
 
     public function mount(): void
     {
         $this->form->fill([
             'discountCode' => 'all',
             'status' => 'payment_obligation',
+            'startDate' => now()->subMonth(),
+            'endDate' => now(),
         ]);
+
+        $this->getStatisticsProperty();
+    }
+
+    public function updated()
+    {
+        $this->getStatisticsProperty();
     }
 
     public function getStatisticsProperty()
@@ -108,13 +117,18 @@ class DiscountStatisticsPage extends Page implements HasForms
                 ],
                 'labels' => $graph['labels'],
             ],
+            'filters' => [
+                'beginDate' => $beginDate,
+                'endDate' => $endDate,
+                'discountCode' => $this->discountCode,
+                'status' => $this->status,
+            ],
             'data' => $statistics,
             'orders' => $orders,
         ];
 
-        $this->emit('updatedStatistics', $graphData);
-
-        return $graphData;
+        $this->graphData = $graphData;
+        $this->dispatch('updateGraphData', $graphData);
     }
 
     protected function getFormSchema(): array
@@ -134,17 +148,15 @@ class DiscountStatisticsPage extends Page implements HasForms
         }
 
         return [
-            Card::make()
+            Section::make()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
                         ->reactive(),
                     DatePicker::make('endDate')
                         ->label('Eind datum')
-                        ->rules([
-                            'nullable',
-                            'after:start_date',
-                        ])
+                        ->nullable()
+                        ->after('startDate')
                         ->reactive(),
                     Select::make('status')
                         ->label('Status')
@@ -172,8 +184,19 @@ class DiscountStatisticsPage extends Page implements HasForms
         ];
     }
 
-    public function submit()
+    protected function getFooterWidgets(): array
     {
-        $this->notify('success', 'De export is gedownload');
+        return [
+            DiscountChart::make(),
+            DiscountCards::make(),
+            DiscountTable::make(),
+        ];
+    }
+
+    public function getWidgetData(): array
+    {
+        return [
+            'graphData' => $this->graphData,
+        ];
     }
 }

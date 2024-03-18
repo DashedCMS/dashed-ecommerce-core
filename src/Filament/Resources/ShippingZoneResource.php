@@ -2,20 +2,24 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\MultiSelect;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\EditShippingZone;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\ListShippingZones;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\CreateShippingZone;
@@ -53,31 +57,25 @@ class ShippingZoneResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(function () {
-                                return ! (Sites::getAmountOfSites() > 1);
-                            })
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
                             ->label('Name')
                             ->required()
-                            ->maxLength(100)
-                            ->rules([
-                                'max:100',
-                            ]),
+                            ->maxLength(100),
                         TextInput::make('search_fields')
                             ->label('Voer extra woorden in waarop deze verzendzone geactiveerd mag worden, woorden scheiden met een komma')
-                            ->maxLength(255)
-                            ->rules([
-                                'max:255',
-                            ]),
+                            ->maxLength(255),
                         Toggle::make('hide_vat_on_invoice')
                             ->label('Verberg BTW op de factuur bij het kiezen van deze verzendzone'),
-                        MultiSelect::make('zones')
+                        Select::make('zones')
                             ->label('Geactiveerde regio\'s')
+                            ->multiple()
                             ->options(function () {
                                 $countries = [];
                                 foreach (collect(Countries::getCountries()) as $country) {
@@ -87,8 +85,9 @@ class ShippingZoneResource extends Resource
                                 return $countries;
                             })
                             ->required(),
-                        MultiSelect::make('disabled_payment_method_ids')
+                        Select::make('disabled_payment_method_ids')
                             ->label('Deactiveer betalingsmethodes voor deze verzendzone')
+                            ->multiple()
                             ->options(collect(PaymentMethods::get())->pluck('name', 'id')->toArray()),
                     ]),
             ]);
@@ -100,15 +99,25 @@ class ShippingZoneResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(query: SearchQuery::make()),
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
-                    ->searchable(),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

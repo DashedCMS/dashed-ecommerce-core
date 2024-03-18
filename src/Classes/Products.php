@@ -215,7 +215,83 @@ class Products
         }
     }
 
-    public static function getAllV2($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [])
+    public static function getBySearch($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null)
+    {
+        if ($sortBy == 'price-asc') {
+            $orderBy = 'price';
+            $order = 'ASC';
+        } elseif ($sortBy == 'price-desc') {
+            $orderBy = 'price';
+            $order = 'DESC';
+        } elseif ($sortBy == 'most-sold') {
+            $orderBy = 'purchases';
+            $order = 'DESC';
+        } elseif ($sortBy == 'stock') {
+            $orderBy = 'stock';
+            $order = 'DESC';
+        } elseif ($sortBy == 'newest') {
+            $orderBy = 'created_at';
+            $order = 'DESC';
+        } else {
+            $orderBy = 'order';
+            $order = 'ASC';
+        }
+
+        $correctProductIds = [];
+        if ($categoryId && $category = ProductCategory::with(['products'])
+                ->findOrFail($categoryId)) {
+            $allProducts = $category->products()
+                ->search($search)
+                ->thisSite()
+                ->publicShowable()
+                ->orderBy($orderBy, $order)
+                ->with(['productFilters', 'productCategories'])
+                ->get();
+        } else {
+            $allProducts = Product::search($search)
+                ->thisSite()
+                ->publicShowable()
+                ->orderBy($orderBy, $order)
+                ->with(['productFilters', 'productCategories'])
+                ->get();
+        }
+
+        $onlyShowParentIds = [];
+        foreach ($allProducts as $product) {
+            $productIsValid = true;
+
+            if ($productIsValid && $product->parent && $product->parent->only_show_parent_product) {
+                if (in_array($product->parent->id, $onlyShowParentIds)) {
+                    $productIsValid = false;
+                } else {
+                    $onlyShowParentIds[] = $product->parent->id;
+                }
+            }
+
+            if ($productIsValid) {
+                $correctProductIds[] = $product->id;
+            }
+        }
+
+        $products = Product::whereIn('id', $correctProductIds)
+            ->search($search)
+            ->thisSite()
+            ->publicShowable()
+            ->orderBy($orderBy, $order)
+            ->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])
+            ->limit($pagination)
+            ->get();
+
+        foreach ($products as $product) {
+            if ($product->parent && $product->parent->only_show_parent_product) {
+                $product->name = $product->parent->name;
+            }
+        }
+
+        return $products;
+    }
+
+    public static function getAllV2($pagination = 12, string $sortBy = 'default', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
     {
         if ($sortBy == 'price-asc') {
             $orderBy = 'price';
@@ -307,7 +383,16 @@ class Products
         }
 
         $products = Product::whereIn('id', $correctProductIds)
-            ->search($search)
+            ->search($search);
+
+        if($priceRange['min'] ?? false) {
+            $products = $products->where('price', '>=', $priceRange['min']);
+        }
+        if($priceRange['max'] ?? false) {
+            $products = $products->where('price', '<=', $priceRange['max']);
+        }
+
+        $products = $products
             ->thisSite()
             ->publicShowable()
             ->orderBy($orderBy, $order)
@@ -321,8 +406,21 @@ class Products
             }
         }
 
+        $minPrice = Product::whereIn('id', $correctProductIds)
+            ->search($search)
+            ->thisSite()
+            ->publicShowable()
+            ->min('price');
+        $maxPrice = Product::whereIn('id', $correctProductIds)
+            ->search($search)
+            ->thisSite()
+            ->publicShowable()
+            ->max('price');
+
         return [
             'products' => $products,
+            'minPrice' => $minPrice,
+            'maxPrice' => $maxPrice,
             'filters' => self::getFiltersV2($allProducts->pluck('id'), $activeFilters),
         ];
     }

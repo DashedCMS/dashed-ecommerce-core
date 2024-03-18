@@ -56,8 +56,12 @@ class ShoppingCart
         return url(route('dashed.frontend.start-transaction'));
     }
 
-    public static function cartItems()
+    public static function cartItems(?string $cartType = null)
     {
+        if ($cartType) {
+            self::setInstance($cartType);
+        }
+
         return Cart::content();
     }
 
@@ -66,11 +70,18 @@ class ShoppingCart
         return Cart::count();
     }
 
-    public static function totalDiscount($formatResult = false)
+    public static function setInstance(string $cartType = 'default')
+    {
+        Cart::instance($cartType);
+    }
+
+    public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null)
     {
         $totalDiscount = 0;
 
-        $discountCode = session('discountCode');
+        //        ray('session ' . session('discountCode'));
+        $discountCode = $discountCodeToUse ?: session('discountCode');
+        //        ray($discountCode);
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
@@ -393,7 +404,7 @@ class ShoppingCart
                 foreach ($cartProducts as $cartProduct) {
                     if ($discountCode && $discountCode->type == 'percentage') {
                         $price = $cartProduct->getShoppingCartItemPrice($cartItem, $discountCode);
-                    //                        $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
+                        //                        $price = $discountCode->getDiscountedPriceForProduct($cartProduct, $cartItem->qty);
                     } else {
                         //                        $price = $cartProduct->currentPrice * $cartItem->qty;
                         $price = $cartProduct->getShoppingCartItemPrice($cartItem);
@@ -609,7 +620,7 @@ class ShoppingCart
 
     public static function getPaymentMethods()
     {
-        $paymentMethods = PaymentMethod::where('available_from_amount', '<', self::total())->where('site_id', Sites::getActive())->where('active', 1)->get()->toArray();
+        $paymentMethods = PaymentMethod::where('available_from_amount', '<=', self::total())->where('site_id', Sites::getActive())->where('active', 1)->get()->toArray();
 
         foreach ($paymentMethods as &$paymentMethod) {
             $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';
@@ -673,11 +684,11 @@ class ShoppingCart
                                     'name' => $productExtraOption['name'],
                                     'value' => $thisProductExtraOption->value,
                                 ];
-                            //                                if ($thisProductExtraOption->calculate_only_1_quantity) {
-                            //                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
-                            //                                } else {
-                            //                                    $productPrice = $productPrice + $thisProductExtraOption->price;
-                            //                                }
+                                //                                if ($thisProductExtraOption->calculate_only_1_quantity) {
+                                //                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
+                                //                                } else {
+                                //                                    $productPrice = $productPrice + $thisProductExtraOption->price;
+                                //                                }
                             } elseif ($thisProductExtraOption) {
                                 Cart::remove($cartItem->rowId);
                                 $cartItemDeleted = true;
@@ -767,6 +778,14 @@ class ShoppingCart
                                     //                                Cart::update($cartItem->rowId, $newQuantity);
                                 }
                             }
+                        }
+
+
+                        try {
+                            Cart::update($cartItem->rowId, [
+                                'price' => $productPrice / $cartItem->qty,
+                            ]);
+                        } catch (Exception $exception) {
                         }
                     }
                 }

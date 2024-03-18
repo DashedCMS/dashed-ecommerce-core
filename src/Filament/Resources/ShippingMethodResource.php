@@ -2,20 +2,25 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Closure;
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Get;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
-use Filament\Forms\Components\BelongsToSelect;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
@@ -47,9 +52,10 @@ class ShippingMethodResource extends Resource
         $schema = [
             Section::make('Globale informatie')
                 ->schema([
-                    BelongsToSelect::make('shipping_zone_id')
+                    Select::make('shipping_zone_id')
                         ->relationship('shippingZone', 'name')
                         ->label('Hangt onder verzendzone')
+                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                         ->required(),
                 ])
                 ->collapsed(fn ($livewire) => $livewire instanceof EditShippingMethod),
@@ -58,10 +64,7 @@ class ShippingMethodResource extends Resource
                     TextInput::make('name')
                         ->label('Name')
                         ->required()
-                        ->maxLength(100)
-                        ->rules([
-                            'max:100',
-                        ]),
+                        ->maxLength(100),
                     Radio::make('sort')
                         ->label('Soort verzendmethod')
                         ->options([
@@ -74,22 +77,14 @@ class ShippingMethodResource extends Resource
                         ->required(),
                     TextInput::make('minimum_order_value')
                         ->label('Vanaf hoeveel € moet deze verzendmethode geldig zijn')
-                        ->numeric()
-                        ->rules([
-                            'numeric',
-                        ]),
+                        ->numeric(),
                     TextInput::make('maximum_order_value')
                         ->label('Tot hoeveel € moet deze verzendmethode geldig zijn (zet op 100000 voor oneindig)')
                         ->numeric()
-                        ->maxValue(100000)
-                        ->rules([
-                            'numeric',
-                        ]),
+                        ->maxValue(100000),
                     TextInput::make('costs')
                         ->label('Kosten van deze verzendmethode')
-                        ->rules([
-                            'numeric',
-                        ])
+                        ->numeric()
                         ->hidden(fn ($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
                     Repeater::make('variables')
                         ->label('Extra vaste kosten van deze verzendmethode')
@@ -98,45 +93,31 @@ class ShippingMethodResource extends Resource
                             TextInput::make('amount_of_items')
                                 ->label('Voor hoeveel stuks moet dit gelden')
                                 ->type('number')
-                                ->rules([
-                                    'numeric',
-                                ]),
+                            ->numeric(),
                             TextInput::make('costs')
                                 ->label('Vul een prijs in voor dit aantal')
-                                ->rules([
-                                    'numeric',
-                                ]),
+                            ->numeric(),
                         ])
                         ->nullable()
                         ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('variable_static_costs')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
-                        ->rules([
-                            'max:255',
-                        ])
+                        ->maxLength(255)
                         ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('order')
                         ->label('Volgorde van de verzendmethode')
-                        ->type('number')
-                        ->required()
-                        ->rules([
-                            'numeric',
-                            'required',
-                        ]),
+                        ->numeric()
+                        ->required(),
                     Toggle::make('distance_range_enabled')
                         ->label('Alleen beschikbaar voor aantal KMs vanaf vestiging')
                         ->helperText('Google API key moet gekoppeld zijn voor dit om te werken')
                         ->reactive(),
                     TextInput::make('distance_range')
                         ->label('Aantal KMs vanaf vestiging mogelijk')
-                        ->type('number')
+                        ->numeric()
                         ->required()
-                        ->rules([
-                            'numeric',
-                            'required',
-                        ])
-                        ->visible(fn (Closure $get) => $get('distance_range_enabled')),
+                        ->visible(fn (Get $get) => $get('distance_range_enabled')),
                 ]),
         ];
 
@@ -144,14 +125,12 @@ class ShippingMethodResource extends Resource
         foreach (ShippingClass::get() as $shippingClass) {
             $shippingClasses[] = TextInput::make("shipping_class_costs_$shippingClass->id")
                 ->label("Vul een meerprijs in voor producten in deze verzendklasse $shippingClass->name")
-                ->rules([
-                    'numeric',
-                ])
+                ->numeric()
                 ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
         }
 
         if ($shippingClasses) {
-            $schema[] = Section::make('Verzendklas meerprijzen')
+            $schema[] = Section::make('Verzendklassen meerprijzen')
                 ->schema($shippingClasses);
         }
 
@@ -165,14 +144,24 @@ class ShippingMethodResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(query: SearchQuery::make()),
                 TextColumn::make('shippingZone.name')
                     ->label('Verzendzone')
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
             ])
             ->filters([
                 //
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

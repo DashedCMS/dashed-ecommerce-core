@@ -4,61 +4,60 @@ namespace Dashed\DashedEcommerceCore;
 
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
-use Filament\PluginServiceProvider;
 use Spatie\LaravelPackageTools\Package;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
+use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CreateOrderLog;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddToCart;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartCount;
 use Dashed\DashedEcommerceCore\Livewire\Orders\AddPaymentToOrder;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Commands\UpdateProductInformations;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\LogsList;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
 use Dashed\DashedEcommerceCore\Commands\RecalculatePurchasesCommand;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentsList;
 use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
-use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProducts;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderRetourStatus;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ViewStatusses;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
-use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 
-class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
+class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 {
     public static string $name = 'dashed-ecommerce-core';
 
@@ -66,16 +65,39 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
     {
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
-            $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)->daily();
-            //            $schedule->command(RecalculatePurchasesCommand::class)->weekly();
-            $schedule->command(CancelOldOrders::class)->everyFifteenMinutes();
+            $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
+                ->daily();
+            $schedule->command(CancelOldOrders::class)
+                ->everyFifteenMinutes();
+            $schedule->command(UpdateProductInformations::class)
+                ->everyFifteenMinutes()
+                ->withoutOverlapping();
         });
 
+        //Stats components
+        Livewire::component('revenue-chart', RevenueChart::class);
+        Livewire::component('revenue-cards', RevenueCards::class);
+        Livewire::component('product-chart', ProductChart::class);
+        Livewire::component('product-cards', ProductCards::class);
+        Livewire::component('product-table', ProductTable::class);
+        Livewire::component('discount-chart', DiscountChart::class);
+        Livewire::component('discount-cards', DiscountCards::class);
+        Livewire::component('discount-table', DiscountTable::class);
+
+        //Backend components
         Livewire::component('change-order-fulfillment-status', ChangeOrderFulfillmentStatus::class);
         Livewire::component('change-order-retour-status', ChangeOrderRetourStatus::class);
         Livewire::component('add-payment-to-order', AddPaymentToOrder::class);
+        Livewire::component('cancel-order', CancelOrder::class);
         Livewire::component('send-order-confirmation-to-email', SendOrderConfirmationToEmail::class);
         Livewire::component('create-order-log', CreateOrderLog::class);
+        Livewire::component('order-shipping-information-list', ShippingInformationList::class);
+        Livewire::component('order-payment-information-list', PaymentInformationList::class);
+        Livewire::component('order-order-products-list', OrderProductsList::class);
+        Livewire::component('order-payments-list', PaymentsList::class);
+        Livewire::component('order-logs-list', LogsList::class);
+        Livewire::component('order-customer-information-block-list', CustomerInformationBlockList::class);
+        Livewire::component('order-view-statusses', ViewStatusses::class);
 
         //Frontend components
         Livewire::component('cart.cart', Cart::class);
@@ -85,6 +107,7 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
+        Livewire::component('products.searchbar', Searchbar::class);
         Livewire::component('account.orders', Orders::class);
         Livewire::component('orders.view-order', ViewOrder::class);
 
@@ -102,7 +125,9 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
     public function configurePackage(Package $package): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'dashed-ecommerce-core');
+
         $this->publishes([
             __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/dashed-ecommerce-core/frontend'),
         ], 'dashed-ecommerce-core-views');
@@ -138,13 +163,13 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
                 'invoicing' => [
                     'name' => 'Facturatie instellingen',
                     'description' => 'Instellingen voor de facturatie',
-                    'icon' => 'document-report',
+                    'icon' => 'document-check',
                     'page' => InvoiceSettingsPage::class,
                 ],
                 'order' => [
                     'name' => 'Bestellingen',
                     'description' => 'Instellingen voor de bestellingen',
-                    'icon' => 'cash',
+                    'icon' => 'banknotes',
                     'page' => OrderSettingsPage::class,
                 ],
                 'paymentMethods' => [
@@ -156,7 +181,7 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
                 'vat' => [
                     'name' => 'BTW instellingen',
                     'description' => 'Beheren hoe je winkel belastingen in rekening brengt',
-                    'icon' => 'receipt-tax',
+                    'icon' => 'receipt-percent',
                     'page' => VATSettingsPage::class,
                 ],
                 'product' => [
@@ -202,60 +227,8 @@ class DashedEcommerceCoreServiceProvider extends PluginServiceProvider
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
                 RecalculatePurchasesCommand::class,
                 CancelOldOrders::class,
+                SendInvoices::class,
+                UpdateProductInformations::class,
             ]);
-    }
-
-    //    protected function getStyles(): array
-    //    {
-    //        return array_merge(parent::getStyles(), [
-    //            'dashed-ecommerce-core' => str_replace('/vendor/dashed/dashed-ecommerce-core/src', '', str_replace('/packages/dashed/dashed-ecommerce-core/src', '', __DIR__)) . '/vendor/dashed/dashed-ecommerce-core/resources/dist/css/dashed-ecommerce-core.css',
-    //        ]);
-    //    }
-
-    protected function getPages(): array
-    {
-        return array_merge(parent::getPages(), [
-            InvoiceSettingsPage::class,
-            OrderSettingsPage::class,
-            CheckoutSettingsPage::class,
-            ProductSettingsPage::class,
-            VATSettingsPage::class,
-            ExportInvoicesPage::class,
-            ExportOrdersPage::class,
-            ExportProductsPage::class,
-            RevenueStatisticsPage::class,
-            ProductStatisticsPage::class,
-            DiscountStatisticsPage::class,
-        ]);
-    }
-
-    protected function getResources(): array
-    {
-        return array_merge(parent::getResources(), [
-            PaymentMethodResource::class,
-            ShippingClassResource::class,
-            ShippingZoneResource::class,
-            ShippingMethodResource::class,
-            DiscountCodeResource::class,
-            ProductResource::class,
-            ProductCategoryResource::class,
-            ProductFilterResource::class,
-            ProductFilterOptionResource::class,
-            ProductCharacteristicResource::class,
-            OrderResource::class,
-        ]);
-    }
-
-    protected function getWidgets(): array
-    {
-        return array_merge(parent::getWidgets(), [
-            MonthlyRevenueAndReturnLineChartStats::class,
-            DailyRevenueStats::class,
-            MonthlyRevenueStats::class,
-            YearlyRevenueStats::class,
-            AlltimeRevenueStats::class,
-            PaymentMethodPieChartWidget::class,
-            DashboardFunLineChartStats::class,
-        ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
@@ -12,6 +13,13 @@ class CreateShippingZone extends CreateRecord
     use Translatable;
 
     protected static string $resource = ShippingZoneResource::class;
+
+    protected function getActions(): array
+    {
+        return [
+            LocaleSwitcher::make(),
+        ];
+    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {

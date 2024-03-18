@@ -15,7 +15,7 @@ class Toastr extends Component
 
     public function showAlert(string $type, string $message)
     {
-        $this->dispatchBrowserEvent(
+        $this->dispatch(
             'alert',
             [
                 'type' => $type,

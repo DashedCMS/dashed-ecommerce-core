@@ -2,9 +2,9 @@
 @php($data = $this->getData())
 <x-filament::card class="col-span-full">
     <div class="flex items-center justify-between gap-8">
-        <x-filament::card.heading>
+{{--        <x-filament::card.heading>--}}
             {{ $this->getHeading() }}
-        </x-filament::card.heading>
+{{--        </x-filament::card.heading>--}}
 
         @if ($filters = $this->getFilters())
             <select
@@ -20,7 +20,7 @@
         @endif
     </div>
 
-    <x-filament::hr />
+    <hr />
 
     <div>
         @php($id = 'chart' . rand(1000,10000))

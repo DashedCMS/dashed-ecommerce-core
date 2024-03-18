@@ -1,53 +1,53 @@
-<form wire:submit.prevent="addToCart">
+<form wire:submit="addToCart">
     @if($filters)
-        <div class="max-w-sm">
-            @foreach($filters as $filter)
+        <div class="">
+            @foreach($filters as $filterKey => $filter)
                 @if($filter['correctFilterOptions'] > 1)
                     <label for="filter-{{$filter['id']}}"
-                           class="block text-sm font-medium text-primary mt-4">
-                        {{$filter['name']}}:
+                           class="inline-block text-sm mb-2">
+                        {{$filter['name']}}
                     </label>
                     <select
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-primary-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                        class="form-input"
                         id="filter-{{$filter['id']}}"
-                        onchange="$(this).val() ? window.location = $(this).val() : ''">
-                        @foreach($filter['values'] as $option)
-                            @if($option['url'])
-                                <option value="{{$option['url']}}"
-                                        @if(!$option['url']) disabled @endif
-                                        @if($option['active']) selected @endif
-                                >
-                                    {{$option['name']}}
-                                    @if($option['url'])
-                                        @if($option['in_stock'])
-                                            ({{Translation::get('product-out-of-stock', 'product', 'In stock')}})
-                                        @elseif(!$option['in_stock'])
-                                            ({{Translation::get('product-out-of-stock', 'product', 'Out of stock')}})
-                                        @endif
-                                    @elseif(!$option['url'])
-                                        ({{Translation::get('product-unavailable', 'product', 'Unavailable')}})
+                        wire:model="filters.{{$filterKey}}.active"
+                        wire:change="checkFilters"
+                    @foreach($filter['values'] as $option)
+                        @if($option['url'])
+                            <option value="{{ $option['value'] }}"
+                                    @if(!$option['url']) disabled @endif
+                            >
+                                {{$option['name']}}
+                                @if($option['url'])
+                                    @if($option['in_stock'])
+                                        ({{Translation::get('product-in-of-stock', 'product', 'In stock')}})
+                                    @elseif(!$option['in_stock'])
+                                        ({{Translation::get('product-out-of-stock', 'product', 'Out of stock')}})
                                     @endif
-                                </option>
+                                @elseif(!$option['url'])
+                                    ({{Translation::get('product-unavailable', 'product', 'Unavailable')}})
+                                @endif
+                            </option>
                             @endif
-                        @endforeach
-                    </select>
-                @endif
-            @endforeach
+                            @endforeach
+                            </select>
+                        @endif
+                    @endforeach
         </div>
     @endif
-    @if($extras)
-        <div class="max-w-sm">
-            @foreach($extras as $extraKey => $extra)
+    @if($productExtras)
+        <div class="">
+            @foreach($productExtras as $extraKey => $extra)
                 @if($extra->type == 'single')
                     <label for="product-extra-{{$extra->id}}"
-                           class="block text-sm font-medium text-primary mt-4">
-                        {{$extra->name}}{{$extra->required ? '*' : ''}}:
+                           class="inline-block text-sm mb-2">
+                        {{$extra->name}}{{$extra->required ? '*' : ''}}
                     </label>
                     <select
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-primary-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                        class="form-input"
                         id="product-extra-{{$extra->id}}"
                         name="product-extra-{{$extra->id}}"
-                        wire:model="extras.{{ $extraKey }}.value"
+                        wire:model.live="extras.{{ $extraKey }}.value"
                         @if($extra->required) required @endif
                     >
                         <option value="">{{Translation::get('make-a-choice', 'product', 'Make a choice')}}</option>
@@ -75,7 +75,7 @@
                                            id="product-extra-{{$option->id}}"
                                            name="product-extra-{{$option->id}}"
                                            value="{{$option->id}}"
-                                           wire:model="extras.{{ $extraKey }}.value">
+                                           wire:model.live="extras.{{ $extraKey }}.value">
                                 </div>
                                 <div class="ml-3 text-sm leading-6">
                                     <label for="product-extra-{{$option->id}}"
@@ -103,7 +103,7 @@
                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-primary-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
                                    id="product-extra-{{$extra->id}}"
                                    name="product-extra-{{$extra->id}}"
-                                   wire:model.debounce.500ms="extras.{{ $extraKey }}.value">
+                                   wire:model.live.debounce.500ms="extras.{{ $extraKey }}.value">
                         </div>
                     </div>
                 @elseif($extra->type == 'file')
@@ -118,19 +118,19 @@
                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-primary-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
                                    id="product-extra-{{$extra->id}}"
                                    name="product-extra-{{$extra->id}}"
-                                   wire:model="files.{{ $extra->id }}.value">
+                                   wire:model.live="files.{{ $extra->id }}.value">
                         </div>
                     </div>
                 @endif
             @endforeach
         </div>
     @endif
-    <div class="mt-4 grid gap-4 max-w-sm">
+    <div class="mt-4 grid gap-4">
         @if($product->inStock())
             <button type="submit"
-                    class="h-10 w-full text-base button button-white-on-primary">{{Translation::get('add-to-cart', 'product', 'Add to cart')}}</button>
+                    class="w-full button button--dark">{{Translation::get('add-to-cart', 'product', 'Add to cart')}}</button>
         @else
-            <div class="h-10 w-full text-base button button-white-on-primary pointer-events-none">
+            <div class="w-full button button--light pointer-events-none">
                 {{Translation::get('add-to-cart', 'product', 'Add to cart')}}
             </div>
         @endif

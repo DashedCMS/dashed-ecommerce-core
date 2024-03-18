@@ -1,4 +1,3 @@
-@livewireStyles
 @if(env('APP_ENV') != 'local')
     @if(isset($order) && $order->isPaidFor() && ((Customsetting::get('google_analytics_id') || Customsetting::get('google_tagmanager_id'))))
         @php($productsPurchasedLoopCount = 0)

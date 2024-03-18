@@ -4,18 +4,30 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 
 class ShowProduct extends Component
 {
-    public Product $product;
-    public $characteristics;
-    public $suggestedProducts;
+    use ProductCartActions;
 
     public function mount(Product $product)
     {
-        $this->product = $product;
-        $this->characteristics = $product->showableCharacteristics();
-        $this->suggestedProducts = $product->getSuggestedProducts();
+        $this->originalProduct = $product;
+
+        $this->fillInformation(true);
+    }
+
+    public function updated()
+    {
+        $this->fillInformation();
+    }
+
+    public function rules()
+    {
+        return [
+            'extras.*.value' => ['nullable'],
+            'files.*' => ['nullable', 'file'],
+        ];
     }
 
     public function render()

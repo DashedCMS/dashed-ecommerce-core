@@ -5,18 +5,15 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Filament\Forms\Concerns\InteractsWithForms;
 
-class InvoiceSettingsPage extends Page implements HasForms
+class InvoiceSettingsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-document-report';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Facturatie instellingen';
@@ -24,6 +21,8 @@ class InvoiceSettingsPage extends Page implements HasForms
     protected static ?string $title = 'Facturatie instellingen';
 
     protected static string $view = 'dashed-core::settings.pages.default-settings';
+
+    public array $data = [];
 
     public function mount(): void
     {
@@ -65,9 +64,6 @@ class InvoiceSettingsPage extends Page implements HasForms
                 TextInput::make("invoice_id_replacement_{$site['id']}")
                     ->label('Invoice ID replacement')
                     ->maxLength(25)
-                    ->rules([
-                        'max:25',
-                    ])
                     ->helperText('Gebruik * voor een random getal / letter, bijv: *****')
                     ->reactive()
                     ->columnSpan([
@@ -78,9 +74,7 @@ class InvoiceSettingsPage extends Page implements HasForms
                 TextInput::make("current_invoice_number_{$site['id']}")
                     ->label('Huidige factuurnummer')
                     ->type('number')
-                    ->rules([
-                        'numeric',
-                    ])
+                    ->numeric()
                     ->helperText('Alleen numeriek')
                     ->reactive()
                     ->columnSpan([
@@ -90,17 +84,11 @@ class InvoiceSettingsPage extends Page implements HasForms
                     ->hidden(fn ($get) => $get("random_invoice_number_{$site['id']}")),
                 TextInput::make("invoice_id_prefix_{$site['id']}")
                     ->label('Voorvoegsel')
-                    ->maxLength(5)
-                    ->rules([
-                        'max:5',
-                    ]),
+                    ->maxLength(5),
                 TextInput::make("invoice_id_suffix_{$site['id']}")
                     ->label('Achtervoegsel')
                     ->reactive()
-                    ->maxLength(5)
-                    ->rules([
-                        'max:5',
-                    ]),
+                    ->maxLength(5),
                 Placeholder::make("invoice_id_example_{$site['id']}")
                     ->label("Voorbeeld van factuur ID")
                     ->content('QC#*****QC of QC#1001QC')
@@ -124,6 +112,11 @@ class InvoiceSettingsPage extends Page implements HasForms
         return $tabGroups;
     }
 
+    public function getFormStatePath(): ?string
+    {
+        return 'data';
+    }
+
     public function submit()
     {
         $sites = Sites::getSites();
@@ -140,6 +133,9 @@ class InvoiceSettingsPage extends Page implements HasForms
             }
         }
 
-        $this->notify('success', 'De facturatie instellingen zijn opgeslagen');
+        Notification::make()
+            ->title('De facturatie instellingen zijn opgeslagen')
+            ->success()
+            ->send();
     }
 }

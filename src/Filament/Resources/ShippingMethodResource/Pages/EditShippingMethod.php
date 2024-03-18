@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
 
+use Filament\Actions\DeleteAction;
+use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
@@ -12,6 +14,14 @@ class EditShippingMethod extends EditRecord
     use Translatable;
 
     protected static string $resource = ShippingMethodResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            LocaleSwitcher::make(),
+            DeleteAction::make(),
+        ];
+    }
 
     public function afterFill(): void
     {

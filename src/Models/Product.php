@@ -18,6 +18,7 @@ use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 
 class Product extends Model
@@ -37,11 +38,15 @@ class Product extends Model
         'search_terms',
         'content',
         'images',
+        'productCharacteristics',
+        'productExtras',
     ];
 
     protected $with = [
         'productFilters',
         'parent',
+//        'bundleProducts',
+//        'childProducts',
     ];
 
     protected $casts = [
@@ -62,7 +67,7 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
-            Cache::tags(['products', 'product-' . $product->id])->flush();
+            Cache::tags(['product-' . $product->id])->flush();
             if ($product->parent) {
                 Cache::tags(['product-' . $product->parent->id])->flush();
                 foreach ($product->parent->childProducts as $childProduct) {
@@ -75,6 +80,8 @@ class Product extends Model
                 $product->save();
                 $product->bundleProducts()->detach();
             }
+
+            UpdateProductInformationJob::dispatch($product);
         });
 
         static::deleting(function ($product) {
@@ -104,12 +111,14 @@ class Product extends Model
         $query->where(function ($query) use ($search) {
             $loop = 1;
             foreach (self::getTranslatableAttributes() as $attribute) {
-                if ($loop == 1) {
-                    $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
-                } else {
-                    $query->orWhereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
+                if (! method_exists($this, $attribute)) {
+                    if ($loop == 1) {
+                        $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
+                    } else {
+                        $query->orWhereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
+                    }
+                    $loop++;
                 }
-                $loop++;
             }
         });
     }
@@ -240,23 +249,12 @@ class Product extends Model
         return array_reverse($breadcrumbs);
     }
 
-    public function getTotalPurchasesAttribute()
-    {
-        $purchases = $this->purchases;
-
-        foreach ($this->childProducts as $childProduct) {
-            $purchases = $purchases + $childProduct->purchases;
-        }
-
-        return $purchases;
-    }
-
     public function getCurrentPriceAttribute()
     {
         if ($this->is_bundle && $this->use_bundle_product_price) {
             return $this->bundleProducts()->sum('price');
         } elseif ($this->childProducts()->count()) {
-            return $this->childProducts()->orderBy('price', 'ASC')->first()->price;
+            return $this->childProducts()->orderBy('price', 'ASC')->value('price');
         } else {
             return $this->price;
         }
@@ -267,7 +265,7 @@ class Product extends Model
         if ($this->is_bundle && $this->use_bundle_product_price) {
             return $this->bundleProducts()->sum('new_price');
         } elseif ($this->childProducts()->count()) {
-            return $this->childProducts()->orderBy('price', 'ASC')->first()->new_price;
+            return $this->childProducts()->orderBy('price', 'ASC')->value('new_price');
         } else {
             if ($this->new_price) {
                 return $this->new_price;
@@ -299,28 +297,30 @@ class Product extends Model
 
     public function getUrl($locale = null)
     {
-        if (! $locale) {
-            $locale = App::getLocale();
-        }
+        return Cache::tags(['product-' . $this->id])->remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
+            if (! $locale) {
+                $locale = App::getLocale();
+            }
 
-        if ($this->childProducts()->count()) {
-            foreach ($this->childProducts as $childProduct) {
-                if ($childProduct->inStock() && ! isset($url)) {
-                    $url = $childProduct->getUrl();
+            if (! Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
+                foreach ($this->childProducts as $childProduct) {
+                    if ($childProduct->inStock() && ! isset($url)) {
+                        $url = $childProduct->getUrl();
+                    }
                 }
+                if (! isset($url)) {
+                    $url = $this->childProducts()->first()->getUrl();
+                }
+            } else {
+                $url = '/' . Translation::get('products-slug', 'slug', 'products') . '/' . $this->slug;
             }
-            if (! isset($url)) {
-                $url = $this->childProducts()->first()->getUrl();
+
+            if ($locale != config('app.locale')) {
+                $url = App::getLocale() . '/' . $url;
             }
-        } else {
-            $url = '/' . Translation::get('products-slug', 'slug', 'products') . '/' . $this->slug;
-        }
 
-        if ($locale != config('app.locale')) {
-            $url = App::getLocale() . '/' . $url;
-        }
-
-        return LaravelLocalization::localizeUrl($url);
+            return LaravelLocalization::localizeUrl($url);
+        });
     }
 
     public function getStatusAttribute()
@@ -383,6 +383,7 @@ class Product extends Model
         return $result;
     }
 
+    //Only used for old method/style
     public function filters()
     {
         $parentProduct = $this->parent;
@@ -429,6 +430,7 @@ class Product extends Model
                         'name' => $filterName,
                         'order' => $activeFilterOptions[0]->order,
                         'activeFilterOptionIds' => $activeFilterOptionIds,
+                        'value' => implode('-', $activeFilterOptionIds),
                         'active' => $this->id == $childProduct->id,
                         'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
                         'productId' => ($this->id == $childProduct->id) ? $this->id : '',
@@ -441,6 +443,7 @@ class Product extends Model
                             'id' => $activeFilter->id,
                             'name' => $filterName,
                             'activeFilterOptionIds' => $activeFilterOptionIds,
+                            'value' => implode('-', $activeFilterOptionIds),
                             'active' => $this->id == $childProduct->id,
                             'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
                             'productId' => ($this->id == $childProduct->id) ? $this->id : '',
@@ -448,6 +451,8 @@ class Product extends Model
                             'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
                             'isPreOrder' => ($this->id == $childProduct->id) ? ($this->isPreorderable()) : false,
                         ];
+
+                        $activeFilterValue = implode('-', $activeFilterOptionIds);
                     }
                 }
             }
@@ -455,7 +460,10 @@ class Product extends Model
             $showableFilters[] = [
                 'id' => $activeFilter->id,
                 'name' => $activeFilter->name,
+                'active' => $activeFilterValue ?? null,
+                'defaultActive' => $activeFilterValue ?? null,
                 'values' => $filterOptionValues,
+                'contentBlocks' => $activeFilter->contentBlocks,
             ];
         }
 
@@ -510,6 +518,74 @@ class Product extends Model
         return $showableFilters;
     }
 
+    public function simpleFilters(): array
+    {
+        $filters = [];
+
+        foreach ($this->activeProductFilters as $filter) {
+            $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
+
+            if (count($filterOptions)) {
+                foreach($filterOptions as &$filterOption) {
+                    $filterOption['name'] = $filterOption['name'][App::getLocale()] ?? $filterOption['name'][0];
+                }
+
+                $filters[] = [
+                    'id' => $filter->id,
+                    'name' => $filter['name'],
+                    'options' => $filterOptions,
+                    'active' => null,
+                ];
+            }
+        }
+
+        return $filters;
+    }
+
+    public function possibleVariations(): array
+    {
+        $variations = [];
+
+        $activeFilters = $this->activeProductFiltersForVariations;
+
+        foreach ($activeFilters as $filter) {
+            $variations[$filter->id] = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->pluck('id');
+        }
+
+        return $this->getCombinations($variations);
+    }
+
+    public function missingVariations(): array
+    {
+        $variations = $this->possibleVariations();
+
+        foreach ($variations as $variationKey => $variation) {
+            if ($this->variationExists($variation)) {
+                unset($variations[$variationKey]);
+            }
+        }
+
+        return $variations;
+    }
+
+    public function variationExists(array $array): bool
+    {
+        foreach ($this->childProducts as $childProduct) {
+            $arrayToCheck = &$array;
+            foreach ($childProduct->productFilters as $filter) {
+                $key = array_search($filter->pivot->product_filter_option_id, $arrayToCheck);
+                if ($key !== false) {
+                    unset($arrayToCheck[$key]);
+                }
+            }
+            if (count($arrayToCheck) == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function reservedStock()
     {
         return OrderProduct::where('product_id', $this->id)->whereIn('order_id', Order::whereIn('status', ['pending'])->pluck('id'))->count();
@@ -517,33 +593,38 @@ class Product extends Model
 
     public function stock()
     {
+        return $this->total_stock;
+    }
+
+    public function calculateStock()
+    {
+        $stock = 0;
+
         if ($this->is_bundle) {
             $minStock = 100000;
-            //            return $minStock;
-
             foreach ($this->bundleProducts as $bundleProduct) {
-                //                dump($bundleProduct);
                 if ($bundleProduct->stock() < $minStock) {
                     $minStock = $bundleProduct->stock();
                 }
             }
 
-            //            dd($minStock);
-
-            return $minStock;
+            $stock = $minStock;
         } elseif ($this->use_stock) {
             if ($this->outOfStockSellable()) {
-                return 100000;
+                $stock = 100000;
             } else {
-                return $this->stock - $this->reservedStock();
+                $stock = $this->stock - $this->reservedStock();
             }
         } else {
             if ($this->stock_status == 'in_stock') {
-                return 100000;
+                $stock = 100000;
             } else {
-                return 0;
+                $stock = 0;
             }
         }
+
+        $this->total_stock = $stock;
+        $this->saveQuietly();
     }
 
     public function hasDirectSellableStock()
@@ -588,8 +669,15 @@ class Product extends Model
         }
     }
 
-    public function inStock()
+    public function inStock(): bool
     {
+        return $this->in_stock;
+    }
+
+    public function calculateInStock(): void
+    {
+        $inStock = false;
+
         if ($this->is_bundle) {
             $allBundleProductsInStock = true;
 
@@ -599,30 +687,43 @@ class Product extends Model
                 }
             }
 
-            return $allBundleProductsInStock;
+            $inStock = $allBundleProductsInStock;
         } elseif ($this->childProducts()->count()) {
             foreach ($this->childProducts as $childProduct) {
                 if ($childProduct->inStock()) {
-                    return true;
+                    $inStock = true;
                 }
             }
         } else {
             if ($this->type == 'simple') {
-                return $this->stock() > 0;
+                $inStock = $this->stock() > 0;
             } elseif ($this->type == 'variable') {
                 if ($this->parent) {
-                    return $this->stock() > 0;
+                    $inStock = $this->stock() > 0;
                 } else {
                     foreach ($this->childProducts() as $childProduct) {
                         if ($childProduct->inStock()) {
-                            return true;
+                            $inStock = true;
                         }
                     }
                 }
             }
         }
 
-        return false;
+        $this->in_stock = $inStock;
+        $this->saveQuietly();
+    }
+
+    public function calculateTotalPurchases(): void
+    {
+        $purchases = $this->purchases;
+
+        foreach ($this->childProducts as $childProduct) {
+            $purchases = $purchases + $childProduct->purchases;
+        }
+
+        $this->total_purchases = $purchases;
+        $this->saveQuietly();
     }
 
     public function outOfStockSellable()
@@ -712,10 +813,12 @@ class Product extends Model
 
     public function productFilters()
     {
-        //        return Cache::tags(["product-$this->id"])->rememberForever("product-filters-" . $this->id, function () {
-        //            return $this->productFiltersRelation();
-        //        });
         return $this->belongsToMany(ProductFilter::class, 'dashed__product_filter')->orderBy('created_at')->withPivot(['product_filter_option_id']);
+    }
+
+    public function enabledProductFilterOptions()
+    {
+        return $this->belongsToMany(ProductFilter::class, 'dashed__product_enabled_filter_options')->withPivot(['product_filter_option_id']);
     }
 
     public function activeProductFilters()
@@ -837,7 +940,7 @@ class Product extends Model
 
     public function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
     {
-        if($discountCode && is_string($discountCode)) {
+        if ($discountCode && is_string($discountCode)) {
             $discountCode = null;
         }
 

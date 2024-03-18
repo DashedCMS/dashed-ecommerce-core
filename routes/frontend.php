@@ -8,17 +8,17 @@ use Dashed\DashedCore\Middleware\FrontendMiddleware;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 
-if (!app()->runningInConsole()) {
-    //Exchange routes
-    Route::get('/' . config('filament.path') . '/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
-    Route::post('/' . config('filament.path') . '/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
-}
+//Exchange routes
+Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
+Route::post('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange.post');
+Route::get('/dashed/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.dashed.exchange');
+Route::post('/dashed/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.dashed.exchange.post');
 
 Route::group(
     [

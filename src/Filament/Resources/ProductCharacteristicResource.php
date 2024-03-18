@@ -2,16 +2,20 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\BooleanColumn;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\EditProductCharacteristic;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\Pages\ListProductCharacteristic;
@@ -44,65 +48,26 @@ class ProductCharacteristicResource extends Resource
         return $form
             ->schema(
                 [
-                    Grid::make([
-                        'default' => 1,
-                        'sm' => 1,
-                        'md' => 1,
-                        'lg' => 1,
-                        'xl' => 1,
-                        '2xl' => 1,
-                    ])->schema(
-                        [
-                            Section::make('Content')
-                                ->schema(
-                                    array_merge([
-                                        TextInput::make('name')
-                                            ->label('Naam')
-                                            ->required()
-                                            ->maxLength(100)
-                                            ->rules([
-                                                'max:100',
-                                            ])->columnSpan([
-                                                'default' => 2,
-                                                'sm' => 2,
-                                                'md' => 2,
-                                                'lg' => 2,
-                                                'xl' => 1,
-                                                '2xl' => 1,
-                                            ]),
-                                        TextInput::make('order')
-                                            ->label('Volgorde')
-                                            ->numeric()
-                                            ->required()
-                                            ->default(1)
-                                            ->minLength(1)
-                                            ->maxLength(100)
-                                            ->rules([
-                                                'numeric',
-                                                'required',
-                                                'min:1',
-                                                'max:100',
-                                            ])->columnSpan([
-                                                'default' => 2,
-                                                'sm' => 2,
-                                                'md' => 2,
-                                                'lg' => 2,
-                                                'xl' => 1,
-                                                '2xl' => 1,
-                                            ]),
-                                        Toggle::make('hide_from_public')
-                                            ->label('Dit kenmerk verbergen op de website')
-                                            ->columnSpan([
-                                                'default' => 1,
-                                                'sm' => 1,
-                                                'md' => 1,
-                                                'lg' => 1,
-                                                'xl' => 1,
-                                                '2xl' => 1,
-                                            ]),
-                                    ])
-                                )->columns(2), ]
-                    ), ]
+                    Section::make('Content')
+                        ->schema(
+                            array_merge([
+                                TextInput::make('name')
+                                    ->label('Naam')
+                                    ->required()
+                                    ->maxLength(100),
+                                TextInput::make('order')
+                                    ->label('Volgorde')
+                                    ->numeric()
+                                    ->required()
+                                    ->default(1)
+                                    ->minLength(1)
+                                    ->maxLength(100),
+                                Toggle::make('hide_from_public')
+                                    ->label('Dit kenmerk verbergen op de website'),
+                            ])
+                        )
+                        ->columns(2),
+                ]
             );
     }
 
@@ -112,18 +77,31 @@ class ProductCharacteristicResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable()
+                    ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('order')
                     ->label('Volgorde')
-                    ->searchable()
                     ->sortable(),
-                BooleanColumn::make('hide_from_public')
-                    ->label('Verberg van website')
+                IconColumn::make('hide_from_public')
+                    ->label('Tonen op website')
+                    ->trueIcon('heroicon-o-eye-slash')
+                    ->trueColor('danger')
+                    ->falseIcon('heroicon-o-eye')
+                    ->falseColor('success')
                     ->sortable(),
             ])
             ->filters([
                 //
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

@@ -8,11 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Dashed\DashedCore\Models\Concerns\HasSearchScope;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 
 class ProductFilter extends Model
 {
     use HasTranslations;
     use LogsActivity;
+    use HasSearchScope;
+    use HasCustomBlocks;
 
     protected static $logFillable = true;
 
@@ -39,14 +43,6 @@ class ProductFilter extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
-    }
-
-    public function scopeSearch($query)
-    {
-        if (request()->get('search')) {
-            $search = strtolower(request()->get('search'));
-            $query->where('name', 'LIKE', "%$search%");
-        }
     }
 
     public function productFilterOptions()

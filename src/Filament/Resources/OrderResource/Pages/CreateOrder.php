@@ -3,12 +3,12 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
+use Filament\Forms\Get;
+use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
-use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
@@ -16,32 +16,28 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CreateOrder extends Page implements HasForms
+class CreateOrder extends Page
 {
-    use InteractsWithForms;
-
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
     protected static string $view = 'dashed-ecommerce-core::orders.create-order';
@@ -78,11 +74,17 @@ class CreateOrder extends Page implements HasForms
     public $invoice_country;
     public $note;
     public $discount_code;
+    public ?string $activeDiscountCode = '';
     public $orderProducts = [];
     public $shipping_method_id;
     public $payment_method_id;
     public $products = [];
     public $activatedProducts = [];
+
+    public function mount()
+    {
+        ShoppingCart::setInstance('handorder');
+    }
 
     protected function getActions(): array
     {
@@ -117,6 +119,25 @@ class CreateOrder extends Page implements HasForms
         return $products;
     }
 
+    public function getProductExtrasSchema(Product $product): array
+    {
+        $productExtras = [];
+
+        foreach ($product->allProductExtras() as $extra) {
+            $extraOptions = [];
+            foreach ($extra->ProductExtraOptions as $option) {
+                $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+            }
+
+            $productExtras[] = Select::make('extra.' . $extra['id'])
+                ->label($extra->name)
+                ->options($extraOptions)
+                ->required($extra['required']);
+        }
+
+        return $productExtras;
+    }
+
     protected function getFormSchema(): array
     {
         $schema = [];
@@ -137,7 +158,7 @@ class CreateOrder extends Page implements HasForms
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -145,7 +166,7 @@ class CreateOrder extends Page implements HasForms
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->nullable()
@@ -157,7 +178,8 @@ class CreateOrder extends Page implements HasForms
                     ->maxLength(255),
                 DatePicker::make('date_of_birth')
                     ->label('Geboortedatum')
-                    ->nullable(),
+                    ->nullable()
+                    ->date(),
                 Select::make('gender')
                     ->label('Geslacht')
                     ->options([
@@ -189,16 +211,16 @@ class CreateOrder extends Page implements HasForms
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn (\Closure $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('country')
@@ -220,26 +242,105 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
             ])
             ->columns(2);
+
+        $schema[] = Wizard\Step::make('Producten')
+            ->schema([
+                Repeater::make('products')
+                    ->label('Kies producten')
+                    ->helperText('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.')
+                    ->schema([
+                        Select::make('product')
+                            ->label('Kies product')
+                            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+                            ->searchable()
+                            ->reactive(),
+                        TextInput::make('quantity')
+                            ->label('Aantal')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0)
+                            ->maxValue(1000)
+                            ->default(0),
+                        Placeholder::make('Voorraad')
+                            ->content(fn (Get $get) => $get('product') ? Product::find($get('product'))->stock() : 'Kies een product'),
+                        Placeholder::make('Prijs')
+                            ->content(fn (Get $get) => $get('product') ? Product::find($get('product'))->currentPrice : 'Kies een product'),
+                        Placeholder::make('Afbeelding')
+                            ->content(fn (Get $get) => $get('product') ? new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', Product::find($get('product'))->firstImageUrl, []) . '">') : 'Kies een product'),
+                        Section::make('Extra\'s')
+                            ->schema(fn (Get $get) => $get('product') ? $this->getProductExtrasSchema(Product::find($get('product'))) : []),
+                    ]),
+            ])
+            ->columnSpan(2);
+
+        //        $productSchemas = [];
+        //
+        //        $productSchemas[] = Select::make('activatedProducts')
+        //            ->label('Kies producten')
+        //            ->helperText('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.')
+        //            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+        //            ->searchable()
+        //            ->multiple()
+        //            ->reactive();
+        //
+        //        foreach ($this->getAllProductsProperty() as $product) {
+        //            $productExtras = [];
+
+        //            foreach ($product['productExtras'] as $extra) {
+        //                $extraOptions = [];
+        //                foreach ($extra['product_extra_options'] ?? [] as $option) {
+        //                    $option = ProductExtraOption::find($option['id']);
+        //                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
+        //                }
+        //
+        //                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra['id'])
+        //                    ->label($extra['name'][array_key_first($extra['name'])])
+        //                    ->options($extraOptions)
+        //                    ->required($extra['required']);
+        //            }
+
+        //            $productSchemas[] = Section::make('Product ' . $product->name)
+        //                ->schema(array_merge([
+        //                    TextInput::make('products.' . $product->id . '.quantity')
+        //                        ->label('Aantal')
+        //                        ->numeric()
+        //                        ->required()
+        //                        ->minValue(0)
+        //                        ->maxValue(1000)
+        //                        ->default(0),
+        //                    Placeholder::make('Voorraad')
+        //                        ->content($product->stock()),
+        //                    Placeholder::make('Prijs')
+        //                        ->content($product->currentPrice),
+        //                    Placeholder::make('Afbeelding')
+        //                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
+        //                ], $productExtras))
+        //                ->visible(fn(Get $get) => in_array($product->id, $get('activatedProducts')));
+        //        }
+        //
+        //        $schema[] = Wizard\Step::make('Producten')
+        //            ->schema($productSchemas)
+        //            ->columnSpan(2);
 
         $schema[] = Wizard\Step::make('Overige informatie')
             ->schema([
@@ -250,67 +351,15 @@ class CreateOrder extends Page implements HasForms
                 TextInput::make('discount_code')
                     ->label('Kortingscode')
                     ->nullable()
-                    ->maxLength(255),
-            ]);
-
-        $productSchemas = [];
-
-        $productSchemas[] = Select::make('activatedProducts')
-            ->label('Kies producten')
-            ->options(Product::handOrderShowable()->pluck('name', 'id'))
-            ->searchable()
-            ->multiple()
-            ->reactive();
-
-        foreach ($this->getAllProductsProperty() as $product) {
-            $productExtras = [];
-
-            foreach ($product['productExtras'] as $extra) {
-                $extraOptions = [];
-                foreach ($extra->productExtraOptions as $option) {
-                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
-                }
-                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
-                    ->label($extra->name)
-                    ->options($extraOptions)
-                    ->required($extra->required);
-            }
-
-            $productSchemas[] = Section::make('Product ' . $product->name)
-                ->schema(array_merge([
-                    TextInput::make('products.' . $product->id . '.quantity')
-                        ->label('Aantal')
-                        ->numeric()
-                        ->required()
-                        ->minValue(0)
-                        ->maxValue(1000)
-                        ->default(0),
-                    Placeholder::make('Voorraad')
-                        ->content($product->stock()),
-                    Placeholder::make('Prijs')
-                        ->content($product->currentPrice),
-                    Placeholder::make('Afbeelding')
-                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
-                ], $productExtras))
-                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')));
-        }
-
-        $schema[] = Wizard\Step::make('Producten')
-            ->schema($productSchemas)
-            ->columnSpan(2);
-
-        $schema[] = Wizard\Step::make('Betaal & verzendmethode')
-            ->schema([
-                Select::make('payment_method_id')
-                    ->label('Betaalmethode')
-                    ->required()
-                    ->options(PaymentMethod::where('available_from_amount', '<', $this->totalUnformatted)->where('psp', 'own')->where('site_id', Sites::getActive())->where('active', 1)->pluck('name', 'id')->toArray()),
+                    ->maxLength(255)
+                    ->reactive(),
                 Select::make('shipping_method_id')
                     ->label('Verzendmethode')
                     ->required()
-                    ->options(collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray()),
-            ])
-            ->columns(2);
+                    ->options(function () {
+                        return collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray();
+                    }),
+            ]);
 
         $schema[] = Wizard\Step::make('Bestelling')
             ->schema([
@@ -326,333 +375,36 @@ class CreateOrder extends Page implements HasForms
 
         return [
             Wizard::make($schema)
-                ->submitAction(new HtmlString(Blade::render(<<<BLADE
+                ->submitAction(new HtmlString(Blade::render(
+                    <<<BLADE
     <x-filament::button
         type="submit"
         size="sm"
     >
         Bestelling aanmaken
     </x-filament::button>
-BLADE))),
+BLADE
+                ))),
         ];
-
-        //Old
-        $schema = [];
-
-        $schema[] = Section::make('Persoonlijke informatie')
-            ->schema([
-                Select::make('user_id')
-                    ->label('Hang de bestelling aan een gebruiker')
-                    ->options($this->users)
-                    ->searchable()
-                    ->reactive(),
-                Toggle::make('marketing')
-                    ->label('De klant accepteert marketing'),
-                TextInput::make('password')
-                    ->label('Wachtwoord')
-                    ->type('password')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                        'confirmed',
-                    ])
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
-                TextInput::make('password_confirmation')
-                    ->label('Wachtwoord herhalen')
-                    ->type('password')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->visible(fn (\Closure $get) => ! $get('user_id')),
-                TextInput::make('first_name')
-                    ->label('Voornaam')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('last_name')
-                    ->label('Achternaam')
-                    ->required()
-                    ->rules([
-                        'required',
-                        'min:6',
-                        'max:255',
-                    ]),
-                DatePicker::make('date_of_birth')
-                    ->label('Geboortedatum')
-                    ->rules([
-                        'nullable',
-                        'date',
-                    ]),
-                Select::make('gender')
-                    ->label('Geslacht')
-                    ->options([
-                        '' => 'Niet gekozen',
-                        'm' => 'Man',
-                        'f' => 'Vrouw',
-                    ]),
-                TextInput::make('email')
-                    ->label('Email')
-                    ->type('email')
-                    ->required()
-                    ->rules([
-                        'required',
-                        'email:rfc',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('phone_number')
-                    ->label('Telefoon nummer')
-                    ->rules([
-                        'max:255',
-                    ]),
-                TextInput::make('street')
-                    ->label('Straat')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->reactive(),
-                TextInput::make('house_nr')
-                    ->label('Huisnummer')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('zip_code')
-                    ->label('Postcode')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('city')
-                    ->label('Stad')
-                    ->required(fn (\Closure $get) => $get('street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('country')
-                    ->label('Land')
-                    ->required()
-                    ->rules([
-                        'required',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->reactive(),
-                TextInput::make('company_name')
-                    ->label('Bedrijfsnaam')
-                    ->rules([
-                        'max:255',
-                    ]),
-                TextInput::make('btw_id')
-                    ->label('BTW id')
-                    ->rules([
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_street')
-                    ->label('Factuur straat')
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ])
-                    ->reactive(),
-                TextInput::make('invoice_house_nr')
-                    ->label('Factuur huisnummer')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_zip_code')
-                    ->label('Factuur postcode')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_city')
-                    ->label('Factuur stad')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                TextInput::make('invoice_country')
-                    ->label('Factuur land')
-                    ->required(fn (\Closure $get) => $get('invoice_street'))
-                    ->rules([
-                        'nullable',
-                        'min:6',
-                        'max:255',
-                    ]),
-                Textarea::make('note')
-                    ->label('Notitie')
-                    ->rules([
-                        'nullable',
-                        'max:1500',
-                    ]),
-                TextInput::make('discount_code')
-                    ->label('Kortingscode')
-                    ->rules([
-                        'nullable',
-                        'max:255',
-                    ])
-                    ->reactive(),
-            ])
-            ->columns([
-                'default' => 1,
-                'lg' => 2,
-            ]);
-
-        $productSchemas = [];
-
-        //        $productSchemas[] = MultiSelect::make('activatedProducts')
-        //            ->label('Kies producten')
-        //            ->getSearchResultsUsing(fn (string $query) => $this->getSearchableProducts($query))
-        //            ->getOptionLabelsUsing(fn ($values): ?string => Product::find($values)->pluck('name'))
-        //            ->reactive();
-
-        $productSchemas[] = MultiSelect::make('activatedProducts')
-            ->label('Kies producten')
-            ->options(Product::handOrderShowable()->pluck('name', 'id'))
-            ->searchable()
-            ->reactive();
-
-        foreach ($this->getAllProductsProperty() as $product) {
-            $productExtras = [];
-
-            foreach ($product['productExtras'] as $extra) {
-                $extraOptions = [];
-                foreach ($extra->productExtraOptions as $option) {
-                    $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
-                }
-                $productExtras[] = Select::make('products.' . $product->id . '.extra.' . $extra->id)
-                    ->label($extra->name)
-                    ->options($extraOptions)
-                    ->reactive()
-                    ->required($extra->required);
-            }
-
-            $productSchemas[] = Section::make('Product ' . $product->name)
-                ->schema(array_merge([
-                    TextInput::make('products.' . $product->id . '.quantity')
-                        ->label('Aantal')
-                        ->type('number')
-                        ->required()
-                        ->minValue(0)
-                        ->maxValue(1000)
-                        ->default(0)
-                        ->rules([
-                            'required',
-                            'numeric',
-                            'min:1',
-                            'max:1000',
-                        ]),
-                    Placeholder::make('Voorraad')
-                        ->content($product->stock()),
-                    Placeholder::make('Prijs')
-                        ->content($product->currentPrice),
-                    Placeholder::make('Afbeelding')
-                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
-                ], $productExtras))
-                ->visible(fn (\Closure $get) => in_array($product->id, $get('activatedProducts')))
-                ->reactive();
-        }
-
-        $schema[] = Section::make('Producten')
-            ->schema($productSchemas)
-            ->columnSpan([
-                'default' => 1,
-                'lg' => 1,
-            ])
-            ->reactive();
-
-        $schema[] = Section::make('Overige informatie')
-            ->schema([
-                Select::make('payment_method_id')
-                    ->label('Betaalmethode')
-                    ->required()
-                    ->options(PaymentMethod::where('available_from_amount', '<', $this->totalUnformatted)->where('psp', 'own')->where('site_id', Sites::getActive())->where('active', 1)->pluck('name', 'id')->toArray()),
-                Select::make('shipping_method_id')
-                    ->label('Verzendmethode')
-                    ->required()
-                    ->options(collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray()),
-            ])
-            ->columns([
-                'default' => 1,
-                'lg' => 2,
-            ])
-            ->reactive();
-
-        $schema[] = Section::make('Bestelling')
-            ->schema([
-                Placeholder::make('')
-                    ->content('Subtotaal: ' . $this->subTotal),
-                Placeholder::make('')
-                    ->content('Korting: ' . $this->discount),
-                Placeholder::make('')
-                    ->content('BTW: ' . $this->vat),
-                Placeholder::make('')
-                    ->content('Totaal: ' . $this->total),
-            ]);
-
-        return $schema;
     }
 
-    //    public function updatedProducts($path, $value): void
-    //    {
-    //        $this->updateInfo();
-    //    }
-    //
-    //    public function updatedCountry($path, $value): void
-    //    {
-    //        $this->updateInfo();
-    //    }
-    //
-    //    public function updatedShippingMethodId($path, $value): void
-    //    {
-    //        $this->updateInfo();
-    //    }
-    //
-    //    public function updatedPaymentMethodId($path, $value): void
-    //    {
-    //        $this->updateInfo();
-    //    }
-    //
-    //    public function updatedDiscountCode($path, $value): void
-    //    {
-    //        $this->updateInfo();
-    //    }
-
-    public function updateInfo()
+    public function updateInfo($showNotification = true)
     {
+        ShoppingCart::setInstance('handorder');
+        ShoppingCart::emptyMyCart();
+
         $this->loading = true;
 
-        foreach (\Cart::instance('handorder')->content() as $row) {
-            \Cart::remove($row->rowId);
-        }
+        //        foreach (\Cart::instance('handorder')->content() as $row) {
+        //            \Cart::remove($row->rowId);
+        //        }
 
-        foreach ($this->getAllProductsProperty() as $product) {
-            if (($this->products[$product->id]['quantity'] ?? 0) > 0) {
+        foreach ($this->products as $chosenProduct) {
+            $product = Product::find($chosenProduct['product']);
+            if (($chosenProduct['quantity'] ?? 0) > 0) {
                 $productPrice = $product->getOriginal('price');
                 $options = [];
-                foreach ($this->products[$product->id]['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
+                foreach ($chosenProduct['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
                     if ($productExtraOptionId) {
                         $thisProductExtra = ProductExtra::find($productExtraId);
                         $thisOption = ProductExtraOption::find($productExtraOptionId);
@@ -668,60 +420,31 @@ BLADE))),
                     }
                 }
 
-                \Cart::add($product->id, $product->name, $this->products[$product->id]['quantity'], $productPrice, $options)->associate(Product::class);
+                \Cart::instance('handorder')->add($product->id, $product->name, $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
             }
         }
 
         if (! $this->discount_code) {
             session(['discountCode' => '']);
+            $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
             if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
+                $this->activeDiscountCode = null;
             } else {
                 session(['discountCode' => $discountCode->code]);
+
+                if ($this->activeDiscountCode != $discountCode->code) {
+                    $this->activeDiscountCode = $discountCode->code;
+                    $showNotification = false;
+
+                    Notification::make()
+                        ->title('Korting toegevoegd, klik nogmaals op "Gegevens bijwerken" om de korting toe te passen')
+                        ->success()
+                        ->send();
+                }
             }
-        }
-
-        $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
-
-        $this->totalUnformatted = $checkoutData['total'];
-
-        $this->discount = $checkoutData['discountFormatted'];
-        $this->vat = $checkoutData['btwFormatted'];
-        $this->subTotal = $checkoutData['subTotalFormatted'];
-        $this->total = $checkoutData['totalFormatted'];
-
-        $this->notify('success', 'Informatie bijgewerkt');
-        $this->loading = false;
-    }
-
-    public function submit()
-    {
-        $this->loading = true;
-        \Cart::instance('handorder')->content();
-        ShoppingCart::removeInvalidItems();
-
-        $cartItems = ShoppingCart::cartItems();
-
-        if (! $cartItems) {
-            $this->notify('error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
-
-            return;
-        }
-
-        $paymentMethods = ShoppingCart::getPaymentMethods();
-        $paymentMethod = '';
-        foreach ($paymentMethods as $thisPaymentMethod) {
-            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
-                $paymentMethod = $thisPaymentMethod;
-            }
-        }
-
-        if (! $paymentMethod) {
-            $this->notify('error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
-
-            return;
         }
 
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
@@ -733,7 +456,84 @@ BLADE))),
         }
 
         if (! $shippingMethod) {
-            $this->notify('error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
+            $this->shipping_method_id = null;
+        }
+
+        $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
+
+        $this->totalUnformatted = $checkoutData['total'];
+
+        $this->discount = $checkoutData['discountFormatted'];
+        $this->vat = $checkoutData['btwFormatted'];
+        $this->subTotal = $checkoutData['subTotalFormatted'];
+        $this->total = $checkoutData['totalFormatted'];
+
+        if ($showNotification) {
+            Notification::make()
+                ->title('Informatie bijgewerkt')
+                ->success()
+                ->send();
+        }
+        $this->loading = false;
+    }
+
+    public function submit()
+    {
+        $this->updateInfo(false);
+        $this->loading = true;
+        \Cart::instance('handorder')->content();
+        ShoppingCart::removeInvalidItems();
+
+        $cartItems = ShoppingCart::cartItems();
+        //        ray($cartItems);
+        $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
+        //        ray($checkoutData);
+
+        if (! $cartItems) {
+            Notification::make()
+                ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        //        $paymentMethods = ShoppingCart::getPaymentMethods();
+        //        $paymentMethod = '';
+        //        foreach ($paymentMethods as $thisPaymentMethod) {
+        //            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
+        //                $paymentMethod = $thisPaymentMethod;
+        //            }
+        //        }
+
+        //        if (!$paymentMethod) {
+        //            Notification::make()
+        //                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
+        //                ->danger()
+        //                ->send();
+        //
+        //            return;
+        //        }
+
+        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        ray($shippingMethods);
+        $shippingMethod = '';
+        foreach ($shippingMethods as $thisShippingMethod) {
+            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
+                $shippingMethod = $thisShippingMethod;
+            }
+        }
+
+        if (! $shippingMethod) {
+            ray($this->shipping_method_id);
+            //            Notification::make()
+            //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
+            //                ->danger()
+            //                ->send();
+            Notification::make()
+                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+                ->danger()
+                ->send();
 
             return;
         }
@@ -746,14 +546,20 @@ BLADE))),
         } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
-            $this->notify('error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
+            Notification::make()
+                ->title(Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))
+                ->danger()
+                ->send();
 
             return;
         }
 
         if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
-                $this->notify('error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
+                Notification::make()
+                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
+                    ->danger()
+                    ->send();
 
                 return;
             }
@@ -789,12 +595,16 @@ BLADE))),
         $order->invoice_country = $this->invoice_country;
         $order->invoice_id = 'PROFORMA';
 
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id']);
-        $discount = ShoppingCart::totalDiscount();
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id']);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id']);
+        session(['discountCode' => $this->discount_code]);
+        //        ray($this->discount_code);
+        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? null);
+        $discount = ShoppingCart::totalDiscount(false, $this->discount_code);
+        //        ray($discount);
+        $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
+        $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $shippingCosts = 0;
         $paymentCosts = 0;
+        //        ray('ss');
 
         if ($shippingMethod->costs > 0) {
             $shippingCosts = $shippingMethod->costs;
@@ -893,45 +703,45 @@ BLADE))),
             $order->save();
         }
 
-        $orderPayment = new OrderPayment();
-        $orderPayment->amount = $order->total;
-        $orderPayment->order_id = $order->id;
-        if ($paymentMethod) {
-            $psp = $paymentMethod['psp'];
-        } else {
-            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
-                if ($ecommercePSP['class']::isConnected()) {
-                    $psp = $pspId;
-                }
-            }
-        }
+        //        $orderPayment = new OrderPayment();
+        //        $orderPayment->amount = $order->total;
+        //        $orderPayment->order_id = $order->id;
+        //        if ($paymentMethod) {
+        //            $psp = $paymentMethod['psp'];
+        //        } else {
+        //            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
+        //                if ($ecommercePSP['class']::isConnected()) {
+        //                    $psp = $pspId;
+        //                }
+        //            }
+        //        }
 
-        $orderPayment->psp = $psp;
-        $depositAmount = 0;
+        //        $orderPayment->psp = $psp;
+        //        $depositAmount = 0;
 
-        if (! $paymentMethod) {
-            $orderPayment->payment_method = $psp;
-        } elseif ($orderPayment->psp == 'own') {
-            $orderPayment->payment_method_id = $paymentMethod['id'];
-
-            if ($depositAmount > 0.00) {
-                $orderPayment->amount = $depositAmount;
-                //                $orderPayment->psp = $depositPaymentMethod['psp'];
-                //                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
-
-                $order->has_deposit = true;
-                $order->save();
-            } else {
-                $orderPayment->amount = 0;
-                $orderPayment->status = 'paid';
-            }
-        } else {
-            $orderPayment->payment_method = $paymentMethod['name'];
-            $orderPayment->payment_method_id = $paymentMethod['id'];
-        }
-
-        $orderPayment->save();
-        $orderPayment->refresh();
+        //        if (!$paymentMethod) {
+        //            $orderPayment->payment_method = $psp;
+        //        } elseif ($orderPayment->psp == 'own') {
+        //            $orderPayment->payment_method_id = $paymentMethod['id'];
+        //
+        //            if ($depositAmount > 0.00) {
+        //                $orderPayment->amount = $depositAmount;
+        //                //                $orderPayment->psp = $depositPaymentMethod['psp'];
+        //                //                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
+        //
+        //                $order->has_deposit = true;
+        //                $order->save();
+        //            } else {
+        //                $orderPayment->amount = 0;
+        //                $orderPayment->status = 'paid';
+        //            }
+        //        } else {
+        //            $orderPayment->payment_method = $paymentMethod['name'];
+        //            $orderPayment->payment_method_id = $paymentMethod['id'];
+        //        }
+        //
+        //        $orderPayment->save();
+        //        $orderPayment->refresh();
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
@@ -939,35 +749,19 @@ BLADE))),
         $orderLog->tag = 'order.created.by.admin';
         $orderLog->save();
 
-        if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
-            $newPaymentStatus = 'waiting_for_confirmation';
-            $order->changeStatus($newPaymentStatus);
+        //        if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
+        $newPaymentStatus = 'waiting_for_confirmation';
+        $order->changeStatus($newPaymentStatus);
 
-            return redirect(url(route('filament.resources.orders.view', [$order])));
-        } else {
-            try {
-                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
-            } catch (\Exception $exception) {
-                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
-            }
-
-            return redirect($transaction['redirectUrl'], 303);
-        }
-
-        //        if ($paymentMethod['system'] == 'own' && $orderPayment->status == 'paid') {
-        //            $newStatus = 'waiting_for_confirmation';
-        //            $order->changeStatus($newStatus);
-        //            return redirect(route('dashed.orders.edit', [$order]));
-        //        } elseif ($paymentMethod['system'] == 'mollie' || (Mollie::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
-        //            $transaction = Mollie::startTransaction($order, $orderPayment);
-        //
-        //            return redirect($transaction->getCheckoutUrl(), 303);
-        //        } elseif ($paymentMethod['system'] == 'paynl' || (PayNL::isConnected() && $paymentMethod['system'] == 'own' && $orderPayment->status == 'pending')) {
-        //            $transaction = PayNL::startTransaction($order, $orderPayment);
-        //
-        //            return redirect($transaction->getRedirectUrl(), 303);
+        return redirect(url(route('filament.dashed.resources.orders.view', [$order])));
         //        } else {
-        //            throw new \Exception('Cannot start payment');
+        //            try {
+        //                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
+        //            } catch (\Exception $exception) {
+        //                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
+        //            }
+        //
+        //            return redirect($transaction['redirectUrl'], 303);
         //        }
     }
 }

@@ -10,8 +10,6 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class AlltimeRevenueStats extends StatsOverviewWidget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
-
     protected function getCards(): array
     {
         $statistics = Cache::remember('all-time-revenue-stats', 60 * 60, function () {
@@ -39,26 +37,14 @@ class AlltimeRevenueStats extends StatsOverviewWidget
         });
 
         return [
-            [
-                'name' => 'Aantal bestellingen (altijd)',
-                'number' => $statistics['allTime']['orders'],
-                'retourNumber' => $statistics['allTimeReturn']['orders'],
-            ],
-            [
-                'name' => 'Totaal bedrag',
-                'number' => $statistics['allTime']['orderAmount'],
-                'retourNumber' => $statistics['allTimeReturn']['orderAmount'],
-            ],
-            [
-                'name' => 'Gemiddelde waarde per order',
-                'number' => $statistics['allTime']['averageOrderAmount'],
-                'retourNumber' => $statistics['allTimeReturn']['averageOrderAmount'],
-            ],
-            [
-                'name' => 'Aantal producten verkocht',
-                'number' => $statistics['allTime']['products'],
-                'retourNumber' => $statistics['allTimeReturn']['products'],
-            ],
+            StatsOverviewWidget\Stat::make('Aantal bestellingen (altijd)', $statistics['allTime']['orders'])
+                ->description($statistics['allTimeReturn']['orders'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['allTime']['orderAmount'])
+                ->description($statistics['allTimeReturn']['orderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['allTime']['averageOrderAmount'])
+                ->description($statistics['allTimeReturn']['averageOrderAmount'] . ' retour'),
+            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['allTime']['products'])
+                ->description($statistics['allTimeReturn']['products'] . ' retour'),
         ];
     }
 

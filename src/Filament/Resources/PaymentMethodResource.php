@@ -2,22 +2,27 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Get;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\MultiSelect;
-use Filament\Tables\Columns\BooleanColumn;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
@@ -50,13 +55,10 @@ class PaymentMethodResource extends Resource
             TextInput::make('name')
                 ->label('Name')
                 ->required()
-                ->maxLength(100)
-                ->rules([
-                    'max:100',
-                ]),
+                ->maxLength(100),
             Toggle::make('active')
                 ->label('Actief')
-            ->default(1),
+                ->default(1),
             Toggle::make('postpay')
                 ->label('Achteraf betaalmethode')
                 ->hidden(fn ($record) => $record && $record->psp == 'own'),
@@ -64,56 +66,39 @@ class PaymentMethodResource extends Resource
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
                 ->rows(2)
-                ->maxLength(1250)
-                ->rules([
-                    'nullable',
-                    'max:1250',
-                ]),
+                ->maxLength(1250),
             Textarea::make('payment_instructions')
                 ->label('Betalingsinstructies')
                 ->helperText('Wordt getoond aan klanten wanneer zij een bestelling hebben geplaatst met deze betaalmethode')
                 ->rows(2)
-                ->maxLength(1250)
-                ->rules([
-                    'nullable',
-                    'max:1250',
-                ]),
+                ->maxLength(1250),
             FileUpload::make('image')
                 ->label('Afbeelding / icon')
                 ->directory('dashed/payment-methods')
                 ->image(),
             TextInput::make('extra_costs')
                 ->label('Extra kosten wanneer deze betalingsmethode wordt gekozen')
-                ->rules([
-                    'required',
-                    'numeric',
-                    'max:100000',
-                ])
-            ->required()
-            ->default(0),
+                ->maxValue(100000)
+                ->numeric()
+                ->required()
+                ->default(0),
             TextInput::make('available_from_amount')
                 ->label('Vanaf hoeveel € moet deze betaalmethode beschikbaar zijn')
-                ->rules([
-                    'required',
-                    'numeric',
-                    'max:100000',
-                ])
-            ->required()
-            ->default(0),
+                ->numeric()
+                ->maxValue(100000)
+                ->required()
+                ->default(0),
             TextInput::make('deposit_calculation')
                 ->label('Calculatie voor de aanbetaling met deze betaalmethode (leeg = geen aanbetaling), let op: hiervoor moet je een PSP gekoppeld hebben & dit werkt niet bij het aanmaken van handmatige orders')
                 ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
                 ->maxLength(255)
-                ->rules([
-                    'nullable',
-                    'max:255',
-                ])
                 ->reactive()
                 ->hidden(fn ($record) => ! $record || ($record && $record->psp != 'own')),
-            MultiSelect::make('deposit_calculation_payment_method_ids')
+            Select::make('deposit_calculation_payment_method_ids')
+                ->multiple()
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn ($record, \Closure $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
+                ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
         ];
 
         return $form
@@ -143,7 +128,7 @@ class PaymentMethodResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable()
+                    ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('site_id')
                     ->label('Actief op site')
@@ -156,12 +141,24 @@ class PaymentMethodResource extends Resource
                     ->searchable(),
                 ImageColumn::make('image')
                     ->label('Afbeelding'),
-                BooleanColumn::make('active')
-                    ->label('Actief'),
+                IconColumn::make('active')
+                    ->label('Actief')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle'),
 
             ])
             ->filters([
                 //
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

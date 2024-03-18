@@ -73,7 +73,7 @@ class OrderPayment extends Model
     public function getPaymentMethodInstructionsAttribute(): string
     {
         if ($this->paymentMethod) {
-            return $this->paymentMethod->payment_instructions;
+            return $this->paymentMethod->payment_instructions ?: '';
         } else {
             return '';
         }

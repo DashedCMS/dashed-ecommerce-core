@@ -3,53 +3,74 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
+use Filament\Actions\Action;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Actions\Contracts\HasActions;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Actions\Concerns\InteractsWithActions;
 
-class AddPaymentToOrder extends Component
+class AddPaymentToOrder extends Component implements HasForms, HasActions
 {
-    public $order;
-    public $paymentAmount;
+    use InteractsWithForms;
+    use InteractsWithActions;
 
-    protected $rules = [
-      'paymentAmount' => [
-          'required',
-          'numeric',
-          'min:0.01',
-      ],
-    ];
+    public Order $order;
 
-    public function mount($order)
+    public function mount(Order $order)
     {
         $this->order = $order;
-        $this->paymentAmount = $order->total - $order->orderPayments->where('status', 'paid')->sum('amount');
-        if ($this->paymentAmount < 0) {
-            $this->paymentAmount = 0;
-        }
+    }
+
+    public function action(): Action
+    {
+
+        return Action::make('action')
+            ->label("Voeg betaling toe (al voldaan: {$this->order->paidAmount})")
+            ->color('primary')
+            ->fillForm(function () {
+                $paymentAmount = $this->order->total - $this->order->orderPayments->where('status', 'paid')->sum('amount');
+                if ($paymentAmount < 0) {
+                    $paymentAmount = 0;
+                }
+
+                return [
+                    'paymentAmount' => $paymentAmount,
+                ];
+            })
+            ->form([
+                TextInput::make('paymentAmount')
+                    ->label('Het bedrag dat betaald is')
+                    ->helperText(fn () => "Het bedrag dat is betaald (al voldaan: {$this->order->paidAmount})")
+                    ->required()
+                    ->numeric()
+                    ->minValue(0.01),
+            ])
+            ->action(function ($data) {
+                if ($this->order->status != 'paid') {
+                    $orderPayment = $this->order->orderPayments()->create([
+                        'psp' => 'own',
+                        'payment_method' => 'manual_payment',
+                        'amount' => $data['paymentAmount'],
+                    ]);
+
+                    $newPaymentStatus = $orderPayment->changeStatus('paid');
+                    $this->order->changeStatus($newPaymentStatus);
+                }
+
+                Notification::make()
+                    ->title('Bestelling gemarkeerd als betaald')
+                    ->success()
+                    ->send();
+
+                $this->dispatch('refreshData');
+            });
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.add-payment-to-order');
-    }
-
-    public function submit()
-    {
-        $this->validate();
-
-        if ($this->order->status != 'paid') {
-            $orderPayment = $this->order->orderPayments()->create([
-                'psp' => 'own',
-                'payment_method' => 'manual_payment',
-                'amount' => $this->paymentAmount,
-            ]);
-
-            $newPaymentStatus = $orderPayment->changeStatus('paid');
-            $this->order->changeStatus($newPaymentStatus);
-        }
-
-        $this->emit('refreshPage');
-        $this->emit('notify', [
-            'status' => 'success',
-            'message' => 'Bestelling gemarkeerd als betaald',
-        ]);
+        return view('dashed-ecommerce-core::orders.components.plain-action');
     }
 }

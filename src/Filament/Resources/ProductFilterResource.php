@@ -2,17 +2,22 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\BooleanColumn;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
@@ -21,6 +26,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Relation
 class ProductFilterResource extends Resource
 {
     use Translatable;
+    use HasCustomBlocksTab;
 
     protected static ?string $model = ProductFilter::class;
 
@@ -43,37 +49,17 @@ class ProductFilterResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Grid::make([
-                    'default' => 1,
-                    'sm' => 1,
-                    'md' => 1,
-                    'lg' => 1,
-                    'xl' => 1,
-                    '2xl' => 1,
-                ])->schema([
-                    Section::make('Content')
-                        ->schema(array_merge([
-                            Toggle::make('hide_filter_on_overview_page')
-                                ->label('Moet deze filter verborgen worden op de overzichts pagina van de producten?'),
-                            TextInput::make('name')
-                                ->label('Naam')
-                                ->required()
-                                ->maxLength(100)
-                                ->rules([
-                                    'max:100',
-                                ])
-                                ->columnSpan([
-                                    'default' => 1,
-                                    'sm' => 1,
-                                    'md' => 1,
-                                    'lg' => 1,
-                                    'xl' => 1,
-                                    '2xl' => 1,
-                                ]),
-                        ])),
-                ]),
-            ]);
+            ->schema(array_merge([
+                Section::make('Content')
+                    ->schema(array_merge([
+                        Toggle::make('hide_filter_on_overview_page')
+                            ->label('Moet deze filter verborgen worden op de overzichts pagina van de producten?'),
+                        TextInput::make('name')
+                            ->label('Naam')
+                            ->required()
+                            ->maxLength(100),
+                    ])),
+            ], static::customBlocksTab(cms()->builder('productFilterBlocks'))));
     }
 
     public static function table(Table $table): Table
@@ -82,19 +68,32 @@ class ProductFilterResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable()
+                    ->searchable(query: SearchQuery::make())
                     ->sortable(),
-                BooleanColumn::make('hide_filter_on_overview_page')
-                    ->label('Verbergen op website')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('product_filter_values_amount')
+                IconColumn::make('hide_filter_on_overview_page')
+                    ->label('Tonen op website')
+                    ->trueIcon('heroicon-o-eye-slash')
+                    ->trueColor('danger')
+                    ->falseIcon('heroicon-o-eye')
+                    ->falseColor('success')
+                    ->sortable(),
+                TextColumn::make('product_filter_options_count')
+                    ->counts('productFilterOptions')
                     ->label('Aantal waardes')
-                    ->sortable()
-                    ->getStateUsing(fn ($record) => $record->productFilterOptions->count()),
+                    ->sortable(),
             ])
             ->filters([
                 //
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

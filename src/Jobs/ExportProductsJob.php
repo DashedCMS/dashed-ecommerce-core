@@ -50,10 +50,10 @@ class ExportProductsJob implements ShouldQueue
             ->latest()
             ->get();
 
-        Excel::store(new ProductListExport($products), '/dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx', 'public');
+        Excel::store(new ProductListExport($products), '/dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx', 'dashed');
 
         Mail::to($this->email)->send(new ProductListExportMail($this->hash));
 
-        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
+        Storage::disk('dashed')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }

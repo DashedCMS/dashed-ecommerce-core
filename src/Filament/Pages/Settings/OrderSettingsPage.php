@@ -9,19 +9,16 @@ use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Mohamedsabil83\FilamentFormsTinyeditor\Components\TinyEditor;
 
-class OrderSettingsPage extends Page implements HasForms
+class OrderSettingsPage extends Page
 {
-    use InteractsWithForms;
-
     protected static ?string $navigationIcon = 'heroicon-o-bell';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Bestelling instellingen';
@@ -29,6 +26,8 @@ class OrderSettingsPage extends Page implements HasForms
     protected static ?string $title = 'Bestelling instellingen';
 
     protected static string $view = 'dashed-core::settings.pages.default-settings';
+
+    public array $data = [];
 
     public function mount(): void
     {
@@ -208,6 +207,11 @@ class OrderSettingsPage extends Page implements HasForms
         return $tabGroups;
     }
 
+    public function getFormStatePath(): ?string
+    {
+        return 'data';
+    }
+
     public function submit()
     {
         $sites = Sites::getSites();
@@ -216,7 +220,7 @@ class OrderSettingsPage extends Page implements HasForms
 
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
-            foreach ($emails as $key => $email) {
+            foreach ($emails ?? [] as $key => $email) {
                 if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
@@ -225,7 +229,7 @@ class OrderSettingsPage extends Page implements HasForms
             $formState["notification_invoice_emails_{$site['id']}"] = $emails;
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
-            foreach ($emails as $key => $email) {
+            foreach ($emails ?? [] as $key => $email) {
                 if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
@@ -255,6 +259,10 @@ class OrderSettingsPage extends Page implements HasForms
             Customsetting::set('fulfillment_status_handled_email_content', $this->form->getState()["fulfillment_status_handled_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
         }
         $this->form->fill($formState);
-        $this->notify('success', 'De bestellings instellingen zijn opgeslagen');
+
+        Notification::make()
+            ->title('De bestellings instellingen zijn opgeslagen')
+            ->success()
+            ->send();
     }
 }

@@ -2,15 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\DeleteAction;
 use Filament\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\ListProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;
 
 class ProductFilterOptionResource extends Resource
@@ -39,31 +43,21 @@ class ProductFilterOptionResource extends Resource
             ->schema([
                 Select::make('product_filter_id')
                     ->relationship('productFilter', 'name')
+                    ->default(request()->get('productFilterId'))
                     ->label('Filter')
                     ->required()
-                    ->rules([
-                        'required',
-                    ]),
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name),
                 TextInput::make('name')
                     ->label('Naam')
                     ->required()
-                    ->maxLength(100)
-                    ->rules([
-                        'max:100',
-                    ]),
+                    ->maxLength(100),
                 TextInput::make('order')
                     ->label('Volgorde')
-                    ->type('number')
                     ->required()
                     ->minValue(1)
                     ->maxValue(10000)
-                    ->default(1)
-                    ->rules([
-                        'required',
-                        'numeric',
-                        'min:1',
-                        'max:10000',
-                    ]),
+                    ->numeric()
+                    ->default(1),
             ]);
     }
 
@@ -73,12 +67,17 @@ class ProductFilterOptionResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable()
+                    ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('productFilter.name')
                     ->label('Filter')
                     ->sortable()
                     ->searchable(),
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
             ])
             ->filters([
                 //
@@ -95,7 +94,7 @@ class ProductFilterOptionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => CreateProductFilterOption::route('/'),
+            'index' => ListProductFilterOption::route('/'),
             'create' => CreateProductFilterOption::route('/create'),
             'edit' => EditProductFilterOption::route('/{record}/edit'),
         ];

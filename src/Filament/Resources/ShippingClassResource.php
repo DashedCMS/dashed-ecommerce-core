@@ -2,17 +2,22 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Resources\Form;
-use Filament\Resources\Table;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
@@ -49,30 +54,22 @@ class ShippingClassResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(function () {
-                                return ! (Sites::getAmountOfSites() > 1);
-                            })
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
                             ->label('Name')
                             ->required()
-                            ->maxLength(100)
-                            ->rules([
-                                'max:100',
-                            ]),
+                            ->maxLength(100),
                         Textarea::make('description')
                             ->label('Beschrijving')
                             ->helperText('Alleen intern gebruik')
                             ->rows(2)
-                            ->maxLength(1250)
-                            ->rules([
-                                'nullable',
-                                'max:1250',
-                            ]),
+                            ->maxLength(1250),
                     ]),
             ]);
     }
@@ -83,15 +80,25 @@ class ShippingClassResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(query: SearchQuery::make()),
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
-                    ->searchable(),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //
+            ])
+            ->actions([
+                EditAction::make()
+                    ->button(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

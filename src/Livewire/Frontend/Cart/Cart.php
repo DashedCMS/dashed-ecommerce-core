@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
@@ -23,10 +22,13 @@ class Cart extends Component
     public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
+    public string $cartType = 'default';
 
-    public function mount(Product $product)
+    public function mount(string $cartType = 'default')
     {
-        $this->discountCode = session('discountCode');
+        $this->cartType = $cartType;
+        ShoppingCart::setInstance($this->cartType);
+        $this->discountCode = session('discountCode', '');
         $this->checkCart();
         $this->fillPrices();
     }
@@ -41,7 +43,7 @@ class Cart extends Component
 
     public function getCartItemsProperty()
     {
-        return ShoppingCart::cartItems();
+        return ShoppingCart::cartItems($this->cartType);
     }
 
     public function updated()
@@ -58,6 +60,6 @@ class Cart extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.cart.cart');
+        return view('dashed-ecommerce-core::frontend.cart.' . ($this->cartType != 'default' ? $this->cartType . '-' : '') . 'cart');
     }
 }

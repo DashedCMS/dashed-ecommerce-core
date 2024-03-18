@@ -10,6 +10,7 @@ use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Validator;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -68,6 +69,7 @@ class Checkout extends Component
     public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
+    public string $cartType = 'default';
 
     public function mount(Product $product)
     {
@@ -106,7 +108,7 @@ class Checkout extends Component
     public function retrievePaymentMethods()
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
-        if (! $this->paymentMethod && count($this->paymentMethods)) {
+        if ((! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
@@ -116,7 +118,7 @@ class Checkout extends Component
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
-        if (! $this->shippingMethod && count($this->shippingMethods)) {
+        if ((! $this->shippingMethod || ! in_array($this->shippingMethod, $this->shippingMethods->pluck('id')->toArray())) && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
@@ -320,13 +322,23 @@ class Checkout extends Component
         ], $this->rules());
 
         if ($validator->fails()) {
-            return $this->emit('showAlert', 'error', collect($validator->errors())->first()[0]);
+            Notification::make()
+                ->danger()
+                ->title(collect($validator->errors())->first()[0])
+                ->send();
+
+            return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
         }
 
         $cartItems = $this->cartItems;
 
         if (! $cartItems) {
-            return $this->emit('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
+                ->send();
+
+            return $this->dispatch('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
         }
 
         $paymentMethods = ShoppingCart::getPaymentMethods();
@@ -345,7 +357,12 @@ class Checkout extends Component
                 }
             }
             if (! $paymentMethodPresent) {
-                return $this->emit('showAlert', 'error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
+                    ->send();
+
+                return $this->dispatch('showAlert', 'error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
             }
         }
 
@@ -358,7 +375,12 @@ class Checkout extends Component
         }
 
         if (! $shippingMethod) {
-            return $this->emit('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+                ->send();
+
+            return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
         $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
@@ -370,7 +392,12 @@ class Checkout extends Component
             ]);
 
             if ($validator->fails()) {
-                return $this->emit('showAlert', 'error', collect($validator->errors())->first()[0]);
+                Notification::make()
+                    ->danger()
+                    ->title(collect($validator->errors())->first()[0])
+                    ->send();
+
+                return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
             }
 
             $depositPaymentMethod = '';
@@ -381,7 +408,12 @@ class Checkout extends Component
             }
 
             if (! $depositPaymentMethod) {
-                return $this->emit('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))
+                    ->send();
+
+                return $this->dispatch('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
         }
 
@@ -393,12 +425,23 @@ class Checkout extends Component
         } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
-            return $this->emit('showAlert', 'error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))
+                ->send();
+
+            return $this->dispatch('showAlert', 'error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
         }
 
         if (Customsetting::get('checkout_account') != 'disabled' && auth()->guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
-                return $this->emit('showAlert', 'error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
+
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
+                    ->send();
+
+                return $this->dispatch('showAlert', 'error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
             }
 
             $user = new User();
@@ -496,6 +539,7 @@ class Checkout extends Component
                     'id' => $optionId,
                     'name' => $option['name'],
                     'value' => $option['value'],
+                    'path' => $option['path'] ?? '',
                     'price' => str($optionId)->contains('product-extra-') ? 0 : ProductExtraOption::find($optionId)->price,
                 ];
             }
@@ -632,9 +676,17 @@ class Checkout extends Component
             try {
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
             } catch (\Exception $exception) {
-                return $this->emit('showAlert', 'error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'));
+                if (env('APP_ENV') == 'local') {
+                    throw new \Exception('Cannot start payment: ' . $exception->getMessage());
+                } else {
+                    Notification::make()
+                        ->danger()
+                        ->title(Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))
+                        ->send();
 
-                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
+                    return $this->dispatch('showAlert', 'error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'));
+                }
+
             }
 
             return redirect($transaction['redirectUrl'], 303);

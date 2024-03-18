@@ -3,7 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages;
 
 use Illuminate\Support\Str;
-use Filament\Pages\Actions\Action;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
@@ -14,11 +15,12 @@ class EditDiscountCode extends EditRecord
 
     protected function getActions(): array
     {
-        return array_merge(parent::getActions() ?: [], [
+        return [
             Action::make('Genereer een code')
                 ->button()
                 ->action('generateRandomCode'),
-        ]);
+            DeleteAction::make(),
+        ];
     }
 
     protected function mutateFormDataBeforeSave(array $data): array

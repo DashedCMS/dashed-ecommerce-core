@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Filament\Notifications\Notification;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -11,29 +12,38 @@ trait CartActions
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
-            $this->emit('showAlert', $status, $message);
+            if($status == 'error') {
+                $status = 'danger';
+            }
+
+            Notification::make()
+                ->$status()
+                ->title($message)
+                ->send();
         }
 
-        ShoppingCart::removeInvalidItems();
+        ShoppingCart::removeInvalidItems($this->cartType);
 
-        $this->emit('refreshCart');
+        $this->dispatch('refreshCart');
     }
 
     public function changeQuantity(string $rowId, int $quantity)
     {
+        ShoppingCart::setInstance($this->cartType);
+
         if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
             }
 
-            $this->checkCart('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
+            $this->checkCart('success', Translation::get('product-removed-from-cart', $this->cartType, 'The product has been removed from your cart'));
         } else {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
                 \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
             }
 
-            $this->checkCart('success', Translation::get('product-updated-to-cart', 'cart', 'The product has been updated to your cart'));
+            $this->checkCart('success', Translation::get('product-updated-to-cart', $this->cartType, 'The product has been updated to your cart'));
         }
 
         $this->fillPrices();
@@ -41,13 +51,15 @@ trait CartActions
 
     public function applyDiscountCode()
     {
+        ShoppingCart::setInstance($this->cartType);
+
         if (! $this->discountCode) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->discount = 0;
             $this->fillPrices();
 
-            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
+            return $this->checkCart('danger', Translation::get('discount-code-not-valid', $this->cartType, 'The discount code is not valid'));
         }
 
         $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
@@ -57,17 +69,19 @@ trait CartActions
             $this->discountCode = '';
             $this->fillPrices();
 
-            return $this->checkCart('error', Translation::get('discount-code-not-valid', 'cart', 'The discount code is not valid'));
+            return $this->checkCart('danger', Translation::get('discount-code-not-valid', $this->cartType, 'The discount code is not valid'));
         }
 
         session(['discountCode' => $discountCode->code]);
         $this->fillPrices();
 
-        return $this->checkCart('success', Translation::get('discount-code-applied', 'cart', 'The discount code has been applied and discount has been calculated'));
+        return $this->checkCart('success', Translation::get('discount-code-applied', $this->cartType, 'The discount code has been applied and discount has been calculated'));
     }
 
     public function fillPrices()
     {
+        ShoppingCart::setInstance($this->cartType);
+
         $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod);
         $this->subtotal = $checkoutData['subTotal'];
         $this->discount = $checkoutData['discount'];

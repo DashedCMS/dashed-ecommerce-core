@@ -6,12 +6,11 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Dashed\DashedEcommerceCore\Classes\Products;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
@@ -19,6 +18,7 @@ class ProductCategory extends Model
 {
     use SoftDeletes;
     use IsVisitable;
+    use HasCustomBlocks;
 
     protected static $logFillable = true;
 
@@ -29,14 +29,12 @@ class ProductCategory extends Model
         'slug',
         'content',
         'image',
-        'meta_image',
-        'meta_title',
-        'meta_description',
     ];
 
     protected $with = [
         'parentProductCategory',
     ];
+
     protected $casts = [
         'site_ids' => 'array',
         'content' => 'array',
@@ -75,10 +73,10 @@ class ProductCategory extends Model
     public function getProductsUrl()
     {
         $url = $this->slug;
-        $parentCategory = $this->parentCategory;
+        $parentCategory = $this->parent;
         while ($parentCategory) {
             $url = $parentCategory->slug . '/' . $url;
-            $parentCategory = $parentCategory->parentCategory;
+            $parentCategory = $parentCategory->parent;
         }
 
         return url($url);
@@ -95,10 +93,10 @@ class ProductCategory extends Model
         }
 
         $url = $this->slug;
-        $parentCategory = $this->parentCategory;
+        $parentCategory = $this->parent;
         while ($parentCategory) {
             $url = $parentCategory->slug . '/' . $url;
-            $parentCategory = $parentCategory->parentCategory;
+            $parentCategory = $parentCategory->parent;
         }
 
         $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
@@ -159,10 +157,6 @@ class ProductCategory extends Model
                 }
 
                 View::share('productCategory', $productCategory);
-
-                $productsResponse = Products::getAll(request()->get('pagination') ?: Customsetting::get('product_default_amount_of_products', null, 12), request()->get('order-by') ?: Customsetting::get('product_default_order_type', null, 'price'), request()->get('order') ?: Customsetting::get('product_default_order_sort', null, 'DESC'), $productCategory->id);
-                View::share('products', $productsResponse['products']);
-                View::share('filters', $productsResponse['filters']);
 
                 return view('dashed.categories.show');
             } else {
