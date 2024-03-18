@@ -2,26 +2,26 @@
     @if($filters)
         <div class="">
             @foreach($filters as $filterKey => $filter)
-                @if($filter['correctFilterOptions'] > 1)
-                    <label for="filter-{{$filter['id']}}"
-                           class="inline-block text-sm mb-2">
-                        {{$filter['name']}}
-                    </label>
-                    <select
-                        class="form-input"
-                        id="filter-{{$filter['id']}}"
-                        wire:model="filters.{{$filterKey}}.active"
-                        wire:change="checkFilters">
-                        @foreach($filter['values'] as $option)
-                            @if($option['url'])
-                                <option value="{{ $option['value'] }}"
-                                        @if(!$option['url']) disabled @endif
+                @if(count($filter['options']))
+                    <div class="grid">
+                        <label for="filter-{{$filter['id']}}"
+                               class="inline-block text-sm mb-2">
+                            {{$filter['name']}}
+                        </label>
+                        <select
+                            class="form-input"
+                            id="filter-{{$filter['id']}}"
+                            wire:model.live="filters.{{$filterKey}}.active">
+                            <option
+                                value="">{{ Translation::get('choose-a-option', 'product', 'Choose a option') }}</option>
+                            @foreach($filter['options'] as $option)
+                                <option value="{{ $option['id'] }}"
                                 >
                                     {{$option['name']}}
                                 </option>
-                            @endif
-                        @endforeach
-                    </select>
+                            @endforeach
+                        </select>
+                    </div>
                 @endif
             @endforeach
         </div>
@@ -30,26 +30,28 @@
         <div class="">
             @foreach($productExtras as $extraKey => $extra)
                 @if($extra->type == 'single')
-                    <label for="product-extra-{{$extra->id}}"
-                           class="inline-block text-sm mb-2">
-                        {{$extra->name}}{{$extra->required ? '*' : ''}}
-                    </label>
-                    <select
-                        class="form-input"
-                        id="product-extra-{{$extra->id}}"
-                        name="product-extra-{{$extra->id}}"
-                        wire:model.live="extras.{{ $extraKey }}.value"
-                        @if($extra->required) required @endif
-                    >
-                        <option value="">{{Translation::get('make-a-choice', 'product', 'Make a choice')}}</option>
-                        @foreach($extra->productExtraOptions as $option)
-                            <option
-                                value="{{$option->id}}">{{$option->value}} @if($option->price > 0)
-                                    (+ {{CurrencyHelper::formatPrice($option->price)}})
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
+                    <div>
+                        <label for="product-extra-{{$extra->id}}"
+                               class="inline-block text-sm mb-2">
+                            {{$extra->name}}{{$extra->required ? '*' : ''}}
+                        </label>
+                        <select
+                            class="form-input"
+                            id="product-extra-{{$extra->id}}"
+                            name="product-extra-{{$extra->id}}"
+                            wire:model.live="extras.{{ $extraKey }}.value"
+                            @if($extra->required) required @endif
+                        >
+                            <option value="">{{Translation::get('make-a-choice', 'product', 'Make a choice')}}</option>
+                            @foreach($extra->productExtraOptions as $option)
+                                <option
+                                    value="{{$option->id}}">{{$option->value}} @if($option->price > 0)
+                                        (+ {{CurrencyHelper::formatPrice($option->price)}})
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 @elseif($extra->type == 'multiple')
                     <p>Niet ondersteund</p>
                 @elseif($extra->type == 'checkbox')
@@ -117,9 +119,13 @@
         </div>
     @endif
     <div class="mt-4 grid gap-4">
-        @if($product->inStock())
+        @if($product && $product->inStock())
             <button type="submit"
                     class="w-full button button--dark">{{Translation::get('add-to-cart', 'product', 'Add to cart')}}</button>
+        @elseif(!$product)
+            <div class="w-full button button--light pointer-events-none">
+                {{Translation::get('choose-another-product', 'product', 'Choose another product')}}
+            </div>
         @else
             <div class="w-full button button--light pointer-events-none">
                 {{Translation::get('add-to-cart', 'product', 'Add to cart')}}
