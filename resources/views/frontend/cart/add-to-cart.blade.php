@@ -11,28 +11,19 @@
                         class="form-input"
                         id="filter-{{$filter['id']}}"
                         wire:model="filters.{{$filterKey}}.active"
-                        wire:change="checkFilters"
-                    @foreach($filter['values'] as $option)
-                        @if($option['url'])
-                            <option value="{{ $option['value'] }}"
-                                    @if(!$option['url']) disabled @endif
-                            >
-                                {{$option['name']}}
-                                @if($option['url'])
-                                    @if($option['in_stock'])
-                                        ({{Translation::get('product-in-of-stock', 'product', 'In stock')}})
-                                    @elseif(!$option['in_stock'])
-                                        ({{Translation::get('product-out-of-stock', 'product', 'Out of stock')}})
-                                    @endif
-                                @elseif(!$option['url'])
-                                    ({{Translation::get('product-unavailable', 'product', 'Unavailable')}})
-                                @endif
-                            </option>
+                        wire:change="checkFilters">
+                        @foreach($filter['values'] as $option)
+                            @if($option['url'])
+                                <option value="{{ $option['value'] }}"
+                                        @if(!$option['url']) disabled @endif
+                                >
+                                    {{$option['name']}}
+                                </option>
                             @endif
-                            @endforeach
-                            </select>
-                        @endif
-                    @endforeach
+                        @endforeach
+                    </select>
+                @endif
+            @endforeach
         </div>
     @endif
     @if($productExtras)

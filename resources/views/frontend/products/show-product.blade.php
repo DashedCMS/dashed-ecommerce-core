@@ -54,7 +54,7 @@
                                     {{Translation::get('product-in-stock', 'product', 'In stock')}}
                                 </p>
                             @else
-                                <p class="text-md tracking-wider text-secondary-500 text-red-500 flex items-center font-bold"><span
+                                <p class="text-md tracking-wider text-red-500 flex items-center font-bold"><span
                                         class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                           viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
                                                 stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
