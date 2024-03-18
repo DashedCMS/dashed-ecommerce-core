@@ -46,6 +46,7 @@ class ShowProducts extends Component
         $this->orderBy = request()->get('order-by', Customsetting::get('product_default_order_type', null, 'price'));
         $this->order = request()->get('order', Customsetting::get('product_default_order_sort', null, 'DESC'));
         $this->sortBy = request()->get('sortBy', 'default');
+        $this->search = request()->get('search');
 
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
