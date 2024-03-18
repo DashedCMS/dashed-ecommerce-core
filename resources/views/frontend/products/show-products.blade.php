@@ -20,14 +20,14 @@
                             id="sort-by">
                         <option
                             value="">{{Translation::get('filter-sort-by-standard', 'products', 'Standaard')}}</option>
-                        <option @if($this->sortBy == 'price-asc') selected
-                                @endif value="price-asc">{{Translation::get('filter-sort-by-price-asc', 'products', 'Prijs oplopend')}}</option>
-                        <option @if($this->sortBy == 'price-desc') selected
-                                @endif value="price-desc">{{Translation::get('filter-sort-by-price-desc', 'products', 'Prijs aflopend')}}</option>
-                        <option @if($this->sortBy == 'most-sold')  selected
-                                @endif value="most-sold">{{Translation::get('filter-sort-by-most-sold', 'products', 'Best verkocht')}}</option>
-                        <option @if($this->sortBy == 'newest')  selected
-                                @endif value="newest">{{Translation::get('filter-sort-by-newest', 'products', 'Nieuwste')}}</option>
+                        <option
+                            value="price-asc">{{Translation::get('filter-sort-by-price-asc', 'products', 'Prijs oplopend')}}</option>
+                        <option
+                            value="price-desc">{{Translation::get('filter-sort-by-price-desc', 'products', 'Prijs aflopend')}}</option>
+                        <option
+                            value="purchases">{{Translation::get('filter-sort-by-most-sold', 'products', 'Best verkocht')}}</option>
+                        <option
+                            value="newest">{{Translation::get('filter-sort-by-newest', 'products', 'Nieuwste')}}</option>
                     </select>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                     <aside x-bind:class="filters ? 'flex' : 'hidden'"
                            x-cloak
                            class="flex-col mb-8 space-x-0 lg:flex lg:space-x-0 lg:space-y-8 lg:w-64 md:flex-col whitespace-nowrap pr-4">
-                        <section class="space-y-2 mt-4 mb-6">
+                        <section class="space-y-2 mt-4">
                             <div
                                 class="inline-flex items-center overflow-hidden">
                                 <input type="text" class="form-input border border-primary" id="search" name="search"
@@ -51,9 +51,15 @@
                                        placeholder="{{Translation::get('search-term', 'products', 'Zoeken...')}}">
                             </div>
                         </section>
-                        <section class="space-y-2 mt-10">
-                            <x-range-slider :options="$defaultSliderOptions"
-                                            wire:model.lazy="priceSlider.min,priceSlider.max"/>
+                        <section class="space-y-2 mt-4">
+                            <div class="mb-12">
+                                <h4 class="text-lg md:text-2xl font-display truncate">
+                                    {{ Translation::get('price', 'products', 'Price') }}
+                                </h4>
+
+                                <div class="w-8 h-1 bg-primary"></div>
+                            </div>
+                            <x-range-slider :options="$defaultSliderOptions" wire:model.lazy="priceSlider.min,priceSlider.max" />
                         </section>
 
                         @foreach ($filters ?? [] as $filter)
