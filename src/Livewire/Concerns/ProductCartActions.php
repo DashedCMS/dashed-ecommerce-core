@@ -121,7 +121,7 @@ trait ProductCartActions
             $this->characteristics = $this->product->showableCharacteristics();
             $this->suggestedProducts = $this->product->getSuggestedProducts();
             if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
-                if(!$isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false)){
+                if(! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false)) {
                     return redirect($this->product->getUrl());
                 }
                 $this->productExtras = $this->product->allProductExtras();
