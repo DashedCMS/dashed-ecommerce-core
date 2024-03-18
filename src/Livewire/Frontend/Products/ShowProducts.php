@@ -64,6 +64,7 @@ class ShowProducts extends Component
 
     public function updated()
     {
+        $this->page = 1;
         $this->loadProducts();
     }
 
