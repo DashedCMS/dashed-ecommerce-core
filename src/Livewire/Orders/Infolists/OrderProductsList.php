@@ -51,10 +51,10 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                             ->height('auto'),
                         TextEntry::make('productExtras')
                             ->label('Product extras')
-                            ->visible(count($orderProduct->product_extras ?? []))
+                            ->visible(count($orderProduct->product_extras ?: []))
                             ->getStateUsing(function () use ($orderProduct) {
                                 $productExtras = '';
-                                foreach ($orderProduct->product_extras as $productExtra) {
+                                foreach ($orderProduct->product_extras ?: [] as $productExtra) {
                                     if ($productExtra['path'] ?? false) {
                                         $productExtras .= $productExtra['name'] . ': <a class="hover:text-primary-500" target="_blank" href="' . Storage::disk('dashed')->url($productExtra['path']) . '">' . $productExtra['value'] . '</a> <br/>';
                                     } else {
