@@ -34,15 +34,17 @@ return new class extends Migration {
         $options = \Illuminate\Support\Facades\DB::table('dashed__product_filter')->get();
         foreach ($options as $option) {
             $product = \Dashed\DashedEcommerceCore\Models\Product::find($option->product_id);
-            if($product->parent){
+            if ($product && $product->parent) {
                 $product = $product->parent;
             }
 
-            \Illuminate\Support\Facades\DB::table('dashed__product_enabled_filter_options')->insert([
-                'product_id' => $product->id,
-                'product_filter_id' => $option->product_filter_id,
-                'product_filter_option_id' => $option->product_filter_option_id,
-            ]);
+            if ($product) {
+                \Illuminate\Support\Facades\DB::table('dashed__product_enabled_filter_options')->insert([
+                    'product_id' => $product->id,
+                    'product_filter_id' => $option->product_filter_id,
+                    'product_filter_option_id' => $option->product_filter_option_id,
+                ]);
+            }
         }
     }
 
