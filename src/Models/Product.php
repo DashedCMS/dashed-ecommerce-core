@@ -76,38 +76,38 @@ class Product extends Model
                 }
             }
 
-            if ($product->is_bundle && $product->type == 'variable' && ! $product->parent_id) {
+            if ($product->is_bundle && $product->type == 'variable' && !$product->parent_id) {
                 $product->is_bundle = false;
                 $product->save();
                 $product->bundleProducts()->detach();
             }
 
-            if($product->childProducts()->count()) {
+            if ($product->childProducts()->count()) {
                 $product->parent_id = null;
                 $product->saveQuietly();
             }
 
-            if($product->type == 'variable' && ! $product->parent_id && count($product->copyable_to_childs)) {
-                foreach($product->childProducts as $childProduct) {
-                    if(in_array('productCategories', $product->copyable_to_childs)) {
+            if ($product->type == 'variable' && !$product->parent_id && count($product->copyable_to_childs)) {
+                foreach ($product->childProducts as $childProduct) {
+                    if (in_array('productCategories', $product->copyable_to_childs)) {
                         $childProduct->productCategories()->sync($product->productCategories);
                     }
-                    if(in_array('shippingClasses', $product->copyable_to_childs)) {
+                    if (in_array('shippingClasses', $product->copyable_to_childs)) {
                         $childProduct->shippingClasses()->sync($product->shippingClasses);
                     }
-                    if(in_array('suggestedProducts', $product->copyable_to_childs)) {
+                    if (in_array('suggestedProducts', $product->copyable_to_childs)) {
                         $childProduct->suggestedProducts()->sync($product->suggestedProducts);
                     }
-                    if(in_array('content', $product->copyable_to_childs)) {
+                    if (in_array('content', $product->copyable_to_childs)) {
                         $childProduct->content = $product->getOriginal('content');
                     }
-                    if(in_array('description', $product->copyable_to_childs)) {
+                    if (in_array('description', $product->copyable_to_childs)) {
                         $childProduct->description = $product->getOriginal('description');
                     }
-                    if(in_array('short_description', $product->copyable_to_childs)) {
+                    if (in_array('short_description', $product->copyable_to_childs)) {
                         $childProduct->short_description = $product->getOriginal('short_description');
                     }
-                    if(in_array('images', $product->copyable_to_childs)) {
+                    if (in_array('images', $product->copyable_to_childs)) {
                         $childProduct->images = $product->getOriginal('images');
                     }
 
@@ -145,7 +145,7 @@ class Product extends Model
         $query->where(function ($query) use ($search) {
             $loop = 1;
             foreach (self::getTranslatableAttributes() as $attribute) {
-                if (! method_exists($this, $attribute)) {
+                if (!method_exists($this, $attribute)) {
                     if ($loop == 1) {
                         $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
                     } else {
@@ -332,19 +332,21 @@ class Product extends Model
     public function getUrl($locale = null)
     {
         return Cache::tags(['product-' . $this->id])->remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
-            if (! $locale) {
+            if (!$locale) {
                 $locale = App::getLocale();
             }
 
-            if (! Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
+            if (!Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
                 foreach ($this->childProducts as $childProduct) {
-                    if ($childProduct->inStock() && ! isset($url)) {
+                    if ($childProduct->inStock() && !isset($url)) {
                         $url = $childProduct->getUrl();
                     }
                 }
-                if (! isset($url)) {
+                if (!isset($url)) {
                     $url = $this->childProducts()->first()->getUrl();
                 }
+            } elseif ($this->parent && $this->parent->only_show_parent_product) {
+                return $this->parent->getUrl();
             } else {
                 $url = '/' . Translation::get('products-slug', 'slug', 'products') . '/' . $this->slug;
             }
@@ -359,7 +361,7 @@ class Product extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->public) {
+        if (!$this->public) {
             return false;
         }
 
@@ -368,7 +370,7 @@ class Product extends Model
         }
 
         $active = false;
-        if (! $this->start_date && ! $this->end_date) {
+        if (!$this->start_date && !$this->end_date) {
             $active = true;
         } else {
             if ($this->start_date && $this->end_date) {
@@ -388,7 +390,7 @@ class Product extends Model
             }
         }
         if ($active) {
-            if (! $this->sku || ! $this->price) {
+            if (!$this->sku || !$this->price) {
                 $active = false;
             }
         }
@@ -458,7 +460,7 @@ class Product extends Model
 
                 //If something does not work correct, check if below code makes sure there is a active one
                 //Array key must be string, otherwise Livewire renders it in order of id, instead of order from filter option
-                if (count($activeFilterOptionIds) && (! array_key_exists('filter-' . $activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
+                if (count($activeFilterOptionIds) && (!array_key_exists('filter-' . $activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
                     $filterOptionValues['filter-' . $activeFilterId] = [
                         'id' => $activeFilter->id,
                         'name' => $filterName,
@@ -504,12 +506,12 @@ class Product extends Model
         foreach ($showableFilters as &$showableFilter) {
             $correctFilterOptions = 0;
             foreach ($showableFilter['values'] as &$showableFilterValue) {
-                if (! $showableFilterValue['url']) {
+                if (!$showableFilterValue['url']) {
                     foreach ($childProducts as $childProduct) {
                         if ($childProduct->id != $this->id) {
                             $productIsCorrectForFilter = true;
                             foreach ($showableFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
-                                if (! $childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
+                                if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
                                     $productIsCorrectForFilter = false;
                                 }
                             }
@@ -518,11 +520,11 @@ class Product extends Model
                                     if ($activeFilterValue['id'] != $showableFilterValue['id']) {
                                         $productHasCorrectFilterOption = true;
                                         foreach ($activeFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
-                                            if (! $childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
+                                            if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
                                                 $productHasCorrectFilterOption = false;
                                             }
                                         }
-                                        if (! $productHasCorrectFilterOption) {
+                                        if (!$productHasCorrectFilterOption) {
                                             $productIsCorrectForFilter = false;
                                         }
                                     }
@@ -560,7 +562,7 @@ class Product extends Model
             $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
 
             if (count($filterOptions)) {
-                foreach($filterOptions as &$filterOption) {
+                foreach ($filterOptions as &$filterOption) {
                     $filterOption['name'] = $filterOption['name'][App::getLocale()] ?? $filterOption['name'][0];
                 }
 
@@ -667,7 +669,7 @@ class Product extends Model
             $allBundleProductsDirectSellable = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (! $bundleProduct->hasDirectSellableStock()) {
+                if (!$bundleProduct->hasDirectSellableStock()) {
                     $allBundleProductsDirectSellable = false;
                 }
             }
@@ -716,7 +718,7 @@ class Product extends Model
             $allBundleProductsInStock = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (! $bundleProduct->inStock()) {
+                if (!$bundleProduct->inStock()) {
                     $allBundleProductsInStock = false;
                 }
             }
@@ -764,17 +766,17 @@ class Product extends Model
     {
         //Todo: make editable if expectedInStockDateValid should be checked or not
 
-        if (! $this->use_stock) {
+        if (!$this->use_stock) {
             if ($this->stock_status == 'out_of_stock') {
                 return false;
             }
         }
 
-        if (! $this->out_of_stock_sellable) {
+        if (!$this->out_of_stock_sellable) {
             return false;
         }
 
-        if (Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && ! $this->expectedInStockDateValid()) {
+        if (Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && !$this->expectedInStockDateValid()) {
             return false;
         }
 
@@ -783,7 +785,7 @@ class Product extends Model
 
     public function isPreorderable()
     {
-        return $this->inStock() && ! $this->hasDirectSellableStock() && $this->use_stock;
+        return $this->inStock() && !$this->hasDirectSellableStock() && $this->use_stock;
     }
 
     public function expectedInStockDate()
@@ -799,7 +801,7 @@ class Product extends Model
     public function expectedInStockDateInWeeks()
     {
         $expectedInStockDate = self::expectedInStockDate();
-        if (! $expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
+        if (!$expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
             return 0;
         }
 
@@ -917,7 +919,7 @@ class Product extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -986,7 +988,7 @@ class Product extends Model
         $price += $this->currentPrice * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
-            if (! str($productExtraOptionId)->contains('product-extra-')) {
+            if (!str($productExtraOptionId)->contains('product-extra-')) {
                 $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                 if ($thisProductExtraOption) {
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
@@ -1032,14 +1034,14 @@ class Product extends Model
 
         if ($slugComponents[0] == Translation::get('products-slug', 'slug', 'products') && count($slugComponents) == 2) {
             $product = Product::thisSite()->where('slug->' . App::getLocale(), $slugComponents[1]);
-            if (! auth()->check() || auth()->user()->role != 'admin') {
+            if (!auth()->check() || auth()->user()->role != 'admin') {
                 $product->publicShowable(true);
             }
             $product = $product->first();
 
-            if (! $product) {
+            if (!$product) {
                 foreach (Product::thisSite()->publicShowable(true)->get() as $possibleProduct) {
-                    if (! $product && $possibleProduct->slug == $slugComponents[1]) {
+                    if (!$product && $possibleProduct->slug == $slugComponents[1]) {
                         $product = $possibleProduct;
                     }
                 }
@@ -1050,7 +1052,7 @@ class Product extends Model
                     seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
                     seo()->metaData('metaDescription', $product->metadata->description ?? '');
                     $metaImage = $product->metadata->image ?? '';
-                    if (! $metaImage) {
+                    if (!$metaImage) {
                         $metaImage = $product->firstImageUrl;
                     }
                     if ($metaImage) {
