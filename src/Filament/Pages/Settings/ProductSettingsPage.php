@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Dashed\DashedPages\Models\Page as PageModel;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -37,6 +38,7 @@ class ProductSettingsPage extends Page
             $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
             $formData["product_use_simple_variation_style_{$site['id']}"] = Customsetting::get('product_use_simple_variation_style', $site['id'], false);
             $formData["product_redirect_after_new_variation_selected_{$site['id']}"] = Customsetting::get('product_redirect_after_new_variation_selected', $site['id'], false);
+            $formData["product_overview_page_id_{$site['id']}"] = Customsetting::get('product_overview_page_id', $site['id']);
         }
 
         $this->form->fill($formData);
@@ -96,6 +98,9 @@ class ProductSettingsPage extends Page
                     ->label('Standaard aantal producten per pagina')
                     ->numeric()
                     ->required(),
+                Select::make("product_overview_page_id_{$site['id']}")
+                    ->label('Product overview pagina')
+                    ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
                 Toggle::make("product_use_simple_variation_style_{$site['id']}")
                     ->label('Gebruik product variaties op de Livewire manier')
                     ->helperText('Alleen gebruiken als jouw webshop hiervoor gebouwd is'),
@@ -135,6 +140,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
             Customsetting::set('product_use_simple_variation_style', $this->form->getState()["product_use_simple_variation_style_{$site['id']}"], $site['id']);
             Customsetting::set('product_redirect_after_new_variation_selected', $this->form->getState()["product_redirect_after_new_variation_selected_{$site['id']}"], $site['id']);
+            Customsetting::set('product_overview_page_id', $this->form->getState()["product_overview_page_id_{$site['id']}"], $site['id']);
         }
 
         Notification::make()
