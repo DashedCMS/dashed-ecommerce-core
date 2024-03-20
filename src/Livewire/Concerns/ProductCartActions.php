@@ -161,8 +161,9 @@ trait ProductCartActions
 
     public function calculateCurrenctPrices(): void
     {
-        if (! $this->product) {
+        if (! $this->product || (!$this->product->parent_id && $this->product->type == 'variable')) {
             $this->price = null;
+            $this->discountPrice = null;
 
             return;
         }
