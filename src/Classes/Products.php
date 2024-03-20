@@ -374,6 +374,7 @@ class Products
                     $productIsValid = false;
                 } else {
                     $onlyShowParentIds[] = $product->parent->id;
+                    $product = $product->parent;
                 }
             }
 
