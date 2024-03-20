@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\DashedPages\Models\Page as PageModel;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -13,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedPages\Models\Page as PageModel;
 
 class ProductSettingsPage extends Page
 {
