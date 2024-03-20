@@ -4,7 +4,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
                     <h2 class="text-3xl font-bold">
-                        {{ $productCategory ? Translation::get('products-overview', 'products', 'Products from :category:', 'text', [
+                        {{ $productCategory ? Translation::get('products-category-overview', 'products', 'Products from :category:', 'text', [
                             'category' => $productCategory->name
                         ]) : Translation::get('products-overview', 'products', 'Product overview') }}
                     </h2>

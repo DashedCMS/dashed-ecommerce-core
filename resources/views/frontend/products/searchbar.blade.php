@@ -1,7 +1,7 @@
 <div class="relative mt-2 z-50"  x-data="{ showSearchBarOverview: false, showSearchbar: @entangle('showSearchbar').live }">
     <div x-cloak x-show="showSearchBarOverview" class="fixed right-0 top-5 w-full sm:w-auto px-2 sm:px-0 sm:absolute sm:-right-2 sm:-top-6">
         <div class="z-30">
-            <form method="get" action="{{ \Dashed\DashedEcommerceCore\Models\Product::getOverviewPage() }}" @class([
+            <form method="get" action="{{ \Dashed\DashedEcommerceCore\Models\Product::getOverviewPage()->getUrl() }}" @class([
                 'relative flex items-center h-10 bg-baby-blue rounded-t-xl rounded-b-xl transition',
                 'focus-within:ring-2 focus-within:ring-baby-blue focus-within:bg-baby-blue/80',
                 'rounded-b-none' => $products && $products->count(),
