@@ -82,27 +82,27 @@ class Product extends Model
                 $product->bundleProducts()->detach();
             }
 
-            if($product->type == 'variable' && !$product->parent_id && count($product->copyable_to_childs)) {
-                foreach($product->childProducts as $childProduct){
-                    if(in_array('images', $product->copyable_to_childs)){
+            if($product->type == 'variable' && ! $product->parent_id && count($product->copyable_to_childs)) {
+                foreach($product->childProducts as $childProduct) {
+                    if(in_array('images', $product->copyable_to_childs)) {
                         $childProduct->images = $product->images;
                     }
-                    if(in_array('productCategories', $product->copyable_to_childs)){
+                    if(in_array('productCategories', $product->copyable_to_childs)) {
                         $childProduct->productCategories()->sync($product->productCategories);
                     }
-                    if(in_array('shippingClasses', $product->copyable_to_childs)){
+                    if(in_array('shippingClasses', $product->copyable_to_childs)) {
                         $childProduct->shippingClasses()->sync($product->shippingClasses);
                     }
-                    if(in_array('suggestedProducts', $product->copyable_to_childs)){
+                    if(in_array('suggestedProducts', $product->copyable_to_childs)) {
                         $childProduct->suggestedProducts()->sync($product->suggestedProducts);
                     }
-                    if(in_array('content', $product->copyable_to_childs)){
+                    if(in_array('content', $product->copyable_to_childs)) {
                         $childProduct->content = $product->content;
                     }
-                    if(in_array('description', $product->copyable_to_childs)){
+                    if(in_array('description', $product->copyable_to_childs)) {
                         $childProduct->description = $product->description;
                     }
-                    if(in_array('short_description', $product->copyable_to_childs)){
+                    if(in_array('short_description', $product->copyable_to_childs)) {
                         $childProduct->short_description = $product->short_description;
                     }
 
