@@ -82,6 +82,7 @@ class ProductFilterResource extends Resource
                     ->label('Aantal waardes')
                     ->sortable(),
             ])
+            ->reorderable('order')
             ->filters([
                 //
             ])

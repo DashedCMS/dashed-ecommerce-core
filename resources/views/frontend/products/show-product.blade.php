@@ -8,7 +8,7 @@
                 <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
                     <div class="flex flex-col-reverse">
                         <div class="aspect-h-1 aspect-w-1 w-full">
-                            @if($images[0])
+                            @if($images[0] ?? false)
                                 <x-drift::image
                                     class="h-full w-full object-cover object-center sm:rounded-lg"
                                     config="dashed"
