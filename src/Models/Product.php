@@ -871,7 +871,7 @@ class Product extends Model
 
     public function activeProductFilters()
     {
-        return $this->belongsToMany(ProductFilter::class, 'dashed__active_product_filter')->orderBy('created_at')->withPivot(['use_for_variations']);
+        return $this->belongsToMany(ProductFilter::class, 'dashed__active_product_filter')->orderBy('order')->withPivot(['use_for_variations']);
     }
 
     public function activeProductFiltersForVariations()
