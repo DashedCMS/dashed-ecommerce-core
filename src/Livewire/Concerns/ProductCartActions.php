@@ -139,6 +139,7 @@ trait ProductCartActions
         $this->shortDescription = $this->product->shortDescription ?? $this->parentProduct->shortDescription;
         $this->sku = $this->product->sku ?? $this->parentProduct->sku;
         $this->calculateCurrenctPrices();
+        $this->dispatch('productUpdated');
     }
 
     public function findVariation(): void
