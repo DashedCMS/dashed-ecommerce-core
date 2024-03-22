@@ -23,7 +23,7 @@
                     </div>
 
                     <div class="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
-                        <h1 class="text-3xl font-bold tracking-tight text-gray-900">{{ $name }}</h1>
+                        <h2 class="text-3xl font-bold tracking-tight text-gray-900">{{ $name }}</h2>
                         @if($product->productCategories()->count())
                             <p class="mt-1 text-sm text-gray-500">{{$product->productCategories()->first()->name}}</p>
                         @endif
