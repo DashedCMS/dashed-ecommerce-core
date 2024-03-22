@@ -136,7 +136,7 @@ trait ProductCartActions
 
         $this->name = $this->product->name ?? $this->parentProduct->name;
         $this->images = $this->product->allImages ?? $this->parentProduct->allImages;
-        foreach($this->images as $image){
+        foreach($this->images as $image) {
             $this->originalImages[] = [
                 'alt' => $image['alt_text'],
                 'image' => app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $image['image'], [
