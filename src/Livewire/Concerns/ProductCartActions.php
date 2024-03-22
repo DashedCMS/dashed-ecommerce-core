@@ -213,7 +213,7 @@ trait ProductCartActions
     {
         ShoppingCart::setInstance($this->cartType);
 
-        if (! $this->product) {
+        if (! $this->product || ($this->product->type == 'variable' && !$this->product->parent_id)) {
             return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
         }
 

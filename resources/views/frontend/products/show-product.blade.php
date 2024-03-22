@@ -121,4 +121,15 @@
 
         <x-blocks :content="$product->content"></x-blocks>
     </div>
+    @script
+    <script>
+        let splide = new Splide('.splide').mount();
+        $wire.on('productUpdated', () => {
+            if (splide) {
+                splide.destroy();
+            }
+            splide = new Splide('.splide').mount();
+        });
+    </script>
+    @endscript
 </div>
