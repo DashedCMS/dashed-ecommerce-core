@@ -1081,3 +1081,4 @@ class Product extends Model
         }
     }
 }
+
