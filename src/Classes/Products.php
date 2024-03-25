@@ -36,11 +36,11 @@ class Products
             }
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -118,14 +118,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -178,7 +178,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -291,7 +291,7 @@ class Products
         return $products;
     }
 
-    public static function getAllV2(int $pagination = 12, int $page = 1, string $orderBy = 'order', $order = 'DESC', $categoryId = null, ?string $search = null, ?array $activeFilters = [], array $priceRange = [])
+    public static function getAllV2(int $pagination = 12, ?int $page = 1, ?string $orderBy = 'order', ?string $order = 'DESC', ?int $categoryId = null, ?string $search = null, ?array $activeFilters = [], ?array $priceRange = [])
     {
         if ($orderBy == 'price-asc') {
             $orderBy = 'price';
@@ -308,7 +308,7 @@ class Products
         } elseif ($orderBy == 'newest') {
             $orderBy = 'created_at';
             $order = 'DESC';
-        } elseif($orderBy == 'order') {
+        } elseif ($orderBy == 'order') {
             $orderBy = 'order';
             $order = 'ASC';
         }
@@ -356,14 +356,14 @@ class Products
                         if ($option->checked) {
                             //                            dump($option->name);
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -386,10 +386,10 @@ class Products
         $products = Product::whereIn('id', $correctProductIds)
             ->search($search);
 
-        if($priceRange['min'] ?? false) {
+        if ($priceRange['min'] ?? false) {
             $products = $products->where('price', '>=', $priceRange['min']);
         }
-        if($priceRange['max'] ?? false) {
+        if ($priceRange['max'] ?? false) {
             $products = $products->where('price', '<=', $priceRange['max']);
         }
 
@@ -445,7 +445,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
