@@ -590,6 +590,7 @@ class ProductResource extends Resource
                     ->label('Aantal verkopen')
                     ->sortable(),
             ], static::visitableTableColumns()))
+            ->reorderable('order')
             ->actions([
                 EditAction::make()
                     ->button(),
