@@ -279,7 +279,7 @@ class ProductResource extends Resource
                 ->schema($productEnabledFiltersSchema)
                 ->collapsible()
                 ->collapsed()
-                ->visible(fn (Get $get, $record) => $get("product_filter_$productFilter->id") && $get("product_filter_{$productFilter->id}_use_for_variations") && $get('type') == 'variable' && $record && ! $record->parent_id);
+                ->visible(fn (Get $get, $record) => $get("product_filter_$productFilter->id") && $get('type') == 'variable' && $record && ! $record->parent_id);
 
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
