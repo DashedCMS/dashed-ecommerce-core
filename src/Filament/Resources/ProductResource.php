@@ -284,7 +284,7 @@ class ProductResource extends Resource
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                     ->label("$productFilter->name: $productFilterOption->name")
-                    ->visible(fn ($record) => $record->parent && $record->parent->enabledProductFilterOptions()->wherePivot('product_filter_option_id', $productFilterOption->id)->count());
+                    ->visible(fn ($record) => ($record->parent && $record->parent->enabledProductFilterOptions()->wherePivot('product_filter_option_id', $productFilterOption->id)->count()) || $record->type == 'simple');
             }
 
             $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
