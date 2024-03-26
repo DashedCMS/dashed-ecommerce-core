@@ -124,6 +124,10 @@ trait ProductCartActions
             }
         }
 
+        if ($this->originalProduct->type == 'simple') {
+            $this->variationExists = true;
+        }
+
         $this->characteristics = $this->product->showableCharacteristics();
         $this->suggestedProducts = $this->product->getSuggestedProducts();
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || !$this->productExtras) {
