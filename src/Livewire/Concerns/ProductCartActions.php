@@ -148,7 +148,6 @@ trait ProductCartActions
         $this->shortDescription = $this->product->shortDescription ?? $this->parentProduct->shortDescription;
         $this->sku = $this->product->sku ?? $this->parentProduct->sku;
         $this->calculateCurrenctPrices();
-        ray($this->variationExists);
         if (!$isMount) {
             $this->dispatch('productUpdated');
         }
