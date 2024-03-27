@@ -379,9 +379,9 @@ class Products
                 }
             }
 
-            if(!$product->parent_id && $product->type == 'variable' && !$product->only_show_parent_product){
+            if(! $product->parent_id && $product->type == 'variable' && ! $product->only_show_parent_product) {
                 $hideProductIds[] = $product->id;
-            }elseif ($productIsValid) {
+            } elseif ($productIsValid) {
                 $correctProductIds[] = $product->id;
             }
         }
