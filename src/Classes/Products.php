@@ -327,6 +327,7 @@ class Products
         //        dump($hasActiveFilters);
 
         $correctProductIds = [];
+        $hideProductIds = [];
         if ($categoryId && $category = ProductCategory::with(['products'])
                 ->findOrFail($categoryId)) {
             $allProducts = $category->products()
@@ -378,12 +379,15 @@ class Products
                 }
             }
 
-            if ($productIsValid) {
+            if(!$product->parent_id && $product->type == 'variable' && !$product->only_show_parent_product){
+                $hideProductIds[] = $product->id;
+            }elseif ($productIsValid) {
                 $correctProductIds[] = $product->id;
             }
         }
 
         $products = Product::whereIn('id', $correctProductIds)
+            ->whereNotIn('id', $hideProductIds)
             ->search($search);
 
         if ($priceRange['min'] ?? false) {
