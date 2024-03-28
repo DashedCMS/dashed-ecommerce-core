@@ -167,7 +167,7 @@ trait ProductCartActions
                 }
             }
 
-            if(!$childProduct->status){
+            if(! $childProduct->status) {
                 $productIsValid = false;
             }
 
