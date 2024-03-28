@@ -377,7 +377,7 @@ class Product extends Model
             return false;
         }
 
-        if ($this->type == 'variable') {
+        if ($this->type == 'variable' && !$this->parent_id) {
             return true;
         }
 

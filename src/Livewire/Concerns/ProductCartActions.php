@@ -167,6 +167,10 @@ trait ProductCartActions
                 }
             }
 
+            if(!$childProduct->status){
+                $productIsValid = false;
+            }
+
             if ($productIsValid) {
                 $this->variationExists = true;
                 $this->product = $childProduct;
