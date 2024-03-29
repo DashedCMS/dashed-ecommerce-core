@@ -78,14 +78,16 @@
                                     class="fixed inset-0 z-[99] flex items-center justify-center bg-primary bg-opacity-50 select-none cursor-zoom-out"
                                     x-cloak>
                                     <div class="relative flex items-center justify-center w-11/12 xl:w-4/5 h-11/12">
-                                        <div @click="$event.stopPropagation(); $dispatch('image-gallery-prev')"
-                                             class="absolute left-0 flex items-center justify-center text-white translate-x-10 rounded-full cursor-pointer xl:-translate-x-24 2xl:-translate-x-32 bg-primary/10 w-14 h-14 hover:bg-primary/20">
-                                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M15.75 19.5L8.25 12l7.5-7.5"/>
-                                            </svg>
-                                        </div>
+                                        @if(count($images) > 1)
+                                            <div @click="$event.stopPropagation(); $dispatch('image-gallery-prev')"
+                                                 class="absolute left-0 flex items-center justify-center text-white translate-x-10 rounded-full cursor-pointer xl:-translate-x-24 2xl:-translate-x-32 bg-primary/10 w-14 h-14 hover:bg-primary/20">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          d="M15.75 19.5L8.25 12l7.5-7.5"/>
+                                                </svg>
+                                            </div>
+                                        @endif
                                         <img
                                             x-show="imageGalleryOpened"
                                             x-transition:enter="transition ease-in-out duration-300"
@@ -94,14 +96,16 @@
                                             x-transition:leave-end="opacity-0 transform scale-50"
                                             class="object-contain object-center w-full h-full select-none cursor-zoom-out"
                                             :src="imageGalleryActiveUrl" alt="" style="display: none;">
-                                        <div @click="$event.stopPropagation(); $dispatch('image-gallery-next');"
-                                             class="absolute right-0 flex items-center justify-center text-white -translate-x-10 rounded-full cursor-pointer xl:translate-x-24 2xl:translate-x-32 bg-primary/10 w-14 h-14 hover:bg-primary/20">
-                                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
-                                            </svg>
-                                        </div>
+                                        @if(count($images) > 1)
+                                            <div @click="$event.stopPropagation(); $dispatch('image-gallery-next');"
+                                                 class="absolute right-0 flex items-center justify-center text-white -translate-x-10 rounded-full cursor-pointer xl:translate-x-24 2xl:translate-x-32 bg-primary/10 w-14 h-14 hover:bg-primary/20">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                                                </svg>
+                                            </div>
+                                        @endif
                                         <div @click="imageGalleryClose"
                                              class="fixed right-6 top-6 flex items-center justify-center text-white rounded-full cursor-pointer bg-primary w-14 h-14 hover:bg-primary/80">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
