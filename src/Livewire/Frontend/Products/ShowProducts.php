@@ -56,9 +56,9 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (!$value) {
+                if (! $value) {
                     unset($activeFilters[$filterKey][$optionKey]);
-                }else{
+                } else {
                     $activeFilters[$filterKey][$optionKey] = true;
                 }
             }
