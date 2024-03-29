@@ -19,9 +19,13 @@ class ShowProducts extends Component
     public ?string $orderBy = null;
     public ?string $order = null;
     public ?string $sortBy = null;
-    public ?string $search = '';
+
+    #[Url(except: '')]
+    public $search = '';
+
     public array $priceSlider = [];
     public array $defaultSliderOptions = [];
+    #[Url]
     public int $page = 1;
 
     public array $activeFilters = [];
@@ -30,7 +34,7 @@ class ShowProducts extends Component
 
     public $event = [];
 
-    public function getQueryString()
+    protected function queryString()
     {
         return array_merge([
             'search' => ['except' => ''],
@@ -52,14 +56,16 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (! $value) {
+                if (!$value) {
                     unset($activeFilters[$filterKey][$optionKey]);
+                }else{
+                    $activeFilters[$filterKey][$optionKey] = true;
                 }
             }
         }
         $this->activeFilters = $activeFilters;
 
-        $this->loadProducts();
+        $this->loadProducts(true);
     }
 
     public function updated()
@@ -74,7 +80,7 @@ class ShowProducts extends Component
         $this->loadProducts();
     }
 
-    public function loadProducts()
+    public function loadProducts(bool $isMount = false)
     {
         //        if (!$this->products) {
 
