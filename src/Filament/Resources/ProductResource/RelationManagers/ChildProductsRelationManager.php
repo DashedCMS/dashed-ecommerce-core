@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Relation
 
 use Filament\Forms\Get;
 use Filament\Forms\Form;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -226,6 +227,7 @@ class ChildProductsRelationManager extends RelationManager
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
+                DeleteBulkAction::make(),
             ])
             ->headerActions([
                 \Filament\Tables\Actions\Action::make('Aanmaken')
