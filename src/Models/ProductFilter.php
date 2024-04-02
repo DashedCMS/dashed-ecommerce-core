@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +38,7 @@ class ProductFilter extends Model
             foreach ($productFilter->productFilterOptions as $option) {
                 $option->delete();
             }
+            DB::table('dashed__active_product_filter')->where('product_filter_id', $productFilter->id)->delete();
         });
     }
 
