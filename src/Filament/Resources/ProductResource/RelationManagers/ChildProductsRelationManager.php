@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Relation
 
 use Filament\Forms\Get;
 use Filament\Forms\Form;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -17,6 +16,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Collection;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Resources\RelationManagers\RelationManager;
 
