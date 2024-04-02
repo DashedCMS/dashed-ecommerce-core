@@ -311,7 +311,7 @@ class Products
         } elseif ($orderBy == 'order') {
             $orderBy = 'order';
             $order = 'ASC';
-        }else{
+        } else {
             $orderBy = 'order';
             $order = 'ASC';
         }
