@@ -36,6 +36,7 @@ class ProductFilterOptionRelationManager extends RelationManager
             ->filters([
                 //
             ])
+            ->reorderable('order')
             ->actions([
                 Action::make('edit')
                     ->label('Bewerken')
