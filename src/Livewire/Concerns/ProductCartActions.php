@@ -229,6 +229,7 @@ trait ProductCartActions
         }
 
         $this->price = $productPrice;
+        $this->discountPrice = $this->product->discountPrice;
     }
 
     public function addToCart()
