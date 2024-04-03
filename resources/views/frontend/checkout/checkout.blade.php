@@ -411,14 +411,16 @@
                                                                     <input id="payment_method{{$thisPaymentMethod['id']}}"
                                                                            name="payment_method" required
                                                                            type="radio"
-                                                                           wire:model="paymentMethod"
+                                                                           wire:model.live="paymentMethod"
                                                                            value="{{$thisPaymentMethod['id']}}"
                                                                            class="focus:ring-primary h-4 w-4 border-gray-300">
                                                                     <label for="payment_method{{$thisPaymentMethod['id']}}"
                                                                            class="ml-3 block text-sm font-medium inline-flex items-center">
                                                                         @if($thisPaymentMethod['image'])
                                                                             <img
-                                                                                src="/storage{{$thisPaymentMethod['image']}}"
+                                                                                src="{{ app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $thisPaymentMethod['image'], [
+                                                                                                                    'widen' => 300,
+                                                                                                                ]) }}"
                                                                                 class="h-10 mr-2">
                                                                         @endif
                                                                         {{ $thisPaymentMethod['name'] }}
@@ -457,14 +459,16 @@
                                                                                                         required
                                                                                                         type="radio"
                                                                                                         value="{{ $thisDepositPaymentMethod['id']}}"
-                                                                                                        wire:model="depositPaymentMethod"
+                                                                                                        wire:model.live="depositPaymentMethod"
                                                                                                         class="focus:ring-primary h-4 w-4 border-gray-300">
                                                                                                     <label
                                                                                                         for="deposit_payment_method{{ $thisDepositPaymentMethod['id']}}"
                                                                                                         class="ml-3 block text-sm font-medium inline-flex items-center">
                                                                                                         @if($thisDepositPaymentMethod['image'])
                                                                                                             <img
-                                                                                                                src="/storage{{ $thisDepositPaymentMethod['image'] }}"
+                                                                                                                src="{{ app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $thisDepositPaymentMethod['image'], [
+                                                                                                                    'widen' => 300,
+                                                                                                                ]) }}"
                                                                                                                 class="h-10 mr-2">
                                                                                                         @endif
                                                                                                         {{ $thisDepositPaymentMethod['name'] }}
@@ -504,7 +508,7 @@
                                                                            name="shipping_method" required
                                                                            type="radio"
                                                                            value="{{ $thisShippingMethod['id'] }}"
-                                                                           wire:model="shippingMethod"
+                                                                           wire:model.live="shippingMethod"
                                                                            class="focus:ring-primary h-4 w-4 border-gray-300">
                                                                     <label for="shipping_method{{$thisShippingMethod['id']}}"
                                                                            class="ml-3 block text-sm font-medium">
