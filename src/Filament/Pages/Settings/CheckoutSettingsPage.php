@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -45,6 +46,8 @@ class CheckoutSettingsPage extends Page
             $formData["checkout_force_checkout_page_{$site['id']}"] = Customsetting::get('checkout_force_checkout_page', $site['id'], false);
             $formData["currency_format_type_{$site['id']}"] = Customsetting::get('currency_format_type', $site['id'], 'type1');
             $formData["show_currency_symbol_{$site['id']}"] = Customsetting::get('show_currency_symbol', $site['id'], true);
+            $formData["first_payment_method_selected_{$site['id']}"] = Customsetting::get('first_payment_method_selected', $site['id'], true);
+            $formData["first_shipping_method_selected_{$site['id']}"] = Customsetting::get('first_shipping_method_selected', $site['id'], true);
         }
 
         $this->form->fill($formData);
@@ -135,6 +138,10 @@ class CheckoutSettingsPage extends Page
                     ->required(),
                 Toggle::make("show_currency_symbol_{$site['id']}")
                     ->label('Laat valutasymbool zien'),
+                Toggle::make("first_payment_method_selected_{$site['id']}")
+                    ->label('Eerste betaalmethode standaard geselecteerd'),
+                Toggle::make("first_shipping_method_selected_{$site['id']}")
+                    ->label('Eerste verzendmethode standaard geselecteerd'),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -174,6 +181,8 @@ class CheckoutSettingsPage extends Page
             Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
             Customsetting::set('currency_format_type', $this->form->getState()["currency_format_type_{$site['id']}"], $site['id']);
             Customsetting::set('show_currency_symbol', $this->form->getState()["show_currency_symbol_{$site['id']}"], $site['id']);
+            Customsetting::set('first_payment_method_selected', $this->form->getState()["first_payment_method_selected_{$site['id']}"], $site['id']);
+            Customsetting::set('first_shipping_method_selected', $this->form->getState()["first_shipping_method_selected_{$site['id']}"], $site['id']);
         }
 
         Notification::make()

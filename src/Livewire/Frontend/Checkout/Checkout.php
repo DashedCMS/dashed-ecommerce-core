@@ -108,7 +108,7 @@ class Checkout extends Component
     public function retrievePaymentMethods()
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
-        if ((! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
+        if (Customsetting::get('first_payment_method_selected', null, true) && (! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
@@ -118,7 +118,7 @@ class Checkout extends Component
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
-        if ((! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
+        if (Customsetting::get('first_shipping_method_selected', null, true) && (! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
