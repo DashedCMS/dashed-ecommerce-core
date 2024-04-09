@@ -297,8 +297,8 @@ class ProductResource extends Resource
         $schema[] = Section::make('Filters beheren')
             ->headerActions([
                 \Filament\Forms\Components\Actions\Action::make('createMissingVariations')
-                    ->label(fn ($record) => "Ontbrekende variaties aanmaken (" . count($record->missingVariations()) . ")")
-                    ->visible(fn ($livewire, $record, $get) => $record->missingVariations() && $livewire instanceof EditProduct && $get('type') == 'variable' && $record && ! $record->parent_id)
+                    ->label(fn ($record) => "Ontbrekende variaties aanmaken (" . $record->missingVariationsCount() . ")")
+                    ->visible(fn ($livewire, $record, $get) => $record->missingVariationsCount() && $livewire instanceof EditProduct && $get('type') == 'variable' && $record && ! $record->parent_id)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         CreateMissingProductVariationsJob::dispatch($record);
