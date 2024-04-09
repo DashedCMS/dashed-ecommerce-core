@@ -35,6 +35,34 @@ class UpdateProductInformationJob implements ShouldQueue
      */
     public function handle(): void
     {
+        if ($this->product->type == 'variable' && ! $this->product->parent_id && count($this->product->copyable_to_childs)) {
+            foreach ($this->product->childProducts as $childProduct) {
+                if (in_array('productCategories', $this->product->copyable_to_childs)) {
+                    $childProduct->productCategories()->sync($this->product->productCategories);
+                }
+                if (in_array('shippingClasses', $this->product->copyable_to_childs)) {
+                    $childProduct->shippingClasses()->sync($this->product->shippingClasses);
+                }
+                if (in_array('suggestedProducts', $this->product->copyable_to_childs)) {
+                    $childProduct->suggestedProducts()->sync($this->product->suggestedProducts);
+                }
+                if (in_array('content', $this->product->copyable_to_childs)) {
+                    $childProduct->content = $this->product->getOriginal('content');
+                }
+                if (in_array('description', $this->product->copyable_to_childs)) {
+                    $childProduct->description = $this->product->getOriginal('description');
+                }
+                if (in_array('short_description', $this->product->copyable_to_childs)) {
+                    $childProduct->short_description = $this->product->getOriginal('short_description');
+                }
+                if (in_array('images', $this->product->copyable_to_childs)) {
+                    $childProduct->images = $this->product->getOriginal('images');
+                }
+
+                $childProduct->saveQuietly();
+            }
+        }
+
         foreach ($this->product->childProducts as $childProduct) {
             $childProduct->calculateStock();
             $childProduct->calculateTotalPurchases();
