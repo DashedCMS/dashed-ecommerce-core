@@ -59,25 +59,20 @@ class EditProduct extends EditRecord
 
         Redirect::handleSlugChange($this->record->getTranslation('slug', $this->activeLocale), $data['slug']);
 
-        foreach ($this->record->childProducts as $childProduct) {
-            $childProduct->site_ids = $data['site_ids'];
-            $childProduct->save();
-        }
-
         $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
-        if ($this->record->parent) {
-            foreach ($this->record->parent->childProducts as $childProduct) {
-                $childProduct->productCategories()->sync($selectedProductCategories);
-            }
-        } else {
-            $this->record->productCategories()->sync($selectedProductCategories);
-        }
+//        if ($this->record->parent) {
+//            foreach ($this->record->parent->childProducts as $childProduct) {
+//                $childProduct->productCategories()->sync($selectedProductCategories);
+//            }
+//        } else {
+        $this->record->productCategories()->sync($selectedProductCategories);
+//        }
 
-        if ($data['parent_id'] ?? false) {
-            foreach (Product::find($data['parent_id'])->childProducts as $childProduct) {
-                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
-            }
-        }
+//        if ($data['parent_id'] ?? false) {
+//            foreach (Product::find($data['parent_id'])->childProducts as $childProduct) {
+//                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
+//            }
+//        }
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
