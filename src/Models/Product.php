@@ -590,24 +590,6 @@ class Product extends Model
         return $variations;
     }
 
-    public function missingVariationsCount(): int
-    {
-        $variations = $this->possibleVariations();
-
-        //Otherwise it will take too long to calculate
-        if (count($variations) > 200) {
-            return count($variations) - $this->childProducts()->count();
-        } else {
-            foreach ($variations as $variationKey => $variation) {
-                if ($this->variationExists($variation)) {
-                    unset($variations[$variationKey]);
-                }
-            }
-
-            return count($variations);
-        }
-    }
-
     public function variationExists(array $array): bool
     {
         foreach ($this->childProducts as $childProduct) {
