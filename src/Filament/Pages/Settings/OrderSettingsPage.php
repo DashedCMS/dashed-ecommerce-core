@@ -15,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
+use FilamentTiptapEditor\TiptapEditor;
 use Mohamedsabil83\FilamentFormsTinyeditor\Components\TinyEditor;
 
 class OrderSettingsPage extends Page
@@ -131,9 +132,9 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
-                TinyEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
+                TiptapEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
-                    ->fileAttachmentsDirectory('/dashed/orders/images')
+                    ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" actie')
@@ -145,9 +146,9 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
-                TinyEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
+                TiptapEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail inhoud')
-                    ->fileAttachmentsDirectory('/dashed/orders/images')
+                    ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" actie')
@@ -159,9 +160,9 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
-                TinyEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
+                TiptapEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail inhoud')
-                    ->fileAttachmentsDirectory('/dashed/orders/images')
+                    ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" actie')
@@ -173,9 +174,9 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
-                TinyEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
+                TiptapEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail inhoud')
-                    ->fileAttachmentsDirectory('/dashed/orders/images')
+                    ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" actie')
@@ -187,9 +188,9 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
-                TinyEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
+                TiptapEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail inhoud')
-                    ->fileAttachmentsDirectory('/dashed/orders/images')
+                    ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
 
