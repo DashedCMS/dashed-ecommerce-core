@@ -9,14 +9,13 @@ use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
+use FilamentTiptapEditor\TiptapEditor;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use FilamentTiptapEditor\TiptapEditor;
-use Mohamedsabil83\FilamentFormsTinyeditor\Components\TinyEditor;
 
 class OrderSettingsPage extends Page
 {
