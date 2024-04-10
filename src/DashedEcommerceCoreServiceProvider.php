@@ -70,7 +70,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             $schedule->command(CancelOldOrders::class)
                 ->everyFifteenMinutes();
             $schedule->command(UpdateProductInformations::class)
-                ->everyFifteenMinutes()
+                ->twiceDaily()
                 ->withoutOverlapping();
         });
 
