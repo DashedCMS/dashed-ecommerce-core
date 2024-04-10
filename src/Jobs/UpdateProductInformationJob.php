@@ -37,7 +37,7 @@ class UpdateProductInformationJob implements ShouldQueue
     {
         foreach ($this->product->childProducts as $childProduct) {
             $childProduct->site_ids = $this->product->site_ids;
-            $childProduct->save();
+            $childProduct->saveQuietly();
         }
 
         if ($this->product->type == 'variable' && ! $this->product->parent_id && count($this->product->copyable_to_childs)) {
