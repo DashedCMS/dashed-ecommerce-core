@@ -75,7 +75,7 @@ class UpdateProductInformationJob implements ShouldQueue
 
         $this->product->calculateStock();
         $this->product->calculateTotalPurchases();
-        $this->product->missing_varations = count($this->product->missingVariations());
+        $this->product->missing_variations = count($this->product->missingVariations());
         $this->product->saveQuietly();
 
         if ($this->product->parent) {
