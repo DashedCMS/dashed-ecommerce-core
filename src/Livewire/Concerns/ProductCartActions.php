@@ -149,7 +149,7 @@ trait ProductCartActions
             ];
         }
         $this->description = $this->product->description ?? $this->parentProduct->description;
-        $this->shortDescription = $this->product->shortDescription ?? $this->parentProduct->shortDescription;
+        $this->shortDescription = $this->product->short_description ?? $this->parentProduct->short_description;
         $this->sku = $this->product->sku ?? $this->parentProduct->sku;
         $this->calculateCurrenctPrices();
         if (! $isMount) {
