@@ -43,8 +43,8 @@ class Product extends Model
     ];
 
     protected $with = [
-        'productFilters',
-        'parent',
+//        'productFilters',
+//        'parent',
 //        'bundleProducts',
 //        'childProducts',
     ];

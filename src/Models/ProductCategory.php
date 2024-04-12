@@ -84,7 +84,7 @@ class ProductCategory extends Model
 
     public function getUrl()
     {
-        if (! $this->hasChilds()) {
+        if (! $this->childs->count()) {
             if ($this->products->count() == 1) {
                 return $this->products->first()->getUrl();
             } else {
@@ -135,12 +135,21 @@ class ProductCategory extends Model
         return $this->belongsToMany(Product::class, 'dashed__product_category');
     }
 
+    public function childs()
+    {
+        return $this->hasMany(self::class, 'parent_id');
+    }
+
     public static function resolveRoute($parameters = [])
     {
         $slug = $parameters['slug'] ?? '';
         $slugComponents = explode('/', $slug);
 
-        $productCategory = ProductCategory::slug($slugComponents[0])->first();
+        $productCategory = ProductCategory::thisSite()->slug($slugComponents[0])->first();
+        View::share('productCategory', $productCategory);
+
+        return view('dashed.categories.show');
+
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
