@@ -146,9 +146,6 @@ class ProductCategory extends Model
         $slugComponents = explode('/', $slug);
 
         $productCategory = ProductCategory::thisSite()->slug($slugComponents[0])->first();
-        View::share('productCategory', $productCategory);
-
-        return view('dashed.categories.show');
 
         if ($productCategory) {
             array_shift($slugComponents);
