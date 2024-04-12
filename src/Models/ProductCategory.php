@@ -140,14 +140,14 @@ class ProductCategory extends Model
         $slug = $parameters['slug'] ?? '';
         $slugComponents = explode('/', $slug);
 
-        $productCategory = ProductCategory::where('slug->' . App::getLocale(), $slugComponents[0])->first();
+        $productCategory = ProductCategory::slug($slugComponents[0])->first();
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
                 if (! $productCategory) {
                     return 'pageNotFound';
                 }
-                $productCategory = ProductCategory::thisSite()->where('slug->' . App::getLocale(), $slugComponent)->where('parent_id', $productCategory->id)->first();
+                $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();
             }
             if (View::exists('dashed.categories.show') && $productCategory) {
                 seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
