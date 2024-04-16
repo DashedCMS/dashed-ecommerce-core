@@ -55,10 +55,10 @@ class ShippingMethodResource extends Resource
                     Select::make('shipping_zone_id')
                         ->relationship('shippingZone', 'name')
                         ->label('Hangt onder verzendzone')
-                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                        ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
                         ->required(),
                 ])
-                ->collapsed(fn ($livewire) => $livewire instanceof EditShippingMethod),
+                ->collapsed(fn($livewire) => $livewire instanceof EditShippingMethod),
             Section::make('Content')
                 ->schema([
                     TextInput::make('name')
@@ -77,15 +77,18 @@ class ShippingMethodResource extends Resource
                         ->required(),
                     TextInput::make('minimum_order_value')
                         ->label('Vanaf hoeveel € moet deze verzendmethode geldig zijn')
+                        ->required()
                         ->numeric(),
                     TextInput::make('maximum_order_value')
                         ->label('Tot hoeveel € moet deze verzendmethode geldig zijn (zet op 100000 voor oneindig)')
+                        ->required()
                         ->numeric()
                         ->maxValue(100000),
                     TextInput::make('costs')
                         ->label('Kosten van deze verzendmethode')
+                        ->required()
                         ->numeric()
-                        ->hidden(fn ($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
                     Repeater::make('variables')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Met variable berekening kan je per x aantal items rekenen, we rekenen van boven naar beneden')
@@ -93,18 +96,18 @@ class ShippingMethodResource extends Resource
                             TextInput::make('amount_of_items')
                                 ->label('Voor hoeveel stuks moet dit gelden')
                                 ->type('number')
-                            ->numeric(),
+                                ->numeric(),
                             TextInput::make('costs')
                                 ->label('Vul een prijs in voor dit aantal')
-                            ->numeric(),
+                                ->numeric(),
                         ])
                         ->nullable()
-                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('variable_static_costs')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
                         ->maxLength(255)
-                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('order')
                         ->label('Volgorde van de verzendmethode')
                         ->numeric()
@@ -117,7 +120,7 @@ class ShippingMethodResource extends Resource
                         ->label('Aantal KMs vanaf vestiging mogelijk')
                         ->numeric()
                         ->required()
-                        ->visible(fn (Get $get) => $get('distance_range_enabled')),
+                        ->visible(fn(Get $get) => $get('distance_range_enabled')),
                 ]),
         ];
 
@@ -126,7 +129,7 @@ class ShippingMethodResource extends Resource
             $shippingClasses[] = TextInput::make("shipping_class_costs_$shippingClass->id")
                 ->label("Vul een meerprijs in voor producten in deze verzendklasse $shippingClass->name")
                 ->numeric()
-                ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
+                ->hidden(fn($livewire, $record) => !($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
         }
 
         if ($shippingClasses) {
