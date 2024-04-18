@@ -513,10 +513,11 @@ class ProductResource extends Resource
                             ->label('Type')
                             ->options([
                                 'single' => '1 optie',
-                                'multiple' => 'Meerdere opties (mogelijk nog niet ondersteund door jouw webshop)',
-                                'checkbox' => 'Checkbox (mogelijk nog niet ondersteund door jouw webshop)',
-                                'input' => 'Invulveld (mogelijk nog niet ondersteund door jouw webshop)',
-                                'file' => 'Upload bestand (mogelijk nog niet ondersteund door jouw webshop)',
+                                'multiple' => 'Meerdere opties',
+                                'checkbox' => 'Checkbox',
+                                'input' => 'Invulveld',
+                                'imagePicker' => 'Afbeelding kiezen',
+                                'file' => 'Upload bestand',
                             ])
                             ->default('single')
                             ->required()
@@ -549,8 +550,8 @@ class ProductResource extends Resource
                             ->relationship('productExtraOptions')
                             ->cloneable()
                             ->label('Opties van deze product extra')
-                            ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
-                            ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox')
+                            ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                            ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
                             ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
                             ->schema([
                                 TextInput::make('value')
@@ -565,6 +566,12 @@ class ProductResource extends Resource
                                     ->numeric()
                                     ->minValue(0.00)
                                     ->maxValue(10000),
+                                FileUpload::make('image')
+                                    ->directory('dashed/products/extra-options/images')
+                                    ->name('Afbeelding')
+                                    ->image()
+                                    ->required()
+                                    ->visible(fn (Get $get) => $get('type') == 'imagePicker'),
                                 Toggle::make('calculate_only_1_quantity')
                                     ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
                             ])
