@@ -396,6 +396,7 @@ class ProductResource extends Resource
                     ->label('Afbeeldingen')
                     ->schema([
                         FileUpload::make('image')
+                            ->downloadable()
                             ->directory('dashed/products/images')
                             ->name('Afbeelding')
                             ->image()
@@ -569,6 +570,7 @@ class ProductResource extends Resource
                                     ->maxValue(10000),
                                 FileUpload::make('image')
                                     ->directory('dashed/products/extra-options/images')
+                                    ->downloadable()
                                     ->name('Afbeelding')
                                     ->image()
                                     ->required(),
