@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\View;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
@@ -36,13 +35,7 @@ class OrderConfirmationMail extends Mailable
     {
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        if (View::exists('dashed.emails.confirm-order')) {
-            $view = 'dashed.emails.confirm-order';
-        } else {
-            $view = 'dashed-ecommerce-core::emails.confirm-order';
-        }
-
-        $mail = $this->view($view)
+        $mail = $this->view('dashed-ecommerce-core::emails.confirm-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('order-confirmation-email-subject', 'orders', 'Order confirmation for order #:orderId:', 'text', [
                 'orderId' => $this->order->invoice_id,
@@ -51,7 +44,7 @@ class OrderConfirmationMail extends Mailable
                 'order' => $this->order,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])->attach($invoicePath, [
-                'as' => Customsetting::get('company_name') . ' - ' . $this->order->invoice_id . '.pdf',
+                'as' => Customsetting::get('company_name').' - '.$this->order->invoice_id.'.pdf',
                 'mime' => 'application/pdf',
             ]);
 
