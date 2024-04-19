@@ -572,8 +572,7 @@ class ProductResource extends Resource
                                     ->directory('dashed/products/extra-options/images')
                                     ->downloadable()
                                     ->name('Afbeelding')
-                                    ->image()
-                                    ->required(),
+                                    ->image(),
                                 Toggle::make('calculate_only_1_quantity')
                                     ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
                             ])
