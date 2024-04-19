@@ -10,6 +10,10 @@ class ShowProduct extends Component
 {
     use ProductCartActions;
 
+    protected $listeners = [
+        'setProductExtraCustomValue'
+    ];
+
     public function mount(Product $product)
     {
         $this->parentProduct = $product->parent ? $product->parent : $product;
