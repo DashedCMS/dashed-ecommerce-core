@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Support\Facades\View;
 use Dashed\DashedTranslations\Models\Translation;
 
 class PreOrderConfirmationMail extends Mailable
@@ -35,7 +36,14 @@ class PreOrderConfirmationMail extends Mailable
     {
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        $mail = $this->view('dashed-ecommerce-core::emails.confirm-pre-order')
+
+        if (View::exists('dashed.emails.confirm-pre-order')) {
+            $view = 'dashed.emails.confirm-pre-order';
+        } else {
+            $view = 'dashed-ecommerce-core::emails.confirm-pre-order';
+        }
+
+        $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('pre-order-confirmation-email-subject', 'pre-orders', 'Pre order confirmation for order #:orderId:', 'text', [
                 'orderId' => $this->order->invoice_id,

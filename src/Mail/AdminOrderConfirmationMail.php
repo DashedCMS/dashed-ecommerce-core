@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
+use Illuminate\Support\Facades\View;
 
 class AdminOrderConfirmationMail extends Mailable
 {
@@ -35,7 +36,13 @@ class AdminOrderConfirmationMail extends Mailable
     {
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        return $this->view('dashed-ecommerce-core::emails.admin-confirm-order')
+        if (View::exists('dashed.emails.admin-confirm-order')) {
+            $view = 'dashed.emails.admin-confirm-order';
+        } else {
+            $view = 'dashed-ecommerce-core::emails.admin-confirm-order';
+        }
+
+        return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('admin-order-confirmation-email-subject', 'orders', 'Order received #:orderId:', 'text', [
                 'orderId' => $this->order->invoice_id,
             ]))
