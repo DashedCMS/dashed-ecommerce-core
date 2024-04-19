@@ -130,6 +130,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
         $this->publishes([
             __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/dashed-ecommerce-core/frontend'),
+            __DIR__ . '/../resources/views/emails' => resource_path('views/vendor/dashed-ecommerce-core/emails'),
         ], 'dashed-ecommerce-core-views');
 
         cms()->builder(
