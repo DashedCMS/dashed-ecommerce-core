@@ -313,6 +313,14 @@ class Products
             $order = 'ASC';
         }
 
+        if (! $orderBy) {
+            $orderBy = Customsetting::get('product_default_order_type', null, 'price');
+        }
+
+        if (! $order) {
+            $order = Customsetting::get('product_default_order_sort', null, 'DESC');
+        }
+
         if ($enableFilters) {
             $productFilters = self::getFiltersV2([], $activeFilters);
             $hasActiveFilters = false;
