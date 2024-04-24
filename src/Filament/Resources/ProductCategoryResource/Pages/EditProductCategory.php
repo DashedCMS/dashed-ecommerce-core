@@ -7,7 +7,6 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
-use Dashed\DashedCore\Models\Redirect;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
