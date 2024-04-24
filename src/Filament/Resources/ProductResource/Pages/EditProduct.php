@@ -57,8 +57,6 @@ class EditProduct extends EditRecord
 
         $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
-        Redirect::handleSlugChange($this->record->getTranslation('slug', $this->activeLocale), $data['slug']);
-
         $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
         //        if ($this->record->parent) {
         //            foreach ($this->record->parent->childProducts as $childProduct) {
