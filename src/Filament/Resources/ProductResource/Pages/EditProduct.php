@@ -137,6 +137,8 @@ class EditProduct extends EditRecord
                 unset($data[$key]);
             }
         }
+        unset($data['productCharacteristics']);
+        unset($data['productExtras']);
 
         return $data;
     }
