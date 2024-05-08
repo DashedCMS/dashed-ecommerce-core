@@ -90,26 +90,5 @@ class UpdateProductInformationJob implements ShouldQueue
                 $bundleParentProduct->calculateTotalPurchases();
             }
         }
-
-        foreach ($this->product->childProducts as $childProduct) {
-            $childProduct->calculateInStock();
-            $childProduct->calculateTotalPurchases();
-        }
-
-        $this->product->calculateInStock();
-        $this->product->calculateTotalPurchases();
-
-        if ($this->product->parent) {
-            $this->product->parent->calculateInStock();
-            $this->product->parent->calculateTotalPurchases();
-        }
-
-        foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
-            $bundleParentProduct = Product::find($productId);
-            if ($bundleParentProduct) {
-                $bundleParentProduct->calculateInStock();
-                $bundleParentProduct->calculateInStock();
-            }
-        }
     }
 }
