@@ -315,6 +315,10 @@ class Product extends Model
 
     public function getUrl($locale = null)
     {
+        if(!$locale){
+            $locale = app()->getLocale();
+        }
+
         return Cache::tags(['product-' . $this->id])->remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
             if (! $locale) {
                 $locale = App::getLocale();

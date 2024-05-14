@@ -342,7 +342,7 @@ class Products
                 ->thisSite()
                 ->publicShowable()
                 ->orderBy($orderBy, $order)
-                ->with(['productFilters', 'productCategories'])
+                ->with(['productFilters'])
                 ->get();
         } else {
             $allProducts = Product::search($search)
