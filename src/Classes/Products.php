@@ -335,21 +335,18 @@ class Products
 
         $correctProductIds = [];
         $hideProductIds = [];
-        if ($categoryId && $category = ProductCategory::with(['products'])
-                ->findOrFail($categoryId)) {
+        if ($categoryId && $category = ProductCategory::findOrFail($categoryId)) {
             $allProducts = $category->products()
                 ->search($search)
                 ->thisSite()
                 ->publicShowable()
                 ->orderBy($orderBy, $order)
-                ->with(['productFilters'])
                 ->get();
         } else {
             $allProducts = Product::search($search)
                 ->thisSite()
                 ->publicShowable()
                 ->orderBy($orderBy, $order)
-                ->with(['productFilters', 'productCategories'])
                 ->get();
         }
 
