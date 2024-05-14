@@ -315,7 +315,7 @@ class Product extends Model
 
     public function getUrl($locale = null)
     {
-        if(!$locale){
+        if(! $locale) {
             $locale = app()->getLocale();
         }
 
