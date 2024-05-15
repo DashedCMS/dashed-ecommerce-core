@@ -505,6 +505,7 @@ class Checkout extends Component
         }
 
         $order->shipping_method_id = $shippingMethod['id'];
+        $order->payment_method_id = $paymentMethod['id'];
 
         if (Auth::check()) {
             $order->user_id = auth()->user()->id;
