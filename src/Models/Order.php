@@ -229,7 +229,7 @@ class Order extends Model
 
     public function mainPaymentMethod(): BelongsTo
     {
-        return $this->belongsTo(PaymentMethod::class)
+        return $this->belongsTo(PaymentMethod::class, 'payment_method_id')
             ->withTrashed();
     }
 
