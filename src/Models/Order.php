@@ -164,7 +164,7 @@ class Order extends Model
 
     public function getPaymentMethodAttribute(): string
     {
-        return $this->paymentMethod ? $this->paymentMethod->name : ($this->orderPayments()->first() ? $this->orderPayments()->first()->payment_method_name : 'Geen methode beschikbaar');
+        return $this->mainPaymentMethod ? $this->mainPaymentMethod->name : ($this->orderPayments()->first() ? $this->orderPayments()->first()->payment_method_name : 'Geen methode beschikbaar');
     }
 
     public function getPaymentMethodInstructionsAttribute(): string
@@ -227,7 +227,7 @@ class Order extends Model
             ->withTrashed();
     }
 
-    public function paymentMethod(): BelongsTo
+    public function mainPaymentMethod(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class)
             ->withTrashed();
