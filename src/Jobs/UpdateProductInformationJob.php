@@ -70,16 +70,19 @@ class UpdateProductInformationJob implements ShouldQueue
 
         foreach ($this->product->childProducts as $childProduct) {
             $childProduct->calculateStock();
+            $childProduct->calculateInStock();
             $childProduct->calculateTotalPurchases();
         }
 
         $this->product->calculateStock();
+        $this->product->calculateInStock();
         $this->product->calculateTotalPurchases();
         $this->product->missing_variations = count($this->product->missingVariations());
         $this->product->saveQuietly();
 
         if ($this->product->parent) {
             $this->product->parent->calculateStock();
+            $this->product->parent->calculateInStock();
             $this->product->parent->calculateTotalPurchases();
         }
 
@@ -87,6 +90,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $bundleParentProduct = Product::find($productId);
             if ($bundleParentProduct) {
                 $bundleParentProduct->calculateStock();
+                $bundleParentProduct->calculateInStock();
                 $bundleParentProduct->calculateTotalPurchases();
             }
         }
