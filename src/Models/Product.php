@@ -651,6 +651,7 @@ class Product extends Model
 
         $this->total_stock = $stock;
         $this->saveQuietly();
+        $this->calculateInStock();
     }
 
     public function hasDirectSellableStock()
