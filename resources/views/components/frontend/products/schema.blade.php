@@ -26,3 +26,22 @@
         <meta itemprop="priceValidUntil" content="{{now()->addYear()}}">
     </div>
 </div>
+
+<script>
+    document.getElementById('add-to-cart-product-{{ $product->id }}').addEventListener('click', function() {
+        dataLayer.push({
+            'event': 'addToCart',
+            'ecommerce': {
+                'currencyCode': 'EUR',
+                'add': {
+                    'products': [{
+                        'name': '{{ $product->name }}',
+                        'id': '{{ $product->id }}',
+                        'price': {{ number_format($product->currentPrice, 2, '.', '') }},
+                        'quantity': 1
+                    }]
+                }
+            }
+        });
+    });
+</script>
