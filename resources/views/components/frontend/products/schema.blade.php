@@ -28,7 +28,7 @@
 </div>
 
 <script>
-    document.getElementById('add-to-cart-product-{{ $product->id }}').addEventListener('click', function() {
+    document.getElementById('add-to-cart-product-{{ $product->id }}') ? document.getElementById('add-to-cart-product-{{ $product->id }}').addEventListener('click', function() {
         dataLayer.push({
             'event': 'addToCart',
             'ecommerce': {
@@ -43,5 +43,5 @@
                 }
             }
         });
-    });
+    }) : null;
 </script>

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -22,7 +23,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord
 {
-    use Translatable;
+    use HasEditableCMSActions;
 
     protected static string $resource = ProductResource::class;
 
@@ -48,28 +49,11 @@ class EditProduct extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['slug'] = Str::slug($data['slug'] ?: $data['name']);
-
-        while (Product::where('id', '!=', $this->record->id)->where('slug->' . $this->activeLocale, $data['slug'])->count()) {
-            $data['slug'] .= Str::random(1);
-        }
-
         $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
         $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
-        //        if ($this->record->parent) {
-        //            foreach ($this->record->parent->childProducts as $childProduct) {
-        //                $childProduct->productCategories()->sync($selectedProductCategories);
-        //            }
-        //        } else {
-        $this->record->productCategories()->sync($selectedProductCategories);
-        //        }
 
-        //        if ($data['parent_id'] ?? false) {
-        //            foreach (Product::find($data['parent_id'])->childProducts as $childProduct) {
-        //                $childProduct->shippingClasses()->sync($this->record->shippingClasses);
-        //            }
-        //        }
+        $this->record->productCategories()->sync($selectedProductCategories);
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
@@ -174,32 +158,6 @@ class EditProduct extends EditRecord
         return $data;
     }
 
-    //    public function afterFill(): void
-    //    {
-    //        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
-    //
-    //        if ($this->record->parent) {
-    //            $activeProductFilters = $this->record->parent->activeProductFilters;
-    //        } else {
-    //            $activeProductFilters = $this->record->activeProductFilters;
-    //        }
-    //
-    //        foreach ($productFilters as $productFilter) {
-    //            $this->data["product_filter_$productFilter->id"] = (bool)$activeProductFilters->contains($productFilter->id);
-    //            $this->data["product_filter_{$productFilter->id}_use_for_variations"] = $activeProductFilters->contains($productFilter->id) ? ($this->record->activeProductFilters()->wherePivot('product_filter_id', $productFilter->id)->first()->pivot->use_for_variations ?? 0) : 0;
-    //
-    //            foreach ($productFilter->productFilterOptions as $productFilterOption) {
-    //                $this->data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] = $this->record->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
-    //            }
-    //        }
-    //
-    //        $productCharacteristics = ProductCharacteristics::get();
-    //
-    //        foreach ($productCharacteristics as $productCharacteristic) {
-    //            $this->data["product_characteristic_$productCharacteristic->id"] = $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->exists() ? $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first()->getTranslation('value', $this->activeLocale) : null;
-    //        }
-    //    }
-
     public function getBreadcrumbs(): array
     {
         if (! $this->record->parent) {
@@ -227,6 +185,7 @@ class EditProduct extends EditRecord
                 ->color('warning');
         }
 
+        $buttons[] = self::duplicateAction();
         $buttons[] = LocaleSwitcher::make();
         $buttons[] = DeleteAction::make();
 
