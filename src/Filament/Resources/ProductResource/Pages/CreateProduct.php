@@ -2,12 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedCore\Filament\Concerns\HasCreatableCMSActions;
-use Illuminate\Support\Str;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+use Dashed\DashedCore\Filament\Concerns\HasCreatableCMSActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class CreateProduct extends CreateRecord
