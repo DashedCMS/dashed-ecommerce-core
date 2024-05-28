@@ -68,14 +68,6 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
-            Cache::tags(['product-' . $product->id])->flush();
-            if ($product->parent) {
-                Cache::tags(['product-' . $product->parent->id])->flush();
-                foreach ($product->parent->childProducts as $childProduct) {
-                    Cache::tags(['product-' . $childProduct->id])->flush();
-                }
-            }
-
             if ($product->is_bundle && $product->type == 'variable' && ! $product->parent_id) {
                 $product->is_bundle = false;
                 $product->save();

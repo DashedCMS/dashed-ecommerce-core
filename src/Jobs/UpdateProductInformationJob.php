@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
@@ -90,5 +92,7 @@ class UpdateProductInformationJob implements ShouldQueue
                 $bundleParentProduct->calculateTotalPurchases();
             }
         }
+
+        ProductUpdatedEvent::dispatch($this->product);
     }
 }
