@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
