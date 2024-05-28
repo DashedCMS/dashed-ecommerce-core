@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
@@ -12,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 
 class UpdateProductInformationJob implements ShouldQueue
 {
@@ -43,7 +43,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $childProduct->saveQuietly();
         }
 
-        if ($this->product->type == 'variable' && ! $this->product->parent_id && count($this->product->copyable_to_childs ?? [])) {
+        if ($this->product->type == 'variable' && !$this->product->parent_id && count($this->product->copyable_to_childs ?? [])) {
             foreach ($this->product->childProducts as $childProduct) {
                 if (in_array('productCategories', $this->product->copyable_to_childs)) {
                     $childProduct->productCategories()->sync($this->product->productCategories);
