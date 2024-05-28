@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,6 @@ class UpdateProductInformationJob implements ShouldQueue
             }
         }
 
-        ProductUpdatedEvent::dispatch($this->product);
+        ProductInformationUpdatedEvent::dispatch($this->product);
     }
 }
