@@ -66,9 +66,7 @@ class ProductCategoryResource extends Resource
                             ->directory('dashed/product-categories/images')
                             ->name('Afbeelding')
                             ->image(),
-                        Builder::make('content')
-                            ->blocks(cms()->builder('blocks'))
-                            ->columnSpanFull(),
+                        cms()->getFilamentBuilderBlock(),
                     ], static::customBlocksTab(cms()->builder('productCategoryBlocks'))))
                     ->columns(2),
                 Section::make('Algemene informatie')
