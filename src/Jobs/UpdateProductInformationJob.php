@@ -2,8 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
@@ -11,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 
 class UpdateProductInformationJob implements ShouldQueue
 {
