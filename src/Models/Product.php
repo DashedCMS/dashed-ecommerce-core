@@ -86,8 +86,8 @@ class Product extends Model
             }
 
 
-            foreach(Locales::getLocalesArray() as $locale) {
-                Cache::forget('product-' . $product->id . '-url-' . $locale);
+            foreach(Locales::getLocalesArray() as $key => $locale) {
+                Cache::forget('product-' . $product->id . '-url-' . $key);
             }
             UpdateProductInformationJob::dispatch($product);
         });
@@ -321,11 +321,7 @@ class Product extends Model
             $locale = app()->getLocale();
         }
 
-        return Cache::tags(['product-' . $this->id])->remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
-            if (! $locale) {
-                $locale = App::getLocale();
-            }
-
+        return Cache::remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
             if (! Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
                 foreach ($this->childProducts as $childProduct) {
                     if ($childProduct->inStock() && ! isset($url)) {
