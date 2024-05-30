@@ -485,9 +485,7 @@ BLADE
         ShoppingCart::removeInvalidItems();
 
         $cartItems = ShoppingCart::cartItems();
-        //        ray($cartItems);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
-        //        ray($checkoutData);
 
         if (! $cartItems) {
             Notification::make()
@@ -516,7 +514,6 @@ BLADE
         //        }
 
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
-        ray($shippingMethods);
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
             if ($thisShippingMethod['id'] == $this->shipping_method_id) {
@@ -525,7 +522,6 @@ BLADE
         }
 
         if (! $shippingMethod) {
-            ray($this->shipping_method_id);
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -596,15 +592,12 @@ BLADE
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $this->discount_code]);
-        //        ray($this->discount_code);
         $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $discount = ShoppingCart::totalDiscount(false, $this->discount_code);
-        //        ray($discount);
         $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
         $shippingCosts = 0;
         $paymentCosts = 0;
-        //        ray('ss');
 
         if ($shippingMethod->costs > 0) {
             $shippingCosts = $shippingMethod->costs;
