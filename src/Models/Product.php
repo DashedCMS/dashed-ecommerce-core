@@ -3,13 +3,13 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedPages\Models\Page;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
 use Gloudemans\Shoppingcart\CartItem;
 use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
