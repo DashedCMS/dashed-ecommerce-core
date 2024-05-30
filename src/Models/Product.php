@@ -87,7 +87,7 @@ class Product extends Model
 
 
             foreach(Locales::getLocalesArray() as $locale) {
-                Cache::forget('product-' . $product->id . '-url-' . $locale['id']);
+                Cache::forget('product-' . $product->id . '-url-' . $locale);
             }
             UpdateProductInformationJob::dispatch($product);
         });
