@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedPages\Models\Page;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
@@ -84,6 +85,10 @@ class Product extends Model
                 $product->saveQuietly();
             }
 
+
+            foreach(Locales::getLocalesArray() as $locale) {
+                Cache::forget('product-' . $product->id . '-url-' . $locale['id']);
+            }
             UpdateProductInformationJob::dispatch($product);
         });
 
