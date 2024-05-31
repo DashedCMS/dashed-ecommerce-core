@@ -2,10 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners;
 
-use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 
 class ClearProductCache
 {
