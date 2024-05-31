@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners;
 
+use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
@@ -19,12 +20,11 @@ class ClearProductCache
     /**
      * Handle the event.
      */
-    public function handle(ProductUpdatedEvent $event): void
+    public function handle(ProductSavedEvent $event): void
     {
         foreach (Locales::getLocalesArray() as $key => $locale) {
             Cache::forget('product-' . $event->product->id . '-url-' . $key);
         }
         Cache::forget("product-showable-characteristics-" . $event->product->id);
-        dd('asdf');
     }
 }
