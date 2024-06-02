@@ -391,12 +391,7 @@ class ProductResource extends Resource
                 Repeater::make('images')
                     ->label('Afbeeldingen')
                     ->schema([
-                        FileUpload::make('image')
-                            ->downloadable()
-                            ->directory('dashed/products/images')
-                            ->name('Afbeelding')
-                            ->image()
-                            ->required(),
+                        mediaHelper()->field('image', 'Afbeelding', true, false, true),
                         TextInput::make('alt_text')
                             ->label('Alt tekst')
                             ->maxLength(1000),

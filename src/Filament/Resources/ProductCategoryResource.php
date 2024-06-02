@@ -61,10 +61,7 @@ class ProductCategoryResource extends Resource
                             ->unique('dashed__product_categories', 'slug', fn ($record) => $record)
                             ->helperText('Laat leeg om automatisch te laten genereren')
                             ->maxLength(255),
-                        FileUpload::make('image')
-                            ->directory('dashed/product-categories/images')
-                            ->name('Afbeelding')
-                            ->image(),
+                        mediaHelper()->field('image', 'Afbeelding'),
                         cms()->getFilamentBuilderBlock(),
                     ], static::customBlocksTab(cms()->builder('productCategoryBlocks'))))
                     ->columns(2),
