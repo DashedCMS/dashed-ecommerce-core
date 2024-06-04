@@ -129,7 +129,7 @@
                             @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
                             @if($logo)
                                 <img
-                                    src="{{$logo->url ?? ''}}"
+                                    src="{{mediaHelper()->getSingleImage($logo)->url ?? ''}}"
                                      class="logo">
                             @endif
                         </td>
