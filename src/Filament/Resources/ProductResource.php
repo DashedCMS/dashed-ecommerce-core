@@ -559,11 +559,7 @@ class ProductResource extends Resource
                                     ->numeric()
                                     ->minValue(0.00)
                                     ->maxValue(10000),
-                                FileUpload::make('image')
-                                    ->directory('dashed/products/extra-options/images')
-                                    ->downloadable()
-                                    ->name('Afbeelding')
-                                    ->image(),
+                                mediaHelper()->field('image', 'Afbeelding'),
                                 Toggle::make('calculate_only_1_quantity')
                                     ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
                             ])

@@ -43,9 +43,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                         ImageEntry::make('image')
                             ->hiddenLabel()
                             ->visible($orderProduct->product && $orderProduct->product->firstImageUrl)
-                            ->getStateUsing(fn () => app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $orderProduct->product->firstImageUrl, [
-                                'widen' => 600,
-                            ]))
+                            ->getStateUsing(fn () => mediaHelper()->getSingleImage($orderProduct->product->firstImageUrl)->url)
                             ->disk('dashed')
                             ->width('100%')
                             ->height('auto'),
