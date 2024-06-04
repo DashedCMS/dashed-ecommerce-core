@@ -508,7 +508,7 @@
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                         @if(optional($orderProduct->product)->firstImageUrl)
                                                                             <img
-                                                                                src="{{mediaHelper()->getSingleImage($orderProduct->product->firstImageUrl, 'small')}}"
+                                                                                src="{{mediaHelper()->getSingleImage($orderProduct->product->firstImageUrl, 'small')->url}}"
                                                                                 class="products-gallery-image"
                                                                                 style="display: block; width: 80px;"
                                                                                 width="80">@endif </a></td>

@@ -144,7 +144,7 @@ trait ProductCartActions
         foreach ($this->images as $image) {
             $this->originalImages[] = [
                 'alt' => $image['alt_text'],
-                'image' => mediaHelper()->getSingleImage($image['image'], 'original'),
+                'image' => mediaHelper()->getSingleImage($image['image'], 'original')->url ?? '',
             ];
         }
         $this->description = $this->product->description ?? $this->parentProduct->description;
