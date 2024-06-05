@@ -18,9 +18,9 @@
                             @foreach($log->images as $image)
                                 <a class="text-primary-500 hover:text-primary-600"
                                    target="_blank"
-                                   href="{{ \Illuminate\Support\Facades\Storage::disk('dashed')->url($image) }}" download>
+                                   href="{{ mediaHelper()->getSingleImage($image)->url ?? '' }}" download>
                                     @if(!\Illuminate\Support\Str::contains($image, '.pdf'))
-                                        <img class="h-16 w-auto rounded-lg" src="{{ \Illuminate\Support\Facades\Storage::disk('dashed')->url($image) }}">
+                                        <img class="h-16 w-auto rounded-lg" src="{{ mediaHelper()->getSingleImage($image)->url ?? '' }}">
                                     @else
                                         <span>PDF Bestand</span>
                                     @endif

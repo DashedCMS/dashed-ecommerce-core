@@ -20,6 +20,7 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Filament\Actions\Concerns\InteractsWithActions;
+use RalphJSmit\Filament\MediaLibrary\Forms\Components\MediaPicker;
 
 class CreateOrderLog extends Component implements HasForms, HasActions
 {
@@ -57,15 +58,7 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                 TextInput::make('emailSubject')
                     ->label('Onderwerp van de mail')
                     ->visible(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
-                FileUpload::make('images')
-                    ->name('Bestanden')
-                    ->multiple()
-                    ->downloadable()
-                    ->openable()
-                    ->reorderable()
-                    ->acceptedFileTypes(['image/*', 'application/pdf'])
-                    ->directory('dashed/orders/logs/images')
-                    ->maxSize(50000),
+                mediaHelper()->field('images', 'Bestanden', multiple: true),
                 Textarea::make('note')
                     ->label('Notitie')
                     ->placeholder('Typ hier je notitie')
