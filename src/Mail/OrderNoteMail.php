@@ -27,8 +27,8 @@ class OrderNoteMail extends Mailable
         $mail = $this->view('dashed-ecommerce-core::emails.order-note')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject($this->orderLog->email_subject ?: Translation::get('order-note-update-email-subject', 'orders', 'Your order #:orderId: has been updated', 'text', [
-            'orderId' => $this->order->invoice_id,
-        ]))
+                'orderId' => $this->order->invoice_id,
+            ]))
             ->with([
                 'order' => $this->order,
                 'orderLog' => $this->orderLog,
@@ -36,7 +36,8 @@ class OrderNoteMail extends Mailable
             ]);
 
         foreach ($this->orderLog->images as $image) {
-            $mail->attachFromStorageDisk('dashed', $image);
+            $media = mediaHelper()->getSingleImage($image);
+            $mail->attachFromStorageDisk('dashed', $media->path);
         }
 
         return $mail;
