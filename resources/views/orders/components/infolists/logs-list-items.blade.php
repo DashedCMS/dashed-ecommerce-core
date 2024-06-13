@@ -18,9 +18,9 @@
                             @foreach($log->images as $image)
                                 <a class="text-primary-500 hover:text-primary-600"
                                    target="_blank"
-                                   href="{{ mediaHelper()->getSingleMedia($image)->url ?? '' }}" download>
+                                   href="{{ mediaHelper()->getSingleMedia($image, 'original')->url ?? '' }}" download>
                                     @if(!\Illuminate\Support\Str::contains($image, '.pdf'))
-                                        <img class="h-16 w-auto rounded-lg" src="{{ mediaHelper()->getSingleMedia($image)->url ?? '' }}">
+                                        <img class="h-16 w-auto rounded-lg" src="{{ mediaHelper()->getSingleMedia($image, 'original')->url ?? '' }}">
                                     @else
                                         <span>PDF Bestand</span>
                                     @endif

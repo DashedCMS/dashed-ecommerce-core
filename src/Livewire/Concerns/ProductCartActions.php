@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
@@ -144,7 +145,7 @@ trait ProductCartActions
         foreach ($this->images as $image) {
             $this->originalImages[] = [
                 'alt' => $image['alt_text'],
-                'image' => mediaHelper()->getSingleMedia($image['image'], 'original')->url ?? '',
+                'image' => mediaHelper()->getSingleImage($image['image'], 'original')->url ?? '',
             ];
         }
         $this->description = $this->product->description ?? $this->parentProduct->description;
@@ -338,7 +339,7 @@ trait ProductCartActions
                     $path = $productValue;
                     $value = str($path)->explode('/')->last();
                 } else {
-                    $value = $productValue['value']->getClientOriginalName();
+                    $value = Str::uuid() . '-' . $productValue['value']->getClientOriginalName();
                     $path = $productValue['value']->storeAs('dashed/product-extras', $value, 'dashed');
                 }
                 if ($value && $path) {

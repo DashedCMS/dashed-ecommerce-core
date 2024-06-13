@@ -36,7 +36,7 @@ class OrderNoteMail extends Mailable
             ]);
 
         foreach ($this->orderLog->images as $image) {
-            $media = mediaHelper()->getSingleMedia($image);
+            $media = mediaHelper()->getSingleImage($image);
             $mail->attachFromStorageDisk('dashed', $media->path);
         }
 

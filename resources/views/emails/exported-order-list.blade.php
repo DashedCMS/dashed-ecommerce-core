@@ -238,7 +238,7 @@
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{mediaHelper()->getSingleMedia($logo, 'medium')->url ?? ''}}"
+                                                                             src="{{mediaHelper()->getSingleImage($logo, 'medium')->url ?? ''}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
                                                                              width="160"> </a></td>
                                                             @endif
