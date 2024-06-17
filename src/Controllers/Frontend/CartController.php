@@ -26,11 +26,11 @@ class CartController extends FrontendController
 
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists('dashed.cart.show')) {
+        if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.cart.show')) {
             seo()->metaData('metaTitle', Translation::get('cart-page-meta-title', 'cart', 'Cart'));
             seo()->metaData('metaDescription', Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
 
-            return view('dashed.cart.show');
+            return view(Customsetting::get('site_theme', null, 'dashed') . '.cart.show');
         } else {
             return $this->pageNotFound();
         }
@@ -40,11 +40,11 @@ class CartController extends FrontendController
     {
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists('dashed.checkout.show')) {
+        if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.checkout.show')) {
             seo()->metaData('metaTitle', Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
             seo()->metaData('metaDescription', Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
 
-            return view('dashed.checkout.show');
+            return view(Customsetting::get('site_theme', null, 'dashed') . '.checkout.show');
         } else {
             return $this->pageNotFound();
         }

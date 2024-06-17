@@ -412,7 +412,7 @@ class TransactionController extends FrontendController
 
             View::share('order', $order);
 
-            return view()->exists('dashed.orders.view-order') ? view('dashed.orders.view-order') : view('dashed.checkout.complete');
+            return view()->exists('dashed.orders.view-order') ? view(Customsetting::get('site_theme', null, 'dashed') . '.orders.view-order') : view(Customsetting::get('site_theme', null, 'dashed') . '.checkout.complete');
         } else {
             return $this->pageNotFound();
         }
