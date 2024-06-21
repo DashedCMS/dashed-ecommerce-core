@@ -50,7 +50,7 @@ class OrderListExport implements FromArray
                 'Locale',
                 'Bestellings herkomst',
                 'Aangekocht op',
-                'Gekochte producten'
+                'Gekochte producten',
             ],
         ];
 
