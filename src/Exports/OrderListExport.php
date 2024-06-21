@@ -50,6 +50,7 @@ class OrderListExport implements FromArray
                 'Locale',
                 'Bestellings herkomst',
                 'Aangekocht op',
+                'Gekochte producten'
             ],
         ];
 
@@ -88,6 +89,7 @@ class OrderListExport implements FromArray
                 $order->locale,
                 $order->order_origin,
                 $order->created_at,
+                $order->orderProducts->pluck('product.name')->implode(', '),
             ];
         }
 
