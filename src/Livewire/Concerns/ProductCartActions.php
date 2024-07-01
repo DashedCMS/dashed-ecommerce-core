@@ -109,7 +109,7 @@ trait ProductCartActions
                 $productFilterResult = $this->originalProduct->productFilters()->where('product_filter_id', $filter['id'])->first();
                 if ($productFilterResult) {
                     $filter['active'] = $productFilterResult->pivot->product_filter_option_id ?? null;
-                } elseif (count($filter['options']) === 1) {
+                } elseif (count($filter['options'] ?? []) === 1) {
                     $filter['active'] = $filter['options'][0]['id'];
                 }
             }
@@ -148,7 +148,7 @@ trait ProductCartActions
                 'image' => mediaHelper()->getSingleImage($image['image'], 'original')->url ?? '',
             ];
         }
-        $this->description = $this->product->description ?? $this->parentProduct->description;
+        $this->description = tiptap_converter()->asHTML($this->product->description) ?? tiptap_converter()->asHTML($this->parentProduct->description);
         $this->shortDescription = $this->product->short_description ?? $this->parentProduct->short_description;
         $this->sku = $this->product->sku ?? $this->parentProduct->sku;
         $this->calculateCurrenctPrices();
