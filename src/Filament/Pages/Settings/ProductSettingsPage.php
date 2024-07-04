@@ -37,7 +37,7 @@ class ProductSettingsPage extends Page
             $formData["product_default_order_sort_{$site['id']}"] = Customsetting::get('product_default_order_sort', $site['id'], 'DESC');
             $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
             $formData["product_use_simple_variation_style_{$site['id']}"] = Customsetting::get('product_use_simple_variation_style', $site['id'], false);
-            $formData["products_use_parents_in_overview_{$site['id']}"] = Customsetting::get('products_use_parents_in_overview', $site['id'], false);
+            $formData["products_hide_parents_in_overview_{$site['id']}"] = Customsetting::get('products_hide_parents_in_overview', $site['id'], false);
             $formData["product_redirect_after_new_variation_selected_{$site['id']}"] = Customsetting::get('product_redirect_after_new_variation_selected', $site['id'], false);
             $formData["product_overview_page_id_{$site['id']}"] = Customsetting::get('product_overview_page_id', $site['id']);
         }
@@ -105,8 +105,8 @@ class ProductSettingsPage extends Page
                 Toggle::make("product_use_simple_variation_style_{$site['id']}")
                     ->label('Gebruik product variaties op de Livewire manier')
                     ->helperText('Alleen gebruiken als jouw webshop hiervoor gebouwd is'),
-                Toggle::make("products_use_parents_in_overview_{$site['id']}")
-                    ->label('Laat parents zien, ook al zijn er geen childs beschikbaar'),
+//                Toggle::make("products_hide_parents_in_overview_{$site['id']}")
+//                    ->label('Verberg alle hoofdproducten'),
                 Toggle::make("product_redirect_after_new_variation_selected_{$site['id']}")
                     ->label('Redirect naar nieuwe pagina als nieuwe variatie gevonden is'),
             ];
@@ -142,7 +142,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('product_default_order_sort', $this->form->getState()["product_default_order_sort_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
             Customsetting::set('product_use_simple_variation_style', $this->form->getState()["product_use_simple_variation_style_{$site['id']}"], $site['id']);
-            Customsetting::set('products_use_parents_in_overview', $this->form->getState()["products_use_parents_in_overview_{$site['id']}"], $site['id']);
+            Customsetting::set('products_hide_parents_in_overview', $this->form->getState()["products_hide_parents_in_overview_{$site['id']}"], $site['id']);
             Customsetting::set('product_redirect_after_new_variation_selected', $this->form->getState()["product_redirect_after_new_variation_selected_{$site['id']}"], $site['id']);
             Customsetting::set('product_overview_page_id', $this->form->getState()["product_overview_page_id_{$site['id']}"], $site['id']);
         }
