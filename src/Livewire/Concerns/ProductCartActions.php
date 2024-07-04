@@ -148,7 +148,7 @@ trait ProductCartActions
                 'image' => mediaHelper()->getSingleImage($image['image'], 'original')->url ?? '',
             ];
         }
-        $this->description = tiptap_converter()->asHTML($this->product->description) ?? tiptap_converter()->asHTML($this->parentProduct->description);
+        $this->description = (isset($this->product->description) && $this->product->description) ? tiptap_converter()->asHTML($this->product->description) : ((isset($this->parentProduct->description) && $this->parentProduct->description) ? $this->parentProduct->description : '');
         $this->shortDescription = $this->product->short_description ?? $this->parentProduct->short_description;
         $this->sku = $this->product->sku ?? $this->parentProduct->sku;
         $this->calculateCurrenctPrices();
