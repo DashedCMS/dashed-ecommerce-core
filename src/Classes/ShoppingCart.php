@@ -810,7 +810,7 @@ class ShoppingCart
                 $currentAmount = 0;
 
                 foreach ($cartItems as $cartItem) {
-                    if ($cartItem->model && $cartItem->model->parent->id == $parentId) {
+                    if ($cartItem->model && $cartItem->model->parent && $cartItem->model->parent->id == $parentId) {
                         if ($currentAmount >= $maxStock || $currentAmount >= $maxLimit) {
                             Notification::make()
                                 ->danger()

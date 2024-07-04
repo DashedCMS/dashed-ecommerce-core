@@ -145,7 +145,7 @@ trait ProductCartActions
         foreach ($this->images as $image) {
             $this->originalImages[] = [
                 'alt' => $image['alt_text'],
-                'image' => mediaHelper()->getSingleImage($image['image'], 'original')->url ?? '',
+                'image' => mediaHelper()->getSingleMedia($image['image'], 'original')->url ?? '',
             ];
         }
         $this->description = (isset($this->product->description) && $this->product->description) ? tiptap_converter()->asHTML($this->product->description) : ((isset($this->parentProduct->description) && $this->parentProduct->description) ? $this->parentProduct->description : '');
