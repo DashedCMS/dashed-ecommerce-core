@@ -317,13 +317,13 @@ class Product extends Model
         return $images;
     }
 
-    public function getUrl($locale = null)
+    public function getUrl($locale = null, $forceOwnUrl = false)
     {
         if (! $locale) {
             $locale = app()->getLocale();
         }
 
-        return Cache::remember('product-' . $this->id . '-url-' . $locale, 60 * 5, function () use ($locale) {
+        return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . $forceOwnUrl, 60 * 5, function () use ($locale, $forceOwnUrl) {
             if (! Customsetting::get('product_use_simple_variation_style', null, false) && $this->childProducts()->count()) {
                 foreach ($this->childProducts as $childProduct) {
                     if ($childProduct->inStock() && ! isset($url)) {
@@ -333,7 +333,7 @@ class Product extends Model
                 if (! isset($url)) {
                     $url = $this->childProducts()->first()->getUrl();
                 }
-            } elseif ($this->parent && $this->parent->only_show_parent_product) {
+            } elseif ($this->parent && $this->parent->only_show_parent_product && !$forceOwnUrl) {
                 return $this->parent->getUrl();
             } else {
                 $url = '/' . Translation::get('products-slug', 'slug', 'products') . '/' . $this->slug;
