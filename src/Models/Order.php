@@ -490,6 +490,11 @@ class Order extends Model
                 }
                 $orderProduct->product->purchases = $orderProduct->product->purchases + $orderProduct->quantity;
                 $orderProduct->product->save();
+                if($orderProduct->product->parent && $orderProduct->product->parent->use_parent_stock) {
+                    if ($orderProduct->product->parent->use_stock) {
+                        $orderProduct->product->parent->stock = $orderProduct->product->parent->stock - $orderProduct->quantity;
+                    }
+                }
             }
         }
 
@@ -535,6 +540,15 @@ class Order extends Model
                     }
                 }
                 $orderProduct->product->save();
+                if($orderProduct->product->parent && $orderProduct->product->parent->use_parent_stock) {
+                    if ($orderProduct->product->parent->use_stock) {
+                        if ($orderProduct->quantity < 0) {
+                            $orderProduct->product->parent->stock = $orderProduct->product->parent->stock - $orderProduct->quantity;
+                        } else {
+                            $orderProduct->product->parent->stock = $orderProduct->product->parent->stock + $orderProduct->quantity;
+                        }
+                    }
+                }
             }
         }
     }
