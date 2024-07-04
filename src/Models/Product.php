@@ -176,9 +176,9 @@ class Product extends Model
                     });
             });
 
-//        if (Customsetting::get('products_hide_parents_in_overview', null, false)) {
-//            $query = $query->notParentProduct();
-//        }
+        //        if (Customsetting::get('products_hide_parents_in_overview', null, false)) {
+        //            $query = $query->notParentProduct();
+        //        }
 
         $query = $query->where(function ($query) {
             $query->where('start_date', null);
