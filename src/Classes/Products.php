@@ -389,7 +389,7 @@ class Products
                 $correctProductIds[] = $product->id;
             }
 
-            if($product->childProducts()->count() && !$product->childProducts()->publicShowable()->count()){
+            if($product->childProducts()->count() && ! $product->childProducts()->publicShowable()->count()) {
                 $hideProductIds[] = $product->id;
             }
         }
