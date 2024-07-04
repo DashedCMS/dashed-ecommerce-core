@@ -163,7 +163,7 @@ class Product extends Model
         $query
             ->public()
             ->thisSite()
-            ->where(function($query){
+            ->where(function ($query) {
                 $query->where(function ($query) {
                     $query
                         ->where('sku', '!=', null)
@@ -176,10 +176,10 @@ class Product extends Model
                     });
             });
 
-//        if (! Customsetting::get('product_use_simple_variation_style', null, false)) {
+        //        if (! Customsetting::get('product_use_simple_variation_style', null, false)) {
         //Todo: if this is needed, create a seperate setting for this
         $query = $query->notParentProduct();
-//        }
+        //        }
 
         $query = $query->where(function ($query) {
             $query->where('start_date', null);
