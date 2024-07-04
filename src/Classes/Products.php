@@ -388,6 +388,10 @@ class Products
             } elseif ($productIsValid) {
                 $correctProductIds[] = $product->id;
             }
+
+            if($product->childProducts()->count() && !$product->childProducts()->publicShowable()->count()){
+                $hideProductIds[] = $product->id;
+            }
         }
 
         $products = Product::whereIn('id', $correctProductIds)
