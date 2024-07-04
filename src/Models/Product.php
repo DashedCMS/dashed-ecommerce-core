@@ -333,7 +333,7 @@ class Product extends Model
                 if (! isset($url)) {
                     $url = $this->childProducts()->first()->getUrl();
                 }
-            } elseif ($this->parent && $this->parent->only_show_parent_product && !$forceOwnUrl) {
+            } elseif ($this->parent && $this->parent->only_show_parent_product && ! $forceOwnUrl) {
                 return $this->parent->getUrl();
             } else {
                 $url = '/' . Translation::get('products-slug', 'slug', 'products') . '/' . $this->slug;
