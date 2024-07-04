@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Exception;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
@@ -85,7 +86,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -117,7 +118,7 @@ class ShoppingCart
         $cartTotal = self::total(false, false, $shippingMethodId, $paymentMethodId);
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
+        if (!$calculateInclusiveTax) {
             $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
         }
 
@@ -168,7 +169,7 @@ class ShoppingCart
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
+        if (!$calculateInclusiveTax) {
             $cartTotal = $cartTotal + self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
         }
 
@@ -380,7 +381,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -422,7 +423,7 @@ class ShoppingCart
 
                     $taxTotal += $price;
                     if ($cartProduct->vat_rate > 0) {
-                        if (! isset($totalAmountForVats[$cartProduct->vat_rate])) {
+                        if (!isset($totalAmountForVats[$cartProduct->vat_rate])) {
                             $totalAmountForVats[$cartProduct->vat_rate] = 0;
                         }
                         $totalAmountForVats[$cartProduct->vat_rate] += $cartProduct->getShoppingCartItemPrice($cartItem);
@@ -485,7 +486,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -589,7 +590,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -651,7 +652,7 @@ class ShoppingCart
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
@@ -661,7 +662,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (! $cartItem->model) {
+            if (!$cartItem->model) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
             } elseif ($cartItem->model->stock() < $cartItem->qty) {
@@ -671,13 +672,13 @@ class ShoppingCart
                 Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (! $cartItemDeleted) {
+            if (!$cartItemDeleted) {
                 $productPrice = $cartItem->model->getShoppingCartItemPrice($cartItem);
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
-                    if (! $cartItemDeleted) {
-                        if (! str($productExtraOptionId)->contains('product-extra-')) {
+                    if (!$cartItemDeleted) {
+                        if (!str($productExtraOptionId)->contains('product-extra-')) {
 
                             $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                             if ($thisProductExtraOption) {
@@ -697,7 +698,7 @@ class ShoppingCart
                         }
                     }
                 }
-                if (! $cartItemDeleted) {
+                if (!$cartItemDeleted) {
                     //                    $cartItem->model->currentPrice = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
@@ -734,19 +735,19 @@ class ShoppingCart
 
                                         foreach ($cartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if ($productExtraOption && ! $productExtraOption->calculate_only_1_quantity) {
+                                            if ($productExtraOption && !$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption || ! $productExtraOption->calculate_only_1_quantity) {
+                                            if (!$productExtraOption || !$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
@@ -792,8 +793,8 @@ class ShoppingCart
                 }
             }
 
-            if (! $cartItemDeleted && $cartItem->model->parent->use_parent_stock ?? false) {
-                if (! in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
+            if (!$cartItemDeleted && $cartItem->model->parent->use_parent_stock ?? false) {
+                if (!in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
                     $parentItemsToCheck[] = $cartItem->model->parent->id;
                 }
             }
@@ -808,14 +809,22 @@ class ShoppingCart
                 $maxLimit = $parentProduct->limit_purchases_per_customer_limit;
                 $currentAmount = 0;
 
-                foreach($cartItems as $cartItem) {
-                    if($cartItem->model && $cartItem->model->parent->id == $parentId) {
-                        if($currentAmount >= $maxStock || $currentAmount >= $maxLimit) {
+                foreach ($cartItems as $cartItem) {
+                    if ($cartItem->model && $cartItem->model->parent->id == $parentId) {
+                        if ($currentAmount >= $maxStock || $currentAmount >= $maxLimit) {
+                            Notification::make()
+                                ->danger()
+                                ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
+                                ->send();
                             Cart::remove($cartItem->rowId);
                         } else {
                             $currentAmount += $cartItem->qty;
 
-                            if($currentAmount > $maxStock || $currentAmount > $maxLimit) {
+                            if ($currentAmount > $maxStock || $currentAmount > $maxLimit) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
+                                    ->send();
                                 Cart::update($cartItem->rowId, $maxStock);
                             }
                         }
