@@ -55,6 +55,25 @@ class OrderListExport implements FromArray
         ];
 
         foreach ($this->orders as $order) {
+            $products = '';
+
+            foreach ($order->orderProducts as $orderProduct) {
+                $name = $orderProduct->name;
+
+                if ($orderProduct->product_extras) {
+                    $name .= ' (';
+
+                    foreach ($orderProduct->product_extras as $productExtra) {
+                        $name .= $productExtra['name'] . ':' . $productExtra['value'] . ', ';
+                    }
+
+                    $name = rtrim($name, ', ');
+                    $name .= ')';
+                }
+
+                $products .= $name . ', ';
+            }
+
             $ordersArray[] = [
                 $order->id,
                 $order->first_name,
@@ -89,7 +108,7 @@ class OrderListExport implements FromArray
                 $order->locale,
                 $order->order_origin,
                 $order->created_at,
-                $order->orderProducts->pluck('product.name')->implode(', '),
+                $products,
             ];
         }
 
