@@ -402,8 +402,8 @@ class ProductResource extends Resource
             ]);
 
         $schema[] = Section::make('Meta')
-            ->schema(static::metadataTab())
-            ->hidden(fn ($record, Get $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id));
+            ->schema(static::metadataTab());
+//            ->hidden(fn ($record, Get $get) => $get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id));
 
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
