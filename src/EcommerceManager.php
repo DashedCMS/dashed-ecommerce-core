@@ -6,6 +6,7 @@ class EcommerceManager
 {
     protected static $builders = [
         'paymentServiceProviders' => [],
+        'fulfillmentProviders' => [],
     ];
 
     protected static $buttonActions = [
