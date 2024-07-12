@@ -398,10 +398,6 @@ class Products
             }
         }
 
-        return [
-            'products' => $allProducts,
-        ];
-
         $products = Product::whereIn('id', $correctProductIds)
             ->whereNotIn('id', $hideProductIds)
             ->search($search);
