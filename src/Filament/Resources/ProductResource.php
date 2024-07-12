@@ -249,18 +249,15 @@ class ProductResource extends Resource
                     ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
                 Select::make('fulfillment_provider')
                     ->label('Door wie wordt dit product verstuurd?')
+                    ->helperText('Laat leeg voor eigen fulfillment')
                     ->options(function () {
-                        $options = [
-                            '' => 'Eigen fulfillment',
-                        ];
 
                         foreach(ecommerce()->builder('fulfillmentProviders') as $key => $provider) {
                             $options[$key] = $provider['name'];
                         }
 
                         return $options;
-                    })
-                    ->default(''),
+                    }),
             ])
             ->hidden(fn ($record, Get $get) => ($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)) && ! $get('use_parent_stock'))
             ->collapsible();
