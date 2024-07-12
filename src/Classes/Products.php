@@ -36,11 +36,11 @@ class Products
             }
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -118,14 +118,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -178,7 +178,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -313,11 +313,11 @@ class Products
             $order = 'ASC';
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -351,6 +351,8 @@ class Products
         }
 
         $onlyShowParentIds = [];
+        $retrievedParentProducts = [];
+
         foreach ($allProducts as $product) {
             $productIsValid = true;
             if ($enableFilters && $hasActiveFilters) {
@@ -361,38 +363,44 @@ class Products
                         if ($option->checked) {
                             //                            dump($option->name);
                             $filterIsActive = true;
-                            if (! $productValidForFilter) {
+                            if (!$productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && ! $productValidForFilter) {
+                    if ($filterIsActive && !$productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
             }
 
-            if ($productIsValid && $product->parent && $product->parent->only_show_parent_product) {
-                if (in_array($product->parent->id, $onlyShowParentIds)) {
+            $parentProduct = $product->parent_id ? (collect($retrievedParentProducts)->where('id', $product->parent_id)->first() ?: $product->parent) : null;
+            if ($productIsValid && $parentProduct && $parentProduct->only_show_parent_product) {
+                if(!in_array($parentProduct, $retrievedParentProducts)){
+                    $retrievedParentProducts[] = $parentProduct;
+                }
+                if (in_array($parentProduct->id, $onlyShowParentIds)) {
                     $productIsValid = false;
                 } else {
-                    $onlyShowParentIds[] = $product->parent->id;
-                    $product = $product->parent;
+                    $onlyShowParentIds[] = $parentProduct->id;
+                    $product = $parentProduct;
                 }
             }
 
-            if (! $product->parent_id && $product->type == 'variable' && ! $product->only_show_parent_product) {
+            if (!$product->parent_id && $product->type == 'variable' && !$product->only_show_parent_product) {
                 $hideProductIds[] = $product->id;
-            } elseif ($productIsValid) {
+            } elseif (!$product->parent_id && $product->type == 'variable' && !$product->childProducts()->publicShowable()->count()) {
+                $hideProductIds[] = $product->id;
+            }elseif ($productIsValid) {
                 $correctProductIds[] = $product->id;
             }
-
-            if($product->childProducts()->count() && ! $product->childProducts()->publicShowable()->count()) {
-                $hideProductIds[] = $product->id;
-            }
         }
+
+        return [
+            'products' => $allProducts,
+        ];
 
         $products = Product::whereIn('id', $correctProductIds)
             ->whereNotIn('id', $hideProductIds)
@@ -457,7 +465,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
