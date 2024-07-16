@@ -31,6 +31,7 @@ class ShowProducts extends Component
     public array $activeFilters = [];
     public array $activeFilterQuery = [];
     public array $usableFilters = [];
+    public bool $enableFilters = true;
 
     public $event = [];
 
@@ -44,7 +45,7 @@ class ShowProducts extends Component
         ], []);
     }
 
-    public function mount($productCategory = null)
+    public function mount($productCategory = null, $enableFilters = true)
     {
         $this->productCategory = $productCategory;
 
@@ -52,6 +53,7 @@ class ShowProducts extends Component
         $this->sortBy = request()->get('sort-by', Customsetting::get('product_default_order_type', null, 'price'));
         $this->order = request()->get('order', Customsetting::get('product_default_order_sort', null, 'DESC'));
         $this->search = request()->get('search');
+        $this->enableFilters = $enableFilters;
 
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
@@ -103,9 +105,10 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider);
+        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider, $this->enableFilters);
+
         $this->products = $response['products'];
-        $this->filters = $response['filters'];
+        $this->filters = $response['filters'] ?? [];
 
         $this->defaultSliderOptions = [
             'start' => [

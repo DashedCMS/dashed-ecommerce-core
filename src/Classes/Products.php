@@ -438,7 +438,7 @@ class Products
             'products' => $products,
             'minPrice' => $minPrice,
             'maxPrice' => $maxPrice,
-            'filters' => $enableFilters ? self::getFiltersV2($allProducts->pluck('id'), $activeFilters) : [],
+            'filters' => $enableFilters ? self::getFiltersV3($allProducts->pluck('id'), $activeFilters) : [],
         ];
     }
 
@@ -446,6 +446,36 @@ class Products
     {
         $productFilters = ProductFilter::with(['productFilterOptions', 'productFilterOptions.products'])
             ->where('hide_filter_on_overview_page', 0)
+            ->orderBy('created_at')
+            ->get();
+
+
+        foreach ($productFilters as $productFilter) {
+            $filterHasActiveOptions = false;
+            $results = $activeFilters[$productFilter->name] ?? [];
+            foreach ($productFilter->productFilterOptions as $option) {
+                if ($results && array_key_exists($option->name, $results) && $results[$option->name]) {
+                    $option->checked = true;
+                } else {
+                    $option->checked = false;
+                }
+                $option->resultCount = 0;
+                if ($products) {
+                    $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
+                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
+                        $filterHasActiveOptions = true;
+                    }
+                }
+            }
+            $productFilter->hasActiveOptions = $filterHasActiveOptions;
+        }
+
+        return $productFilters;
+    }
+
+    public static function getFiltersV3($products = [], array $activeFilters = [])
+    {
+        $productFilters = ProductFilter::where('hide_filter_on_overview_page', 0)
             ->orderBy('created_at')
             ->get();
 
@@ -460,6 +490,7 @@ class Products
                 }
                 $option->resultCount = 0;
                 if ($products) {
+                    //This is very slow with a lot of products
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
                     if (! $filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
