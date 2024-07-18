@@ -1050,14 +1050,9 @@ class Product extends Model
                         seo()->metaData('metaImage', $metaImage);
                     }
 
-                    return [
-                        'view' => Customsetting::get('site_theme', null, 'dashed') . '.products.show',
-                        'parameters' => [
-                            'product' => $product,
-                        ],
-                    ];
+                    View::share('product', $product);
 
-                    return view(Customsetting::get('site_theme', null, 'dashed') . ' . products . show');
+                    return view(Customsetting::get('site_theme', null, 'dashed') . '.products.show');
                 } else {
                     return 'pageNotFound';
                 }
