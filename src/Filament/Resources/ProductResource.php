@@ -251,6 +251,7 @@ class ProductResource extends Resource
                     ->label('Door wie wordt dit product verstuurd?')
                     ->helperText('Laat leeg voor eigen fulfillment')
                     ->options(function () {
+                        $options = [];
 
                         foreach(ecommerce()->builder('fulfillmentProviders') as $key => $provider) {
                             $options[$key] = $provider['name'];
