@@ -40,8 +40,14 @@ class Product extends Model
         'search_terms',
         'content',
         'images',
-        'productCharacteristics',
-        'productExtras',
+    ];
+
+    public $resourceRelations = [
+        'productExtras' => [
+            'childRelations' => [
+                'productExtraOptions',
+            ],
+        ],
     ];
 
     protected $with = [
@@ -865,7 +871,7 @@ class Product extends Model
 
     public function productExtras()
     {
-        return $this->hasMany(ProductExtra::class)->with(['ProductExtraOptions']);
+        return $this->hasMany(ProductExtra::class)->with(['productExtraOptions']);
     }
 
     public function allProductExtras()
