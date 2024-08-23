@@ -174,9 +174,7 @@ class EditProduct extends EditRecord
     {
         $buttons = [];
 
-        $buttons[] = Action::make('Bekijk product')
-            ->url($this->record->getUrl())
-            ->openUrlInNewTab();
+        $buttons[] = self::viewAction();
 
         if ($this->record->type != 'variable' || $this->record->parent_id) {
             $buttons[] = Action::make('Dupliceer product')
@@ -184,7 +182,7 @@ class EditProduct extends EditRecord
                 ->color('warning');
         }
 
-        $buttons[] = self::duplicateAction();
+        $buttons[] = self::translateAction();
         $buttons[] = LocaleSwitcher::make();
         $buttons[] = DeleteAction::make();
 
