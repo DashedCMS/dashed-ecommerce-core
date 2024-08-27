@@ -1,10 +1,10 @@
 <?php
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 return new class extends Migration {
     /**
@@ -17,7 +17,7 @@ return new class extends Migration {
                 ->default(0);
         });
 
-        foreach(Product::withTrashed()->get() as $product){
+        foreach(Product::withTrashed()->get() as $product) {
             UpdateProductInformationJob::dispatch($product);
         }
     }
