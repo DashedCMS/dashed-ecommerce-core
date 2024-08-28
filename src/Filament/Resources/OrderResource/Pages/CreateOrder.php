@@ -3,8 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Carbon\Carbon;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Get;
 use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
@@ -23,9 +21,11 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
@@ -93,7 +93,7 @@ class CreateOrder extends Page
         return [
             Action::make('updateInfo')
                 ->label('Gegevens bijwerken')
-                ->action(fn() => $this->updateInfo()),
+                ->action(fn () => $this->updateInfo()),
         ];
     }
 
@@ -205,7 +205,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn(Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -213,7 +213,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn(Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->nullable()
@@ -258,16 +258,16 @@ class CreateOrder extends Page
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('country')
@@ -289,22 +289,22 @@ class CreateOrder extends Page
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
             ])
@@ -329,13 +329,13 @@ class CreateOrder extends Page
                             ->maxValue(1000)
                             ->default(0),
                         Placeholder::make('Voorraad')
-                            ->content(fn(Get $get) => $get('product') ? Product::find($get('product'))->stock() : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('product') ? Product::find($get('product'))->stock() : 'Kies een product'),
                         Placeholder::make('Prijs')
-                            ->content(fn(Get $get) => $get('product') ? Product::find($get('product'))->currentPrice : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('product') ? Product::find($get('product'))->currentPrice : 'Kies een product'),
                         Placeholder::make('Afbeelding')
-                            ->content(fn(Get $get) => $get('product') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('product'))->firstImageUrl, 'medium')->url ?? '') . '">') : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('product') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('product'))->firstImageUrl, 'medium')->url ?? '') . '">') : 'Kies een product'),
                         Section::make('Extra\'s')
-                            ->schema(fn(Get $get) => $get('product') ? $this->getProductExtrasSchema(Product::find($get('product'))) : []),
+                            ->schema(fn (Get $get) => $get('product') ? $this->getProductExtrasSchema(Product::find($get('product'))) : []),
                     ]),
             ])
             ->columnSpan(2);
@@ -471,12 +471,12 @@ BLADE
             }
         }
 
-        if (!$this->discount_code) {
+        if (! $this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -502,7 +502,7 @@ BLADE
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -534,7 +534,7 @@ BLADE
         $cartItems = ShoppingCart::cartItems();
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -568,7 +568,7 @@ BLADE
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -583,10 +583,10 @@ BLADE
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
