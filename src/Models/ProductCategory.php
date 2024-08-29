@@ -164,6 +164,7 @@ class ProductCategory extends Model
                     seo()->metaData('metaImage', $productCategory->metadata->image);
                 }
 
+                View::share('model', $productCategory);
                 View::share('productCategory', $productCategory);
 
                 return view(Customsetting::get('site_theme', null, 'dashed') . '.categories.show');
@@ -178,6 +179,7 @@ class ProductCategory extends Model
                     seo()->metaData('metaTitle', Translation::get('all-categories', 'categories', 'All categories'));
 
                     View::share('productCategory', null);
+                    View::share('model', null);
                     $childProductCategories = ProductCategories::getTopLevel(1000);
                     View::share('childProductCategories', $childProductCategories);
 
@@ -200,6 +202,7 @@ class ProductCategory extends Model
                     if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.categories.index') && $productCategory) {
                         seo()->metaData('metaTitle', $productCategory->name);
 
+                        View::share('model', $productCategory);
                         View::share('productCategory', $productCategory);
                         $childProductCategories = $productCategory->getFirstChilds();
                         View::share('childProductCategories', $childProductCategories);

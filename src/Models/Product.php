@@ -1056,6 +1056,7 @@ class Product extends Model
                         seo()->metaData('metaImage', $metaImage);
                     }
 
+                    View::share('model', $product);
                     View::share('product', $product);
 
                     return view(Customsetting::get('site_theme', null, 'dashed') . '.products.show');
