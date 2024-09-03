@@ -253,7 +253,7 @@ class ProductResource extends Resource
                     ->options(function () {
                         $options = [];
 
-                        foreach(ecommerce()->builder('fulfillmentProviders') as $key => $provider) {
+                        foreach (ecommerce()->builder('fulfillmentProviders') as $key => $provider) {
                             $options[$key] = $provider['name'];
                         }
 

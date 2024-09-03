@@ -12,7 +12,7 @@ trait CartActions
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
-            if($status == 'error') {
+            if ($status == 'error') {
                 $status = 'danger';
             }
 

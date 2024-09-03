@@ -128,7 +128,7 @@ class CheckoutSettingsPage extends Page
                     ->options(function () {
                         $options = [];
 
-                        foreach(CurrencyShowTypes::cases() as $currencyShowType) {
+                        foreach (CurrencyShowTypes::cases() as $currencyShowType) {
                             $options[$currencyShowType->value] = $currencyShowType->getValue(10);
                         }
 
