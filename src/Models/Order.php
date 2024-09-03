@@ -278,7 +278,7 @@ class Order extends Model
         return false;
     }
 
-    public function isReturn(): bool
+    public function isReturnStatus(): bool
     {
         if ($this->status == 'return') {
             return true;
