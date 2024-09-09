@@ -7,7 +7,8 @@
                      alt="">
                 <div class="flex-1 space-y-1">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-medium">{{ $log->user_id ? $log->user->name : ($order->user ? $order->user->name : (\Illuminate\Support\Str::contains('system', $order->tag) ? 'System' : $order->name)) }}</h3>
+                        <h3 class="text-sm font-medium">{{ $log->user_id ? $log->user->name : 'Systeem' }}</h3>
+{{--                        <h3 class="text-sm font-medium">{{ $log->user_id ? $log->user->name : ($order->user ? $order->user->name : (\Illuminate\Support\Str::contains('system', $order->tag) ? 'System' : $order->name)) }}</h3>--}}
                         <p class="text-sm text-gray-500">
                             {{ $log->created_at > now()->subHour() ? $log->created_at->diffForHumans() : $log->created_at->format('d-m-Y H:i') }}
                         </p>
