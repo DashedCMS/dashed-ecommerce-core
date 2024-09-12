@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -24,6 +25,11 @@ class OrderMarkedAsPaidEvent
     public function __construct(Order $order)
     {
         $this->order = $order;
+        $orderLog = new OrderLog();
+        $orderLog->order_id = $this->id;
+        $orderLog->user_id = null;
+        $orderLog->tag = 'order.marked_as_paid_event.dispatched';
+        $orderLog->save();
     }
 
     //    /**

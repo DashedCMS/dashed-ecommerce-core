@@ -70,6 +70,8 @@ class OrderLog extends Model
             return ' heeft de bestelling automatisch geannuleerd.';
         } elseif ($this->tag == 'order.note.created') {
             return ' heeft een notitie aangemaakt.';
+        } elseif ($this->tag == 'system.note.created') {
+            return ' heeft een notitie aangemaakt.';
         } elseif ($this->tag == 'order.changed-fulfillment-status-to-handled') {
             return ' heeft de bestelling als afgehandeld gemarkeerd.';
         } elseif ($this->tag == 'order.changed-fulfillment-status-to-unhandled') {
@@ -114,6 +116,10 @@ class OrderLog extends Model
             return ' heeft de fulfillment status update voor Verzonden niet laten versturen.';
         } elseif ($this->tag == 'order.fulfillment-status-update-to-shipped.mail.not-send') {
             return ' heeft de fulfillment status update voor Verzonden niet laten versturen.';
+        } elseif ($this->tag == 'order.marked_as_paid_event.dispatched') {
+            return ' heeft een signaal afgegeven dat de order is betaald.';
+        } elseif ($this->message) {
+            return $this->message;
         } else {
             return ' ERROR tag niet gevonden: ' . $this->tag;
         }
