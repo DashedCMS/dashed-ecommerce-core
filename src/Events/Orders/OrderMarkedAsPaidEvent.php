@@ -26,7 +26,7 @@ class OrderMarkedAsPaidEvent
     {
         $this->order = $order;
         $orderLog = new OrderLog();
-        $orderLog->order_id = $this->id;
+        $orderLog->order_id = $order->id;
         $orderLog->user_id = null;
         $orderLog->tag = 'order.marked_as_paid_event.dispatched';
         $orderLog->save();
