@@ -40,7 +40,7 @@
                         </p>
                     @endif
                     @if($log->note)
-                        <p class="text-sm text-gray-900">{!! nl2br($log->note) !!}</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{!! nl2br($log->note) !!}</p>
                     @endif
                 </div>
             </div>
