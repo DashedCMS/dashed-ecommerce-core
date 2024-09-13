@@ -8,7 +8,6 @@ use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
