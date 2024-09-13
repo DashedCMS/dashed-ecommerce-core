@@ -463,6 +463,12 @@ class TransactionController extends FrontendController
                 }
             }
         } catch (LockTimeoutException $e) {
+            $orderLog = new OrderLog();
+            $orderLog->order_id = $event->order->id;
+            $orderLog->user_id = null;
+            $orderLog->tag = 'system.note.created';
+            $orderLog->note = 'Order status could not be updated due to a lock timeout exception';
+            $orderLog->save();
             return 'timeout exception';
         } finally {
             $lock->release();
