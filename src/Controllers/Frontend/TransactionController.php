@@ -446,7 +446,6 @@ class TransactionController extends FrontendController
         $order = $orderPayment->order;
 
         $lock = Cache::lock('order.check-payment.' . $order->id, 10);
-
         try {
             if ($lock->get()) {
                 if ($orderPayment->psp == 'own') {

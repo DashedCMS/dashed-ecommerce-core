@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\User;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,16 @@ class OrderLog extends Model
     protected $casts = [
         'images' => 'array',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($orderLog) {
+            $orderLog->is_system = str($orderLog->note)->contains('system');
+            $orderLog->url = url()->current();
+        });
+    }
 
     public function user()
     {
@@ -124,7 +135,7 @@ class OrderLog extends Model
             return 'ERROR tag niet gevonden: ' . $this->tag;
         }
 
-        return (auth()->check() ? auth()->user()->name : 'Systeem') . ' ' . $string;
+        return ($this->user ? $this->user->name : ($this->is_system ? 'Systeem' : $this->order->name)) . ' ' . $string;
     }
 
     public function getActivitylogOptions(): LogOptions
