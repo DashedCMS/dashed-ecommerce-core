@@ -614,13 +614,13 @@ class Order extends Model
                         Mail::to($this->email)->send(new OrderFulfillmentStatusChangedMail($this, Customsetting::get("fulfillment_status_{$key}_email_subject", null, null, $this->locale), Customsetting::get("fulfillment_status_{$key}_email_content", null, null, $this->locale)));
                         $orderLog = new OrderLog();
                         $orderLog->order_id = $this->id;
-                        $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                        $orderLog->user_id = auth()->user()->id ?? null;
                         $orderLog->tag = "order.fulfillment-status-update-to-{$key}.mail.send";
                         $orderLog->save();
                     } catch (\Exception $e) {
                         $orderLog = new OrderLog();
                         $orderLog->order_id = $this->id;
-                        $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                        $orderLog->user_id = auth()->user()->id ?? null;
                         $orderLog->tag = "order.fulfillment-status-update-to-{$key}.mail.not-send";
                         $orderLog->save();
                     }
@@ -637,23 +637,30 @@ class Order extends Model
 
             $orderLog = new OrderLog();
             $orderLog->order_id = $this->id;
-            $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+            $orderLog->user_id = auth()->user()->id ?? null;
             $orderLog->tag = 'order.marked-as-paid';
             $orderLog->save();
         } else {
             $this->status = 'paid';
             $this->save();
 
-            if (Auth::user() && Auth::user()->id != $this->user_id) {
+            if (auth()->check() && auth()->user()->id != $this->user_id) {
                 $orderLog = new OrderLog();
                 $orderLog->order_id = $this->id;
-                $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                $orderLog->user_id = auth()->user()->id ?? null;
                 $orderLog->tag = 'order.marked-as-paid';
                 $orderLog->save();
             } else {
                 $orderLog = new OrderLog();
                 $orderLog->order_id = $this->id;
-                $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                $orderLog->user_id = auth()->user()->id ?? null;
+                $orderLog->tag = 'system.note.created';
+                $orderLog->note = 'Marked as paid from url ' . url()->current();
+                $orderLog->save();
+
+                $orderLog = new OrderLog();
+                $orderLog->order_id = $this->id;
+                $orderLog->user_id = auth()->user()->id ?? null;
                 $orderLog->tag = 'order.paid';
                 $orderLog->save();
             }
@@ -684,7 +691,7 @@ class Order extends Model
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $this->id;
-        $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+        $orderLog->user_id = auth()->user()->id ?? null;
         $orderLog->tag = 'order.partially_paid';
         $orderLog->save();
 
@@ -709,7 +716,7 @@ class Order extends Model
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $this->id;
-        $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+        $orderLog->user_id = auth()->user()->id ?? null;
         $orderLog->tag = 'order.waiting_for_confirmation';
         $orderLog->save();
 
@@ -746,7 +753,7 @@ class Order extends Model
         } else {
             $orderLog = new OrderLog();
             $orderLog->order_id = $this->id;
-            $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+            $orderLog->user_id = auth()->user()->id ?? null;
             $orderLog->tag = 'order.cancelled';
             $orderLog->save();
         }
@@ -773,13 +780,13 @@ class Order extends Model
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
                     $orderLog = new OrderLog();
                     $orderLog->order_id = $this->id;
-                    $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                    $orderLog->user_id = auth()->user()->id ?? null;
                     $orderLog->tag = 'order.cancelled.mail.send';
                     $orderLog->save();
                 } catch (\Exception $e) {
                     $orderLog = new OrderLog();
                     $orderLog->order_id = $this->id;
-                    $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+                    $orderLog->user_id = auth()->user()->id ?? null;
                     $orderLog->tag = 'order.cancelled.mail.send.failed';
                     $orderLog->note = 'Error: ' . $e->getMessage();
                     $orderLog->save();
@@ -817,7 +824,7 @@ class Order extends Model
         } else {
             $orderLog = new OrderLog();
             $orderLog->order_id = $newOrder->id;
-            $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
+            $orderLog->user_id = auth()->user()->id ?? null;
             $orderLog->tag = 'order.cancelled';
             $orderLog->save();
         }
