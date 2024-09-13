@@ -469,6 +469,7 @@ class TransactionController extends FrontendController
             $orderLog->tag = 'system.note.created';
             $orderLog->note = 'Order status could not be updated due to a lock timeout exception';
             $orderLog->save();
+
             return 'timeout exception';
         } finally {
             $lock->release();
