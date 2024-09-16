@@ -405,16 +405,17 @@ class ProductResource extends Resource
 
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
-                Repeater::make('images')
-                    ->label('Afbeeldingen')
-                    ->schema([
-                        mediaHelper()->field('image', 'Afbeelding', true, false, true),
-                        TextInput::make('alt_text')
-                            ->label('Alt tekst')
-                            ->maxLength(1000),
-                    ])
-                    ->defaultItems(0)
-                    ->addActionLabel('Nieuwe afbeelding toevoegen'),
+                mediaHelper()->field('images', 'Afbeeldingen', required: true, multiple: true),
+//                Repeater::make('images')
+//                    ->label('Afbeeldingen')
+//                    ->schema([
+//                        mediaHelper()->field('image', 'Afbeelding', true, false, true),
+//                        TextInput::make('alt_text')
+//                            ->label('Alt tekst')
+//                            ->maxLength(1000),
+//                    ])
+//                    ->defaultItems(0)
+//                    ->addActionLabel('Nieuwe afbeelding toevoegen'),
             ])
             ->collapsible();
 
