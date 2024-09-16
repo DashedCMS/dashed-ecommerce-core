@@ -435,14 +435,14 @@ class Order extends Model
         if ($this->order_origin == 'own') {
             $this->generateInvoiceId();
             $order = Order::find($this->id);
-            if (! Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+            if (!Storage::disk('dashed')->exists($invoicePath)) {
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
                 Storage::disk('dashed')->put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
@@ -456,7 +456,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (!Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -474,7 +474,7 @@ class Order extends Model
         if ($this->order_origin == 'own' && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (!Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.credit-invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -611,17 +611,9 @@ class Order extends Model
                 if ($this->fulfillment_status == $key && Customsetting::get("fulfillment_status_{$key}_enabled", null, false, $this->locale)) {
                     try {
                         Mail::to($this->email)->send(new OrderFulfillmentStatusChangedMail($this, Customsetting::get("fulfillment_status_{$key}_email_subject", null, null, $this->locale), Customsetting::get("fulfillment_status_{$key}_email_content", null, null, $this->locale)));
-                        $orderLog = new OrderLog();
-                        $orderLog->order_id = $this->id;
-                        $orderLog->user_id = auth()->user()->id ?? null;
-                        $orderLog->tag = "order.fulfillment-status-update-to-{$key}.mail.send";
-                        $orderLog->save();
+                        OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.send");
                     } catch (\Exception $e) {
-                        $orderLog = new OrderLog();
-                        $orderLog->order_id = $this->id;
-                        $orderLog->user_id = auth()->user()->id ?? null;
-                        $orderLog->tag = "order.fulfillment-status-update-to-{$key}.mail.not-send";
-                        $orderLog->save();
+                        OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.not-send");
                     }
                 }
             }
@@ -634,44 +626,37 @@ class Order extends Model
             $this->status = 'paid';
             $this->save();
 
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $this->id;
-            $orderLog->user_id = auth()->user()->id ?? null;
-            $orderLog->tag = 'order.marked-as-paid';
-            $orderLog->save();
+            OrderLog::createLog(orderId: $this->id, tag: 'order.marked-as-paid');
         } else {
             $this->status = 'paid';
             $this->save();
 
             if (auth()->check() && auth()->user()->id != $this->user_id) {
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $this->id;
-                $orderLog->user_id = auth()->user()->id ?? null;
-                $orderLog->tag = 'order.marked-as-paid';
-                $orderLog->save();
+                OrderLog::createLog(orderId: $this->id, tag: 'order.marked-as-paid');
             } else {
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $this->id;
-                $orderLog->user_id = auth()->user()->id ?? null;
-                $orderLog->tag = 'system.note.created';
-                $orderLog->note = 'Marked as paid from url ' . url()->current();
-                $orderLog->save();
+                OrderLog::createLog(orderId: $this->id, note: 'Marked as paid from url ' . url()->current());
 
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $this->id;
-                $orderLog->user_id = auth()->user()->id ?? null;
-                $orderLog->tag = 'order.paid';
-                $orderLog->save();
+                OrderLog::createLog(orderId: $this->id, tag: 'order.paid');
             }
 
-            $this->generateInvoiceId();
+            OrderLog::createLog(orderId: $this->id, note: 'Creating invoice');
             $this->createInvoice();
+            OrderLog::createLog(orderId: $order->id, note: 'Invoice created');
 
+            OrderLog::createLog(orderId: $this->id, note: 'Deducting stock');
             $this->deductStock();
+            OrderLog::createLog(orderId: $order->id, note: 'Stock deducted');
+            OrderLog::createLog(orderId: $this->id, note: 'Discount deducted');
             $this->deductDiscount();
-            OrderMarkedAsPaidEvent::dispatch($this);
+            OrderLog::createLog(orderId: $order->id, note: 'Deducted discount');
 
+            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start');
+            OrderMarkedAsPaidEvent::dispatch($this);
+            OrderLog::createLog(orderId: $order->id, note: 'Mark as paid event dispatch end');
+
+            OrderLog::createLog(orderId: $this->id, note: 'Emptying shopping cart');
             ShoppingCart::emptyMyCart();
+            OrderLog::createLog(orderId: $order->id, note: 'Shopping cart emptied');
 
             $this->sendGAEcommerceHit();
         }
@@ -688,17 +673,13 @@ class Order extends Model
         $this->status = 'partially_paid';
         $this->save();
 
-        $orderLog = new OrderLog();
-        $orderLog->order_id = $this->id;
-        $orderLog->user_id = auth()->user()->id ?? null;
-        $orderLog->tag = 'order.partially_paid';
-        $orderLog->save();
+        OrderLog::createLog(orderId: $this->id, tag: 'order.partially_paid');
 
-        $this->generateInvoiceId();
         $this->createInvoice();
 
         $this->deductStock();
         $this->deductDiscount();
+
         OrderMarkedAsPaidEvent::dispatch($this);
 
         ShoppingCart::emptyMyCart();
@@ -713,11 +694,7 @@ class Order extends Model
         $this->status = 'waiting_for_confirmation';
         $this->save();
 
-        $orderLog = new OrderLog();
-        $orderLog->order_id = $this->id;
-        $orderLog->user_id = auth()->user()->id ?? null;
-        $orderLog->tag = 'order.waiting_for_confirmation';
-        $orderLog->save();
+        OrderLog::createLog(orderId: $this->id, tag: 'order.waiting_for_confirmation');
 
         $this->generateInvoiceId();
         $this->createInvoice();
@@ -743,52 +720,22 @@ class Order extends Model
         $this->changeFulfillmentStatus('handled');
         $this->save();
 
-        if (app()->runningInConsole()) {
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $this->id;
-            $orderLog->user_id = null;
-            $orderLog->tag = 'order.system.cancelled';
-            $orderLog->save();
-        } else {
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $this->id;
-            $orderLog->user_id = auth()->user()->id ?? null;
-            $orderLog->tag = 'order.cancelled';
-            $orderLog->save();
-        }
+        OrderLog::createLog(orderId: $this->id, tag: app()->runningInConsole() ? 'order.system.cancelled' : 'order.cancelled');
 
         if ($sendMail) {
             if (app()->runningInConsole()) {
                 try {
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
-                    $orderLog = new OrderLog();
-                    $orderLog->order_id = $this->id;
-                    $orderLog->user_id = null;
-                    $orderLog->tag = 'order.system.cancelled.mail.send';
-                    $orderLog->save();
+                    OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send');
                 } catch (\Exception $e) {
-                    $orderLog = new OrderLog();
-                    $orderLog->order_id = $this->id;
-                    $orderLog->user_id = null;
-                    $orderLog->tag = 'order.system.cancelled.mail.send.failed';
-                    $orderLog->note = 'Error: ' . $e->getMessage();
-                    $orderLog->save();
+                    OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send.failed', note: 'Error: ' . $e->getMessage());
                 }
             } else {
                 try {
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
-                    $orderLog = new OrderLog();
-                    $orderLog->order_id = $this->id;
-                    $orderLog->user_id = auth()->user()->id ?? null;
-                    $orderLog->tag = 'order.cancelled.mail.send';
-                    $orderLog->save();
+                    OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send');
                 } catch (\Exception $e) {
-                    $orderLog = new OrderLog();
-                    $orderLog->order_id = $this->id;
-                    $orderLog->user_id = auth()->user()->id ?? null;
-                    $orderLog->tag = 'order.cancelled.mail.send.failed';
-                    $orderLog->note = 'Error: ' . $e->getMessage();
-                    $orderLog->save();
+                    OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send.failed', note: 'Error: ' . $e->getMessage());
                 }
             }
         }
@@ -815,17 +762,9 @@ class Order extends Model
         $newOrder->save();
 
         if (app()->runningInConsole()) {
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $newOrder->id;
-            $orderLog->user_id = null;
-            $orderLog->tag = 'order.system.cancelled';
-            $orderLog->save();
+            OrderLog::createLog(orderId: $newOrder->id, tag: 'order.system.cancelled');
         } else {
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $newOrder->id;
-            $orderLog->user_id = auth()->user()->id ?? null;
-            $orderLog->tag = 'order.cancelled';
-            $orderLog->save();
+            OrderLog::createLog(orderId: $newOrder->id, tag: 'order.cancelled');
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
@@ -929,12 +868,7 @@ class Order extends Model
                 $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send.failed' : 'order.cancelled.mail.send.failed';
                 $error = 'Error: ' . $e->getMessage();
             }
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $newOrder->id;
-            $orderLog->user_id = auth()->user()->id ?? null;
-            $orderLog->tag = $tag;
-            $orderLog->note = $error ?? null;
-            $orderLog->save();
+            OrderLog::createLog(orderId: $newOrder->id, tag: $tag, note: $error ?? null);
             $newOrder->invoice_send_to_customer = 1;
             $newOrder->save();
         }
@@ -962,8 +896,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
-            if (! Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && !$this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+            if (!Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -1027,7 +961,7 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (! $this->credit_for_order_id) {
+        if (!$this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',

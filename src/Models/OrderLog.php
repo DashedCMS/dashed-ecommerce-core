@@ -141,4 +141,16 @@ class OrderLog extends Model
     {
         return LogOptions::defaults();
     }
+
+    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, $images = null, $publicForCustomer = false)
+    {
+        $orderLog = new OrderLog();
+        $orderLog->order_id = $orderId;
+        $orderLog->user_id = str($tag)->contains('system') ? null : (auth()->user()->id ?? null);
+        $orderLog->tag = $tag;
+        $orderLog->note = $note;
+        $orderLog->images = $images;
+        $orderLog->public_for_customer = $publicForCustomer;
+        $orderLog->save();
+    }
 }

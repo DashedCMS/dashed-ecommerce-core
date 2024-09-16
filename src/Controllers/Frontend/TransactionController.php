@@ -316,11 +316,7 @@ class TransactionController extends FrontendController
         $orderPayment->save();
         $orderPayment->refresh();
 
-        $orderLog = new OrderLog();
-        $orderLog->order_id = $order->id;
-        $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
-        $orderLog->tag = 'order.created';
-        $orderLog->save();
+        OrderLog::createLog(orderId: $order->id, tag: 'order.created');
 
         if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
             $newPaymentStatus = 'waiting_for_confirmation';
@@ -463,12 +459,7 @@ class TransactionController extends FrontendController
                 }
             }
         } catch (LockTimeoutException $e) {
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $order->id;
-            $orderLog->user_id = null;
-            $orderLog->tag = 'system.note.created';
-            $orderLog->note = 'Order status could not be updated due to a lock timeout exception';
-            $orderLog->save();
+            OrderLog::createLog(orderId: $order->id, note: 'Order status could not be updated due to a lock timeout exception');
 
             return 'timeout exception';
         } finally {
