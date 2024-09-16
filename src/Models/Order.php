@@ -641,22 +641,22 @@ class Order extends Model
 
             OrderLog::createLog(orderId: $this->id, note: 'Creating invoice');
             $this->createInvoice();
-            OrderLog::createLog(orderId: $order->id, note: 'Invoice created');
+            OrderLog::createLog(orderId: $this->id, note: 'Invoice created');
 
             OrderLog::createLog(orderId: $this->id, note: 'Deducting stock');
             $this->deductStock();
-            OrderLog::createLog(orderId: $order->id, note: 'Stock deducted');
+            OrderLog::createLog(orderId: $this->id, note: 'Stock deducted');
             OrderLog::createLog(orderId: $this->id, note: 'Discount deducted');
             $this->deductDiscount();
-            OrderLog::createLog(orderId: $order->id, note: 'Deducted discount');
+            OrderLog::createLog(orderId: $this->id, note: 'Deducted discount');
 
             OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start');
             OrderMarkedAsPaidEvent::dispatch($this);
-            OrderLog::createLog(orderId: $order->id, note: 'Mark as paid event dispatch end');
+            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch end');
 
             OrderLog::createLog(orderId: $this->id, note: 'Emptying shopping cart');
             ShoppingCart::emptyMyCart();
-            OrderLog::createLog(orderId: $order->id, note: 'Shopping cart emptied');
+            OrderLog::createLog(orderId: $this->id, note: 'Shopping cart emptied');
 
             $this->sendGAEcommerceHit();
         }
