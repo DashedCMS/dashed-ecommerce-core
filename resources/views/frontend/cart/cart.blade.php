@@ -23,11 +23,11 @@
                                               d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                 </button>
-                                @if($item->model->firstImageUrl)
+                                @if($item->model->firstImage)
                                     <x-drift::image
                                         class="mx-auto"
                                         config="dashed"
-                                        :path="$item->model->firstImageUrl"
+                                        :path="$item->model->firstImage"
                                         :alt=" $item->model->name"
                                         :manipulations="[
                                                     'widen' => 100,

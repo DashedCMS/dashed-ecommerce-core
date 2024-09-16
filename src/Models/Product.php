@@ -1078,7 +1078,7 @@ class Product extends Model
                     seo()->metaData('metaDescription', $product->metadata->description ?? '');
                     $metaImage = $product->metadata->image ?? '';
                     if (! $metaImage) {
-                        $metaImage = $product->firstImageUrl;
+                        $metaImage = $product->firstImage;
                     }
                     if ($metaImage) {
                         seo()->metaData('metaImage', $metaImage);

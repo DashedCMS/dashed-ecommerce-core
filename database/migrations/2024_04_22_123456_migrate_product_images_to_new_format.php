@@ -11,11 +11,11 @@ return new class extends Migration {
     public function up(): void
     {
         foreach (\Dashed\DashedEcommerceCore\Models\Product::withTrashed()->get() as $product) {
-            $allImages = json_decode($product->getRawOriginal('images'), true);
+            $allImages = json_decode($product->getRawOriginal('images') ?: '{}', true);
             foreach($allImages as $key => $images){
                 $imageIds = [];
                 foreach($images as $image){
-                    $imageIds[] = $image['image'];
+                    $imageIds[] = is_array($image) ? $image['image'] : $image;
                 }
                 $allImages[$key] = $imageIds;
             }

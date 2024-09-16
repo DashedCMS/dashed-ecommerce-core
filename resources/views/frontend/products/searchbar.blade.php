@@ -31,12 +31,12 @@
                         <ul class="border-t divide-y border-black/5 divide-black/5">
                             @foreach($products ?: [] as $product)
                                 <li class="grid relative items-center grid-cols-2 gap-6 p-4 lg:grid-cols-3">
-                                    @if($product->firstImageUrl)
+                                    @if($product->firstImage)
                                         <a href="{{ $product->getUrl() }}">
                                             <x-drift::image
                                                 class="object-cover aspect-[3/2] rounded-lg"
                                                 config="dashed"
-                                                :path="$product->firstImageUrl"
+                                                :path="$product->firstImage"
                                                 :alt="$product->name"
                                                 :manipulations="[
                                                         'widen' => 300,

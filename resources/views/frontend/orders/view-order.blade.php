@@ -13,11 +13,11 @@
             @foreach($order->orderProducts as $orderProduct)
                 <div class="grid grid-cols-12 gap-4 border-b border-primary py-4">
                     <div class="flex items-center space-x-4 col-span-12 lg:col-span-6">
-                        @if($orderProduct->product && $orderProduct->product->firstImageUrl)
+                        @if($orderProduct->product && $orderProduct->product->firstImage)
                             <x-drift::image
                                 class="mx-auto"
                                 config="dashed"
-                                :path="$orderProduct->product->firstImageUrl"
+                                :path="$orderProduct->product->firstImage"
                                 :alt=" $orderProduct->product->name"
                                 :manipulations="[
                                                     'widen' => 100,

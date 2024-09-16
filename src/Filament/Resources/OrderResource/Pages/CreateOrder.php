@@ -333,7 +333,7 @@ class CreateOrder extends Page
                         Placeholder::make('Prijs')
                             ->content(fn (Get $get) => $get('product') ? Product::find($get('product'))->currentPrice : 'Kies een product'),
                         Placeholder::make('Afbeelding')
-                            ->content(fn (Get $get) => $get('product') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('product'))->firstImageUrl, 'medium')->url ?? '') . '">') : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('product') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('product'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
                         Section::make('Extra\'s')
                             ->schema(fn (Get $get) => $get('product') ? $this->getProductExtrasSchema(Product::find($get('product'))) : []),
                     ]),
@@ -380,7 +380,7 @@ class CreateOrder extends Page
         //                    Placeholder::make('Prijs')
         //                        ->content($product->currentPrice),
         //                    Placeholder::make('Afbeelding')
-        //                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImageUrl, []) . '">')),
+        //                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImage, []) . '">')),
         //                ], $productExtras))
         //                ->visible(fn(Get $get) => in_array($product->id, $get('activatedProducts')));
         //        }

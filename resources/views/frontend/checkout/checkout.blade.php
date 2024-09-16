@@ -23,11 +23,11 @@
                             <ul role="list" class="divide-y divide-white divide-opacity-10 text-sm font-medium">
                                 @foreach($this->cartItems as $item)
                                     <li class="flex items-start space-x-4 py-6">
-                                        @if($item->model->firstImageUrl)
+                                        @if($item->model->firstImage)
                                             <x-drift::image
                                                 class="h-36 flex-none rounded-md object-cover object-center"
                                                 config="dashed"
-                                                :path="$item->model->firstImageUrl"
+                                                :path="$item->model->firstImage"
                                                 :alt=" $item->model->name"
                                                 :manipulations="[
                                                     'widen' => 200,

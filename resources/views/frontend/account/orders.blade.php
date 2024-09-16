@@ -42,11 +42,11 @@
                                 @foreach($order->orderProducts as $orderProduct)
                                     <a href="{{$orderProduct->product ? $orderProduct->product->getUrl() : '#'}}"
                                        class="flex py-4 space-x-4">
-                                        @if($orderProduct->product && $orderProduct->product->firstImageUrl)
+                                        @if($orderProduct->product && $orderProduct->product->firstImage)
                                             <x-drift::image
                                                 class="object-cover h-16"
                                                 config="dashed"
-                                                :path="$orderProduct->product->firstImageUrl"
+                                                :path="$orderProduct->product->firstImage"
                                                 :alt=" $orderProduct->product->name"
                                                 :manipulations="[
                                                     'widen' => 150,
