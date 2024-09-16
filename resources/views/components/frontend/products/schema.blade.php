@@ -6,8 +6,8 @@
     <meta itemprop="url" content="{{$product->getUrl()}}">
     <meta itemprop="sku" content="{{$product->sku}}">
     <meta itemprop="gtin8" content="{{$product->ean}}">
-    @if($product->firstImageUrl)
-        <meta itemprop="image" content="{{url($product->firstImageUrl)}}">
+    @if($product->firstImage)
+        <meta itemprop="image" content="{{mediaHelper()->getSingleMedia($product->firstImage, 'original')->url ?? ''}}">
     @endif
 {{--    <div itemprop="value" itemscope itemtype="http://schema.org/PropertyValue">--}}
 {{--        <span itemprop="propertyID" content="item_group_id"></span>--}}
