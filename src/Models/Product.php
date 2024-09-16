@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Exception;
 use Carbon\Carbon;
 use Dashed\DashedPages\Models\Page;
-use Exception;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
@@ -310,7 +310,7 @@ class Product extends Model
     public function getFirstImageUrlAttribute()
     {
         throw new Exception('This method is deprecated. Use the firstImage attribute instead.');
-//        return $this->images[0] ?? '';
+        //        return $this->images[0] ?? '';
     }
 
     public function getFirstImageAttribute()
@@ -324,9 +324,8 @@ class Product extends Model
     public function getAllImagesAttribute()
     {
         throw new Exception('This method is deprecated. Use the images attribute instead.');
-//        return $this->images ? collect($this->images) : collect();
+        //        return $this->images ? collect($this->images) : collect();
     }
-
 
     /**
      * @deprecated Use the imagesExceptFirst attribute instead.
@@ -334,12 +333,12 @@ class Product extends Model
     public function getAllImagesExceptFirstAttribute()
     {
         throw new Exception('This method is deprecated. Use the imagesExceptFirst attribute instead.');
-//        $images = $this->allImages;
-//        if (count($images)) {
-//            unset($images[0]);
-//        }
-//
-//        return $images;
+        //        $images = $this->allImages;
+        //        if (count($images)) {
+        //            unset($images[0]);
+        //        }
+        //
+        //        return $images;
     }
 
     public function getImagesExceptFirstAttribute(): array
