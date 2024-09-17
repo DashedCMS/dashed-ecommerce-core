@@ -444,7 +444,7 @@ class Order extends Model
             $order = Order::find($this->id);
             OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again done', isDebugLog: true);
             $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
-            if (!Storage::disk('dashed')->exists($invoicePath)) {
+            if (! Storage::disk('dashed')->exists($invoicePath)) {
                 OrderLog::createLog(orderId: $this->id, note: 'Invoice does not exists yet, creating view', isDebugLog: true);
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 OrderLog::createLog(orderId: $this->id, note: 'Rendering view', isDebugLog: true);
@@ -476,7 +476,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (!Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -494,7 +494,7 @@ class Order extends Model
         if ($this->order_origin == 'own' && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (!Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.credit-invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -916,8 +916,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && !$this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
-            if (!Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+            if (! Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -981,7 +981,7 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (!$this->credit_for_order_id) {
+        if (! $this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
