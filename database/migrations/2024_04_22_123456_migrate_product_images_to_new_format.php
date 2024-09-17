@@ -20,7 +20,7 @@ return new class extends Migration {
                 $allImages[$key] = $imageIds;
             }
             $product->images = $allImages;
-            $product->save();
+            $product->saveQuietly();
         }
     }
 
