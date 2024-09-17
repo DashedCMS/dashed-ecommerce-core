@@ -142,8 +142,12 @@ class OrderLog extends Model
         return LogOptions::defaults();
     }
 
-    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, $images = null, $publicForCustomer = false)
+    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false): void
     {
+        if($isDebugLog && !env('DASHED_ECOMMERCE_DEBUG_LOGS_ENABLED', false)){
+            return;
+        }
+
         $orderLog = new OrderLog();
         $orderLog->order_id = $orderId;
         $orderLog->user_id = str($tag)->contains('system') ? null : (auth()->user()->id ?? null);
@@ -151,6 +155,7 @@ class OrderLog extends Model
         $orderLog->note = $note;
         $orderLog->images = $images;
         $orderLog->public_for_customer = $publicForCustomer;
+        $orderLog->is_debug_log = $isDebugLog;
         $orderLog->save();
     }
 }
