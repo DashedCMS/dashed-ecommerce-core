@@ -141,7 +141,7 @@ trait ProductCartActions
         }
 
         $this->name = $this->product->name ?? $this->parentProduct->name;
-        $this->images = $this->product->images ?? $this->parentProduct->images;
+        $this->images = ($this->product->images && is_array($this->product->images)) ? $this->product->images : (($this->parentProduct->images && is_array($this->parentProduct->images)) ? $this->parentProduct->images : []);
         foreach ($this->images as $image) {
             $this->originalImages[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
         }
