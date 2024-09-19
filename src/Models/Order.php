@@ -466,7 +466,7 @@ class Order extends Model
                 OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent done', isDebugLog: true);
             }
 
-            if (! $this->order->invoice_send_to_customer) {
+            if (! $this->invoice_send_to_customer) {
                 OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob', isDebugLog: true);
                 SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
                 OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob done', isDebugLog: true);
