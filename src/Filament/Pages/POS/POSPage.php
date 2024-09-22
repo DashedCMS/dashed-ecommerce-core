@@ -6,7 +6,7 @@ use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 
-class POSPage extends Page
+class POSPage extends page
 {
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'Point of Sale';
@@ -14,6 +14,7 @@ class POSPage extends Page
     protected static ?string $title = 'Point of Sale';
     protected static ?string $slug = 'point-of-sale';
     protected static ?int $navigationSort = 3;
+    protected ?string $maxContentWidth = 'full';
 
     protected static string $view = 'dashed-ecommerce-core::pos.pages.point-of-sale';
 

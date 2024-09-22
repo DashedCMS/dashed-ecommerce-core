@@ -1,18 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Middleware\AdminMiddleware;
 use Dashed\DashedCore\Middleware\AuthMiddleware;
-use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Middleware\FrontendMiddleware;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
+use Dashed\DashedEcommerceCore\Livewire\PointOfSale\POSPage;
+use Dashed\DashedTranslations\Models\Translation;
+use Illuminate\Support\Facades\Route;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
+use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
@@ -51,8 +53,14 @@ Route::group(
     }
 );
 
-Route::middleware(['web'])->prefix(config('filament.path') . '/api')->group(function () {
+Route::middleware(['web'])->prefix(config('filament.path', 'dashed') . '/api')->group(function () {
     Route::get('/checkout/available-shipping-methods', [CheckoutApiController::class, 'availableShippingMethods'])->name('dashed.api.checkout.available-shipping-methods');
     Route::get('/checkout/available-payment-methods', [CheckoutApiController::class, 'availablePaymentMethods'])->name('dashed.api.checkout.available-payment-methods');
     Route::get('/checkout/get-checkout-data', [CheckoutApiController::class, 'getCheckoutData'])->name('dashed.api.checkout.get-checkout-data');
 });
+
+//Route::middleware(['web', AdminMiddleware::class])->group(function () {
+//    Route::get('/ecommerce/point-of-sale', function(){
+//        return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
+//    })->name('dashed.ecommerce.point-of-sale');
+//});
