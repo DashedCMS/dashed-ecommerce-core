@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
-return new class extends Migration {
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +17,7 @@ return new class extends Migration {
                 ->default(0);
         });
 
-        foreach(Product::withTrashed()->get() as $product) {
+        foreach (Product::withTrashed()->get() as $product) {
             UpdateProductInformationJob::dispatch($product);
         }
     }

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration {
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -12,9 +12,9 @@ return new class extends Migration {
     {
         foreach (\Dashed\DashedEcommerceCore\Models\Product::withTrashed()->get() as $product) {
             $allImages = json_decode($product->getRawOriginal('images') ?: '{}', true);
-            foreach($allImages as $key => $images){
+            foreach ($allImages as $key => $images) {
                 $imageIds = [];
-                foreach($images as $image){
+                foreach ($images as $image) {
                     $imageIds[] = is_array($image) ? $image['image'] : $image;
                 }
                 $allImages[$key] = $imageIds;

@@ -70,7 +70,7 @@ class MigrateProductsTable extends Migration
                         $images[] = [
                             'image' => "dashed/products/images/$media->file_name",
                             'alt_text' => is_array(json_decode($media->custom_properties, true)) ? (json_decode($media->custom_properties, true)['alt'] ?? '') : '',
-                            'order' => $imageCount
+                            'order' => $imageCount,
                         ];
                         $imageCount++;
                     }
@@ -94,7 +94,7 @@ class MigrateProductsTable extends Migration
                             $images[] = [
                                 'image' => "dashed/products/images/$media->file_name",
                                 'alt_text' => is_array(json_decode($media->custom_properties, true)) ? (json_decode($media->custom_properties, true)['alt'] ?? '') : '',
-                                'order' => $imageCount
+                                'order' => $imageCount,
                             ];
                             $imageCount++;
                         }
