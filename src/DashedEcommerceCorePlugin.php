@@ -2,38 +2,38 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
+use Filament\Panel;
+use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
-use Filament\Contracts\Plugin;
-use Filament\Panel;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
 
 class DashedEcommerceCorePlugin implements Plugin
 {
