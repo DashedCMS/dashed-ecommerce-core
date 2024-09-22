@@ -2,10 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 class POSPage extends Page
 {
