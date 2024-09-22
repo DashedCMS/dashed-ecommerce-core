@@ -4,25 +4,16 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
 use Filament\Forms\Get;
-use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
-use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Wizard;
-use Illuminate\Support\Facades\Blade;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
@@ -36,7 +27,6 @@ use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 trait CreateManualOrderActions
 {
@@ -278,7 +268,7 @@ trait CreateManualOrderActions
                 ->send();
 
             return [
-                'success' => false
+                'success' => false,
             ];
         }
 
@@ -318,7 +308,7 @@ trait CreateManualOrderActions
                 ->send();
 
             return [
-                'success' => false
+                'success' => false,
             ];
         }
 
@@ -336,7 +326,7 @@ trait CreateManualOrderActions
                 ->send();
 
             return [
-                'success' => false
+                'success' => false,
             ];
         }
 
@@ -348,7 +338,7 @@ trait CreateManualOrderActions
                     ->send();
 
                 return [
-                    'success' => false
+                    'success' => false,
                 ];
             }
 

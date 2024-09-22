@@ -2,15 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Carbon\Carbon;
 use Filament\Forms\Get;
 use Filament\Actions\Action;
-use Dashed\DashedCore\Models\User;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
@@ -19,20 +14,9 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
@@ -40,11 +24,10 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class CreateOrder extends Page
 {
+    use OrderResource\Concerns\CreateManualOrderActions;
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
     protected static string $view = 'dashed-ecommerce-core::orders.create-order';
-
-    use OrderResource\Concerns\CreateManualOrderActions;
     public string $cartInstance = 'handorder';
 
     protected function getActions(): array
@@ -310,7 +293,7 @@ BLADE
     {
         $response = $this->createOrder();
 
-        if($response['success']){
+        if ($response['success']) {
             $order = $response['order'];
             //        if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
             $newPaymentStatus = 'waiting_for_confirmation';
