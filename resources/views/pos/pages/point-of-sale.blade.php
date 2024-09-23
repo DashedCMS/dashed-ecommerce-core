@@ -1,4 +1,4 @@
-<div class="px-8 py-8">
+<div class="p-8 m-8 border border-white rounded-lg h-[calc(100vh-60px)] overflow-y-hidden">
     <div class="grid grid-cols-10 divide-x divide-gray-500">
         <div class="sm:col-span-5 sm:pr-8 flex flex-col gap-8">
             <div>
@@ -18,7 +18,7 @@
                            inputmode="{{ $searchQueryInputmode }}"
                            wire:keyup.debounce.500ms="updateSearchedProducts"
                            placeholder="Zoek een product op naam, SKU of barcode..."
-                           class="dark:text-black w-full rounded-lg pl-10 pr-10">
+                           class="text-black w-full rounded-lg pl-10 pr-10">
                     <p class="absolute right-2 top-2 text-black cursor-pointer" wire:click="toggleSearchQueryInputmode">
                         @if($searchQueryInputmode == 'none')
                             <span>
@@ -63,7 +63,7 @@
 
                                             <div wire:click="addProduct({{ $product->id }})"
                                                  class="lg:col-span-2 cursor-pointer">
-                                                <p class="font-medium">
+                                                <p class="font-medium text-black">
                                                     {{ $product->name }}
                                                     ({{ CurrencyHelper::formatPrice($product->currentPrice) }})
                                                 </p>
@@ -76,7 +76,7 @@
                     @elseif($searchProductQuery && count($searchedProducts ?: []) === 0)
                         <div class="absolute z-50 bg-white rounded-lg mt-2 shadow-xl">
                             <div class="p-4">
-                                <p class="text-center">Geen producten gevonden</p>
+                                <p class="text-center text-black">Geen producten gevonden</p>
                             </div>
                         </div>
                     @endif
@@ -84,61 +84,88 @@
             </form>
         </div>
         <div class="sm:col-span-5 sm:pl-8 flex flex-col gap-8 h-full">
-            <div class="grid gap-8">
+            <div class="flex flex-col gap-8">
                 <div class="flex flex-wrap justify-between items-center">
                     <p class="text-5xl font-bold">Winkelwagen</p>
-                    <button wire:click="clearProducts"
-                            class="ml-8 h-12 w-12 bg-red-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
-                        </svg>
-                    </button>
+                    <div class="flex gap-4">
+                        @if(count($products ?: []))
+                            <button wire:click="clearProducts"
+                                    class="h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                                </svg>
+                            </button>
+                        @endif
+                        <button id="exitFullscreenBtn"
+                                class="@if(!$fullscreen) hidden @endif h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"/>
+                            </svg>
+                        </button>
+                        <button id="fullscreenBtn"
+                                class="@if($fullscreen) hidden @endif h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="p-4 rounded-lg border border-gray-400 grid gap-4">
+                {{--                <div class="p-4 rounded-lg border border-gray-400 grid gap-4">--}}
+                <div class="p-4 rounded-lg border border-gray-400 grid gap-4 h-[calc(100vh-460px)] overflow-y-auto">
                     @if(count($products ?: []))
-                        @foreach($products as $product)
-                            <div class="flex flex-wrap items-center gap-4">
-                                <div class="relative">
-                                    <x-dashed-files::image
-                                        class="object-cover rounded-lg w-20 h-20"
-                                        :mediaId="$product['product']['firstImage']"/>
-                                    <span class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white">{{ $product['quantity'] }}</span>
-                                </div>
-                                <div class="flex flex-col flex-wrap gap-1">
-                                    <span class="font-bold text-lg">{{ $product['product']['name'] }}</span>
-                                    <div class="flex flex-wrap gap-2">
-                                        <button wire:click="changeQuantity({{ $product['id'] }}, {{ $product['quantity'] + 1 }})"
-                                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                 stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M12 4.5v15m7.5-7.5h-15"/>
-                                            </svg>
-                                        </button>
-                                        <button wire:click="changeQuantity({{ $product['id'] }}, {{ $product['quantity'] - 1 }})"
-                                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                 stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
-                                            </svg>
-                                        </button>
-                                        <button wire:click="changeQuantity({{ $product['id'] }}, {{ 0 }})"
-                                                class="ml-8 h-12 w-12 bg-red-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                 stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
-                                            </svg>
-                                        </button>
+                        @for($i = 0; $i < 12; $i++)
+                            @foreach($products as $product)
+                                @if(!$loop->first)
+                                    <hr class="bg-gray-400">
+                                @endif
+                                <div class="flex flex-wrap items-center gap-4">
+                                    <div class="relative">
+                                        <x-dashed-files::image
+                                            class="object-cover rounded-lg w-20 h-20"
+                                            :mediaId="$product['product']['firstImage']"/>
+                                        <span class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white">{{ $product['quantity'] }}</span>
+                                    </div>
+                                    <div class="flex flex-col flex-wrap gap-1">
+                                        <span class="font-bold text-lg">{{ $product['product']['name'] }}</span>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button wire:click="changeQuantity({{ $product['id'] }}, {{ $product['quantity'] + 1 }})"
+                                                    class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                     stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          d="M12 4.5v15m7.5-7.5h-15"/>
+                                                </svg>
+                                            </button>
+                                            <button wire:click="changeQuantity({{ $product['id'] }}, {{ $product['quantity'] - 1 }})"
+                                                    class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                     stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
+                                                </svg>
+                                            </button>
+                                            <button wire:click="changeQuantity({{ $product['id'] }}, {{ 0 }})"
+                                                    class="ml-8 h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                     stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <span class="font-bold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($product['price']) }}</span>
                                     </div>
                                 </div>
-                                <div class="ml-auto">
-                                    <span class="font-bold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($product['price']) }}</span>
-                                </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        @endfor
                     @else
                         <p>Geen producten geselecteerd...</p>
                     @endif
@@ -176,7 +203,55 @@
         $wire.on('focus', () => {
             document.getElementById("search-product-query").focus();
         });
-        document.addEventListener('touchmove', event => event.scale !== 1 && event.preventDefault(), {passive: false});
+
+        function requestFullscreen() {
+            const elem = document.documentElement; // Can be any element, here we use the whole document
+
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // For Firefox
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { // For Chrome, Safari, and Opera
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // For Internet Explorer/Edge
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen();
+        });
+
+        function isFullscreen() {
+            var isFullscreen = document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement;
+            if (isFullscreen) {
+                $wire.dispatch('fullscreenValue', {fullscreen: true});
+            } else {
+                $wire.dispatch('fullscreenValue', {fullscreen: false});
+            }
+        }
+
+        document.getElementById("fullscreenBtn").addEventListener("click", function () {
+            requestFullscreen();
+        });
+        document.getElementById("exitFullscreenBtn").addEventListener("click", function () {
+            exitFullscreen();
+        });
     </script>
     @endscript
 </div>
