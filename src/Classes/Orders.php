@@ -34,8 +34,12 @@ class Orders
         ];
     }
 
-    public static function sendNotification(Order $order, $email = null, ?User $mailSendByUser): void
+    public static function sendNotification(Order $order, ?string $email = null, ?User $mailSendByUser): void
     {
+        if(!$email && !$order->email){
+            return;
+        }
+
         try {
             if ($order->contains_pre_orders) {
                 Mail::to($email ?: $order->email)->send(new PreOrderConfirmationMail($order));
