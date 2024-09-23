@@ -431,6 +431,54 @@
             </div>
         </div>
     @endif
+    @if($orderConfirmationPopup)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+            <div class="absolute h-full w-full" wire:click="closeOrderConfirmation"></div>
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
+                <div class="bg-white rounded-lg p-8 grid gap-4">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         wire:click="closeOrderConfirmation">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold">Bestelling {{ $order->invoice_id }} afgerond - {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->total) }}</p>
+                        <p class="text-xl text-gray-400">
+                            Betaalmethode: {{ $order->orderPayments()->first()->paymentMethod->name }}
+                        </p>
+                    </div>
+                    @if($order->orderPayments()->first()->paymentMethod->is_cash_payment)
+                        <div class="flex flex-col gap-4">
+                            <p class="text-xl font-bold">Betaling overzicht</p>
+                            <div class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
+                                <div class="flex flex-col">
+                                    <p class="font-bold text-lg">Betaling 1</p>
+                                    <p class="text-gray-400">{{ $order->orderPayments()->first()->paymentMethod->name }}</p>
+                                </div>
+                                <div class="flex flex-col">
+                                    <p class="font-bold text-xl">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount) }}</p>
+                                    @if($order->orderPayments()->first()->amount > $order->total)
+                                        <p class="text-warning-500 font-bold text-xl">
+                                            Wisselgeld verschuldigd: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount - $order->total) }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="grid gap-4 mt-16">
+                        <button wire:click="closeOrderConfirmation"
+                                class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            Terug naar POS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
     @script
     <script>
         $wire.on('focus', () => {
