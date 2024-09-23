@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -13,6 +12,7 @@ use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
+use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CreateOrderLog;

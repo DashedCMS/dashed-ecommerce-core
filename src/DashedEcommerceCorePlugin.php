@@ -2,11 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
-use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
