@@ -3,7 +3,7 @@
     <div
         class="absolute transitiona-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
     </div>
-    <div class="p-8 m-8 border border-white rounded-lg h-[calc(100%) - 50px] overflow-hidden bg-black z-10 w-full">
+    <div class="p-8 m-8 border border-white rounded-lg h-[calc(100%) - 50px] overflow-hidden bg-black/90 z-10 w-full">
         <div class="grid grid-cols-10 divide-x divide-gray-500">
             <div class="sm:col-span-5 sm:pr-8 flex flex-col gap-8">
                 <div>
@@ -90,7 +90,7 @@
                     </div>
                 </form>
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <button wire:click="toggleCustomProductPopup"
+                    <button wire:click="toggleVariable('customProductPopup')"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -102,7 +102,9 @@
                         </span>
                         <p>Aangepaste verkoop toevoegen</p>
                     </button>
-                    <button class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                    @if($discount > 0.00)
+                        <button wire:click="removeDiscount"
+                                class="text-left rounded-lg bg-red-500/40 hover:bg-red-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-percent"><line x1="19" x2="5"
@@ -110,7 +112,40 @@
                                                                                                          y2="19"/><circle
         cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
                         </span>
-                        <p>Korting toepassen</p>
+                            <p>Korting verwijderen</p>
+                        </button>
+                    @else
+                        <button wire:click="toggleVariable('createDiscountPopup')"
+                                class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                        <span>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-percent"><line x1="19" x2="5"
+                                                                                                         y1="5"
+                                                                                                         y2="19"/><circle
+        cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                        </span>
+                            <p>Korting toepassen</p>
+                        </button>
+                    @endif
+                    <button class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                        <span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+     class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+</svg>
+                        </span>
+                        <p>Klant toevoegen</p>
+                    </button>
+                    <button wire:click="openCashRegister" class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                        <span>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hand-coins"><path
+        d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path
+        d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path
+        d="m2 16 6 6"/><circle cx="16" cy="9" r="2.9"/><circle cx="6" cy="5" r="3"/></svg>
+                        </span>
+                        <p>Kassa lade openen</p>
                     </button>
                 </div>
             </div>
@@ -149,7 +184,7 @@
                         </div>
                     </div>
                     {{--                <div class="p-4 rounded-lg border border-gray-400 grid gap-4">--}}
-                    <div class="p-4 rounded-lg border border-gray-400 flex flex-col gap-4 min-h-[450px] overflow-y-auto">
+                    <div class="p-4 rounded-lg border border-gray-400 flex flex-col gap-4 h-[calc(100vh-550px)] overflow-y-auto">
                         @if(count($products ?: []))
                             @foreach($products as $product)
                                 @if(!$loop->first)
@@ -162,7 +197,8 @@
                                                 class="object-cover rounded-lg w-20 h-20"
                                                 :mediaId="$product['product']['firstImage']"/>
                                         @else
-                                            <img src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop" class="object-cover rounded-lg w-20 h-20">
+                                            <img src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop"
+                                                 class="object-cover rounded-lg w-20 h-20">
                                         @endif
                                         <span class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white">{{ $product['quantity'] }}</span>
                                     </div>
@@ -212,6 +248,13 @@
                         <span class="text-sm font-normal">{{ collect($products)->sum('quantity') }} artikelen</span>
                     </span>
                     <span class="font-bold">{{ $total }}</span>
+                        @if($discount > 0.00)
+                </span>
+                        <hr/>
+                        <span class="text-sm font-bold flex justify-between items-center">
+                        <span>Korting</span>
+                    <span class="font-bold">{{ $discount }}</span>
+                            @endif
                 </span>
                         <hr/>
                         <span class="text-sm font-bold flex justify-between items-center">
@@ -234,7 +277,15 @@
     </div>
     @if($customProductPopup)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-            <div class="bg-white rounded-lg p-8 grid gap-4">
+            <div class="absolute h-full w-full" wire:click="toggleVariable('customProductPopup')"></div>
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative">
+                <div class="absolute top-2 right-2 text-black cursor-pointer" wire:click="toggleVariable('customProductPopup')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="size-10">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
                 <p class="text-3xl font-bold">Aangepaste verkoop toevoegen</p>
                 <form wire:submit.prevent="submitCustomProductForm">
                     <div class="grid gap-4">
@@ -250,60 +301,87 @@
             </div>
         </div>
     @endif
-    @script
-    <script>
-        $wire.on('focus', () => {
-            document.getElementById("search-product-query").focus();
-        });
+    @if($createDiscountPopup)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+            <div class="absolute h-full w-full" wire:click="toggleVariable('createDiscountPopup')"></div>
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative">
+                <div class="bg-white rounded-lg p-8 grid gap-4">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer" wire:click="toggleVariable('createDiscountPopup')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <p class="text-3xl font-bold">Korting toepassen op winkelwagen</p>
+                    <form wire:submit.prevent="submitCreateDiscountForm">
+                        <div class="grid gap-4">
+                            {{ $this->createDiscountForm }}
+                            <div>
+                                <button type="submit"
+                                        class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                    Toevoegen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
+            @script
+            <script>
+                $wire.on('focus', () => {
+                    document.getElementById("search-product-query").focus();
+                });
 
-        function requestFullscreen() {
-            const elem = document.documentElement; // Can be any element, here we use the whole document
+                function requestFullscreen() {
+                    const elem = document.documentElement; // Can be any element, here we use the whole document
 
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.mozRequestFullScreen) { // For Firefox
-                elem.mozRequestFullScreen();
-            } else if (elem.webkitRequestFullscreen) { // For Chrome, Safari, and Opera
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) { // For Internet Explorer/Edge
-                elem.msRequestFullscreen();
-            }
-        }
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen();
+                    } else if (elem.mozRequestFullScreen) { // For Firefox
+                        elem.mozRequestFullScreen();
+                    } else if (elem.webkitRequestFullscreen) { // For Chrome, Safari, and Opera
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) { // For Internet Explorer/Edge
+                        elem.msRequestFullscreen();
+                    }
+                }
 
-        function exitFullscreen() {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        }
+                function exitFullscreen() {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
 
-        document.addEventListener('fullscreenchange', () => {
-            isFullscreen();
-        });
+                document.addEventListener('fullscreenchange', () => {
+                    isFullscreen();
+                });
 
-        function isFullscreen() {
-            var isFullscreen = document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.mozFullScreenElement ||
-                document.msFullscreenElement;
-            if (isFullscreen) {
-                $wire.dispatch('fullscreenValue', {fullscreen: true});
-            } else {
-                $wire.dispatch('fullscreenValue', {fullscreen: false});
-            }
-        }
+                function isFullscreen() {
+                    var isFullscreen = document.fullscreenElement ||
+                        document.webkitFullscreenElement ||
+                        document.mozFullScreenElement ||
+                        document.msFullscreenElement;
+                    if (isFullscreen) {
+                        $wire.dispatch('fullscreenValue', {fullscreen: true});
+                    } else {
+                        $wire.dispatch('fullscreenValue', {fullscreen: false});
+                    }
+                }
 
-        document.getElementById("fullscreenBtn").addEventListener("click", function () {
-            requestFullscreen();
-        });
-        document.getElementById("exitFullscreenBtn").addEventListener("click", function () {
-            exitFullscreen();
-        });
-    </script>
-    @endscript
-</div>
+                document.getElementById("fullscreenBtn").addEventListener("click", function () {
+                    requestFullscreen();
+                });
+                document.getElementById("exitFullscreenBtn").addEventListener("click", function () {
+                    exitFullscreen();
+                });
+            </script>
+            @endscript
+        </div>

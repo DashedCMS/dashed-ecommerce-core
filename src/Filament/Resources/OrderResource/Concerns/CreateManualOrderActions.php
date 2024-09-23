@@ -3,8 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
-use Filament\Forms\Get;
+use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\Concerns\HasForm;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +23,6 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
@@ -78,13 +80,13 @@ trait CreateManualOrderActions
     public $searchQueryInputmode = 'none';
     public $customProductPopup = false;
     public ?array $customProductData = [];
-    public $customProductName;
-    public $customProductPrice;
-    public $customProductQuantity;
+    public $createDiscountPopup = false;
+    public ?array $createDiscountData = [];
 
     public array $cachableVariables = [
         'products' => [],
         'searchQueryInputmode' => 'none',
+        'discount_code' => '',
     ];
 
     public function initialize($cartInstance)
@@ -96,6 +98,9 @@ trait CreateManualOrderActions
         $this->customProductForm->fill([
             'quantity' => 1,
             'vat_rate' => 21,
+        ]);
+        $this->createDiscountForm->fill([
+            'type' => 'percentage',
         ]);
         $this->updateInfo(false);
     }
@@ -218,12 +223,12 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -233,10 +238,12 @@ trait CreateManualOrderActions
                     $this->activeDiscountCode = $discountCode->code;
                     $showNotification = false;
 
-                    Notification::make()
-                        ->title('Korting toegevoegd, klik nogmaals op "Gegevens bijwerken" om de korting toe te passen')
-                        ->success()
-                        ->send();
+                    if ($this->cartInstance == 'handorder') {
+                        Notification::make()
+                            ->title('Korting toegevoegd, klik nogmaals op "Gegevens bijwerken" om de korting toe te passen')
+                            ->success()
+                            ->send();
+                    }
                 }
             }
         }
@@ -249,7 +256,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -284,7 +291,7 @@ trait CreateManualOrderActions
         $cartItems = ShoppingCart::cartItems();
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -320,7 +327,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -337,10 +344,10 @@ trait CreateManualOrderActions
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -582,7 +589,7 @@ trait CreateManualOrderActions
                 }
             }
 
-            if (! $productAlreadyInCart) {
+            if (!$productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
@@ -676,7 +683,7 @@ trait CreateManualOrderActions
 
     public function toggleCustomProductPopup()
     {
-        $this->customProductPopup = ! $this->customProductPopup;
+        $this->customProductPopup = !$this->customProductPopup;
     }
 
     public function getForms(): array
@@ -684,6 +691,7 @@ trait CreateManualOrderActions
         return [
             'customProductForm',
             'createOrderForm',
+            'createDiscountForm',
         ];
     }
 
@@ -699,6 +707,7 @@ trait CreateManualOrderActions
                 TextInput::make('name')
                     ->label('Productnaam')
                     ->required()
+                    ->autofocus()
                     ->columnSpanFull(),
                 TextInput::make('price')
                     ->label('Prijs')
@@ -719,7 +728,7 @@ trait CreateManualOrderActions
                     ->default(1)
                     ->prefix('x'),
                 TextInput::make('vat_rate')
-                    ->label('Aantal')
+                    ->label('Percentage')
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(100)
@@ -752,5 +761,118 @@ trait CreateManualOrderActions
         $this->customProductPopup = false;
         $this->customProductForm->fill();
         $this->updateInfo(false);
+    }
+
+    public function createDiscountForm(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Select::make('type')
+                    ->label('Type')
+                    ->options([
+                        'percentage' => 'Percentage',
+                        'amount' => 'Vast bedrag',
+                        'discountCode' => 'Kortingscode',
+                    ])
+                    ->reactive()
+                    ->autofocus()
+                    ->required(),
+                TextInput::make('note')
+                    ->label('Reden voor korting')
+                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->reactive(),
+                TextInput::make('amount')
+                    ->label('Prijs')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(999999)
+                    ->inputMode('decimal')
+                    ->required()
+                    ->prefix('€')
+                    ->reactive()
+                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
+                TextInput::make('percentage')
+                    ->label('Percentage')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->inputMode('numeric')
+                    ->required()
+                    ->default(21)
+                    ->prefix('%')
+                    ->reactive()
+                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
+                Select::make('discountCode')
+                    ->label('Kortings code')
+                    ->preload()
+                    ->searchable()
+                    ->options(function () {
+                        $discountCodes = DiscountCode::usable()->get();
+                        $options = [];
+                        foreach ($discountCodes as $discountCode) {
+                            $options[$discountCode->id] = $discountCode->name . ' (' . $discountCode->code . ') (' . ($discountCode->type == 'amount' ? CurrencyHelper::formatPrice($discountCode->discount_amount) : ($discountCode->discount_percentage . '%')) . ')';
+                        }
+
+                        return $options;
+                    })
+                    ->required()
+                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+
+            ])
+            ->statePath('createDiscountData');
+    }
+
+    public function submitCreateDiscountForm()
+    {
+        $this->createDiscountForm->validate();
+
+        if ($this->createDiscountData['type'] == 'discountCode') {
+            $discountCode = DiscountCode::find($this->createDiscountData['discountCode']);
+            $this->discount_code = $discountCode->code;
+        } else {
+            $discountCode = new DiscountCode();
+            $discountCode->site_ids = [Sites::getActive()];
+            $discountCode->name = 'Point of Sale discount';
+            $discountCode->note = $this->createDiscountData['note'];
+            $discountCode->code = '*****-*****-*****-*****-*****';
+            $discountCode->type = $this->createDiscountData['type'];
+            $discountCode->{'discount_' . $this->createDiscountData['type']} = $this->createDiscountData[$this->createDiscountData['type']];
+            $discountCode->start_date = Carbon::now();
+            $discountCode->end_date = Carbon::now()->addMinutes(30);
+            $discountCode->limit_use_per_customer = 1;
+            $discountCode->use_stock = 1;
+            $discountCode->stock = 1;
+            $discountCode->save();
+            $this->discount_code = $discountCode->code;
+        }
+
+        if (!$discountCode) {
+            Notification::make()
+                ->title('Kortingscode niet gevonden')
+                ->danger()
+                ->send();
+        }
+
+        $this->createDiscountPopup = false;
+        $this->createDiscountForm->fill();
+        $this->updateInfo(false);
+    }
+
+    public function toggleVariable($variable)
+    {
+        $this->{$variable} = !$this->{$variable};
+    }
+
+    public function removeDiscount()
+    {
+        $this->discount_code = '';
+        $this->updateInfo(false);
+    }
+
+    public function openCashRegister()
+    {
+
     }
 }
