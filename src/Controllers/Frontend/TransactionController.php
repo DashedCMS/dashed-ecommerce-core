@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +11,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
