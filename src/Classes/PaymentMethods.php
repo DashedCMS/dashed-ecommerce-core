@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 
 class PaymentMethods

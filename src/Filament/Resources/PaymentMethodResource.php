@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -22,6 +21,7 @@ use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
@@ -70,7 +70,7 @@ class PaymentMethodResource extends Resource
                 ->required(),
             Toggle::make('postpay')
                 ->label('Achteraf betaalmethode')
-                ->hidden(fn($record) => $record && $record->psp == 'own'),
+                ->hidden(fn ($record) => $record && $record->psp == 'own'),
             Textarea::make('additional_info')
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
@@ -99,12 +99,12 @@ class PaymentMethodResource extends Resource
                 ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
                 ->maxLength(255)
                 ->reactive()
-                ->hidden(fn($record) => !$record || ($record && $record->psp != 'own')),
+                ->hidden(fn ($record) => ! $record || ($record && $record->psp != 'own')),
             Select::make('deposit_calculation_payment_method_ids')
                 ->multiple()
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn($record, Get $get) => (!$record || ($record && $record->psp != 'own')) || !$get('deposit_calculation')),
+                ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
         ];
 
         return $form
@@ -115,14 +115,14 @@ class PaymentMethodResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
                     ->hidden(function () {
-                        return !(Sites::getAmountOfSites() > 1);
+                        return ! (Sites::getAmountOfSites() > 1);
                     })
-                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Content')
                     ->schema($contentSchema),
             ]);
@@ -139,7 +139,7 @@ class PaymentMethodResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
                     ->label('PSP')
