@@ -36,7 +36,7 @@ class Orders
 
     public static function sendNotification(Order $order, ?string $email = null, ?User $mailSendByUser): void
     {
-        if(!$email && !$order->email){
+        if (! $email && ! $order->email) {
             return;
         }
 

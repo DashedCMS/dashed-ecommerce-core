@@ -55,7 +55,7 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
      */
     public function handle(): void
     {
-        if (!$this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
+        if (! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
             if ($this->sendToCustomer) {
                 if ($this->order->email) {
                     Orders::sendNotification($this->order, null, $this->sendByUser);
