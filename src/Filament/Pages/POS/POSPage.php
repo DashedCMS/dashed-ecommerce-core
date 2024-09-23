@@ -2,12 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns\CreateManualOrderActions;
 use Filament\Pages\Page;
-use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns\CreateManualOrderActions;
 
 class POSPage extends page
 {

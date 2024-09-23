@@ -2,15 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Carbon\Carbon;
 use Filament\Forms\Get;
 use Filament\Actions\Action;
-use Dashed\DashedCore\Models\User;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Wizard;
@@ -19,20 +14,9 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
@@ -40,11 +24,10 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class CreateOrder extends Page
 {
+    use OrderResource\Concerns\CreateManualOrderActions;
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
     protected static string $view = 'dashed-ecommerce-core::orders.create-order';
-
-    use OrderResource\Concerns\CreateManualOrderActions;
 
     public function mount(): void
     {
@@ -56,7 +39,7 @@ class CreateOrder extends Page
         return [
             Action::make('updateInfo')
                 ->label('Gegevens bijwerken')
-                ->action(fn() => $this->updateInfo()),
+                ->action(fn () => $this->updateInfo()),
         ];
     }
 
@@ -80,7 +63,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn(Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
                     ->label('Wachtwoord herhalen')
                     ->type('password')
@@ -88,7 +71,7 @@ class CreateOrder extends Page
                     ->minLength(6)
                     ->maxLength(255)
                     ->confirmed()
-                    ->visible(fn(Get $get) => !$get('user_id')),
+                    ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('first_name')
                     ->label('Voornaam')
                     ->nullable()
@@ -133,16 +116,16 @@ class CreateOrder extends Page
                 TextInput::make('house_nr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
                     ->label('Postcode')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('country')
@@ -164,22 +147,22 @@ class CreateOrder extends Page
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
                     ->label('Factuur postcode')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_city')
                     ->label('Factuur stad')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_country')
                     ->label('Factuur land')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
             ])
@@ -204,13 +187,13 @@ class CreateOrder extends Page
                             ->maxValue(1000)
                             ->default(0),
                         Placeholder::make('Voorraad')
-                            ->content(fn(Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
                         Placeholder::make('Prijs')
-                            ->content(fn(Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
                         Placeholder::make('Afbeelding')
-                            ->content(fn(Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
                         Section::make('Extra\'s')
-                            ->schema(fn(Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
+                            ->schema(fn (Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
                     ]),
             ])
             ->columnSpan(2);
