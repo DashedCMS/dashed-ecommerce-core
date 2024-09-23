@@ -961,6 +961,10 @@ class Order extends Model
 
     public function downloadInvoiceUrl(): ?string
     {
+        if (Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
+            return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
+        }
+
         $this->createInvoice();
 
         if (Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
@@ -972,6 +976,10 @@ class Order extends Model
 
     public function downloadPackingslipUrl(): ?string
     {
+        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
+            return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
+        }
+
         $this->createPackingSlip();
 
         if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {

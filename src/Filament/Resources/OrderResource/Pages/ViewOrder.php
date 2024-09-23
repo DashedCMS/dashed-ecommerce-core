@@ -25,6 +25,9 @@ class ViewOrder extends ViewRecord
 
     protected function getActions(): array
     {
+        $invoiceUrl = $this->record->downloadInvoiceUrl();
+        $packingSlipUrl = $this->record->downloadPackingslipUrl();
+
         return array_merge([
             Action::make('Bekijk in website')
                 ->button()
@@ -35,12 +38,12 @@ class ViewOrder extends ViewRecord
                 ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
             Action::make('Download factuur')
                 ->button()
-                ->url($this->record->downloadInvoiceUrl())
-                ->visible((bool)$this->record->downloadInvoiceUrl()),
+                ->url($invoiceUrl)
+                ->visible((bool)$invoiceUrl),
             Action::make('Download pakbon')
                 ->button()
-                ->url($this->record->downloadPackingslipUrl())
-                ->visible((bool)$this->record->downloadPackingslipUrl()),
+                ->url($packingSlipUrl)
+                ->visible((bool)$packingSlipUrl),
         ], ecommerce()->buttonActions('order'));
     }
 
