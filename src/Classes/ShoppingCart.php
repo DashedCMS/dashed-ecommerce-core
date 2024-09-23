@@ -117,10 +117,10 @@ class ShoppingCart
     {
         $cartTotal = self::total(false, false, $shippingMethodId, $paymentMethodId);
 
-        $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
-            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
-        }
+//        $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
+//        if ($calculateInclusiveTax) {
+        $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
+//        }
 
         if ($formatResult) {
             return CurrencyHelper::formatPrice($cartTotal);

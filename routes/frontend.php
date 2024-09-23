@@ -8,7 +8,6 @@ use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
-use Dashed\DashedEcommerceCore\Livewire\PointOfSale\POSPage;
 use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -59,8 +58,8 @@ Route::middleware(['web'])->prefix(config('filament.path', 'dashed') . '/api')->
     Route::get('/checkout/get-checkout-data', [CheckoutApiController::class, 'getCheckoutData'])->name('dashed.api.checkout.get-checkout-data');
 });
 
-//Route::middleware(['web', AdminMiddleware::class])->group(function () {
-//    Route::get('/ecommerce/point-of-sale', function(){
-//        return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
-//    })->name('dashed.ecommerce.point-of-sale');
-//});
+Route::middleware(['web', AdminMiddleware::class])->group(function () {
+    Route::get('/ecommerce/point-of-sale', function(){
+        return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
+    })->name('dashed.ecommerce.point-of-sale');
+});

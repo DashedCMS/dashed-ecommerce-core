@@ -4,16 +4,25 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
 use Filament\Forms\Get;
+use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
+use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Wizard;
+use Illuminate\Support\Facades\Blade;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
@@ -27,6 +36,7 @@ use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 trait CreateManualOrderActions
 {
@@ -71,12 +81,20 @@ trait CreateManualOrderActions
     public $searchedProducts = [];
     public $searchProductQuery;
     public string $cartInstance = '';
+    public $searchQueryInputmode = 'none';
+
+    public array $cachableVariables = [
+        'products' => [],
+        'searchQueryInputmode' => 'none',
+    ];
 
     public function initialize($cartInstance)
     {
         $this->cartInstance = $cartInstance;
         ShoppingCart::setInstance($this->cartInstance);
         $this->allProducts = Product::handOrderShowable()->get();
+        $this->loadVariables();
+        $this->updateInfo(false);
     }
 
     public function getUsersProperty()
@@ -165,7 +183,7 @@ trait CreateManualOrderActions
         //            \Cart::remove($row->rowId);
         //        }
 
-        foreach ($this->products as $chosenProduct) {
+        foreach ($this->products ?: [] as $chosenProduct) {
             $product = Product::find($chosenProduct['id']);
             if (($chosenProduct['quantity'] ?? 0) > 0) {
                 $productPrice = $product->getOriginal('price');
@@ -190,12 +208,12 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -221,7 +239,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -240,6 +258,9 @@ trait CreateManualOrderActions
                 ->success()
                 ->send();
         }
+
+        $this->cacheVariables();
+
         $this->loading = false;
     }
 
@@ -253,14 +274,14 @@ trait CreateManualOrderActions
         $cartItems = ShoppingCart::cartItems();
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
                 ->send();
 
             return [
-                'success' => false,
+                'success' => false
             ];
         }
 
@@ -289,7 +310,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -300,16 +321,16 @@ trait CreateManualOrderActions
                 ->send();
 
             return [
-                'success' => false,
+                'success' => false
             ];
         }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -318,7 +339,7 @@ trait CreateManualOrderActions
                 ->send();
 
             return [
-                'success' => false,
+                'success' => false
             ];
         }
 
@@ -330,7 +351,7 @@ trait CreateManualOrderActions
                     ->send();
 
                 return [
-                    'success' => false,
+                    'success' => false
                 ];
             }
 
@@ -541,18 +562,20 @@ trait CreateManualOrderActions
         if ($selectedProduct) {
             $productAlreadyInCart = false;
 
-            foreach ($this->products as &$product) {
+            foreach ($this->products ?: [] as &$product) {
                 if ($product['id'] == $selectedProduct['id']) {
                     $productAlreadyInCart = true;
                     $product['quantity']++;
+                    $product['price'] = $selectedProduct->getOriginal('price') * $product['quantity'];
                 }
             }
 
-            if (! $productAlreadyInCart) {
+            if (!$productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
                     'quantity' => 1,
+                    'price' => $selectedProduct->getOriginal('price'),
                     'extra' => [],
                 ];
             }
@@ -561,7 +584,7 @@ trait CreateManualOrderActions
             $this->updateInfo(false);
         } else {
             Notification::make()
-                ->title('Product not found')
+                ->title('Product ' . $this->searchProductQuery . ' niet gevonden')
                 ->danger()
                 ->send();
             $this->searchProductQuery = '';
@@ -570,15 +593,69 @@ trait CreateManualOrderActions
         $this->dispatch('focus');
     }
 
+    public function changeQuantity($productId, $quantity)
+    {
+        foreach ($this->products as $productKey => &$product) {
+            if ($product['id'] == $productId) {
+                if ($quantity == 0) {
+                    unset($this->products[$productKey]);
+                } else {
+                    $product['quantity'] = $quantity;
+                    $product['price'] = $product['product']->getOriginal('price') * $quantity;
+                }
+            }
+        }
+
+        $this->updateInfo(false);
+    }
+
+    public function clearProducts()
+    {
+        $this->products = [];
+
+        $this->updateInfo(false);
+    }
+
     public function updateSearchedProducts()
     {
         $this->searchedProducts = Product::handOrderShowable()
             ->search($this->searchProductQuery)
             ->limit(25)
             ->get();
-        //        Notification::make()
-        //            ->title('boem')
-        //            ->success()
-        //            ->send();
+//        Notification::make()
+//            ->title('boem')
+//            ->success()
+//            ->send();
+    }
+
+//    public function updated()
+//    {
+//        $this->cacheVariables();
+//    }
+
+    public function toggleSearchQueryInputmode()
+    {
+        if ($this->searchQueryInputmode == 'none') {
+            $this->searchQueryInputmode = null;
+        } else {
+            $this->searchQueryInputmode = 'none';
+        }
+
+        $this->dispatch('focus');
+        $this->cacheVariables();
+    }
+
+    public function cacheVariables(): void
+    {
+        foreach ($this->cachableVariables as $variable => $defaultValue) {
+            session([$variable => $this->{$variable}]);
+        }
+    }
+
+    public function loadVariables(): void
+    {
+        foreach ($this->cachableVariables as $variable => $defaultValue) {
+            $this->{$variable} = session($variable, $defaultValue);
+        }
     }
 }
