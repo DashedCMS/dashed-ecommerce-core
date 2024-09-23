@@ -3,6 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
+use Filament\Actions\Concerns\HasForm;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +33,8 @@ use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 trait CreateManualOrderActions
 {
+    use InteractsWithForms;
+
     public $loading = false;
 
     public $subTotal = 0;
@@ -72,6 +77,11 @@ trait CreateManualOrderActions
     public $searchProductQuery;
     public string $cartInstance = '';
     public $searchQueryInputmode = 'none';
+    public $customProductPopup = false;
+    public ?array $customProductData = [];
+    public $customProductName;
+    public $customProductPrice;
+    public $customProductQuantity;
 
     public array $cachableVariables = [
         'products' => [],
@@ -84,6 +94,10 @@ trait CreateManualOrderActions
         ShoppingCart::setInstance($this->cartInstance);
         $this->allProducts = Product::handOrderShowable()->get();
         $this->loadVariables();
+        $this->customProductForm->fill([
+            'quantity' => 1,
+            'vat_rate' => 21,
+        ]);
         $this->updateInfo(false);
     }
 
@@ -176,7 +190,7 @@ trait CreateManualOrderActions
         foreach ($this->products ?: [] as $chosenProduct) {
             $product = Product::find($chosenProduct['id']);
             if (($chosenProduct['quantity'] ?? 0) > 0) {
-                $productPrice = $product->getOriginal('price');
+                $productPrice = ($chosenProduct['customProduct'] ?? false) ? $chosenProduct['price'] : $product->getOriginal('price');
                 $options = [];
                 foreach ($chosenProduct['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
                     if ($productExtraOptionId) {
@@ -194,16 +208,23 @@ trait CreateManualOrderActions
                     }
                 }
 
-                \Cart::instance($this->cartInstance)->add($product->id, $product->name, $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
+                if ($product->id ?? false) {
+                    \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
+                } else {
+                    $options['customProduct'] = true;
+                    $options['vat_rate'] = $chosenProduct['vat_rate'];
+                    $options['singlePrice'] = $chosenProduct['singlePrice'];
+                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options);
+                }
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -229,7 +250,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -264,7 +285,7 @@ trait CreateManualOrderActions
         $cartItems = ShoppingCart::cartItems();
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -300,7 +321,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -317,10 +338,10 @@ trait CreateManualOrderActions
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -423,8 +444,8 @@ trait CreateManualOrderActions
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
-            $orderProduct->price = $cartItem->model->getShoppingCartItemPrice($cartItem, $discountCode ?? null);
-            $orderProduct->discount = $cartItem->model->getShoppingCartItemPrice($cartItem) - $orderProduct->price;
+            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
+            $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             $productExtras = [];
             foreach ($cartItem->options as $optionId => $option) {
                 $productExtras[] = [
@@ -552,15 +573,17 @@ trait CreateManualOrderActions
         if ($selectedProduct) {
             $productAlreadyInCart = false;
 
-            foreach ($this->products ?: [] as &$product) {
+            $products = $this->products;
+            foreach ($products as &$product) {
                 if ($product['id'] == $selectedProduct['id']) {
                     $productAlreadyInCart = true;
                     $product['quantity']++;
                     $product['price'] = $selectedProduct->getOriginal('price') * $product['quantity'];
+                    $this->products = $products;
                 }
             }
 
-            if (! $productAlreadyInCart) {
+            if (!$productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
@@ -586,17 +609,18 @@ trait CreateManualOrderActions
     public function changeQuantity($productId, $quantity)
     {
         foreach ($this->products as $productKey => &$product) {
-            if ($product['id'] == $productId) {
+            if ($product['id'] == $productId || ($product['customId'] ?? false) == $productId) {
                 if ($quantity == 0) {
                     unset($this->products[$productKey]);
                 } else {
                     $product['quantity'] = $quantity;
-                    $product['price'] = $product['product']->getOriginal('price') * $quantity;
+                    $product['price'] = $product['product'] ? ($product['product']->getOriginal('price') * $quantity) : $product['singlePrice'] * $quantity;
                 }
             }
         }
 
         $this->updateInfo(false);
+        $this->dispatch('focus');
     }
 
     public function clearProducts()
@@ -604,6 +628,7 @@ trait CreateManualOrderActions
         $this->products = [];
 
         $this->updateInfo(false);
+        $this->dispatch('focus');
     }
 
     public function updateSearchedProducts()
@@ -612,6 +637,7 @@ trait CreateManualOrderActions
             ->search($this->searchProductQuery)
             ->limit(25)
             ->get();
+        $this->dispatch('focus');
         //        Notification::make()
         //            ->title('boem')
         //            ->success()
@@ -647,5 +673,79 @@ trait CreateManualOrderActions
         foreach ($this->cachableVariables as $variable => $defaultValue) {
             $this->{$variable} = session($variable, $defaultValue);
         }
+    }
+
+    public function toggleCustomProductPopup()
+    {
+        $this->customProductPopup = !$this->customProductPopup;
+    }
+
+    public function getForms(): array
+    {
+        return [
+            'customProductForm',
+        ];
+    }
+
+    public function customProductForm(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('name')
+                    ->label('Productnaam')
+                    ->required()
+                    ->columnSpanFull(),
+                TextInput::make('price')
+                    ->label('Prijs')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(999999)
+                    ->inputMode('decimal')
+                    ->required()
+                    ->prefix('€')
+                    ->columnSpanFull(),
+                TextInput::make('quantity')
+                    ->label('Aantal')
+                    ->numeric()
+                    ->minValue(1)
+                    ->maxValue(999999)
+                    ->inputMode('numeric')
+                    ->required()
+                    ->default(1)
+                    ->prefix('x'),
+                TextInput::make('vat_rate')
+                    ->label('Aantal')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->inputMode('numeric')
+                    ->required()
+                    ->default(21)
+                    ->prefix('%'),
+            ])
+            ->columns(2)
+            ->statePath('customProductData');
+    }
+
+    public function submitCustomProductForm()
+    {
+        $this->customProductForm->validate();
+
+        $this->products[] = [
+            'id' => null,
+            'product' => null,
+            'name' => $this->customProductData['name'],
+            'quantity' => $this->customProductData['quantity'],
+            'price' => $this->customProductData['price'] * $this->customProductData['quantity'],
+            'singlePrice' => $this->customProductData['price'],
+            'vat_rate' => $this->customProductData['vat_rate'],
+            'customProduct' => true,
+            'extra' => [],
+            'customId' => 'custom-' . rand(1, 10000000),
+        ];
+
+        $this->customProductPopup = false;
+        $this->customProductForm->fill();
+        $this->updateInfo(false);
     }
 }

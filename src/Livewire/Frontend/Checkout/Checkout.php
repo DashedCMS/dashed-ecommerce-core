@@ -531,8 +531,8 @@ class Checkout extends Component
             //                $orderProduct->price = $discountedPrice;
             //                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             //            } else {
-            $orderProduct->price = $cartItem->model->getShoppingCartItemPrice($cartItem, $discountCode ?? null);
-            $orderProduct->discount = $cartItem->model->getShoppingCartItemPrice($cartItem) - $orderProduct->price;
+            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
+            $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             //            }
             $productExtras = [];
             foreach ($cartItem->options as $optionId => $option) {

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -186,8 +187,8 @@ class TransactionController extends FrontendController
             //                $orderProduct->price = $discountedPrice;
             //                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             //            } else {
-            $orderProduct->price = $cartItem->model->getShoppingCartItemPrice($cartItem, $discountCode ?? null);
-            $orderProduct->discount = $cartItem->model->getShoppingCartItemPrice($cartItem) - $orderProduct->price;
+            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
+            $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             //            }
             $productExtras = [];
             foreach ($cartItem->options as $optionId => $option) {

@@ -999,7 +999,7 @@ class Product extends Model
         return Product::thisSite()->publicShowable()->whereIn('id', $suggestedProductIds)->limit($limit)->inRandomOrder()->get();
     }
 
-    public function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
+    public static function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
     {
         if ($discountCode && is_string($discountCode)) {
             $discountCode = null;
@@ -1010,7 +1010,7 @@ class Product extends Model
 
         $price = 0;
 
-        $price += $this->currentPrice * $quantity;
+        $price += ($cartItem->model ? $cartItem->model->currentPrice : $cartItem->options['singlePrice']) * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
             if (! str($productExtraOptionId)->contains('product-extra-')) {
@@ -1029,11 +1029,11 @@ class Product extends Model
             $discountValidForProduct = false;
 
             if ($discountCode->valid_for == 'categories') {
-                if ($discountCode->productCategories()->whereIn('product_category_id', $cartItem->model->productCategories()->pluck('product_category_id'))->exists()) {
+                if ($cartItem->model && $discountCode->productCategories()->whereIn('product_category_id', $cartItem->model->productCategories()->pluck('product_category_id'))->exists()) {
                     $discountValidForProduct = true;
                 }
             } elseif ($discountCode->valid_for == 'products') {
-                if ($discountCode->products()->where('product_id', $cartItem->model->id)->exists()) {
+                if ($cartItem->model && $discountCode->products()->where('product_id', $cartItem->model->id)->exists()) {
                     $discountValidForProduct = true;
                 }
             } else {
