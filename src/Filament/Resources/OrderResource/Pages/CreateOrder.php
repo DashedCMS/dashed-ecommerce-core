@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
@@ -22,12 +24,14 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CreateOrder extends Page
+class CreateOrder extends Page implements HasForms
 {
     use OrderResource\Concerns\CreateManualOrderActions;
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
     protected static string $view = 'dashed-ecommerce-core::orders.create-order';
+
+    public ?array $data = [];
 
     public function mount(): void
     {
@@ -43,7 +47,7 @@ class CreateOrder extends Page
         ];
     }
 
-    protected function getFormSchema(): array
+    public function createOrderForm(Form $form): Form
     {
         $schema = [];
 
@@ -177,6 +181,7 @@ class CreateOrder extends Page
                         Select::make('id')
                             ->label('Kies product')
                             ->options($this->allProducts->pluck('name', 'id'))
+                            ->required()
                             ->searchable()
                             ->reactive(),
                         TextInput::make('quantity')
@@ -278,7 +283,7 @@ class CreateOrder extends Page
                     ->content('Totaal: ' . $this->total),
             ]);
 
-        return [
+        $schema = [
             Wizard::make($schema)
                 ->submitAction(new HtmlString(Blade::render(
                     <<<BLADE
@@ -291,6 +296,9 @@ class CreateOrder extends Page
 BLADE
                 ))),
         ];
+
+        return $form
+            ->schema($schema);
     }
 
     public function submit()
