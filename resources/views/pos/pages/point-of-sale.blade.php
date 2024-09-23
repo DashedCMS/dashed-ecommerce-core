@@ -137,7 +137,8 @@
                         </span>
                         <p>Klant toevoegen</p>
                     </button>
-                    <button wire:click="openCashRegister" class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                    <button wire:click="openCashRegister"
+                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hand-coins"><path
@@ -267,7 +268,7 @@
                     <span class="font-bold">{{ $vat }}</span>
                 </span>
                     </div>
-                    <button wire:click="submit"
+                    <button wire:click="initiateCheckout"
                             class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Checkout
                     </button>
@@ -279,7 +280,8 @@
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
             <div class="absolute h-full w-full" wire:click="toggleVariable('customProductPopup')"></div>
             <div class="bg-white rounded-lg p-8 grid gap-4 relative">
-                <div class="absolute top-2 right-2 text-black cursor-pointer" wire:click="toggleVariable('customProductPopup')">
+                <div class="absolute top-2 right-2 text-black cursor-pointer"
+                     wire:click="toggleVariable('customProductPopup')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -306,7 +308,8 @@
             <div class="absolute h-full w-full" wire:click="toggleVariable('createDiscountPopup')"></div>
             <div class="bg-white rounded-lg p-8 grid gap-4 relative">
                 <div class="bg-white rounded-lg p-8 grid gap-4">
-                    <div class="absolute top-2 right-2 text-black cursor-pointer" wire:click="toggleVariable('createDiscountPopup')">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         wire:click="toggleVariable('createDiscountPopup')">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-10">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -327,61 +330,161 @@
                     </form>
                 </div>
             </div>
-            @endif
-            @script
-            <script>
-                $wire.on('focus', () => {
-                    document.getElementById("search-product-query").focus();
-                });
-
-                function requestFullscreen() {
-                    const elem = document.documentElement; // Can be any element, here we use the whole document
-
-                    if (elem.requestFullscreen) {
-                        elem.requestFullscreen();
-                    } else if (elem.mozRequestFullScreen) { // For Firefox
-                        elem.mozRequestFullScreen();
-                    } else if (elem.webkitRequestFullscreen) { // For Chrome, Safari, and Opera
-                        elem.webkitRequestFullscreen();
-                    } else if (elem.msRequestFullscreen) { // For Internet Explorer/Edge
-                        elem.msRequestFullscreen();
-                    }
-                }
-
-                function exitFullscreen() {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                        document.mozCancelFullScreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    }
-                }
-
-                document.addEventListener('fullscreenchange', () => {
-                    isFullscreen();
-                });
-
-                function isFullscreen() {
-                    var isFullscreen = document.fullscreenElement ||
-                        document.webkitFullscreenElement ||
-                        document.mozFullScreenElement ||
-                        document.msFullscreenElement;
-                    if (isFullscreen) {
-                        $wire.dispatch('fullscreenValue', {fullscreen: true});
-                    } else {
-                        $wire.dispatch('fullscreenValue', {fullscreen: false});
-                    }
-                }
-
-                document.getElementById("fullscreenBtn").addEventListener("click", function () {
-                    requestFullscreen();
-                });
-                document.getElementById("exitFullscreenBtn").addEventListener("click", function () {
-                    exitFullscreen();
-                });
-            </script>
-            @endscript
         </div>
+    @endif
+    @if($checkoutPopup)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+            <div class="absolute h-full w-full" wire:click="closeCheckout"></div>
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
+                <div class="bg-white rounded-lg p-8 grid gap-4">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         wire:click="closeCheckout">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold">Totaal: {{ $total }}</p>
+                        <p class="text-xl text-gray-400">Selecteer betalingsoptie</p>
+                    </div>
+                    @if(count($posPaymentMethods))
+                        <div class="grid gap-8">
+                            @foreach($posPaymentMethods as $paymentMethod)
+                                <button wire:click="selectPaymentMethod('{{ $paymentMethod['id'] }}')"
+                                        class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
+                                    @if($paymentMethod['image'])
+                                        <img
+                                            src="{{ mediaHelper()->getSingleMedia($paymentMethod['image'], 'original')->url ?? '' }}"
+                                            class="h-20 mr-2">
+                                    @else
+                                        <img src="https://placehold.co/400x400/000/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}?text={{ $paymentMethod['name'] }}"
+                                             class="object-cover rounded-lg h-20">
+                                    @endif
+                                    <span>{{ $paymentMethod['name'] }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-4">
+                            <p class="text-center text-black">Geen betaalmethodes gevonden</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+    @if($paymentPopup)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+            <div class="absolute h-full w-full" wire:click="closePayment"></div>
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
+                <div class="bg-white rounded-lg p-8 grid gap-4">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         wire:click="closePayment">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold">Totaal: {{ $total }}</p>
+                        <p class="text-xl text-gray-400">Betaalmethode: {{ $paymentMethod->name }}</p>
+                    </div>
+                    @if($paymentMethod->is_cash_payment)
+                        <div class="flex flex-col gap-4">
+                            <div class="flex flex-col gap-2">
+                                <p class="text-xl font-bold">Ontvangen bedrag</p>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    @foreach($suggestedCashPaymentAmounts as $suggestedCashPaymentAmount)
+                                        <button wire:click="setCashPaymentAmount({{ $suggestedCashPaymentAmount }})"
+                                                class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                            {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($suggestedCashPaymentAmount) }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <form wire:submit.prevent="markAsPaid">
+                                {{ $this->cashPaymentForm }}
+                                {{--                                <input wire:model="cashPaymentAmount"--}}
+                                {{--                                       type="number"--}}
+                                {{--                                       min="0"--}}
+                                {{--                                       max="100000"--}}
+                                {{--                                       required--}}
+                                {{--                                       class="text-black w-full rounded-lg pl-4 pr-4"--}}
+                                {{--                                       placeholder="Anders...">--}}
+                            </form>
+                        </div>
+                    @endif
+                    <div class="grid md:grid-cols-2 gap-4 mt-16">
+                        <button wire:click="closePayment"
+                                class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            Annuleren
+                        </button>
+                        <button wire:click="markAsPaid"
+                                class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            Markeer als betaald
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+    @script
+    <script>
+        $wire.on('focus', () => {
+            document.getElementById("search-product-query").focus();
+        });
+
+        function requestFullscreen() {
+            const elem = document.documentElement; // Can be any element, here we use the whole document
+
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { // For Firefox
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { // For Chrome, Safari, and Opera
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { // For Internet Explorer/Edge
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen();
+        });
+
+        function isFullscreen() {
+            var isFullscreen = document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement;
+            if (isFullscreen) {
+                $wire.dispatch('fullscreenValue', {fullscreen: true});
+            } else {
+                $wire.dispatch('fullscreenValue', {fullscreen: false});
+            }
+        }
+
+        document.getElementById("fullscreenBtn").addEventListener("click", function () {
+            requestFullscreen();
+        });
+        document.getElementById("exitFullscreenBtn").addEventListener("click", function () {
+            exitFullscreen();
+        });
+    </script>
+    @endscript
+</div>

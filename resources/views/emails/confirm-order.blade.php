@@ -718,7 +718,7 @@
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
                                                         <div
                                                             style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
-                                                            {{$order->shippingMethod->name}}
+                                                            {{$order->shippingMethod->name ?? 'geen gekozen'}}
                                                         </div>
                                                     </div>
                                                 </td>

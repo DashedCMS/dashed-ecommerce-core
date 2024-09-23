@@ -18,7 +18,7 @@ class POSPage extends Component implements HasForms
 
     public function mount(): void
     {
-        $this->initialize('point-of-sale');
+        $this->initialize('point-of-sale', 'pos');
     }
 
     public function render()

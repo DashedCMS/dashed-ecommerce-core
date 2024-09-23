@@ -137,7 +137,7 @@ class Order extends Model
                 return $this->last_name;
             }
         } else {
-            return $this->email;
+            return $this->email ?: 'Geen naam';
         }
     }
 
@@ -387,7 +387,7 @@ class Order extends Model
 
     public function generateInvoiceId()
     {
-        if ($this->order_origin == 'own' && ($this->invoice_id == 'PROFORMA' || $this->invoice_id == 'RETURN')) {
+        if (in_array($this->order_origin, ['own', 'pos']) && ($this->invoice_id == 'PROFORMA' || $this->invoice_id == 'RETURN')) {
             if (Customsetting::get('random_invoice_number')) {
                 $invoiceNumber = '';
                 foreach (str_split(Customsetting::get('invoice_id_replacement', config('dashed.currentSite'), '*****')) as $codeCharacter) {
@@ -421,7 +421,7 @@ class Order extends Model
 
     public function createInvoice()
     {
-        if ($this->order_origin == 'own') {
+        if (in_array($this->order_origin, ['own', 'pos'])) {
             if ($this->parentCreditOrder) {
                 OrderLog::createLog(orderId: $this->id, note: 'Creating credit invoice', isDebugLog: true);
                 $this->createCreditInvoice();
@@ -436,7 +436,7 @@ class Order extends Model
 
     public function createNormalInvoice()
     {
-        if ($this->order_origin == 'own') {
+        if (in_array($this->order_origin, ['own', 'pos'])) {
             OrderLog::createLog(orderId: $this->id, note: 'Generating invoice id', isDebugLog: true);
             $this->generateInvoiceId();
             OrderLog::createLog(orderId: $this->id, note: 'Generating invoice id done', isDebugLog: true);
@@ -493,7 +493,7 @@ class Order extends Model
 
     public function createCreditInvoice()
     {
-        if ($this->order_origin == 'own' && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
+        if (in_array($this->order_origin, ['own', 'pos']) && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
             if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {

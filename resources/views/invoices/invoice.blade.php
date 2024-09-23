@@ -130,7 +130,7 @@
                             @if($logo)
                                 <img
                                     src="{{mediaHelper()->getSingleImage($logo)->url ?? ''}}"
-                                     class="logo">
+                                    class="logo">
                             @endif
                         </td>
                     </tr>
@@ -195,7 +195,7 @@
                         <span>{{$order->invoice_id}}</span><br>
                         <span>{{$order->created_at->format('d-m-Y')}}</span><br>
                         <span>{{$order->paymentMethod}}</span><br>
-                        <span>{{$order->shippingMethod->name}}</span><br>
+                        <span>{{$order->shippingMethod->name ?? 'niet gekozen'}}</span><br>
                         @if($order->status == 'partially_paid')
                             <span>{{CurrencyHelper::formatPrice($order->paidAmount)}}</span><br>
                             <span>{{CurrencyHelper::formatPrice($order->openAmount)}}</span><br>
@@ -243,7 +243,7 @@
                     {{CurrencyHelper::formatPrice($order->subtotal, 'EUR', true)}}
                 </td>
             </tr>
-            @if(!$order->shippingMethod->shippingZone->hide_vat_on_invoice)
+            @if(!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice)
                 <tr>
                     <td>
                         {{Translation::get('btw', 'invoice', 'BTW')}}

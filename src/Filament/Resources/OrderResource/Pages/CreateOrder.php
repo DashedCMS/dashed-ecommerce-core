@@ -35,7 +35,7 @@ class CreateOrder extends Page implements HasForms
 
     public function mount(): void
     {
-        $this->initialize('handorder');
+        $this->initialize('handorder', 'own');
     }
 
     protected function getActions(): array

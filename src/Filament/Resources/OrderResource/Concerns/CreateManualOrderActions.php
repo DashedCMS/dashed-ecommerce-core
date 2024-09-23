@@ -3,11 +3,14 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
-use Filament\Forms\Get;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Filament\Actions\Concerns\HasForm;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Select;
@@ -21,7 +24,6 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
@@ -71,6 +73,7 @@ trait CreateManualOrderActions
     public $orderProducts = [];
     public $shipping_method_id;
     public $payment_method_id;
+    public $paymentMethod;
     public $allProducts = [];
     public $products = [];
     public $searchedProducts = [];
@@ -81,6 +84,12 @@ trait CreateManualOrderActions
     public ?array $customProductData = [];
     public $createDiscountPopup = false;
     public ?array $createDiscountData = [];
+    public $checkoutPopup = false;
+    public $paymentPopup = false;
+    public $posPaymentMethods = [];
+    public $suggestedCashPaymentAmounts = [];
+    public $cashPaymentAmount = null;
+    public $orderOrigin;
 
     public array $cachableVariables = [
         'products' => [],
@@ -88,9 +97,10 @@ trait CreateManualOrderActions
         'discount_code' => '',
     ];
 
-    public function initialize($cartInstance)
+    public function initialize($cartInstance, $orderOrigin)
     {
         $this->cartInstance = $cartInstance;
+        $this->orderOrigin = $orderOrigin;
         ShoppingCart::setInstance($this->cartInstance);
         $this->allProducts = Product::handOrderShowable()->get();
         $this->loadVariables();
@@ -190,6 +200,7 @@ trait CreateManualOrderActions
         //            \Cart::remove($row->rowId);
         //        }
 
+        dump($this->products);
         foreach ($this->products ?: [] as $chosenProduct) {
             $product = Product::find($chosenProduct['id']);
             if (($chosenProduct['quantity'] ?? 0) > 0) {
@@ -222,12 +233,12 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -246,7 +257,6 @@ trait CreateManualOrderActions
                 }
             }
         }
-
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
@@ -255,7 +265,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -284,13 +294,14 @@ trait CreateManualOrderActions
     {
         $this->updateInfo(false);
         $this->loading = true;
+        ShoppingCart::setInstance($this->cartInstance);
         \Cart::instance($this->cartInstance)->content();
         ShoppingCart::removeInvalidItems();
 
-        $cartItems = ShoppingCart::cartItems();
+        $cartItems = ShoppingCart::cartItems($this->cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -326,7 +337,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod && $this->orderOrigin != 'pos') {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -343,10 +354,10 @@ trait CreateManualOrderActions
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -380,6 +391,7 @@ trait CreateManualOrderActions
         }
 
         $order = new Order();
+        $order->order_origin = $this->orderOrigin;
         $order->first_name = $this->first_name;
         $order->last_name = $this->last_name;
         $order->email = $this->email;
@@ -403,14 +415,14 @@ trait CreateManualOrderActions
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $this->discount_code]);
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? null);
+        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
         $discount = ShoppingCart::totalDiscount(false, $this->discount_code);
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
+        $btw = ShoppingCart::btw(false, true, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
+        $total = ShoppingCart::total(false, true, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
         $shippingCosts = 0;
         $paymentCosts = 0;
 
-        if ($shippingMethod->costs > 0) {
+        if (($shippingMethod->costs ?? 0) > 0) {
             $shippingCosts = $shippingMethod->costs;
         }
 
@@ -429,7 +441,7 @@ trait CreateManualOrderActions
             $order->discount_code_id = $discountCode->id;
         }
 
-        $order->shipping_method_id = $shippingMethod['id'];
+        $order->shipping_method_id = $shippingMethod['id'] ?? null;
 
         if (isset($user)) {
             $order->user_id = $user->id;
@@ -445,24 +457,26 @@ trait CreateManualOrderActions
         foreach ($cartItems as $cartItem) {
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = $cartItem->qty;
-            $orderProduct->product_id = $cartItem->model->id;
+            $orderProduct->product_id = $cartItem->model->id ?? null;
             $orderProduct->order_id = $order->id;
-            $orderProduct->name = $cartItem->model->name;
-            $orderProduct->sku = $cartItem->model->sku;
+            $orderProduct->name = $cartItem->model->name ?? $cartItem->name;
+            $orderProduct->sku = $cartItem->model->sku ?? null;
             $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             $productExtras = [];
             foreach ($cartItem->options as $optionId => $option) {
-                $productExtras[] = [
-                    'id' => $optionId,
-                    'name' => $option['name'],
-                    'value' => $option['value'],
-                    'price' => ProductExtraOption::find($optionId)->price,
-                ];
+                if ($option['name'] ?? false) {
+                    $productExtras[] = [
+                        'id' => $optionId,
+                        'name' => $option['name'],
+                        'value' => $option['value'],
+                        'price' => ProductExtraOption::find($optionId)->price,
+                    ];
+                }
             }
             $orderProduct->product_extras = $productExtras;
 
-            if ($cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
+            if ($cartItem->model && $cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
                 $orderProduct->is_pre_order = true;
                 $orderProduct->pre_order_restocked_date = $cartItem->model->expected_in_stock_date;
                 $orderContainsPreOrders = true;
@@ -588,7 +602,7 @@ trait CreateManualOrderActions
                 }
             }
 
-            if (! $productAlreadyInCart) {
+            if (!$productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
@@ -682,7 +696,7 @@ trait CreateManualOrderActions
 
     public function toggleCustomProductPopup()
     {
-        $this->customProductPopup = ! $this->customProductPopup;
+        $this->customProductPopup = !$this->customProductPopup;
     }
 
     public function getForms(): array
@@ -691,6 +705,7 @@ trait CreateManualOrderActions
             'customProductForm',
             'createOrderForm',
             'createDiscountForm',
+            'cashPaymentForm',
         ];
     }
 
@@ -778,7 +793,7 @@ trait CreateManualOrderActions
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -789,7 +804,7 @@ trait CreateManualOrderActions
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'amount')
+                    ->visible(fn(Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -801,7 +816,7 @@ trait CreateManualOrderActions
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'percentage')
+                    ->visible(fn(Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -817,7 +832,7 @@ trait CreateManualOrderActions
                         return $options;
                     })
                     ->required()
-                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -825,6 +840,15 @@ trait CreateManualOrderActions
 
     public function submitCreateDiscountForm()
     {
+        if (!$this->products) {
+            Notification::make()
+                ->title('Geen producten in winkelmand')
+                ->danger()
+                ->send();
+            $this->createDiscountPopup = false;
+            return;
+        }
+
         $this->createDiscountForm->validate();
 
         if ($this->createDiscountData['type'] == 'discountCode') {
@@ -847,7 +871,7 @@ trait CreateManualOrderActions
             $this->discount_code = $discountCode->code;
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -861,7 +885,7 @@ trait CreateManualOrderActions
 
     public function toggleVariable($variable)
     {
-        $this->{$variable} = ! $this->{$variable};
+        $this->{$variable} = !$this->{$variable};
     }
 
     public function removeDiscount()
@@ -873,5 +897,167 @@ trait CreateManualOrderActions
     public function openCashRegister()
     {
 
+    }
+
+    public function closeCheckout()
+    {
+        $this->checkoutPopup = false;
+    }
+
+    public function closePayment()
+    {
+        $this->paymentPopup = false;
+    }
+
+    public function initiateCheckout()
+    {
+        if (!$this->products) {
+            Notification::make()
+                ->title('Geen producten in winkelmand')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $this->posPaymentMethods = ShoppingCart::getPaymentMethods('pos');
+        $this->checkoutPopup = true;
+    }
+
+    public function getPaymentOptions($amount): array
+    {
+        $options = [];
+
+        // 1. Add the exact amount as the first option
+        $options[] = round($amount, 2);
+
+        // 2. Round up to the nearest 5
+        $roundedUp5 = ceil($amount / 5) * 5;
+        if ($roundedUp5 != $amount) {
+            $options[] = $roundedUp5;
+        }
+
+        // 3. Round up to the nearest 10
+        $roundedUp10 = ceil($amount / 10) * 10;
+        if ($roundedUp10 != $amount && $roundedUp10 != $roundedUp5) {
+            $options[] = $roundedUp10;
+        }
+
+        // 4. Add a larger increment, such as the nearest 50 or 100
+        $roundedUp50 = ceil($amount / 50) * 50;
+        if ($roundedUp50 != $amount && $roundedUp50 != $roundedUp5 && $roundedUp50 != $roundedUp10) {
+            $options[] = $roundedUp50;
+        }
+
+        $roundedUp100 = ceil($amount / 100) * 100;
+        if ($roundedUp100 != $amount && $roundedUp100 != $roundedUp5 && $roundedUp100 != $roundedUp10 && $roundedUp100 != $roundedUp50) {
+            $options[] = $roundedUp100;
+        }
+
+        // Limit the number of options to 5
+        return array_slice($options, 0, 5);
+    }
+
+    public function cashPaymentForm(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('cashPaymentAmount')
+                    ->label('Prijs')
+                    ->hiddenLabel()
+                    ->placeholder('Anders...')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(999999)
+                    ->inputMode('decimal')
+                    ->required()
+                    ->extraInputAttributes([
+                        'class' => 'text-xl sm:text-xl md:text-xl py-2'
+                    ])
+                    ->extraFieldWrapperAttributes([
+                        'class' => 'text-xl sm:text-xl md:text-xl py-2'
+                    ])
+                    ->extraAttributes([
+                        'class' => 'text-xl sm:text-xl md:text-xl py-2'
+                    ])
+                    ->prefix('€'),
+            ]);
+    }
+
+    public function selectPaymentMethod($paymentMethodId)
+    {
+        $this->payment_method_id = $paymentMethodId;
+        $this->paymentMethod = PaymentMethod::find($paymentMethodId);
+        $this->suggestedCashPaymentAmounts = $this->getPaymentOptions($this->totalUnformatted);
+        $this->updateInfo(false);
+        $this->checkoutPopup = false;
+        $this->paymentPopup = true;
+    }
+
+    public function setCashPaymentAmount($amount)
+    {
+        $this->cashPaymentAmount = $amount;
+        $this->markAsPaid();
+    }
+
+    public function markAsPaid()
+    {
+        if ($this->paymentMethod->is_cash_payment && !$this->cashPaymentAmount) {
+            Notification::make()
+                ->title('Geen bedrag ingevoerd')
+                ->danger()
+                ->send();
+            return;
+        } elseif ($this->paymentMethod->is_cash_payment && $this->cashPaymentAmount < $this->totalUnformatted) {
+            Notification::make()
+                ->title('Bedrag is te laag')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $response = $this->createOrder();
+
+        if ($response['success']) {
+
+            $order = $response['order'];
+
+            $orderPayment = new OrderPayment();
+            $orderPayment->amount = $this->cashPaymentAmount;
+            $orderPayment->order_id = $order->id;
+            $orderPayment->payment_method_id = $this->payment_method_id;
+            $orderPayment->payment_method = $this->paymentMethod->name;
+            $orderPayment->psp = 'own';
+            $orderPayment->save();
+            $orderPayment->changeStatus('paid');
+
+//            dd($orderPayment->amount, $order, $orderPayment->amount > $order->total);
+            if ($orderPayment->amount > $order->total) {
+                $difference = $order->total - $orderPayment->amount;
+
+                $refundOrderPayment = new OrderPayment();
+                $refundOrderPayment->amount = $difference;
+                $refundOrderPayment->order_id = $order->id;
+                $refundOrderPayment->payment_method_id = $this->payment_method_id;
+                $refundOrderPayment->payment_method = $this->paymentMethod->name;
+                $refundOrderPayment->psp = 'own';
+                $refundOrderPayment->save();
+                $refundOrderPayment->changeStatus('paid');
+            }
+
+            $order->changeStatus('paid');
+            $order->changeFulfillmentStatus('handled');
+
+            $orderLog = new OrderLog();
+            $orderLog->order_id = $order->id;
+            $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
+            $orderLog->tag = 'order.created';
+            $orderLog->save();
+
+            $this->paymentPopup = false;
+            $this->products = [];
+            $this->discount_code = '';
+            $this->cashPaymentAmount = null;
+            $this->updateInfo(false);
+        }
     }
 }

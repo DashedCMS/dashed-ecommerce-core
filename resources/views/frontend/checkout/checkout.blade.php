@@ -418,10 +418,8 @@
                                                                            class="ml-3 block text-sm font-medium inline-flex items-center">
                                                                         @if($thisPaymentMethod['image'])
                                                                             <img
-                                                                                src="{{ app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $thisPaymentMethod['image'], [
-                                                                                                                    'widen' => 300,
-                                                                                                                ]) }}"
-                                                                                class="h-10 mr-2">
+                                                                                src="{{ mediaHelper()->getSingleMedia($paymentMethod['image'], 'original')->url ?? '' }}"
+                                                                                class="h-20 mr-2">
                                                                         @endif
                                                                         {{ $thisPaymentMethod['name'] }}
                                                                         @if($thisPaymentMethod['extra_costs'] > 0)
