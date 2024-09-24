@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
 use Spatie\Activitylog\LogOptions;
@@ -454,7 +455,12 @@ class Order extends Model
                 OrderLog::createLog(orderId: $this->id, note: 'Loading HTML', isDebugLog: true);
                 $pdf->loadHTML($contents);
                 OrderLog::createLog(orderId: $this->id, note: 'Getting the output', isDebugLog: true);
-                $output = $pdf->output();
+                try{
+                    $output = $pdf->output();
+                }catch (\Exception $e){
+                    OrderLog::createLog(orderId: $this->id, note: 'Error: ' . $e->getMessage(), isDebugLog: true);
+                    throw new Exception($e->getMessage());
+                }
                 OrderLog::createLog(orderId: $this->id, note: 'Output retrieved', isDebugLog: true);
 
                 OrderLog::createLog(orderId: $this->id, note: 'Put on disk', isDebugLog: true);
