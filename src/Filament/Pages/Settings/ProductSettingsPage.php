@@ -145,7 +145,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('product_default_order_sort', $this->form->getState()["product_default_order_sort_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
             Customsetting::set('product_use_simple_variation_style', $this->form->getState()["product_use_simple_variation_style_{$site['id']}"], $site['id']);
-//            Customsetting::set('products_hide_parents_in_overview', $this->form->getState()["products_hide_parents_in_overview_{$site['id']}"], $site['id']);
+            //            Customsetting::set('products_hide_parents_in_overview', $this->form->getState()["products_hide_parents_in_overview_{$site['id']}"], $site['id']);
             Customsetting::set('product_redirect_after_new_variation_selected', $this->form->getState()["product_redirect_after_new_variation_selected_{$site['id']}"], $site['id']);
             Customsetting::set('product_overview_page_id', $this->form->getState()["product_overview_page_id_{$site['id']}"], $site['id']);
             Customsetting::set('product_category_index_page_enabled', $this->form->getState()["product_category_index_page_enabled_{$site['id']}"], $site['id']);
