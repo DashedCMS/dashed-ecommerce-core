@@ -201,7 +201,6 @@ trait CreateManualOrderActions
         //            \Cart::remove($row->rowId);
         //        }
 
-        dump($this->products);
         foreach ($this->products ?: [] as $chosenProduct) {
             $product = Product::find($chosenProduct['id']);
             if (($chosenProduct['quantity'] ?? 0) > 0) {
