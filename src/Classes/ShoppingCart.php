@@ -717,7 +717,7 @@ class ShoppingCart
 
                         if ($cartItemExists && $otherCartItemExists) {
                             if ($cartItem->rowId != $otherCartItem->rowId) {
-                                if ($cartItem->model && $otherCartItem->model &&  $cartItem->model->id == $otherCartItem->model->id) {
+                                if ($cartItem->model && $otherCartItem->model && $cartItem->model->id == $otherCartItem->model->id) {
                                     if ($cartItem->options == $otherCartItem->options) {
                                         $newQuantity = $cartItem->qty + $otherCartItem->qty;
 
