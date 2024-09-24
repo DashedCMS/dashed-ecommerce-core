@@ -40,6 +40,7 @@ class ProductSettingsPage extends Page
             $formData["products_hide_parents_in_overview_{$site['id']}"] = Customsetting::get('products_hide_parents_in_overview', $site['id'], false);
             $formData["product_redirect_after_new_variation_selected_{$site['id']}"] = Customsetting::get('product_redirect_after_new_variation_selected', $site['id'], false);
             $formData["product_overview_page_id_{$site['id']}"] = Customsetting::get('product_overview_page_id', $site['id']);
+            $formData["product_category_index_page_enabled_{$site['id']}"] = Customsetting::get('product_category_index_page_enabled', $site['id'], true);
         }
 
         $this->form->fill($formData);
@@ -109,6 +110,8 @@ class ProductSettingsPage extends Page
 //                    ->label('Verberg alle hoofdproducten'),
                 Toggle::make("product_redirect_after_new_variation_selected_{$site['id']}")
                     ->label('Redirect naar nieuwe pagina als nieuwe variatie gevonden is'),
+                Toggle::make("product_category_index_page_enabled_{$site['id']}")
+                    ->label('Product categorie index pagina inschakelen'),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -145,6 +148,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('products_hide_parents_in_overview', $this->form->getState()["products_hide_parents_in_overview_{$site['id']}"], $site['id']);
             Customsetting::set('product_redirect_after_new_variation_selected', $this->form->getState()["product_redirect_after_new_variation_selected_{$site['id']}"], $site['id']);
             Customsetting::set('product_overview_page_id', $this->form->getState()["product_overview_page_id_{$site['id']}"], $site['id']);
+            Customsetting::set('product_category_index_page_enabled', $this->form->getState()["product_category_index_page_enabled_{$site['id']}"], $site['id']);
         }
 
         Notification::make()

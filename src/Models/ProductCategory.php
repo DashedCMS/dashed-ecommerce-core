@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Cassandra\Custom;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
@@ -173,7 +174,7 @@ class ProductCategory extends Model
             }
         }
 
-        if ($slugComponents[0] == Translation::get('categories-slug', 'slug', 'categories')) {
+        if (Customsetting::get('product_category_index_page_enabled', null, true) && $slugComponents[0] == Translation::get('categories-slug', 'slug', 'categories')) {
             if (count($slugComponents) == 1) {
                 if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.categories.index')) {
                     seo()->metaData('metaTitle', Translation::get('all-categories', 'categories', 'All categories'));
