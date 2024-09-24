@@ -455,10 +455,12 @@ class Order extends Model
                 OrderLog::createLog(orderId: $this->id, note: 'Loading HTML', isDebugLog: true);
                 $pdf->loadHTML($contents);
                 OrderLog::createLog(orderId: $this->id, note: 'Getting the output', isDebugLog: true);
-                try{
+
+                try {
                     $output = $pdf->output();
-                }catch (\Exception $e){
+                } catch (\Exception $e) {
                     OrderLog::createLog(orderId: $this->id, note: 'Error: ' . $e->getMessage(), isDebugLog: true);
+
                     throw new Exception($e->getMessage());
                 }
                 OrderLog::createLog(orderId: $this->id, note: 'Output retrieved', isDebugLog: true);
