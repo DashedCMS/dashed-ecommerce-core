@@ -227,6 +227,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->hasRoutes([
                 'frontend',
             ])
+            ->hasConfigFile([
+                'receiptprinter',
+            ])
             ->hasAssets()
             ->hasCommands([
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
