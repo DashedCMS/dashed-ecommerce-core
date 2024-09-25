@@ -2,10 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Filament\Actions\Action;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
@@ -13,9 +12,9 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedPages\Models\Page as PageModel;
 
 class POSSettingsPage extends Page
 {
@@ -62,7 +61,7 @@ class POSSettingsPage extends Page
                     ->label('Bonnen printer connectie type'),
                 TextInput::make("receipt_printer_connector_descriptor_{$site['id']}")
                     ->label('Naam van de printer')
-                    ->required(fn(Get $get) => $get("receipt_printer_connector_type_{$site['id']}")),
+                    ->required(fn (Get $get) => $get("receipt_printer_connector_type_{$site['id']}")),
                 Toggle::make("cash_register_available_{$site['id']}")
                     ->label('Kassa beschikbaar'),
             ];
