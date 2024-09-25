@@ -127,7 +127,8 @@
                             <p>Korting toepassen</p>
                         </button>
                     @endif
-                    <button class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                    <button
+                        class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
      class="size-6">
@@ -137,8 +138,9 @@
                         </span>
                         <p>Klant toevoegen</p>
                     </button>
-                    <button wire:click="openCashRegister"
-                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                    @if(Customsetting::get('cash_register_available', null, false))
+                        <button wire:click="openCashRegister"
+                                class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hand-coins"><path
@@ -146,8 +148,9 @@
         d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path
         d="m2 16 6 6"/><circle cx="16" cy="9" r="2.9"/><circle cx="6" cy="5" r="3"/></svg>
                         </span>
-                        <p>Kassa lade openen</p>
-                    </button>
+                            <p>Kassa lade openen</p>
+                        </button>
+                    @endif
                 </div>
             </div>
             <div class="sm:col-span-5 sm:pl-8 flex flex-col gap-8">
@@ -185,7 +188,8 @@
                         </div>
                     </div>
                     {{--                <div class="p-4 rounded-lg border border-gray-400 grid gap-4">--}}
-                    <div class="p-4 rounded-lg border border-gray-400 flex flex-col gap-4 h-[calc(100vh-550px)] overflow-y-auto">
+                    <div
+                        class="p-4 rounded-lg border border-gray-400 flex flex-col gap-4 h-[calc(100vh-550px)] overflow-y-auto">
                         @if(count($products ?: []))
                             @foreach($products as $product)
                                 @if(!$loop->first)
@@ -198,31 +202,37 @@
                                                 class="object-cover rounded-lg w-20 h-20"
                                                 :mediaId="$product['product']['firstImage']"/>
                                         @else
-                                            <img src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop"
-                                                 class="object-cover rounded-lg w-20 h-20">
+                                            <img
+                                                src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop"
+                                                class="object-cover rounded-lg w-20 h-20">
                                         @endif
-                                        <span class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white">{{ $product['quantity'] }}</span>
+                                        <span
+                                            class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white">{{ $product['quantity'] }}</span>
                                     </div>
                                     <div class="flex flex-col flex-wrap gap-1">
-                                        <span class="font-bold text-lg">{{ $product['product']['name'] ?? $product['name'] }}</span>
+                                        <span
+                                            class="font-bold text-lg">{{ $product['product']['name'] ?? $product['name'] }}</span>
                                         <div class="flex flex-wrap gap-2">
-                                            <button wire:click="changeQuantity('{{ $product['id'] ?: $product['customId'] }}', {{ $product['quantity'] + 1 }})"
-                                                    class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                            <button
+                                                wire:click="changeQuantity('{{ $product['id'] ?: $product['customId'] }}', {{ $product['quantity'] + 1 }})"
+                                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                           d="M12 4.5v15m7.5-7.5h-15"/>
                                                 </svg>
                                             </button>
-                                            <button wire:click="changeQuantity('{{ $product['id'] ?: $product['customId'] }}', {{ $product['quantity'] - 1 }})"
-                                                    class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                            <button
+                                                wire:click="changeQuantity('{{ $product['id'] ?: $product['customId'] }}', {{ $product['quantity'] - 1 }})"
+                                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
                                                 </svg>
                                             </button>
-                                            <button wire:click="changeQuantity('{{ $product['id'] ?: $product['customId'] }}', {{ 0 }})"
-                                                    class="ml-8 h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                            <button
+                                                wire:click="changeQuantity('{{ $product['id'] ?: $product['customId'] }}', {{ 0 }})"
+                                                class="ml-8 h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -232,7 +242,8 @@
                                         </div>
                                     </div>
                                     <div class="ml-auto">
-                                        <span class="font-bold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($product['price']) }}</span>
+                                        <span
+                                            class="font-bold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($product['price']) }}</span>
                                     </div>
                                 </div>
                             @endforeach
@@ -359,8 +370,9 @@
                                             src="{{ mediaHelper()->getSingleMedia($paymentMethod['image'], 'original')->url ?? '' }}"
                                             class="h-20 mr-2">
                                     @else
-                                        <img src="https://placehold.co/400x400/000/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}?text={{ $paymentMethod['name'] }}"
-                                             class="object-cover rounded-lg h-20">
+                                        <img
+                                            src="https://placehold.co/400x400/000/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}?text={{ $paymentMethod['name'] }}"
+                                            class="object-cover rounded-lg h-20">
                                     @endif
                                     <span>{{ $paymentMethod['name'] }}</span>
                                 </button>
@@ -445,7 +457,8 @@
                         </svg>
                     </div>
                     <div>
-                        <p class="text-3xl font-bold">Bestelling {{ $order->invoice_id }} afgerond - {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->total) }}</p>
+                        <p class="text-3xl font-bold">Bestelling {{ $order->invoice_id }} afgerond
+                            - {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->total) }}</p>
                         <p class="text-xl text-gray-400">
                             Betaalmethode: {{ $order->orderPayments()->first()->paymentMethod->name }}
                         </p>
@@ -453,7 +466,8 @@
                     @if($order->orderPayments()->first()->paymentMethod->is_cash_payment)
                         <div class="flex flex-col gap-4">
                             <p class="text-xl font-bold">Betaling overzicht</p>
-                            <div class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
+                            <div
+                                class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
                                 <div class="flex flex-col">
                                     <p class="font-bold text-lg">Betaling 1</p>
                                     <p class="text-gray-400">{{ $order->orderPayments()->first()->paymentMethod->name }}</p>
@@ -462,7 +476,8 @@
                                     <p class="font-bold text-xl">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount) }}</p>
                                     @if($order->orderPayments()->first()->amount > $order->total)
                                         <p class="text-warning-500 font-bold text-xl">
-                                            Wisselgeld verschuldigd: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount - $order->total) }}
+                                            Wisselgeld
+                                            verschuldigd: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount - $order->total) }}
                                         </p>
                                     @endif
                                 </div>

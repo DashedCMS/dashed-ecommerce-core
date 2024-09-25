@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
+use charlieuki\ReceiptPrinter\ReceiptPrinter as ReceiptPrinter;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Dashed\DashedCore\Models\User;
@@ -113,6 +114,8 @@ trait CreateManualOrderActions
             'type' => 'percentage',
         ]);
         $this->updateInfo(false);
+        $order = Order::latest()->first();
+        $this->printReceipt($order);
     }
 
     public function getUsersProperty()
@@ -233,12 +236,12 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -265,7 +268,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -301,7 +304,7 @@ trait CreateManualOrderActions
         $cartItems = ShoppingCart::cartItems($this->cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -337,7 +340,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod && $this->orderOrigin != 'pos') {
+        if (!$shippingMethod && $this->orderOrigin != 'pos') {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -354,10 +357,10 @@ trait CreateManualOrderActions
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -602,7 +605,7 @@ trait CreateManualOrderActions
                 }
             }
 
-            if (! $productAlreadyInCart) {
+            if (!$productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
@@ -696,7 +699,7 @@ trait CreateManualOrderActions
 
     public function toggleCustomProductPopup()
     {
-        $this->customProductPopup = ! $this->customProductPopup;
+        $this->customProductPopup = !$this->customProductPopup;
     }
 
     public function getForms(): array
@@ -793,7 +796,7 @@ trait CreateManualOrderActions
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -804,7 +807,7 @@ trait CreateManualOrderActions
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'amount')
+                    ->visible(fn(Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -816,7 +819,7 @@ trait CreateManualOrderActions
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'percentage')
+                    ->visible(fn(Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -832,7 +835,7 @@ trait CreateManualOrderActions
                         return $options;
                     })
                     ->required()
-                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -840,7 +843,7 @@ trait CreateManualOrderActions
 
     public function submitCreateDiscountForm()
     {
-        if (! $this->products) {
+        if (!$this->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -872,7 +875,7 @@ trait CreateManualOrderActions
             $this->discount_code = $discountCode->code;
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -886,7 +889,7 @@ trait CreateManualOrderActions
 
     public function toggleVariable($variable)
     {
-        $this->{$variable} = ! $this->{$variable};
+        $this->{$variable} = !$this->{$variable};
     }
 
     public function removeDiscount()
@@ -897,12 +900,84 @@ trait CreateManualOrderActions
 
     public function openCashRegister()
     {
-
+        $printer = new ReceiptPrinter();
+        $printer->init(
+            Customsetting::get('receipt_printer_connector_type'),
+            Customsetting::get('receipt_printer_connector_descriptor')
+        );
+        $printer->openDrawer();
     }
 
-    public function printReceipt()
+    public function printReceipt(Order $order)
     {
+        $mid = '123123456';
+        $store_name = 'YOURMART';
+        $store_address = 'Mart Address';
+        $store_phone = '1234567890';
+        $store_email = 'yourmart@email.com';
+        $store_website = 'yourmart.com';
+        $tax_percentage = 10;
+        $transaction_id = 'TX123ABC456';
 
+        // Set items
+        $items = [
+            [
+                'name' => 'French Fries (tera)',
+                'qty' => 2,
+                'price' => 65000,
+            ],
+            [
+                'name' => 'Roasted Milk Tea (large)',
+                'qty' => 1,
+                'price' => 24000,
+            ],
+            [
+                'name' => 'Honey Lime (large)',
+                'qty' => 3,
+                'price' => 10000,
+            ],
+            [
+                'name' => 'Jasmine Tea (grande)',
+                'qty' => 3,
+                'price' => 8000,
+            ],
+        ];
+
+        // Init printer
+        $printer = new ReceiptPrinter();
+        $printer->init(
+            Customsetting::get('receipt_printer_connector_type'),
+            Customsetting::get('receipt_printer_connector_descriptor')
+        );
+
+        // Set store info
+        $printer->setStore($mid, $store_name, $store_address, $store_phone, $store_email, $store_website);
+
+        // Add items
+        foreach ($items as $item) {
+            $printer->addItem(
+                $item['name'],
+                $item['qty'],
+                $item['price']
+            );
+        }
+        // Set tax
+        $printer->setTax($tax_percentage);
+
+        // Calculate total
+        $printer->calculateSubTotal();
+        $printer->calculateGrandTotal();
+
+        // Set transaction ID
+        $printer->setTransactionID($transaction_id);
+
+        // Set qr code
+        $printer->setQRcode([
+            'tid' => $transaction_id,
+        ]);
+
+        // Print receipt
+        $printer->printReceipt();
     }
 
     public function closeCheckout()
@@ -923,7 +998,7 @@ trait CreateManualOrderActions
 
     public function initiateCheckout()
     {
-        if (! $this->products) {
+        if (!$this->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -940,22 +1015,18 @@ trait CreateManualOrderActions
     {
         $options = [];
 
-        // 1. Add the exact amount as the first option
         $options[] = round($amount, 2);
 
-        // 2. Round up to the nearest 5
         $roundedUp5 = ceil($amount / 5) * 5;
         if ($roundedUp5 != $amount) {
             $options[] = $roundedUp5;
         }
 
-        // 3. Round up to the nearest 10
         $roundedUp10 = ceil($amount / 10) * 10;
         if ($roundedUp10 != $amount && $roundedUp10 != $roundedUp5) {
             $options[] = $roundedUp10;
         }
 
-        // 4. Add a larger increment, such as the nearest 50 or 100
         $roundedUp50 = ceil($amount / 50) * 50;
         if ($roundedUp50 != $amount && $roundedUp50 != $roundedUp5 && $roundedUp50 != $roundedUp10) {
             $options[] = $roundedUp50;
@@ -966,7 +1037,6 @@ trait CreateManualOrderActions
             $options[] = $roundedUp100;
         }
 
-        // Limit the number of options to 5
         return array_slice($options, 0, 5);
     }
 
@@ -1014,7 +1084,7 @@ trait CreateManualOrderActions
 
     public function markAsPaid()
     {
-        if ($this->paymentMethod->is_cash_payment && ! $this->cashPaymentAmount) {
+        if ($this->paymentMethod->is_cash_payment && !$this->cashPaymentAmount) {
             Notification::make()
                 ->title('Geen bedrag ingevoerd')
                 ->danger()
@@ -1068,8 +1138,7 @@ trait CreateManualOrderActions
             $orderLog->tag = 'order.created';
             $orderLog->save();
 
-            //Todo: print receipt
-            $this->printReceipt();
+            $this->printReceipt($this->order);
             if ($order->orderPayments()->first()->paymentMethod->is_cash_payment) {
                 $this->openCashRegister();
             }

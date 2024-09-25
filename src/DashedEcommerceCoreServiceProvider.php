@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -219,6 +220,12 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                     'icon' => 'truck',
                     'page' => ShippingMethodResource::class,
                 ],
+                'pos' => [
+                    'name' => 'Point of Sale',
+                    'description' => 'Bewerk je POS',
+                    'icon' => 'banknotes',
+                    'page' => POSSettingsPage::class,
+                ],
             ])
         );
 
@@ -226,9 +233,6 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->name('dashed-ecommerce-core')
             ->hasRoutes([
                 'frontend',
-            ])
-            ->hasConfigFile([
-                'receiptprinter',
             ])
             ->hasAssets()
             ->hasCommands([
