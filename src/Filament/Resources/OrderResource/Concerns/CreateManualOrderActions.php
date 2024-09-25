@@ -31,7 +31,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use charlieuki\ReceiptPrinter\ReceiptPrinter as ReceiptPrinter;
+use Dashed\ReceiptPrinter\ReceiptPrinter as ReceiptPrinter;
 
 trait CreateManualOrderActions
 {
@@ -910,38 +910,12 @@ trait CreateManualOrderActions
 
     public function printReceipt(Order $order)
     {
-        $mid = '123123456';
-        $store_name = 'YOURMART';
-        $store_address = 'Mart Address';
-        $store_phone = '1234567890';
-        $store_email = 'yourmart@email.com';
-        $store_website = 'yourmart.com';
-        $tax_percentage = 10;
-        $transaction_id = 'TX123ABC456';
-
-        // Set items
-        $items = [
-            [
-                'name' => 'French Fries (tera)',
-                'qty' => 2,
-                'price' => 65000,
-            ],
-            [
-                'name' => 'Roasted Milk Tea (large)',
-                'qty' => 1,
-                'price' => 24000,
-            ],
-            [
-                'name' => 'Honey Lime (large)',
-                'qty' => 3,
-                'price' => 10000,
-            ],
-            [
-                'name' => 'Jasmine Tea (grande)',
-                'qty' => 3,
-                'price' => 8000,
-            ],
-        ];
+        $transaction_id = '#' . $order->invoice_id;
+        $store_name = Customsetting::get('site_name');
+        $store_address = Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') . ' ' . Customsetting::get('company_city');
+        $store_phone = Customsetting::get('company_phone_number');
+        $store_email = Customsetting::get('site_to_email');
+        $store_website = url('/');
 
         // Init printer
         $printer = new ReceiptPrinter();
@@ -950,33 +924,10 @@ trait CreateManualOrderActions
             Customsetting::get('receipt_printer_connector_descriptor')
         );
 
-        // Set store info
-        $printer->setStore($mid, $store_name, $store_address, $store_phone, $store_email, $store_website);
-
-        // Add items
-        foreach ($items as $item) {
-            $printer->addItem(
-                $item['name'],
-                $item['qty'],
-                $item['price']
-            );
-        }
-        // Set tax
-        $printer->setTax($tax_percentage);
-
-        // Calculate total
-        $printer->calculateSubTotal();
-        $printer->calculateGrandTotal();
-
-        // Set transaction ID
-        $printer->setTransactionID($transaction_id);
-
-        // Set qr code
-        $printer->setQRcode([
-            'tid' => $transaction_id,
-        ]);
-
-        // Print receipt
+        $printer->setStore($store_name, $store_address, $store_phone, $store_email, $store_website);
+        $printer->setOrder($order);
+        $printer->setQRcode('order-' . $order->id);
+        $printer->setLogo(public_path('/receipts/logo/logo.png'));
         $printer->printReceipt();
     }
 
