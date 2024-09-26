@@ -240,12 +240,12 @@ trait CreateManualOrderActions
             }
         }
 
-        if (!$this->discount_code) {
+        if (! $this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -272,7 +272,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (!$shippingMethod) {
+        if (! $shippingMethod) {
             $this->shipping_method_id = null;
         }
 
@@ -309,7 +309,7 @@ trait CreateManualOrderActions
         $cartItems = ShoppingCart::cartItems($this->cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -345,7 +345,7 @@ trait CreateManualOrderActions
             }
         }
 
-        if (!$shippingMethod && $this->orderOrigin != 'pos') {
+        if (! $shippingMethod && $this->orderOrigin != 'pos') {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -362,10 +362,10 @@ trait CreateManualOrderActions
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -612,7 +612,7 @@ trait CreateManualOrderActions
                 }
             }
 
-            if (!$productAlreadyInCart) {
+            if (! $productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
@@ -706,7 +706,7 @@ trait CreateManualOrderActions
 
     public function toggleCustomProductPopup()
     {
-        $this->customProductPopup = !$this->customProductPopup;
+        $this->customProductPopup = ! $this->customProductPopup;
     }
 
     public function getForms(): array
@@ -776,7 +776,7 @@ trait CreateManualOrderActions
                     ->autofocus()
                     ->columnSpanFull()
                     ->extraInputAttributes([
-                        'class' => 'search-order'
+                        'class' => 'search-order',
                     ]),
             ])
             ->columns(2)
@@ -788,12 +788,13 @@ trait CreateManualOrderActions
         $orderId = str($this->searchOrderData['order_id'])->trim()->replace(' ', '')->replace('order-', '');
         $this->searchOrderData['order_id'] = $orderId;
         $order = Order::find($orderId);
-        if (!$order) {
+        if (! $order) {
             Notification::make()
                 ->title('Order niet gevonden')
                 ->danger()
                 ->send();
             $this->showOrder = null;
+
             return;
         }
 
@@ -845,7 +846,7 @@ trait CreateManualOrderActions
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -856,7 +857,7 @@ trait CreateManualOrderActions
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -868,7 +869,7 @@ trait CreateManualOrderActions
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -884,7 +885,7 @@ trait CreateManualOrderActions
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -892,7 +893,7 @@ trait CreateManualOrderActions
 
     public function submitCreateDiscountForm()
     {
-        if (!$this->products) {
+        if (! $this->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -924,7 +925,7 @@ trait CreateManualOrderActions
             $this->discount_code = $discountCode->code;
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -938,9 +939,9 @@ trait CreateManualOrderActions
 
     public function toggleVariable($variable)
     {
-        $this->{$variable} = !$this->{$variable};
+        $this->{$variable} = ! $this->{$variable};
 
-        if ($variable == 'searchOrderPopup' && !$this->{$variable}) {
+        if ($variable == 'searchOrderPopup' && ! $this->{$variable}) {
             $this->dispatch('focusSearchOrder');
         }
     }
@@ -987,7 +988,7 @@ trait CreateManualOrderActions
 
     public function initiateCheckout()
     {
-        if (!$this->products) {
+        if (! $this->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -1073,7 +1074,7 @@ trait CreateManualOrderActions
 
     public function markAsPaid()
     {
-        if ($this->paymentMethod->is_cash_payment && !$this->cashPaymentAmount) {
+        if ($this->paymentMethod->is_cash_payment && ! $this->cashPaymentAmount) {
             Notification::make()
                 ->title('Geen bedrag ingevoerd')
                 ->danger()
