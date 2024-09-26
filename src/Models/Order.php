@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
@@ -44,56 +45,8 @@ class Order extends Model
 
     protected $table = 'dashed__orders';
 
-    protected $fillable = [
-        'hash',
-        'ip',
-        'first_name',
-        'last_name',
-        'email',
-        'phone_number',
-        'street',
-        'house_nr',
-        'zip_code',
-        'city',
-        'country',
-        'marketing',
-        'company_name',
-        'btw_id',
-        'note',
-        'invoice_first_name',
-        'invoice_last_name',
-        'invoice_street',
-        'invoice_house_nr',
-        'invoice_zip_code',
-        'invoice_city',
-        'invoice_country',
-        'invoice_id',
-        'payment_method',
-        'has_deposit',
-        'total',
-        'subtotal',
-        'btw',
-        'discount',
-        'status',
-        'invoice_send_to_customer',
-        'ga_user_id',
-        'ga_commerce_hit_send',
-        'discount_code_id',
-        'user_id',
-        'shipping_costs',
-        'shipping_method_id',
-        'site_id',
-        'locale',
-        'fulfillment_status',
-        'payment_costs',
-        'payment_method_id',
-        'contains_pre_orders',
-        'date_of_birth',
-        'initials',
-        'gender',
-        'order_origin',
-        'credit_for_order_id',
-        'retour_status',
+    protected $casts = [
+        'vat_percentages' => 'array',
     ];
 
     protected $appends = [
@@ -1087,5 +1040,27 @@ class Order extends Model
         return (bool)$this->orderProducts()->whereHas('product', function ($query) use ($provider) {
             $query->where('fulfillment_provider', $provider);
         })->count();
+    }
+
+    public function printReceipt($isCopy = false)
+    {
+        $store_name = Customsetting::get('site_name');
+        $store_address = Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') . ' ' . Customsetting::get('company_city');
+        $store_phone = Customsetting::get('company_phone_number');
+        $store_email = Customsetting::get('site_to_email');
+        $store_website = url('/');
+
+        // Init printer
+        $printer = new ReceiptPrinter();
+        $printer->init(
+            Customsetting::get('receipt_printer_connector_type'),
+            Customsetting::get('receipt_printer_connector_descriptor')
+        );
+
+        $printer->setStore($store_name, $store_address, $store_phone, $store_email, $store_website);
+        $printer->setOrder($this);
+        $printer->setQRcode('order-' . $this->id);
+        $printer->setLogo(public_path('/receipts/logo/logo.png'));
+        $printer->printReceipt($isCopy);
     }
 }

@@ -131,7 +131,7 @@
                             @if($logo)
                                 <img
                                     src="{{mediaHelper()->getSingleImage($logo)->url ?? ''}}"
-                                     class="logo">
+                                    class="logo">
                             @endif
                         </td>
                     </tr>
@@ -235,7 +235,7 @@
                     {{CurrencyHelper::formatPrice($order->subtotal, 'EUR', true)}}
                 </td>
             </tr>
-            @if(!$order->shippingMethod->shippingZone->hide_vat_on_invoice)
+            @if(!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice)
                 <tr>
                     <td>
                         {{Translation::get('btw', 'credit-invoice', 'BTW')}}

@@ -85,7 +85,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -168,7 +168,7 @@ class ShoppingCart
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
+        if (!$calculateInclusiveTax) {
             $cartTotal = $cartTotal + self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
         }
 
@@ -223,54 +223,6 @@ class ShoppingCart
         $discountCode = $baseVatInfo['discountCode'];
 
         $taxTotal = $baseVatInfo['taxTotal'];
-        //        dd($taxTotal);
-
-        //        if ($calculateDiscount) {
-        //            $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
-        //
-        //            if (!$discountCode || !$discountCode->isValidForCart()) {
-        //                session(['discountCode' => '']);
-        //                $discountCode = null;
-        //            }
-        //        } else {
-        //            $discountCode = null;
-        //        }
-        //
-        //        $totalAmountForVats = [];
-        //
-        //        $totalPriceForProducts = 0;
-        //
-        //        foreach (self::cartItems() as $cartItem) {
-        //            if ($cartItem->model) {
-        //                if ($discountCode && $discountCode->type == 'percentage') {
-        //                    $price = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
-        //                } else {
-        //                    $price = $cartItem->model->currentPrice * $cartItem->qty;
-        //                }
-        //
-        //                $totalPriceForProducts += $price;
-        //
-        //                if ($calculateInclusiveTax) {
-        //                    $price = $price / (100 + $cartItem->model->vat_rate) * $cartItem->model->vat_rate;
-        //                } else {
-        //                    $price = $price / 100 * $cartItem->model->vat_rate;
-        //                }
-        //
-        //                $taxTotal += $price;
-        //                if ($cartItem->model->vat_rate > 0) {
-        //                    if (!isset($totalAmountForVats[$cartItem->model->vat_rate])) {
-        //                        $totalAmountForVats[$cartItem->model->vat_rate] = 0;
-        //                    }
-        //                    $totalAmountForVats[$cartItem->model->vat_rate] += ($cartItem->model->currentPrice * $cartItem->qty);
-        //                }
-        //            }
-        //        }
-        //
-        //        $vatPercentageOfTotals = [];
-        //
-        //        foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-        //            $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
-        //        }
 
         if ($discountCode && $discountCode->type == 'amount') {
             if ($calculateInclusiveTax) {
@@ -290,22 +242,6 @@ class ShoppingCart
 
         if ($shippingMethodId) {
             $taxTotal += self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount);
-            //            $shippingMethod = ShippingMethod::find($shippingMethodId);
-            //            if ($shippingMethod) {
-            //                if ($calculateInclusiveTax) {
-            //                    foreach ($vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-            //                        if ($vatPercentageOfTotal) {
-            //                            $taxTotal += (($shippingMethod->costs * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
-            //                        }
-            //                    }
-            //                } else {
-            //                    foreach ($vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-            //                        if ($vatPercentageOfTotal) {
-            //                            $taxTotal += (($shippingMethod->costs * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
-            //                        }
-            //                    }
-            //                }
-            //            }
         }
 
         if ($paymentMethodId) {
@@ -319,11 +255,62 @@ class ShoppingCart
         }
     }
 
-    public static function vatForShippingMethod($shippingMethodId, $formatResult = false, $calculateDiscount = true)
+    public static function btwPercentages($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null): array
+    {
+        $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
+        $baseVatInfo = self::getVatBaseInfoForCalculation($calculateDiscount);
+        $discountCode = $baseVatInfo['discountCode'];
+
+        $taxTotal = $baseVatInfo['taxTotal'];
+
+        if ($discountCode && $discountCode->type == 'amount') {
+            if ($calculateInclusiveTax) {
+                foreach ($baseVatInfo['vatPercentageOfTotals'] as $percentage => $vatPercentageOfTotal) {
+                    if ($vatPercentageOfTotal) {
+                        $taxTotal -= (($discountCode->discount_amount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
+                    }
+                }
+            } else {
+                foreach ($baseVatInfo['vatPercentageOfTotals'] as $percentage => $vatPercentageOfTotal) {
+                    if ($vatPercentageOfTotal) {
+                        $taxTotal -= (($discountCode->discount_amount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
+                    }
+                }
+            }
+        }
+
+        $totalVatPerPercentage = $baseVatInfo['totalVatPerPercentage'];
+
+        $shippingMethodId = 1;
+        if ($shippingMethodId) {
+            foreach($totalVatPerPercentage as $percentage => $value){
+                $result = self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount, $percentage) / 100 * $baseVatInfo['vatPercentageOfTotals'][$percentage];
+                $totalVatPerPercentage[$percentage] += $result;
+            }
+            $taxTotal += self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount);
+        }
+
+        if ($paymentMethodId) {
+            $paymentVat = self::vatForPaymentMethod($paymentMethodId);
+            $taxTotal += $paymentVat;
+            isset($totalVatPerPercentage[21]) ? $totalVatPerPercentage[21] += $paymentVat : $totalVatPerPercentage[21] = $paymentVat;
+        }
+
+        foreach($totalVatPerPercentage as $percentage => $value){
+            $totalVatPerPercentage[$percentage] = round($value, 2);
+        }
+
+        return $totalVatPerPercentage;
+    }
+
+    public static function vatForShippingMethod($shippingMethodId, $formatResult = false, $calculateDiscount = true, $vatRate = null)
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
 
-        $vatRate = self::vatRateForShippingMethod($shippingMethodId);
+        if (!$vatRate) {
+            $vatRate = self::vatRateForShippingMethod($shippingMethodId);
+        }
+
         $taxTotal = 0;
 
         $shippingMethod = ShippingMethod::find($shippingMethodId);
@@ -341,7 +328,6 @@ class ShoppingCart
     public static function vatRateForShippingMethod($shippingMethodId)
     {
         $baseVatInfo = self::getVatBaseInfoForCalculation();
-
 
         $shippingMethod = ShippingMethod::find($shippingMethodId);
         if ($shippingMethod && $baseVatInfo['vatRatesCount']) {
@@ -380,7 +366,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -421,7 +407,7 @@ class ShoppingCart
 
                     $taxTotal += $price;
                     if (($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate) > 0) {
-                        if (! isset($totalAmountForVats[($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate)])) {
+                        if (!isset($totalAmountForVats[($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate)])) {
                             $totalAmountForVats[($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate)] = 0;
                         }
                         $totalAmountForVats[($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate)] += Product::getShoppingCartItemPrice($cartItem);
@@ -436,13 +422,16 @@ class ShoppingCart
         }
 
         $vatPercentageOfTotals = [];
+        $totalVatPerPercentage = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
             $vatPercentageOfTotals[$percentage] = $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
+            $totalVatPerPercentage[$percentage] = $totalAmountForVat > 0.00 ? ($totalAmountForVat / (100 + $percentage) * $percentage) : 0;
         }
 
-        //        dd($taxTotal);
         return [
+            'totalAmountForVats' => $totalAmountForVats,
+            'totalVatPerPercentage' => $totalVatPerPercentage,
             'vatPercentageOfTotals' => $vatPercentageOfTotals,
             'vatRates' => $vatRates,
             'vatRatesCount' => $vatRatesCount,
@@ -486,7 +475,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -590,7 +579,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -652,7 +641,7 @@ class ShoppingCart
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
@@ -662,7 +651,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (! $cartItem->model) {
+            if (!$cartItem->model) {
 
             } elseif ($cartItem->model->stock() < $cartItem->qty) {
                 Cart::remove($cartItem->rowId);
@@ -671,13 +660,13 @@ class ShoppingCart
                 Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (! $cartItemDeleted && $cartItem->model) {
+            if (!$cartItemDeleted && $cartItem->model) {
                 $productPrice = Product::getShoppingCartItemPrice($cartItem);
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
-                    if (! $cartItemDeleted) {
-                        if (! str($productExtraOptionId)->contains('product-extra-')) {
+                    if (!$cartItemDeleted) {
+                        if (!str($productExtraOptionId)->contains('product-extra-')) {
 
                             $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                             if ($thisProductExtraOption) {
@@ -697,7 +686,7 @@ class ShoppingCart
                         }
                     }
                 }
-                if (! $cartItemDeleted) {
+                if (!$cartItemDeleted) {
                     //                    $cartItem->model->currentPrice = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
@@ -734,19 +723,19 @@ class ShoppingCart
 
                                         foreach ($cartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if ($productExtraOption && ! $productExtraOption->calculate_only_1_quantity) {
+                                            if ($productExtraOption && !$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption || ! $productExtraOption->calculate_only_1_quantity) {
+                                            if (!$productExtraOption || !$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
@@ -792,8 +781,8 @@ class ShoppingCart
                 }
             }
 
-            if (! $cartItemDeleted && $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->use_parent_stock ?? false) {
-                if (! in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
+            if (!$cartItemDeleted && $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->use_parent_stock ?? false) {
+                if (!in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
                     $parentItemsToCheck[] = $cartItem->model->parent->id;
                 }
             }
@@ -855,6 +844,7 @@ class ShoppingCart
         $subTotal = ShoppingCart::subtotal(false, $shippingMethodId, $paymentMethodId);
         $discount = ShoppingCart::totalDiscount();
         $btw = ShoppingCart::btw(false, true, $shippingMethodId, $paymentMethodId);
+        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethodId, $paymentMethodId);
         $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethodId, $paymentMethodId);
         $total = ShoppingCart::total(false, true, $shippingMethodId, $paymentMethodId);
         $depositPaymentMethods = [];
@@ -887,6 +877,7 @@ class ShoppingCart
             'discount' => $discount,
             'discountFormatted' => CurrencyHelper::formatPrice($discount),
             'btw' => $btw,
+            'btwPercentages' => $btwPercentages,
             'btwFormatted' => CurrencyHelper::formatPrice($btw),
             'total' => $total,
             'totalFormatted' => CurrencyHelper::formatPrice($total),

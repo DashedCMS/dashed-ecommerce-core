@@ -6,8 +6,22 @@
     <div class="p-8 m-8 border border-white rounded-lg h-[calc(100%) - 50px] overflow-hidden bg-black/90 z-10 w-full">
         <div class="grid grid-cols-10 divide-x divide-gray-500">
             <div class="sm:col-span-5 sm:pr-8 flex flex-col gap-8">
-                <div>
+                <div class="flex flex-wrap justify-between items-center">
                     <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        @if($lastOrder)
+                            <button
+                                wire:click="printLastOrder"
+                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
                 </div>
                 <form wire:submit.prevent="selectProduct">
                     <div class="w-full relative">
@@ -151,6 +165,16 @@
                             <p>Kassa lade openen</p>
                         </button>
                     @endif
+                    <button wire:click="toggleVariable('searchOrderPopup')"
+                            class="focus-search-order text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                        </svg>
+
+                        <p>Zoek bestelling</p>
+                    </button>
                 </div>
             </div>
             <div class="sm:col-span-5 sm:pl-8 flex flex-col gap-8">
@@ -273,8 +297,19 @@
                         <span>Subtotaal</span>
                     <span class="font-bold">{{ $subTotal }}</span>
                 </span>
-                        <hr/>
-                        <span class="text-sm font-bold flex justify-between items-center">
+                            @foreach($vatPercentages as $percentage => $value)
+                                @if($loop->first)
+                                <hr/>
+                            @endif
+                                <span class="text-sm font-bold flex justify-between items-center">
+                        <span>BTW {{ $percentage }}%</span>
+                    <span class="font-bold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($value) }}</span>
+                </span>
+                            @endforeach
+                        @if(!count($vatPercentages))
+                            <hr/>
+                        @endif
+                            <span class="text-sm font-bold flex justify-between items-center">
                         <span>BTW</span>
                     <span class="font-bold">{{ $vat }}</span>
                 </span>
@@ -335,6 +370,35 @@
                                 <button type="submit"
                                         class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                                     Toevoegen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+    @if($searchOrderPopup)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+            <div class="absolute h-full w-full" wire:click="toggleVariable('searchOrderPopup')"></div>
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative">
+                <div class="bg-white rounded-lg p-8 grid gap-4">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         wire:click="toggleVariable('searchOrderPopup')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <p class="text-3xl font-bold">Zoek een bestelling op ID</p>
+                    <form wire:submit.prevent="submitSearchOrderForm">
+                        <div class="grid gap-4">
+                            {{ $this->searchOrderForm }}
+                            <div>
+                                <button type="submit"
+                                        class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                    Zoeken
                                 </button>
                             </div>
                         </div>
@@ -494,10 +558,70 @@
             </div>
         </div>
     @endif
+    @if($showOrder)
+        <div class="fixed inset-0 flex items-center justify-center z-50 text-black">
+            <div class="absolute h-full w-full" wire:click="closeShowOrder"></div>
+            <div class="bg-white h-[95%] w-[95%] rounded-lg p-8 grid gap-4 relative">
+                <div class="bg-white rounded-lg p-8 grid gap-4 overflow-y-scroll">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         wire:click="closeShowOrder">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="grid gap-4">
+                            <div>
+                                <h3 class="font-bold text-2xl">Bestelling #{{ $showOrder->invoice_id }}
+                                    van {{$showOrder->name}}</h3>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button wire:click="printReceipt(@js($showOrder), true)"
+                                        class="px-4 py-4 text-lg rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold">
+                                    Print bon
+                                </button>
+                                @if(!$showOrder->credit_for_order_id)
+                                    <div>
+                                        @livewire('cancel-order', ['order' => $showOrder, 'isPos' => true, 'buttonText'
+                                        => 'Retour aanmaken', 'buttonClass' => 'px-4 py-4 text-lg uppercase rounded-lg
+                                        bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300
+                                        text-white font-bold'])
+                                    </div>
+                                @endif
+                            </div>
+                            <div>
+                                @livewire('order-view-statusses', ['order' => $showOrder])
+                            </div>
+                            <div>
+                                @livewire('order-order-products-list', ['order' => $showOrder])
+                            </div>
+                            <div>
+                                @livewire('order-shipping-information-list', ['order' => $showOrder])
+                            </div>
+                            <div>
+                                @livewire('order-payment-information-list', ['order' => $showOrder])
+                            </div>
+                            <div>
+                                @livewire('order-payments-list', ['order' => $showOrder])
+                            </div>
+                            <div>
+                                @livewire('order-logs-list', ['order' => $showOrder])
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
     @script
     <script>
         $wire.on('focus', () => {
             document.getElementById("search-product-query").focus();
+        });
+        $wire.on('focusSearchOrder', () => {
+            document.getElementById("searchOrderData.order_id").focus();
         });
 
         function requestFullscreen() {

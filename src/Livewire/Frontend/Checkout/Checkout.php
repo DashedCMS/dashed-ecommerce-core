@@ -480,6 +480,7 @@ class Checkout extends Component
         $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? '');
         $discount = ShoppingCart::totalDiscount();
         $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
+        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
         $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
         $shippingCosts = 0;
         $paymentCosts = 0;
@@ -495,6 +496,7 @@ class Checkout extends Component
         $order->total = $total;
         $order->subtotal = $subTotal;
         $order->btw = $btw;
+        $order->vat_percentages = $btwPercentages;
         $order->discount = $discount;
         $order->status = 'pending';
         $gaUserId = preg_replace("/^.+\.(.+?\..+?)$/", '\\1', @$_COOKIE['_ga']);

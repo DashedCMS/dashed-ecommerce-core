@@ -24,16 +24,25 @@ class CancelOrder extends Component implements HasForms, HasActions
     use InteractsWithActions;
 
     public Order $order;
+    public bool $isPos = false;
+    public string $buttonText = '';
+    public string $buttonClass = '';
 
-    public function mount(Order $order)
+    public function mount(Order $order, bool $isPos = false, ?string $buttonText = null, ?string $buttonClass = null)
     {
         $this->order = $order;
+        $this->buttonText = $buttonText;
+        $this->buttonClass = $buttonClass;
+        $this->isPos = $isPos;
     }
 
     public function action(): Action
     {
         return Action::make('action')
-            ->label('Annuleer bestelling')
+            ->label($this->buttonText ?: 'Annuleer bestelling')
+            ->extraAttributes([
+                'class' => $this->buttonClass
+            ])
             ->color('primary')
             ->fillForm([
                 'fulfillment_status' => $this->order->fulfillment_status,
@@ -55,30 +64,30 @@ class CancelOrder extends Component implements HasForms, HasActions
                             Placeholder::make('')
                                 ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
                         ])
-                        ->hidden($this->order->order_origin == 'own'),
+                        ->hidden(in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Retour aanmaken')
                         ->schema([
                             Placeholder::make('')
                                 ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
                         ])
-                        ->hidden($this->order->order_origin != 'own'),
+                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Bestelde producten')
                         ->schema(array_merge($orderProductSchema, [
                             TextInput::make('extra_order_line_name')
                                 ->required()
-                                ->hidden(fn ($get) => ! $get('extra_order_line')),
+                                ->hidden(fn($get) => !$get('extra_order_line')),
                             TextInput::make('extra_order_line_price')
                                 ->required()
                                 ->numeric()
                                 ->minValue(0.01)
                                 ->maxValue(100000)
-                                ->hidden(fn ($get) => ! $get('extra_order_line')),
+                                ->hidden(fn($get) => !$get('extra_order_line')),
                         ]))
                         ->columns([
                             'default' => 1,
                             'lg' => 3,
                         ])
-                        ->hidden($this->order->order_origin != 'own'),
+                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Overige opties')
                         ->schema([
                             Select::make('fulfillment_status')
@@ -102,11 +111,11 @@ class CancelOrder extends Component implements HasForms, HasActions
                                     dan op 0 hierboven)')
                                 ->reactive(),
                         ])
-                        ->hidden($this->order->order_origin != 'own'),
+                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
                 ];
             })
             ->action(function ($data) {
-                if ($this->order->order_origin == 'own') {
+                if (in_array($this->order->order_origin, ['own', 'pos'])) {
                     $sendCustomerEmail = $data['send_customer_email'];
                     $createCreditInvoice = $data['create_credit_invoice'];
                     $productsMustBeReturned = $data['products_must_be_returned'];
@@ -127,7 +136,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                     $extraOrderLineName = $data['extra_order_line_name'] ?? '';
                     $extraOrderLinePrice = $data['extra_order_line_price'] ?? '';
 
-                    if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
+                    if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
                         Notification::make()
                             ->title('Je moet tenminste 1 product laten retourneren.')
                             ->danger()
@@ -140,7 +149,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                         $createCreditInvoice = true;
                     }
 
-                    if (! $createCreditInvoice) {
+                    if (!$createCreditInvoice) {
                         $this->order->changeStatus('cancelled', $sendCustomerEmail);
 
                         Notification::make()
@@ -148,7 +157,11 @@ class CancelOrder extends Component implements HasForms, HasActions
                             ->success()
                             ->send();
 
-                        return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
+                        if ($this->isPos) {
+                            $this->closeActionModal();
+                        } else {
+                            return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
+                        }
                     } else {
                         $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status']);
 
@@ -157,7 +170,12 @@ class CancelOrder extends Component implements HasForms, HasActions
                             ->success()
                             ->send();
 
-                        return redirect(route('filament.dashed.resources.orders.view', [$newOrder]));
+                        if ($this->isPos) {
+                            $newOrder->printReceipt();
+                            $this->closeActionModal();
+                        } else {
+                            return redirect(route('filament.dashed.resources.orders.view', [$newOrder]));
+                        }
                     }
                 } else {
                     $this->order->changeStatus('cancelled');
@@ -167,7 +185,11 @@ class CancelOrder extends Component implements HasForms, HasActions
                         ->success()
                         ->send();
 
-                    return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
+                    if ($this->isPos) {
+                        $this->closeActionModal();
+                    } else {
+                        return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
+                    }
                 }
             });
     }
