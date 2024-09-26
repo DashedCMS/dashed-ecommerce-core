@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -47,11 +46,9 @@ class ProductCategory extends Model
     protected static function booted()
     {
         static::created(function ($productCategory) {
-            Cache::tags(['product-categories'])->flush();
         });
 
         static::updated(function ($productCategory) {
-            Cache::tags(['product-categories'])->flush();
         });
 
         static::deleting(function ($productCategory) {
