@@ -41,7 +41,7 @@ class CancelOrder extends Component implements HasForms, HasActions
         return Action::make('action')
             ->label($this->buttonText ?: 'Annuleer bestelling')
             ->extraAttributes([
-                'class' => $this->buttonClass
+                'class' => $this->buttonClass,
             ])
             ->color('primary')
             ->fillForm([
@@ -70,24 +70,24 @@ class CancelOrder extends Component implements HasForms, HasActions
                             Placeholder::make('')
                                 ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
                         ])
-                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
+                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Bestelde producten')
                         ->schema(array_merge($orderProductSchema, [
                             TextInput::make('extra_order_line_name')
                                 ->required()
-                                ->hidden(fn($get) => !$get('extra_order_line')),
+                                ->hidden(fn ($get) => ! $get('extra_order_line')),
                             TextInput::make('extra_order_line_price')
                                 ->required()
                                 ->numeric()
                                 ->minValue(0.01)
                                 ->maxValue(100000)
-                                ->hidden(fn($get) => !$get('extra_order_line')),
+                                ->hidden(fn ($get) => ! $get('extra_order_line')),
                         ]))
                         ->columns([
                             'default' => 1,
                             'lg' => 3,
                         ])
-                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
+                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Overige opties')
                         ->schema([
                             Select::make('fulfillment_status')
@@ -111,7 +111,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                                     dan op 0 hierboven)')
                                 ->reactive(),
                         ])
-                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
+                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
                 ];
             })
             ->action(function ($data) {
@@ -136,7 +136,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                     $extraOrderLineName = $data['extra_order_line_name'] ?? '';
                     $extraOrderLinePrice = $data['extra_order_line_price'] ?? '';
 
-                    if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
+                    if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
                         Notification::make()
                             ->title('Je moet tenminste 1 product laten retourneren.')
                             ->danger()
@@ -149,7 +149,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                         $createCreditInvoice = true;
                     }
 
-                    if (!$createCreditInvoice) {
+                    if (! $createCreditInvoice) {
                         $this->order->changeStatus('cancelled', $sendCustomerEmail);
 
                         Notification::make()

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
@@ -15,6 +14,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
