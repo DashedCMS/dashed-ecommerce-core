@@ -25,10 +25,10 @@ class CancelOrder extends Component implements HasForms, HasActions
 
     public Order $order;
     public bool $isPos = false;
-    public string $buttonText = '';
-    public string $buttonClass = '';
+    public ?string $buttonText = '';
+    public ?string $buttonClass = '';
 
-    public function mount(Order $order, bool $isPos = false, ?string $buttonText = null, ?string $buttonClass = null)
+    public function mount(Order $order, bool $isPos = false, ?string $buttonText = '', ?string $buttonClass = '')
     {
         $this->order = $order;
         $this->buttonText = $buttonText;
