@@ -343,7 +343,7 @@ class Product extends Model
 
     public function getImagesExceptFirstAttribute(): array
     {
-        $images = $this->images;
+        $images = $this->images ?: [];
         if (count($images)) {
             unset($images[0]);
         }
