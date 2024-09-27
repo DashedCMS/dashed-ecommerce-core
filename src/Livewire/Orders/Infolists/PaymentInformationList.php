@@ -78,7 +78,7 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                         ->keyLabel('Percentage')
                         ->valueLabel('Bedrag')
                         ->getStateUsing(function ($record) {
-                            $vatPercentages = $record->vat_percentages;
+                            $vatPercentages = $record->vat_percentages ?: [];
                             foreach ($vatPercentages as $key => $vatPercentage) {
                                 $vatPercentages[$key] = '€' . number_format($vatPercentage, 2, ',', '.');
                             }
