@@ -35,8 +35,8 @@ class OrderNoteMail extends Mailable
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        foreach ($this->orderLog->images ?? [] as $image) {
-            $media = mediaHelper()->getSingleMedia($image);
+        foreach ($this->orderLog->images ?: [] as $image) {
+            $media = mediaHelper()->getSingleImage($image);
             $mail->attachFromStorageDisk('dashed', $media->path);
         }
 
