@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -46,6 +47,7 @@ class CancelOrder extends Component implements HasForms, HasActions
             ->color('primary')
             ->fillForm([
                 'fulfillment_status' => $this->order->fulfillment_status,
+                'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
             ])
             ->form(function () {
                 $orderProductSchema = [];
@@ -94,6 +96,9 @@ class CancelOrder extends Component implements HasForms, HasActions
                                 ->label('Verander fulfillment status naar')
                                 ->required()
                                 ->options(Orders::getFulfillmentStatusses()),
+                            Select::make('payment_method_id')
+                                ->label('Betaalmethode voor terugbetaling')
+                                ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray()),
                             Toggle::make('send_customer_email')
                                 ->label('Moet de klant een mail krijgen van deze annulering/retournering?'),
                             Toggle::make('create_credit_invoice')

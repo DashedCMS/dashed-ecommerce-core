@@ -1098,7 +1098,7 @@ trait CreateManualOrderActions
             $this->order = $order;
 
             $orderPayment = new OrderPayment();
-            $orderPayment->amount = $this->cashPaymentAmount;
+            $orderPayment->amount = $this->cashPaymentAmount ?: $this->totalUnformatted;
             $orderPayment->order_id = $order->id;
             $orderPayment->payment_method_id = $this->payment_method_id;
             $orderPayment->payment_method = $this->paymentMethod->name;

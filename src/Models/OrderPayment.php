@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -44,7 +44,7 @@ class OrderPayment extends Model
         static::created(function ($orderPayment) {
             if (Customsetting::get('cash_register_available', null, false) && Customsetting::get('cash_register_track_cash_book', null, '') && ($orderPayment->paymentMethod->is_cash_payment ?? false)) {
                 $cashRegisterAmount = Customsetting::get('cash_register_amount', null, 0);
-                $cashRegisterAmount = $cashRegisterAmount - $orderPayment->amount;
+                $cashRegisterAmount = $cashRegisterAmount + $orderPayment->amount;
                 Customsetting::set('cash_register_amount', $cashRegisterAmount);
             }
         });
@@ -91,7 +91,7 @@ class OrderPayment extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false): string
     {
-        if (! $newStatus || $this->status == $newStatus) {
+        if (!$newStatus || $this->status == $newStatus) {
             return '';
         }
 

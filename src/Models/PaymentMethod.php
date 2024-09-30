@@ -16,22 +16,6 @@ class PaymentMethod extends Model
 
     protected static $logFillable = true;
 
-    protected $fillable = [
-        'site_id',
-        'name',
-        'additional_info',
-        'payment_instructions',
-        'extra_costs',
-        'available_from_amount',
-        'deposit_calculation',
-        'postpay',
-        'psp',
-        'psp_id',
-        'image',
-        'active',
-        'deposit_calculation_payment_method_ids',
-    ];
-
     public $translatable = [
         'name',
         'additional_info',
@@ -47,6 +31,11 @@ class PaymentMethod extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
     }
 
     public function orderPayments()
