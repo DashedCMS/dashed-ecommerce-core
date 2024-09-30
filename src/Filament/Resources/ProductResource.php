@@ -474,6 +474,12 @@ class ProductResource extends Resource
                     ->helperText('Berekend in CM')
                     ->maxLength(100000)
                     ->numeric(),
+                TextInput::make('purchase_price')
+                    ->helperText('Voorbeeld: 10.50')
+                    ->prefix('€')
+                    ->minValue(0)
+                    ->maxValue(100000)
+                    ->numeric(),
             ])
             ->columns(['default' => 1,
                 'lg' => 2,])

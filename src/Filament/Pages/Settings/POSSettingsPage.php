@@ -66,6 +66,9 @@ class POSSettingsPage extends Page
                 ->label('Bedrag in de kassa')
                 ->required()
                 ->numeric()
+                ->prefix('€')
+                ->minValue(0)
+                ->maxValue(100000)
                 ->visible(fn (Get $get) => $get("cash_register_track_cash_book")),
         ];
 
