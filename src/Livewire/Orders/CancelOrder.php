@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -17,6 +16,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class CancelOrder extends Component implements HasForms, HasActions

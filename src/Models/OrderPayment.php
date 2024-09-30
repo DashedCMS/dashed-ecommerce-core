@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -91,7 +91,7 @@ class OrderPayment extends Model
 
     public function changeStatus($newStatus = null, $sendMail = false): string
     {
-        if (!$newStatus || $this->status == $newStatus) {
+        if (! $newStatus || $this->status == $newStatus) {
             return '';
         }
 
