@@ -2,278 +2,187 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>{{Translation::get('invoice', 'invoice', 'Invoice')}} {{Customsetting::get('company_name')}}</title>
+    <title>{{Translation::get('financial-report', 'financial-report', 'Financial report :startDate: - :endDate:', 'text', [
+    'startDate' => $startDate->format('d-m-Y'),
+    'endDate' => $endDate->format('d-m-Y'),
+])}} {{Customsetting::get('site_name')}}</title>
+
+    {{--    <link rel="preconnect" href="https://fonts.googleapis.com">--}}
+    {{--    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>--}}
+    {{--    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"--}}
+    {{--          rel="stylesheet">--}}
+
     <style>
-        .invoice-box {
-            max-width: 800px;
-            margin: auto;
-            padding: 30px;
-            border: 1px solid #eee;
-            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+        body {
+            font-family: 'Helvetica', sans-serif;
             font-size: 16px;
-            line-height: 24px;
-            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-            color: #555;
         }
 
-        .invoice-box table {
+        .item-title {
+            /*display: grid;*/
+            /*grid-template-columns: repeat(2, minmax(0, 1fr));*/
+            /*justify-content: space-between;*/
+            font-weight: 500;
+            font-size: 18px;
             width: 100%;
-            text-align: left;
         }
 
-        .invoice-box table td {
-            padding: 5px;
-            vertical-align: top;
+        .item-title td {
+            width: 50%;
         }
 
-        .invoice-box table tr td:nth-child(2) {
+        .item-title td:nth-of-type(2) {
             text-align: right;
         }
 
-        .invoice-box table tr.top table td {
-            padding-bottom: 20px;
+        .subtitle {
+            font-size: 14px;
         }
 
-        .invoice-box table tr.top table td.title {
-            font-size: 45px;
-            line-height: 45px;
-            color: #333;
+        .mt {
+            margin-top: 20px;
         }
 
-        .invoice-box table tr.information table td {
-            padding-bottom: 40px;
+        .mt-2 {
+            margin-top: 50px;
         }
 
-        .invoice-box table tr.heading td {
-            background: #eee;
-            border-bottom: 1px solid #ddd;
-            font-weight: bold;
-            height: 10px;
+        .mb {
+            margin-bottom: 20px;
         }
 
-        .invoice-box table tr.details td {
-            padding-bottom: 20px;
+        .title {
+            font-weight: 600;
+            font-size: 35px;
         }
 
-        .invoice-box table tr.item td {
-            border-bottom: 1px solid #eee;
+        table {
+            width: 100%;
         }
-
-        .invoice-box table tr.item.last td {
-            border-bottom: none;
-        }
-
-        .invoice-box table tr.total td:nth-child(2) {
-            border-top: 2px solid #eee;
-            font-weight: bold;
-        }
-
-        @media only screen and (max-width: 600px) {
-            .invoice-box table tr.top table td {
-                width: 100%;
-                display: block;
-                text-align: center;
-            }
-
-            .invoice-box table tr.information table td {
-                width: 100%;
-                display: block;
-                text-align: center;
-            }
-        }
-
-        .logo-parent {
-            text-align: left !important;
-        }
-
-        .logo {
-            width: 125px !important;
-            height: auto !important;
-        }
-
-        .left {
-        }
-
-        .h1-top {
-            color: #33B679;
-            display: inline-block;
-
-            text-transform: uppercase;
-            font-size: 20px;
-
-            position: absolute;
-            left: 200px;
-            width: 125%;
-        }
-
-        .contact-table {
-            position: relative;
-            float: right;
-            bottom: 25px;
-        }
-
-        .border-product {
-            border: 1px solid black;
-            padding: 20px;
-        }
-
     </style>
 </head>
 <body>
-<div class="invoice-box">
-    <table cellpadding="0" cellspacing="0">
-        <tr class="top">
-            <td colspan="2">
-                <table>
-                    <tr>
-                        <td class='logo-parent'>
-                            @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
-                            @if($logo)
-                                <img
-                                    src="{{mediaHelper()->getSingleImage($logo)->url ?? ''}}"
-                                    class="logo">
-                            @endif
-                        </td>
+<div style="width: 500px; margin-left: auto; margin-right: auto;">
+    <div>
+        <div>
+            <p style="font-size: 40px; font-weight: 600;">
+                {{Translation::get('financial-report', 'financial-report', 'Financial report')}}
+            </p>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <div style="display: grid; gap: 5px;">
+                <span style="font-weight: bold;">Datum vanaf</span>
+                <span>{{$startDate->format('d-m-Y')}}</span>
+            </div>
+            <div style="display: grid; gap: 5px;">
+                <span style="font-weight: bold;">Datum tot</span>
+                <span>{{$endDate->format('d-m-Y')}}</span>
+            </div>
+        </div>
+        <div class="mt-2">
+            <div>
+                <span class="title">Verkopen</span>
+            </div>
+            <hr/>
+            <table>
+                <tr class="item-title">
+                    <td>Bruto verkopen</td>
+                    <td>{{'€ ' . number_format($grossRevenue, 2, ',', '')}}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="subtitle">
+                        productprijs + aantal (excl. belastingen, korting en retouren)
+                    </td>
+                </tr>
+            </table>
+            <table class="mt">
+                <tr class="item-title">
+                    <td>Kortingen</td>
+                    <td>{{'€ ' . number_format($discounts, 2, ',', '')}}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="subtitle">korting op orderregel + korting op gehele verkoop</td>
+                </tr>
+            </table>
+            <table class="mt">
+                <tr class="item-title">
+                    <td>Retouren</td>
+                    <td>{{'€ ' . number_format($returns, 2, ',', '')}}</td>
+                </tr>
+            </table>
+            <hr class="mb mt"/>
+            <table>
+                <tr class="item-title">
+                    <td>Netto verkopen</td>
+                    <td>{{'€ ' . number_format($netRevenue, 2, ',', '')}}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="subtitle">bruto verkopen - kortingen - retouren</td>
+                </tr>
+            </table>
+            <table class="mt">
+                <tr class="item-title">
+                    <td>Belastingen</td>
+                    <td>{{'€ ' . number_format($taxes, 2, ',', '')}}</td>
+                </tr>
+            </table>
+            <hr class="mb mt"/>
+            <table>
+                <tr class="item-title">
+                    <td>Totaal verkopen</td>
+                    <td>{{'€ ' . number_format($totalRevenue, 2, ',', '')}}</td>
+                </tr>
+                <td class="subtitle">bruto verkopen - kortingen - retouren+ belastingen</td>
+            </table>
+        </div>
+        <div class="mt-2">
+            <div>
+                <span class="title">Belastingen</span>
+            </div>
+            <hr/>
+            @foreach($vatPercentages as $vatPercentage => $amount)
+                <table class="@if(!$loop->first) mt @endif">
+                    <tr class="item-title">
+                        <td>BTW {{ $vatPercentage }}%</td>
+                        <td>{{'€ ' . number_format($amount, 2, ',', '')}}</td>
                     </tr>
                     <tr>
-                        <td class="">
-
-                        </td>
-                        <td class="">
-                            @if(Customsetting::get('company_kvk'))
-                                {{Translation::get('kvk', 'invoice', 'KVK')}}: {{Customsetting::get('company_kvk')}}
-                                <br>
-                            @endif
-                            @if(Customsetting::get('company_btw'))
-                                {{Translation::get('btw', 'invoice', 'BTW')}}: {{Customsetting::get('company_btw')}}
-                                <br>
-                            @endif
-                            {{Customsetting::get('company_name')}}<br>
-                            {{Customsetting::get('company_street')}} {{Customsetting::get('company_street_number')}}<br>
-                            {{Customsetting::get('company_postal_code')}} {{Customsetting::get('company_city')}}<br>
-                            {{Customsetting::get('company_country')}}
-                        </td>
+                        <td colspan="2" class="subtitle">over {{ '€ ' . number_format($amount / $vatPercentage * 100, 2, ',', '') }}</td>
                     </tr>
                 </table>
-            </td>
-        </tr>
-        <tr>
-            <td><b>{{Translation::get('invoice', 'invoice', 'Invoice')}}:</b><br><br>
-            </td>
-        </tr>
-        <tr class="information" style="">
-            <div class='left' style="width:100%; display:block;margin-left:5px;">
-
-                <div style="width:25%; display:inline-block; position:relative;top:0;">
-                    <p>
-                        {{--                        {{Translation::get('invoice-number', 'invoice', 'Invoice number')}}: <br>--}}
-                        {{Translation::get('invoice-date-range', 'invoice', 'Invoice date range')}}: <br>
-                    </p>
-                </div>
-                <div style="width:31%;display:inline-block; position:relative;top:0;">
-                    <p>
-                        {{--                        <span style="position:absolute; right:0;">{{$order->invoice_id}}</span>--}}
-                        {{--                        <br>--}}
-                        <span style="position:absolute; right:0;">{{ $startDate->format('d-m-Y') }} - {{ $endDate->format('d-m-Y') }}</span><br>
-                    </p>
-                </div>
+            @endforeach
+            <hr class="mb mt"/>
+            <table>
+                <tr class="item-title">
+                    <td>Totaal belastingen</td>
+                    <td>{{'€ ' . number_format($taxes, 2, ',', '')}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="mt-2">
+            <div>
+                <span class="title">Transacties</span>
             </div>
-        </tr>
-    </table>
-    <table>
-        <tr>
-            <td>
-                <b>{{Translation::get('note', 'invoice', 'Note')}}:</b>
-            </td>
-        </tr>
-    </table>
-    <div>
-        <table class="border-product">
-            @foreach($productSales as $productSale)
-                @if($productSale['quantity'] > 0)
-                    <tr>
-                        <td>
-                            {{$productSale['name']}} {{$productSale['quantity']}}x
-                        </td>
-                        <td>
-                            {{CurrencyHelper::formatPrice($productSale['totalPrice'], 'EUR', true)}}
-                        </td>
+            <hr/>
+            @foreach($transactions as $transaction)
+                <table class="@if(!$loop->first) mt @endif">
+                    <tr class="item-title">
+                        <td>{{ $transaction['name'] }}</td>
+                        <td>{{'€ ' . number_format($transaction['amount'], 2, ',', '')}}</td>
                     </tr>
-                @endif
+                    <tr>
+                        <td class="subtitle">{{ $transaction['transactions'] }} transacties</td>
+                    </tr>
+                </table>
             @endforeach
-            <tr>
-                <td>
-                    <hr>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    {{Translation::get('subtotal', 'invoice', 'Subtotal')}}
-                </td>
-                <td>
-                    {{CurrencyHelper::formatPrice($subTotal, 'EUR', true)}}
-                </td>
-            </tr>
-            @foreach($vatPercentages as $vatPercentage => $vatAmount)
-                <tr>
-                    <td>
-                        {{Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
-                            'percentage' => $vatPercentage,
-                        ]) . ':'}}
-                    </td>
-                    <td>
-                        {{CurrencyHelper::formatPrice($vatAmount, 'EUR', true)}}
-                    </td>
+            <hr class="mb mt"/>
+            <table>
+                <tr class="item-title">
+                    <td>Totaal transacties</td>
+                    <td>{{'€ ' . number_format(collect($transactions)->sum('amount'), 2, ',', '')}}</td>
                 </tr>
-            @endforeach
-            @if(count($vatPercentages) > 1)
-                <tr>
-                    <td>
-                        {{Translation::get('btw', 'invoice', 'BTW')}}
-                    </td>
-                    <td>
-                        {{CurrencyHelper::formatPrice($btw, 'EUR', true)}}
-                    </td>
-                </tr>
-            @endif
-            {{--            <tr>--}}
-            {{--                <td>--}}
-            {{--                    {{Translation::get('shipping-costs', 'invoice', 'Shipping costs')}}:--}}
-            {{--                </td>--}}
-            {{--                <td>--}}
-            {{--                    @if($shippingCosts != 0.00)--}}
-            {{--                        {{CurrencyHelper::formatPrice($shippingCosts, 'EUR', true)}} @else {{Translation::get('free-shipping', 'invoice', 'Free')}} @endif--}}
-            {{--                </td>--}}
-            {{--            </tr>--}}
-            {{--            @if($paymentCosts != 0.00)--}}
-            {{--                <tr>--}}
-            {{--                    <td>--}}
-            {{--                        {{Translation::get('payment-costs', 'invoice', 'Betalingsmethode kosten')}}:--}}
-            {{--                    </td>--}}
-            {{--                    <td>--}}
-            {{--                        {{CurrencyHelper::formatPrice($paymentCosts, 'EUR', true)}}--}}
-            {{--                    </td>--}}
-            {{--                </tr>--}}
-            {{--            @endif--}}
-            @if($discount != 0.00)
-                <tr>
-                    <td>
-                        {{Translation::get('discount', 'invoice', 'Discount')}}:
-                    </td>
-                    <td>
-                        {{CurrencyHelper::formatPrice($discount, 'EUR', true)}}
-                    </td>
-                </tr>
-            @endif
-            <tr>
-                <td>
-                    {{Translation::get('total', 'invoice', 'Total')}}:
-                </td>
-                <td>
-                    {{CurrencyHelper::formatPrice($total, 'EUR', true)}}
-                </td>
-            </tr>
-        </table>
+            </table>
+        </div>
     </div>
     <div style="height:100px">
     </div>
@@ -281,10 +190,6 @@
         <hr>
         <div style="width:30%;display:inline-block;">
             {{Customsetting::get('site_name')}}
-        </div>
-        <div
-            style="float:right;display:inline-block;"><a
-                href="mailto:{{Customsetting::get('site_to_email')}}">{{Customsetting::get('site_to_email')}}</a>
         </div>
     </div>
 </div>

@@ -9,7 +9,7 @@ class CurrencyHelper
 {
     public static function formatPrice($amount): string
     {
-        if (! $amount) {
+        if (is_null($amount)) {
             return '';
         }
 
