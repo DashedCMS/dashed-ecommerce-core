@@ -471,6 +471,7 @@ trait CreateManualOrderActions
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name ?? $cartItem->name;
             $orderProduct->sku = $cartItem->model->sku ?? null;
+            $orderProduct->vat_rate = $cartItem->options['vat_rate'] ?? $cartItem->taxRate;
             $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             $productExtras = [];

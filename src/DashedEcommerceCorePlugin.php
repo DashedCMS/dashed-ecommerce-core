@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -55,6 +56,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ExportInvoicesPage::class,
                 ExportOrdersPage::class,
                 ExportProductsPage::class,
+                ExportFinancialReportPage::class,
                 RevenueStatisticsPage::class,
                 ProductStatisticsPage::class,
                 DiscountStatisticsPage::class,
