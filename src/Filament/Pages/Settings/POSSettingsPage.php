@@ -2,15 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Filament\Forms\Components\Section;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Tabs\Tab;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Dashed\ReceiptPrinter\ReceiptPrinter;
@@ -56,19 +54,19 @@ class POSSettingsPage extends Page
                 ->label('Bonnen printer connectie type'),
             TextInput::make("receipt_printer_connector_descriptor")
                 ->label('Naam van de printer')
-                ->required(fn(Get $get) => $get("receipt_printer_connector_type")),
+                ->required(fn (Get $get) => $get("receipt_printer_connector_type")),
             Toggle::make("cash_register_available")
                 ->reactive()
                 ->label('Kassa beschikbaar'),
             Toggle::make("cash_register_track_cash_book")
                 ->label('Kasboek bijhouden')
                 ->reactive()
-                ->visible(fn(Get $get) => $get("cash_register_available")),
+                ->visible(fn (Get $get) => $get("cash_register_available")),
             TextInput::make("cash_register_amount")
                 ->label('Bedrag in de kassa')
                 ->required()
                 ->numeric()
-                ->visible(fn(Get $get) => $get("cash_register_track_cash_book")),
+                ->visible(fn (Get $get) => $get("cash_register_track_cash_book")),
         ];
 
         return [

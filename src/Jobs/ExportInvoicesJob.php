@@ -107,8 +107,8 @@ class ExportInvoicesJob implements ShouldQueue
                 $discount += $order->discount;
                 $total += $order->total;
 
-                foreach($order->vat_percentages ?: [] as $percentage => $amount){
-                    if(!isset($vatPercentages[number_format($percentage, 0)])){
+                foreach ($order->vat_percentages ?: [] as $percentage => $amount) {
+                    if (! isset($vatPercentages[number_format($percentage, 0)])) {
                         $vatPercentages[number_format($percentage, 0)] = 0;
                     }
                     $vatPercentages[number_format($percentage, 0)] += $amount;
