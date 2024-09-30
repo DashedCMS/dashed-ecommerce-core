@@ -207,22 +207,12 @@ class Product extends Model
             ->where(function ($query) {
                 $query->where('type', '!=', 'variable')
                     ->where('sku', '!=', null)
-                    ->where('price', '!=', null)
-                    ->public();
+                    ->where('price', '!=', null);
             })->orWhere(function ($query) {
                 $query->where('type', 'variable')
                     ->where('parent_id', '!=', null)
                     ->where('sku', '!=', null)
-                    ->where('price', '!=', null)
-                    ->public();
-            })->where(function ($query) {
-                $query->where('start_date', null);
-            })->orWhere(function ($query) {
-                $query->where('start_date', '<=', Carbon::now());
-            })->where(function ($query) {
-                $query->where('end_date', null);
-            })->orWhere(function ($query) {
-                $query->where('end_date', '>=', Carbon::now());
+                    ->where('price', '!=', null);
             });
     }
 

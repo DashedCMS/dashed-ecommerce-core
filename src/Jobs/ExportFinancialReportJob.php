@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Mail\FinanceReportMail;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
@@ -14,6 +15,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 
 class ExportFinancialReportJob implements ShouldQueue
@@ -50,7 +52,7 @@ class ExportFinancialReportJob implements ShouldQueue
         $startDate = $this->startDate ? Carbon::parse($this->startDate)->startOfDay() : Order::first()->created_at;
         $endDate = $this->endDate ? Carbon::parse($this->endDate)->endOfDay() : Order::latest()->first()->created_at;
 
-        $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
+        $orders = Order::with(['orderProducts', 'orderProducts.product'])->isPaidOrReturn();
         if ($startDate) {
             $orders->where('created_at', '>=', $startDate);
         }
@@ -60,6 +62,8 @@ class ExportFinancialReportJob implements ShouldQueue
         }
         $orders = $orders->get();
 
+        $vatPercentages = [];
+        $transactions = [];
         $grossRevenue = 0;
         $discounts = 0;
         $returns = 0;
@@ -70,23 +74,40 @@ class ExportFinancialReportJob implements ShouldQueue
         foreach ($orders as $order) {
             if ($order->status == 'return') {
                 $returns -= $order->total - $order->btw;
-                //                $grossRevenue += $order->total;
-                $taxes += $order->btw;
-            } else {
-                $grossRevenue += $order->total - $order->btw;
-                //                $grossRevenue += $order->total - $order->discount - $order->btw;
-                $discounts += $order->discount;
                 $netRevenue += $order->total - $order->btw;
                 $taxes += $order->btw;
-                $totalRevenue += $order->total - $order->discount;
+                $totalRevenue += $order->btw;
+            } else {
+                $grossRevenue += $order->total - $order->btw + $order->discountWithoutTax;
+                $discounts += $order->discountWithoutTax;
+                $netRevenue += $order->total - $order->btw;
+                $taxes += $order->btw;
+                $totalRevenue += $order->total;
             }
+
+            foreach ($order->vat_percentages ?: [] as $vatPercentage => $amount) {
+                if (!isset($vatPercentages[number_format($vatPercentage, 0)])) {
+                    $vatPercentages[number_format($vatPercentage, 0)] = 0;
+                }
+
+                $vatPercentages[number_format($vatPercentage, 0)] += $amount;
+            }
+
+            $firstPayment = $order->orderPayments()->first();
+            if(!isset($transactions[$firstPayment->payment_method_id ?? 'unknown'])) {
+                $transactions[$firstPayment->payment_method_id ?? 'unknown'] = [
+                    'name' => $firstPayment->paymentMethod->name ?? 'unknown',
+                    'amount' => 0,
+                    'transactions' => 0,
+                ];
+            }
+            $transactions[$firstPayment->payment_method_id ?? 'unknown']['amount'] += $order->total;
+            $transactions[$firstPayment->payment_method_id ?? 'unknown']['transactions']++;
         }
 
         $totalRevenue -= $returns;
 
-        dd($grossRevenue, $discounts, $returns, $netRevenue, $taxes, $totalRevenue);
-
-        $view = View::make('dashed-ecommerce-core::financial-rapports.financial-report', compact('startDate', 'endDate'));
+        $view = View::make('dashed-ecommerce-core::financial-reports.financial-report', compact('startDate', 'endDate', 'grossRevenue', 'discounts', 'returns', 'netRevenue', 'taxes', 'totalRevenue', 'vatPercentages', 'transactions'));
         $contents = $view->render();
         $pdf = App::make('dompdf.wrapper');
         $pdf->loadHTML($contents);
@@ -95,7 +116,7 @@ class ExportFinancialReportJob implements ShouldQueue
         $pdfPath = '/dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf';
         Storage::disk('public')->put($pdfPath, $output);
 
-        //        Mail::to($this->email)->send(new FinanceExportMail($this->hash));
+        Mail::to($this->email)->send(new FinanceReportMail($this->hash));
         Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }

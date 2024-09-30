@@ -304,7 +304,7 @@ trait CreateManualOrderActions
         $this->loading = true;
         ShoppingCart::setInstance($this->cartInstance);
         \Cart::instance($this->cartInstance)->content();
-        ShoppingCart::removeInvalidItems();
+        ShoppingCart::removeInvalidItems(checkStock: false);
 
         $cartItems = ShoppingCart::cartItems($this->cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);

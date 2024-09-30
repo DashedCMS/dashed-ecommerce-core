@@ -638,7 +638,7 @@ class ShoppingCart
         return $depositPaymentMethods;
     }
 
-    public static function removeInvalidItems(): void
+    public static function removeInvalidItems($checkStock = true): void
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
@@ -654,7 +654,7 @@ class ShoppingCart
 
             if (! $cartItem->model) {
 
-            } elseif ($cartItem->model->stock() < $cartItem->qty) {
+            } elseif ($checkStock && $cartItem->model->stock() < $cartItem->qty) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
             } elseif ($cartItem->model->limit_purchases_per_customer && $cartItem->qty > $cartItem->model->limit_purchases_per_customer_limit) {
