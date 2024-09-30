@@ -53,7 +53,7 @@ class ExportInvoicesJob implements ShouldQueue
         $startDate = $this->startDate ? Carbon::parse($this->startDate)->startOfDay() : Order::first()->created_at;
         $endDate = $this->endDate ? Carbon::parse($this->endDate)->endOfDay() : Order::latest()->first()->created_at;
 
-        $orders = Order::with(['orderProducts', 'orderProducts.product'])->where('order_origin', 'own')->calculatableForStats();
+        $orders = Order::with(['orderProducts', 'orderProducts.product'])->calculatableForStats();
         if ($startDate) {
             $orders->where('created_at', '>=', $startDate);
         }
@@ -84,6 +84,7 @@ class ExportInvoicesJob implements ShouldQueue
         } elseif ($this->sort == 'combined') {
             $subTotal = 0;
             $btw = 0;
+            $vatPercentages = [];
             $paymentCosts = 0;
             $shippingCosts = 0;
             $discount = 0;
@@ -105,6 +106,13 @@ class ExportInvoicesJob implements ShouldQueue
                 $btw += $order->btw;
                 $discount += $order->discount;
                 $total += $order->total;
+
+                foreach($order->vat_percentages ?: [] as $percentage => $amount){
+                    if(!isset($vatPercentages[number_format($percentage, 0)])){
+                        $vatPercentages[number_format($percentage, 0)] = 0;
+                    }
+                    $vatPercentages[number_format($percentage, 0)] += $amount;
+                }
 
                 foreach ($order->orderProducts as $orderProduct) {
                     if ($orderProduct->product) {
@@ -129,7 +137,7 @@ class ExportInvoicesJob implements ShouldQueue
                 }
             }
 
-            $view = View::make('dashed-ecommerce-core::invoices.combined-invoices', compact('subTotal', 'btw', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
+            $view = View::make('dashed-ecommerce-core::invoices.combined-invoices', compact('subTotal', 'btw', 'vatPercentages', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
             $contents = $view->render();
             $pdf = App::make('dompdf.wrapper');
             $pdf->loadHTML($contents);

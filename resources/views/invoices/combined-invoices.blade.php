@@ -131,7 +131,7 @@
                             @if($logo)
                                 <img
                                     src="{{mediaHelper()->getSingleImage($logo)->url ?? ''}}"
-                                     class="logo">
+                                    class="logo">
                             @endif
                         </td>
                     </tr>
@@ -214,33 +214,47 @@
                     {{CurrencyHelper::formatPrice($subTotal, 'EUR', true)}}
                 </td>
             </tr>
-            <tr>
-                <td>
-                    {{Translation::get('btw', 'invoice', 'BTW')}}
-                </td>
-                <td>
-                    {{CurrencyHelper::formatPrice($btw, 'EUR', true)}}
-                </td>
-            </tr>
-{{--            <tr>--}}
-{{--                <td>--}}
-{{--                    {{Translation::get('shipping-costs', 'invoice', 'Shipping costs')}}:--}}
-{{--                </td>--}}
-{{--                <td>--}}
-{{--                    @if($shippingCosts != 0.00)--}}
-{{--                        {{CurrencyHelper::formatPrice($shippingCosts, 'EUR', true)}} @else {{Translation::get('free-shipping', 'invoice', 'Free')}} @endif--}}
-{{--                </td>--}}
-{{--            </tr>--}}
-{{--            @if($paymentCosts != 0.00)--}}
-{{--                <tr>--}}
-{{--                    <td>--}}
-{{--                        {{Translation::get('payment-costs', 'invoice', 'Betalingsmethode kosten')}}:--}}
-{{--                    </td>--}}
-{{--                    <td>--}}
-{{--                        {{CurrencyHelper::formatPrice($paymentCosts, 'EUR', true)}}--}}
-{{--                    </td>--}}
-{{--                </tr>--}}
-{{--            @endif--}}
+            @foreach($vatPercentages as $vatPercentage => $vatAmount)
+                <tr>
+                    <td>
+                        {{Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
+                            'percentage' => $vatPercentage,
+                        ]) . ':'}}
+                    </td>
+                    <td>
+                        {{CurrencyHelper::formatPrice($vatAmount, 'EUR', true)}}
+                    </td>
+                </tr>
+            @endforeach
+            @if(count($vatPercentages) > 1)
+                <tr>
+                    <td>
+                        {{Translation::get('btw', 'invoice', 'BTW')}}
+                    </td>
+                    <td>
+                        {{CurrencyHelper::formatPrice($btw, 'EUR', true)}}
+                    </td>
+                </tr>
+            @endif
+            {{--            <tr>--}}
+            {{--                <td>--}}
+            {{--                    {{Translation::get('shipping-costs', 'invoice', 'Shipping costs')}}:--}}
+            {{--                </td>--}}
+            {{--                <td>--}}
+            {{--                    @if($shippingCosts != 0.00)--}}
+            {{--                        {{CurrencyHelper::formatPrice($shippingCosts, 'EUR', true)}} @else {{Translation::get('free-shipping', 'invoice', 'Free')}} @endif--}}
+            {{--                </td>--}}
+            {{--            </tr>--}}
+            {{--            @if($paymentCosts != 0.00)--}}
+            {{--                <tr>--}}
+            {{--                    <td>--}}
+            {{--                        {{Translation::get('payment-costs', 'invoice', 'Betalingsmethode kosten')}}:--}}
+            {{--                    </td>--}}
+            {{--                    <td>--}}
+            {{--                        {{CurrencyHelper::formatPrice($paymentCosts, 'EUR', true)}}--}}
+            {{--                    </td>--}}
+            {{--                </tr>--}}
+            {{--            @endif--}}
             @if($discount != 0.00)
                 <tr>
                     <td>

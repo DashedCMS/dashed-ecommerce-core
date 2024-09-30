@@ -262,7 +262,7 @@ class Order extends Model
 
     public function scopeCalculatableForStats($query)
     {
-        return $query->whereNotIn('invoice_id', ['PROFORMA', 'RETURN'])->where('order_origin', 'own');
+        return $query->whereNotIn('invoice_id', ['PROFORMA', 'RETURN'])->whereIn('order_origin', ['own', 'pos']);
     }
 
     public function scopeUnhandled($query)

@@ -237,21 +237,37 @@
             </tr>
             <tr>
                 <td>
-                    {{Translation::get('subtotal', 'invoice', 'Subtotal')}}
+                    {{Translation::get('subtotal', 'invoice', 'Subtotal') . ':'}}
                 </td>
                 <td>
                     {{CurrencyHelper::formatPrice($order->subtotal, 'EUR', true)}}
                 </td>
             </tr>
             @if(!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice)
-                <tr>
-                    <td>
-                        {{Translation::get('btw', 'invoice', 'BTW')}}
-                    </td>
-                    <td>
-                        {{CurrencyHelper::formatPrice($order->btw, 'EUR', true)}}
-                    </td>
-                </tr>
+                @if($order->vat_percentages)
+                    @foreach($order->vat_percentages as $vatPercentage => $vatAmount)
+                        <tr>
+                            <td>
+                                {{Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
+                                    'percentage' => number_format($vatPercentage, 0),
+                                ]) . ':'}}
+                            </td>
+                            <td>
+                                {{CurrencyHelper::formatPrice($vatAmount, 'EUR', true)}}
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
+                @if(count($order->vat_percentages ?: []) != 1)
+                    <tr>
+                        <td>
+                            {{Translation::get('btw', 'invoice', 'BTW') . ':'}}
+                        </td>
+                        <td>
+                            {{CurrencyHelper::formatPrice($order->btw, 'EUR', true)}}
+                        </td>
+                    </tr>
+                @endif
             @endif
             {{--            <tr>--}}
             {{--                <td>--}}

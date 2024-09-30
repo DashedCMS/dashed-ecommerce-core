@@ -34,17 +34,15 @@ class FinanceExportMail extends Mailable
      */
     public function build()
     {
-        $invoicePath = Storage::disk('public')->url('dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf');
-
-        return $this->view('dashed-ecommerce-core::emails.exported-invoice')
+        $mail = $this->view('dashed-ecommerce-core::emails.exported-invoice')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
-            ])
-            ->attach($invoicePath, [
-                'as' => Customsetting::get('company_name') . ' - exported invoice.pdf',
-                'mime' => 'application/pdf',
             ]);
+
+        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf', Customsetting::get('site_name') . ' - exported invoice.pdf');
+
+        return $mail;
     }
 }

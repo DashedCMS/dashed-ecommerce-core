@@ -83,7 +83,7 @@
                                                 @endif
 
                                                 <div wire:click="addProduct({{ $product->id }})"
-                                                     class="lg:col-span-2 cursor-pointer">
+                                                     class="lg:col-span-2 cursor-pointer text-wrap max-w-[300px] md:max-w-[400px]">
                                                     <p class="font-medium text-black">
                                                         {{ $product->name }}
                                                         ({{ CurrencyHelper::formatPrice($product->currentPrice) }})

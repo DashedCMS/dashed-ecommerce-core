@@ -43,7 +43,7 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->label('IP'),
                         TextEntry::make('note')
                             ->label('Notitie')
-                            ->getStateUsing(fn ($record) => $record->note ?: 'Geen notitie'),
+                            ->getStateUsing(fn($record) => $record->note ?: 'Geen notitie'),
                         IconEntry::make('marketing')
                             ->label('Marketing geaccepteerd')
                             ->trueIcon('heroicon-o-check-circle')
@@ -52,16 +52,16 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->label('Factuur ID'),
                         TextEntry::make('paymentMethod')
                             ->label('Betalingsmethode')
-                            ->getStateUsing(fn ($record) => $record->paymentMethod ?? 'Niet gevonden'),
+                            ->getStateUsing(fn($record) => $record->paymentMethod ?? 'Niet gevonden'),
                         TextEntry::make('psp')
                             ->label('PSP')
-                            ->visible(fn ($record) => $record->psp),
+                            ->visible(fn($record) => $record->psp),
                         TextEntry::make('psp_id')
                             ->label('PSP ID')
-                            ->visible(fn ($record) => $record->psp),
+                            ->visible(fn($record) => $record->psp),
                         TextEntry::make('order_origin')
                             ->label('Verzendmethode')
-                            ->getStateUsing(fn ($record) => $record->shippingMethod->name ?? 'Niet gevonden'),
+                            ->getStateUsing(fn($record) => $record->shippingMethod->name ?? 'Niet gevonden'),
                         TextEntry::make('subtotal')
                             ->label('Subtotaal')
                             ->money('EUR'),
@@ -69,22 +69,23 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->label('Korting')
                             ->money('EUR'),
                         TextEntry::make('discountCode.code')
-                            ->label('Kortingscode'),
+                            ->label('Kortingscode')
+                            ->visible(fn($record) => $record->discountCode),
                         TextEntry::make('btw')
                             ->label('BTW')
                             ->money('EUR'),
                         KeyValueEntry::make('vat_percentages')
                             ->label('BTW percentages')
-                        ->keyLabel('Percentage')
-                        ->valueLabel('Bedrag')
-                        ->getStateUsing(function ($record) {
-                            $vatPercentages = $record->vat_percentages ?: [];
-                            foreach ($vatPercentages as $key => $vatPercentage) {
-                                $vatPercentages[$key] = '€' . number_format($vatPercentage, 2, ',', '.');
-                            }
+                            ->keyLabel('Percentage')
+                            ->valueLabel('Bedrag')
+                            ->getStateUsing(function ($record) {
+                                $vatPercentages = [];
+                                foreach ($record->vat_percentages ?: [] as $key => $vatPercentage) {
+                                    $vatPercentages[number_format($key, 0) . '%'] = '€' . number_format($vatPercentage, 2, ',', '.');
+                                }
 
-                            return $vatPercentages;
-                        }),
+                                return $vatPercentages;
+                            }),
                         TextEntry::make('total')
                             ->label('Totaal')
                             ->money('EUR'),

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Section;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
@@ -30,54 +31,50 @@ class POSSettingsPage extends Page
     public function mount(): void
     {
         $formData = [];
-        $sites = Sites::getSites();
-        foreach ($sites as $site) {
-            $formData["cash_register_available_{$site['id']}"] = Customsetting::get('cash_register_available', $site['id'], false);
-            $formData["receipt_printer_connector_type_{$site['id']}"] = Customsetting::get('receipt_printer_connector_type', $site['id'], '');
-            $formData["receipt_printer_connector_descriptor_{$site['id']}"] = Customsetting::get('receipt_printer_connector_descriptor', $site['id'], '');
-        }
+        $formData["cash_register_available"] = Customsetting::get('cash_register_available', null, false);
+        $formData["receipt_printer_connector_type"] = Customsetting::get('receipt_printer_connector_type', null, '');
+        $formData["receipt_printer_connector_descriptor"] = Customsetting::get('receipt_printer_connector_descriptor', null, '');
+        $formData["cash_register_track_cash_book"] = Customsetting::get('cash_register_track_cash_book', null, '');
+        $formData["cash_register_amount"] = Customsetting::get('cash_register_amount', null, 0);
 
         $this->form->fill($formData);
     }
 
     protected function getFormSchema(): array
     {
-        $sites = Sites::getSites();
-        $tabGroups = [];
+        $schema = [
+            Placeholder::make('label')
+                ->label("POS instellingen voor")
+                ->columnSpanFull(),
+            Select::make("receipt_printer_connector_type")
+                ->options([
+                    'cups' => 'cups',
+                    'network' => 'network',
+                    'windows' => 'windows',
+                ])
+                ->reactive()
+                ->label('Bonnen printer connectie type'),
+            TextInput::make("receipt_printer_connector_descriptor")
+                ->label('Naam van de printer')
+                ->required(fn(Get $get) => $get("receipt_printer_connector_type")),
+            Toggle::make("cash_register_available")
+                ->reactive()
+                ->label('Kassa beschikbaar'),
+            Toggle::make("cash_register_track_cash_book")
+                ->label('Kasboek bijhouden')
+                ->reactive()
+                ->visible(fn(Get $get) => $get("cash_register_available")),
+            TextInput::make("cash_register_amount")
+                ->label('Bedrag in de kassa')
+                ->required()
+                ->numeric()
+                ->visible(fn(Get $get) => $get("cash_register_track_cash_book")),
+        ];
 
-        $tabs = [];
-        foreach ($sites as $site) {
-            $schema = [
-                Placeholder::make('label')
-                    ->label("POS instellingen voor {$site['name']}")
-                    ->columnSpan(2),
-                Select::make("receipt_printer_connector_type_{$site['id']}")
-                    ->options([
-                        'cups' => 'cups',
-                        'network' => 'network',
-                        'windows' => 'windows',
-                    ])
-                    ->reactive()
-                    ->label('Bonnen printer connectie type'),
-                TextInput::make("receipt_printer_connector_descriptor_{$site['id']}")
-                    ->label('Naam van de printer')
-                    ->required(fn (Get $get) => $get("receipt_printer_connector_type_{$site['id']}")),
-                Toggle::make("cash_register_available_{$site['id']}")
-                    ->label('Kassa beschikbaar'),
-            ];
-
-            $tabs[] = Tab::make($site['id'])
-                ->label(ucfirst($site['name']))
-                ->schema($schema)
-                ->columns([
-                    'default' => 1,
-                    'lg' => 2,
-                ]);
-        }
-        $tabGroups[] = Tabs::make('Sites')
-            ->tabs($tabs);
-
-        return $tabGroups;
+        return [
+            Section::make($schema)
+                ->columns(2),
+        ];
     }
 
     public function getFormStatePath(): ?string
@@ -138,9 +135,11 @@ class POSSettingsPage extends Page
         $sites = Sites::getSites();
 
         foreach ($sites as $site) {
-            Customsetting::set('cash_register_available', $this->form->getState()["cash_register_available_{$site['id']}"], $site['id']);
-            Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type_{$site['id']}"], $site['id']);
-            Customsetting::set('receipt_printer_connector_descriptor', $this->form->getState()["receipt_printer_connector_descriptor_{$site['id']}"], $site['id']);
+            Customsetting::set('cash_register_available', $this->form->getState()["cash_register_available"], $site['id']);
+            Customsetting::set('cash_register_track_cash_book', $this->form->getState()["cash_register_track_cash_book"], $site['id']);
+            Customsetting::set('cash_register_amount', $this->form->getState()["cash_register_amount"], $site['id']);
+            Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type"], $site['id']);
+            Customsetting::set('receipt_printer_connector_descriptor', $this->form->getState()["receipt_printer_connector_descriptor"], $site['id']);
         }
 
         Notification::make()
