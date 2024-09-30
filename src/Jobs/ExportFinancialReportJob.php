@@ -14,7 +14,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 
 class ExportFinancialReportJob implements ShouldQueue
@@ -71,11 +70,11 @@ class ExportFinancialReportJob implements ShouldQueue
         foreach ($orders as $order) {
             if ($order->status == 'return') {
                 $returns -= $order->total - $order->btw;
-//                $grossRevenue += $order->total;
+                //                $grossRevenue += $order->total;
                 $taxes += $order->btw;
             } else {
                 $grossRevenue += $order->total - $order->btw;
-//                $grossRevenue += $order->total - $order->discount - $order->btw;
+                //                $grossRevenue += $order->total - $order->discount - $order->btw;
                 $discounts += $order->discount;
                 $netRevenue += $order->total - $order->btw;
                 $taxes += $order->btw;
@@ -96,7 +95,7 @@ class ExportFinancialReportJob implements ShouldQueue
         $pdfPath = '/dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf';
         Storage::disk('public')->put($pdfPath, $output);
 
-//        Mail::to($this->email)->send(new FinanceExportMail($this->hash));
+        //        Mail::to($this->email)->send(new FinanceExportMail($this->hash));
         Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }
