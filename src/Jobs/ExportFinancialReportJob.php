@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Mail\FinanceReportMail;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
@@ -15,8 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
+use Dashed\DashedEcommerceCore\Mail\FinanceReportMail;
 
 class ExportFinancialReportJob implements ShouldQueue
 {
@@ -86,7 +84,7 @@ class ExportFinancialReportJob implements ShouldQueue
             }
 
             foreach ($order->vat_percentages ?: [] as $vatPercentage => $amount) {
-                if (!isset($vatPercentages[number_format($vatPercentage, 0)])) {
+                if (! isset($vatPercentages[number_format($vatPercentage, 0)])) {
                     $vatPercentages[number_format($vatPercentage, 0)] = 0;
                 }
 
@@ -94,7 +92,7 @@ class ExportFinancialReportJob implements ShouldQueue
             }
 
             $firstPayment = $order->orderPayments()->first();
-            if(!isset($transactions[$firstPayment->payment_method_id ?? 'unknown'])) {
+            if (! isset($transactions[$firstPayment->payment_method_id ?? 'unknown'])) {
                 $transactions[$firstPayment->payment_method_id ?? 'unknown'] = [
                     'name' => $firstPayment->paymentMethod->name ?? 'unknown',
                     'amount' => 0,
