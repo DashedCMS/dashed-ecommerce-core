@@ -839,7 +839,7 @@ class Order extends Model
         $newOrder->save();
         $newOrder->refresh();
 
-        if($paymentMethodId){
+        if ($paymentMethodId) {
             $newOrderPayment = $newOrder->orderPayments()->create([
                 'payment_method_id' => $paymentMethodId,
                 'payment_method' => PaymentMethod::find($paymentMethodId)->name,
