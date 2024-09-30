@@ -377,13 +377,13 @@ class Order extends Model
     {
         if (in_array($this->order_origin, ['own', 'pos'])) {
             if ($this->parentCreditOrder) {
-//                OrderLog::createLog(orderId: $this->id, note: 'Creating credit invoice', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Creating credit invoice', isDebugLog: true);
                 $this->createCreditInvoice();
             } elseif ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid') {
-//                OrderLog::createLog(orderId: $this->id, note: 'Creating normal invoice', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Creating normal invoice', isDebugLog: true);
                 $this->createNormalInvoice();
             } else {
-//                OrderLog::createLog(orderId: $this->id, note: 'Creating no invoice, WRONG', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Creating no invoice, WRONG', isDebugLog: true);
             }
         }
     }
@@ -391,15 +391,15 @@ class Order extends Model
     public function createNormalInvoice()
     {
         if (in_array($this->order_origin, ['own', 'pos'])) {
-//            OrderLog::createLog(orderId: $this->id, note: 'Generating invoice id', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Generating invoice id', isDebugLog: true);
             $this->generateInvoiceId();
-//            OrderLog::createLog(orderId: $this->id, note: 'Generating invoice id done', isDebugLog: true);
-//            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Generating invoice id done', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again', isDebugLog: true);
             $order = Order::find($this->id);
-//            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again done', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again done', isDebugLog: true);
             $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
-            if (!Storage::disk('dashed')->exists($invoicePath)) {
-//                OrderLog::createLog(orderId: $this->id, note: 'Invoice does not exists yet, creating view', isDebugLog: true);
+            if (! Storage::disk('dashed')->exists($invoicePath)) {
+                //                OrderLog::createLog(orderId: $this->id, note: 'Invoice does not exists yet, creating view', isDebugLog: true);
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', [
                     'order' => $order,
                 ]);
@@ -420,19 +420,19 @@ class Order extends Model
                 }
                 OrderLog::createLog(orderId: $this->id, note: 'Output retrieved', isDebugLog: true);
 
-//                OrderLog::createLog(orderId: $this->id, note: 'Put on disk', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Put on disk', isDebugLog: true);
                 Storage::disk('dashed')->put($invoicePath, $output);
-//                OrderLog::createLog(orderId: $this->id, note: 'Put on disk done', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Put on disk done', isDebugLog: true);
 
-//                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent', isDebugLog: true);
                 InvoiceCreatedEvent::dispatch($this);
-//                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent done', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent done', isDebugLog: true);
             }
 
-            if (!$this->invoice_send_to_customer) {
-//                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob', isDebugLog: true);
+            if (! $this->invoice_send_to_customer) {
+                //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob', isDebugLog: true);
                 SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
-//                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob done', isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob done', isDebugLog: true);
             }
         }
     }
@@ -441,7 +441,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (!Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -459,7 +459,7 @@ class Order extends Model
         if (in_array($this->order_origin, ['own', 'pos']) && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (!Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.credit-invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -619,7 +619,7 @@ class Order extends Model
             if (auth()->check() && auth()->user()->id != $this->user_id) {
                 OrderLog::createLog(orderId: $this->id, tag: 'order.marked-as-paid');
             } else {
-//                OrderLog::createLog(orderId: $this->id, note: 'Marked as paid from url ' . url()->current(), isDebugLog: true);
+                //                OrderLog::createLog(orderId: $this->id, note: 'Marked as paid from url ' . url()->current(), isDebugLog: true);
 
                 OrderLog::createLog(orderId: $this->id, tag: 'order.paid');
             }
@@ -631,22 +631,22 @@ class Order extends Model
             } catch (\Exception $e) {
                 OrderLog::createLog(orderId: $this->id, note: 'Error creating invoice: ' . $e->getMessage(), isDebugLog: true);
             }
-//            OrderLog::createLog(orderId: $this->id, note: 'Invoice created', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Invoice created', isDebugLog: true);
 
-//            OrderLog::createLog(orderId: $this->id, note: 'Deducting stock', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Deducting stock', isDebugLog: true);
             $this->deductStock();
-//            OrderLog::createLog(orderId: $this->id, note: 'Stock deducted', isDebugLog: true);
-//            OrderLog::createLog(orderId: $this->id, note: 'Discount deducted', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Stock deducted', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Discount deducted', isDebugLog: true);
             $this->deductDiscount();
-//            OrderLog::createLog(orderId: $this->id, note: 'Deducted discount', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Deducted discount', isDebugLog: true);
 
-//            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start', isDebugLog: true);
             OrderMarkedAsPaidEvent::dispatch($this);
-//            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch end', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch end', isDebugLog: true);
 
-//            OrderLog::createLog(orderId: $this->id, note: 'Emptying shopping cart', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Emptying shopping cart', isDebugLog: true);
             ShoppingCart::emptyMyCart();
-//            OrderLog::createLog(orderId: $this->id, note: 'Shopping cart emptied', isDebugLog: true);
+            //            OrderLog::createLog(orderId: $this->id, note: 'Shopping cart emptied', isDebugLog: true);
 
             $this->sendGAEcommerceHit();
         }
@@ -898,8 +898,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && !$this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
-            if (!Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+            if (! Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -971,7 +971,7 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (!$this->credit_for_order_id) {
+        if (! $this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
