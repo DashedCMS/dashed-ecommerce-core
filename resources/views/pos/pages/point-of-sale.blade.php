@@ -116,7 +116,7 @@
                         </span>
                         <p>Aangepaste verkoop toevoegen</p>
                     </button>
-                    @if($discount > 0.00)
+                    @if($activeDiscountCode)
                         <button wire:click="removeDiscount"
                                 class="text-left rounded-lg bg-red-500/40 hover:bg-red-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
@@ -284,7 +284,7 @@
                         <span class="text-sm font-normal">{{ collect($products)->sum('quantity') }} artikelen</span>
                     </span>
                     <span class="font-bold">{{ $total }}</span>
-                        @if($discount > 0.00)
+                        @if($activeDiscountCode)
                 </span>
                         <hr/>
                         <span class="text-sm font-bold flex justify-between items-center">

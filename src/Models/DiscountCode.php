@@ -259,7 +259,7 @@ class DiscountCode extends Model
             $amountOfCart = 0;
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
-                if ($this->products()->where('product_id', $item->model->id)->exists()) {
+                if ($item->model && $this->products()->where('product_id', $item->model->id)->exists()) {
                     $amountOfCart = $amountOfCart + ($item->model->currentPrice * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
