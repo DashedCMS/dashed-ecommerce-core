@@ -731,7 +731,7 @@ class Order extends Model
         $this->updateOrderProductsProductInformation();
     }
 
-    public function markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus)
+    public function markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId)
     {
         $newOrder = $this->replicate();
         $newOrder->invoice_id = 'RETURN';
@@ -838,6 +838,18 @@ class Order extends Model
 
         $newOrder->save();
         $newOrder->refresh();
+
+        if($paymentMethodId){
+            $newOrderPayment = $newOrder->orderPayments()->create([
+                'payment_method_id' => $paymentMethodId,
+                'payment_method' => PaymentMethod::find($paymentMethodId)->name,
+                'amount' => $newOrder->total,
+                'psp' => 'own',
+            ]);
+            $newOrderPayment->psp = 'own';
+            $newOrderPayment->save();
+            $newOrderPayment->changeStatus('paid');
+        }
 
         if ($createCreditInvoice) {
             $newOrder->createInvoice();

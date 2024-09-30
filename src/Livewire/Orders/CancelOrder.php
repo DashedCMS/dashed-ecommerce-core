@@ -168,7 +168,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                             return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
                         }
                     } else {
-                        $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status']);
+                        $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id']);
 
                         Notification::make()
                             ->title('Bestelling gemarkeerd als geannuleerd')
