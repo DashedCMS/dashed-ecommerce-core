@@ -292,26 +292,28 @@
                     <span class="font-bold">{{ $discount }}</span>
                             @endif
                 </span>
-                        <hr/>
-                        <span class="text-sm font-bold flex justify-between items-center">
-                        <span>Subtotaal</span>
-                    <span class="font-bold">{{ $subTotal }}</span>
-                </span>
-                            @foreach($vatPercentages as $percentage => $value)
-                                @if($loop->first)
+                        {{--                        <hr/>--}}
+                        {{--                        <span class="text-sm font-bold flex justify-between items-center">--}}
+                        {{--                        <span>Subtotaal</span>--}}
+                        {{--                    <span class="font-bold">{{ $subTotal }}</span>--}}
+                        {{--                </span>--}}
+                        @foreach($vatPercentages as $percentage => $value)
+                            @if($loop->first)
                                 <hr/>
                             @endif
-                                <span class="text-sm font-bold flex justify-between items-center">
-                        <span>BTW {{ $percentage }}%</span>
+                            <span class="text-sm font-bold flex justify-between items-center">
+                        <span>BTW {{ number_format($percentage, 0) }}%</span>
                     <span class="font-bold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($value) }}</span>
                 </span>
-                            @endforeach
+                        @endforeach
                         @if(!count($vatPercentages))
                             <hr/>
                         @endif
+                        @if(count($vatPercentages) > 1)
                             <span class="text-sm font-bold flex justify-between items-center">
                         <span>BTW</span>
                     <span class="font-bold">{{ $vat }}</span>
+                            @endif
                 </span>
                     </div>
                     <button wire:click="initiateCheckout"
