@@ -21,7 +21,7 @@ class Searchbar extends Component
     public function getProductsFromSearch()
     {
         if ($this->search) {
-            $this->products = Products::getBySearch(1000, 'default', null, $this->search);
+            $this->products = Products::getBySearch(50, 'default', null, $this->search);
             $this->showSearchbar = true;
         } else {
             $this->products = null;

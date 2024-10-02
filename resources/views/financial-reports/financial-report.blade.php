@@ -15,7 +15,7 @@
     <style>
         body {
             font-family: 'Helvetica', sans-serif;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .item-title {
@@ -23,7 +23,7 @@
             /*grid-template-columns: repeat(2, minmax(0, 1fr));*/
             /*justify-content: space-between;*/
             font-weight: 500;
-            font-size: 18px;
+            font-size: 16px;
             width: 100%;
         }
 
@@ -36,24 +36,24 @@
         }
 
         .subtitle {
-            font-size: 14px;
+            font-size: 10px;
         }
 
         .mt {
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .mt-2 {
-            margin-top: 50px;
+            margin-top: 30px;
         }
 
         .mb {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .title {
             font-weight: 600;
-            font-size: 35px;
+            font-size: 20px;
         }
 
         table {
@@ -65,8 +65,10 @@
 <div style="width: 500px; margin-left: auto; margin-right: auto;">
     <div>
         <div>
-            <p style="font-size: 40px; font-weight: 600;">
-                {{Translation::get('financial-report', 'financial-report', 'Financial report')}}
+            <p style="font-size: 25px; font-weight: 600;">
+                {{Translation::get('financial-report', 'financial-report', 'Financial report from :siteName:', 'text', [
+    'siteName'=>Customsetting::get('site_name')
+    ])}}
             </p>
         </div>
         <div style="display: flex; justify-content: space-between;">
@@ -147,7 +149,8 @@
                         <td>{{'€ ' . number_format($amount, 2, ',', '')}}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" class="subtitle">over {{ '€ ' . number_format($amount / $vatPercentage * 100, 2, ',', '') }}</td>
+                        <td colspan="2" class="subtitle">
+                            over {{ '€ ' . number_format($amount / $vatPercentage * 100, 2, ',', '') }}</td>
                     </tr>
                 </table>
             @endforeach
@@ -184,14 +187,7 @@
             </table>
         </div>
     </div>
-    <div style="height:100px">
-    </div>
-    <div>
-        <hr>
-        <div style="width:30%;display:inline-block;">
-            {{Customsetting::get('site_name')}}
-        </div>
-    </div>
 </div>
 </body>
 </html>
+d
