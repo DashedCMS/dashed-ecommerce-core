@@ -405,7 +405,7 @@ class ProductResource extends Resource
 
         $schema[] = Section::make('Afbeeldingen beheren')
             ->schema([
-                mediaHelper()->field('images', 'Afbeeldingen', required: true, multiple: true),
+                mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true),
 //                Repeater::make('images')
 //                    ->label('Afbeeldingen')
 //                    ->schema([
