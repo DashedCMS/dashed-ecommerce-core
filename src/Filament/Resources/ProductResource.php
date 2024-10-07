@@ -492,7 +492,7 @@ class ProductResource extends Resource
                     ->multiple()
                     ->preload()
                     ->relationship('productCategories', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link aan categorieeën')
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd'),
                 Select::make('shippingClasses')
@@ -505,7 +505,7 @@ class ProductResource extends Resource
                     ->multiple()
                     ->preload()
                     ->relationship('suggestedProducts', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link voorgestelde producten'),])
             ->columns([
                 'default' => 1,
