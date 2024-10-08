@@ -3,23 +3,23 @@
         <div class="col-span-4 lg:col-span-2">
             <nav class="grid space-y-2" aria-label="Tabs">
                 <a href="{{AccountHelper::getAccountUrl()}}"
-                   class="button button-white-on-primary">
-                    {{Translation::get('my-account', 'account', 'My account')}}
+                   class="button button--primary-dark">
+                    {{Translation::get('my-account', 'account', 'Mijn account')}}
                 </a>
                 <a href="{{EcommerceAccountHelper::getAccountOrdersUrl()}}"
-                   class="button button-primary-ghost">
-                    {{Translation::get('my-orders', 'account', 'My orders')}}
+                   class="button button--primary-light">
+                    {{Translation::get('my-orders', 'account', 'Mijn bestellingen')}}
                 </a>
                 <a href="{{AccountHelper::getLogoutUrl()}}"
-                   class="button button-white-on-primary">
-                    {{Translation::get('logout', 'login', 'Logout')}}
+                   class="button button--primary-dark">
+                    {{Translation::get('logout', 'login', 'Uitloggen')}}
                 </a>
             </nav>
         </div>
         <div class="col-span-6 lg:col-span-4">
-            <h1 class="text-2xl">{{Translation::get('my-orders', 'account', 'My orders')}}</h1>
+            <h1 class="text-2xl">{{Translation::get('my-orders', 'account', 'Mijn bestellingen')}}</h1>
             @if(!$orders->count())
-                <p>{{Translation::get('no-orders-yet', 'account', 'You dont have any orders yet')}}</p>
+                <p>{{Translation::get('no-orders-yet', 'account', 'Je hebt nog geen bestellingen')}}</p>
             @else
                 <div class="mt-8 space-y-8">
                     @foreach($orders as $order)
@@ -27,13 +27,13 @@
                             <div class="md:flex items-center justify-between">
                                 <p>{{$order->created_at->format('d-m-Y')}} | {{$order->invoice_id}}</p>
                                 <div class="space-y-2">
-                                    <a class="button button-primary-on-white"
+                                    <a class="button button--primary-dark"
                                        href="{{$order->downloadInvoiceUrl()}}">
-                                        {{Translation::get('download-invoice', 'cart', 'Download invoice')}}
+                                        {{Translation::get('download-invoice', 'cart', 'Download factuur')}}
                                     </a>
-                                    <a class="button button-primary-on-white"
+                                    <a class="button button--primary-dark"
                                        href="{{$order->getUrl()}}">
-                                        {{Translation::get('view-order', 'cart', 'View order')}}
+                                        {{Translation::get('view-order', 'cart', 'Bekijk bestelling')}}
                                     </a>
                                 </div>
                             </div>
@@ -59,7 +59,8 @@
                                                 @if($orderProduct->product_extras)
                                                     <div>
                                                         @foreach($orderProduct->product_extras as $option)
-                                                            <p class="text-xs">{{$option['name']}}: {{$option['value']}}</p>
+                                                            <p class="text-xs">{{$option['name']}}
+                                                                : {{$option['value']}}</p>
                                                         @endforeach
                                                     </div>
                                                 @endif
