@@ -14,7 +14,7 @@ class AccountController extends FrontendController
             seo()->metaData('metaTitle', Translation::get('account-orders-page-meta-title', 'account', 'My orders'));
             seo()->metaData('metaDescription', Translation::get('account-orders-page-meta-description', 'account', 'View your orders here'));
 
-            return view(env('SITE_THEME', 'dashed') . '.account.orders');
+            return view(env('SITE_THEME', 'dashed') . '.account.show-orders');
         } else {
             return $this->pageNotFound();
         }
