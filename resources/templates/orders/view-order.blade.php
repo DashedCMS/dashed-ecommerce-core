@@ -32,7 +32,7 @@
                                     <small>{{$option['name']}}: {{$option['value']}}</small>
                                 @endforeach
                             @endif
-                        </div class="truncate">
+                        </div>
                     </div>
                     <div class="col-span-8 lg:col-span-4 flex items-center">
                         <div
