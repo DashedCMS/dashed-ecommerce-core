@@ -239,6 +239,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->hasRoutes([
                 'frontend',
             ])
+            ->hasViews()
             ->hasAssets()
             ->hasCommands([
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
