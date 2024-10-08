@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Support\Facades\View;
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Controllers\Frontend\FrontendController;
 
