@@ -1063,7 +1063,7 @@ class Product extends Model
             }
 
             if ($product) {
-                if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.products.show')) {
+                if (View::exists(env('SITE_THEME', 'dashed') . '.products.show')) {
                     seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
                     seo()->metaData('metaDescription', $product->metadata->description ?? '');
                     $metaImage = $product->metadata->image ?? '';
@@ -1077,7 +1077,7 @@ class Product extends Model
                     View::share('model', $product);
                     View::share('product', $product);
 
-                    return view(Customsetting::get('site_theme', null, 'dashed') . '.products.show');
+                    return view(env('SITE_THEME', 'dashed') . '.products.show');
                 } else {
                     return 'pageNotFound';
                 }

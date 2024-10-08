@@ -21,6 +21,6 @@ class ViewOrder extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.orders.view-order');
+        return view(env('SITE_THEME', 'dashed') . '.orders.view-order');
     }
 }

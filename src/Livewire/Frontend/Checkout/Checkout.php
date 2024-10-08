@@ -698,6 +698,6 @@ class Checkout extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.checkout.checkout');
+        return view(env('SITE_THEME', 'dashed') . '.checkout.checkout');
     }
 }

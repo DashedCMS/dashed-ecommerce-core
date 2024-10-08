@@ -36,7 +36,7 @@ class ProductListExportMail extends Mailable
     {
         $productListPath = Storage::disk('dashed')->url('dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx');
 
-        return $this->view('dashed-ecommerce-core::emails.exported-product-list')
+        return $this->view(env('SITE_THEME', 'dashed') . '.emails.exported-product-list')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-product-list-email-subject', 'products', 'Exported product list'))
             ->with([

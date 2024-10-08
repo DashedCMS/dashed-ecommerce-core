@@ -131,12 +131,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'dashed-ecommerce-core');
+//        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'dashed-ecommerce-core');
+
+//        $this->publishes([
+//            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/dashed-ecommerce-core/frontend'),
+//            __DIR__ . '/../resources/views/emails' => resource_path('views/vendor/dashed-ecommerce-core/emails'),
+//        ], 'dashed-ecommerce-core-views');
 
         $this->publishes([
-            __DIR__ . '/../resources/views/frontend' => resource_path('views/vendor/dashed-ecommerce-core/frontend'),
-            __DIR__ . '/../resources/views/emails' => resource_path('views/vendor/dashed-ecommerce-core/emails'),
-        ], 'dashed-ecommerce-core-views');
+            __DIR__ . '/../resources/templates' => resource_path('views/' . env('SITE_THEME', 'dashed')),
+            __DIR__ . '/../resources/component-templates' => resource_path('views/components'),
+        ], 'dashed-core-templates');
 
         cms()->builder(
             'frontendMiddlewares',

@@ -154,7 +154,7 @@ class ProductCategory extends Model
                 }
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();
             }
-            if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.categories.show') && $productCategory) {
+            if (View::exists(env('SITE_THEME', 'dashed') . '.categories.show') && $productCategory) {
                 seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
                 seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
                 if ($productCategory->metadata && $productCategory->metadata->image) {
@@ -164,7 +164,7 @@ class ProductCategory extends Model
                 View::share('model', $productCategory);
                 View::share('productCategory', $productCategory);
 
-                return view(Customsetting::get('site_theme', null, 'dashed') . '.categories.show');
+                return view(env('SITE_THEME', 'dashed') . '.categories.show');
             } else {
                 return 'pageNotFound';
             }
@@ -172,7 +172,7 @@ class ProductCategory extends Model
 
         if (Customsetting::get('product_category_index_page_enabled', null, true) && $slugComponents[0] == Translation::get('categories-slug', 'slug', 'categories')) {
             if (count($slugComponents) == 1) {
-                if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.categories.index')) {
+                if (View::exists(env('SITE_THEME', 'dashed') . '.categories.index')) {
                     seo()->metaData('metaTitle', Translation::get('all-categories', 'categories', 'All categories'));
 
                     View::share('productCategory', null);
@@ -180,7 +180,7 @@ class ProductCategory extends Model
                     $childProductCategories = ProductCategories::getTopLevel(1000);
                     View::share('childProductCategories', $childProductCategories);
 
-                    return view(Customsetting::get('site_theme', null, 'dashed') . '.categories.index');
+                    return view(env('SITE_THEME', 'dashed') . '.categories.index');
                 } else {
                     return 'pageNotFound';
                 }
@@ -196,7 +196,7 @@ class ProductCategory extends Model
                             return 'pageNotFound';
                         }
                     }
-                    if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.categories.index') && $productCategory) {
+                    if (View::exists(env('SITE_THEME', 'dashed') . '.categories.index') && $productCategory) {
                         seo()->metaData('metaTitle', $productCategory->name);
 
                         View::share('model', $productCategory);
@@ -204,7 +204,7 @@ class ProductCategory extends Model
                         $childProductCategories = $productCategory->getFirstChilds();
                         View::share('childProductCategories', $childProductCategories);
 
-                        return view(Customsetting::get('site_theme', null, 'dashed') . '.categories.index');
+                        return view(env('SITE_THEME', 'dashed') . '.categories.index');
                     } else {
                         return 'pageNotFound';
                     }

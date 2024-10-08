@@ -37,6 +37,6 @@ class ShowProduct extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.products.show-product');
+        return view(env('SITE_THEME', 'dashed') . '.products.show-product');
     }
 }

@@ -129,7 +129,7 @@ class ShowProducts extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.products.show-products', [
+        return view(env('SITE_THEME', 'dashed') . '.products.show-products', [
             'products' => $this->products,
             'filters' => $this->filters,
             'activeFilters' => $this->activeFilters,

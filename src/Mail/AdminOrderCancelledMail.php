@@ -35,7 +35,7 @@ class AdminOrderCancelledMail extends Mailable
     {
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        return $this->view('dashed-ecommerce-core::emails.admin-cancelled-order')
+        return $this->view(env('SITE_THEME', 'dashed') . '.emails.admin-cancelled-order')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('admin-order-cancelled-email-subject', 'orders', 'Order #:orderId: cancelled', 'text', [
                 'orderId' => $this->order->parentCreditOrder->invoice_id,
             ]))

@@ -26,6 +26,6 @@ class Toastr extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.notification.toastr');
+        return view(env('SITE_THEME', 'dashed') . '.notification.toastr');
     }
 }

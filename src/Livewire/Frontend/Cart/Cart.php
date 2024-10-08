@@ -60,6 +60,6 @@ class Cart extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.cart.' . ($this->cartType != 'default' ? $this->cartType . '-' : '') . 'cart');
+        return view(env('SITE_THEME', 'dashed') . '.cart.' . ($this->cartType != 'default' ? $this->cartType . '-' : '') . 'cart');
     }
 }

@@ -33,7 +33,7 @@ class FinanceExportMail extends Mailable
      */
     public function build()
     {
-        $mail = $this->view('dashed-ecommerce-core::emails.exported-invoice')
+        $mail = $this->view(env('SITE_THEME', 'dashed') . '.emails.exported-invoice')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
             ->with([

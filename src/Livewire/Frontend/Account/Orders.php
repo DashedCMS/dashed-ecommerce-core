@@ -16,6 +16,6 @@ class Orders extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.account.orders');
+        return view(env('SITE_THEME', 'dashed') . '.account.orders');
     }
 }

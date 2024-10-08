@@ -36,7 +36,7 @@ class OrderListExportMail extends Mailable
     {
         $orderListPath = Storage::disk('dashed')->url('dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx');
 
-        return $this->view('dashed-ecommerce-core::emails.exported-order-list')
+        return $this->view(env('SITE_THEME', 'dashed') . '.emails.exported-order-list')
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-order-list-email-subject', 'orders', 'Exported order list'))
             ->with([

@@ -29,6 +29,6 @@ class CartCount extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.cart.cart-count');
+        return view(env('SITE_THEME', 'dashed') . '.cart.cart-count');
     }
 }

@@ -26,11 +26,11 @@ class CartController extends FrontendController
 
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.cart.show')) {
+        if (View::exists(env('SITE_THEME', 'dashed') . '.cart.show')) {
             seo()->metaData('metaTitle', Translation::get('cart-page-meta-title', 'cart', 'Cart'));
             seo()->metaData('metaDescription', Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
 
-            return view(Customsetting::get('site_theme', null, 'dashed') . '.cart.show');
+            return view(env('SITE_THEME', 'dashed') . '.cart.show');
         } else {
             return $this->pageNotFound();
         }
@@ -40,11 +40,11 @@ class CartController extends FrontendController
     {
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists(Customsetting::get('site_theme', null, 'dashed') . '.checkout.show')) {
+        if (View::exists(env('SITE_THEME', 'dashed') . '.checkout.show')) {
             seo()->metaData('metaTitle', Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
             seo()->metaData('metaDescription', Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
 
-            return view(Customsetting::get('site_theme', null, 'dashed') . '.checkout.show');
+            return view(env('SITE_THEME', 'dashed') . '.checkout.show');
         } else {
             return $this->pageNotFound();
         }

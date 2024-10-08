@@ -33,6 +33,6 @@ class AddToCart extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.cart.add-to-cart');
+        return view(env('SITE_THEME', 'dashed') . '.cart.add-to-cart');
     }
 }

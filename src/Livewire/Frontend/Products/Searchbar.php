@@ -36,6 +36,6 @@ class Searchbar extends Component
 
     public function render()
     {
-        return view('dashed-ecommerce-core::frontend.products.searchbar');
+        return view(env('SITE_THEME', 'dashed') . '.products.searchbar');
     }
 }
