@@ -13,11 +13,11 @@
                                     @if($item->model->firstImage)
                                         <a href="{{ $item->model->getUrl() }}">
                                             <x-drift::image
-                                                    class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
-                                                    config="dashed"
-                                                    :path="$item->model->firstImage"
-                                                    :alt=" $item->model->name"
-                                                    :manipulations="[
+                                                class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
+                                                config="dashed"
+                                                :path="$item->model->firstImage"
+                                                :alt=" $item->model->name"
+                                                :manipulations="[
                                                     'widen' => 400,
                                                 ]"
                                             />
@@ -50,32 +50,32 @@
 
                                         <div class="mt-4 sm:mt-0 sm:pr-9">
                                             <div
-                                                    class="inline-flex items-center p-1 transition rounded bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
+                                                class="inline-flex items-center p-1 transition rounded bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
                                                 <button
-                                                        wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
-                                                        class="grid w-6 h-6 bg-white rounded shadow-xl place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+                                                    wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
+                                                    class="grid w-6 h-6 bg-white rounded shadow-xl place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
                                                 >
                                                     <x-lucide-minus class="w-4 h-4"/>
                                                 </button>
 
                                                 <input
-                                                        class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none"
-                                                        value="{{$item->qty}}"
-                                                        disabled
-                                                        min="0" max="{{$item->model->stock()}}">
+                                                    class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none"
+                                                    value="{{$item->qty}}"
+                                                    disabled
+                                                    min="0" max="{{$item->model->stock()}}">
 
                                                 <button
-                                                        wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
-                                                        class="grid w-6 h-6 bg-white rounded shadow-xl place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+                                                    wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
+                                                    class="grid w-6 h-6 bg-white rounded shadow-xl place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
                                                 >
                                                     <x-lucide-plus class="w-4 h-4"/>
                                                 </button>
 
                                                 <div class="absolute right-0 top-0">
                                                     <button
-                                                            wire:click="changeQuantity('{{ $item->rowId }}', '0')"
-                                                            type="button"
-                                                            class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-800 trans">
+                                                        wire:click="changeQuantity('{{ $item->rowId }}', '0')"
+                                                        type="button"
+                                                        class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-800 trans">
                                                         <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
                                                         <x-lucide-trash class="h-5 w-5"/>
                                                     </button>
@@ -87,7 +87,7 @@
                                     <div class="mt-4 flex space-x-2 text-sm text-gray-700">
                                         @if($item->model->inStock())
                                             @if($item->model->hasDirectSellableStock())
-                                                @if($product->stock() > 10)
+                                                @if($item->model->stock() > 10)
                                                     <p class="text-md tracking-wider text-primary-600 flex items-center font-bold"><span
                                                             class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                                               viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
@@ -104,7 +104,7 @@
                                                                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             </span>
                                                         {{Translation::get('product-in-stock-specific', 'product', 'Nog :count: op voorraad', 'text', [
-                                'count' => $product->stock()
+                                'count' => $item->model->stock()
                                 ])}}
                                                     </p>
                                                 @endif

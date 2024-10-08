@@ -14,13 +14,13 @@
                     <main class="grid items-start gap-8 mt-6 md:gap-16 md:mt-12 md:grid-cols-5">
                         <aside class="relative order-2 md:col-span-3">
                             <div
-                                    class="absolute inset-y-0 right-0 w-[calc(100vw+1rem)] md:w-screen -mb-24 -mr-8 border-r border-black/5 bg-white/10 backdrop-blur-lg">
+                                class="absolute inset-y-0 right-0 w-[calc(100vw+1rem)] md:w-screen -mb-24 -mr-8 border-r border-black/5 bg-white/10 backdrop-blur-lg">
                             </div>
 
                             <div class="relative py-6">
                                 <form
-                                        class="grid gap-4 md:grid-cols-2"
-                                        wire:submit="submit"
+                                    class="grid gap-4 md:grid-cols-2"
+                                    wire:submit="submit"
                                 >
                                     <div class="md:col-span-2">
                                         <h2 class="text-xl font-bold text-primary-800">{{ Translation::get('contact-information', 'checkout', 'Contact informatie') }}</h2>
@@ -59,7 +59,7 @@
 
                                     <div class="space-y-2 md:col-span-2">
                                         <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-email-address', 'checkout', 'Vul je email adres in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-email-address', 'checkout', 'Vul je email adres in')}}
                                             <span class="text-red-500">*</span></label>
 
                                         <input type="email" class="form-input" id="email" name="email" required
@@ -94,9 +94,9 @@
 
                                     <div class="space-y-2">
                                         <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
                                             <span
-                                                    class="text-red-500">*</span></label>
+                                                class="text-red-500">*</span></label>
 
                                         <input type="text" class="form-input" id="street" name="street" required
                                                wire:model.blur="street"
@@ -105,9 +105,9 @@
 
                                     <div class="space-y-2">
                                         <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')}}
                                             <span
-                                                    class="text-red-500">*</span></label>
+                                                class="text-red-500">*</span></label>
 
                                         <input type="text" class="form-input" id="house_nr" name="house_nr" required
                                                wire:model.blur="houseNr"
@@ -116,9 +116,9 @@
 
                                     <div class="space-y-2">
                                         <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
                                             <span
-                                                    class="text-red-500">*</span></label>
+                                                class="text-red-500">*</span></label>
 
                                         <input type="text" class="form-input" id="zip_code" name="zip_code" required
                                                wire:model.blur="zipCode"
@@ -127,9 +127,9 @@
 
                                     <div class="space-y-2">
                                         <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-city', 'checkout', 'Vul je stad in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-city', 'checkout', 'Vul je stad in')}}
                                             <span
-                                                    class="text-red-500">*</span></label>
+                                                class="text-red-500">*</span></label>
 
                                         <input type="text" class="form-input" id="city" name="city" required
                                                wire:model.blur="city"
@@ -138,9 +138,9 @@
 
                                     <div class="space-y-2 md:col-span-2">
                                         <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-country', 'checkout', 'Vul je land in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-country', 'checkout', 'Vul je land in')}}
                                             <span
-                                                    class="text-red-500">*</span></label>
+                                                class="text-red-500">*</span></label>
 
                                         <input type="text" class="form-input" id="country" name="country" required
                                                wire:model.blur="country"
@@ -149,9 +149,9 @@
 
                                     <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
                                         <input
-                                                wire:model.live="invoiceAddress"
-                                                class="transition rounded-sm shadow-inner border-black/20 text-primary-800 shadow-black/5 focus:ring-primary-800"
-                                                type="checkbox" name="invoice_address" id="invoice_address">
+                                            wire:model.live="invoiceAddress"
+                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-800 shadow-black/5 focus:ring-primary-800"
+                                            type="checkbox" name="invoice_address" id="invoice_address">
 
                                         <span>{!! Translation::get('seperate-invoice-address', 'checkout', 'Afwijkend factuur adres') !!}</span>
                                     </label>
@@ -236,7 +236,7 @@
                                                            value="{{$thisPaymentMethod['id']}}">
 
                                                     <div
-                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-800 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-800 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
                                                     <span class="ml-3 mr-auto">
                                                             {{ $thisPaymentMethod['name'] }}
@@ -249,8 +249,8 @@
 
                                                     @if($thisPaymentMethod['image'])
                                                         <img
-                                                                src="{{ mediaHelper()->getSingleImage($thisPaymentMethod['image'])->url ?? '' }}"
-                                                                class="object-contain h-6">
+                                                            src="{{ mediaHelper()->getSingleImage($thisPaymentMethod['image'])->url ?? '' }}"
+                                                            class="object-contain h-6">
                                                     @endif
                                                 </label>
                                             @endforeach
@@ -275,7 +275,7 @@
                                                            wire:model.live="shippingMethod">
 
                                                     <div
-                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-800 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-800 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
                                                     <span class="ml-3 mr-auto"> {{ $thisShippingMethod['name'] }}
                                                             ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }})
@@ -295,9 +295,9 @@
 
                                     <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
                                         <input
-                                                wire:model.live="generalCondition" required
-                                                class="transition rounded-sm shadow-inner border-black/20 text-primary-800 shadow-black/5 focus:ring-primary-800"
-                                                type="checkbox" name="general_condition" id="general_condition">
+                                            wire:model.live="generalCondition" required
+                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-800 shadow-black/5 focus:ring-primary-800"
+                                            type="checkbox" name="general_condition" id="general_condition">
 
                                         <span>{!! Translation::get('accept-general-conditions', 'checkout', 'Ja, ik ga akkoord met de <a href="/algemene-voorwaarden">Algemene Voorwaarden</a> en <a href="/privacy-beleid">Privacy Statement</a>', 'editor') !!}</span>
                                     </label>
@@ -313,17 +313,17 @@
                         </aside>
 
                         <aside
-                                class="order-1 text-white md:order-3 md:col-span-2 rounded-xl">
+                            class="order-1 text-white md:order-3 md:col-span-2 rounded-xl">
                             <h2 class="text-lg font-bold text-primary-800">{{Translation::get('your-order', 'cart', 'Jouw bestelling')}}</h2>
 
                             <div class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary-800">
                                 <h3 class="sr-only">{{Translation::get('items-in-your-cart', 'cart', 'Producten in je winkelwagen')}}</h3>
                                 <ul role="list" class="divide-y divide-gray-200">
                                     @foreach($this->cartItems as $item)
-                                    <li class="flex px-4 py-6 sm:px-6">
-                                        <div class="flex-shrink-0">
-                                            @if($item->model->firstImage)
-                                                <x-drift::image
+                                        <li class="flex px-4 py-6 sm:px-6">
+                                            <div class="flex-shrink-0">
+                                                @if($item->model->firstImage)
+                                                    <x-drift::image
                                                         class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
                                                         config="dashed"
                                                         :path="$item->model->firstImage"
@@ -331,108 +331,108 @@
                                                         :manipulations="[
                                                     'widen' => 400,
                                                 ]"
-                                                />
-                                            @endif
-                                        </div>
+                                                    />
+                                                @endif
+                                            </div>
 
-                                        <div class="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
-                                            <div class="relative pr-9 sm:grid sm:gap-x-6 sm:pr-0">
-                                                <div>
-                                                    <div class="flex justify-between">
-                                                        <h3 class="text-sm">
-                                                            <a href="{{ $item->model->getUrl() }}"
-                                                               class="font-bold text-primary-200 hover:text-primary-500 trans">
-                                                                {{ $item->model->name }}
-                                                            </a>
-                                                        </h3>
+                                            <div class="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
+                                                <div class="relative pr-9 sm:grid sm:gap-x-6 sm:pr-0">
+                                                    <div>
+                                                        <div class="flex justify-between">
+                                                            <h3 class="text-sm">
+                                                                <a href="{{ $item->model->getUrl() }}"
+                                                                   class="font-bold text-primary-200 hover:text-primary-500 trans">
+                                                                    {{ $item->model->name }}
+                                                                </a>
+                                                            </h3>
+                                                        </div>
+                                                        <div class="mt-1 flex text-sm">
+                                                            @foreach($item->options as $option)
+                                                                @if($loop->first)
+                                                                    <p class="">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                                                @else
+                                                                    <p class="ml-4 border-l border-gray-200 pl-4">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
+                                                        <p class="mt-1 text-sm font-bold ">{{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}</p>
                                                     </div>
-                                                    <div class="mt-1 flex text-sm">
-                                                        @foreach($item->options as $option)
-                                                            @if($loop->first)
-                                                                <p class="">{{$option['name'] . ':'}}{{$option['value']}}</p>
-                                                            @else
-                                                                <p class="ml-4 border-l border-gray-200 pl-4">{{$option['name'] . ':'}}{{$option['value']}}</p>
-                                                            @endif
-                                                        @endforeach
-                                                    </div>
-                                                    <p class="mt-1 text-sm font-bold ">{{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}</p>
-                                                </div>
 
-                                                <div class="mt-4">
-                                                    <div
+                                                    <div class="mt-4">
+                                                        <div
                                                             class="inline-flex items-center p-1 transition rounded bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
-                                                        <button
+                                                            <button
                                                                 wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
                                                                 class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5"
-                                                        >
-                                                            <x-lucide-minus class="w-4 h-4"/>
-                                                        </button>
+                                                            >
+                                                                <x-lucide-minus class="w-4 h-4"/>
+                                                            </button>
 
-                                                        <input
+                                                            <input
                                                                 class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none text-primary-500 font-bold"
                                                                 value="{{$item->qty}}"
                                                                 disabled
                                                                 min="0" max="{{$item->model->stock()}}">
 
-                                                        <button
+                                                            <button
                                                                 wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
                                                                 class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5"
-                                                        >
-                                                            <x-lucide-plus class="w-4 h-4"/>
-                                                        </button>
+                                                            >
+                                                                <x-lucide-plus class="w-4 h-4"/>
+                                                            </button>
 
-                                                        <div class="absolute right-0 top-0">
-                                                            <button
+                                                            <div class="absolute right-0 top-0">
+                                                                <button
                                                                     wire:click="changeQuantity('{{ $item->rowId }}', '0')"
                                                                     type="button"
                                                                     class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-800 trans">
-                                                                <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
-                                                                <x-lucide-trash class="h-5 w-5"/>
-                                                            </button>
+                                                                    <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
+                                                                    <x-lucide-trash class="h-5 w-5"/>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="mt-4 flex space-x-2 text-sm text-gray-700">
-                                                @if($item->model->inStock())
-                                                    @if($item->model->hasDirectSellableStock())
-                                                        @if($product->stock() > 10)
-                                                            <p class="text-md tracking-wider text-primary-600 flex items-center font-bold"><span
-                                                                    class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
-                                                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
-                                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <div class="mt-4 flex space-x-2 text-sm text-gray-700">
+                                                    @if($item->model->inStock())
+                                                        @if($item->model->hasDirectSellableStock())
+                                                            @if($item->model->stock() > 10)
+                                                                <p class="text-md tracking-wider text-white flex items-center font-bold"><span
+                                                                        class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                                                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
+                                                                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             </span>
-                                                                {{Translation::get('product-in-stock', 'product', 'Op voorraad')}}
-                                                            </p>
+                                                                    {{Translation::get('product-in-stock', 'product', 'Op voorraad')}}
+                                                                </p>
+                                                            @else
+                                                                <p class="text-md tracking-wider text-white flex items-center font-bold"><span
+                                                                        class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                                                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
+                                                                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </span>
+                                                                    {{Translation::get('product-in-stock-specific', 'product', 'Nog :count: op voorraad', 'text', [
+                                            'count' => $item->model->stock()
+                                            ])}}
+                                                                </p>
+                                                            @endif
                                                         @else
-                                                            <p class="text-md tracking-wider text-primary-600 flex items-center font-bold"><span
-                                                                    class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
-                                                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
-                                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            </span>
-                                                                {{Translation::get('product-in-stock-specific', 'product', 'Nog :count: op voorraad', 'text', [
-                                        'count' => $product->stock()
-                                        ])}}
+                                                            <p class="font-bold text-white italic text-sm">{{ Translation::get('pre-order-product-now', 'product', 'Pre order nu, levering op :date:', 'text', [
+                                'date' => $item->model->expectedInStockDate()
+                            ]) }}
                                                             </p>
                                                         @endif
                                                     @else
-                                                        <p class="font-bold text-primary-800 italic text-sm">{{ Translation::get('pre-order-product-now', 'product', 'Pre order nu, levering op :date:', 'text', [
-                                'date' => $item->model->expectedInStockDate()
-                            ]) }}
+                                                        <p class="font-bold text-red-500 text-md flex items-center gap-2">
+                                                            <x-lucide-x-circle class="h-5 w-5"/>
+                                                            {{ Translation::get('not-in-stock', 'product', 'Niet op voorraad') }}
                                                         </p>
                                                     @endif
-                                                @else
-                                                    <p class="font-bold text-red-500 text-md flex items-center gap-2">
-                                                        <x-lucide-x-circle class="h-5 w-5"/>
-                                                        {{ Translation::get('not-in-stock', 'product', 'Niet op voorraad') }}
-                                                    </p>
-                                                @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                    </li>
+                                        </li>
                                     @endforeach
                                 </ul>
                                 <dl class="space-y-6 border-t border-gray-200 px-4 py-6 sm:px-6 text-white">
@@ -473,12 +473,12 @@
                                     </div>
                                 </dl>
 
-{{--                                <div class="border-t border-gray-200 px-4 py-6 sm:px-6">--}}
-{{--                                    <button type="submit"--}}
-{{--                                            class="button button--dark">--}}
-{{--                                        Confirm order--}}
-{{--                                    </button>--}}
-{{--                                </div>--}}
+                                {{--                                <div class="border-t border-gray-200 px-4 py-6 sm:px-6">--}}
+                                {{--                                    <button type="submit"--}}
+                                {{--                                            class="button button--dark">--}}
+                                {{--                                        Confirm order--}}
+                                {{--                                    </button>--}}
+                                {{--                                </div>--}}
                             </div>
                         </aside>
                     </main>
