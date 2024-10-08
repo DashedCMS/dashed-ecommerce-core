@@ -238,7 +238,7 @@
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{mediaHelper()->getSingleImage($logo, 'medium')->url ?? ''}}"
+                                                                             src="{{mediaHelper()->getSingleMedia($logo, 'medium')->url ?? ''}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
                                                                              width="160"> </a></td>
                                                             @endif
@@ -335,7 +335,7 @@
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; padding: 0; word-break: break-word;">
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 26px; font-weight: bold; line-height: 30px; text-align: left; color: #4F4F4F;">
-                                                                    {{Translation::get('products-with-past-due-pre-order-date-email-title', 'products-with-past-due-pre-order-date', 'Dear admin')}}
+                                                                    {{Translation::get('products-with-past-due-pre-order-date-email-title', 'products-with-past-due-pre-order-date', 'Hallo admin')}}
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -345,7 +345,7 @@
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 25px; text-align: left; color: #4F4F4F;">
                                                                     <br>
-                                                                    {{Translation::get('products-with-past-due-pre-order-date-email-content', 'products-with-past-due-pre-order-date', 'There are products that require attention. The pre-order date has been passed but the stock is below 1.', 'textarea')}}
+                                                                    {{Translation::get('products-with-past-due-pre-order-date-email-content', 'products-with-past-due-pre-order-date', 'Deze producten hebben je aandacht nodig. De pre-order datum is voorbij maar de voorraad is nog onder 1.', 'textarea')}}
                                                                     <br><br>
                                                                     @foreach($products as $product)
                                                                         <a href="{{ route('dashed.products.edit', [$product, Locales::getFirstLocale()['id']]) }}">{{$product->name}}</a>

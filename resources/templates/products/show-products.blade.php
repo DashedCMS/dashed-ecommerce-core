@@ -202,7 +202,7 @@
                             </div>
                         @else
                             <div>
-                                <p>{{ Translation::get('no-products-found', 'products', 'No products found') }}</p>
+                                <p>{{ Translation::get('no-products-found', 'products', 'Geen producten gevonden...') }}</p>
                             </div>
                         @endif
                     </div>

@@ -397,12 +397,29 @@
                                             <div class="mt-4 flex space-x-2 text-sm text-gray-700">
                                                 @if($item->model->inStock())
                                                     @if($item->model->hasDirectSellableStock())
-                                                        <p class="font-bold text-green-500 text-md flex items-center gap-2">
-                                                            <x-lucide-check-circle class="h-5 w-5"/>
-                                                            {{ Translation::get('in-stock', 'product', 'Op voorraad') }}
-                                                        </p>
+                                                        @if($product->stock() > 10)
+                                                            <p class="text-md tracking-wider text-primary-600 flex items-center font-bold"><span
+                                                                    class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
+                                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </span>
+                                                                {{Translation::get('product-in-stock', 'product', 'Op voorraad')}}
+                                                            </p>
+                                                        @else
+                                                            <p class="text-md tracking-wider text-primary-600 flex items-center font-bold"><span
+                                                                    class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                                                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path
+                                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </span>
+                                                                {{Translation::get('product-in-stock-specific', 'product', 'Nog :count: op voorraad', 'text', [
+                                        'count' => $product->stock()
+                                        ])}}
+                                                            </p>
+                                                        @endif
                                                     @else
-                                                        <p class="font-bold text-primary-800 italic text-sm">{{ Translation::get('pre-order-product-now', 'product', 'Pre order now, delivery on :date:', 'text', [
+                                                        <p class="font-bold text-primary-800 italic text-sm">{{ Translation::get('pre-order-product-now', 'product', 'Pre order nu, levering op :date:', 'text', [
                                 'date' => $item->model->expectedInStockDate()
                             ]) }}
                                                         </p>

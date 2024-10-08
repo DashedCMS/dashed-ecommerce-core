@@ -238,7 +238,7 @@
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{mediaHelper()->getSingleImage($logo, 'medium')->url ?? ''}}"
+                                                                             src="{{mediaHelper()->getSingleMedia($logo, 'medium')->url ?? ''}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
                                                                              width="160"> </a></td>
                                                             @endif
@@ -335,7 +335,7 @@
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; padding: 0; word-break: break-word;">
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 26px; font-weight: bold; line-height: 30px; text-align: left; color: #4F4F4F;">
-                                                                    {{Translation::get('admin-order-cancelled-email-title', 'orders', 'Order #:orderId: has been cancelled!', 'text', [
+                                                                    {{Translation::get('admin-order-cancelled-email-title', 'orders', 'Bestelling #:orderId: is geannuleerd!', 'text', [
                 'orderId' => $order->parentCreditOrder->invoice_id
             ])}}
                                                                 </div>
@@ -347,7 +347,7 @@
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 25px; text-align: left; color: #4F4F4F;">
 <br>
-                                                                    {!! nl2br(Translation::get('admin-order-cancelled-email-content', 'orders', 'U can view this order in the admin.', 'textarea')) !!}
+                                                                    {!! nl2br(Translation::get('admin-order-cancelled-email-content', 'orders', 'Je kan deze bestelling bekijken in het CMS', 'textarea')) !!}
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -414,21 +414,21 @@
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 20px; color: #333; padding-left: 10px;">
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                                                        {{Translation::get('order-confirmation-email-contact-information', 'orders', 'Contact information') . ':'}}
+                                                        {{Translation::get('order-confirmation-email-contact-information', 'orders', 'Contact informatie') . ':'}}
                                                     </div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
-                                                        <strong>{{Translation::get('order-confirmation-email-order-number', 'orders', 'Order number') . ':'}}
+                                                        <strong>{{Translation::get('order-confirmation-email-order-number', 'orders', 'Bestelnummer') . ':'}}
                                                         </strong>
                                                         {{$order->parentCreditOrder->invoice_id}}<br></div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
-                                                        <strong>{{Translation::get('order-confirmation-email-ordered-at', 'orders', 'Ordered at') . ':'}}
+                                                        <strong>{{Translation::get('order-confirmation-email-ordered-at', 'orders', 'Besteld op') . ':'}}
                                                         </strong> {{$order->created_at->format('d-m-Y H:i')}}<br></div>
                                                     @if($order->phone_number)
                                                         <div
                                                             style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
-                                                            <strong>{{Translation::get('order-confirmation-email-phone-number', 'orders', 'Phone number') . ':'}}
+                                                            <strong>{{Translation::get('order-confirmation-email-phone-number', 'orders', 'Telefoonnummer') . ':'}}
                                                             </strong> {{$order->phone_number}}<br/></div>
                                                     @endif
                                                     <div
@@ -491,11 +491,11 @@
                                                             style="border-bottom: 2px solid #D8D8D8; line-height: 30px;">
                                                             <th class="image-column" width="55%" align="left"
                                                                 style="line-height: 18px; padding-bottom: 18px; color: #333;">
-                                                                {{Translation::get('order-confirmation-email-order-details', 'orders', 'Order details')}}
+                                                                {{Translation::get('order-confirmation-email-order-details', 'orders', 'Bestellings details')}}
                                                             </th>
                                                             <th class="price-column" width="45%" align="right"
                                                                 style="line-height: 18px; padding-bottom: 18px; color: #333;">
-                                                                {{Translation::get('order-confirmation-email-order-number', 'orders', 'Order number')}}
+                                                                {{Translation::get('order-confirmation-email-order-number', 'orders', 'Bestelnummer')}}
                                                                 : {{$order->invoice_id}}
                                                             </th>
                                                         </tr>
@@ -508,7 +508,7 @@
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                         @if(optional($orderProduct->product)->firstImage)
                                                                             <img
-                                                                                src="{{mediaHelper()->getSingleImage($orderProduct->product->firstImage, 'small')->url}}"
+                                                                                src="{{mediaHelper()->getSingleMedia($orderProduct->product->firstImage, 'small')->url}}"
                                                                                 class="products-gallery-image"
                                                                                 style="display: block; width: 80px;"
                                                                                 width="80">@endif </a></td>
@@ -549,7 +549,7 @@
                                                             <td width="75%"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; color: #999999;">{{Translation::get('order-confirmation-email-order-subtotal', 'orders', 'Subtotal')}} </span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; color: #999999;">{{Translation::get('order-confirmation-email-order-subtotal', 'orders', 'Subtotaal')}} </span>
                                                             </td>
                                                             <td width="25%" align="right"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
@@ -601,7 +601,7 @@
                                                                 <td width="75%"
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; color: #999999;">{{Translation::get('order-confirmation-email-order-discount', 'orders', 'Discount')}} </span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; color: #999999;">{{Translation::get('order-confirmation-email-order-discount', 'orders', 'Korting')}} </span>
                                                                 </td>
                                                                 <td width="25%" align="right"
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
@@ -614,7 +614,7 @@
                                                             <td width="75%"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                 <span
-                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; color: #999999;">{{Translation::get('order-confirmation-email-order-total', 'orders', 'Order total')}} </span>
+                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; color: #999999;">{{Translation::get('order-confirmation-email-order-total', 'orders', 'Totaal')}} </span>
                                                             </td>
                                                             <td width="25%" align="right"
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
@@ -687,7 +687,7 @@
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding-left: 10px; line-height: 20px; color: #333;">
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; margin-bottom: 8px; font-weight: bold;">
-                                                        {{Translation::get('order-confirmation-email-shipping-method', 'orders', 'Shipping method') . ':'}}
+                                                        {{Translation::get('order-confirmation-email-shipping-method', 'orders', 'Verzendmethode') . ':'}}
                                                     </div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
@@ -724,7 +724,7 @@
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 20px; color: #333; padding-left: 10px;">
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                                                        {{Translation::get('order-confirmation-email-payment-method', 'orders', 'Payment method') . ':'}}
+                                                        {{Translation::get('order-confirmation-email-payment-method', 'orders', 'Betaalmethode') . ':'}}
                                                     </div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
@@ -801,7 +801,7 @@
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 20px; color: #333; padding-left: 10px;">
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                                                        {{Translation::get('order-confirmation-email-shipping-address', 'orders', 'Shipping address') . ':'}}
+                                                        {{Translation::get('order-confirmation-email-shipping-address', 'orders', 'Verzend adres') . ':'}}
                                                     </div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
@@ -878,7 +878,7 @@
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 20px; color: #333; padding-left: 10px;">
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                                                        {{Translation::get('order-confirmation-email-invoice-address', 'orders', 'Invoice address') . ':'}}
+                                                        {{Translation::get('order-confirmation-email-invoice-address', 'orders', 'Factuur adres') . ':'}}
                                                     </div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">
@@ -950,7 +950,7 @@
                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; line-height: 20px; color: #333; padding-left: 10px;">
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: bold; margin-bottom: 8px;">
-                                                        {{Translation::get('order-confirmation-email-note', 'orders', 'Note') . ':'}}
+                                                        {{Translation::get('order-confirmation-email-note', 'orders', 'Notitie') . ':'}}
                                                     </div>
                                                     <div
                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 14px;">

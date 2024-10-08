@@ -47,7 +47,7 @@
             @endforeach
             <div class="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                    <h2 class="text-2xl font-bold">{{Translation::get('shipping-address', 'complete-order', 'Shipping address')}}</h2>
+                    <h2 class="text-2xl font-bold">{{Translation::get('shipping-address', 'complete-order', 'Verzend adres')}}</h2>
                     <p>
                         @if($order->company_name)
                             {{$order->company_name}} <br>
@@ -63,7 +63,7 @@
                 </div>
                 @if($order->invoice_street)
                     <div>
-                        <h2 class="text-2xl font-bold">{{Translation::get('invoice-address', 'complete-order', 'Invoice address')}}</h2>
+                        <h2 class="text-2xl font-bold">{{Translation::get('invoice-address', 'complete-order', 'Factuur adres')}}</h2>
                         <p>
                             @if($order->company_name)
                                 {{$order->company_name}} <br>

@@ -134,7 +134,7 @@
                         @endif
 
                         <div class="mt-3">
-                            <h2 class="sr-only">{{ Translation::get('product-information', 'products', 'Product information') }}</h2>
+                            <h2 class="sr-only">{{ Translation::get('product-information', 'products', 'Product informatie') }}</h2>
                             <p class="text-3xl tracking-tight text-gray-900">{{ CurrencyHelper::formatPrice($price) }}
                                 {{--                                @if(Customsetting::get('taxes_prices_include_taxes'))--}}
                                 {{--                                    {{ Translation::get('product-including-tax', 'products', 'incl. TAX') }}--}}
@@ -242,11 +242,4 @@
 
         <x-blocks :content="$product->content"></x-blocks>
     </div>
-    @script
-    <script>
-        $wire.on('productUpdated', () => {
-            splide = new Splide('.products-splide').mount();
-        });
-    </script>
-    @endscript
 </div>

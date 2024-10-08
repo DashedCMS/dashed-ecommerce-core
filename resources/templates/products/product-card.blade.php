@@ -37,7 +37,7 @@
     <div class="mt-6">
         <a href="{{ $product->getUrl() }}"
            class="relative flex items-center justify-center rounded-md border border-transparent bg-primary-500 px-8 py-2 text-sm text-white font-bold hover:bg-primary-700">
-            {{ Translation::get('view-product', 'products', 'View product') }}
+            {{ Translation::get('view-product', 'products', 'Bekijk product') }}
         </a>
     </div>
 </div>

@@ -238,7 +238,7 @@
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
                                                                         <img alt="{{Customsetting::get('site_name')}}"
                                                                              height="auto"
-                                                                             src="{{mediaHelper()->getSingleImage($logo, 'medium')->url ?? ''}}"
+                                                                             src="{{mediaHelper()->getSingleMedia($logo, 'medium')->url ?? ''}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
                                                                              width="160"> </a></td>
                                                             @endif
@@ -335,7 +335,7 @@
                                                                 style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 0px; padding: 0; word-break: break-word;">
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 26px; font-weight: bold; line-height: 30px; text-align: left; color: #4F4F4F;">
-                                                                    {{Translation::get('product-low-stock-email-title', 'products', 'Product low on stock')}}
+                                                                    {{Translation::get('product-low-stock-email-title', 'products', 'Product bijna uitverkocht')}}
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -345,7 +345,7 @@
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 25px; text-align: left; color: #4F4F4F;">
                                                                     <br>
-                                                                    {!! nl2br(Translation::get('product-low-stock-email-content', 'products', 'Product :productName: is low on stock, stock left is: :stock:!', 'textarea', [
+                                                                    {!! nl2br(Translation::get('product-low-stock-email-content', 'products', 'Product :productName: is bijna uitverkocht, nog :stock: op voorraad!', 'textarea', [
     'productName' => $product->name,
     'stock' => $product->stock(),
 ])) !!}
@@ -366,7 +366,7 @@
                                                                             valign="middle"><a
                                                                                 href="{{route('filament.dashed.resources.products.edit', [$product, Locales::getFirstLocale()['id']])}}"
                                                                                 style="display: inline-block; background: {{Translation::get('primary-color-code', 'emails', '#A0131C')}}; color: #ffffff; font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 18px; font-weight: bold; line-height: 120%; margin: 0; text-decoration: none; text-transform: none; padding: 10px 25px; mso-padding-alt: 0px; border-radius: 3px;"
-                                                                                target="_blank"> {{Translation::get('product-low-stock-email-view-product', 'products', 'View product')}} </a>
+                                                                                target="_blank"> {{Translation::get('product-low-stock-email-view-product', 'products', 'Bekijk product')}} </a>
                                                                         </td>
                                                                     </tr>
                                                                 </table>

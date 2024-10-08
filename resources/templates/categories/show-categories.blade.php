@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
             <h2 class="text-2xl font-bold text-gray-900">
-                {{ $productCategory->name ?? Translation::get('all-categories', 'categories', 'All categories') }}
+                {{ $productCategory->name ?? Translation::get('all-categories', 'categories', 'Alle categorieen') }}
             </h2>
 
             @if($productCategories->count() ?? false)
@@ -26,7 +26,7 @@
                                 <h3 class="mt-6 text-sm text-gray-500">
                                     <a href="{{$productCategory->getUrl()}}">
                                         <span class="absolute inset-0"></span>
-                                        {{ Translation::get('amount-of-products', 'categories', ':amount: products', 'text', [
+                                        {{ Translation::get('amount-of-products', 'categories', ':amount: producten', 'text', [
                                             'amount' => $productCategory->products->count() ?? 0
                                         ]) }}
                                     </a>
@@ -38,7 +38,7 @@
                 </div>
             @else
                 <div class="mt-6">
-                    <p>{{ Translation::get('no-underlying-categories-found', 'categories', 'No underlying categories found') }}</p>
+                    <p>{{ Translation::get('no-underlying-categories-found', 'categories', 'Geen onderliggende categorieen gevonden') }}</p>
                 </div>
             @endif
         </div>
