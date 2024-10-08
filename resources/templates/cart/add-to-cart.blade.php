@@ -9,11 +9,11 @@
                             {{$filter['name']}}
                         </label>
                         <select
-                            class="form-input"
-                            id="filter-{{$filter['id']}}"
-                            wire:model.live="filters.{{$filterKey}}.active">
+                                class="form-input"
+                                id="filter-{{$filter['id']}}"
+                                wire:model.live="filters.{{$filterKey}}.active">
                             <option
-                                value="">{{ Translation::get('choose-a-option', 'product', 'Choose a option') }}</option>
+                                    value="">{{ Translation::get('choose-a-option', 'product', 'Kies een optie') }}</option>
                             @foreach($filter['options'] as $option)
                                 <option value="{{ $option['id'] }}"
                                 >
@@ -36,16 +36,16 @@
                             {{$extra->name}}{{$extra->required ? '*' : ''}}
                         </label>
                         <select
-                            class="form-input"
-                            id="product-extra-{{$extra->id}}"
-                            name="product-extra-{{$extra->id}}"
-                            wire:model.live="extras.{{ $extraKey }}.value"
-                            @if($extra->required) required @endif
+                                class="form-input"
+                                id="product-extra-{{$extra->id}}"
+                                name="product-extra-{{$extra->id}}"
+                                wire:model.live="extras.{{ $extraKey }}.value"
+                                @if($extra->required) required @endif
                         >
-                            <option value="">{{Translation::get('make-a-choice', 'product', 'Make a choice')}}</option>
+                            <option value="">{{Translation::get('make-a-choice', 'product', 'Maak een keuze')}}</option>
                             @foreach($extra->productExtraOptions as $option)
                                 <option
-                                    value="{{$option->id}}">{{$option->value}} @if($option->price > 0)
+                                        value="{{$option->id}}">{{$option->value}} @if($option->price > 0)
                                         (+ {{CurrencyHelper::formatPrice($option->price)}})
                                     @endif
                                 </option>
@@ -72,11 +72,11 @@
                                         </div>
                                     @endif
                                     <x-drift::image
-                                        class="w-full h-full"
-                                        config="dashed"
-                                        :path="$option->image"
-                                        :alt="$option->value"
-                                        :manipulations="[
+                                            class="w-full h-full"
+                                            config="dashed"
+                                            :path="$option->image"
+                                            :alt="$option->value"
+                                            :manipulations="[
                                                 'fit' => [150,150],
                                             ]"
                                     />
@@ -94,7 +94,7 @@
                     <div>
                         @foreach($extra->productExtraOptions as $option)
                             <label for="product-extra-{{$option->id}}"
-                                   class="block text-sm font-medium text-primary mt-4">
+                                   class="block text-sm font-bold text-primary mt-4">
                                 {{$extra->name}}{{$extra->required ? '*' : ''}}:
                             </label>
                             <div class="relative flex items-start">
@@ -108,7 +108,7 @@
                                 </div>
                                 <div class="ml-3 text-sm leading-6">
                                     <label for="product-extra-{{$option->id}}"
-                                           class="font-medium text-gray-900">{{$option->value}} @if($option->price > 0)
+                                           class="font-bold text-gray-900">{{$option->value}} @if($option->price > 0)
                                             (+ {{CurrencyHelper::formatPrice($option->price)}})
                                         @endif</label>
                                 </div>
@@ -118,7 +118,7 @@
                 @elseif($extra->type == 'input')
                     <div>
                         <label for="product-extra-{{$extra->id}}"
-                               class="block text-sm font-medium text-primary mt-4">
+                               class="block text-sm font-bold text-primary mt-4">
                             {{$extra->name}}{{$extra->required ? '*' : ''}}:
                         </label>
                         <div class="relative flex items-start">
@@ -138,7 +138,7 @@
                 @elseif($extra->type == 'file')
                     <div>
                         <label for="product-extra-{{$extra->id}}"
-                               class="block text-sm font-medium text-primary mt-4">
+                               class="block text-sm font-bold text-primary mt-4">
                             {{$extra->name}}{{$extra->required ? '*' : ''}}:
                         </label>
                         <div class="relative flex items-start">
@@ -154,6 +154,29 @@
             @endforeach
         </div>
     @endif
+    <div
+            class="inline-flex items-center p-1 transition rounded bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
+        <div
+                wire:click="setQuantity('{{ $quantity - 1 }}')"
+                class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+        >
+            <x-lucide-minus class="w-4 h-4"/>
+        </div>
+
+        <input
+                class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none"
+                type="number" value="1" id="qty"
+                name="qty" disabled
+                wire:model="quantity"
+                min="1" max="{{$product->stock()}}">
+
+        <div
+                wire:click="setQuantity('{{ $quantity + 1 }}')"
+                class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+        >
+            <x-lucide-plus class="w-4 h-4"/>
+        </div>
+    </div>
     <div class="mt-4 grid gap-4">
         @if($product && $product->inStock())
             <button type="submit"
@@ -164,15 +187,15 @@
                           d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
                 </svg>
 
-                <span>{{Translation::get('add-to-cart', 'product', 'Add to cart')}}</span>
+                <span>{{Translation::get('add-to-cart', 'product', 'Toevoegen aan winkelmandje')}}</span>
             </button>
         @elseif(!$product)
             <div class="w-full button button--primary-dark pointer-events-none">
-                {{Translation::get('choose-another-product', 'product', 'Choose another product')}}
+                {{Translation::get('choose-another-product', 'product', 'Kies een ander product')}}
             </div>
         @else
             <div class="w-full button button--primary-dark pointer-events-none">
-                {{Translation::get('add-to-cart', 'product', 'Add to cart')}}
+                {{Translation::get('add-to-cart-not-in-stock', 'product', 'Niet op voorraad')}}
             </div>
         @endif
     </div>

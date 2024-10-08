@@ -1,8 +1,8 @@
 <x-container>
     <div class="grid grid-cols-6 gap-8 py-16 sm:py-24">
         <div class="col-span-6 lg:col-span-4">
-            <h1 class="text-2xl font-bold">{{Translation::get('thanks-for-order-title', 'complete-order', 'Thank you for your order!')}}</h1>
-            <p>{{Translation::get('thanks-for-order-description', 'complete-order', 'We have received your order and we will start processing it!')}}</p>
+            <h1 class="text-2xl font-bold">{{Translation::get('thanks-for-order-title', 'complete-order', 'Bedankt voor je bestelling!')}}</h1>
+            <p>{{Translation::get('thanks-for-order-description', 'complete-order', 'We hebben je bestelling ontvangen en gaan hem verwerken!')}}</p>
             <div class="grid grid-cols-12 gap-4 mt-4">
                 <div class="col-span-6">{{Translation::get('product', 'cart', 'Product')}}</div>
                 <div
@@ -80,46 +80,46 @@
                 @endif
             </div>
         </div>
-        <div class="col-span-6 lg:col-span-2 p-4 bg-primary-500 rounded-md text-white">
-            <h2 class="text-2xl">{{Translation::get('overview', 'cart', 'Overview')}}</h2>
+        <div class="col-span-6 lg:col-span-2 p-4 bg-primary-800 rounded-md text-white">
+            <h2 class="text-2xl">{{Translation::get('overview', 'cart', 'Overzicht')}}</h2>
             <hr class="my-4">
-            <p>{{Translation::get('subtotal', 'cart', 'Subtotal')}}: <span
+            <p>{{Translation::get('subtotal', 'cart', 'Subtotaal')}}: <span
                     class="float-right">{{CurrencyHelper::formatPrice($order->subtotal)}}</span></p>
             <hr class="my-2">
             @if($order->discount > 0)
                 <p>
-                    {{Translation::get('discount', 'cart', 'Discount')}}: <span
+                    {{Translation::get('discount', 'cart', 'Korting')}}: <span
                         class="float-right">{{CurrencyHelper::formatPrice($order->discount)}}</span>
                 </p>
                 <hr class="my-2">
             @endif
             @if($order->shipping_costs > 0)
                 <p>
-                    {{Translation::get('shipping-costs', 'cart', 'Shipping costs')}}: <span
+                    {{Translation::get('shipping-costs', 'cart', 'Verzendkosten')}}: <span
                         class="float-right">{{CurrencyHelper::formatPrice($order->shipping_costs)}}</span>
                 </p>
                 <hr class="my-2">
             @endif
-            <p>{{Translation::get('btw', 'cart', 'TAX')}}: <span
+            <p>{{Translation::get('btw', 'cart', 'BTW')}}: <span
                     class="float-right">{{CurrencyHelper::formatPrice($order->btw)}}</span></p>
             <hr class="my-2">
-            <p>{{Translation::get('total', 'cart', 'Total')}}: <span
+            <p>{{Translation::get('total', 'cart', 'Totaal')}}: <span
                     class="float-right">{{CurrencyHelper::formatPrice($order->total)}}</span></p>
             <hr class="my-2">
-            <p>{{Translation::get('payment-method', 'cart', 'Payment method')}}:
+            <p>{{Translation::get('payment-method', 'cart', 'Betaalmethode')}}:
                 <span class="float-right">
                         {{$order->payment_method ?: $order->paymentMethod->name}}
                     </span>
             </p>
             <hr class="my-2">
-            <p>{{Translation::get('shipping-method', 'cart', 'Shipping method')}}:
+            <p>{{Translation::get('shipping-method', 'cart', 'Verzendmethode')}}:
                 <span class="float-right">
                         {{$order->shippingMethod->name}}
                     </span>
             </p>
             @if($order->note)
                 <hr class="my-2">
-                <p>{{Translation::get('note', 'cart', 'Note')}}:
+                <p>{{Translation::get('note', 'cart', 'Notitie')}}:
                 </p>
                 <p>
                     {{$order->note}}
@@ -127,8 +127,8 @@
             @endif
             <div class="flex mt-6">
                 <a href="{{$order->downloadInvoiceUrl()}}"
-                   class="button button-primary-on-white w-full uppercase text-center">
-                    {{Translation::get('download-invoice', 'cart', 'Download invoice')}}
+                   class="button button--primary-light w-full uppercase text-center">
+                    {{Translation::get('download-invoice', 'cart', 'Download factuur')}}
                 </a>
             </div>
         </div>

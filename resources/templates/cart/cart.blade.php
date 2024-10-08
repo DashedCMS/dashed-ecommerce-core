@@ -1,110 +1,166 @@
-<div class="bg-white py-16 sm:py-24">
-    @if(count($this->cartItems))
-        <x-container>
-            <div class="grid grid-cols-6 gap-8">
-                <div class="col-span-6 lg:col-span-4">
-                    <h1 class="text-2xl font-bold">{{Translation::get('items-in-cart', 'cart', 'Items in je winkelwagen')}}</h1>
-                    <div class="grid grid-cols-12 gap-4 mt-4">
-                        <div class="col-span-6">{{Translation::get('product', 'cart', 'Product')}}</div>
-                        <div
-                            class="col-span-4 hidden lg:block">{{Translation::get('quantity', 'cart', 'Hoeveelheid')}}</div>
-                        <div class="col-span-2 hidden lg:block">{{Translation::get('price', 'cart', 'Prijs')}}</div>
-                    </div>
-                    <hr class="mt-4 border-primary">
-                    @foreach($this->cartItems as $item)
-                        <div class="grid grid-cols-12 gap-4 border-b border-primary py-4">
-                            <div class="flex items-center space-x-4 col-span-12 lg:col-span-6">
-                                <button
-                                    wire:click="changeQuantity('{{ $item->rowId }}', '0')"
-                                    class="border-2 border-primary text-primary-500 hover:text-white hover:bg-primary-500">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
-                                @if($item->model->firstImage)
-                                    <x-drift::image
-                                        class="mx-auto"
-                                        config="dashed"
-                                        :path="$item->model->firstImage"
-                                        :alt=" $item->model->name"
-                                        :manipulations="[
-                                                    'widen' => 100,
+<div class="py-16">
+    <x-container>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{{ Translation::get('shopping-cart', 'cart', 'Winkelwagen') }}</h1>
+        @if(count($this->cartItems))
+            <div class="mt-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
+                <section aria-labelledby="cart-heading" class="lg:col-span-7">
+                    <h2 id="cart-heading"
+                        class="sr-only">{{ Translation::get('items-in-your-shopping-cart', 'cart', 'Items in je winkelwagen') }}</h2>
+                    <ul role="list" class="divide-y divide-gray-200 border-b border-t border-gray-200">
+                        @foreach($this->cartItems as $item)
+                            <li class="flex py-6 sm:py-10">
+                                <div class="flex-shrink-0">
+                                    @if($item->model->firstImage)
+                                        <a href="{{ $item->model->getUrl() }}">
+                                            <x-drift::image
+                                                    class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
+                                                    config="dashed"
+                                                    :path="$item->model->firstImage"
+                                                    :alt=" $item->model->name"
+                                                    :manipulations="[
+                                                    'widen' => 400,
                                                 ]"
-                                    />
-                                @endif
-                                <div class="">
-                                    {{$item->model->name}}
-                                    @foreach($item->options as $option)
-                                        <br>
-                                        <small>{{$option['name']}}: {{$option['value']}}</small>
-                                    @endforeach
+                                            />
+                                        </a>
+                                    @endif
                                 </div>
-                            </div>
-                            <div class="col-span-8 lg:col-span-4 flex items-center">
-                                <div class="inline-flex items-center h-10 overflow-hidden">
-                                    {{--                                    <div wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')" class="flex items-center justify-center w-10 h-10 bg-gray-50 text-primary-500 cursor-pointer">--}}
-                                    {{--                                        +--}}
-                                    {{--                                    </div>--}}
-                                    <input class="w-16 h-10 text-center text-primary-500 font-bold border-2 border-primary" type="number" value="{{$item->qty}}"
-                                           disabled
-                                           min="0" max="{{$item->model->stock()}}">
-                                    {{--                                    <div wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')" class="flex items-center justify-center w-10 h-10 bg-gray-50 text-primary-500 cursor-pointer">--}}
-                                    {{--                                        ---}}
-                                    {{--                                    </div>--}}
+
+                                <div class="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
+                                    <div class="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
+                                        <div>
+                                            <div class="flex justify-between">
+                                                <h3 class="text-sm">
+                                                    <a href="{{ $item->model->getUrl() }}"
+                                                       class="font-bold text-gray-700 hover:text-gray-800">
+                                                        {{ $item->model->name }}
+                                                    </a>
+                                                </h3>
+                                            </div>
+                                            <div class="mt-1 flex text-sm">
+                                                @foreach($item->options as $option)
+                                                    @if($loop->first)
+                                                        <p class="text-gray-500">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                                    @else
+                                                        <p class="ml-4 border-l border-gray-200 pl-4 text-gray-500">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                            <p class="mt-1 text-sm font-bold text-gray-900">{{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}</p>
+                                        </div>
+
+                                        <div class="mt-4 sm:mt-0 sm:pr-9">
+                                            <div
+                                                    class="inline-flex items-center p-1 transition rounded bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
+                                                <button
+                                                        wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
+                                                        class="grid w-6 h-6 bg-white rounded shadow-xl place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+                                                >
+                                                    <x-lucide-minus class="w-4 h-4"/>
+                                                </button>
+
+                                                <input
+                                                        class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none"
+                                                        value="{{$item->qty}}"
+                                                        disabled
+                                                        min="0" max="{{$item->model->stock()}}">
+
+                                                <button
+                                                        wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
+                                                        class="grid w-6 h-6 bg-white rounded shadow-xl place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+                                                >
+                                                    <x-lucide-plus class="w-4 h-4"/>
+                                                </button>
+
+                                                <div class="absolute right-0 top-0">
+                                                    <button
+                                                            wire:click="changeQuantity('{{ $item->rowId }}', '0')"
+                                                            type="button"
+                                                            class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-800 trans">
+                                                        <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
+                                                        <x-lucide-trash class="h-5 w-5"/>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 flex space-x-2 text-sm text-gray-700">
+                                        @if($item->model->inStock())
+                                            @if($item->model->hasDirectSellableStock())
+                                                <p class="font-bold text-green-500 text-md flex items-center gap-2">
+                                                    <x-lucide-check-circle class="h-5 w-5"/>
+                                                    {{ Translation::get('in-stock', 'product', 'Op voorraad') }}
+                                                </p>
+                                            @else
+                                                <p class="font-bold text-primary-800 italic text-sm">{{ Translation::get('pre-order-product-now', 'product', 'Pre order now, delivery on :date:', 'text', [
+                                'date' => $item->model->expectedInStockDate()
+                            ]) }}
+                                                </p>
+                                            @endif
+                                        @else
+                                            <p class="font-bold text-red-500 text-md flex items-center gap-2">
+                                                <x-lucide-x-circle class="h-5 w-5"/>
+                                                {{ Translation::get('not-in-stock', 'product', 'Niet op voorraad') }}
+                                            </p>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-span-4 lg:col-span-2 flex items-center">
-                                {{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="col-span-6 lg:col-span-2 p-4 bg-primary-500 rounded-md text-white">
-                    <h2 class="text-2xl">{{Translation::get('overview', 'cart', 'Overzicht')}}</h2>
-                    <hr class="my-4">
-                    <div>
-                        <form wire:submit.prevent="applyDiscountCode" class="flex justify-between">
-                            <label class="block relative h-0 w-0 overflow-hidden">{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}</label>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+
+                <section aria-labelledby="summary-heading"
+                         class="mt-16 rounded-lg bg-primary-800 text-white px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
+                    <h2 id="summary-heading"
+                        class="text-xl font-bold">{{Translation::get('overview', 'cart', 'Overzicht')}}</h2>
+
+                    <div class="mt-2">
+                        <form wire:submit.prevent="applyDiscountCode" class="md:flex justify-between gap-2">
                             <input placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
-                                   class="w-3/5 xl:w-2/3 block pl-3 pr-10 py-2 text-base border border-primary-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                                   class="form-input"
                                    wire:model.lazy="discountCode">
-                            <button type="submit" class="w-2/5 xl:w-1/3 ml-4 lg:ml-2 xl:ml-4 button button-primary-on-white"
+                            <button type="submit"
+                                    class="w-full button button--primary-light"
                                     aria-label="Apply button">{{Translation::get('add-discount', 'cart', 'Toevoegen')}}</button>
                         </form>
                     </div>
-                    <hr class="my-4">
-                    <p>{{Translation::get('subtotal', 'cart', 'Subtotaal')}}: <span
-                            class="float-right">{{ $subtotal }}</span></p>
-                    <hr class="my-2">
-                    @if($discount)
-                        <p>
-                            {{Translation::get('discount', 'cart', 'Korting')}}: <span
-                                class="float-right">{{ $discount }}</span>
-                        </p>
-                        <hr class="my-2">
-                    @endif
-                    <p>{{Translation::get('btw', 'cart', 'BTW')}}: <span
-                            class="float-right">{{ $tax }}</span></p>
-                    <hr class="my-2">
-                    <p>{{Translation::get('total', 'cart', 'Totaal')}}: <span
-                            class="float-right">{{ $total }}</span></p>
 
-                    <div class="flex">
-                        <a href="{{ShoppingCart::getCheckoutUrl()}}"
-                           class="button button-primary-on-white mt-5 py-2 px-2 w-full uppercase text-center">
-                            {{Translation::get('proceed-to-checkout', 'cart', 'Proceed to checkout')}}
+                    <dl class="mt-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <dt class="text-sm">{{Translation::get('subtotal', 'cart', 'Subtotaal')}}</dt>
+                            <dd class="text-sm font-bold">{{ $subtotal }}</dd>
+                        </div>
+                        @if($discount)
+                            <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                                <dt class="text-sm">{{Translation::get('discount', 'cart', 'Korting')}}</dt>
+                                <dd class="text-sm font-bold">{{ $discount }}</dd>
+                            </div>
+                        @endif
+                        <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                            <dt class="text-sm">{{Translation::get('btw', 'cart', 'BTW')}}</dt>
+                            <dd class="text-sm font-bold">{{ $tax }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                            <dt class="text-sm">{{Translation::get('total', 'cart', 'Totaal')}}</dt>
+                            <dd class="text-sm font-bold">{{ $total }}</dd>
+                        </div>
+                    </dl>
+
+                    <div class="mt-6">
+                        <a href="{{ ShoppingCart::getCheckoutUrl() }}"
+                           class="button button--primary-light w-full">
+                            {{ Translation::get('checkout', 'cart', 'Naar de checkout') }}
                         </a>
                     </div>
-                </div>
+                </section>
             </div>
-        </x-container>
-    @else
-        <x-container>
-            <h1 class="text-2xl font-bold">{{Translation::get('no-items-in-cart', 'cart', 'No items in your cart?')}}</h1>
-            <p>{{Translation::get('go-shop-furter', 'cart', 'Continue shopping!')}}</p>
-        </x-container>
-    @endif
-
+        @else
+            <x-blocks.header :data="[
+                'title' => Translation::get('no-items-in-cart', 'cart', 'Geen items in je winkelwagen!'),
+                'subtitle' => Translation::get('keep-shopping', 'cart', 'Verder shoppen!'),
+                'image' => Translation::get('image', 'cart', '', 'image'),
+            ]"></x-blocks.header>
+        @endif
+    </x-container>
 </div>

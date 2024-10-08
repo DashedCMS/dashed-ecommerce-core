@@ -6,7 +6,7 @@
             </h2>
 
             @if($productCategories->count() ?? false)
-                <div class="mt-6 space-y-12 lg:grid lg:grid-cols-3 lg:gap-x-6 lg:space-y-0">
+                <div class="mt-6 space-y-12 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
                     @foreach($productCategories as $productCategory)
                         @if($productCategory->products->count())
                             <div class="group relative">
@@ -27,8 +27,8 @@
                                     <a href="{{$productCategory->getUrl()}}">
                                         <span class="absolute inset-0"></span>
                                         {{ Translation::get('amount-of-products', 'categories', ':amount: products', 'text', [
-        'amount' => $productCategory->products->count() ?? 0
-    ]) }}
+                                            'amount' => $productCategory->products->count() ?? 0
+                                        ]) }}
                                     </a>
                                 </h3>
                                 <p class="text-base font-semibold text-gray-900">{{$productCategory->name}}</p>

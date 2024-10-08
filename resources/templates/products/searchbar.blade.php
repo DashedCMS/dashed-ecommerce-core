@@ -1,9 +1,9 @@
-<div class="relative mt-2 z-50"  x-data="{ showSearchBarOverview: false, showSearchbar: @entangle('showSearchbar').live }">
+<div class="relative z-50 mt-1"  x-data="{ showSearchBarOverview: false, showSearchbar: @entangle('showSearchbar').live }">
     <div x-cloak x-show="showSearchBarOverview" class="fixed right-0 top-5 w-full sm:w-auto px-2 sm:px-0 sm:absolute sm:-right-2 sm:-top-6">
         <div class="z-30">
             <form method="get" action="{{ \Dashed\DashedEcommerceCore\Models\Product::getOverviewPage()->getUrl() }}" @class([
-                'relative flex items-center h-10 bg-baby-blue rounded-t-xl rounded-b-xl transition',
-                'focus-within:ring-2 focus-within:ring-baby-blue focus-within:bg-baby-blue/80',
+                'relative flex items-center h-10 bg-primary-500 text-white rounded-t-xl rounded-b-xl transition',
+                'focus-within:ring-2 focus-within:ring-primary-500 focus-within:bg-primary-500/80',
                 'rounded-b-none' => $products && $products->count(),
             ])>
                 <button class="grid w-10 h-10 place-items-center">
@@ -11,7 +11,7 @@
                 </button>
 
                 <div class="absolute right-2.5 top-2.5" @click="showSearchBarOverview = !showSearchBarOverview" x-cloak x-show="showSearchBarOverview">
-                    <x-icon-button icon="lucide-x"/>
+                    <x-icon-button icon="lucide-x" class="text-white hover:text-black"/>
                 </div>
 
                 <input
@@ -26,7 +26,7 @@
                     placeholder="{{ Translation::get('search-products', 'searchbar', 'Zoek een product...') }}"
                 >
                 <div x-show="showSearchbar" @click.away="showSearchbar = false"
-                     class="bg-white shadow-xl max-h-96 absolute w-full px-2 sm:w-[424px] top-12">
+                     class="bg-white text-black shadow-xl max-h-96 absolute w-full px-2 sm:w-[424px] top-12">
                     <div class="overflow-y-auto max-h-96">
                         <ul class="border-t divide-y border-black/5 divide-black/5">
                             @foreach($products ?: [] as $product)
@@ -46,7 +46,7 @@
                                     @endif
 
                                     <a href="{{ $product->getUrl() }}" class="lg:col-span-2">
-                                        <p class="font-medium">
+                                        <p class="font-bold">
                                             {{ $product->name }}
                                             ({{ CurrencyHelper::formatPrice($product->currentPrice) }})
                                         </p>

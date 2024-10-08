@@ -18,7 +18,7 @@
             @endif
         </div>
         <div class="relative mt-4">
-            <h3 class="text-sm font-medium text-gray-900">{{$product->name}}</h3>
+            <h3 class="text-sm font-bold text-gray-900">{{$product->name}}</h3>
             @if($product->productCategories()->count())
                 <p class="mt-1 text-sm text-gray-500">{{$product->productCategories()->first()->name}}</p>
             @endif
@@ -36,7 +36,7 @@
     </div>
     <div class="mt-6">
         <a href="{{ $product->getUrl() }}"
-           class="relative flex items-center justify-center rounded-md border border-transparent bg-primary px-8 py-2 text-sm text-white font-bold hover:bg-primary-700">
+           class="relative flex items-center justify-center rounded-md border border-transparent bg-primary-500 px-8 py-2 text-sm text-white font-bold hover:bg-primary-700">
             {{ Translation::get('view-product', 'products', 'View product') }}
         </a>
     </div>
