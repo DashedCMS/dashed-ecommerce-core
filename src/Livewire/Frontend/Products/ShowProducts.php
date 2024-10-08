@@ -127,6 +127,18 @@ class ShowProducts extends Component
         //        }
     }
 
+    public function setSortByValue($value)
+    {
+        $this->sortBy = $value;
+        $this->loadProducts();
+    }
+
+    public function removeFilter($filterKey, $optionKey)
+    {
+        $this->activeFilters[$filterKey][$optionKey] = false;
+        $this->loadProducts();
+    }
+
     public function render()
     {
         return view(env('SITE_THEME', 'dashed') . '.products.show-products', [
