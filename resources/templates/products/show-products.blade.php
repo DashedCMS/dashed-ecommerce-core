@@ -178,7 +178,7 @@
                     <div class="relative inline-block text-left" x-data="{ sortBy: false }">
                         <div>
                             <button @click="sortBy = !sortBy" type="button"
-                                    class="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900"
+                                    class="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
                                     id="menu-button" aria-expanded="false" aria-haspopup="true">
                                 {{Translation::get('filter-by', 'products', 'Sorteren')}}
                                 <svg class="-mr-1 ml-1 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
@@ -193,6 +193,8 @@
                         <div x-show="sortBy"
                              x-cloak
                              x-transition.opacity.scale.origin.top
+                             @click.away="sortBy = false"
+                             @keydown.window.escape="sortBy = false"
                              class="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none"
                              role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
                             <div class="py-1" role="none">
