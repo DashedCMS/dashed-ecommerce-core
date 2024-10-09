@@ -10,7 +10,7 @@ class AccountController extends FrontendController
 {
     public function orders()
     {
-        if (View::exists(env('SITE_THEME', 'dashed') . '.account.orders')) {
+        if (View::exists(env('SITE_THEME', 'dashed') . '.account.show-orders')) {
             seo()->metaData('metaTitle', Translation::get('account-orders-page-meta-title', 'account', 'My orders'));
             seo()->metaData('metaDescription', Translation::get('account-orders-page-meta-description', 'account', 'View your orders here'));
 

@@ -152,7 +152,7 @@
                             @if($product->inStock())
                                 @if($product->hasDirectSellableStock())
                                     @if($product->stock() > 10)
-                                        <p class="text-md tracking-wider text-white flex items-center font-bold"><span
+                                        <p class="text-md tracking-wider text-primary-800 flex items-center font-bold"><span
                                                 class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                                   viewBox="0 0 24 24"
                                                                   xmlns="http://www.w3.org/2000/svg"><path
@@ -163,7 +163,7 @@
                                             {{Translation::get('product-in-stock', 'product', 'Op voorraad')}}
                                         </p>
                                     @else
-                                        <p class="text-md tracking-wider text-white flex items-center font-bold"><span
+                                        <p class="text-md tracking-wider text-primary-800 flex items-center font-bold"><span
                                                 class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                                   viewBox="0 0 24 24"
                                                                   xmlns="http://www.w3.org/2000/svg"><path
