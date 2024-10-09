@@ -31,11 +31,6 @@
         </div>
     @endif
     <div>
-        <!--
-          Mobile filter dialog
-
-          Off-canvas filters for mobile, show/hide based on off-canvas filters state.
-        -->
         <div class="relative z-40 lg:hidden" role="dialog" aria-modal="true" x-show="filters" x-cloak
              @keydown.window.escape="filters = false">
             <div class="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true" x-show="filters"
@@ -140,7 +135,7 @@
             </div>
         </div>
 
-        <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <x-container>
             <div class="flex items-baseline justify-between border-b border-gray-200 py-6">
                 <div>
                     <h1 class="text-4xl font-bold tracking-tight text-gray-900"> {{ $productCategory ? Translation::get('products-category-overview', 'products', 'Producten van :category:', 'text', [
@@ -357,7 +352,7 @@
                     </div>
                 </div>
             </section>
-        </main>
+        </x-container>
     </div>
 
     @if($productCategory)

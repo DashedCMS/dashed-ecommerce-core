@@ -194,6 +194,7 @@ class ProductResource extends Resource
             ->schema([
                 Toggle::make('use_stock')
                     ->label('Voorraad bijhouden')
+                    ->columnSpanFull()
                     ->reactive(),
                 TextInput::make('stock')
                     ->type('number')
@@ -206,15 +207,27 @@ class ProductResource extends Resource
                 Toggle::make('out_of_stock_sellable')
                     ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                     ->reactive()
+                    ->columnSpanFull()
                     ->hidden(fn (Get $get) => ! $get('use_stock')),
                 DatePicker::make('expected_in_stock_date')
                     ->label('Wanneer komt dit product weer op voorraad')
                     ->reactive()
-                    ->required()
+                    ->helperText('Gebruik 1 van deze 2 opties')
+                    ->required(fn(Get $get) => !$get('expected_delivery_in_days'))
+                    ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
+                TextInput::make('expected_delivery_in_days')
+                    ->label('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
+                    ->helperText('Gebruik dit als je dit altijd op nabestelling levert')
+                    ->reactive()
+                    ->numeric()
+                    ->minValue(1)
+                    ->maxValue(1000)
+                    ->required(fn(Get $get) => !$get('expected_in_stock_date'))
                     ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
                 Toggle::make('low_stock_notification')
                     ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                     ->reactive()
+                    ->columnSpanFull()
                     ->hidden(fn (Get $get) => ! $get('use_stock')),
                 TextInput::make('low_stock_notification_limit')
                     ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
@@ -237,6 +250,7 @@ class ProductResource extends Resource
                     ->hidden(fn (Get $get) => $get('use_stock')),
                 Toggle::make('limit_purchases_per_customer')
                     ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
+                    ->columnSpanFull()
                     ->reactive(),
                 TextInput::make('limit_purchases_per_customer_limit')
                     ->type('number')
@@ -259,6 +273,10 @@ class ProductResource extends Resource
 
                         return $options;
                     }),
+            ])
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
             ])
             ->hidden(fn ($record, Get $get) => ($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)) && ! $get('use_parent_stock'))
             ->collapsible();
