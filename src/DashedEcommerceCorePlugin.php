@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPageRedirect;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -21,6 +20,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
