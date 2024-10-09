@@ -62,4 +62,7 @@ Route::middleware(['web', AdminMiddleware::class])->group(function () {
     Route::get('/ecommerce/point-of-sale', function(){
         return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
     })->name('dashed.ecommerce.point-of-sale');
+    Route::get('/ecommerce/customer-point-of-sale', function(){
+        return view('dashed-ecommerce-core::pos.pages.customer-point-of-sale-wrapper');
+    })->name('dashed.ecommerce.point-of-sale');
 });

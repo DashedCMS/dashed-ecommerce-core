@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPage;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -115,6 +116,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
         //POS components
         Livewire::component('point-of-sale', POSPage::class);
+        Livewire::component('customer-point-of-sale', POSCustomerPage::class);
 
         User::addDynamicRelation('orders', function (User $model) {
             return $model->hasMany(Order::class)
