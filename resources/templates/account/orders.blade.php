@@ -105,14 +105,27 @@
                                         <div class="flex items-center sm:items-start">
                                             <div
                                                 class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 sm:h-40 sm:w-40">
-                                                <img
-                                                    src="https://tailwindui.com/plus/img/ecommerce-images/order-history-page-03-product-01.jpg"
-                                                    alt="Moss green canvas compact backpack with double top zipper, zipper front pouch, and matching carry handle and backpack straps."
-                                                    class="h-full w-full object-cover object-center">
+                                                @if($orderProduct->product && $orderProduct->product->firstImage)
+                                                    <x-drift::image
+                                                        class="h-full w-full object-cover object-center"
+                                                        :path="$orderProduct->product->firstImage"
+                                                        :alt=" $orderProduct->product->name"
+                                                        :manipulations="[
+                                                                'widen' => 300,
+                                                            ]"
+                                                    />
+                                                @endif
                                             </div>
                                             <div class="ml-6 flex-1 text-sm">
                                                 <div class="font-medium text-gray-900 sm:flex sm:justify-between">
-                                                    <h5>{{ $orderProduct->name }}</h5>
+                                                    <h5>{{ $orderProduct->name }}
+                                                        @if($orderProduct->product_extras)
+                                                            @foreach($orderProduct->product_extras as $option)
+                                                                <br>
+                                                                <small>{{$option['name']}}: {{$option['value']}}</small>
+                                                            @endforeach
+                                                        @endif
+                                                    </h5>
                                                     <p class="mt-2 sm:mt-0">{{ CurrencyHelper::formatPrice($orderProduct->price) }}</p>
                                                 </div>
                                                 @if($orderProduct->product && $orderProduct->product->short_description)
