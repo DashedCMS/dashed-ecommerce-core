@@ -213,7 +213,7 @@ class ProductResource extends Resource
                     ->label('Wanneer komt dit product weer op voorraad')
                     ->reactive()
                     ->helperText('Gebruik 1 van deze 2 opties')
-                    ->required(fn(Get $get) => !$get('expected_delivery_in_days'))
+                    ->required(fn (Get $get) => ! $get('expected_delivery_in_days'))
                     ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
                 TextInput::make('expected_delivery_in_days')
                     ->label('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
@@ -222,7 +222,7 @@ class ProductResource extends Resource
                     ->numeric()
                     ->minValue(1)
                     ->maxValue(1000)
-                    ->required(fn(Get $get) => !$get('expected_in_stock_date'))
+                    ->required(fn (Get $get) => ! $get('expected_in_stock_date'))
                     ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
                 Toggle::make('low_stock_notification')
                     ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
