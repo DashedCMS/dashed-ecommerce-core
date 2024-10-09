@@ -19,11 +19,17 @@ class POSCustomerPage extends Component implements HasForms
     public function mount(): void
     {
         $this->initialize('point-of-sale', 'pos');
+        $this->refreshDataFromDatabase();
     }
 
     public function render()
     {
         return view('dashed-ecommerce-core::pos.pages.customer-point-of-sale');
+    }
+
+    public function refreshDataFromDatabase()
+    {
+        $this->updateInfo(false, true);
     }
 
     public function fullscreenValue($fullscreen)
