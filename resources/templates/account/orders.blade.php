@@ -106,10 +106,9 @@
                                             <div
                                                 class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 sm:h-40 sm:w-40">
                                                 @if($orderProduct->product && $orderProduct->product->firstImage)
-                                                    <x-drift::image
+                                                    <x-dashed-files::image
                                                         class="h-full w-full object-cover object-center"
-                                                        :path="$orderProduct->product->firstImage"
-                                                        :alt=" $orderProduct->product->name"
+                                                        :mediaId="$orderProduct->product->firstImage"
                                                         :manipulations="[
                                                                 'widen' => 300,
                                                             ]"
