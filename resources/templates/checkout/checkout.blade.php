@@ -249,7 +249,7 @@
 
                                                     @if($thisPaymentMethod['image'])
                                                         <img
-                                                            src="{{ mediaHelper()->getSingleImage($thisPaymentMethod['image'])->url ?? '' }}"
+                                                            src="{{ mediaHelper()->getSingleMedia($thisPaymentMethod['image'])->url ?? '' }}"
                                                             class="object-contain h-6">
                                                     @endif
                                                 </label>

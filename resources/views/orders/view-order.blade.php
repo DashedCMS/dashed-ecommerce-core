@@ -1,10 +1,10 @@
 <x-filament::page>
     <style>
-        .w-full .fi-btn{
+        .custom-view-order .w-full .fi-btn{
             width: 100%;
         }
     </style>
-    <div class="grid md:grid-cols-6 gap-4">
+    <div class="grid md:grid-cols-6 gap-4 custom-view-order">
         <div class="md:col-span-4">
             <div class="grid gap-4">
                 <div>

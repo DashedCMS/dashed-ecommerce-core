@@ -196,7 +196,7 @@ class CreateOrder extends Page implements HasForms
                         Placeholder::make('Prijs')
                             ->content(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
                         Placeholder::make('Afbeelding')
-                            ->content(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleImage(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
+                            ->content(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
                         Section::make('Extra\'s')
                             ->schema(fn (Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
                     ]),

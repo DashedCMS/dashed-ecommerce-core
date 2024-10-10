@@ -43,7 +43,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                         ImageEntry::make('image')
                             ->hiddenLabel()
                             ->visible($orderProduct->product && $orderProduct->product->firstImage)
-                            ->getStateUsing(fn () => mediaHelper()->getSingleImage($orderProduct->product->firstImage)->url ?? '')
+                            ->getStateUsing(fn () => mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? '')
                             ->disk('dashed')
                             ->width('100%')
                             ->height('auto'),
