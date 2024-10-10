@@ -34,16 +34,16 @@ class ShippingInformationList extends Component implements HasForms, HasInfolist
     {
         $trackAndTraces = [];
 
-        foreach($this->order->trackAndTraces as $trackAndTrace){
+        foreach ($this->order->trackAndTraces as $trackAndTrace) {
             $trackAndTraces[] = Fieldset::make('Track & Trace')
                 ->schema([
                     TextEntry::make('supplier')
                         ->label('Via')
-                        ->getStateUsing(fn($record) => $trackAndTrace->supplier)
+                        ->getStateUsing(fn ($record) => $trackAndTrace->supplier)
                         ->icon('heroicon-o-truck'),
                     TextEntry::make('code')
                         ->label('Bedrijf + code')
-                        ->getStateUsing(fn($record) => $trackAndTrace->delivery_company . ': ' . $trackAndTrace->code)
+                        ->getStateUsing(fn ($record) => $trackAndTrace->delivery_company . ': ' . $trackAndTrace->code)
                         ->url(fn ($record) => $trackAndTrace->url ?: '#')
                         ->openUrlInNewTab()
                         ->icon('heroicon-o-envelope'),
