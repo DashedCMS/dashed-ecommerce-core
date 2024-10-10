@@ -32,11 +32,29 @@ class ShippingInformationList extends Component implements HasForms, HasInfolist
 
     public function infolist(Infolist $infolist): Infolist
     {
+        $trackAndTraces = [];
+
+        foreach($this->order->trackAndTraces as $trackAndTrace){
+            $trackAndTraces[] = Fieldset::make('Track & Trace')
+                ->schema([
+                    TextEntry::make('supplier')
+                        ->label('Via')
+                        ->getStateUsing(fn($record) => $trackAndTrace->supplier)
+                        ->icon('heroicon-o-truck'),
+                    TextEntry::make('code')
+                        ->label('Bedrijf + code')
+                        ->getStateUsing(fn($record) => $trackAndTrace->delivery_company . ': ' . $trackAndTrace->code)
+                        ->url(fn ($record) => $trackAndTrace->url ?: '#')
+                        ->openUrlInNewTab()
+                        ->icon('heroicon-o-envelope'),
+                ]);
+        }
+
         return $infolist
             ->record($this->order)
             ->schema([
                 Fieldset::make('Verzend informatie')
-                    ->schema([
+                    ->schema(array_merge([
                         TextEntry::make('shippingAddress')
                             ->label('Verzendadres')
                             ->getStateUsing(fn ($record) => new HtmlString(($record->company_name ? $record->company_name . ' <br>' : '') . "$record->name<br>$record->street $record->house_nr<br>$record->city $record->zip_code<br>$record->country")),
@@ -59,8 +77,8 @@ class ShippingInformationList extends Component implements HasForms, HasInfolist
                                     ->icon('heroicon-o-envelope')
                                     ->hiddenLabel(),
                             ])
-                        ->columnSpan(1),
-                    ])
+                            ->columnSpan(1),
+                    ], $trackAndTraces))
                     ->columns(3),
             ]);
     }

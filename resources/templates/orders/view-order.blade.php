@@ -16,10 +16,12 @@
                 <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900">{{Translation::get('thanks-for-order-title', 'complete-order', 'Bedankt voor je bestelling!')}}</p>
                 <p class="mt-2 text-base text-gray-500">{{Translation::get('thanks-for-order-description', 'complete-order', 'We hebben je bestelling ontvangen en gaan hem verwerken!')}}</p>
 
-                {{--                    <dl class="mt-16 text-sm font-medium">--}}
-                {{--                        <dt class="text-gray-900">Tracking number</dt>--}}
-                {{--                        <dd class="mt-2 text-primary-600">51547878755545848512</dd>--}}
-                {{--                    </dl>--}}
+                @foreach($order->trackAndTraces as $trackAndTrace)
+                    <dl class="mt-16 text-sm font-medium">
+                        <dt class="text-gray-900">{{ Translation::get('track-and-trace', 'view-order', 'Track&trace') }}</dt>
+                        <dd class="mt-2 text-primary-600 text-link"><a target="_blank" href="{{ $trackAndTrace->url ?: '#' }}">{{ $trackAndTrace->delivery_company . ': ' . $trackAndTrace->code }}</a></dd>
+                    </dl>
+                @endforeach
 
                 <ul role="list"
                     class="mt-6 divide-y divide-gray-200 border-t border-gray-200 text-sm font-medium text-gray-500">
