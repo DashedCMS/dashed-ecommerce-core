@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Mail\TrackandTraceMail;
-use Illuminate\Support\Facades\Mail;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Dashed\DashedEcommerceCore\Mail\TrackandTraceMail;
 
 class OrderTrackAndTrace extends Model
 {

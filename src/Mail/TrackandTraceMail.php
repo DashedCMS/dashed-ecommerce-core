@@ -1,15 +1,13 @@
 <?php
 
-
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Dashed\DashedEcommerceCore\Models\OrderTrackAndTrace;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceSendy\Models\SendyOrder;
+use Dashed\DashedEcommerceCore\Models\OrderTrackAndTrace;
 
 class TrackandTraceMail extends Mailable
 {
