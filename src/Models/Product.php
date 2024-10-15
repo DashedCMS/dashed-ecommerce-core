@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 use Exception;
 use Carbon\Carbon;
 use Dashed\DashedPages\Models\Page;
@@ -24,6 +23,7 @@ use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class Product extends Model
 {
@@ -1085,24 +1085,24 @@ class Product extends Model
                         'product' => $product,
                     ],
                 ];
-//                if (View::exists(env('SITE_THEME', 'dashed') . '.products.show')) {
-//                    seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
-//                    seo()->metaData('metaDescription', $product->metadata->description ?? '');
-//                    $metaImage = $product->metadata->image ?? '';
-//                    if (! $metaImage) {
-//                        $metaImage = $product->firstImage;
-//                    }
-//                    if ($metaImage) {
-//                        seo()->metaData('metaImage', $metaImage);
-//                    }
-//
-//                    View::share('model', $product);
-//                    View::share('product', $product);
-//
-//                    return view(env('SITE_THEME', 'dashed') . '.products.show');
-//                } else {
-//                    return 'pageNotFound';
-//                }
+                //                if (View::exists(env('SITE_THEME', 'dashed') . '.products.show')) {
+                //                    seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
+                //                    seo()->metaData('metaDescription', $product->metadata->description ?? '');
+                //                    $metaImage = $product->metadata->image ?? '';
+                //                    if (! $metaImage) {
+                //                        $metaImage = $product->firstImage;
+                //                    }
+                //                    if ($metaImage) {
+                //                        seo()->metaData('metaImage', $metaImage);
+                //                    }
+                //
+                //                    View::share('model', $product);
+                //                    View::share('product', $product);
+                //
+                //                    return view(env('SITE_THEME', 'dashed') . '.products.show');
+                //                } else {
+                //                    return 'pageNotFound';
+                //                }
             }
         }
     }

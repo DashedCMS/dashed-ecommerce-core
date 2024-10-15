@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +21,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedCore\Controllers\Frontend\FrontendController;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 
 class TransactionController extends FrontendController
@@ -414,7 +414,7 @@ class TransactionController extends FrontendController
                 'livewireComponent' => ViewOrder::class,
                 'parameters' => [
                     'order' => $order,
-                ]
+                ],
             ]);
 
             return view()->exists('dashed.orders.view') ? view(env('SITE_THEME', 'dashed') . '.orders.view') : view(env('SITE_THEME', 'dashed') . '.checkout.complete');
