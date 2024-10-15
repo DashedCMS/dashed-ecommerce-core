@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -404,10 +405,17 @@ class TransactionController extends FrontendController
             return redirect('/')->with('error', Translation::get('order-status-cancelled', 'checkout', 'Your order is cancelled'));
         }
 
-        if (view()->exists('dashed.checkout.complete') || view()->exists('dashed.orders.view-order')) {
+        if (view()->exists('dashed.orders.view-order')) {
             seo()->metaData('metaTitle', Translation::get('complete-page-meta-title', 'complete-order', 'Your order'));
 
             View::share('order', $order);
+
+            return view('dashed-core::layouts.livewire-master', [
+                'livewireComponent' => ViewOrder::class,
+                'parameters' => [
+                    'order' => $order,
+                ]
+            ]);
 
             return view()->exists('dashed.orders.view') ? view(env('SITE_THEME', 'dashed') . '.orders.view') : view(env('SITE_THEME', 'dashed') . '.checkout.complete');
         } else {

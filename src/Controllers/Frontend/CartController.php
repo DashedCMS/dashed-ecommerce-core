@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
@@ -26,11 +28,15 @@ class CartController extends FrontendController
 
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists(env('SITE_THEME', 'dashed') . '.cart.show')) {
+        if (View::exists(env('SITE_THEME', 'dashed') . '.cart.cart')) {
             seo()->metaData('metaTitle', Translation::get('cart-page-meta-title', 'cart', 'Cart'));
             seo()->metaData('metaDescription', Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
 
-            return view(env('SITE_THEME', 'dashed') . '.cart.show');
+            return view('dashed-core::layouts.livewire-master', [
+                'livewireComponent' => \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart::class,
+            ]);
+
+            return view(env('SITE_THEME', 'dashed') . '.cart.cart');
         } else {
             return $this->pageNotFound();
         }
@@ -40,11 +46,15 @@ class CartController extends FrontendController
     {
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists(env('SITE_THEME', 'dashed') . '.checkout.show')) {
+        if (View::exists(env('SITE_THEME', 'dashed') . '.checkout.checkout')) {
             seo()->metaData('metaTitle', Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
             seo()->metaData('metaDescription', Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
 
-            return view(env('SITE_THEME', 'dashed') . '.checkout.show');
+            return view('dashed-core::layouts.livewire-master', [
+                'livewireComponent' => Checkout::class,
+            ]);
+
+            return view(env('SITE_THEME', 'dashed') . '.checkout.checkout');
         } else {
             return $this->pageNotFound();
         }
