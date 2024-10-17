@@ -1207,6 +1207,14 @@ trait CreateManualOrderActions
                 $this->pinTerminalStatus = 'waiting_for_clearance';
             }
 
+            if(env('APP_ENV') == 'local') {
+
+                Notification::make()
+                    ->danger()
+                    ->title($exception->getMessage())
+                    ->send();
+            }
+
             Notification::make()
                 ->danger()
                 ->title(Translation::get('failed-to-start-payment-try-again', 'cart', 'De betaling kon niet worden gestart, probeer het nogmaals'))
