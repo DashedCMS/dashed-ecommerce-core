@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Models\PinTerminal;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -21,6 +20,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
+use Dashed\DashedEcommerceCore\Models\PinTerminal;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
@@ -74,7 +74,7 @@ class PaymentMethodResource extends Resource
                 ->label('PIN terminal')
                 ->helperText('Pin terminal')
                 ->visible(fn (Get $get) => $get('type') == 'pos')
-                ->options(fn() => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
+                ->options(fn () => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
                 ->searchable()
                 ->preload(),
             Toggle::make('postpay')
