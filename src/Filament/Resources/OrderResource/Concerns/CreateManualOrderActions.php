@@ -1207,7 +1207,7 @@ trait CreateManualOrderActions
                 $this->pinTerminalStatus = 'waiting_for_clearance';
             }
 
-            if(env('APP_ENV') == 'local') {
+            if (env('APP_ENV') == 'local') {
 
                 Notification::make()
                     ->danger()
