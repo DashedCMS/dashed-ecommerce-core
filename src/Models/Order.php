@@ -711,6 +711,10 @@ class Order extends Model
             $this->refillDiscount();
         }
 
+        foreach($this->orderPayments()->where('status', 'pending')->get() as $orderPayment) {
+            $orderPayment->changeStatus('cancelled');
+        }
+
         $this->status = 'cancelled';
         $this->changeFulfillmentStatus('handled');
         $this->save();

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\PinTerminal;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -67,7 +68,15 @@ class PaymentMethodResource extends Resource
                 ->helperText('Waarvoor is deze betaalmethode?')
                 ->default('online')
                 ->options(PaymentMethods::getTypes())
+                ->reactive()
                 ->required(),
+            Select::make('pin_terminal_id')
+                ->label('PIN terminal')
+                ->helperText('Pin terminal')
+                ->visible(fn (Get $get) => $get('type') == 'pos')
+                ->options(fn() => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
+                ->searchable()
+                ->preload(),
             Toggle::make('postpay')
                 ->label('Achteraf betaalmethode')
                 ->hidden(fn ($record) => $record && $record->psp == 'own'),

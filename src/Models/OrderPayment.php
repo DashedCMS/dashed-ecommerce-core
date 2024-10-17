@@ -27,10 +27,15 @@ class OrderPayment extends Model
         'amount',
         'status',
         'payment_hash',
+        'attributes',
     ];
 
     protected $appends = [
         'payment_method_name',
+    ];
+
+    protected $casts = [
+        'attributes' => 'array',
     ];
 
     public static function boot()
@@ -89,7 +94,7 @@ class OrderPayment extends Model
         }
     }
 
-    public function changeStatus($newStatus = null, $sendMail = false): string
+    public function changeStatus($newStatus = null): string
     {
         if (! $newStatus || $this->status == $newStatus) {
             return '';

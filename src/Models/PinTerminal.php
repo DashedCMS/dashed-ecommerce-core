@@ -2,15 +2,15 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PaymentMethod extends Model
+class PinTerminal extends Model
 {
     use HasTranslations;
     use LogsActivity;
@@ -20,15 +20,13 @@ class PaymentMethod extends Model
 
     public $translatable = [
         'name',
-        'additional_info',
-        'payment_instructions',
     ];
 
     protected $casts = [
-        'deposit_calculation_payment_method_ids' => 'array',
+        'attributes' => 'array',
     ];
 
-    protected $table = 'dashed__payment_methods';
+    protected $table = 'dashed__pin_terminals';
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -40,13 +38,8 @@ class PaymentMethod extends Model
         return $query->where('active', true);
     }
 
-    public function orderPayments()
+    public function paymentMethods(): BelongsToMany
     {
-        $this->hasMany(OrderPayment::class);
-    }
-
-    public function pinTerminal(): BelongsTo
-    {
-        return $this->belongsTo(PinTerminal::class);
+        return $this->belongsToMany(PaymentMethod::class);
     }
 }
