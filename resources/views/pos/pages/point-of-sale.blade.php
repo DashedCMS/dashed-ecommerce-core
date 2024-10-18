@@ -522,10 +522,6 @@
                         @endif
                     @endif
                     <div class="grid md:grid-cols-2 gap-4 mt-16">
-                        <button wire:click="closePayment"
-                                class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
-                            Annuleren
-                        </button>
                         @if($isPinTerminalPayment)
                             <button wire:poll.1s="checkPinTerminalPayment" disabled class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -535,6 +531,10 @@
                                 <span>Wachten op betaling...</span>
                             </button>
                         @else
+                            <button wire:click="closePayment"
+                                    class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                Annuleren
+                            </button>
                             <button wire:click="markAsPaid"
                                     class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                                 Markeer als betaald
