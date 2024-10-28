@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedTranslations\Models\Translation;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
@@ -22,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
