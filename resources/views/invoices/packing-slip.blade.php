@@ -131,7 +131,7 @@
                             @if($logo)
                                 <img
                                     src="{{mediaHelper()->getSingleMedia($logo)->url ?? ''}}"
-                                     class="logo">
+                                    class="logo">
                             @endif
                         </td>
                     </tr>
@@ -188,9 +188,7 @@
                         {{Translation::get('package-slip-number', 'package-slip', 'Package slip number')}}: <br>
                         {{Translation::get('package-slip-date', 'package-slip', 'Package slip date')}}:<br>
                         {{Translation::get('package-slip-payment-method', 'package-slip', 'Payment method') . ':'}}<br>
-                        @if(($order->shippingMethod->name ?? false))
-                            {{Translation::get('package-slip-shipping-method', 'package-slip', 'Shipping method') . ':'}}
-                        @endif
+                        {{Translation::get('package-slip-shipping-method', 'package-slip', 'Shipping method') . ':'}}
                     </p>
                 </div>
                 <div style="width:31%;display:inline-block; position:relative;top:0;">
@@ -199,10 +197,8 @@
                         <br>
                         <span>{{$order->created_at->format('d-m-Y')}}</span><br>
                         <span>{{$order->paymentMethod}}</span><br>
-                        @if(($order->shippingMethod->name ?? false))
-                            <span>{{$order->shippingMethod->name ?? Translation::get('shipping-method-not-known', 'orders', 'Shipping method not known')}}</span>
-                            <br>
-                        @endif
+                        <span>{{$order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'package-slip', 'niet gekozen')}}</span>
+                        <br>
                     </p>
                 </div>
             </div>

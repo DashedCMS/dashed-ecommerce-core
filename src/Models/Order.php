@@ -117,7 +117,7 @@ class Order extends Model
 
     public function getPaymentMethodAttribute(): string
     {
-        return $this->mainPaymentMethod ? $this->mainPaymentMethod->name : ($this->orderPayments()->first() ? $this->orderPayments()->first()->payment_method_name : 'Geen methode beschikbaar');
+        return $this->mainPaymentMethod ? $this->mainPaymentMethod->name : ($this->orderPayments()->first() ? $this->orderPayments()->first()->payment_method_name : Translation::get('no-payment-method-available', 'orders', 'Geen methode beschikbaar'));
     }
 
     public function getPaymentMethodInstructionsAttribute(): string

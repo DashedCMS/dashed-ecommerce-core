@@ -195,7 +195,7 @@
                         <span>{{$order->invoice_id}}</span><br>
                         <span>{{$order->created_at->format('d-m-Y')}}</span><br>
                         <span>{{$order->paymentMethod}}</span><br>
-                        <span>{{$order->shippingMethod->name ?? 'niet gekozen'}}</span><br>
+                        <span>{{$order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'invoice', 'niet gekozen')}}</span><br>
                         @if($order->status == 'partially_paid')
                             <span>{{CurrencyHelper::formatPrice($order->paidAmount)}}</span><br>
                             <span>{{CurrencyHelper::formatPrice($order->openAmount)}}</span><br>
