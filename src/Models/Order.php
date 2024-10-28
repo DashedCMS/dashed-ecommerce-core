@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedTranslations\Models\Translation;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
