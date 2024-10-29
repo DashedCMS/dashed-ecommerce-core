@@ -35,8 +35,8 @@ class OrderSettingsPage extends Page
         $sites = Sites::getSites();
         $locales = Locales::getLocales();
         foreach ($sites as $site) {
-            $formData["notification_invoice_emails_{$site['id']}"] = json_decode(Customsetting::get('notification_invoice_emails', $site['id'], '{}'), true);
-            $formData["notification_low_stock_emails_{$site['id']}"] = json_decode(Customsetting::get('notification_low_stock_emails', $site['id'], '{}'), true);
+            $formData["notification_invoice_emails_{$site['id']}"] = Customsetting::get('notification_invoice_emails', $site['id']);
+            $formData["notification_low_stock_emails_{$site['id']}"] = Customsetting::get('notification_low_stock_emails', $site['id']);
         }
 
         $formData["order_index_show_other_statuses"] = Customsetting::get('order_index_show_other_statuses', null, true) ? true : false;
@@ -130,11 +130,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" actie')
                     ->reactive()
@@ -144,11 +144,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" actie')
                     ->reactive()
@@ -158,11 +158,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" actie')
                     ->reactive()
@@ -172,11 +172,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" actie')
                     ->reactive()
@@ -186,11 +186,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
 
             $tabs[] = Tab::make($locale['id'])
@@ -221,20 +221,20 @@ class OrderSettingsPage extends Page
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
-            Customsetting::set('notification_invoice_emails', json_encode($emails), $site['id']);
+            Customsetting::set('notification_invoice_emails', $emails, $site['id']);
             $formState["notification_invoice_emails_{$site['id']}"] = $emails;
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
-            Customsetting::set('notification_low_stock_emails', json_encode($emails), $site['id']);
+            Customsetting::set('notification_low_stock_emails', $emails, $site['id']);
             $formState["notification_low_stock_emails_{$site['id']}"] = $emails;
         }
 
