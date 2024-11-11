@@ -833,7 +833,7 @@ class Product extends Model
 
     public function expectedDeliveryInDays(): int
     {
-        $expectedDeliveryInDays = $product->expected_delivery_in_days ?: 0;
+        $expectedDeliveryInDays = $this->expected_delivery_in_days ?: 0;
 
         return $expectedDeliveryInDays;
     }
