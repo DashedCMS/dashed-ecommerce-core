@@ -831,6 +831,13 @@ class Product extends Model
         return $diffInWeeks;
     }
 
+    public function expectedDeliveryInDays(): int
+    {
+        $expectedDeliveryInDays = $product->expected_delivery_in_days ?: 0;
+
+        return $expectedDeliveryInDays;
+    }
+
     public function purchasable()
     {
         if ($this->inStock() || $this->outOfStockSellable()) {

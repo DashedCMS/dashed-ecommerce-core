@@ -397,7 +397,6 @@ class Products
                     $filterIsActive = false;
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
-                            //                            dump($option->name);
                             $filterIsActive = true;
                             if (! $productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
