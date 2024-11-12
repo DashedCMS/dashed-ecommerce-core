@@ -632,7 +632,7 @@ class ShoppingCart
 
     public static function getPaymentMethods($type = 'online')
     {
-        $paymentMethods = PaymentMethod::where('available_from_amount', '<=', self::total())->where('site_id', Sites::getActive())->where('active', 1)->where('type', $type)->get()->toArray();
+        $paymentMethods = PaymentMethod::where('available_from_amount', '<=', self::total())->where('site_id', Sites::getActive())->where('active', 1)->where('type', $type)->orderBy('order', 'desc')->get()->toArray();
 
         foreach ($paymentMethods as &$paymentMethod) {
             $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';

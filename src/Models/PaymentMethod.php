@@ -29,6 +29,15 @@ class PaymentMethod extends Model
 
     protected $table = 'dashed__payment_methods';
 
+    public static function booted()
+    {
+        static::creating(function ($paymentMethod) {
+            $paymentMethod->order = PaymentMethod::max('order') + 1;
+        });
+
+        parent::booted();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
