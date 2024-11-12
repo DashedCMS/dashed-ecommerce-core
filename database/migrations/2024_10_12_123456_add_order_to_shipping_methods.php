@@ -10,11 +10,6 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('dashed__shipping_methods', function (Blueprint $table) {
-            $table->integer('order')
-                ->default(1);
-        });
-
         foreach(\Dashed\DashedEcommerceCore\Models\ShippingMethod::withTrashed()->get() as $index => $paymentMethod) {
             $paymentMethod->order = $index + 1;
             $paymentMethod->save();
