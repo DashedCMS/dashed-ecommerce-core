@@ -347,7 +347,7 @@
                                                                     <br>
                                                                     {!! nl2br(Translation::get('product-low-stock-email-content', 'products', 'Product :productName: is bijna uitverkocht, nog :stock: op voorraad!', 'textarea', [
     'productName' => $product->name,
-    'stock' => $product->stock(),
+    'stock' => $product->stock,
 ])) !!}
                                                                 </div>
                                                             </td>
