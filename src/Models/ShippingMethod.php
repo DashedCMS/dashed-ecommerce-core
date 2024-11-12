@@ -44,6 +44,15 @@ class ShippingMethod extends Model
 
     protected $table = 'dashed__shipping_methods';
 
+    public static function booted()
+    {
+        static::creating(function ($shippingMethod) {
+            $shippingMethod->order = ShippingMethod::max('order') + 1;
+        });
+
+        parent::booted();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();

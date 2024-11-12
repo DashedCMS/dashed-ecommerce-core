@@ -108,10 +108,6 @@ class ShippingMethodResource extends Resource
                         ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
                         ->maxLength(255)
                         ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
-                    TextInput::make('order')
-                        ->label('Volgorde van de verzendmethode')
-                        ->numeric()
-                        ->required(),
                     Toggle::make('distance_range_enabled')
                         ->label('Alleen beschikbaar voor aantal KMs vanaf vestiging')
                         ->helperText('Google API key moet gekoppeld zijn voor dit om te werken')
@@ -161,6 +157,7 @@ class ShippingMethodResource extends Resource
                     ->button(),
                 DeleteAction::make(),
             ])
+            ->reorderable('order')
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
