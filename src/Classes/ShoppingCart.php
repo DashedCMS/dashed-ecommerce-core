@@ -675,7 +675,7 @@ class ShoppingCart
 
             if (! $cartItem->model) {
 
-            } elseif ($cartItem->model->trashed()) {
+            } elseif ($cartItem->model->trashed() || !Product::where('id', $cartItem->model->id)->publicShowable()->count()) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
                 Notification::make()

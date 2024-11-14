@@ -987,7 +987,8 @@ class Product extends Model
         $suggestedProductIds = $this->suggestedProducts->pluck('id')->toArray();
 
         if (count($suggestedProductIds) < $limit) {
-            $randomProductIds = Product::thisSite()->publicShowable()
+            $randomProductIds = Product::thisSite()
+                ->publicShowable()
                 ->where('id', '!=', $this->id)
                 ->whereNotIn('id', $suggestedProductIds)
                 ->limit($limit - count($suggestedProductIds))
