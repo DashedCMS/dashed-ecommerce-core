@@ -3,7 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Auth;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 
 class EcommerceAccountHelper
 {

@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
 use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;

@@ -10,10 +10,10 @@ use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
 use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\Route;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
-use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
-use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
+use Dashed\LaravelLocalization\Middleware\LocaleSessionRedirect;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
