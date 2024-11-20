@@ -89,6 +89,7 @@ class ProductCategoryResource extends Resource
                     DeleteBulkAction::make(),
                 ]),
             ])
+            ->reorderable('order')
             ->filters([
                 //
             ]);
