@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
@@ -41,6 +42,7 @@ class CheckoutSettingsPage extends Page
             $formData["checkout_extra_scripts_{$site['id']}"] = Customsetting::get('checkout_extra_scripts', $site['id']);
             $formData["checkout_google_api_key_{$site['id']}"] = Customsetting::get('checkout_google_api_key', $site['id']);
             $formData["checkout_postnl_api_key_{$site['id']}"] = Customsetting::get('checkout_postnl_api_key', $site['id']);
+            $formData["checkout_postcode_api_key_{$site['id']}"] = Customsetting::get('checkout_postcode_api_key', $site['id']);
             $formData["checkout_bcc_email_{$site['id']}"] = Customsetting::get('checkout_bcc_email', $site['id']);
             $formData["checkout_force_checkout_page_{$site['id']}"] = Customsetting::get('checkout_force_checkout_page', $site['id'], false);
             $formData["currency_format_type_{$site['id']}"] = Customsetting::get('currency_format_type', $site['id'], 'type1');
@@ -116,6 +118,17 @@ class CheckoutSettingsPage extends Page
                     ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een oude versie checkout.'),
                 TextInput::make("checkout_postnl_api_key_{$site['id']}")
                     ->label('PostNL API key')
+                    ->hintAction(Action::make('requestPostcodeApi')
+                        ->label('API aanvragen')
+                        ->url('https://developer.postnl.nl/integration-with-postnl/request-api-key/')
+                        ->openUrlInNewTab())
+                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.'),
+                TextInput::make("checkout_postcode_api_key_{$site['id']}")
+                    ->label('Postcode API key')
+                    ->hintAction(Action::make('requestPostcodeApi')
+                    ->label('API aanvragen')
+                    ->url('https://postcode.tech/')
+                    ->openUrlInNewTab())
                     ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.'),
                 TextInput::make("checkout_bcc_email_{$site['id']}")
                     ->email()
@@ -176,6 +189,7 @@ class CheckoutSettingsPage extends Page
             Customsetting::set('checkout_extra_scripts', $this->form->getState()["checkout_extra_scripts_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_google_api_key', $this->form->getState()["checkout_google_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_postnl_api_key', $this->form->getState()["checkout_postnl_api_key_{$site['id']}"], $site['id']);
+            Customsetting::set('checkout_postcode_api_key', $this->form->getState()["checkout_postcode_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_bcc_email', $this->form->getState()["checkout_bcc_email_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
             Customsetting::set('currency_format_type', $this->form->getState()["currency_format_type_{$site['id']}"], $site['id']);

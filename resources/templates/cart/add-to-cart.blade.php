@@ -9,11 +9,11 @@
                             {{$filter['name']}}
                         </label>
                         <select
-                                class="form-input"
-                                id="filter-{{$filter['id']}}"
-                                wire:model.live="filters.{{$filterKey}}.active">
+                            class="form-input"
+                            id="filter-{{$filter['id']}}"
+                            wire:model.live="filters.{{$filterKey}}.active">
                             <option
-                                    value="">{{ Translation::get('choose-a-option', 'product', 'Kies een optie') }}</option>
+                                value="">{{ Translation::get('choose-a-option', 'product', 'Kies een optie') }}</option>
                             @foreach($filter['options'] as $option)
                                 <option value="{{ $option['id'] }}"
                                 >
@@ -36,16 +36,16 @@
                             {{$extra->name}}{{$extra->required ? '*' : ''}}
                         </label>
                         <select
-                                class="form-input"
-                                id="product-extra-{{$extra->id}}"
-                                name="product-extra-{{$extra->id}}"
-                                wire:model.live="extras.{{ $extraKey }}.value"
-                                @if($extra->required) required @endif
+                            class="form-input"
+                            id="product-extra-{{$extra->id}}"
+                            name="product-extra-{{$extra->id}}"
+                            wire:model.live="extras.{{ $extraKey }}.value"
+                            @if($extra->required) required @endif
                         >
                             <option value="">{{Translation::get('make-a-choice', 'product', 'Maak een keuze')}}</option>
                             @foreach($extra->productExtraOptions as $option)
                                 <option
-                                        value="{{$option->id}}">{{$option->value}} @if($option->price > 0)
+                                    value="{{$option->id}}">{{$option->value}} @if($option->price > 0)
                                         (+ {{CurrencyHelper::formatPrice($option->price)}})
                                     @endif
                                 </option>
@@ -72,11 +72,11 @@
                                         </div>
                                     @endif
                                     <x-drift::image
-                                            class="w-full h-full"
-                                            config="dashed"
-                                            :path="$option->image"
-                                            :alt="$option->value"
-                                            :manipulations="[
+                                        class="w-full h-full"
+                                        config="dashed"
+                                        :path="$option->image"
+                                        :alt="$option->value"
+                                        :manipulations="[
                                                 'fit' => [150,150],
                                             ]"
                                     />
@@ -155,27 +155,38 @@
         </div>
     @endif
     <div
-            class="inline-flex items-center p-1 transition rounded bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
+        class="inline-flex items-center p-1 transition rounded bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
         <div
-                wire:click="setQuantity('{{ $quantity - 1 }}')"
-                class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+            wire:click="setQuantity('{{ $quantity - 1 }}')"
+            class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
         >
             <x-lucide-minus class="w-4 h-4"/>
         </div>
 
         <input
-                class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none"
-                type="number" value="1" id="qty"
-                name="qty" disabled
-                wire:model="quantity"
-                min="1" max="{{$product->stock()}}">
+            class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none"
+            type="number" value="1" id="qty"
+            name="qty" disabled
+            wire:model="quantity"
+            min="1" max="{{$product->stock()}}">
 
         <div
-                wire:click="setQuantity('{{ $quantity + 1 }}')"
-                class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
+            wire:click="setQuantity('{{ $quantity + 1 }}')"
+            class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
         >
             <x-lucide-plus class="w-4 h-4"/>
         </div>
+    </div>
+    <div class="my-4">
+        <p class="flex items-center text-sm">
+            <x-dashed-files::image
+                class="h-10 rounded-lg mr-2"
+                :mediaId="Translation::get('pay-in-terms-logo', 'products', '', 'image')"
+            />
+            {!! Translation::get('pay-in-terms', 'products', 'Betaal in 3 termijnen: &nbsp; <b>:term:</b> &nbsp; per termijn', 'text', [
+'term' => CurrencyHelper::formatPrice($price / 3),
+]) !!}
+        </p>
     </div>
     <div class="mt-4 grid gap-4">
         @if($product && $product->inStock())
@@ -198,5 +209,38 @@
                 {{Translation::get('add-to-cart-not-in-stock', 'product', 'Niet op voorraad')}}
             </div>
         @endif
+    </div>
+
+    <div class="my-4 flex flex-wrap items-center md:gap-8">
+        <div class="flex flex-col gap-2">
+            <p class="text-xs">{{ Translation::get('customers-give-us', 'product', 'Klanten beoordelen ons met een') }}:</p>
+            <div class="flex gap-2 items-center justify-center">
+                <x-drift::image
+                    class="w-12 rounded-xl"
+                    config="dashed"
+                    :path="Translation::get('product-review-image', 'product', '', 'image')"
+                    alt=""
+                    :manipulations="[
+                                                        'widen' => 500,
+                                                    ]"
+                />
+                <div class="flex gap-1 items-center justify-center">
+                    @for($i = 5; $i > 0; $i--)
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                             class="size-8 text-yellow-500">
+                            <path fill-rule="evenodd"
+                                  d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+                    @endfor
+                </div>
+            </div>
+
+            <p class="text-primary-800 text-xs xl:text-lg"><span
+                    class="font-bold text-primary-300">{{ Customsetting::get('google_maps_rating') }}</span>
+                {{ Translation::get('based-on', 'product', 'op basis van') }} <span
+                    class="font-bold text-primary-300">{{ Customsetting::get('google_maps_review_count') }}</span>
+                {{ Translation::get('reviews', 'product', 'reviews') }}</p>
+        </div>
     </div>
 </form>
