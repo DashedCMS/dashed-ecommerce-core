@@ -32,8 +32,6 @@ trait ProductCartActions
     public string $cartType = 'default';
     public bool $allFiltersFilled = false;
     public bool $variationExists = false;
-    public $price = 0;
-    public $discountPrice = 0;
 
     public ?string $name = '';
     public array $images = [];
@@ -41,6 +39,8 @@ trait ProductCartActions
     public ?string $description = '';
     public ?string $shortDescription = '';
     public ?string $sku = '';
+    public $price = 0;
+    public $discountPrice = 0;
 
     public function checkCart(?string $status = null, ?string $message = null)
     {
@@ -152,6 +152,14 @@ trait ProductCartActions
         if (! $isMount) {
             $this->dispatch('productUpdated', [
                 'extras' => $this->extras,
+                'name' => $this->name,
+                'images' => $this->images,
+                'originalImages' => $this->originalImages,
+                'description' => $this->description,
+                'shortDescription' => $this->shortDescription,
+                'sku' => $this->sku,
+                'price' => $this->price,
+                'discountPrice' => $this->discountPrice,
             ]);
         }
     }
