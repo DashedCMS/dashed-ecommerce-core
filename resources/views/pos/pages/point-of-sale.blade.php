@@ -501,7 +501,8 @@
                             <div>
                                 <p class="text-3xl">{{ Translation::get('pin-transaction-started', 'point-of-sale', 'De klant mag nu pinnen.') }}</p>
                                 @if($order->paidAmount > 0)
-                                    <p class="text-xl text-gray-400">Al betaald: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->paidAmount) }}</p>
+                                    <p class="text-xl text-gray-400">Al
+                                        betaald: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->paidAmount) }}</p>
                                 @endif
                             </div>
                         @elseif($pinTerminalStatus == 'waiting_for_clearance')
@@ -531,7 +532,7 @@
                         @endif
                     @endif
                     <div class="grid md:grid-cols-2 gap-4 mt-16">
-                        @if($isPinTerminalPayment)
+                        @if($isPinTerminalPayment && $pinTerminalStatus == 'pending')
                             <button wire:poll.1s="checkPinTerminalPayment" disabled
                                     class="md:col-span-2 px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -543,7 +544,7 @@
                                 </svg>
                                 <span>Wachten op betaling...</span>
                             </button>
-                        @else
+                        @elseif(!$isPinTerminalPayment)
                             <button wire:click="closePayment"
                                     class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                                 Annuleren
@@ -593,22 +594,26 @@
                     @if($order->orderPayments()->first()->paymentMethod->is_cash_payment)
                         <div class="flex flex-col gap-4">
                             <p class="text-xl font-bold">Betaling overzicht</p>
-                            <div
-                                class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
-                                <div class="flex flex-col">
-                                    <p class="font-bold text-lg">Betaling 1</p>
-                                    <p class="text-gray-400">{{ $order->orderPayments()->first()->paymentMethod->name }}</p>
+                            @foreach($order->orderPayments()->where('status', 'paid')->get() as $orderPayment)
+                                <div
+                                    class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
+                                    <div class="flex flex-col">
+                                        <p class="font-bold text-lg">Betaling {{ $loop->index }}</p>
+                                        <p class="text-gray-400">{{ $orderPayment->paymentMethod->name }}</p>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <p class="font-bold text-xl">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderPayment->amount) }}</p>
+                                        @if($loop->first)
+                                            @if($order->total < $order->paidAmount)
+                                                <p class="text-warning-500 font-bold text-xl">
+                                                    Wisselgeld
+                                                    verschuldigd: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderPayment->amount - $order->total) }}
+                                                </p>
+                                            @endif
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="flex flex-col">
-                                    <p class="font-bold text-xl">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount) }}</p>
-                                    @if($order->orderPayments()->first()->amount > $order->total)
-                                        <p class="text-warning-500 font-bold text-xl">
-                                            Wisselgeld
-                                            verschuldigd: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->orderPayments()->first()->amount - $order->total) }}
-                                        </p>
-                                    @endif
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     @endif
                     <div class="grid gap-4 mt-16">

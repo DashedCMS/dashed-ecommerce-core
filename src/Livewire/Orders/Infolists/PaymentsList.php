@@ -40,14 +40,17 @@ class PaymentsList extends Component implements HasForms, HasInfolists
                             ->label('PSP')
                             ->getStateUsing($orderPayment->psp),
                         TextEntry::make('psp_id')
+                            ->getStateUsing($orderPayment->psp_id ?: '-')
                             ->label('PSP ID'),
                         TextEntry::make('payment_method')
+                            ->getStateUsing($orderPayment->payment_method)
                             ->label('Betaalmethode'),
                         TextEntry::make('amount')
                             ->label('Bedrag')
                             ->getStateUsing($orderPayment->amount)
                             ->money('EUR'),
                         TextEntry::make('status')
+                            ->getStateUsing($orderPayment->status)
                             ->label('Status'),
                     ])
                     ->columns(3)
