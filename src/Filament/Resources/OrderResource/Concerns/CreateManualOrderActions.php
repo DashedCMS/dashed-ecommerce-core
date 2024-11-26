@@ -305,7 +305,7 @@ trait CreateManualOrderActions
                 ->send();
         }
 
-        if (! $refreshFromDatabase) {
+        if ($refreshFromDatabase) {
             $this->savePOSCart();
             $this->cacheVariables();
         }
