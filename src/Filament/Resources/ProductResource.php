@@ -98,7 +98,7 @@ class ProductResource extends Resource
                     ->reactive()
                     ->searchable()
                     ->helperText('Als je het bovenliggende product aanpast, moet je alle filters etc controleren.')
-                    ->visible(fn (Get $get, $livewire, $record) => $get('type') == 'variable' && ($livewire instanceof CreateProduct || ($livewire instanceof EditProduct && $record->parent_id))),
+                    ->visible(fn (Get $get, $livewire, $record) => $get('type') == 'variable' && ($livewire instanceof CreateProduct || $livewire instanceof EditProduct)),
                 Select::make('site_ids')
                     ->multiple()
                     ->label('Actief op sites')
