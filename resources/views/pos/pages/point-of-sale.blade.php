@@ -598,7 +598,7 @@
                                 <div
                                     class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
                                     <div class="flex flex-col">
-                                        <p class="font-bold text-lg">Betaling {{ $loop->index }}</p>
+                                        <p class="font-bold text-lg">Betaling {{ $loop->iteration }}</p>
                                         <p class="text-gray-400">{{ $orderPayment->paymentMethod->name }}</p>
                                     </div>
                                     <div class="flex flex-col">
