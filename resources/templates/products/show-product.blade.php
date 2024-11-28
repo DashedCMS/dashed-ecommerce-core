@@ -205,7 +205,7 @@
                             @if($product->inStock())
                                 @if($product->hasDirectSellableStock())
                                     @if($product->stock() > 10)
-                                        <p class="text-md tracking-wider text-primary-500 flex items-center font-bold"><span
+                                        <p class="text-md tracking-wider text-green-500 flex items-center font-bold"><span
                                                 class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                                   viewBox="0 0 24 24"
                                                                   xmlns="http://www.w3.org/2000/svg"><path
@@ -216,7 +216,7 @@
                                             {{Translation::get('product-in-stock', 'product', 'Op voorraad')}}
                                         </p>
                                     @else
-                                        <p class="text-md tracking-wider text-primary-500 flex items-center font-bold"><span
+                                        <p class="text-md tracking-wider text-green-500 flex items-center font-bold"><span
                                                 class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                                   viewBox="0 0 24 24"
                                                                   xmlns="http://www.w3.org/2000/svg"><path
@@ -231,9 +231,9 @@
                                     @endif
                                 @else
                                     @if($product->expectedDeliveryInDays())
-                                        <p class="font-bold italic text-md flex items-center gap-1 text-primary-500">
+                                        <p class="font-bold italic text-md flex items-center gap-1 text-orange-500">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                 fill="currentColor" class="size-8 text-primary-500">
+                                                 fill="currentColor" class="size-8">
                                                 <path fill-rule="evenodd"
                                                       d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z"
                                                       clip-rule="evenodd"/>
@@ -244,9 +244,9 @@
                                             ]) }}</span>
                                         </p>
                                     @else
-                                        <p class="font-bold italic text-md flex items-center gap-1 text-primary-500">
+                                        <p class="font-bold italic text-md flex items-center gap-1 text-orange-500">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                 fill="currentColor" class="size-8 text-primary-500">
+                                                 fill="currentColor" class="size-8">
                                                 <path fill-rule="evenodd"
                                                       d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z"
                                                       clip-rule="evenodd"/>
