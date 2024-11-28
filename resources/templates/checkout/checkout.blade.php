@@ -6,7 +6,7 @@
                 <div class="relative">
                     <header>
                         <h1 class="text-2xl font-bold tracking-tight md:text-4xl">{{ Translation::get('checkout-now', 'checkout', 'Afrekenen') }}</h1>
-                        <a href="{{ShoppingCart::getCartUrl()}}" class="text-primary-800 hover:text-primary-800/70">
+                        <a href="{{ShoppingCart::getCartUrl()}}" class="text-primary-500 hover:text-primary-500/70">
                             {{Translation::get('back-to-cart', 'checkout', 'Terug naar winkelwagen')}}
                         </a>
                     </header>
@@ -23,13 +23,13 @@
                                     wire:submit="submit"
                                 >
                                     <div class="md:col-span-2">
-                                        <h2 class="text-xl font-bold text-primary-800">{{ Translation::get('contact-information', 'checkout', 'Contact informatie') }}</h2>
+                                        <h2 class="text-xl font-bold text-primary-500">{{ Translation::get('contact-information', 'checkout', 'Contact informatie') }}</h2>
 
                                         @if(Auth::guest() && Customsetting::get('checkout_account') != 'disabled')
                                             <p class="text-black">
                                                 {{Translation::get('already-have-account', 'checkout', 'Heb je al een account?')}}
                                                 <a href="{{AccountHelper::getAccountUrl()}}"
-                                                   class="text-primary-800 hover:text-primary-800/70">{{Translation::get('login', 'checkout', 'Inloggen')}}</a>
+                                                   class="text-primary-500 hover:text-primary-500/70">{{Translation::get('login', 'checkout', 'Inloggen')}}</a>
                                             </p>
                                         @endif
                                     </div>
@@ -57,7 +57,7 @@
                                                placeholder="{{Translation::get('last-name', 'checkout', 'Achternaam')}}">
                                     </div>
 
-                                    <div class="space-y-2 md:col-span-2">
+                                    <div class="space-y-2">
                                         <label
                                             class="inline-block text-sm font-bold">{{Translation::get('enter-email-address', 'checkout', 'Vul je email adres in')}}
                                             <span class="text-red-500">*</span></label>
@@ -65,6 +65,16 @@
                                         <input type="email" class="form-input" id="email" name="email" required
                                                wire:model.blur="email"
                                                placeholder="{{Translation::get('email', 'checkout', 'Email')}}">
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-phone-number', 'checkout', 'Vul je telefoonnummer in')}}
+                                            <span class="text-red-500">*</span></label>
+
+                                        <input type="text" class="form-input" id="phoneNumber" name="phoneNumber" required
+                                               wire:model.blur="phoneNumber"
+                                               placeholder="{{Translation::get('phone-number', 'checkout', 'Telefoonnummer')}}">
                                     </div>
 
                                     @if(Auth::guest() && Customsetting::get('checkout_account') != 'disabled')
@@ -88,19 +98,19 @@
                                         </div>
                                     @endif
 
-                                    <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-800 border-black/5">
+                                    <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
                                         {{ Translation::get('shipping-address', 'checkout', 'Verzendmethode') }}
                                     </h2>
 
                                     <div class="space-y-2">
                                         <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
                                             <span
                                                 class="text-red-500">*</span></label>
 
-                                        <input type="text" class="form-input" id="street" name="street" required
-                                               wire:model.blur="street"
-                                               placeholder="{{Translation::get('street', 'checkout', 'Straat')}}">
+                                        <input type="text" class="form-input" id="zip_code" name="zip_code" required
+                                               wire:model.blur="zipCode"
+                                               placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}">
                                     </div>
 
                                     <div class="space-y-2">
@@ -116,13 +126,13 @@
 
                                     <div class="space-y-2">
                                         <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
+                                            class="inline-block text-sm font-bold">{{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
                                             <span
                                                 class="text-red-500">*</span></label>
 
-                                        <input type="text" class="form-input" id="zip_code" name="zip_code" required
-                                               wire:model.blur="zipCode"
-                                               placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}">
+                                        <input type="text" class="form-input" id="street" name="street" required
+                                               wire:model.blur="street"
+                                               placeholder="{{Translation::get('street', 'checkout', 'Straat')}}">
                                     </div>
 
                                     <div class="space-y-2">
@@ -150,26 +160,26 @@
                                     <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
                                         <input
                                             wire:model.live="invoiceAddress"
-                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-800 shadow-black/5 focus:ring-primary-800"
+                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-500 shadow-black/5 focus:ring-primary-500"
                                             type="checkbox" name="invoice_address" id="invoice_address">
 
                                         <span>{!! Translation::get('seperate-invoice-address', 'checkout', 'Afwijkend factuur adres') !!}</span>
                                     </label>
                                     @if($invoiceAddress)
-                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-800 border-black/5">
+                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
                                             {{ Translation::get('invoice-address', 'checkout', 'Factuur adres') }}
                                         </h2>
                                         <div class="space-y-2">
                                             <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
+                                                {{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
                                                 <span class="text-red-500">*</span>
                                             </label>
                                             <input type="text" class="form-input"
-                                                   id="invoice_street"
+                                                   id="invoice_zip_code"
+                                                   name="invoice_zip_code"
                                                    required
-                                                   onFocus="geolocate()"
-                                                   wire:model.blur="invoiceStreet"
-                                                   placeholder="{{Translation::get('street', 'checkout', 'Straat')}}">
+                                                   wire:model.blur="invoiceZipCode"
+                                                   placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}">
                                         </div>
                                         <div class="space-y-2">
                                             <label class="inline-block text-sm font-bold">
@@ -185,15 +195,15 @@
                                         </div>
                                         <div class="space-y-2">
                                             <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
+                                                {{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
                                                 <span class="text-red-500">*</span>
                                             </label>
                                             <input type="text" class="form-input"
-                                                   id="invoice_zip_code"
-                                                   name="invoice_zip_code"
+                                                   id="invoice_street"
                                                    required
-                                                   wire:model.blur="invoiceZipCode"
-                                                   placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}">
+                                                   onFocus="geolocate()"
+                                                   wire:model.blur="invoiceStreet"
+                                                   placeholder="{{Translation::get('street', 'checkout', 'Straat')}}">
                                         </div>
                                         <div class="space-y-2">
                                             <label class="inline-block text-sm font-bold">
@@ -220,7 +230,7 @@
                                         </div>
                                     @endif
 
-                                    <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-800 border-black/5">
+                                    <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
                                         {{ Translation::get('payment-method', 'checkout', 'Betaalmethode') }}
                                     </h2>
 
@@ -230,13 +240,13 @@
                                                 <label class="relative flex items-center p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg">
                                                     <input required
                                                            id="payment_method{{$thisPaymentMethod['id']}}"
-                                                           class="transition shadow-inner focus:ring-primary-800 text-primary-800 border-black/20 shadow-black/5 peer"
+                                                           class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
                                                            name="payment_method" type="radio"
                                                            wire:model.live="paymentMethod"
                                                            value="{{$thisPaymentMethod['id']}}">
 
                                                     <div
-                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-800 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
                                                     <span class="ml-3 mr-auto">
                                                             {{ $thisPaymentMethod['name'] }}
@@ -250,7 +260,7 @@
                                                     @if($thisPaymentMethod['image'])
                                                         <img
                                                             src="{{ mediaHelper()->getSingleMedia($thisPaymentMethod['image'])->url ?? '' }}"
-                                                            class="object-contain h-6">
+                                                            class="object-contain h-12">
                                                     @endif
                                                 </label>
                                             @endforeach
@@ -259,7 +269,7 @@
                                         @endif
                                     </div>
 
-                                    <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-800 border-black/5">
+                                    <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
                                         {{ Translation::get('shipping-method', 'checkout', 'Verzend methode') }}
                                     </h2>
 
@@ -269,13 +279,13 @@
                                                 <label class="relative flex items-center p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg">
                                                     <input id="shipping_method{{$thisShippingMethod['id']}}"
                                                            name="shipping_method" required
-                                                           class="transition shadow-inner focus:ring-primary-800 text-primary-800 border-black/20 shadow-black/5 peer"
+                                                           class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
                                                            type="radio"
                                                            value="{{ $thisShippingMethod['id'] }}"
                                                            wire:model.live="shippingMethod">
 
                                                     <div
-                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-800 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
                                                     <span class="ml-3 mr-auto"> {{ $thisShippingMethod['name'] }}
                                                             ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }})
@@ -296,14 +306,14 @@
                                     <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
                                         <input
                                             wire:model.live="generalCondition" required
-                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-800 shadow-black/5 focus:ring-primary-800"
+                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-500 shadow-black/5 focus:ring-primary-500"
                                             type="checkbox" name="general_condition" id="general_condition">
 
                                         <span>{!! Translation::get('accept-general-conditions', 'checkout', 'Ja, ik ga akkoord met de <a href="/algemene-voorwaarden">Algemene Voorwaarden</a> en <a href="/privacy-beleid">Privacy Statement</a>', 'editor') !!}</span>
                                     </label>
 
                                     <button type="submit"
-                                            class="inline-flex items-center justify-between gap-4 mt-4 button button--primary-dark w-full md:col-span-2">
+                                            class="inline-flex items-center justify-between gap-4 mt-4 button button--primary w-full md:col-span-2">
                                         <span>{{Translation::get('pay-now', 'cart', 'Afrekenen')}}</span>
 
                                         <x-lucide-lock class="w-5 h-5"/>
@@ -314,9 +324,9 @@
 
                         <aside
                             class="order-1 text-white md:order-3 md:col-span-2 rounded-xl">
-                            <h2 class="text-lg font-bold text-primary-800">{{Translation::get('your-order', 'cart', 'Jouw bestelling')}}</h2>
+                            <h2 class="text-lg font-bold text-primary-500">{{Translation::get('your-order', 'cart', 'Jouw bestelling')}}</h2>
 
-                            <div class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary-800">
+                            <div class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary-500">
                                 <h3 class="sr-only">{{Translation::get('items-in-your-cart', 'cart', 'Producten in je winkelwagen')}}</h3>
                                 <ul role="list" class="divide-y divide-gray-200">
                                     @foreach($this->cartItems as $item)
@@ -339,7 +349,7 @@
                                                 <div class="relative pr-9 sm:grid sm:gap-x-6 sm:pr-0">
                                                     <div>
                                                         <div class="flex justify-between">
-                                                            <h3 class="text-sm">
+                                                            <h3 class="text-sm pr-6">
                                                                 <a href="{{ $item->model->getUrl() }}"
                                                                    class="font-bold text-primary-200 hover:text-primary-500 trans">
                                                                     {{ $item->model->name }}
@@ -360,10 +370,10 @@
 
                                                     <div class="mt-4">
                                                         <div
-                                                            class="inline-flex items-center p-1 transition rounded bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800">
+                                                            class="inline-flex items-center p-1 transition rounded bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-500">
                                                             <button
                                                                 wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
-                                                                class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5"
+                                                                class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"
                                                             >
                                                                 <x-lucide-minus class="w-4 h-4"/>
                                                             </button>
@@ -376,7 +386,7 @@
 
                                                             <button
                                                                 wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
-                                                                class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5"
+                                                                class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"
                                                             >
                                                                 <x-lucide-plus class="w-4 h-4"/>
                                                             </button>
@@ -385,7 +395,7 @@
                                                                 <button
                                                                     wire:click="changeQuantity('{{ $item->rowId }}', '0')"
                                                                     type="button"
-                                                                    class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-800 trans">
+                                                                    class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-700 trans">
                                                                     <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
                                                                     <x-lucide-trash class="h-5 w-5"/>
                                                                 </button>
@@ -424,7 +434,7 @@
                                                             @endif
                                                         @else
                                                             @if($item->model->expectedDeliveryInDays())
-                                                                <p class="font-bold italic text-md flex items-center gap-1 text-primary-800">
+                                                                <p class="font-bold italic text-md flex items-center gap-1 text-primary-500">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                                                                     </svg>
@@ -433,7 +443,7 @@
                                             ]) }}</span>
                                                                 </p>
                                                             @else
-                                                                <p class="font-bold italic text-md flex items-center gap-1 text-primary-800">
+                                                                <p class="font-bold italic text-md flex items-center gap-1 text-primary-500">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                                                                     </svg>
@@ -513,7 +523,4 @@
             'image' => Translation::get('image', 'cart', '', 'image'),
         ]"></x-blocks.header>
     @endif
-
-    <hr class="border-t border-black/5"/>
-
 </div>

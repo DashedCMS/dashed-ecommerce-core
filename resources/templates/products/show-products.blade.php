@@ -7,18 +7,20 @@
                         @foreach($productCategory->getFirstChilds() as $child)
                             <li class="swiper-slide">
                                 <a href="{{ $child->getUrl() }}" class="group relative bg-white rounded-lg">
-                                    <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-white group-hover:opacity-75">
-                                        <x-dashed-files::image
-                                            class="h-full w-full object-cover object-center"
-                                            config="dashed"
-                                            :mediaId="$child->image"
-                                            :manipulations="[
+                                    @if($child->image)
+                                        <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-white group-hover:opacity-75">
+                                            <x-dashed-files::image
+                                                class="h-full w-full object-cover object-center"
+                                                config="dashed"
+                                                :mediaId="$child->image"
+                                                :manipulations="[
                                                                                         'fit' => [600,600],
                                                                                     ]"
-                                            width="180"
-                                            height="180"
-                                        />
-                                    </div>
+                                                width="180"
+                                                height="180"
+                                            />
+                                        </div>
+                                    @endif
                                     <div class="bg-primary-500/90 absolute bottom-0 w-full h-auto rounded-b-lg">
                                         <p class="font-semibold text-center text-white">{{$child->name}}</p>
                                     </div>
@@ -144,6 +146,11 @@
                     @if($products)
                         <p class="mt-4 text-base text-gray-500">{{$products->total()}} {{$products->total() == 1 ? Translation::get('result', 'products', 'resultaat') : Translation::get('results', 'products', 'resultaten')}}</p>
                     @endif
+                    @if($productCategory && ($productCategory->contentBlocks['top-content'] ?? false))
+                        <div class="prose max-w-full mt-4">
+                            {!! tiptap_converter()->asHTML($productCategory->contentBlocks['top-content']) !!}
+                        </div>
+                    @endif
                     @if(count($activeFilters))
                         <div class="flex flex-wrap gap-2 mt-4">
                             @foreach($activeFilters as $activeFilter => $value)
@@ -227,7 +234,8 @@
                         </div>
                     </div>
 
-                    <button type="button" class="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden" x-on:click="filters = !filters">
+                    <button type="button" class="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
+                            x-on:click="filters = !filters">
                         <span class="sr-only">Filters</span>
                         <svg class="h-5 w-5" aria-hidden="true" viewBox="0 0 20 20" fill="currentColor"
                              data-slot="icon">
