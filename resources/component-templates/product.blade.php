@@ -34,9 +34,9 @@
             </div>
 
             <div class="mb-3 flex items-center">
-                @if($item->model->inStock())
-                    @if($item->model->hasDirectSellableStock())
-                        @if($item->model->stock() > 10)
+                @if($product->inStock())
+                    @if($product->hasDirectSellableStock())
+                        @if($product->stock() > 10)
                             <p class="text-md tracking-wider text-white flex items-center font-bold"><span
                                     class="mr-1"><svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                       viewBox="0 0 24 24"
@@ -57,12 +57,12 @@
                                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             </span>
                                 {{Translation::get('product-in-stock-specific', 'product', 'Nog :count: op voorraad', 'text', [
-        'count' => $item->model->stock()
+        'count' => $product->stock()
         ])}}
                             </p>
                         @endif
                     @else
-                        @if($item->model->expectedDeliveryInDays())
+                        @if($product->expectedDeliveryInDays())
                             <p class="font-bold italic text-md flex items-center gap-1 text-primary-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                      fill="currentColor" class="size-8 text-primary-500">
@@ -71,7 +71,7 @@
                                           clip-rule="evenodd"/>
                                 </svg>
                                 <span>{{ Translation::get('pre-order-product-static-delivery-time', 'product', 'Levering duurt circa :days: dagen', 'text', [
-                                                'days' => $item->model->expectedDeliveryInDays()
+                                                'days' => $product->expectedDeliveryInDays()
                                             ]) }}</span>
                             </p>
                         @else
@@ -84,7 +84,7 @@
                                 </svg>
                                 <span>
                                                 {{ Translation::get('pre-order-product-now', 'product', 'Pre order nu, levering op :date:', 'text', [
-                                                'date' => $item->model->expectedInStockDate()
+                                                'date' => $product->expectedInStockDate()
                                             ]) }}
                                             </span>
                             </p>
