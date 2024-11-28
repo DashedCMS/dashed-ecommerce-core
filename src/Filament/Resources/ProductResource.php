@@ -172,7 +172,7 @@ class ProductResource extends Resource
                     ->label('Toon 1 variatie op overzichtspagina')
                     ->hidden(fn ($record, Get $get) => $get('type') != 'variable' || ($record && $record->parent_id)),
                 Select::make('copyable_to_childs')
-                    ->label('Welke onderdelen moeten gekopieerd worden naar de variaties?')
+                    ->label('Welke onderdelen moeten gekopieerd worden naar alle variaties?')
                     ->multiple()
                     ->searchable()
                     ->preload()
@@ -186,6 +186,7 @@ class ProductResource extends Resource
                         'content' => 'Content',
                         'description' => 'Uitgebreide beschrijving',
                         'short_description' => 'Korte beschrijving',
+                        'customBlocks' => 'Maatwerk blokken',
                     ])
                     ->hidden(fn ($record, Get $get) => $get('type') != 'variable' || ($record && $record->parent_id)),
             ])

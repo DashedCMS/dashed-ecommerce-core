@@ -1,36 +1,39 @@
-<div class="border-4 border-white rounded-lg bg-white relative">
+<div class="rounded-lg bg-white relative group">
     <a href="{{ $product->getUrl() }}">
         @if ($product->discountPrice)
             <div
-                class="absolute top-3 right-3 uppercase px-1 tracking-wider py-1 px-2 text-xs font-bold bg-primary-800 text-white rounded-lg">
+                class="absolute top-3 right-3 uppercase tracking-wider py-1 px-2 text-xs font-bold bg-primary-500 text-white rounded-lg">
                 {{ Translation::get('sale', 'product', 'Uitverkoop') }}
             </div>
         @endif
 
-        @if($product->firstImage)
-            <x-drift::image
-                class="w-full aspect-[4/3] object-contain mix-blend-multiply p-4 object-center"
-                config="dashed"
-                :path="$product->firstImage"
-                :alt="$product->name"
-                :manipulations="[
+        <div class="w-full aspect-[4/3] overflow-hidden">
+            @if($product->firstImage)
+                <x-drift::image
+                    class="w-full aspect-[4/3] object-cover object-center group-hover:scale-110 transform trans"
+                    config="dashed"
+                    :path="$product->firstImage"
+                    :alt="$product->name"
+                    :manipulations="[
                             'widen' => 1000,
                         ]"
-            />
-        @endif
+                />
+            @endif
+        </div>
 
-        <header class="p-4 @if($product->firstImage) border-t border-primary-500 @endif text-center text-black flex flex-col">
+        <header class="text-black font-medium uppercase flex flex-col mt-2 text-left">
             <p>{{ $product->name }}</p>
 
-            <div class="mt-2 mb-4 flex items-baseline justify-center gap-1">
-                @if ($product->discountPrice)
-                    <p
-                        class="text-gray-400 line-through text-sm">{{ CurrencyHelper::formatPrice($product->discountPrice) }}</p>
+            <div class="my-2 flex flex-wrap gap-2 items-center">
+                @if($product->discountPrice)
+                    <span class="line-through text-red-500 mr-2 font-normal">
+                                    {{CurrencyHelper::formatPrice($product->discountPrice)}}
+                                </span>
                 @endif
-                <p class="font-bold text-primary-800">{{ CurrencyHelper::formatPrice($product->currentPrice) }}</p>
+                <p class="text-xl tracking-tight font-medium text-gray-900">{{ CurrencyHelper::formatPrice($product->currentPrice) }}</p>
             </div>
 
-            <div class="my-3 flex items-center justify-center">
+            <div class="mb-3 flex items-center">
                 @if($product && $product->purchasable())
                     @if($product->stock() > 10)
                         <p class="text-md tracking-wider text-primary-600 flex items-center font-bold"><span
@@ -64,7 +67,7 @@
             </div>
 
             <button
-                class="button button--primary-dark w-full"
+                class="button button--primary w-full"
                 href="{{ $product->getUrl() }}"
             >
                 {{ Translation::get('view-product', 'product', 'Bekijken') }}

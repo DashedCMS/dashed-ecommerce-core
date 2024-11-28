@@ -67,6 +67,10 @@ class UpdateProductInformationJob implements ShouldQueue
                 if (in_array('images', $this->product->copyable_to_childs)) {
                     $childProduct->images = $this->product->getOriginal('images');
                 }
+                if (in_array('customBlocks', $this->product->copyable_to_childs)) {
+                    $childProduct->customBlocks->blocks = $this->product->customBlocks->blocks;
+                    $childProduct->customBlocks->saveQuietly();
+                }
 
                 $childProduct->saveQuietly();
             }
