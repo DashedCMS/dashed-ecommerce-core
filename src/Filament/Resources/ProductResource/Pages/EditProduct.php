@@ -233,6 +233,14 @@ class EditProduct extends EditRecord
             ]);
         }
 
+        foreach (DB::table('dashed__product_crosssell_product')->where('product_id', $this->record->id)->get() as $crossSellProduct) {
+            DB::table('dashed__product_crosssell_product')->insert([
+                'product_id' => $newProduct->id,
+                'suggested_product_id' => $crossSellProduct->suggested_product_id,
+                'order' => $crossSellProduct->order,
+            ]);
+        }
+
         foreach (DB::table('dashed__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
             $newProductExtra = new ProductExtra();
             $newProductExtra->product_id = $newProduct->id;

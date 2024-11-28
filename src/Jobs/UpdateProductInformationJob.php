@@ -52,6 +52,9 @@ class UpdateProductInformationJob implements ShouldQueue
                 if (in_array('suggestedProducts', $this->product->copyable_to_childs)) {
                     $childProduct->suggestedProducts()->sync($this->product->suggestedProducts);
                 }
+                if (in_array('crossSellProducts', $this->product->copyable_to_childs)) {
+                    $childProduct->crossSellProducts()->sync($this->product->crossSellProducts);
+                }
                 if (in_array('content', $this->product->copyable_to_childs)) {
                     $childProduct->content = $this->product->getOriginal('content');
                 }

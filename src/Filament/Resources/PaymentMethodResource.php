@@ -27,6 +27,7 @@ use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
+use RalphJSmit\Filament\MediaLibrary\Tables\Columns\MediaColumn;
 
 class PaymentMethodResource extends Resource
 {
@@ -155,7 +156,8 @@ class PaymentMethodResource extends Resource
                     ->sortable()
                     ->searchable(),
                 ImageColumn::make('image')
-                    ->label('Afbeelding'),
+                    ->label('Afbeelding')
+                    ->getStateUsing(fn($record) => mediaHelper()->getSingleMedia($record->image)->url ?? ''),
                 IconColumn::make('active')
                     ->label('Actief')
                     ->trueIcon('heroicon-o-check-circle')

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
@@ -24,6 +25,7 @@ trait ProductCartActions
     public ?Product $product = null;
     public $characteristics;
     public $suggestedProducts;
+    public $crossSellProducts;
     public array $filters = [];
     public ?Collection $productExtras = null;
     public ?array $extras = [];
@@ -41,6 +43,7 @@ trait ProductCartActions
     public ?string $sku = '';
     public $price = 0;
     public $discountPrice = 0;
+    public $paymentMethods = [];
 
     public function checkCart(?string $status = null, ?string $message = null)
     {
@@ -101,6 +104,7 @@ trait ProductCartActions
 
         if ($isMount) {
             $this->filters = Customsetting::get('product_use_simple_variation_style', null, false) ? $this->parentProduct->simpleFilters() : $this->parentProduct->filters();
+            $this->paymentMethods = PaymentMethod::active()->where('type', 'online')->orderBy('order', 'asc')->get();
         }
 
         $this->allFiltersFilled = true;
@@ -132,6 +136,7 @@ trait ProductCartActions
 
         $this->characteristics = $this->product->showableCharacteristics();
         $this->suggestedProducts = $this->product->getSuggestedProducts();
+        $this->crossSellProducts = $this->product->getCrossSellProducts();
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
             if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false)) {
                 return redirect($this->product->getUrl(forceOwnUrl: true));

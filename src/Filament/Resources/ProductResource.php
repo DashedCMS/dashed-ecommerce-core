@@ -182,6 +182,7 @@ class ProductResource extends Resource
                         'productCategories' => 'Product categorieën',
                         'shippingClasses' => 'Verzendklasses',
                         'suggestedProducts' => 'Voorgestelde producten',
+                        'crossSellProducts' => 'Cross sell producten',
                         'content' => 'Content',
                         'description' => 'Uitgebreide beschrijving',
                         'short_description' => 'Korte beschrijving',
