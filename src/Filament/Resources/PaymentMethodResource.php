@@ -156,7 +156,7 @@ class PaymentMethodResource extends Resource
                     ->searchable(),
                 ImageColumn::make('image')
                     ->label('Afbeelding')
-                    ->getStateUsing(fn ($record) => mediaHelper()->getSingleMedia($record->image)->url ?? ''),
+                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
                     ->label('Actief')
                     ->trueIcon('heroicon-o-check-circle')

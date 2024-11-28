@@ -58,12 +58,6 @@
             </div>
         </div>
 
-{{--        <button--}}
-{{--                class="button button--primary w-full"--}}
-{{--                href="{{ $product->getUrl() }}"--}}
-{{--        >--}}
-{{--            {{ Translation::get('view-product', 'product', 'Bekijken') }}--}}
-{{--        </button>--}}
         <livewire:cart.add-to-cart :product="$product" view="add-to-cart-small"/>
     </header>
 </div>
