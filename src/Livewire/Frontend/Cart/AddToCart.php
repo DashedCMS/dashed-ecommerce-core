@@ -10,10 +10,13 @@ class AddToCart extends Component
 {
     use ProductCartActions;
 
-    public function mount(Product $product)
+    public ?string $view = '';
+
+    public function mount(Product $product, ?string $view = '')
     {
         $this->parentProduct = $product->parent ? $product->parent : $product;
         $this->originalProduct = $product;
+        $this->view = $view;
 
         $this->fillInformation(true);
     }
@@ -33,6 +36,6 @@ class AddToCart extends Component
 
     public function render()
     {
-        return view(env('SITE_THEME', 'dashed') . '.cart.add-to-cart');
+        return view(env('SITE_THEME', 'dashed') . '.cart.' . ($this->view ?: 'add-to-cart'));
     }
 }
