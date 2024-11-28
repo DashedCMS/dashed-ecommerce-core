@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
@@ -14,6 +13,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 trait ProductCartActions
