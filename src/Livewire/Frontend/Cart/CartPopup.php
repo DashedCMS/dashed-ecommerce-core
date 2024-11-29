@@ -13,7 +13,7 @@ class CartPopup extends Component
     use CartActions;
 
     public ?string $view = '';
-    public bool $showCartPopup = true;
+    public bool $showCartPopup = false;
     public $cartSubtotal;
     public $cartTax;
     public $cartTotal;
