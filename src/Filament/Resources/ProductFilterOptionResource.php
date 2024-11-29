@@ -2,9 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
-use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
@@ -13,6 +12,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Resources\Concerns\Translatable;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
@@ -49,7 +49,7 @@ class ProductFilterOptionResource extends Resource
                     ->label('Filter')
                     ->required()
                     ->reactive()
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name),
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name),
                 TextInput::make('name')
                     ->label('Naam')
                     ->required()
@@ -57,7 +57,7 @@ class ProductFilterOptionResource extends Resource
                 mediaHelper()->field('image')
                     ->label('Afbeelding')
                     ->required()
-                    ->visible(fn(Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
+                    ->visible(fn (Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
                 TextInput::make('order')
                     ->label('Volgorde')
                     ->required()

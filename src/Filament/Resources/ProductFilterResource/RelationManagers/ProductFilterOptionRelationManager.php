@@ -2,12 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
 
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Forms\Form;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
