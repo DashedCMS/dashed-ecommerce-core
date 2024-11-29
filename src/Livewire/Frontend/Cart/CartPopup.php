@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 
 class CartPopup extends Component
@@ -14,16 +13,16 @@ class CartPopup extends Component
 
     public function mount(?string $view = '')
     {
-//        $this->parentProduct = $product->parent ? $product->parent : $product;
-//        $this->originalProduct = $product;
+        //        $this->parentProduct = $product->parent ? $product->parent : $product;
+        //        $this->originalProduct = $product;
         $this->view = $view;
 
-//        $this->fillInformation(true);
+        //        $this->fillInformation(true);
     }
 
     public function updated()
     {
-//        $this->fillInformation();
+        //        $this->fillInformation();
     }
 
     public function rules()

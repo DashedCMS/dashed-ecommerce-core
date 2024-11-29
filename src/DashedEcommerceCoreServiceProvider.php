@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartPopup;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -20,6 +19,7 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\CreateOrderLog;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddToCart;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartCount;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartPopup;
 use Dashed\DashedEcommerceCore\Livewire\Orders\AddPaymentToOrder;
 use Dashed\DashedEcommerceCore\Commands\UpdateProductInformations;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPage;
