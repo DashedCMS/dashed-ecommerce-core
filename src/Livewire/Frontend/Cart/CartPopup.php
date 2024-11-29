@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Livewire\Component;
+use Illuminate\Support\Collection;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
-use Dashed\DashedTranslations\Models\Translation;
-use Illuminate\Support\Collection;
-use Livewire\Component;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 
 class CartPopup extends Component
 {
