@@ -202,7 +202,7 @@
                         </div>
 
                         <div class="mt-6 grid gap-2">
-                            <x-stock-text :product="$product" />
+                            <x-stock-text :product="$product"/>
 
                             <div class="flex items-center text-sm">
                                 <x-dashed-files::image
@@ -296,17 +296,17 @@
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
                                          @click="openTab == 'description' ? openTab = '' : openTab = 'description'">
                                         <h3>{{ Translation::get('product-description', 'products', 'Beschrijving') }}</h3>
-                                        <svg x-show="openTab == 'description'" xmlns="http://www.w3.org/2000/svg"
-                                             viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                            <path fill-rule="evenodd"
-                                                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
-                                                  clip-rule="evenodd"/>
-                                        </svg>
-                                        <svg x-cloak x-show="openTab != 'description'"
+                                        <svg x-show="openTab == 'description'"
                                              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                              class="size-6">
                                             <path fill-rule="evenodd"
                                                   d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
+                                                  clip-rule="evenodd"/>
+                                        </svg>
+                                        <svg x-cloak  x-show="openTab != 'description'" xmlns="http://www.w3.org/2000/svg"
+                                             viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                            <path fill-rule="evenodd"
+                                                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
                                                   clip-rule="evenodd"/>
                                         </svg>
                                     </div>
@@ -326,7 +326,8 @@
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
                                          @click="openTab == 'characteristics' ? openTab = '' : openTab = 'characteristics'">
                                         <h3>{{ Translation::get('product-characteristics', 'product', 'Productkenmerken') }}</h3>
-                                        <svg x-cloak x-show="openTab != 'characteristics'" xmlns="http://www.w3.org/2000/svg"
+                                        <svg x-cloak x-show="openTab != 'characteristics'"
+                                             xmlns="http://www.w3.org/2000/svg"
                                              viewBox="0 0 24 24" fill="currentColor" class="size-6">
                                             <path fill-rule="evenodd"
                                                   d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
@@ -389,8 +390,8 @@
                                                 <div class="bg-white">
                                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
                                                          @click="openFaq == '{{ $loop->iteration }}' ? openFaq = '' : openFaq = '{{ $loop->iteration }}'">
-                                                        <h3>{{ Translation::get('faq', 'product', 'Veelgestelde vragen') }}</h3>
-                                                        <svg x-cloak  x-show="openFaq != '{{ $loop->iteration }}'"
+                                                        <h3>{{ $faq['title'] }}</h3>
+                                                        <svg x-cloak x-show="openFaq != '{{ $loop->iteration }}'"
                                                              xmlns="http://www.w3.org/2000/svg"
                                                              viewBox="0 0 24 24" fill="currentColor" class="size-6">
                                                             <path fill-rule="evenodd"
@@ -424,16 +425,18 @@
                             @endif
                         </div>
 
-                        @if(count($crossSellProducts))
-                            <div class="mt-6 grid gap-4">
-                                <h3 class="text-sm font-bold text-gray-900 text-center">{{ Translation::get('product-cross-sell', 'product', 'Vaak samen gekocht') }}</h3>
-                                <div class="grid gap-4">
-                                    @foreach($crossSellProducts as $crossSellProduct)
-                                        <x-cross-sell-product :product="$crossSellProduct"/>
-                                    @endforeach
+                        <div wire:ignore>
+                            @if(count($crossSellProducts))
+                                <div class="mt-6 grid gap-4">
+                                    <h3 class="text-sm font-bold text-gray-900 text-center">{{ Translation::get('product-cross-sell', 'product', 'Vaak samen gekocht') }}</h3>
+                                    <div class="grid gap-4">
+                                        @foreach($crossSellProducts as $crossSellProduct)
+                                            <x-cross-sell-product :product="$crossSellProduct"/>
+                                        @endforeach
+                                    </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
                 </div>
 

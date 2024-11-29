@@ -423,6 +423,9 @@ trait ProductCartActions
         $this->quantity = 1;
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
+
+        $this->dispatch('productAddedToCart');
+
         if ($redirectChoice == 'same') {
             return $this->checkCart('success', Translation::get('product-added-to-cart', $this->cartType, 'The product has been added to your cart'));
         } elseif ($redirectChoice == 'cart') {
