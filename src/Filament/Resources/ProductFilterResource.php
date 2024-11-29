@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -58,6 +59,14 @@ class ProductFilterResource extends Resource
                             ->label('Naam')
                             ->required()
                             ->maxLength(100),
+                        Select::make('type')
+                            ->label('Type')
+                            ->default('select')
+                            ->options([
+                                'select' => 'Dropdown',
+                                'image' => 'Afbeelding',
+                            ])
+                            ->required(),
                     ])),
             ], static::customBlocksTab(cms()->builder('productFilterBlocks'))));
     }

@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
@@ -46,11 +48,16 @@ class ProductFilterOptionResource extends Resource
                     ->default(request()->get('productFilterId'))
                     ->label('Filter')
                     ->required()
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name),
+                    ->reactive()
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name),
                 TextInput::make('name')
                     ->label('Naam')
                     ->required()
                     ->maxLength(100),
+                mediaHelper()->field('image')
+                    ->label('Afbeelding')
+                    ->required()
+                    ->visible(fn(Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
                 TextInput::make('order')
                     ->label('Volgorde')
                     ->required()

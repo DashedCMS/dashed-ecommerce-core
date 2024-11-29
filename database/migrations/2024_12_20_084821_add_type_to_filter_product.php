@@ -13,9 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('dashed__active_product_filter', function (Blueprint $table) {
+        Schema::table('dashed__product_filters', function (Blueprint $table) {
             $table->string('type')
                 ->default('select');
+        });
+        Schema::table('dashed__product_filter_options', function (Blueprint $table) {
+            $table->string('image')
+                ->nullable();
         });
     }
 

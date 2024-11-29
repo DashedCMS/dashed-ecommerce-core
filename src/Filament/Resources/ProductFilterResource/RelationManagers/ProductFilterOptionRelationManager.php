@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
 
+use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Forms\Form;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -32,6 +34,9 @@ class ProductFilterOptionRelationManager extends RelationManager
                     ->label('Naam')
                     ->searchable()
                     ->sortable(),
+                ImageColumn::make('image')
+                    ->label('Afbeelding')
+                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
             ])
             ->filters([
                 //

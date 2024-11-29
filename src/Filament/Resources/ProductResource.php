@@ -305,19 +305,6 @@ class ProductResource extends Resource
                     'lg' => 2,
                 ])
                 ->hidden(fn ($record, Get $get) => $get('type') == 'variable' && $record && $record->parent_id);
-            $productFilterSchema[] = Select::make("product_filter_{$productFilter->id}_type")
-                ->label("$productFilter->name filter type")
-                ->visible(fn (Get $get) => $get("product_filter_$productFilter->id"))
-                ->options([
-                    'select' => 'Dropdown',
-                    'image' => 'Afbeeldingen',
-                ])
-                ->reactive()
-                ->columnSpan([
-                    'default' => 1,
-                    'lg' => 2,
-                ])
-                ->hidden(fn ($record, Get $get) => $get('type') == 'variable' && $record && $record->parent_id);
 
             $productEnabledFiltersSchema = [];
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
