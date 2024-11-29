@@ -235,9 +235,9 @@ trait ProductCartActions
 
     public function addToCart(?int $productId = null)
     {
-        if($productId) {
+        if ($productId) {
             $product = Product::find($productId);
-        }else{
+        } else {
             $product = $this->product;
         }
 
