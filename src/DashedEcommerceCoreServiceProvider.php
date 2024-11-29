@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartPopup;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -106,6 +107,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('cart.cart', Cart::class);
         Livewire::component('cart.cart-count', CartCount::class);
         Livewire::component('cart.add-to-cart', AddToCart::class);
+        Livewire::component('cart.cart-popup', CartPopup::class);
         Livewire::component('checkout.checkout', Checkout::class);
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
