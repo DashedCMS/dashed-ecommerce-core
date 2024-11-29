@@ -46,7 +46,7 @@
                                                         @endif
                                                     @endforeach
                                                 </div>
-                                                <p class="mt-1 text-sm font-bold text-gray-900">{{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}</p>
+                                                <p class="mt-1 text-sm font-bold text-gray-900">{{CurrencyHelper::formatPrice($item->price * $item->qty)}}</p>
                                             </div>
 
                                             <div class="mt-4 sm:mt-0 sm:pr-9">
@@ -133,7 +133,7 @@
 
                         <div class="mt-6">
                             <a href="{{ ShoppingCart::getCheckoutUrl() }}"
-                               class="button button--primary-light w-full">
+                               class="button button--primary w-full">
                                 {{ Translation::get('checkout', 'cart', 'Naar de checkout') }}
                             </a>
                         </div>

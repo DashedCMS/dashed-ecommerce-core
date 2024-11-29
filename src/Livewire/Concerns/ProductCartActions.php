@@ -233,18 +233,24 @@ trait ProductCartActions
         $this->discountPrice = $this->product->discountPrice;
     }
 
-    public function addToCart()
+    public function addToCart(?int $productId = null)
     {
+        if($productId) {
+            $product = Product::find($productId);
+        }else{
+            $product = $this->product;
+        }
+
         ShoppingCart::setInstance($this->cartType);
 
-        if (! $this->product || ($this->product->type == 'variable' && ! $this->product->parent_id)) {
+        if (! $product || ($product->type == 'variable' && ! $product->parent_id)) {
             return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
         }
 
         $cartUpdated = false;
-        $productPrice = $this->product->currentPrice;
+        $productPrice = $product->currentPrice;
         $options = [];
-        foreach ($this->productExtras as $extraKey => $productExtra) {
+        foreach ($product->allProductExtras() as $extraKey => $productExtra) {
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
@@ -386,14 +392,14 @@ trait ProductCartActions
 
         $cartItems = ShoppingCart::cartItems($this->cartType);
         foreach ($cartItems as $cartItem) {
-            if ($cartItem->model && $cartItem->model->id == $this->product->id && $options == $cartItem->options) {
+            if ($cartItem->model && $cartItem->model->id == $product->id && $options == $cartItem->options) {
                 $newQuantity = $cartItem->qty + $this->quantity;
 
-                if ($this->product->limit_purchases_per_customer && $newQuantity > $this->product->limit_purchases_per_customer_limit) {
-                    Cart::update($cartItem->rowId, $this->product->limit_purchases_per_customer_limit);
+                if ($product->limit_purchases_per_customer && $newQuantity > $product->limit_purchases_per_customer_limit) {
+                    Cart::update($cartItem->rowId, $product->limit_purchases_per_customer_limit);
 
                     return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', $this->cartType, 'You can only purchase :quantity: of this product', 'text', [
-                        'quantity' => $this->product->limit_purchases_per_customer_limit,
+                        'quantity' => $product->limit_purchases_per_customer_limit,
                     ]));
                 }
 
@@ -403,15 +409,15 @@ trait ProductCartActions
         }
 
         if (! $cartUpdated) {
-            if ($this->product->limit_purchases_per_customer && $this->quantity > $this->product->limit_purchases_per_customer_limit) {
-                Cart::add($this->product->id, $this->product->name, $this->product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
+            if ($product->limit_purchases_per_customer && $this->quantity > $product->limit_purchases_per_customer_limit) {
+                Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
                 return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', $this->cartType, 'You can only purchase :quantity: of this product', 'text', [
-                    'quantity' => $this->product->limit_purchases_per_customer_limit,
+                    'quantity' => $product->limit_purchases_per_customer_limit,
                 ]));
             }
 
-            Cart::add($this->product->id, $this->product->name, $this->quantity, $productPrice, $options)->associate(Product::class);
+            Cart::add($product->id, $product->name, $this->quantity, $productPrice, $options)->associate(Product::class);
         }
 
         $this->quantity = 1;
@@ -443,6 +449,12 @@ trait ProductCartActions
     public function setProductExtraValue($extraKey, $value)
     {
         $this->extras[$extraKey]['value'] = $value;
+        $this->fillInformation();
+    }
+
+    public function setFilterValue($filterKey, $value)
+    {
+        $this->filters[$filterKey]['active'] = $value;
         $this->fillInformation();
     }
 

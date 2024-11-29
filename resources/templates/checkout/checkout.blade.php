@@ -287,8 +287,9 @@
                                                     <div
                                                         class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
-                                                    <span class="ml-3 mr-auto"> {{ $thisShippingMethod['name'] }}
-                                                            ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }})
+                                                    <span class="ml-3 mr-auto">
+                                                        {{ $thisShippingMethod['name'] }}
+                                                        @if($thisShippingMethod['costs'] > 0) ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }}) @endif
                                             </span>
                                                 </label>
                                             @endforeach
@@ -365,7 +366,7 @@
                                                                 @endif
                                                             @endforeach
                                                         </div>
-                                                        <p class="mt-1 text-sm font-bold ">{{CurrencyHelper::formatPrice($item->model->currentPrice * $item->qty)}}</p>
+                                                        <p class="mt-1 text-sm font-bold ">{{CurrencyHelper::formatPrice($item->price * $item->qty)}}</p>
                                                     </div>
 
                                                     <div class="mt-4">
@@ -405,7 +406,7 @@
                                                 </div>
 
                                                 <div class="mt-4 flex space-x-2 text-sm text-gray-700">
-                                                    <x-stock-text :product="$item->model" />
+                                                    <x-stock-text :product="$item->model" :forceWhite="true" />
                                                 </div>
                                             </div>
                                         </li>
@@ -429,7 +430,7 @@
                                                 <dd class="text-sm font-bold">{{ CurrencyHelper::formatPrice($shippingCosts) }}</dd>
                                             @else
                                                 <dt class="text-sm">{{Translation::get('shipping-costs', 'checkout', 'Verzendkosten')}}</dt>
-                                                <dd class="text-sm font-bold">{{Translation::get('not-applicable', 'checkout', 'Niet van toepassing')}}</dd>
+                                                <dd class="text-sm font-bold">{{Translation::get('free', 'checkout', 'Gratis')}}</dd>
                                             @endif
                                         </div>
                                     @endif
