@@ -1,4 +1,4 @@
-<div class="relative z-40" role="dialog" aria-modal="true" x-data="{ showCartPopup: @entangle('showCartPopup') }"
+<div class="relative z-[100]" role="dialog" aria-modal="true" x-data="{ showCartPopup: @entangle('showCartPopup') }"
      x-init="
     window.addEventListener('productAddedToCart', (event) => {
         showCartPopup = true;
@@ -26,7 +26,7 @@
          x-transition:leave="transition ease-in-out duration-500 transform"
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full">
-        <div class="relative ml-auto flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-xl"
+        <div class="relative ml-auto flex h-full w-full max-w-[90%] sm:max-w-md flex-col overflow-y-auto bg-white shadow-xl"
              @click.away="showCartPopup = false">
             <div class="flex items-center justify-between px-4 bg-primary-500 text-white">
                 <div class="mx-auto py-4 grid gap-2">
@@ -70,87 +70,93 @@
             </div>
 
             <div class="grow overflow-y-auto shadow-xl bg-gray-100">
-                @foreach($this->cartItems as $item)
-                    <li class="flex px-4 py-6 sm:px-6">
-                        <div class="flex-shrink max-w-[150px]">
-                            @if($item->model->firstImage)
-                                <x-drift::image
-                                    class="aspect-square rounded-md object-cover object-center w-full"
-                                    config="dashed"
-                                    :path="$item->model->firstImage"
-                                    :alt=" $item->model->name"
-                                    :manipulations="[
+                @if(count($this->cartItems))
+                    @foreach($this->cartItems as $item)
+                        <li class="flex px-4 py-6 sm:px-6">
+                            <div class="flex-shrink max-w-[80px] md:max-w-[150px]">
+                                @if($item->model->firstImage)
+                                    <x-drift::image
+                                        class="aspect-square rounded-md object-cover object-center w-full"
+                                        config="dashed"
+                                        :path="$item->model->firstImage"
+                                        :alt=" $item->model->name"
+                                        :manipulations="[
                                                     'widen' => 200,
                                                 ]"
-                                />
-                            @endif
-                        </div>
+                                    />
+                                @endif
+                            </div>
 
-                        <div class="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
-                            <div class="relative pr-9 sm:grid sm:gap-x-6 sm:pr-0">
-                                <div>
-                                    <div class="flex justify-between">
-                                        <h3 class="text-sm pr-6">
-                                            <a href="{{ $item->model->getUrl() }}"
-                                               class="font-bold text-primary-500 hover:text-primary-800 trans">
-                                                {{ $item->model->name }}
-                                            </a>
-                                        </h3>
+                            <div class="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
+                                <div class="relative pr-9 sm:grid sm:gap-x-6 sm:pr-0">
+                                    <div>
+                                        <div class="flex justify-between">
+                                            <h3 class="text-sm pr-6">
+                                                <a href="{{ $item->model->getUrl() }}"
+                                                   class="font-bold text-primary-500 hover:text-primary-800 trans text-wrap">
+                                                    {{ $item->model->name }}
+                                                </a>
+                                            </h3>
+                                        </div>
+                                        <div class="mt-1 flex text-sm">
+                                            @foreach($item->options as $option)
+                                                @if($loop->first)
+                                                    <p class="">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                                @else
+                                                    <p class="ml-4 border-l border-gray-200 pl-4">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                        <p class="mt-1 text-sm font-bold ">{{CurrencyHelper::formatPrice($item->price * $item->qty)}}</p>
                                     </div>
-                                    <div class="mt-1 flex text-sm">
-                                        @foreach($item->options as $option)
-                                            @if($loop->first)
-                                                <p class="">{{$option['name'] . ':'}}{{$option['value']}}</p>
-                                            @else
-                                                <p class="ml-4 border-l border-gray-200 pl-4">{{$option['name'] . ':'}}{{$option['value']}}</p>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                    <p class="mt-1 text-sm font-bold ">{{CurrencyHelper::formatPrice($item->price * $item->qty)}}</p>
-                                </div>
 
-                                <div class="mt-4">
-                                    <div
-                                        class="inline-flex items-center p-1 transition rounded bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-500">
-                                        <button
-                                            wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
-                                            class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"
-                                        >
-                                            <x-lucide-minus class="w-4 h-4"/>
-                                        </button>
-
-                                        <input
-                                            class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none text-primary-500 font-bold"
-                                            value="{{$item->qty}}"
-                                            disabled
-                                            min="0" max="{{$item->model->stock()}}">
-
-                                        <button
-                                            wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
-                                            class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"
-                                        >
-                                            <x-lucide-plus class="w-4 h-4"/>
-                                        </button>
-
-                                        <div class="absolute right-0 top-0">
+                                    <div class="mt-4">
+                                        <div
+                                            class="inline-flex items-center p-1 transition rounded bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-500">
                                             <button
-                                                wire:click="changeQuantity('{{ $item->rowId }}', '0')"
-                                                type="button"
-                                                class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-700 trans">
-                                                <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
-                                                <x-lucide-trash class="h-5 w-5"/>
+                                                wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
+                                                class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"
+                                            >
+                                                <x-lucide-minus class="w-4 h-4"/>
                                             </button>
+
+                                            <input
+                                                class="w-[4ch] px-0 py-0.5 focus:ring-0 text-center bg-transparent border-none text-primary-500 font-bold"
+                                                value="{{$item->qty}}"
+                                                disabled
+                                                min="0" max="{{$item->model->stock()}}">
+
+                                            <button
+                                                wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty + 1 }}')"
+                                                class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"
+                                            >
+                                                <x-lucide-plus class="w-4 h-4"/>
+                                            </button>
+
+                                            <div class="absolute right-0 top-0">
+                                                <button
+                                                    wire:click="changeQuantity('{{ $item->rowId }}', '0')"
+                                                    type="button"
+                                                    class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-700 trans">
+                                                    <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
+                                                    <x-lucide-trash class="h-5 w-5"/>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="mt-4 flex space-x-2 text-sm text-gray-700">
-                                <x-stock-text :product="$item->model" />
+                                <div class="mt-4 flex space-x-2 text-sm text-gray-700">
+                                    <x-stock-text :product="$item->model"/>
+                                </div>
                             </div>
-                        </div>
-                    </li>
-                @endforeach
+                        </li>
+                    @endforeach
+                @else
+                    <div class="p-6 text-center">
+                        <p class="text-gray-700">{{ Translation::get('no-items-in-cart', 'cart-popup', 'Er zitten geen producten in je winkelwagen, ga snel verder met winkelen') }}</p>
+                    </div>
+                @endif
             </div>
             <div class="p-6 grid gap-4">
                 <div class="space-y-2 text-gray-700">
@@ -169,17 +175,18 @@
                 </div>
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
-                        <a href="{{ \Dashed\DashedEcommerceCore\Classes\ShoppingCart::getCartUrl() }}"
+                        <a href="{{ \Dashed\DashedEcommerceCore\Classes\ShoppingCart::getCheckoutUrl() }}"
                            class="w-full button button--primary font-bold text-sm">
                             <span>{{ Translation::get('to-the-checkout', 'cart-popup', 'Afrekenen') }}</span>
                         </a>
                     </div>
-                    <a href="{{ \Dashed\DashedEcommerceCore\Classes\ShoppingCart::getCheckoutUrl() }}"
-                       class="w-fit button button--white-outline border-primary-500 text-primary-500 font-bold text-sm">
+                    <a href="{{ \Dashed\DashedEcommerceCore\Classes\ShoppingCart::getCartUrl() }}"
+                       class="w-full md:w-fit button button--white-outline border-primary-500 text-primary-500 font-bold text-sm">
                         <span>{{ Translation::get('to-the-cart', 'cart-popup', 'Bekijk winkelwagen') }}</span>
                     </a>
                     <a @click="showCartPopup = false"
-                       class="w-fit button button--white-outline border-primary-500 text-primary-500 font-bold text-sm">
+                       href="#"
+                       class="w-full md:w-fit button button--white-outline border-primary-500 text-primary-500 font-bold text-sm cursor-pointer">
                         <span>{{ Translation::get('continue-shopping', 'cart-popup', 'Verder winkelen') }}</span>
                     </a>
                 </div>
