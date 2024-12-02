@@ -2,19 +2,19 @@
     @if($product->hasDirectSellableStock())
         @if($product->stock() > 10)
             <p class="text-md tracking-wider @if($forceWhite ?? false) text-white @else text-green-500 @endif  flex items-center font-bold"><span
-                    class="mr-1"><svg class="w-6 h-6" fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      xmlns="http://www.w3.org/2000/svg"><path
-                            stroke-linecap="round" stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        class="mr-1"><svg class="w-6 h-6" fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"><path
+                                stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             </span>
                 {{Translation::get('product-in-stock', 'product', 'Op voorraad')}}
             </p>
         @else
             <p class="text-md tracking-wider @if($forceWhite ?? false) text-white @else text-orange-500 @endif flex items-center font-bold"><span
-                    class="mr-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                        class="mr-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
   <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
 </svg>
 

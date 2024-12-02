@@ -1,4 +1,5 @@
 <div class="rounded-lg bg-white relative group flex flex-col h-full">
+    <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
     <a href="{{ $product->getUrl() }}" class="flex flex-col h-full">
         @if ($product->discountPrice)
             <div
@@ -22,6 +23,9 @@
                 @endif
             </div>
 
+            {{--            @if($product->productCategories()->count())--}}
+            {{--                <p class="mt-2 text-xs text-white font-medium rounded-lg w-fit px-2 py-1 bg-primary-500">{{$product->productCategories()->first()->name}}</p>--}}
+            {{--            @endif--}}
             <p class="font-medium uppercase mt-2 grow">{{ $product->name }}</p>
         </div>
 
@@ -36,7 +40,7 @@
             </div>
 
             <div class="mb-3 flex items-center">
-                <x-stock-text :product="$product"/>
+                <x-product.stock-text :product="$product"/>
             </div>
 
             <button

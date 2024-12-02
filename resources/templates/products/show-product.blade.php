@@ -2,11 +2,10 @@
     <x-blocks.breadcrumbs :breadcrumbs="$product->breadcrumbs()"/>
     <div class="mt-8">
         <x-container>
-            <x-dashed-ecommerce-core::frontend.products.schema
-                :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
+            <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
             <div class="mx-auto max-w-2xl lg:max-w-none">
                 <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
-                    <div class="flex flex-col-reverse">
+                    <div class="flex flex-col-reverse lg:sticky lg:top-32">
                         <div x-data="{
         imageGalleryOpened: false,
         imageGalleryActiveUrl: null,
@@ -202,7 +201,7 @@
                         </div>
 
                         <div class="mt-6 grid gap-2">
-                            <x-stock-text :product="$product"/>
+                            <x-product.stock-text :product="$product"/>
 
                             <div class="flex items-center text-sm">
                                 <x-dashed-files::image
@@ -231,6 +230,34 @@
                                     ]) !!}
                                 </div>
                             </div>
+
+                            @if(count($paymentMethods))
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center justify-center text-sm gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                             class="size-8 text-green-500">
+                                            <path fill-rule="evenodd"
+                                                  d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
+                                                  clip-rule="evenodd"/>
+                                        </svg>
+
+
+                                        <h3>{{ Translation::get('pay-safe-with', 'products', 'Betaal veilig met') }}</h3>
+                                    </div>
+                                    <div class="flex gap-2 flex-wrap items-center justify-center">
+                                        @foreach($paymentMethods as $paymentMethod)
+                                            @if($paymentMethod->image)
+                                                <x-dashed-files::image
+                                                    :mediaId="$paymentMethod->image"
+                                                    :alt="$paymentMethod->name"
+                                                    :manipulations="[ 'widen' => 100 ]"
+                                                    class="w-8"
+                                                />
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
 
                             {{--                            @if($product->contentBlocks['delivery_time'] ?? false)--}}
                             {{--                                <p class="mt-1 text-orange-500 flex flex-wrap gap-1 items-center">--}}
@@ -262,33 +289,46 @@
                                                 :quantity="$quantity" :price="$price" :discountPrice="$discountPrice"/>
                         </div>
 
-                        @if(count($paymentMethods))
-                            <div class="mt-6 grid gap-2">
-                                <div class="flex items-center justify-center text-xs gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                                         class="size-4 text-green-500">
-                                        <path fill-rule="evenodd"
-                                              d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
-                                              clip-rule="evenodd"/>
-                                    </svg>
+                        {{--                        @if(count($paymentMethods))--}}
+                        {{--                            <div class="mt-6 grid gap-2">--}}
+                        {{--                                <div class="flex items-center justify-center text-xs gap-1">--}}
+                        {{--                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"--}}
+                        {{--                                         class="size-4 text-green-500">--}}
+                        {{--                                        <path fill-rule="evenodd"--}}
+                        {{--                                              d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"--}}
+                        {{--                                              clip-rule="evenodd"/>--}}
+                        {{--                                    </svg>--}}
 
 
-                                    <h3>{{ Translation::get('pay-safe-with', 'products', 'Betaal veilig met') }}</h3>
+                        {{--                                    <h3>{{ Translation::get('pay-safe-with', 'products', 'Betaal veilig met') }}</h3>--}}
+                        {{--                                </div>--}}
+                        {{--                                <div class="flex gap-4 flex-wrap items-center justify-center">--}}
+                        {{--                                    @foreach($paymentMethods as $paymentMethod)--}}
+                        {{--                                        @if($paymentMethod->image)--}}
+                        {{--                                            <x-dashed-files::image--}}
+                        {{--                                                    :mediaId="$paymentMethod->image"--}}
+                        {{--                                                    :alt="$paymentMethod->name"--}}
+                        {{--                                                    :manipulations="[ 'widen' => 100 ]"--}}
+                        {{--                                                    class="w-8"--}}
+                        {{--                                            />--}}
+                        {{--                                        @endif--}}
+                        {{--                                    @endforeach--}}
+                        {{--                                </div>--}}
+                        {{--                            </div>--}}
+                        {{--                        @endif--}}
+
+                        <div wire:ignore>
+                            @if(count($crossSellProducts))
+                                <div class="mt-6 grid gap-4">
+                                    <h3 class="text-sm font-bold text-gray-900 text-center">{{ Translation::get('product-cross-sell', 'product', 'Vaak samen gekocht') }}</h3>
+                                    <div class="grid gap-4">
+                                        @foreach($crossSellProducts as $crossSellProduct)
+                                            <x-product.cross-sell-product :product="$crossSellProduct"/>
+                                        @endforeach
+                                    </div>
                                 </div>
-                                <div class="flex gap-4 flex-wrap items-center justify-center">
-                                    @foreach($paymentMethods as $paymentMethod)
-                                        @if($paymentMethod->image)
-                                            <x-dashed-files::image
-                                                :mediaId="$paymentMethod->image"
-                                                :alt="$paymentMethod->name"
-                                                :manipulations="[ 'widen' => 100 ]"
-                                                class="w-8"
-                                            />
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
 
                         <div class="mt-6 grid gap-2" x-data="{ openTab: '' }">
                             @if($description)
@@ -303,7 +343,8 @@
                                                   d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
                                                   clip-rule="evenodd"/>
                                         </svg>
-                                        <svg x-cloak  x-show="openTab != 'description'" xmlns="http://www.w3.org/2000/svg"
+                                        <svg x-cloak x-show="openTab != 'description'"
+                                             xmlns="http://www.w3.org/2000/svg"
                                              viewBox="0 0 24 24" fill="currentColor" class="size-6">
                                             <path fill-rule="evenodd"
                                                   d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
@@ -424,19 +465,6 @@
                                 </div>
                             @endif
                         </div>
-
-                        <div wire:ignore>
-                            @if(count($crossSellProducts))
-                                <div class="mt-6 grid gap-4">
-                                    <h3 class="text-sm font-bold text-gray-900 text-center">{{ Translation::get('product-cross-sell', 'product', 'Vaak samen gekocht') }}</h3>
-                                    <div class="grid gap-4">
-                                        @foreach($crossSellProducts as $crossSellProduct)
-                                            <x-cross-sell-product :product="$crossSellProduct"/>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
                     </div>
                 </div>
 
@@ -447,7 +475,7 @@
 
                     <div class="mt-8 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
                         @foreach($suggestedProducts as $suggestedProduct)
-                            <x-product :product="$suggestedProduct"></x-product>
+                            <x-product.product :product="$suggestedProduct"/>
                         @endforeach
                     </div>
                 </section>

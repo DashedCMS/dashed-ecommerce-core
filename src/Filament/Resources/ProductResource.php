@@ -560,7 +560,7 @@ class ProductResource extends Resource
                                 'multiple' => 'Meerdere opties',
                                 'checkbox' => 'Checkbox',
                                 'input' => 'Invulveld',
-                                'imagePicker' => 'Afbeelding kiezen',
+                                'image' => 'Afbeelding kiezen',
                                 'file' => 'Upload bestand',
                             ])
                             ->default('single')
