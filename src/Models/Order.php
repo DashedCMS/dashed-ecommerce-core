@@ -808,7 +808,7 @@ class Order extends Model
                 $newOrder->btw += $taxPrice;
 
                 $vatRate = number_format($orderProduct->vat_rate, 0);
-                if(!isset($vatPercentagesForOrder[$vatRate])){
+                if (! isset($vatPercentagesForOrder[$vatRate])) {
                     $vatPercentagesForOrder[$vatRate] = 0;
                 }
                 $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
@@ -840,7 +840,7 @@ class Order extends Model
             $newOrder->btw += $taxPrice;
 
             $vatRate = 21;
-            if(!isset($vatPercentagesForOrder[$vatRate])){
+            if (! isset($vatPercentagesForOrder[$vatRate])) {
                 $vatPercentagesForOrder[$vatRate] = 0;
             }
             $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
