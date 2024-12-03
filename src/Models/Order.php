@@ -774,6 +774,7 @@ class Order extends Model
 
         $vatPercentages = 0;
         $vatPercentageCount = 0;
+        $vatPercentagesForOrder = [];
 
         foreach ($chosenOrderProducts as $chosenOrderProduct) {
             if ($chosenOrderProduct['refundQuantity'] > 0) {
@@ -791,7 +792,6 @@ class Order extends Model
 
                 $discountToGet -= $chosenOrderProduct['discount'];
                 $discountToSave += $chosenOrderProduct['discount'];
-
                 $vatPercentages += ($orderProduct->vat_rate * $chosenOrderProduct['refundQuantity']);
                 $vatPercentageCount += $chosenOrderProduct['refundQuantity'];
 
@@ -806,6 +806,12 @@ class Order extends Model
                 }
 
                 $newOrder->btw += $taxPrice;
+
+                $vatRate = number_format($orderProduct->vat_rate, 0);
+                if(!isset($vatPercentagesForOrder[$vatRate])){
+                    $vatPercentagesForOrder[$vatRate] = 0;
+                }
+                $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
             }
         }
 
@@ -832,9 +838,16 @@ class Order extends Model
             }
 
             $newOrder->btw += $taxPrice;
+
+            $vatRate = 21;
+            if(!isset($vatPercentagesForOrder[$vatRate])){
+                $vatPercentagesForOrder[$vatRate] = 0;
+            }
+            $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
         }
 
         $newOrder->subtotal = $newOrder->total;
+        $newOrder->vat_percentages = $vatPercentagesForOrder;
 
         if ($refundDiscountCosts && $discountToGet > 0.00) {
             if ($calculateInclusiveTax) {
