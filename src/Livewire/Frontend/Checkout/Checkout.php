@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
-use Dashed\DashedCore\Classes\AccountHelper;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -14,6 +13,7 @@ use Illuminate\Support\Facades\Http;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Validator;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Classes\AccountHelper;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
@@ -107,15 +107,16 @@ class Checkout extends Component
         $this->phoneNumberRequired = Customsetting::get('checkout_form_phone_number_delivery_address', default: 0);
         $this->useDeliveryAddressAsInvoiceAddress = Customsetting::get('checkout_delivery_address_standard_invoice_address', default: 1) ?: 0;
 
-        if($this->accountRequired == 1 && auth()->guest()){
+        if ($this->accountRequired == 1 && auth()->guest()) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('account-required', 'checkout', 'You need to create an account to checkout'))
                 ->send();
+
             return $this->redirect(AccountHelper::getAccountUrl());
         }
 
-        if($this->companyRequired == 1){
+        if ($this->companyRequired == 1) {
             $this->isCompany = true;
         }
 
@@ -259,7 +260,7 @@ class Checkout extends Component
             ],
             'firstName' => [
                 'max:255',
-                Rule::requiredIf($this->firstAndLastnameRequired == 1 || $this->postpayPaymentMethod)
+                Rule::requiredIf($this->firstAndLastnameRequired == 1 || $this->postpayPaymentMethod),
             ],
             'lastName' => [
                 'required',
