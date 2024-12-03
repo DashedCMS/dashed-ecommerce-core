@@ -39,7 +39,7 @@ class ExportInvoicesPage extends Page
                             ->label('Start datum'),
                         DatePicker::make('end_date')
                             ->label('Eind datum')
-                            ->after('start_date'),
+                            ->afterOrEqual('start_date'),
                         Select::make('sort')
                             ->label('Soort export')
                             ->options([

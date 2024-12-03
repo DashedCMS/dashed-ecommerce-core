@@ -37,11 +37,11 @@ class ExportOrdersPage extends Page
                     ->schema([
                         DatePicker::make('startDate')
                             ->label('Start datum')
-                        ->nullable(),
+                            ->nullable(),
                         DatePicker::make('endDate')
                             ->label('Eind datum')
-                        ->nullable()
-                        ->after('startDate'),
+                            ->nullable()
+                            ->afterOrEqual('startDate'),
                         Select::make('type')
                             ->label('Type export')
                             ->options([
