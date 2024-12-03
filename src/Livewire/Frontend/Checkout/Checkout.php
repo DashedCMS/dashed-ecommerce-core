@@ -222,7 +222,7 @@ class Checkout extends Component
                     ->retry(3, 1000)
                     ->get('https://postcode.tech/api/v1/postcode', [
                         'postcode' => $zipCode,
-                        'number' => $houseNr,
+                        'number' => preg_replace('/\D/', '', $houseNr),
                     ]);
                 if ($response->successful()) {
                     $response = $response->json();
