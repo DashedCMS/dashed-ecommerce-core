@@ -34,52 +34,42 @@
                                         @endif
                                     </div>
 
-                                    <div class="space-y-2">
-                                        <label class="inline-block text-sm font-bold">
-                                            {{Translation::get('enter-first-name', 'checkout', 'Vul je voornaam in')}}@if($firstAndLastnameRequired || $postpayPaymentMethod)
-                                                <span class="text-red-500">*</span>
-                                            @endif
-                                        </label>
-                                        <input type="text" class="form-input" id="first_name" name="first_name"
-                                               @if($firstAndLastnameRequired || $postpayPaymentMethod) required
-                                               @endif
-                                               wire:model.blur="firstName"
-                                               placeholder="{{Translation::get('first-name', 'checkout', 'Voornaam')}}">
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="inline-block text-sm font-bold">
-                                            {{Translation::get('enter-last-name', 'checkout', 'Vul je achternaam in')}}
-                                            <span class="text-red-500">*</span>
-                                        </label>
-                                        <input type="text" class="form-input" id="last_name" name="last_name"
-                                               required
-                                               wire:model.blur="lastName"
-                                               placeholder="{{Translation::get('last-name', 'checkout', 'Achternaam')}}">
-                                    </div>
+                                    <x-fields.input
+                                        :required="$firstAndLastnameRequired || $postpayPaymentMethod"
+                                        type="text"
+                                        model="firstName"
+                                        id="firstName"
+                                        :label="Translation::get('enter-first-name', 'checkout', 'Vul je voornaam in')"
+                                        placeholder="{{Translation::get('first-name', 'checkout', 'Voornaam')}}"
+                                    />
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-email-address', 'checkout', 'Vul je email adres in')}}
-                                            <span class="text-red-500">*</span></label>
+                                    <x-fields.input
+                                        required
+                                        type="text"
+                                        model="lastName"
+                                        id="lastName"
+                                        :label="Translation::get('enter-last-name', 'checkout', 'Vul je achternaam in')"
+                                        placeholder="{{Translation::get('last-name', 'checkout', 'Achternaam')}}"
+                                    />
 
-                                        <input type="email" class="form-input" id="email" name="email" required
-                                               wire:model.blur="email"
-                                               placeholder="{{Translation::get('email', 'checkout', 'Email')}}">
-                                    </div>
+                                    <x-fields.input
+                                        required
+                                        placeholder="{{Translation::get('email', 'checkout', 'Email')}}"
+                                        type="email"
+                                        model="email"
+                                        id="email"
+                                        :label="Translation::get('enter-email-address', 'checkout', 'Vul je email adres in')"
+                                    />
 
                                     @if($phoneNumberRequired != 0)
-                                        <div class="space-y-2">
-                                            <label
-                                                class="inline-block text-sm font-bold">{{Translation::get('enter-phone-number', 'checkout', 'Vul je telefoonnummer in')}}
-                                                @if($phoneNumberRequired == 1)
-                                                    <span class="text-red-500">*</span>
-                                                @endif</label>
-
-                                            <input type="text" class="form-input" id="phoneNumber" name="phoneNumber"
-                                                   @if($phoneNumberRequired == 1) required @endif
-                                                   wire:model.blur="phoneNumber"
-                                                   placeholder="{{Translation::get('phone-number', 'checkout', 'Telefoonnummer')}}">
-                                        </div>
+                                        <x-fields.input
+                                            :required="$phoneNumberRequired == 1"
+                                            placeholder="{{Translation::get('phone-number', 'checkout', 'Telefoonnummer')}}"
+                                            type="text"
+                                            model="phoneNumber"
+                                            id="phone_number"
+                                            :label="Translation::get('enter-phone-number', 'checkout', 'Vul je telefoonnummer in')"
+                                        />
                                     @endif
 
                                     @if(Auth::guest() && $accountRequired == 2)
@@ -90,185 +80,161 @@
                                                 @endif
                                             </label>
                                             <div class="grid gap-4 md:grid-cols-2">
-                                                <input type="password" class="form-input" id="password" name="password"
-                                                       placeholder="{{Translation::get('password', 'checkout', 'Wachtwoord')}}"
-                                                       wire:model.blur="password"
-                                                       @if(Customsetting::get('checkout_account') == 'required') required @endif>
-                                                <input type="password" class="form-input" id="password_confirmation"
-                                                       name="password_confirmation"
-                                                       wire:model.blur="passwordConfirmation"
-                                                       placeholder="{{Translation::get('password-repeat', 'checkout', 'Wachtwoord herhalen')}}"
-                                                       @if(Customsetting::get('checkout_account') == 'required') required @endif>
+                                                <x-fields.input
+                                                    :required="$accountRequired == 1"
+                                                    placeholder="{{Translation::get('password', 'checkout', 'Wachtwoord')}}"
+                                                    type="password"
+                                                    model="password"
+                                                    id="password"
+                                                />
+                                                <x-fields.input
+                                                    :required="$accountRequired == 1"
+                                                    placeholder="{{Translation::get('password-repeat', 'checkout', 'Wachtwoord herhalen')}}"
+                                                    type="password"
+                                                    model="passwordConfirmation"
+                                                    id="passwordConfirmation"
+                                                />
                                             </div>
                                         </div>
                                     @endif
+
+                                    <div class="md:col-span-2">
+                                        <x-fields.checkbox
+                                            model="marketing"
+                                            id="marketing"
+                                            :label="Translation::get('accept-marketing-text', 'checkout', 'Wil je onze nieuwsbrief ontvangen?')"
+                                        />
+                                    </div>
 
                                     <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
                                         {{ Translation::get('shipping-information', 'checkout', 'Verzend informatie') }}
                                     </h2>
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
-                                            <span
-                                                class="text-red-500">*</span></label>
+                                    <x-fields.input
+                                        required
+                                        type="text"
+                                        model="zipCode"
+                                        id="zipCode"
+                                        :label="Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')"
+                                        placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}"
+                                    />
 
-                                        <input type="text" class="form-input" id="zip_code" name="zip_code" required
-                                               wire:model.blur="zipCode"
-                                               placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}">
-                                    </div>
+                                    <x-fields.input
+                                        required
+                                        type="text"
+                                        model="houseNr"
+                                        id="houseNr"
+                                        :label="Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')"
+                                        placeholder="{{Translation::get('house-number', 'checkout', 'Huisnummer')}}"
+                                    />
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')}}
-                                            <span
-                                                class="text-red-500">*</span></label>
+                                    <x-fields.input
+                                        required
+                                        type="text"
+                                        model="street"
+                                        id="street"
+                                        :label="Translation::get('enter-street', 'checkout', 'Vul je straat in')"
+                                        placeholder="{{Translation::get('street', 'checkout', 'Straat')}}"
+                                    />
 
-                                        <input type="text" class="form-input" id="house_nr" name="house_nr" required
-                                               wire:model.blur="houseNr"
-                                               placeholder="{{Translation::get('house-number', 'checkout', 'Huisnummer')}}">
-                                    </div>
+                                    <x-fields.input
+                                        required
+                                        type="text"
+                                        model="city"
+                                        id="city"
+                                        :label="Translation::get('enter-city', 'checkout', 'Vul je stad in')"
+                                        placeholder="{{Translation::get('city', 'checkout', 'Stad')}}"
+                                    />
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
-                                            <span
-                                                class="text-red-500">*</span></label>
-
-                                        <input type="text" class="form-input" id="street" name="street" required
-                                               wire:model.blur="street"
-                                               placeholder="{{Translation::get('street', 'checkout', 'Straat')}}">
-                                    </div>
-
-                                    <div class="space-y-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-city', 'checkout', 'Vul je stad in')}}
-                                            <span
-                                                class="text-red-500">*</span></label>
-
-                                        <input type="text" class="form-input" id="city" name="city" required
-                                               wire:model.blur="city"
-                                               placeholder="{{Translation::get('city', 'checkout', 'Stad')}}">
-                                    </div>
-
-                                    <div class="space-y-2 md:col-span-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-country', 'checkout', 'Vul je land in')}}
-                                            <span
-                                                class="text-red-500">*</span></label>
-
-                                        <input type="text" class="form-input" id="country" name="country" required
-                                               wire:model.blur="country"
-                                               placeholder="{{Translation::get('country', 'checkout', 'Land')}}">
-                                    </div>
+                                    <x-fields.input
+                                        required
+                                        type="text"
+                                        model="country"
+                                        id="country"
+                                        :label="Translation::get('enter-country', 'checkout', 'Vul je land in')"
+                                        placeholder="{{Translation::get('country', 'checkout', 'Land')}}"
+                                    />
 
                                     @if($companyRequired != 0)
                                         @if($companyRequired == 2)
-                                            <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
-                                                <input
-                                                    wire:model.live="isCompany"
-                                                    class="transition rounded-sm shadow-inner border-black/20 text-primary-500 shadow-black/5 focus:ring-primary-500"
-                                                    type="checkbox" name="isCompany" id="isCompany">
-
-                                                <span>{!! Translation::get('order-as-company', 'checkout', 'Bestellen als bedrijf') !!}</span>
-                                            </label>
+                                            <div class="md:col-span-2">
+                                                <x-fields.checkbox
+                                                    model="isCompany"
+                                                    id="isCompany"
+                                                    :label="Translation::get('order-as-company', 'checkout', 'Bestellen als bedrijf')"
+                                                />
+                                            </div>
                                         @endif
                                         @if($isCompany || $companyRequired == 1)
-                                            <div class="space-y-2">
-                                                <label
-                                                    class="inline-block text-sm font-bold">{{Translation::get('enter-company', 'checkout', 'Vul bedrijfsnaam in')}}
-                                                    @if($companyRequired == 1)
-                                                        <span
-                                                            class="text-red-500">*</span>
-                                                    @endif</label>
-
-                                                <input type="text" class="form-input" id="company" name="company"
-                                                       wire:model.blur="company" @if($companyRequired == 1) required
-                                                       @endif
-                                                       placeholder="{{Translation::get('company', 'checkout', 'Bedrijfsnaam')}}">
-                                            </div>
-                                            <div class="space-y-2">
-                                                <label
-                                                    class="inline-block text-sm font-bold">{{Translation::get('enter-tax-id', 'checkout', 'Vul BTW ID in')}}</label>
-
-                                                <input type="text" class="form-input" id="taxId" name="taxId"
-                                                       wire:model.blur="taxId"
-                                                       placeholder="{{Translation::get('tax-id', 'checkout', 'BTW ID')}}">
-                                            </div>
+                                            <x-fields.input
+                                                :required="$companyRequired == 1"
+                                                type="text"
+                                                model="company"
+                                                id="company"
+                                                :label="Translation::get('enter-company-name', 'checkout', 'Vul je bedrijfsnaam in')"
+                                                placeholder="{{Translation::get('company-name', 'checkout', 'Bedrijfsnaam')}}"
+                                            />
+                                            <x-fields.input
+                                                type="text"
+                                                model="taxId"
+                                                id="taxId"
+                                                :label="Translation::get('enter-tax-id', 'checkout', 'Vul BTW ID in')"
+                                                placeholder="{{Translation::get('tax-id', 'checkout', 'BTW ID')}}"
+                                            />
                                         @endif
                                     @endif
 
-                                    <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
-                                        <input
-                                            wire:model.live="invoiceAddress"
-                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-500 shadow-black/5 focus:ring-primary-500"
-                                            type="checkbox" name="invoice_address" id="invoice_address">
-
-                                        <span>{!! Translation::get('seperate-invoice-address', 'checkout', 'Afwijkend factuur adres') !!}</span>
-                                    </label>
+                                    <div class="md:col-span-2">
+                                        <x-fields.checkbox
+                                            model="invoiceAddress"
+                                            id="invoiceAddress"
+                                            :label="Translation::get('seperate-invoice-address', 'checkout', 'Afwijkend factuur adres')"
+                                        />
+                                    </div>
                                     @if($invoiceAddress)
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
                                             {{ Translation::get('invoice-address', 'checkout', 'Factuur adres') }}
                                         </h2>
-                                        <div class="space-y-2">
-                                            <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')}}
-                                                <span class="text-red-500">*</span>
-                                            </label>
-                                            <input type="text" class="form-input"
-                                                   id="invoice_zip_code"
-                                                   name="invoice_zip_code"
-                                                   required
-                                                   wire:model.blur="invoiceZipCode"
-                                                   placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}">
-                                        </div>
-                                        <div class="space-y-2">
-                                            <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')}}
-                                                <span class="text-red-500">*</span>
-                                            </label>
-                                            <input type="text" class="form-input"
-                                                   id="invoice_house_nr"
-                                                   name="invoice_house_nr"
-                                                   required
-                                                   wire:model.blur="invoiceHouseNr"
-                                                   placeholder="{{Translation::get('house-number', 'checkout', 'Huisnummer')}}">
-                                        </div>
-                                        <div class="space-y-2">
-                                            <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-street', 'checkout', 'Vul je straat in')}}
-                                                <span class="text-red-500">*</span>
-                                            </label>
-                                            <input type="text" class="form-input"
-                                                   id="invoice_street"
-                                                   required
-                                                   onFocus="geolocate()"
-                                                   wire:model.blur="invoiceStreet"
-                                                   placeholder="{{Translation::get('street', 'checkout', 'Straat')}}">
-                                        </div>
-                                        <div class="space-y-2">
-                                            <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-city', 'checkout', 'Vul je stad in')}}
-                                                <span class="text-red-500">*</span>
-                                            </label>
-                                            <input type="text" class="form-input" id="invoice_city"
-                                                   name="invoice_city"
-                                                   required
-                                                   wire:model.blur="invoiceCity"
-                                                   placeholder="{{Translation::get('city', 'checkout', 'Stad')}}">
-                                        </div>
-                                        <div class="space-y-2 md:col-span-2">
-                                            <label class="inline-block text-sm font-bold">
-                                                {{Translation::get('enter-country', 'checkout', 'Vul je land in')}}
-                                                <span class="text-red-500">*</span>
-                                            </label>
-                                            <input type="text" class="form-input"
-                                                   id="invoice_country"
-                                                   name="invoice_country"
-                                                   required
-                                                   wire:model.blur="invoiceCountry"
-                                                   placeholder="{{Translation::get('country', 'checkout', 'Land')}}">
-                                        </div>
+                                        <x-fields.input
+                                            required
+                                            type="text"
+                                            model="invoiceZipCode"
+                                            id="invoiceZipCode"
+                                            :label="Translation::get('enter-zip-code', 'checkout', 'Vul je postcode in')"
+                                            placeholder="{{Translation::get('zip-code', 'checkout', 'Postcode')}}"
+                                        />
+                                        <x-fields.input
+                                            required
+                                            type="text"
+                                            model="invoiceHouseNr"
+                                            id="invoiceHouseNr"
+                                            :label="Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')"
+                                            placeholder="{{Translation::get('house-number', 'checkout', 'Huisnummer')}}"
+                                        />
+                                        <x-fields.input
+                                            required
+                                            type="text"
+                                            model="invoiceStreet"
+                                            id="invoiceStreet"
+                                            :label="Translation::get('enter-street', 'checkout', 'Vul je straat in')"
+                                            placeholder="{{Translation::get('street', 'checkout', 'Straat')}}"
+                                        />
+                                        <x-fields.input
+                                            required
+                                            type="text"
+                                            model="invoiceCity"
+                                            id="invoiceCity"
+                                            :label="Translation::get('enter-city', 'checkout', 'Vul je stad in')"
+                                            placeholder="{{Translation::get('city', 'checkout', 'Stad')}}"
+                                        />
+                                        <x-fields.input
+                                            required
+                                            type="text"
+                                            model="invoiceCountry"
+                                            id="invoiceCountry"
+                                            :label="Translation::get('enter-country', 'checkout', 'Vul je land in')"
+                                            placeholder="{{Translation::get('country', 'checkout', 'Land')}}"
+                                        />
                                     @endif
 
                                     <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
@@ -342,20 +308,51 @@
                                         <p class="bg-red-400 border-2 border-red-800 px-4 py-2 text-white">{{Translation::get('no-shipping-methods-available', 'checkout', 'Er zijn geen verzendmethodes beschikbaar, vul een land in.')}}</p>
                                     @endif
 
+                                    @if($postpayPaymentMethod)
+                                        <x-fields.input
+                                            :required="$postpayPaymentMethod"
+                                            type="date"
+                                            model="dateOfBirth"
+                                            id="dateOfBirth"
+                                            :label="Translation::get('enter-dob', 'checkout', 'Vul je geboortedatum in')"
+                                            placeholder="{{Translation::get('date-of-birth', 'checkout', 'Geboortedatum')}}"
+                                        />
+                                        <x-fields.select
+                                            :required="$postpayPaymentMethod"
+                                            model="gender"
+                                            id="gender"
+                                            :label="Translation::get('enter-gender', 'checkout', 'Kies een geslacht')"
+                                        >
+                                            <option
+                                                value="">{{Translation::get('enter-gender', 'checkout', 'Kies een geslacht')}}</option>
+                                            <option
+                                                value="m">{{Translation::get('enter-gender-male', 'checkout', 'Man')}}</option>
+                                            <option
+                                                value="f">{{Translation::get('enter-gender-female', 'checkout', 'Vrouw')}}</option>
+                                        </x-fields.select>
+                                        <small
+                                            class="leading-4 text-xs md:col-span-2">{{Translation::get('required-with-postpay', 'checkout', 'Deze velden zijn verplicht in combinatie met achteraf betalen')}}</small>
+                                    @endif
+
                                     <hr class="mt-4 md:col-span-2 border-black/5"/>
 
-                                    <textarea wire:model.blur="note"
-                                              placeholder="{{Translation::get('leave-a-note', 'checkout', 'Laat een notitie achter')}}"
-                                              class="md:col-span-2 form-input" name="note" id="note"></textarea>
+                                    <div class="md:col-span-2">
+                                        <x-fields.textarea
+                                            :placeholder="Translation::get('leave-a-note', 'checkout', 'Laat een notitie achter')"
+                                            model="note"
+                                            rows="3"
+                                            id="note"
+                                        />
+                                    </div>
 
-                                    <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
-                                        <input
-                                            wire:model.live="generalCondition" required
-                                            class="transition rounded-sm shadow-inner border-black/20 text-primary-500 shadow-black/5 focus:ring-primary-500"
-                                            type="checkbox" name="general_condition" id="general_condition">
-
-                                        <span>{!! Translation::get('accept-general-conditions', 'checkout', 'Ja, ik ga akkoord met de <a href="/algemene-voorwaarden">Algemene Voorwaarden</a> en <a href="/privacy-beleid">Privacy Statement</a>', 'editor') !!}</span>
-                                    </label>
+                                    <div class="md:col-span-2">
+                                        <x-fields.checkbox
+                                            model="generalCondition"
+                                            id="generalCondition"
+                                            labelClass="checkout-content"
+                                            :label='Translation::get("accept-general-conditions", "checkout", "Ja, ik ga akkoord met de <a href=\"/algemene-voorwaarden\">Algemene Voorwaarden</a> en <a href=\"/privacy-beleid\">Privacy Statement</a>", "editor")'
+                                        />
+                                    </div>
 
                                     <button type="submit"
                                             class="inline-flex items-center justify-between gap-4 mt-4 button button--primary w-full md:col-span-2">
