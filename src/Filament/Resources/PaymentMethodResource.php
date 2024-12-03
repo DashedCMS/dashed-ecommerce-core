@@ -79,13 +79,13 @@ class PaymentMethodResource extends Resource
             Select::make('pin_terminal_id')
                 ->label('PIN terminal')
                 ->helperText('Pin terminal')
-                ->visible(fn(Get $get) => $get('type') == 'pos')
-                ->options(fn() => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
+                ->visible(fn (Get $get) => $get('type') == 'pos')
+                ->options(fn () => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
                 ->searchable()
                 ->preload(),
             Toggle::make('postpay')
                 ->label('Achteraf betaalmethode')
-                ->hidden(fn($record) => $record && $record->psp == 'own'),
+                ->hidden(fn ($record) => $record && $record->psp == 'own'),
             Textarea::make('additional_info')
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
@@ -114,12 +114,12 @@ class PaymentMethodResource extends Resource
                 ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
                 ->maxLength(255)
                 ->reactive()
-                ->hidden(fn($record) => !$record || ($record && $record->psp != 'own')),
+                ->hidden(fn ($record) => ! $record || ($record && $record->psp != 'own')),
             Select::make('deposit_calculation_payment_method_ids')
                 ->multiple()
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn($record, Get $get) => (!$record || ($record && $record->psp != 'own')) || !$get('deposit_calculation')),
+                ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
         ];
 
         return $form
@@ -130,14 +130,14 @@ class PaymentMethodResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
                     ->hidden(function () {
-                        return !(Sites::getAmountOfSites() > 1);
+                        return ! (Sites::getAmountOfSites() > 1);
                     })
-                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Betaalmethode')
                     ->schema($contentSchema),
             ]);
@@ -154,7 +154,7 @@ class PaymentMethodResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
                     ->label('PSP')
@@ -162,7 +162,7 @@ class PaymentMethodResource extends Resource
                     ->searchable(),
                 ImageColumn::make('image')
                     ->label('Afbeelding')
-                    ->getStateUsing(fn($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
+                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
                     ->label('Actief')
                     ->trueIcon('heroicon-o-check-circle')
