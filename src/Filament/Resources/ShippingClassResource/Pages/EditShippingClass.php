@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages;
 
-use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\DeleteAction;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
