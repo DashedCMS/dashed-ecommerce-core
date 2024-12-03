@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
+use Dashed\DashedCore\Classes\AccountHelper;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -58,6 +59,12 @@ class Checkout extends Component
     public string $company = '';
     public string $taxId = '';
 
+    public int $accountRequired;
+    public int $firstAndLastnameRequired;
+    public int $companyRequired;
+    public int $phoneNumberRequired;
+    public int $useDeliveryAddressAsInvoiceAddress;
+
     public $subtotal;
     public $discount;
     public $tax;
@@ -93,6 +100,24 @@ class Checkout extends Component
         $this->invoiceZipCode = optional(auth()->user())->lastOrder()->invoice_zip_code ?? '';
         $this->invoiceCity = optional(auth()->user())->lastOrder()->invoice_city ?? '';
         $this->invoiceCountry = optional(auth()->user())->lastOrder()->invoice_country ?? '';
+
+        $this->accountRequired = Customsetting::get('checkout_account', default: 2);
+        $this->firstAndLastnameRequired = Customsetting::get('checkout_form_name', default: 0);
+        $this->companyRequired = Customsetting::get('checkout_form_company_name', default: 2);
+        $this->phoneNumberRequired = Customsetting::get('checkout_form_phone_number_delivery_address', default: 0);
+        $this->useDeliveryAddressAsInvoiceAddress = Customsetting::get('checkout_delivery_address_standard_invoice_address', default: 1) ?: 0;
+
+        if($this->accountRequired == 1 && auth()->guest()){
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('account-required', 'checkout', 'You need to create an account to checkout'))
+                ->send();
+            return $this->redirect(AccountHelper::getAccountUrl());
+        }
+
+        if($this->companyRequired == 1){
+            $this->isCompany = true;
+        }
 
         $this->checkCart();
         $this->retrievePaymentMethods();
@@ -234,6 +259,7 @@ class Checkout extends Component
             ],
             'firstName' => [
                 'max:255',
+                Rule::requiredIf($this->firstAndLastnameRequired == 1 || $this->postpayPaymentMethod)
             ],
             'lastName' => [
                 'required',
@@ -274,11 +300,11 @@ class Checkout extends Component
                 'max:255',
             ],
             'phoneNumber' => [
-                Rule::requiredIf(Customsetting::get('checkout_form_phone_number_delivery_address') == 'required'),
+                Rule::requiredIf($this->phoneNumberRequired == 1),
                 'max:255',
             ],
             'company' => [
-                Rule::requiredIf(Customsetting::get('checkout_form_company_name') == 'required'),
+                Rule::requiredIf($this->companyRequired == 1),
                 'max:255',
             ],
             'taxId' => [

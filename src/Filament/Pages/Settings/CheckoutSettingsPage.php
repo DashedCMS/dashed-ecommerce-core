@@ -32,11 +32,10 @@ class CheckoutSettingsPage extends Page
         $formData = [];
         $sites = Sites::getSites();
         foreach ($sites as $site) {
-            $formData["checkout_account_{$site['id']}"] = Customsetting::get('checkout_account', $site['id'], 'optional');
-            $formData["checkout_form_name_{$site['id']}"] = Customsetting::get('checkout_form_name', $site['id'], 'last');
-            $formData["checkout_form_company_name_{$site['id']}"] = Customsetting::get('checkout_form_company_name', $site['id'], 'hidden');
-            //            $formData["checkout_form_address_line_2_{$site['id']}"] = Customsetting::get('checkout_form_address_line_2', $site['id'], 'optional');
-            $formData["checkout_form_phone_number_delivery_address_{$site['id']}"] = Customsetting::get('checkout_form_phone_number_delivery_address', $site['id'], 'hidden');
+            $formData["checkout_account_{$site['id']}"] = Customsetting::get('checkout_account', $site['id'], 2);
+            $formData["checkout_form_name_{$site['id']}"] = Customsetting::get('checkout_form_name', $site['id'], 0);
+            $formData["checkout_form_company_name_{$site['id']}"] = Customsetting::get('checkout_form_company_name', $site['id'], 2);
+            $formData["checkout_form_phone_number_delivery_address_{$site['id']}"] = Customsetting::get('checkout_form_phone_number_delivery_address', $site['id'], 0);
             $formData["checkout_delivery_address_standard_invoice_address_{$site['id']}"] = Customsetting::get('checkout_delivery_address_standard_invoice_address', $site['id'], 1);
             $formData["checkout_autofill_address_{$site['id']}"] = Customsetting::get('checkout_autofill_address', $site['id'], 1);
             $formData["checkout_extra_scripts_{$site['id']}"] = Customsetting::get('checkout_extra_scripts', $site['id']);
@@ -71,32 +70,32 @@ class CheckoutSettingsPage extends Page
                 Radio::make("checkout_account_{$site['id']}")
                     ->label('Klantaccounts')
                     ->options([
-                        'disabled' => 'Accounts zijn uitgeschakeld',
-                        'optional' => 'Accounts zijn optioneel',
-                        'required' => 'Account vereist',
+                        0 => 'Accounts zijn uitgeschakeld',
+                        2 => 'Accounts zijn optioneel',
+                        1 => 'Account vereist',
                     ])
                     ->required(),
                 Radio::make("checkout_form_name_{$site['id']}")
                     ->label('Voor- en achternaam')
                     ->options([
-                        'last' => 'Alleen achternaam nodig',
-                        'full' => 'Voor- en achternaam vereisen',
+                        0 => 'Alleen achternaam nodig',
+                        1 => 'Voor- en achternaam vereisen',
                     ])
                     ->required(),
                 Radio::make("checkout_form_company_name_{$site['id']}")
                     ->label('Bedrijfsnaam')
                     ->options([
-                        'hidden' => 'Verborgen',
-                        'optional' => 'Optioneel',
-                        'required' => 'Verplicht',
+                        0 => 'Verborgen',
+                        2 => 'Optioneel',
+                        1 => 'Verplicht',
                     ])
                     ->required(),
                 Radio::make("checkout_form_phone_number_delivery_address_{$site['id']}")
                     ->label('Telefoonnummer van het bezorgadres')
                     ->options([
-                        'hidden' => 'Verborgen',
-                        'optional' => 'Optioneel',
-                        'required' => 'Verplicht',
+                        0 => 'Verborgen',
+                        2 => 'Optioneel',
+                        1 => 'Verplicht',
                     ])
                     ->required(),
                 Toggle::make("checkout_delivery_address_standard_invoice_address_{$site['id']}")
@@ -126,9 +125,9 @@ class CheckoutSettingsPage extends Page
                 TextInput::make("checkout_postcode_api_key_{$site['id']}")
                     ->label('Postcode API key')
                     ->hintAction(Action::make('requestPostcodeApi')
-                    ->label('API aanvragen')
-                    ->url('https://postcode.tech/')
-                    ->openUrlInNewTab())
+                        ->label('API aanvragen')
+                        ->url('https://postcode.tech/')
+                        ->openUrlInNewTab())
                     ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.'),
                 TextInput::make("checkout_bcc_email_{$site['id']}")
                     ->email()
