@@ -17,11 +17,11 @@
                     </div>
                 @endif
                 <x-drift::image
-                        class="w-full h-full"
-                        config="dashed"
-                        :path="$option['image']"
-                        :alt="$option['name']"
-                        :manipulations="[
+                    class="w-full h-full"
+                    config="dashed"
+                    :path="$option['image']"
+                    :alt="$option['name']"
+                    :manipulations="[
                                                 'fit' => [150,150],
                                             ]"
                 />

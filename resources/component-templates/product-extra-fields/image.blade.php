@@ -17,18 +17,18 @@
                     </div>
                 @endif
                 <x-drift::image
-                        class="w-full h-full"
-                        config="dashed"
-                        :path="$option->image"
-                        :alt="$option->value"
-                        :manipulations="[
+                    class="w-full h-full"
+                    config="dashed"
+                    :path="$option->image"
+                    :alt="$option->value"
+                    :manipulations="[
                                                 'fit' => [150,150],
                                             ]"
                 />
                 <span class="font-brand text-center">{{$option->value}}</span>
-                    @if($option->price > 0)
-                        <span class="font-bold text-center">+ {{CurrencyHelper::formatPrice($option->price)}}</span>
-                    @endif
+                @if($option->price > 0)
+                    <span class="font-bold text-center">+ {{CurrencyHelper::formatPrice($option->price)}}</span>
+                @endif
             </div>
         @endforeach
     </div>

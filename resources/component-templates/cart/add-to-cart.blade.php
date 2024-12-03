@@ -12,6 +12,7 @@
             <x-dynamic-component
                 :component="'product-extra-fields.' . $extra['type']"
                 :extra="$extra"
+                :extras="$extras"
                 :extraKey="$extraKey"/>
         @endforeach
     @endif
