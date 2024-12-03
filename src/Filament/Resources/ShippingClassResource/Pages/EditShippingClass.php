@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages;
 
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
@@ -20,5 +21,12 @@ class EditShippingClass extends EditRecord
             LocaleSwitcher::make(),
             DeleteAction::make(),
         ];
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
+
+        return $data;
     }
 }
