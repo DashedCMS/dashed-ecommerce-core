@@ -25,7 +25,7 @@
                                     <div class="md:col-span-2">
                                         <h2 class="text-xl font-bold text-primary-500">{{ Translation::get('contact-information', 'checkout', 'Contact informatie') }}</h2>
 
-                                        @if(Auth::guest() && Customsetting::get('checkout_account') != 'disabled')
+                                        @if(Auth::guest() && $accountRequired == 2)
                                             <p class="text-black">
                                                 {{Translation::get('already-have-account', 'checkout', 'Heb je al een account?')}}
                                                 <a href="{{AccountHelper::getAccountUrl()}}"
@@ -36,12 +36,12 @@
 
                                     <div class="space-y-2">
                                         <label class="inline-block text-sm font-bold">
-                                            {{Translation::get('enter-first-name', 'checkout', 'Vul je voornaam in')}}@if(Customsetting::get('checkout_form_name') == 'full' || $postpayPaymentMethod)
+                                            {{Translation::get('enter-first-name', 'checkout', 'Vul je voornaam in')}}@if($firstAndLastnameRequired || $postpayPaymentMethod)
                                                 <span class="text-red-500">*</span>
                                             @endif
                                         </label>
                                         <input type="text" class="form-input" id="first_name" name="first_name"
-                                               @if(Customsetting::get('checkout_form_name') == 'full' || $postpayPaymentMethod) required
+                                               @if($firstAndLastnameRequired || $postpayPaymentMethod) required
                                                @endif
                                                wire:model.blur="firstName"
                                                placeholder="{{Translation::get('first-name', 'checkout', 'Voornaam')}}">
@@ -67,18 +67,22 @@
                                                placeholder="{{Translation::get('email', 'checkout', 'Email')}}">
                                     </div>
 
-                                    <div class="space-y-2">
-                                        <label
-                                            class="inline-block text-sm font-bold">{{Translation::get('enter-phone-number', 'checkout', 'Vul je telefoonnummer in')}}
-                                            <span class="text-red-500">*</span></label>
+                                    @if($phoneNumberRequired != 0)
+                                        <div class="space-y-2">
+                                            <label
+                                                class="inline-block text-sm font-bold">{{Translation::get('enter-phone-number', 'checkout', 'Vul je telefoonnummer in')}}
+                                                @if($phoneNumberRequired == 1)
+                                                    <span class="text-red-500">*</span>
+                                                @endif</label>
 
-                                        <input type="text" class="form-input" id="phoneNumber" name="phoneNumber"
-                                               required
-                                               wire:model.blur="phoneNumber"
-                                               placeholder="{{Translation::get('phone-number', 'checkout', 'Telefoonnummer')}}">
-                                    </div>
+                                            <input type="text" class="form-input" id="phoneNumber" name="phoneNumber"
+                                                   @if($phoneNumberRequired == 1) required @endif
+                                                   wire:model.blur="phoneNumber"
+                                                   placeholder="{{Translation::get('phone-number', 'checkout', 'Telefoonnummer')}}">
+                                        </div>
+                                    @endif
 
-                                    @if(Auth::guest() && Customsetting::get('checkout_account') != 'disabled')
+                                    @if(Auth::guest() && $accountRequired == 2)
                                         <div class="space-y-2 md:col-span-2">
                                             <label class="inline-block text-sm font-bold">
                                                 {{Translation::get('enter-password-to-create-account', 'checkout', 'Vul een wachtwoord in om gelijk een account aan te maken')}}@if(Customsetting::get('checkout_account') == 'required')
@@ -100,7 +104,7 @@
                                     @endif
 
                                     <h2 class="pt-4 mt-4 text-xl font-bold border-t md:col-span-2 text-primary-500 border-black/5">
-                                        {{ Translation::get('shipping-address', 'checkout', 'Verzendmethode') }}
+                                        {{ Translation::get('shipping-information', 'checkout', 'Verzend informatie') }}
                                     </h2>
 
                                     <div class="space-y-2">
@@ -157,6 +161,42 @@
                                                wire:model.blur="country"
                                                placeholder="{{Translation::get('country', 'checkout', 'Land')}}">
                                     </div>
+
+                                    @if($companyRequired != 0)
+                                        @if($companyRequired == 2)
+                                            <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
+                                                <input
+                                                    wire:model.live="isCompany"
+                                                    class="transition rounded-sm shadow-inner border-black/20 text-primary-500 shadow-black/5 focus:ring-primary-500"
+                                                    type="checkbox" name="isCompany" id="isCompany">
+
+                                                <span>{!! Translation::get('order-as-company', 'checkout', 'Bestellen als bedrijf') !!}</span>
+                                            </label>
+                                        @endif
+                                        @if($isCompany || $companyRequired == 1)
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="inline-block text-sm font-bold">{{Translation::get('enter-company', 'checkout', 'Vul bedrijfsnaam in')}}
+                                                    @if($companyRequired == 1)
+                                                        <span
+                                                            class="text-red-500">*</span>
+                                                    @endif</label>
+
+                                                <input type="text" class="form-input" id="company" name="company"
+                                                       wire:model.blur="company" @if($companyRequired == 1) required
+                                                       @endif
+                                                       placeholder="{{Translation::get('company', 'checkout', 'Bedrijfsnaam')}}">
+                                            </div>
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="inline-block text-sm font-bold">{{Translation::get('enter-tax-id', 'checkout', 'Vul BTW ID in')}}</label>
+
+                                                <input type="text" class="form-input" id="taxId" name="taxId"
+                                                       wire:model.blur="taxId"
+                                                       placeholder="{{Translation::get('tax-id', 'checkout', 'BTW ID')}}">
+                                            </div>
+                                        @endif
+                                    @endif
 
                                     <label class="flex items-center gap-2 text-sm font-bold md:col-span-2">
                                         <input
