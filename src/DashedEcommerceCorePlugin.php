@@ -2,18 +2,18 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;

@@ -2,32 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\EditProductTab;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\ListProductTab;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductTab;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Forms\Form;
 use Filament\Forms\Set;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use FilamentTiptapEditor\TiptapEditor;
 use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
-use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
-use FilamentTiptapEditor\TiptapEditor;
-use Illuminate\Support\Facades\DB;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\EditProductTab;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\ListProductTab;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
 
 class ProductTabResource extends Resource
 {
@@ -68,12 +64,13 @@ class ProductTabResource extends Resource
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->label('Gekoppelde producten')
-                            ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->multiple()
-                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
-                            ->hintAction(Action::make('addAllProducts')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                            ->hintAction(
+                                Action::make('addAllProducts')
                                 ->label('Voeg alle producten toe')
                                 ->action(function (Set $set) {
                                     $set('products', Product::all()->pluck('id')->toArray());

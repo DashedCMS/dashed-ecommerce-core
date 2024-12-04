@@ -2,12 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Filament\Actions\CreateAction;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 
 class ListProductTab extends ListRecords
 {

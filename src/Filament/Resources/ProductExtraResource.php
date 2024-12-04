@@ -2,35 +2,29 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\CreateProductExtra;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\EditProductExtra;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\ListProductExtra;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductTab;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
 use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
-use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
-use FilamentTiptapEditor\TiptapEditor;
-use Illuminate\Support\Facades\DB;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\EditProductExtra;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\ListProductExtra;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\CreateProductExtra;
 
 class ProductExtraResource extends Resource
 {
@@ -85,28 +79,28 @@ class ProductExtraResource extends Resource
                         'dateTime' => 'Datum + tijd',
                     ])
                     ->default('text')
-                    ->visible(fn(Get $get) => $get('type') == 'input')
-                    ->required(fn(Get $get) => $get('type') == 'input'),
+                    ->visible(fn (Get $get) => $get('type') == 'input')
+                    ->required(fn (Get $get) => $get('type') == 'input'),
                 TextInput::make('min_length')
                     ->label('Minimale lengte/waarde')
                     ->numeric()
-                    ->visible(fn(Get $get) => $get('type') == 'input')
-                    ->required(fn(Get $get) => $get('type') == 'input'),
+                    ->visible(fn (Get $get) => $get('type') == 'input')
+                    ->required(fn (Get $get) => $get('type') == 'input'),
                 TextInput::make('max_length')
                     ->label('Maximale lengte/waarde')
                     ->numeric()
-                    ->visible(fn(Get $get) => $get('type') == 'input')
-                    ->required(fn(Get $get) => $get('type') == 'input')
+                    ->visible(fn (Get $get) => $get('type') == 'input')
+                    ->required(fn (Get $get) => $get('type') == 'input')
                     ->reactive(),
                 Toggle::make('required')
                     ->label('Verplicht'),
                 Repeater::make('productExtraOptions')
                     ->relationship('productExtraOptions')
-                    ->cloneable(fn(Get $get) => $get('type') != 'checkbox')
+                    ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
                     ->label('Opties van deze product extra')
-                    ->visible(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                    ->required(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                    ->maxItems(fn(Get $get) => $get('type') == 'checkbox' ? 1 : 50)
+                    ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                    ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                    ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
                     ->reactive()
                     ->schema([
                         TextInput::make('value')
@@ -129,12 +123,13 @@ class ProductExtraResource extends Resource
                 Select::make('products')
                     ->relationship('products', 'name')
                     ->label('Gekoppelde producten')
-                    ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                    ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                     ->searchable()
                     ->preload()
                     ->multiple()
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
-                    ->hintAction(Action::make('addAllProducts')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->hintAction(
+                        Action::make('addAllProducts')
                         ->label('Voeg alle producten toe')
                         ->action(function (Set $set) {
                             $set('products', Product::all()->pluck('id')->toArray());
