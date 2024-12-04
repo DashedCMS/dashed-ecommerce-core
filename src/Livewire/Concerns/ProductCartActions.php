@@ -27,6 +27,7 @@ trait ProductCartActions
     public $suggestedProducts;
     public $crossSellProducts;
     public array $filters = [];
+    public ?Collection $productTabs = null;
     public ?Collection $productExtras = null;
     public ?array $extras = [];
     public string|int $quantity = 1;
@@ -137,12 +138,13 @@ trait ProductCartActions
         $this->characteristics = $this->product->showableCharacteristics();
         $this->suggestedProducts = $this->product->getSuggestedProducts();
         $this->crossSellProducts = $this->product->getCrossSellProducts();
+        $this->productTabs = $this->product->tabs;
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
             if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false)) {
                 return redirect($this->product->getUrl(forceOwnUrl: true));
             }
-            $this->productExtras = $this->product->allProductExtras();
-            $this->extras = $this->product->allProductExtras()->toArray();
+            $this->productExtras = $this->product->productExtras;
+            $this->extras = $this->product->productExtras->toArray();
         }
 
         $this->name = $this->product->name ?? $this->parentProduct->name;
@@ -250,7 +252,7 @@ trait ProductCartActions
         $cartUpdated = false;
         $productPrice = $product->currentPrice;
         $options = [];
-        foreach ($product->allProductExtras() as $extraKey => $productExtra) {
+        foreach ($product->productExtras as $extraKey => $productExtra) {
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && ! $productValue) {
