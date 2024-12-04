@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
@@ -31,9 +33,16 @@ class ProductExtra extends Model
 
     protected $table = 'dashed__product_extras';
 
-    public static function boot()
+
+    public static function booted()
     {
-        parent::boot();
+        parent::booted();
+
+        static::creating(function ($productExtra) {
+            if ($productExtra->global) {
+                $productExtra->order = ProductExtra::where('global', 1)->max('order') + 1;
+            }
+        });
 
         static::deleting(function ($productExtra) {
             foreach ($productExtra->productExtraOptions as $productExtraOption) {
@@ -47,12 +56,12 @@ class ProductExtra extends Model
         return LogOptions::defaults();
     }
 
-    public function product()
+    public function products(): BelongsToMany
     {
-        return $this->belongsto(Product::class);
+        return $this->belongsToMany(Product::class, 'dashed__product_extra_product', 'product_extra_id', 'product_id');
     }
 
-    public function productExtraOptions()
+    public function productExtraOptions(): HasMany
     {
         return $this->hasMany(ProductExtraOption::class);
     }

@@ -147,7 +147,7 @@ class DiscountCodeResource extends Resource
                             ->relationship('products', 'name')
                             ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label('Selecteer producten waar deze kortingscode voor geldt')
                             ->required()
                             ->hidden(fn ($get) => $get('valid_for') != 'products'),
@@ -155,7 +155,7 @@ class DiscountCodeResource extends Resource
                             ->relationship('productCategories', 'name')
                             ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label('Selecteer categorieën waar deze kortingscode voor geldt')
                             ->required(fn ($get) => $get('valid_for') == 'categories')
                             ->hidden(fn ($get) => $get('valid_for') != 'categories'),
