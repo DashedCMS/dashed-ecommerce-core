@@ -236,7 +236,7 @@ class EditProduct extends EditRecord
         foreach (DB::table('dashed__product_crosssell_product')->where('product_id', $this->record->id)->get() as $crossSellProduct) {
             DB::table('dashed__product_crosssell_product')->insert([
                 'product_id' => $newProduct->id,
-                'suggested_product_id' => $crossSellProduct->suggested_product_id,
+                'crosssell_product_id' => $crossSellProduct->crosssell_product_id,
                 'order' => $crossSellProduct->order,
             ]);
         }

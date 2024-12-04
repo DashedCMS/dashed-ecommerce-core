@@ -31,6 +31,7 @@ class Cart extends Component
         $this->discountCode = session('discountCode', '');
         $this->checkCart();
         $this->fillPrices();
+        $this->getSuggestedProducts();
     }
 
     public function fillPrices()

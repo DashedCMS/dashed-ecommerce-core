@@ -16,12 +16,38 @@
                 <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900">{{Translation::get('thanks-for-order-title', 'complete-order', 'Bedankt voor je bestelling!')}}</p>
                 <p class="mt-2 text-base text-gray-500">{{Translation::get('thanks-for-order-description', 'complete-order', 'We hebben je bestelling ontvangen en gaan hem verwerken!')}}</p>
 
-                @foreach($order->trackAndTraces as $trackAndTrace)
-                    <dl class="mt-16 text-sm font-medium">
-                        <dt class="text-gray-900">{{ Translation::get('track-and-trace', 'view-order', 'Track&trace') }}</dt>
-                        <dd class="mt-2 text-primary-600 text-link"><a target="_blank" href="{{ $trackAndTrace->url ?: '#' }}">{{ $trackAndTrace->delivery_company . ': ' . $trackAndTrace->code }}</a></dd>
-                    </dl>
-                @endforeach
+                @if($order->mainPaymentMethod && $order->mainPaymentMethod->payment_instructions)
+                    <div class="mt-6 text-sm text-orange-500 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                            <path fill-rule="evenodd"
+                                  d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+
+                        <span>{!! $order->mainPaymentMethod->payment_instructions !!}</span>
+                    </div>
+                @endif
+
+                @if($order->trackAndTraces()->count())
+                    @foreach($order->trackAndTraces as $trackAndTrace)
+                        <a href="{{ $trackAndTrace->url ?: '#' }}" target="_blank" class="mt-6 text-sm font-medium">
+                            <dt class="text-gray-900">{{ Translation::get('tracking-number', 'complete-order', 'Track en trace van :deliveryCompany:', 'text', [
+                                'deliveryCompany' => $trackAndTrace->delivery_company
+                            ]) }}</dt>
+                            <dd class="mt-2 text-primary-600">{{ $trackAndTrace->code }}</dd>
+                        </a>
+                    @endforeach
+                @else
+                    <div class="mt-6 text-sm text-orange-500 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                            <path fill-rule="evenodd"
+                                  d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+
+                        <span>{{ Translation::get('no-tracking-numbers-available', 'complete-order', 'Er zijn (nog) geen track & trace codes beschikbaar.') }}</span>
+                    </div>
+                @endif
 
                 <ul role="list"
                     class="mt-6 divide-y divide-gray-200 border-t border-gray-200 text-sm font-medium text-gray-500">

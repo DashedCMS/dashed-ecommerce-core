@@ -9,6 +9,8 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 trait CartActions
 {
+    public $suggestedProducts = [];
+
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
@@ -92,5 +94,10 @@ trait CartActions
         $this->depositAmount = $checkoutData['depositAmount'];
         $this->depositPaymentMethods = $checkoutData['depositPaymentMethods'];
         $this->postpayPaymentMethod = $checkoutData['postpayPaymentMethod'];
+    }
+
+    public function getSuggestedProducts()
+    {
+        $this->suggestedProducts = ShoppingCart::getCrossSellAndSuggestedProducts();
     }
 }

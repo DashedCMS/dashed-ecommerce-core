@@ -318,7 +318,7 @@
                         {{--                            </div>--}}
                         {{--                        @endif--}}
 
-                        <div wire:ignore>
+                        <div wire:key="product-cross-sells-{{ $product->id }}">
                             @if(count($crossSellProducts))
                                 <div class="mt-6 grid gap-4">
                                     <h3 class="text-sm font-bold text-gray-900 text-center">{{ Translation::get('product-cross-sell', 'product', 'Vaak samen gekocht') }}</h3>
@@ -331,20 +331,26 @@
                             @endif
                         </div>
 
-                        <div class="mt-6 grid gap-2" x-data="{ openTab: '' }">
+                        <div class="mt-6 grid gap-2" wire:key="product-tabs-{{ $product->id }}" x-data="{
+                                activeTab: '',
+
+                                openTab(tab) {
+                                    this.activeTab = this.activeTab == tab ? '' : tab;
+                                },
+                            }">
                             @if($description)
                                 <div class="bg-gray-100">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
-                                         @click="openTab == 'description' ? openTab = '' : openTab = 'description'">
+                                         @click="openTab('description')">
                                         <h3>{{ Translation::get('product-description', 'products', 'Beschrijving') }}</h3>
-                                        <svg x-show="openTab == 'description'"
+                                        <svg x-show="activeTab == 'description'"
                                              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                              class="size-6">
                                             <path fill-rule="evenodd"
                                                   d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
                                                   clip-rule="evenodd"/>
                                         </svg>
-                                        <svg x-cloak x-show="openTab != 'description'"
+                                        <svg x-cloak x-show="activeTab != 'description'"
                                              xmlns="http://www.w3.org/2000/svg"
                                              viewBox="0 0 24 24" fill="currentColor" class="size-6">
                                             <path fill-rule="evenodd"
@@ -355,7 +361,7 @@
                                     <div
                                         class="px-4 pb-4"
                                         x-cloak
-                                        x-show="openTab == 'description'"
+                                        x-show="activeTab == 'description'"
                                         x-transition.opacity.scale.origin.top
                                     >
                                         {!! $description !!}
@@ -366,16 +372,16 @@
                             @if($characteristics)
                                 <div class="bg-gray-100">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
-                                         @click="openTab == 'characteristics' ? openTab = '' : openTab = 'characteristics'">
+                                         @click="openTab('characteristics')">
                                         <h3>{{ Translation::get('product-characteristics', 'product', 'Productkenmerken') }}</h3>
-                                        <svg x-cloak x-show="openTab != 'characteristics'"
+                                        <svg x-cloak x-show="activeTab != 'characteristics'"
                                              xmlns="http://www.w3.org/2000/svg"
                                              viewBox="0 0 24 24" fill="currentColor" class="size-6">
                                             <path fill-rule="evenodd"
                                                   d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
                                                   clip-rule="evenodd"/>
                                         </svg>
-                                        <svg x-show="openTab == 'characteristics'"
+                                        <svg x-show="activeTab == 'characteristics'"
                                              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                              class="size-6">
                                             <path fill-rule="evenodd"
@@ -386,7 +392,7 @@
                                     <div
                                         class="px-4 pb-4"
                                         x-cloak
-                                        x-show="openTab == 'characteristics'"
+                                        x-show="activeTab == 'characteristics'"
                                         x-transition.opacity.scale.origin.top
                                     >
                                         <div class="grid grid-cols-2 gap-4">
@@ -405,15 +411,15 @@
                             @if(count($product->contentBlocks['faqs'] ?? []))
                                 <div class="bg-gray-100">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
-                                         @click="openTab == 'faq' ? openTab = '' : openTab = 'faq'">
+                                         @click="openTab('faq')">
                                         <h3>{{ Translation::get('faq', 'product', 'Veelgestelde vragen') }}</h3>
-                                        <svg x-cloak x-show="openTab != 'faq'" xmlns="http://www.w3.org/2000/svg"
+                                        <svg x-cloak x-show="activeTab != 'faq'" xmlns="http://www.w3.org/2000/svg"
                                              viewBox="0 0 24 24" fill="currentColor" class="size-6">
                                             <path fill-rule="evenodd"
                                                   d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
                                                   clip-rule="evenodd"/>
                                         </svg>
-                                        <svg x-show="openTab == 'faq'"
+                                        <svg x-show="activeTab == 'faq'"
                                              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                              class="size-6">
                                             <path fill-rule="evenodd"
@@ -424,7 +430,7 @@
                                     <div
                                         class="px-4 pb-4"
                                         x-cloak
-                                        x-show="openTab == 'faq'"
+                                        x-show="activeTab == 'faq'"
                                         x-transition.opacity.scale.origin.top
                                     >
                                         <div class="grid gap-4" x-data="{ openFaq: '' }">

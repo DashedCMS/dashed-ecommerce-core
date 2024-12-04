@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Http;
@@ -85,7 +86,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -117,7 +118,7 @@ class ShoppingCart
         $cartTotal = self::total(false, false, $shippingMethodId, $paymentMethodId);
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
+        if (!$calculateInclusiveTax) {
             $cartTotal -= self::btw(false, false);
             //            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
         }
@@ -169,7 +170,7 @@ class ShoppingCart
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
+        if (!$calculateInclusiveTax) {
             $cartTotal = $cartTotal + self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
         }
 
@@ -204,6 +205,7 @@ class ShoppingCart
                 if ($paymentMethod['id'] == $paymentMethodId) {
                     if ($paymentMethod['deposit_calculation']) {
                         $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', self::total(false, $calculateDiscount, $shippingMethodId, null), $paymentMethod['deposit_calculation']);
+                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL}', self::total(false, $calculateDiscount, $shippingMethodId, $paymentMethodId), $paymentMethod['deposit_calculation']);
                         $depositAmount = eval('return ' . $paymentMethod['deposit_calculation'] . ';');
                     }
                 }
@@ -307,7 +309,7 @@ class ShoppingCart
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
 
-        if (! $vatRate) {
+        if (!$vatRate) {
             $vatRate = self::vatRateForShippingMethod($shippingMethodId);
         }
 
@@ -366,7 +368,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -410,7 +412,7 @@ class ShoppingCart
                     $taxTotal += $price;
                     if (($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate) > 0) {
                         //                        dump($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate);
-                        if (! isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
+                        if (!isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
                             $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] = 0;
                         }
                         if ($discountCode && $discountCode->type == 'percentage') {
@@ -432,10 +434,10 @@ class ShoppingCart
         $totalVatPerPercentage = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-            if (! isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
+            if (!isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
                 $vatPercentageOfTotals[number_format($percentage, 0)] = 0;
             }
-            if (! isset($totalVatPerPercentage[number_format($percentage, 0)])) {
+            if (!isset($totalVatPerPercentage[number_format($percentage, 0)])) {
                 $totalVatPerPercentage[number_format($percentage, 0)] = 0;
             }
             $vatPercentageOfTotals[number_format($percentage, 0)] += $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
@@ -497,7 +499,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -601,7 +603,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -663,7 +665,7 @@ class ShoppingCart
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
@@ -673,9 +675,9 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (! $cartItem->model) {
+            if (!$cartItem->model) {
 
-            } elseif ($cartItem->model->trashed() || ! Product::where('id', $cartItem->model->id)->publicShowable()->count()) {
+            } elseif ($cartItem->model->trashed() || !Product::where('id', $cartItem->model->id)->publicShowable()->count()) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
                 Notification::make()
@@ -708,13 +710,13 @@ class ShoppingCart
                 Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (! $cartItemDeleted && $cartItem->model) {
+            if (!$cartItemDeleted && $cartItem->model) {
                 $productPrice = Product::getShoppingCartItemPrice($cartItem);
                 $options = [];
 
                 foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
-                    if (! $cartItemDeleted) {
-                        if (! str($productExtraOptionId)->contains('product-extra-')) {
+                    if (!$cartItemDeleted) {
+                        if (!str($productExtraOptionId)->contains('product-extra-')) {
 
                             $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                             if ($thisProductExtraOption) {
@@ -734,7 +736,7 @@ class ShoppingCart
                         }
                     }
                 }
-                if (! $cartItemDeleted) {
+                if (!$cartItemDeleted) {
                     //                    $cartItem->model->currentPrice = $productPrice;
 
                     foreach ($cartItems as $otherCartItem) {
@@ -771,19 +773,19 @@ class ShoppingCart
 
                                         foreach ($cartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if ($productExtraOption && ! $productExtraOption->calculate_only_1_quantity) {
+                                            if ($productExtraOption && !$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
                                         foreach ($otherCartItem->options as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption || ! $productExtraOption->calculate_only_1_quantity) {
+                                            if (!$productExtraOption || !$productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
                                             }
-                                            if (! isset($optionsForBothItems[$key])) {
+                                            if (!isset($optionsForBothItems[$key])) {
                                                 $optionsForBothItems[$key] = $option;
                                             }
                                         }
@@ -829,8 +831,8 @@ class ShoppingCart
                 }
             }
 
-            if (! $cartItemDeleted && $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->use_parent_stock ?? false) {
-                if (! in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
+            if (!$cartItemDeleted && $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->use_parent_stock ?? false) {
+                if (!in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
                     $parentItemsToCheck[] = $cartItem->model->parent->id;
                 }
             }
@@ -939,5 +941,47 @@ class ShoppingCart
             'depositAmountFormatted' => CurrencyHelper::formatPrice($depositAmount),
             'depositPaymentMethods' => $depositPaymentMethods,
         ];
+    }
+
+    public static function getCrossSellAndSuggestedProducts(int $limit = 4, bool $removeIfAlreadyPresentInShoppingCart = true): Collection
+    {
+        $suggestedProductIds = [];
+        $cartItems = self::cartItems();
+        $productIdsInCart = [];
+
+        foreach ($cartItems as $cartItem) {
+            $productIdsInCart[] = $cartItem->model->id;
+        }
+
+        foreach ($cartItems as $cartItem) {
+            if ($cartItem->model->crossSellProducts) {
+                $suggestedProductIds = array_merge($suggestedProductIds, $cartItem->model->crossSellProducts->pluck('id')->toArray());
+            }
+        }
+        foreach ($cartItems as $cartItem) {
+            if ($cartItem->model->suggestedProducts) {
+                $suggestedProductIds = array_merge($suggestedProductIds, $cartItem->model->suggestedProducts->pluck('id')->toArray());
+            }
+        }
+
+        if ($removeIfAlreadyPresentInShoppingCart) {
+            foreach ($suggestedProductIds as $key => $id) {
+                if (in_array($id, $productIdsInCart)) {
+                    unset($suggestedProductIds[$key]);
+                }
+            }
+        }
+
+        if(count($suggestedProductIds) > $limit) {
+            $suggestedProductIds = array_slice($suggestedProductIds, 0, $limit);
+        }
+
+        if(count($suggestedProductIds) < $limit) {
+            $limit -= count($suggestedProductIds);
+            $additionalSuggestedProductIds = Product::publicShowable()->whereNotIn('id', $suggestedProductIds)->inRandomOrder()->limit($limit)->pluck('id')->toArray();
+            $suggestedProductIds = array_merge($suggestedProductIds, $additionalSuggestedProductIds);
+        }
+
+        return Product::whereIn('id', $suggestedProductIds)->publicShowable()->get();
     }
 }

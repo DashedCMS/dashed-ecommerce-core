@@ -244,32 +244,91 @@
                                     <div class="grid gap-4 md:grid-cols-2 md:col-span-2">
                                         @if(count($paymentMethods))
                                             @foreach($paymentMethods as $thisPaymentMethod)
-                                                <label class="relative flex items-center p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg">
-                                                    <input required
-                                                           id="payment_method{{$thisPaymentMethod['id']}}"
-                                                           class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
-                                                           name="payment_method" type="radio"
-                                                           wire:model.live="paymentMethod"
-                                                           value="{{$thisPaymentMethod['id']}}">
+                                                <div class="grid gap-2">
+                                                    <label class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
+                                                        <input required
+                                                               id="payment_method{{$thisPaymentMethod['id']}}"
+                                                               class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
+                                                               name="payment_method" type="radio"
+                                                               wire:model.live="paymentMethod"
+                                                               value="{{$thisPaymentMethod['id']}}">
 
-                                                    <div
-                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                        <div
+                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
-                                                    <span class="ml-3 mr-auto">
+                                                        <span class="ml-3 mr-auto">
                                                             {{ $thisPaymentMethod['name'] }}
-                                                        @if($thisPaymentMethod['extra_costs'] > 0)
-                                                            <span>
+                                                            @if($thisPaymentMethod['extra_costs'] > 0)
+                                                                <span>
                                                                         (+ {{ CurrencyHelper::formatPrice($thisPaymentMethod['extra_costs']) }})
                                                                     </span>
-                                                        @endif
+                                                            @endif
                                             </span>
 
-                                                    @if($thisPaymentMethod['image'])
-                                                        <img
-                                                            src="{{ mediaHelper()->getSingleMedia($thisPaymentMethod['image'])->url ?? '' }}"
-                                                            class="object-contain h-12">
+                                                        @if($thisPaymentMethod['image'])
+                                                            <img
+                                                                src="{{ mediaHelper()->getSingleMedia($thisPaymentMethod['image'])->url ?? '' }}"
+                                                                class="object-contain h-12">
+                                                        @endif
+                                                    </label>
+                                                    @if($paymentMethod == $thisPaymentMethod['id'] && ($thisPaymentMethod['additional_info'] || count($depositPaymentMethods)))
+                                                        <div class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
+                                                            @if($thisPaymentMethod['additional_info'])
+                                                                <p class="payment-method-content">
+                                                                    {!! nl2br($thisPaymentMethod['additional_info']) !!}
+                                                                </p>
+                                                            @endif
+                                                        </div>
+                                                        <div class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
+                                                            @if(count($depositPaymentMethods))
+                                                                <div>
+                                                                    <fieldset role="group">
+                                                                        <label
+                                                                            class="block text-md mt-1">
+                                                                            {{Translation::get('select-deposit-payment-method', 'checkout', 'Kies een betaalmethode voor de aanbetaling van :price:', 'text', [
+                                                                                'price' => CurrencyHelper::formatPrice($depositAmount)
+                                                                            ])}}
+                                                                            <span
+                                                                                class="text-red-500">*</span>
+                                                                        </label>
+                                                                        <div class="mt-4 space-y-4">
+                                                                            @foreach($depositPaymentMethods as $thisDepositPaymentMethod)
+                                                                                <label class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
+                                                                                    <input required
+                                                                                           id="depositPaymentMethod{{$thisDepositPaymentMethod['id']}}"
+                                                                                           class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
+                                                                                           name="depositPaymentMethod"
+                                                                                           type="radio"
+                                                                                           wire:model.live="depositPaymentMethod"
+                                                                                           value="{{$thisDepositPaymentMethod['id']}}">
+
+                                                                                    <div
+                                                                                        class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+
+                                                                                    <span class="ml-3 mr-auto">
+                                                            {{ $thisDepositPaymentMethod['name'] }}
+                                                                                        @if($thisDepositPaymentMethod['extra_costs'] > 0)
+                                                                                            <span>
+                                                                        (+ {{ CurrencyHelper::formatPrice($thisDepositPaymentMethod['extra_costs']) }})
+                                                                    </span>
+                                                                                        @endif
+                                            </span>
+
+                                                                                    @if($thisDepositPaymentMethod['image'])
+                                                                                        <img
+                                                                                            src="{{ mediaHelper()->getSingleMedia($thisDepositPaymentMethod['image'])->url ?? '' }}"
+                                                                                            class="object-contain h-12">
+                                                                                    @endif
+                                                                                </label>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </fieldset>
+                                                                </div>
+                                                            @endif
+                                                        </div>
                                                     @endif
-                                                </label>
+                                                </div>
+
                                             @endforeach
                                         @else
                                             <p class="bg-red-400 border-2 border-red-800 px-4 py-2 text-white mt-4">{{Translation::get('no-payment-methods-available', 'checkout', 'Er zijn geen betaalmethodes beschikbaar, neem contact met ons op.')}}</p>
@@ -409,14 +468,13 @@
                                         <dt class="text-base font-bold">{{Translation::get('total', 'cart', 'Totaal')}}</dt>
                                         <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($total) }}</dd>
                                     </div>
+                                    @if($depositAmount > 0)
+                                        <div class="flex items-center justify-between border-t border-gray-200 pt-6">
+                                            <dt class="text-base font-bold">{{Translation::get('pre-payment', 'cart', 'Aanbetaling')}}</dt>
+                                            <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($depositAmount) }}</dd>
+                                        </div>
+                                    @endif
                                 </dl>
-
-                                {{--                                <div class="border-t border-gray-200 px-4 py-6 sm:px-6">--}}
-                                {{--                                    <button type="submit"--}}
-                                {{--                                            class="button button--dark">--}}
-                                {{--                                        Confirm order--}}
-                                {{--                                    </button>--}}
-                                {{--                                </div>--}}
                             </div>
                         </aside>
                     </main>
