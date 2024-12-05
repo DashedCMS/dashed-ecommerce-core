@@ -8,12 +8,14 @@ use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
+use Dashed\DashedEcommerceCore\Middleware\HandleInertiaRequests;
 use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\Route;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\LaravelLocalization\Middleware\LocaleSessionRedirect;
+use Inertia\Inertia;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
@@ -59,10 +61,15 @@ Route::middleware(['web'])->prefix(config('filament.path', 'dashed') . '/api')->
 });
 
 Route::middleware(['web', AdminMiddleware::class])->group(function () {
-    Route::get('/ecommerce/point-of-sale', function(){
+    Route::get('/ecommerce/point-of-sale', function () {
         return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
     })->name('dashed.ecommerce.point-of-sale');
-    Route::get('/ecommerce/customer-point-of-sale', function(){
+    Route::get('/ecommerce/point-of-sale-v2', function () {
+        Inertia::setRootView('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper-v2');
+        return Inertia::render('Event/Show');
+    })->name('dashed.ecommerce.point-of-sale-v2')
+        ->middleware([HandleInertiaRequests::class]);
+    Route::get('/ecommerce/customer-point-of-sale', function () {
         return view('dashed-ecommerce-core::pos.pages.customer-point-of-sale-wrapper');
     })->name('dashed.ecommerce.customer-point-of-sale');
 });
