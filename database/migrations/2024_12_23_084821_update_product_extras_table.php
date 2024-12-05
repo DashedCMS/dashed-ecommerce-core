@@ -38,8 +38,21 @@ return new class extends Migration {
             ]);
         }
 
+        try {
+            Schema::table('dashed__product_extras', function (Blueprint $table) {
+                $table->dropForeign('qcommerce__product_extras_product_id_foreign');
+            });
+        } catch (\Exception $e) {
+        }
+        try {
+
+        } catch (\Exception $e) {
+            Schema::table('dashed__product_extras', function (Blueprint $table) {
+                $table->dropForeign('dashed__product_extras_product_id_foreign');
+            });
+        }
         Schema::table('dashed__product_extras', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('product_id');
+            $table->dropColumn('product_id');
         });
     }
 
