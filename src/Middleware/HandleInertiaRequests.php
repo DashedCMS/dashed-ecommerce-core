@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Middleware;
 
-use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Http\Request;
 
 class HandleInertiaRequests extends Middleware
 {
