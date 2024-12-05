@@ -67,9 +67,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
-        $this->publishes([
-            __DIR__ . '/../dist/pos.js' => public_path('vendor/dashed-ecommerce-core/js/pos.js'),
-        ], 'dashed-ecommerce-core-assets');
+//        $this->publishes([
+//            __DIR__ . '/../dist' => public_path('/js/dashed-ecommerce-core'),
+//        ], 'dashed-ecommerce-core-assets');
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);

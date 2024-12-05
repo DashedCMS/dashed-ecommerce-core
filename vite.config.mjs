@@ -21,7 +21,7 @@ export default defineConfig({
         }),
     ],
     build: {
-        outDir: 'dist', // Output directory (Laravel's public folder)
+        outDir: 'resources/dist', // Output directory (Laravel's public folder)
         rollupOptions: {
             input: path.resolve(__dirname, 'resources/js/pos.js'),
             output: {
