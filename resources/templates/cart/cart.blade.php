@@ -60,9 +60,8 @@
 
         <x-blocks.few-products :data="[
     'title' => Translation::get('suggested-products', 'cart', 'Misschien vind je dit ook leuk'),
-    'products' => $suggestedProducts,
     'backgroundColor' => 'bg-primary-100'
-]" />
+]" :products="$suggestedProducts" />
     @else
         <x-blocks.header :data="[
                 'title' => Translation::get('no-items-in-cart', 'cart', 'Geen items in je winkelwagen!'),

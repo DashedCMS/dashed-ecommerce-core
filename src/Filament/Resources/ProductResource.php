@@ -280,7 +280,7 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 2,
             ])
-            ->hidden(fn ($record, Get $get) => ($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)) && ! $get('use_parent_stock'))
+            ->hidden(fn ($record, Get $get) => (($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)) && ! $get('use_parent_stock')) || $get('is_bundle'))
             ->collapsible();
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();

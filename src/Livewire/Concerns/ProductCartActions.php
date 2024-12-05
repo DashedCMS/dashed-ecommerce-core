@@ -251,6 +251,7 @@ trait ProductCartActions
 
         $cartUpdated = false;
         $productPrice = $product->currentPrice;
+        $discountedProductPrice = $product->discountPrice;
         $options = [];
         foreach ($product->productExtras as $extraKey => $productExtra) {
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
@@ -269,8 +270,10 @@ trait ProductCartActions
                     ];
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
+                        $discountedProductPrice += ($productExtraOption->price / $this->quantity);
                     } else {
                         $productPrice += $productExtraOption->price;
+                        $discountedProductPrice += $productExtraOption->price;
                     }
                 }
             } elseif ($productExtra->type == 'checkbox') {
@@ -289,8 +292,10 @@ trait ProductCartActions
                     ];
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
+                        $discountedProductPrice += ($productExtraOption->price / $this->quantity);
                     } else {
                         $productPrice += $productExtraOption->price;
+                        $discountedProductPrice += $productExtraOption->price;
                     }
                 }
             } elseif ($productExtra->type == 'multiple') {
@@ -312,8 +317,10 @@ trait ProductCartActions
                             ];
                             if ($productExtraOption->calculate_only_1_quantity) {
                                 $productPrice += ($productExtraOption->price / $this->quantity);
+                                $discountedProductPrice += ($productExtraOption->price / $this->quantity);
                             } else {
                                 $productPrice += $productExtraOption->price;
+                                $discountedProductPrice += $productExtraOption->price;
                             }
                         } else {
                             $customValues[] = $productValue;
@@ -384,17 +391,22 @@ trait ProductCartActions
                         ];
                         if ($option->calculate_only_1_quantity) {
                             $productPrice = $productPrice + ($option->price / $this->quantity);
+                            $discountedProductPrice = $productPrice + ($option->price / $this->quantity);
                         } else {
                             $productPrice = $productPrice + $option->price;
+                            $discountedProductPrice = $productPrice + $option->price;
                         }
                     }
                 }
             }
         }
 
+        $attributes['discountPrice'] = $discountedProductPrice;
+        $attributes['options'] = $options;
+
         $cartItems = ShoppingCart::cartItems($this->cartType);
         foreach ($cartItems as $cartItem) {
-            if ($cartItem->model && $cartItem->model->id == $product->id && $options == $cartItem->options) {
+            if ($cartItem->model && $cartItem->model->id == $product->id && $attributes['options'] == $cartItem->options['options']) {
                 $newQuantity = $cartItem->qty + $this->quantity;
 
                 if ($product->limit_purchases_per_customer && $newQuantity > $product->limit_purchases_per_customer_limit) {
@@ -412,14 +424,16 @@ trait ProductCartActions
 
         if (! $cartUpdated) {
             if ($product->limit_purchases_per_customer && $this->quantity > $product->limit_purchases_per_customer_limit) {
-                Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
+                Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $attributes)
+                    ->associate(Product::class);
 
                 return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', $this->cartType, 'You can only purchase :quantity: of this product', 'text', [
                     'quantity' => $product->limit_purchases_per_customer_limit,
                 ]));
             }
 
-            Cart::add($product->id, $product->name, $this->quantity, $productPrice, $options)->associate(Product::class);
+            Cart::add($product->id, $product->name, $this->quantity, $productPrice, $attributes)
+                ->associate(Product::class);
         }
 
         $this->quantity = 1;
