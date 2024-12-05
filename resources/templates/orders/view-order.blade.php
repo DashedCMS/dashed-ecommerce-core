@@ -174,7 +174,7 @@
 
                 <div class="flex mt-6">
                     <a href="{{$order->downloadInvoiceUrl()}}"
-                       class="button button--primary-light w-full uppercase text-center">
+                       class="button button--primary w-full uppercase text-center">
                         {{Translation::get('download-invoice', 'cart', 'Download factuur')}}
                     </a>
                 </div>

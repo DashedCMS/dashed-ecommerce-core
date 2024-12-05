@@ -279,8 +279,8 @@
                                                                 </p>
                                                             @endif
                                                         </div>
-                                                        <div class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
-                                                            @if(count($depositPaymentMethods))
+                                                        @if(count($depositPaymentMethods) && $depositAmount > 0)
+                                                            <div class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
                                                                 <div>
                                                                     <fieldset role="group">
                                                                         <label
@@ -324,8 +324,8 @@
                                                                         </div>
                                                                     </fieldset>
                                                                 </div>
-                                                            @endif
-                                                        </div>
+                                                            </div>
+                                                        @endif
                                                     @endif
                                                 </div>
 
@@ -406,6 +406,7 @@
 
                                     <div class="md:col-span-2">
                                         <x-fields.checkbox
+                                            required
                                             model="generalCondition"
                                             id="generalCondition"
                                             labelClass="checkout-content"

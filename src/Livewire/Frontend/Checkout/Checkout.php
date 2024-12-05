@@ -255,9 +255,9 @@ class Checkout extends Component
     public function rules()
     {
         return [
-            'generalCondition' => [
-                'accepted',
-            ],
+//            'generalCondition' => [
+//                'accepted',
+//            ],
             'firstName' => [
                 'max:255',
                 Rule::requiredIf($this->firstAndLastnameRequired == 1 || $this->postpayPaymentMethod),
@@ -592,7 +592,7 @@ class Checkout extends Component
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             //            }
             $productExtras = [];
-            foreach ($cartItem->options as $optionId => $option) {
+            foreach ($cartItem->options['options'] as $optionId => $option) {
                 $productExtras[] = [
                     'id' => $optionId,
                     'name' => $option['name'],
