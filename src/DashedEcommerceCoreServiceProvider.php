@@ -67,6 +67,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        $this->publishes([
+            __DIR__ . '/../dist/pos.js' => public_path('vendor/dashed-ecommerce-core/js/pos.js'),
+        ], 'dashed-ecommerce-core-assets');
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
@@ -146,10 +150,6 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             __DIR__ . '/../resources/templates' => resource_path('views/' . env('SITE_THEME', 'dashed')),
             __DIR__ . '/../resources/component-templates' => resource_path('views/components'),
         ], 'dashed-templates');
-
-        $this->publishes([
-            __DIR__ . '/../dist/pos.js' => public_path('vendor/dashed-ecommerce-core/js/pos.js'),
-        ], 'dashed-ecommerce-core-assets');
 
         cms()->builder(
             'frontendMiddlewares',
