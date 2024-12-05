@@ -94,16 +94,16 @@
                 <div class="mt-4 rounded-lg bg-primary-500 text-white p-4">
                     <h3 class="text-lg font-medium">{{ Translation::get('this-bundel-contains', 'cart', 'Deze bundel bestaat uit:') }}</h3>
 
-                    <div class="grid md:grid-cols-2 gap-4 mt-4">
+                    <div class="grid gap-4 mt-4">
                         @foreach($item->model->bundleProducts as $bundleProduct)
                             <div class="flex">
                                 <div class="flex-shrink-0">
-                                    @if($item->model->firstImage)
+                                    @if($bundleProduct->firstImage)
                                         <x-drift::image
-                                            class="h-12 w-12 rounded-md object-cover object-center sm:h-24 sm:w-24"
+                                            class="h-12 w-12 rounded-md object-cover object-center"
                                             config="dashed"
-                                            :path="$item->model->firstImage"
-                                            :alt=" $item->model->name"
+                                            :path="$bundleProduct->firstImage"
+                                            :alt=" $bundleProduct->name"
                                             :manipulations="[
                                                     'widen' => 400,
                                                 ]"
@@ -116,9 +116,9 @@
                                         <div>
                                             <div class="flex justify-between">
                                                 <h3 class="text-sm pr-6">
-                                                    <a href="{{ $item->model->getUrl() }}"
+                                                    <a href="{{ $bundleProduct->getUrl() }}"
                                                        class="font-bold text-white hover:text-primary-800 trans">
-                                                        {{ $item->model->name }}
+                                                        {{ $bundleProduct->name }}
                                                     </a>
                                                 </h3>
                                             </div>

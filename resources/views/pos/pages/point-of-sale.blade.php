@@ -1,7 +1,7 @@
-<div class="relative inline-flex w-full">
-    {{--<div class="h-full overflow-y-scroll bg-red-500">--}}
+<div class="relative inline-flex w-full"
+     x-data="POSData()">
     <div
-        class="absolute transitiona-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
+        class="absolute transitiona-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-primary-300 via-primary-300 to-primary-800 rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
     </div>
     <div class="p-8 m-8 border border-white rounded-lg h-[calc(100%) - 50px] overflow-hidden bg-black/90 z-10 w-full">
         <div class="grid grid-cols-10 divide-x divide-gray-500">
@@ -104,7 +104,8 @@
                     </div>
                 </form>
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <button wire:click="toggleVariable('customProductPopup')"
+                    <button @click="toggle('customProductPopup')"
+                            {{--                    <button wire:click="toggleVariable('customProductPopup')"--}}
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -115,6 +116,7 @@
                                     d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
                         </span>
                         <p>Aangepaste verkoop toevoegen</p>
+                        <p>Tonen: {{ $customProductPopup ? 'Ja' : 'Nee' }}</p>
                     </button>
                     @if($activeDiscountCode)
                         <button wire:click="removeDiscount"
@@ -325,33 +327,35 @@
             </div>
         </div>
     </div>
-    @if($customProductPopup)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-            <div class="absolute h-full w-full" wire:click="toggleVariable('customProductPopup')"></div>
-            <div class="bg-white rounded-lg p-8 grid gap-4 relative">
-                <div class="absolute top-2 right-2 text-black cursor-pointer"
-                     wire:click="toggleVariable('customProductPopup')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="size-10">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                    </svg>
-                </div>
-                <p class="text-3xl font-bold">Aangepaste verkoop toevoegen</p>
-                <form wire:submit.prevent="submitCustomProductForm">
-                    <div class="grid gap-4">
-                        {{ $this->customProductForm }}
-                        <div>
-                            <button type="submit"
-                                    class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
-                                Toevoegen
-                            </button>
-                        </div>
-                    </div>
-                </form>
+    <div
+        x-show="customProductPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="toggle('customProductPopup')"></div>
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative">
+            <div class="absolute top-2 right-2 text-black cursor-pointer"
+                 @click="toggle('customProductPopup')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                     stroke="currentColor" class="size-10">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
             </div>
+            <p class="text-3xl font-bold">Aangepaste verkoop toevoegen</p>
+            <form wire:submit.prevent="submitCustomProductForm">
+                <div class="grid gap-4">
+                    {{ $this->customProductForm }}
+                    <div>
+                        <button type="submit"
+                                class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            Toevoegen
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
-    @endif
+    </div>
     @if($createDiscountPopup)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
             <div class="absolute h-full w-full" wire:click="toggleVariable('createDiscountPopup')"></div>
@@ -742,4 +746,17 @@
         });
     </script>
     @endscript
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('POSData', () => ({
+                customProductPopup: @entangle('customProductPopup').live,
+
+                toggle(variable) {
+                    if (variable in this) {
+                        this[variable] = !this[variable];
+                    }
+                },
+            }));
+        });
+    </script>
 </div>
