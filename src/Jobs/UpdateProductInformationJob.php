@@ -41,7 +41,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $childProduct->saveQuietly();
         }
 
-        if ($this->product->type == 'variable' && !$this->product->parent_id && count($this->product->copyable_to_childs ?? [])) {
+        if ($this->product->type == 'variable' && ! $this->product->parent_id && count($this->product->copyable_to_childs ?? [])) {
             foreach ($this->product->childProducts as $childProduct) {
                 if (in_array('productCategories', $this->product->copyable_to_childs)) {
                     $childProduct->productCategories()->sync($this->product->productCategories);
