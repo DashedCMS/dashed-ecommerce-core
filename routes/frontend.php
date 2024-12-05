@@ -66,7 +66,7 @@ Route::middleware(['web', AdminMiddleware::class])->group(function () {
     })->name('dashed.ecommerce.point-of-sale');
     Route::get('/ecommerce/point-of-sale-v2', function () {
         Inertia::setRootView('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper-v2');
-        return Inertia::render('Event/Show');
+        return Inertia::render('POSPage');
     })->name('dashed.ecommerce.point-of-sale-v2')
         ->middleware([HandleInertiaRequests::class]);
     Route::get('/ecommerce/customer-point-of-sale', function () {

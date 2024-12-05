@@ -1,0 +1,8 @@
+{
+  "resources/js/pos.js": {
+    "file": "pos.js",
+    "name": "pos",
+    "src": "resources/js/pos.js",
+    "isEntry": true
+  }
+}

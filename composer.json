@@ -51,7 +51,13 @@
     "scripts": {
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest coverage"
+        "test-coverage": "vendor/bin/pest coverage",
+        "post-install-cmd": [
+            "@php artisan vendor:publish --tag=dashed-ecommerce-core-assets --force"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=dashed-ecommerce-core-assets --force"
+        ]
     },
     "config": {
         "sort-packages": true,

@@ -147,6 +147,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             __DIR__ . '/../resources/component-templates' => resource_path('views/components'),
         ], 'dashed-templates');
 
+        $this->publishes([
+            __DIR__ . '/../dist/pos.js' => public_path('vendor/dashed-ecommerce-core/js/pos.js'),
+        ], 'dashed-ecommerce-core-assets');
+
         cms()->builder(
             'frontendMiddlewares',
             array_merge(cms()->builder('frontendMiddlewares'), [

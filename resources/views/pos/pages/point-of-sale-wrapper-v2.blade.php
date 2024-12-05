@@ -13,7 +13,8 @@
     </style>
 
     @php(\Filament\Support\Facades\FilamentColor::register(collect(filament()->getPanels())->first()->getColors()))
-    @vite('resources/js/pos.js')
+    @vite(['packages/dashed/dashed-ecommerce-core/resources/js/PosPage.vue'])
+{{--    @vite(['packages/dashed/dashed-ecommerce-core/resources/js/PosPage.vue'])--}}
 
     @inertiaHead
 
