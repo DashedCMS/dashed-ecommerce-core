@@ -1006,7 +1006,7 @@ trait CreateManualOrderActions
         $this->{$variable} = ! $this->{$variable};
 
         if ($variable == 'searchOrderPopup' && ! $this->{$variable}) {
-//            $this->dispatch('focusSearchOrder');
+            //            $this->dispatch('focusSearchOrder');
         }
     }
 
