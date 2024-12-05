@@ -47,6 +47,11 @@ class ProductStatisticsPage extends Page
         $this->getStatisticsProperty();
     }
 
+    public function submit()
+    {
+        $this->getStatisticsProperty();
+    }
+
     public function getStatisticsProperty()
     {
         $beginDate = $this->startDate ? Carbon::parse($this->startDate) : now()->subMonth();
