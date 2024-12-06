@@ -242,6 +242,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->name('dashed-ecommerce-core')
             ->hasRoutes([
                 'frontend',
+                'point-of-sale',
             ])
             ->hasViews()
             ->hasCommands([
