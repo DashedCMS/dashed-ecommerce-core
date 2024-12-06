@@ -148,7 +148,7 @@ trait CreateManualOrderActions
     {
         $productExtras = [];
 
-        foreach ($product->allProductExtras() as $extra) {
+        foreach ($product->productExtras as $extra) {
             $extraOptions = [];
             foreach ($extra->ProductExtraOptions as $option) {
                 $extraOptions[$option->id] = $option->value . ' (+ ' . CurrencyHelper::formatPrice($option->price) . ')';
