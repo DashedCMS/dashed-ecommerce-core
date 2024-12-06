@@ -64,11 +64,6 @@ Route::middleware(['web', AdminMiddleware::class])->group(function () {
     Route::get('/ecommerce/point-of-sale', function () {
         return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
     })->name('dashed.ecommerce.point-of-sale');
-    Route::get('/ecommerce/point-of-sale-v2', function () {
-        Inertia::setRootView('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper-v2');
-        return Inertia::render('POSPage');
-    })->name('dashed.ecommerce.point-of-sale-v2')
-        ->middleware([HandleInertiaRequests::class]);
     Route::get('/ecommerce/customer-point-of-sale', function () {
         return view('dashed-ecommerce-core::pos.pages.customer-point-of-sale-wrapper');
     })->name('dashed.ecommerce.customer-point-of-sale');
