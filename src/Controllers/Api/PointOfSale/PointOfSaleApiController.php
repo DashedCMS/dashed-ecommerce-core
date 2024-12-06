@@ -2,20 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Filament\Notifications\Notification;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Illuminate\Support\Str;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
 {
@@ -32,13 +31,13 @@ class PointOfSaleApiController extends Controller
 
             return response()
                 ->json([
-                    'success' => true
+                    'success' => true,
                 ]);
         } catch (\Exception $e) {
             return response()
                 ->json([
                     'success' => false,
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 500);
         }
     }
@@ -64,10 +63,11 @@ class PointOfSaleApiController extends Controller
 
         //Todo: only add fields you need
         foreach ($products ?? [] as $productKey => &$product) {
-            if (!isset($product['customProduct']) || $product['customProduct'] == false) {
+            if (! isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
-                if (!$product) {
+                if (! $product) {
                     unset($products[$productKey]);
+
                     continue;
                 }
                 $product['image'] = $product->firstImage;
@@ -79,7 +79,7 @@ class PointOfSaleApiController extends Controller
                 'posIdentifier' => $posIdentifier ?? null,
                 'products' => $products ?? [],
                 'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -133,18 +133,18 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $activeDiscountCode = null;
             } else {
                 session(['discountCode' => $discountCode->code]);
 
-                if (!isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
+                if (! isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
                     $activeDiscountCode = $discountCode->code;
                 }
 
@@ -154,22 +154,22 @@ class PointOfSaleApiController extends Controller
         $posCart->discount_code = $activeDiscountCode ?? null;
         $posCart->save();
 
-//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
-//        $shippingMethod = '';
-//        foreach ($shippingMethods as $thisShippingMethod) {
-//            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
-//                $shippingMethod = $thisShippingMethod;
-//            }
-//        }
-//
-//        if (!$shippingMethod) {
-//            $this->shipping_method_id = null;
-//        }
+        //        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        //        $shippingMethod = '';
+        //        foreach ($shippingMethods as $thisShippingMethod) {
+        //            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
+        //                $shippingMethod = $thisShippingMethod;
+        //            }
+        //        }
+        //
+        //        if (!$shippingMethod) {
+        //            $this->shipping_method_id = null;
+        //        }
 
         $checkoutData = ShoppingCart::getCheckoutData($shippingMethodId ?? null, $paymentMethodId ?? null);
 
 
-//        $this->total = $checkoutData['total'];
+        //        $this->total = $checkoutData['total'];
         $discount = $checkoutData['discountFormatted'];
         $vat = $checkoutData['btwFormatted'];
         $vatPercentages = $checkoutData['btwPercentages'];
@@ -191,7 +191,7 @@ class PointOfSaleApiController extends Controller
                 'vatPercentages' => $vatPercentages ?? null,
                 'subTotal' => $subTotal ?? null,
                 'total' => $total ?? null,
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -204,11 +204,11 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (!$order) {
+        if (! $order) {
             return response()
                 ->json([
                     'success' => false,
-                    'message' => 'Bestelling niet gevonden'
+                    'message' => 'Bestelling niet gevonden',
                 ], 404);
         }
 
@@ -218,7 +218,7 @@ class PointOfSaleApiController extends Controller
             ->json([
                 'products' => $products ?? [],
                 'discountCode' => $discountCode ?? null,
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -247,7 +247,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -270,14 +270,14 @@ class PointOfSaleApiController extends Controller
             return response()
                 ->json([
                     'products' => $products ?? [],
-                    'success' => true
+                    'success' => true,
                 ]);
         } else {
             return response()
                 ->json([
                     'products' => $products ?? [],
                     'message' => 'Product niet gevonden',
-                    'success' => false
+                    'success' => false,
                 ], 404);
         }
     }
@@ -295,7 +295,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (!$productAlreadyInCart) {
+        if (! $productAlreadyInCart) {
             $products[] = [
                 'id' => $selectedProduct['id'],
                 'identifier' => Str::random(),
@@ -328,12 +328,12 @@ class PointOfSaleApiController extends Controller
             ->orWhere('ean', $productSearchQuery)
             ->first();
 
-        if (!$selectedProduct) {
+        if (! $selectedProduct) {
             return response()
                 ->json([
                     'products' => $products ?? [],
                     'message' => 'Product niet gevonden',
-                    'success' => false
+                    'success' => false,
                 ], 404);
         }
 
@@ -342,7 +342,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -382,7 +382,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -400,7 +400,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -416,7 +416,7 @@ class PointOfSaleApiController extends Controller
 
         return response()
             ->json([
-                'success' => true
+                'success' => true,
             ]);
     }
 }
