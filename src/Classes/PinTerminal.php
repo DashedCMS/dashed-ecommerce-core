@@ -2,19 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail;
-use Dashed\DashedEcommerceCore\Mail\PreOrderConfirmationMail;
+use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
 
 class PinTerminal
 {
@@ -76,12 +70,12 @@ class PinTerminal
             $printer->close();
 
             return [
-                'success' => true
+                'success' => true,
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ];
         }
     }

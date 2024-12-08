@@ -3,45 +3,28 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedTranslations\Models\Translation;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Str;
 use Livewire\Component;
+use Filament\Forms\Form;
+use Illuminate\Support\Str;
+use Dashed\DashedCore\Classes\Sites;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns\CreateManualOrderActions;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class POSPage extends Component implements HasForms
 {
     use InteractsWithForms;
 
 
-//    public $loading = false;
-//
+    //    public $loading = false;
+    //
     public $subTotal = 0;
     public $discount = 0;
     public $vat = 0;
@@ -61,7 +44,7 @@ class POSPage extends Component implements HasForms
 
     protected $listeners = [
         'fullscreenValue',
-        'notify'
+        'notify',
     ];
 
     public function mount(): void
@@ -126,44 +109,44 @@ class POSPage extends Component implements HasForms
             ->statePath('customProductData');
     }
 
-//    public function searchOrderForm(Form $form): Form
-//    {
-//        return $form
-//            ->schema([
-//                TextInput::make('order_id')
-//                    ->label('Zoek order op ID')
-//                    ->required()
-//                    ->autofocus()
-//                    ->columnSpanFull()
-//                    ->extraInputAttributes([
-//                        'class' => 'search-order',
-//                    ]),
-//            ])
-//            ->columns(2)
-//            ->statePath('searchOrderData');
-//    }
-//
-//    public function submitSearchOrderForm()
-//    {
-//        $orderId = str($this->searchOrderData['order_id'])->trim()->replace(' ', '')->replace('order-', '');
-//        $this->searchOrderData['order_id'] = $orderId;
-//        $order = Order::where('id', $orderId)
-//            ->orWhere('invoice_id', $orderId)
-//            ->first();
-//        if (!$order) {
-//            Notification::make()
-//                ->title('Order niet gevonden')
-//                ->danger()
-//                ->send();
-//            $this->showOrder = null;
-//
-//            return;
-//        }
-//
-//        $this->searchOrderPopup = false;
-//        $this->showOrder = $order;
-//        $this->searchOrderData['order_id'] = null;
-//    }
+    //    public function searchOrderForm(Form $form): Form
+    //    {
+    //        return $form
+    //            ->schema([
+    //                TextInput::make('order_id')
+    //                    ->label('Zoek order op ID')
+    //                    ->required()
+    //                    ->autofocus()
+    //                    ->columnSpanFull()
+    //                    ->extraInputAttributes([
+    //                        'class' => 'search-order',
+    //                    ]),
+    //            ])
+    //            ->columns(2)
+    //            ->statePath('searchOrderData');
+    //    }
+    //
+    //    public function submitSearchOrderForm()
+    //    {
+    //        $orderId = str($this->searchOrderData['order_id'])->trim()->replace(' ', '')->replace('order-', '');
+    //        $this->searchOrderData['order_id'] = $orderId;
+    //        $order = Order::where('id', $orderId)
+    //            ->orWhere('invoice_id', $orderId)
+    //            ->first();
+    //        if (!$order) {
+    //            Notification::make()
+    //                ->title('Order niet gevonden')
+    //                ->danger()
+    //                ->send();
+    //            $this->showOrder = null;
+    //
+    //            return;
+    //        }
+    //
+    //        $this->searchOrderPopup = false;
+    //        $this->showOrder = $order;
+    //        $this->searchOrderData['order_id'] = null;
+    //    }
 
     public function submitCustomProductForm()
     {
@@ -213,7 +196,7 @@ class POSPage extends Component implements HasForms
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -224,7 +207,7 @@ class POSPage extends Component implements HasForms
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -236,7 +219,7 @@ class POSPage extends Component implements HasForms
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -252,7 +235,7 @@ class POSPage extends Component implements HasForms
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -262,7 +245,7 @@ class POSPage extends Component implements HasForms
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (!$posCart->products) {
+        if (! $posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -292,7 +275,7 @@ class POSPage extends Component implements HasForms
             $discountCode->save();
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
