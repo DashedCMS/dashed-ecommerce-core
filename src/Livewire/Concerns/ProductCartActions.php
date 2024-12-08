@@ -139,7 +139,7 @@ trait ProductCartActions
         $this->suggestedProducts = $this->product->getSuggestedProducts();
         $this->crossSellProducts = $this->product->getCrossSellProducts();
         $this->productTabs = $this->product->tabs;
-        if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->allProductExtras()) {
+        if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
             if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false)) {
                 return redirect($this->product->getUrl(forceOwnUrl: true));
             }
