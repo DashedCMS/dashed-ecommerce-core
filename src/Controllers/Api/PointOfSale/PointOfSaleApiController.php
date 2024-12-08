@@ -3,53 +3,38 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
-use Paynl\Payment;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Dashed\DashedCore\Models\User;
-use App\Http\Controllers\Controller;
-use Filament\Notifications\Notification;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\PinTerminal;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
+use Filament\Notifications\Notification;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Illuminate\Support\Str;
+use Paynl\Payment;
 
 class PointOfSaleApiController extends Controller
 {
     public function openCashRegister(Request $request)
     {
-        try {
-            $printer = new ReceiptPrinter();
-            $printer->init(
-                Customsetting::get('receipt_printer_connector_type'),
-                Customsetting::get('receipt_printer_connector_descriptor')
-            );
-            $printer->openDrawer();
-            $printer->close();
+        $response = POSHelper::openCashRegister();
 
-            return response()
-                ->json([
-                    'success' => true,
-                ]);
-        } catch (\Exception $e) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ], 500);
-        }
+        return response()->json($response, $response['success'] ? 200 : 400);
     }
 
     public function initialize(Request $request)
@@ -73,11 +58,10 @@ class PointOfSaleApiController extends Controller
 
         //Todo: only add fields you need
         foreach ($products ?? [] as $productKey => &$product) {
-            if (! isset($product['customProduct']) || $product['customProduct'] == false) {
+            if (!isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
-                if (! $product) {
+                if (!$product) {
                     unset($products[$productKey]);
-
                     continue;
                 }
                 $product['image'] = $product->firstImage;
@@ -89,23 +73,34 @@ class PointOfSaleApiController extends Controller
                 'posIdentifier' => $posIdentifier ?? null,
                 'products' => $products ?? [],
                 'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
-                'success' => true,
+                'success' => true
             ]);
     }
 
-    public function retrieveCart(Request $request)
+    public function retrieveCart(Request $request): JsonResponse
     {
         $data = $request->all();
 
-        $cartInstance = $data['cartInstance'] ?? [];
-        $posIdentifier = $data['posIdentifier'] ?? [];
+        $cartInstance = $data['cartInstance'] ?? '';
+        $posIdentifier = $data['posIdentifier'] ?? '';
+        $discountCode = $data['discountCode'] ?? '';
 
+        return response()
+            ->json($this->updateCart(
+                $cartInstance,
+                $posIdentifier,
+                $discountCode
+            ));
+    }
+
+    public function updateCart(string $cartInstance, string $posIdentifier, ?string $discountCode = null): array
+    {
         ShoppingCart::setInstance($cartInstance);
         ShoppingCart::emptyMyCart();
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
-        $discountCode = $data['discountCode'] ?? $posCart->discount_code;
+        $discountCode = $discountCode ?? $posCart->discount_code;
 
         $products = $posCart->products ?? [];
 
@@ -143,18 +138,18 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $activeDiscountCode = null;
             } else {
                 session(['discountCode' => $discountCode->code]);
 
-                if (! isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
+                if (!isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
                     $activeDiscountCode = $discountCode->code;
                 }
 
@@ -164,22 +159,9 @@ class PointOfSaleApiController extends Controller
         $posCart->discount_code = $activeDiscountCode ?? null;
         $posCart->save();
 
-        //        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
-        //        $shippingMethod = '';
-        //        foreach ($shippingMethods as $thisShippingMethod) {
-        //            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
-        //                $shippingMethod = $thisShippingMethod;
-        //            }
-        //        }
-        //
-        //        if (!$shippingMethod) {
-        //            $this->shipping_method_id = null;
-        //        }
-
         $checkoutData = ShoppingCart::getCheckoutData($shippingMethodId ?? null, $paymentMethodId ?? null);
 
 
-        //        $this->total = $checkoutData['total'];
         $discount = $checkoutData['discountFormatted'];
         $vat = $checkoutData['btwFormatted'];
         $vatPercentages = $checkoutData['btwPercentages'];
@@ -188,6 +170,7 @@ class PointOfSaleApiController extends Controller
         }
         $subTotal = $checkoutData['subTotalFormatted'];
         $total = $checkoutData['totalFormatted'];
+        $totalUnformatted = $checkoutData['total'];
 
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
 
@@ -195,19 +178,19 @@ class PointOfSaleApiController extends Controller
             $paymentMethod['image'] = mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '';
         }
 
-        return response()
-            ->json([
-                'products' => $products ?? [],
-                'discountCode' => $discountCode ?? null,
-                'activeDiscountCode' => $activeDiscountCode ?? null,
-                'discount' => $discount ?? null,
-                'vat' => $vat ?? null,
-                'vatPercentages' => $vatPercentages ?? null,
-                'subTotal' => $subTotal ?? null,
-                'total' => $total ?? null,
-                'paymentMethods' => $paymentMethods ?? [],
-                'success' => true,
-            ]);
+        return [
+            'products' => $products ?? [],
+            'discountCode' => $discountCode ?? null,
+            'activeDiscountCode' => $activeDiscountCode ?? null,
+            'discount' => $discount ?? null,
+            'vat' => $vat ?? null,
+            'vatPercentages' => $vatPercentages ?? null,
+            'subTotal' => $subTotal ?? null,
+            'total' => $total ?? null,
+            'totalUnformatted' => $totalUnformatted ?? null,
+            'paymentMethods' => $paymentMethods ?? [],
+            'success' => true
+        ];
     }
 
     public function printReceipt(Request $request)
@@ -219,11 +202,11 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (! $order) {
+        if (!$order) {
             return response()
                 ->json([
                     'success' => false,
-                    'message' => 'Bestelling niet gevonden',
+                    'message' => 'Bestelling niet gevonden'
                 ], 404);
         }
 
@@ -233,7 +216,7 @@ class PointOfSaleApiController extends Controller
             ->json([
                 'products' => $products ?? [],
                 'discountCode' => $discountCode ?? null,
-                'success' => true,
+                'success' => true
             ]);
     }
 
@@ -262,7 +245,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true,
+                'success' => true
             ]);
     }
 
@@ -285,14 +268,14 @@ class PointOfSaleApiController extends Controller
             return response()
                 ->json([
                     'products' => $products ?? [],
-                    'success' => true,
+                    'success' => true
                 ]);
         } else {
             return response()
                 ->json([
                     'products' => $products ?? [],
                     'message' => 'Product niet gevonden',
-                    'success' => false,
+                    'success' => false
                 ], 404);
         }
     }
@@ -310,7 +293,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (! $productAlreadyInCart) {
+        if (!$productAlreadyInCart) {
             $products[] = [
                 'id' => $selectedProduct['id'],
                 'identifier' => Str::random(),
@@ -343,12 +326,12 @@ class PointOfSaleApiController extends Controller
             ->orWhere('ean', $productSearchQuery)
             ->first();
 
-        if (! $selectedProduct) {
+        if (!$selectedProduct) {
             return response()
                 ->json([
                     'products' => $products ?? [],
                     'message' => 'Product niet gevonden',
-                    'success' => false,
+                    'success' => false
                 ], 404);
         }
 
@@ -357,7 +340,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true,
+                'success' => true
             ]);
     }
 
@@ -397,7 +380,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true,
+                'success' => true
             ]);
     }
 
@@ -415,7 +398,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => [],
-                'success' => true,
+                'success' => true
             ]);
     }
 
@@ -431,7 +414,7 @@ class PointOfSaleApiController extends Controller
 
         return response()
             ->json([
-                'success' => true,
+                'success' => true
             ]);
     }
 
@@ -478,24 +461,27 @@ class PointOfSaleApiController extends Controller
             return response()
                 ->json([
                     'success' => false,
-                    'message' => $response['message'],
+                    'message' => $response['message']
                 ], 500);
         }
     }
 
     public function createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId): array
     {
-        ShoppingCart::setInstance($cartInstance);
-        \Cart::instance($cartInstance)->content();
-        ShoppingCart::removeInvalidItems(checkStock: false);
+        $this->updateCart($cartInstance, $posCart->identifier);
+//        ShoppingCart::setInstance($cartInstance);
+//        \Cart::instance($cartInstance)->content();
+        $cartItems = ShoppingCart::cartItems($cartInstance);
+//        ShoppingCart::removeInvalidItems(checkStock: false); //Dont have to check
 
         $cartItems = ShoppingCart::cartItems($cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData(null, $paymentMethodId);
 
-        if (! $cartItems) {
+
+        if (!count($cartItems)) {
             return [
                 'success' => false,
-                'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen'),
+                'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen')
             ];
         }
 
@@ -516,32 +502,32 @@ class PointOfSaleApiController extends Controller
         //            return;
         //        }
 
-        //        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
-        //        $shippingMethod = '';
-        //        foreach ($shippingMethods as $thisShippingMethod) {
-        //            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
-        //                $shippingMethod = $thisShippingMethod;
-        //            }
-        //        }
-        //
-        //        if (!$shippingMethod && $this->orderOrigin != 'pos') {
-        //            Notification::make()
-        //                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
-        //                ->danger()
-        //                ->send();
-        //
-        //            return [
-        //                'success' => false,
-        //            ];
-        //        }
+//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+//        $shippingMethod = '';
+//        foreach ($shippingMethods as $thisShippingMethod) {
+//            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
+//                $shippingMethod = $thisShippingMethod;
+//            }
+//        }
+//
+//        if (!$shippingMethod && $this->orderOrigin != 'pos') {
+//            Notification::make()
+//                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+//                ->danger()
+//                ->send();
+//
+//            return [
+//                'success' => false,
+//            ];
+//        }
 
         if ($posCart->discount_code) {
             $discountCode = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
 
-            if (! $discountCode) {
+            if (!$discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+            } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -549,53 +535,53 @@ class PointOfSaleApiController extends Controller
 
                 return [
                     'success' => false,
-                    'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig'),
+                    'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig')
                 ];
             }
         }
 
-        //        if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
-        //            if (User::where('email', $this->email)->count()) {
-        //                Notification::make()
-        //                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
-        //                    ->danger()
-        //                    ->send();
-        //
-        //                return [
-        //                    'success' => false,
-        //                ];
-        //            }
-        //
-        //            $user = new User();
-        //            $user->first_name = $this->first_name;
-        //            $user->last_name = $this->last_name;
-        //            $user->email = $this->email;
-        //            $user->password = Hash::make($this->password);
-        //            $user->save();
-        //        }
+//        if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
+//            if (User::where('email', $this->email)->count()) {
+//                Notification::make()
+//                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
+//                    ->danger()
+//                    ->send();
+//
+//                return [
+//                    'success' => false,
+//                ];
+//            }
+//
+//            $user = new User();
+//            $user->first_name = $this->first_name;
+//            $user->last_name = $this->last_name;
+//            $user->email = $this->email;
+//            $user->password = Hash::make($this->password);
+//            $user->save();
+//        }
 
         $order = new Order();
         $order->order_origin = $orderOrigin;
-        //        $order->first_name = $this->first_name;
-        //        $order->last_name = $this->last_name;
-        //        $order->email = $this->email;
-        //        $order->gender = $this->gender;
-        //        $order->date_of_birth = $this->date_of_birth ? Carbon::parse($this->date_of_birth) : null;
-        //        $order->phone_number = $this->phone_number;
-        //        $order->street = $this->street;
-        //        $order->house_nr = $this->house_nr;
-        //        $order->zip_code = $this->zip_code;
-        //        $order->city = $this->city;
-        //        $order->country = $this->country;
-        //        $order->marketing = $this->marketing ? 1 : 0;
-        //        $order->company_name = $this->company_name;
-        //        $order->btw_id = $this->btw_id;
-        //        $order->note = $this->note;
-        //        $order->invoice_street = $this->invoice_street;
-        //        $order->invoice_house_nr = $this->invoice_house_nr;
-        //        $order->invoice_zip_code = $this->invoice_zip_code;
-        //        $order->invoice_city = $this->invoice_city;
-        //        $order->invoice_country = $this->invoice_country;
+//        $order->first_name = $this->first_name;
+//        $order->last_name = $this->last_name;
+//        $order->email = $this->email;
+//        $order->gender = $this->gender;
+//        $order->date_of_birth = $this->date_of_birth ? Carbon::parse($this->date_of_birth) : null;
+//        $order->phone_number = $this->phone_number;
+//        $order->street = $this->street;
+//        $order->house_nr = $this->house_nr;
+//        $order->zip_code = $this->zip_code;
+//        $order->city = $this->city;
+//        $order->country = $this->country;
+//        $order->marketing = $this->marketing ? 1 : 0;
+//        $order->company_name = $this->company_name;
+//        $order->btw_id = $this->btw_id;
+//        $order->note = $this->note;
+//        $order->invoice_street = $this->invoice_street;
+//        $order->invoice_house_nr = $this->invoice_house_nr;
+//        $order->invoice_zip_code = $this->invoice_zip_code;
+//        $order->invoice_city = $this->invoice_city;
+//        $order->invoice_country = $this->invoice_country;
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $posCart->discount_code]);
@@ -632,9 +618,9 @@ class PointOfSaleApiController extends Controller
         if (isset($user)) {
             $order->user_id = $user->id;
         } else {
-            //            if ($this->user_id) {
-            //                $order->user_id = $this->user_id;
-            //            }
+//            if ($this->user_id) {
+//                $order->user_id = $this->user_id;
+//            }
         }
 
         $order->save();
@@ -746,7 +732,15 @@ class PointOfSaleApiController extends Controller
             $options[] = $roundedUp100;
         }
 
-        return array_slice($options, 0, 5);
+        $amounts = [];
+        foreach ($options as $option) {
+            $amounts[] = [
+                'amount' => $option,
+                'formattedAmount' => CurrencyHelper::formatPrice($option),
+            ];
+        }
+
+        return array_slice($amounts, 0, 5);
     }
 
     public function startPinTerminalPayment(Request $request): JsonResponse
@@ -754,6 +748,30 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $posIdentifier = $data['posIdentifier'] ?? null;
+        $hasMultiplePayments = $data['hasMultiplePayments'] ?? false;
+        $order = $data['order'] ?? null;
+        $order = Order::find($order['id']);
+        $paymentMethod = $data['paymentMethod'] ?? null;
+        $paymentMethod = PaymentMethod::find($paymentMethod['id']);
+        if($hasMultiplePayments){
+            $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
+        }
+
+        $posCart = POSCart::where('identifier', $posIdentifier)->first();
+
+        $pinTerminalResponse = PinTerminal::startPayment($order, $paymentMethod, $posCart);
+
+        return response()
+            ->json($pinTerminalResponse, $pinTerminalResponse['success'] ? 200 : 400);
+    }
+
+    public function markAsPaid(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $posIdentifier = $data['posIdentifier'] ?? null;
+        $hasMultiplePayments = $data['hasMultiplePayments'] ?? false;
+        $cashPaymentAmount = $data['cashPaymentAmount'] ?? false;
         $order = $data['order'] ?? null;
         $order = Order::find($order['id']);
         $paymentMethod = $data['paymentMethod'] ?? null;
@@ -761,47 +779,163 @@ class PointOfSaleApiController extends Controller
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
-        $order->status = 'pending';
-        $order->save();
+        if ($paymentMethod->is_cash_payment) {
+            if (!$cashPaymentAmount) {
+                return response()
+                    ->json([
+                        'success' => false,
+                        'message' => 'Geen bedrag ingevoerd'
+                    ], 400);
+            } elseif (!$hasMultiplePayments && $cashPaymentAmount < $order->total) {
+                return response()
+                    ->json([
+                        'success' => false,
+                        'message' => 'Bedrag is te laag'
+                    ], 400);
+            }
+        }
 
         $orderPayment = new OrderPayment();
-        $orderPayment->amount = $order->total - $order->orderPayments->where('status', 'paid')->sum('amount');
+        $orderPayment->amount = $cashPaymentAmount ?: $order->total;
         $orderPayment->order_id = $order->id;
         $orderPayment->payment_method_id = $paymentMethod->id;
         $orderPayment->payment_method = $paymentMethod->name;
-        $orderPayment->psp = $paymentMethod->pinTerminal->psp;
+        $orderPayment->psp = 'own';
         $orderPayment->save();
+        $orderPayment->changeStatus('paid');
 
-        try {
-            $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
-            $pinTerminalError = false;
-            $pinTerminalErrorMessage = null;
-            $pinTerminalStatus = 'pending';
-            CheckPinTerminalPaymentStatusJob::dispatch($orderPayment);
+        if ($orderPayment->amount > $order->total) {
+            $difference = $order->total - $orderPayment->amount;
 
-            return response()
-                ->json([
-                    'success' => true,
-                    'transaction' => $transaction,
-                    'orderPayment' => $orderPayment,
-                    'pinTerminalError' => $pinTerminalError,
-                    'pinTerminalErrorMessage' => $pinTerminalErrorMessage,
-                    'pinTerminalStatus' => $pinTerminalStatus,
-                ]);
-        } catch (\Exception $exception) {
-            $pinTerminalError = true;
-            $pinTerminalErrorMessage = $exception->getMessage();
-            if (str($pinTerminalErrorMessage)->contains('Terminal in use')) {
-                $pinTerminalStatus = 'waiting_for_clearance';
+            $refundOrderPayment = new OrderPayment();
+            $refundOrderPayment->amount = $difference;
+            $refundOrderPayment->order_id = $order->id;
+            $refundOrderPayment->payment_method_id = $paymentMethod->id;
+            $refundOrderPayment->payment_method = $paymentMethod->name;
+            $refundOrderPayment->psp = 'own';
+            $refundOrderPayment->save();
+            $refundOrderPayment->changeStatus('paid');
+        }
+
+        $order->refresh();
+
+        if ($paymentMethod->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
+            $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
+            if (!$paymentMethod) {
+                return response()
+                    ->json([
+                        'success' => false,
+                        'message' => 'Geen pin terminal gevonden, bestelling incorrect afgehandeld'
+                    ], 400);
             }
 
             return response()
                 ->json([
+                    'success' => true,
+                    'order' => $order,
+                    'startPinTerminalPayment' => true,
+                    'paymentMethod' => [
+                        'id' => $paymentMethod->id,
+                        'name' => $paymentMethod->name,
+                        'image' => mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '',
+                    ],
+                ]);
+//            $response = PinTerminal::startPayment($order, $paymentMethod, $posCart);
+//
+//            return response()
+//                ->json($response, $response['success'] ? 200 : 400);
+        } else {
+            POSHelper::finishPaidOrder($order, $posCart);
+
+            $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
+            $order->paidAmount = $order->paidAmount;
+            $order->paidAmountFormatted = CurrencyHelper::formatPrice($order->paidAmount);
+            $order->changeMoney = CurrencyHelper::formatPrice($orderPayment->amount - $order->total);
+            $order->shouldChangeMoney = $orderPayment->amount > $order->total;
+            $orderPayments = $order->orderPayments;
+            foreach ($orderPayments as $orderPayment) {
+                $orderPayment->amountFormatted = CurrencyHelper::formatPrice($orderPayment->amount);
+                $orderPayment->paymentMethodName = $orderPayment->paymentMethod->name;
+            }
+
+            return response()
+                ->json([
+                    'success' => true,
+                    'order' => $order,
+                    'orderPayments' => $orderPayments,
+                    'startPinTerminalPayment' => false,
+                    'firstPaymentMethod' => [
+                        'id' => $paymentMethod->id,
+                        'is_cash_payment' => $paymentMethod->is_cash_payment,
+                        'name' => $paymentMethod->name,
+                        'image' => mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '',
+                    ],
+                ]);
+        }
+    }
+
+    public function checkPinTerminalPayment(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $posIdentifier = $data['posIdentifier'] ?? null;
+        $order = $data['order'] ?? null;
+        $order = Order::find($order['id']);
+
+        $posCart = POSCart::where('identifier', $posIdentifier)->first();
+
+        $order->refresh();
+
+        if ($order->isPaidFor()) {
+            POSHelper::finishPaidOrder($order, $posCart);
+
+            return response()
+                ->json([
+                    'success' => true,
+                    'pinTerminalStatus' => 'paid',
+                    'pinTerminalError' => false,
+                    'pinTerminalErrorMessage' => null,
+                ]);
+        } elseif ($order->status == 'cancelled') {
+            return response()
+                ->json([
+                    'success' => true,
+                    'pinTerminalStatus' => 'cancelled_by_customer',
+                    'pinTerminalError' => true,
+                    'pinTerminalErrorMessage' => 'Betaling geannuleerd door klant',
+                ]);
+        }else{
+            return response()
+                ->json([
+                    'success' => true,
+                    'pinTerminalStatus' => 'pending',
+                    'pinTerminalError' => false,
+                    'pinTerminalErrorMessage' => null,
+                ]);
+        }
+    }
+
+    public function closePayment(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $posIdentifier = $data['posIdentifier'] ?? null;
+        $order = $data['order'] ?? null;
+        $order = Order::find($order['id']);
+
+        $posCart = POSCart::where('identifier', $posIdentifier)->first();
+
+        if ($order->isPaidFor()) {
+            return response()
+                ->json([
                     'success' => false,
-                    'pinTerminalError' => $pinTerminalError,
-                    'pinTerminalErrorMessage' => $pinTerminalErrorMessage,
-                    'pinTerminalStatus' => $pinTerminalStatus ?? null,
-                    'message' => Translation::get('failed-to-start-payment-try-again', 'cart', 'De betaling kon niet worden gestart, probeer het nogmaals'),
+                    'message' => 'Bestelling is al betaald',
+                ]);
+        } else {
+            return response()
+                ->json([
+                    'success' => true,
+                    'message' => 'De bestelling is geannuleerd',
                 ]);
         }
     }

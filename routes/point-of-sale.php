@@ -47,5 +47,11 @@ Route::group(
             ->name('api.point-of-sale.select-payment-method');
         Route::post('/start-pin-terminal-payment', [PointOfSaleApiController::class, 'startPinTerminalPayment'])
             ->name('api.point-of-sale.start-pin-terminal-payment');
+        Route::post('/mark-as-paid', [PointOfSaleApiController::class, 'markAsPaid'])
+            ->name('api.point-of-sale.mark-as-paid');
+        Route::post('/check-pin-terminal-payment', [PointOfSaleApiController::class, 'checkPinTerminalPayment'])
+            ->name('api.point-of-sale.check-pin-terminal-payment');
+        Route::post('/close-payment', [PointOfSaleApiController::class, 'closePayment'])
+            ->name('api.point-of-sale.close-payment');
     }
 );

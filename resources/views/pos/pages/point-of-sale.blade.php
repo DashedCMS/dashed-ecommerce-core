@@ -285,13 +285,13 @@
                                 </div>
                                 <span class="font-bold" x-html="total"></span>
                             </div>
-                            <hr>
+                            <hr />
                             <div x-show="activeDiscountCode" x-cloak>
                                 <div class="text-sm font-bold flex justify-between items-center mb-2">
                                     <span>Korting</span>
                                     <span class="font-bold" x-html="discount"></span>
                                 </div>
-                                <hr/>
+                                <hr>
                             </div>
                             {{--                        <hr/>--}}
                             {{--                        <span class="text-sm font-bold flex justify-between items-center">--}}
@@ -309,6 +309,11 @@
                                  class="text-sm font-bold flex justify-between items-center">
                                 <span>BTW</span>
                                 <span class="font-bold" x-html="vat"></span>
+                            </div>
+                            <div x-show="vatPercentages.length == 0"
+                                 class="text-sm font-bold flex justify-between items-center">
+                                <span>BTW</span>
+                                <span class="font-bold">0</span>
                             </div>
                         </div>
                     </div>
@@ -456,173 +461,192 @@
         x-cloak
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-        <div class="absolute h-full w-full" @click="toggle('paymentPopup')"></div>
+        <div class="absolute h-full w-full" @click="closePayment"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="bg-white rounded-lg p-8 grid gap-4">
                 <div class="absolute top-2 right-2 text-black cursor-pointer"
-                     @click="toggle('paymentPopup')">
+                     @click="closePayment">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
                 </div>
-                <div>
-                    <p class="text-3xl font-bold" x-html="'Totaal: ' + total"></p>
-                    <p class="text-xl text-gray-400" x-html="'Betaalmethode: ' + chosenPaymentMethod.name"></p>
-                </div>
-                <div class="flex flex-col gap-4" x-show="chosenPaymentMethod.isCashPayment">
+                <template x-if="chosenPaymentMethod">
+                    <div>
+                        <p class="text-3xl font-bold" x-html="'Totaal: ' + total"></p>
+                        <p class="text-xl text-gray-400" x-html="'Betaalmethode: ' + chosenPaymentMethod.name"></p>
+                    </div>
+                </template>
+                <div class="flex flex-col gap-4"
+                     x-show="!isPinTerminalPayment && chosenPaymentMethod && chosenPaymentMethod.isCashPayment">
                     <div class="flex flex-col gap-2">
                         <p class="text-xl font-bold">Ontvangen bedrag</p>
                         <div class="grid md:grid-cols-2 gap-4">
-                            @foreach($suggestedCashPaymentAmounts as $suggestedCashPaymentAmount)
-                                <button wire:click="setCashPaymentAmount({{ $suggestedCashPaymentAmount }})"
-                                        class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
-                                    {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($suggestedCashPaymentAmount) }}
+                            <template x-for="suggestedCashPaymentAmount in suggestedCashPaymentAmounts">
+                                <button @click="setCashPaymentAmount(suggestedCashPaymentAmount.amount)"
+                                        class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full"
+                                        x-html="suggestedCashPaymentAmount.formattedAmount">
+
                                 </button>
-                            @endforeach
+                            </template>
                         </div>
                     </div>
-                    <form wire:submit.prevent="markAsPaid">
-                        {{ $this->cashPaymentForm }}
-                        <input wire:model="cashPaymentAmount"
-                               type="number"
-                               min="0"
-                               max="100000"
-                               required
-                               class="text-black w-full rounded-lg pl-4 pr-4"
-                               placeholder="Anders...">
+                    <form @submit.prevent="markAsPaid" x-show="!isPinTerminalPayment">
+                        <div>
+                            <label for="cashPaymentAmount"
+                                   class="text-xl font-bold">Anders</label>
+                            <div class="mt-2">
+                                <div class="flex items-center rounded-md bg-white px-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-600">
+                                    <div class="shrink-0 select-none text-base text-gray-500 sm:text-lg pr-3">€</div>
+                                    <input x-model="cashPaymentAmount"
+                                           type="number"
+                                           min="0"
+                                           max="100000"
+                                           required
+                                           placeholder="Anders..."
+                                           class="block min-w-0 grow py-3 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-lg">
+                                    <div id="price-currency"
+                                         class="shrink-0 select-none text-base text-gray-500 sm:text-lg pl-3">EUR
+                                    </div>
+                                </div>
+                            </div>
+                            {{--                            <button class="mt-4 p-4 text-xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">--}}
+                            {{--                                Betaling verwerken--}}
+                            {{--                            </button>--}}
+                        </div>
                     </form>
                 </div>
-                {{--                @if($isPinTerminalPayment)--}}
-                {{--                    @if($pinTerminalStatus == 'pending')--}}
-                {{--                        <div>--}}
-                {{--                            <p class="text-3xl">{{ Translation::get('pin-transaction-started', 'point-of-sale', 'De klant mag nu pinnen.') }}</p>--}}
-                {{--                            @if($order->paidAmount > 0)--}}
-                {{--                                <p class="text-xl text-gray-400">Al--}}
-                {{--                                    betaald: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->paidAmount) }}</p>--}}
-                {{--                            @endif--}}
-                {{--                        </div>--}}
-                {{--                    @elseif($pinTerminalStatus == 'waiting_for_clearance')--}}
-                {{--                        <p class="text-3xl">{{ Translation::get('pin-terminal-in-use', 'point-of-sale', 'De pin terminal is in gebruik, wacht tot deze vrijgegeven is.') }}</p>--}}
-                {{--                        <button wire:click="startPinTerminalPayment"--}}
-                {{--                                class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">--}}
-                {{--                            <span>Start betaling opnieuw</span>--}}
-                {{--                        </button>--}}
-                {{--                    @elseif($pinTerminalStatus == 'timed_out')--}}
-                {{--                        <p class="text-3xl">{{ Translation::get('pin-terminal-payment-timed-out', 'point-of-sale', 'De betaling is niet optijd voltooid, probeer het opnieuw.') }}</p>--}}
-                {{--                        <button wire:click="startPinTerminalPayment"--}}
-                {{--                                class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">--}}
-                {{--                            <span>Start betaling opnieuw</span>--}}
-                {{--                        </button>--}}
-                {{--                    @elseif($pinTerminalStatus == 'cancelled_by_customer')--}}
-                {{--                        <p class="text-3xl">{{ Translation::get('pin-terminal-payment-timed-out', 'point-of-sale', 'De betaling is niet voltooid door de klant.') }}</p>--}}
-                {{--                        <button wire:click="startPinTerminalPayment"--}}
-                {{--                                class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">--}}
-                {{--                            <span>Start betaling opnieuw</span>--}}
-                {{--                        </button>--}}
-                {{--                    @elseif($pinTerminalError)--}}
-                {{--                        <p class="text-3xl">{{ $pinTerminalErrorMessage }}</p>--}}
-                {{--                        <button wire:click="startPinTerminalPayment"--}}
-                {{--                                class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">--}}
-                {{--                            <span>Probeer betaling opnieuw</span>--}}
-                {{--                        </button>--}}
-                {{--                    @endif--}}
-                {{--                @endif--}}
-                {{--                <div class="grid md:grid-cols-2 gap-4 mt-16">--}}
-                {{--                    @if($isPinTerminalPayment && $pinTerminalStatus == 'pending')--}}
-                {{--                        <button wire:poll.1s="checkPinTerminalPayment" disabled--}}
-                {{--                                class="md:col-span-2 px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">--}}
-                {{--                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"--}}
-                {{--                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">--}}
-                {{--                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"--}}
-                {{--                                        stroke-width="4"></circle>--}}
-                {{--                                <path class="opacity-75" fill="currentColor"--}}
-                {{--                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>--}}
-                {{--                            </svg>--}}
-                {{--                            <span>Wachten op betaling...</span>--}}
-                {{--                        </button>--}}
-                {{--                    @elseif(!$isPinTerminalPayment)--}}
-                {{--                        <button wire:click="closePayment"--}}
-                {{--                                class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">--}}
-                {{--                            Annuleren--}}
-                {{--                        </button>--}}
-                {{--                        @if(!$cashPaymentAmount)--}}
-                {{--                            <button disabled--}}
-                {{--                                    class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">--}}
-                {{--                                Vul een bedrag in--}}
-                {{--                            </button>--}}
-                {{--                        @elseif($cashPaymentAmount < $totalUnformatted)--}}
-                {{--                            <button wire:click="createPaymentWithExtraPayment"--}}
-                {{--                                    class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">--}}
-                {{--                                Restbedrag bijpinnen--}}
-                {{--                            </button>--}}
-                {{--                        @else--}}
-                {{--                            <button wire:click="markAsPaid"--}}
-                {{--                                    class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">--}}
-                {{--                                Markeer als betaald--}}
-                {{--                            </button>--}}
-                {{--                        @endif--}}
-                {{--                    @endif--}}
-                {{--                </div>--}}
+
+                <template x-if="isPinTerminalPayment && pinTerminalStatus == 'pending'">
+                    <div class="grid gap-2">
+                        <p class="text-3xl">{{ Translation::get('pin-transaction-started', 'point-of-sale', 'De klant mag nu pinnen.') }}</p>
+                        <p class="text-xl text-gray-400" x-show="order && order.paidAmount > 0">
+                            Al
+                            betaald: <span x-html="order.paidAmountFormatted"></span>
+                        </p>
+                    </div>
+                </template>
+                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'waiting_for_clearance'" class="grid gap-2">
+                    <p class="text-3xl">{{ Translation::get('pin-terminal-in-use', 'point-of-sale', 'De pin terminal is in gebruik, wacht tot deze vrijgegeven is.') }}</p>
+                    <button @click="startPinTerminalPayment"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                        <span>Start betaling opnieuw</span>
+                    </button>
+                </div>
+                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'timed_out'" class="grid gap-2">
+                    <p class="text-3xl">{{ Translation::get('pin-terminal-payment-timed-out', 'point-of-sale', 'De betaling is niet optijd voltooid, probeer het opnieuw.') }}</p>
+                    <button @click="startPinTerminalPayment"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                        <span>Start betaling opnieuw</span>
+                    </button>
+                </div>
+                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'cancelled_by_customer'" class="grid gap-2">
+                    <p class="text-3xl">{{ Translation::get('pin-terminal-payment-timed-out', 'point-of-sale', 'De betaling is niet voltooid door de klant.') }}</p>
+                    <button @click="startPinTerminalPayment"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                        <span>Start betaling opnieuw</span>
+                    </button>
+                </div>
+                <div x-show="isPinTerminalPayment && pinTerminalError && !['pending', 'waiting_for_clearance', 'timed_out', 'cancelled_by_customer'].includes(pinTerminalStatus)"
+                     class="grid gap-2">
+                    <p class="text-3xl" x-html="pinTerminalError"></p>
+                    <button @click="startPinTerminalPayment"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                        <span>Probeer betaling opnieuw</span>
+                    </button>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4 mt-16">
+                    <template x-if="isPinTerminalPayment && pinTerminalStatus == 'pending'">
+                        <button disabled
+                                class="md:col-span-2 px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Wachten op betaling...</span>
+                        </button>
+                    </template>
+                    <button @click="closePayment" x-show="!isPinTerminalPayment"
+                            class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                        Annuleren
+                    </button>
+                    <button disabled x-show="!cashPaymentAmount && !isPinTerminalPayment"
+                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                        Vul een bedrag in
+                    </button>
+                    <button @click="createPaymentWithExtraPayment"
+                            x-show="!isPinTerminalPayment && cashPaymentAmount && Math.floor(cashPaymentAmount) < Math.floor(totalUnformatted)"
+                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                        Restbedrag bijpinnen
+                    </button>
+                    <button @click="markAsPaid"
+                            x-show="!isPinTerminalPayment && Math.floor(cashPaymentAmount) >= Math.floor(totalUnformatted)"
+                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                        Markeer als betaald
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    {{--    @if($orderConfirmationPopup)--}}
-    {{--        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">--}}
-    {{--            <div class="absolute h-full w-full" wire:click="closeOrderConfirmation"></div>--}}
-    {{--            <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">--}}
-    {{--                <div class="bg-white rounded-lg p-8 grid gap-4">--}}
-    {{--                    <div class="absolute top-2 right-2 text-black cursor-pointer"--}}
-    {{--                         wire:click="closeOrderConfirmation">--}}
-    {{--                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"--}}
-    {{--                             stroke="currentColor" class="size-10">--}}
-    {{--                            <path stroke-linecap="round" stroke-linejoin="round"--}}
-    {{--                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>--}}
-    {{--                        </svg>--}}
-    {{--                    </div>--}}
-    {{--                    <div>--}}
-    {{--                        <p class="text-3xl font-bold">Bestelling {{ $order->invoice_id }} afgerond--}}
-    {{--                            - {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($order->total) }}</p>--}}
-    {{--                        <p class="text-xl text-gray-400">--}}
-    {{--                            Betaalmethode: {{ $order->orderPayments()->first()->paymentMethod->name }}--}}
-    {{--                        </p>--}}
-    {{--                    </div>--}}
-    {{--                    @if($order->orderPayments()->first()->paymentMethod->is_cash_payment)--}}
-    {{--                        <div class="flex flex-col gap-4">--}}
-    {{--                            <p class="text-xl font-bold">Betaling overzicht</p>--}}
-    {{--                            @foreach($order->orderPayments()->where('status', 'paid')->get() as $orderPayment)--}}
-    {{--                                <div--}}
-    {{--                                    class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">--}}
-    {{--                                    <div class="flex flex-col">--}}
-    {{--                                        <p class="font-bold text-lg">Betaling {{ $loop->iteration }}</p>--}}
-    {{--                                        <p class="text-gray-400">{{ $orderPayment->paymentMethod->name }}</p>--}}
-    {{--                                    </div>--}}
-    {{--                                    <div class="flex flex-col">--}}
-    {{--                                        <p class="font-bold text-xl">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderPayment->amount) }}</p>--}}
-    {{--                                        @if($loop->first)--}}
-    {{--                                            @if($order->total < $order->paidAmount)--}}
-    {{--                                                <p class="text-warning-500 font-bold text-xl">--}}
-    {{--                                                    Wisselgeld--}}
-    {{--                                                    verschuldigd: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderPayment->amount - $order->total) }}--}}
-    {{--                                                </p>--}}
-    {{--                                            @endif--}}
-    {{--                                        @endif--}}
-    {{--                                    </div>--}}
-    {{--                                </div>--}}
-    {{--                            @endforeach--}}
-    {{--                        </div>--}}
-    {{--                    @endif--}}
-    {{--                    <div class="grid gap-4 mt-16">--}}
-    {{--                        <button wire:click="closeOrderConfirmation"--}}
-    {{--                                class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">--}}
-    {{--                            Terug naar POS--}}
-    {{--                        </button>--}}
-    {{--                    </div>--}}
-    {{--                </div>--}}
-    {{--            </div>--}}
-    {{--        </div>--}}
-    {{--    @endif--}}
+    <div
+        x-show="orderConfirmationPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="resetPOS()"></div>
+        <template x-if="order && firstPaymentMethod">
+            <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
+                <div class="bg-white rounded-lg p-8 grid gap-4">
+                    <div class="absolute top-2 right-2 text-black cursor-pointer"
+                         @click="resetPOS()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-10">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold">
+                            Bestelling <span x-html="order.invoice_id"></span> afgerond - <span
+                                x-html="order.totalFormatted"></span>
+                        </p>
+                        <p class="text-xl text-gray-400">
+                            Betaalmethode: <span x-html="firstPaymentMethod.name"></span>
+                        </p>
+                    </div>
+                    <div class="flex flex-col gap-4" x-show="firstPaymentMethod.is_cash_payment">
+                        <p class="text-xl font-bold">Betaling overzicht</p>
+                        <template x-for="(orderPayment, index) in orderPayments">
+                            <div x-show="index == 0 || (index != 0 && !order.shouldChangeMoney)"
+                                 class="flex flex-wrap items-center justify-between border border-gray-400 rounded-lg p-4 gap-4">
+                                <div class="flex flex-col">
+                                    <p class="font-bold text-lg">Betaling <span x-html="index + 1"></span></p>
+                                    <p class="text-gray-400" x-html="orderPayment.paymentMethodName"></p>
+                                </div>
+                                <div class="flex flex-col">
+                                    <p class="font-bold text-xl" x-html="orderPayment.amountFormatted"></p>
+                                    <p class="text-warning-500 font-bold text-xl"
+                                       x-show="index == 0 && order.shouldChangeMoney">
+                                        Wisselgeld verschuldigd: <span x-html="order.changeMoney"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="grid gap-4 mt-16">
+                        <button @click="resetPOS()"
+                                class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            Terug naar POS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
     {{--    @if($showOrder)--}}
     {{--        <div class="fixed inset-0 flex items-center justify-center z-50 text-black">--}}
     {{--            <div class="absolute h-full w-full" wire:click="closeShowOrder"></div>--}}
@@ -698,6 +722,7 @@
             vatPercentages: [],
             subTotal: null,
             total: null,
+            totalUnformatted: null,
             activeDiscountCode: null,
             searchedProducts: [],
             paymentMethods: [],
@@ -705,6 +730,13 @@
             suggestedCashPaymentAmounts: [],
             chosenPaymentMethod: null,
             isPinTerminalPayment: false,
+            pinTerminalStatus: false,
+            pinTerminalError: false,
+            pinTerminalErrorMessage: false,
+            cashPaymentAmount: null,
+            orderPayments: [],
+            firstPaymentMethod: null,
+            pinTerminalIntervalId: null,
             totalQuantity() {
                 return this.products.reduce((sum, product) => sum + product.quantity, 0);
             },
@@ -713,6 +745,7 @@
             createDiscountPopup: false,
             checkoutPopup: false,
             paymentPopup: false,
+            orderConfirmationPopup: false,
 
             hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
 
@@ -790,6 +823,7 @@
             },
 
             async retrieveCart() {
+                this.loading = true;
                 try {
                     let response = await fetch('{{ route('api.point-of-sale.retrieve-cart') }}', {
                         method: 'POST',
@@ -807,27 +841,31 @@
                     let data = await response.json();
 
                     if (!response.ok) {
-                        return $wire.dispatch('notify', {
+                        $wire.dispatch('notify', {
                             type: 'danger',
                             message: data.message,
                         })
+                    } else {
+                        this.products = data.products;
+                        this.discountCode = data.discountCode;
+                        this.activeDiscountCode = data.activeDiscountCode;
+                        this.discount = data.discount;
+                        this.vat = data.vat;
+                        this.vatPercentages = data.vatPercentages;
+                        this.subTotal = data.subTotal;
+                        this.total = data.total;
+                        this.totalUnformatted = data.totalUnformatted;
+                        this.paymentMethods = data.paymentMethods;
                     }
 
-                    this.products = data.products;
-                    this.discountCode = data.discountCode;
-                    this.activeDiscountCode = data.activeDiscountCode;
-                    this.discount = data.discount;
-                    this.vat = data.vat;
-                    this.vatPercentages = data.vatPercentages;
-                    this.subTotal = data.subTotal;
-                    this.total = data.total;
-                    this.paymentMethods = data.paymentMethods;
                 } catch (error) {
-                    return $wire.dispatch('notify', {
+                    $wire.dispatch('notify', {
                         type: 'danger',
                         message: 'De winkelwagen kon niet worden opgehaald'
                     })
                 }
+
+                this.loading = false;
             },
 
             async printLastOrder() {
@@ -1081,6 +1119,7 @@
                             cartInstance: this.cartInstance,
                             orderOrigin: this.orderOrigin,
                             paymentMethodId: paymentMethodId,
+                            userId: this.userId,
                         })
                     });
 
@@ -1114,7 +1153,8 @@
                 }
             },
 
-            async startPinTerminalPayment() {
+            async startPinTerminalPayment(hasMultiplePayments = false) {
+                this.isPinTerminalPayment = true;
                 try {
                     let response = await fetch('{{ route('api.point-of-sale.start-pin-terminal-payment') }}', {
                         method: 'POST',
@@ -1125,8 +1165,108 @@
                         body: JSON.stringify({
                             posIdentifier: this.posIdentifier,
                             order: this.order,
-                            paymentMethod: this.paymentMethod,
+                            paymentMethod: this.chosenPaymentMethod,
                             userId: this.userId,
+                            hasMultiplePayments: hasMultiplePayments,
+                        })
+                    });
+
+                    let data = await response.json();
+                    this.focus();
+
+                    if (!response.ok) {
+                        this.pinTerminalStatus = data.pinTerminalStatus;
+                        this.pinTerminalError = data.pinTerminalError;
+                        this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
+
+                        return $wire.dispatch('notify', {
+                            type: 'danger',
+                            message: data.message,
+                        })
+                    }
+
+                    this.pinTerminalStatus = data.pinTerminalStatus;
+                    this.pinTerminalError = data.pinTerminalError;
+                    this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
+
+                    if (this.pinTerminalStatus == 'pending') {
+                        this.checkPinTerminalPayment();
+                    }
+
+                } catch (error) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: 'De pin betaling kon niet worden gestart'
+                    })
+                }
+            },
+
+            async createPaymentWithExtraPayment() {
+                this.markAsPaid(true);
+            },
+
+            async closePayment() {
+                try {
+                    let response = await fetch('{{ route('api.point-of-sale.close-payment') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            posIdentifier: this.posIdentifier,
+                            order: this.order,
+                        })
+                    });
+
+                    let data = await response.json();
+                    this.focus();
+
+                    if (!response.ok) {
+                        return $wire.dispatch('notify', {
+                            type: 'danger',
+                            message: data.message,
+                        });
+                    }
+
+                    $wire.dispatch('notify', {
+                        type: 'success',
+                        message: data.message,
+                    });
+
+                    this.isPinTerminalPayment = false;
+                    this.order = null;
+                    this.toggle('paymentPopup');
+
+                } catch (error) {
+                    console.log(error);
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: 'De betaling kon niet worden gesloten'
+                    })
+                }
+            },
+
+            async setCashPaymentAmount(amount) {
+                this.cashPaymentAmount = amount;
+                this.markAsPaid();
+            },
+
+            async markAsPaid(hasMultiplePayments = false) {
+                try {
+                    let response = await fetch('{{ route('api.point-of-sale.mark-as-paid') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            posIdentifier: this.posIdentifier,
+                            order: this.order,
+                            paymentMethod: this.chosenPaymentMethod,
+                            userId: this.userId,
+                            cashPaymentAmount: this.cashPaymentAmount,
+                            hasMultiplePayments: hasMultiplePayments,
                         })
                     });
 
@@ -1140,20 +1280,79 @@
                         })
                     }
 
-                    // this.isPinTerminalPayment = data.isPinTerminalPayment;
-                    // this.paymentMethod = data.paymentMethod;
-                    // this.suggestedCashPaymentAmounts = data.suggestedCashPaymentAmounts;
-                    // this.order = data.order;
-
-                    // this.toggle('checkoutPopup');
-                    // this.toggle('paymentPopup');
+                    if (data.startPinTerminalPayment) {
+                        this.startPinTerminalPayment(hasMultiplePayments);
+                    } else {
+                        this.toggle('paymentPopup')
+                        this.products = [];
+                        this.discountCode = '';
+                        this.cashPaymentAmount = null;
+                        this.order = data.order;
+                        this.orderPayments = data.orderPayments;
+                        this.firstPaymentMethod = data.firstPaymentMethod;
+                        this.toggle('orderConfirmationPopup')
+                    }
 
                 } catch (error) {
                     return $wire.dispatch('notify', {
                         type: 'danger',
-                        message: 'De pin betaling kon niet worden gestart'
+                        message: 'De bestelling kon niet worden gemarkeerd als betaald'
                     })
                 }
+            },
+
+            checkPinTerminalPayment() {
+                this.pinTerminalIntervalId = setInterval(() => {
+                    if (this.isPinTerminalPayment && this.pinTerminalStatus == 'pending') {
+                        this.pollPinTerminalPayment();
+                    } else {
+                        clearInterval(this.pinTerminalIntervalId); // Stop polling if condition changes
+                    }
+                }, 1000);
+            },
+
+            async pollPinTerminalPayment() {
+                try {
+                    let response = await fetch('{{ route('api.point-of-sale.check-pin-terminal-payment') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            posIdentifier: this.posIdentifier,
+                            order: this.order,
+                        })
+                    });
+
+                    let data = await response.json();
+                    this.focus();
+
+                    if (!response.ok) {
+                        return $wire.dispatch('notify', {
+                            type: 'danger',
+                            message: data.message,
+                        })
+                    }
+
+                    this.pinTerminalStatus = data.pinTerminalStatus;
+                    this.pinTerminalError = data.pinTerminalError;
+                    this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
+
+                } catch (error) {
+                    console.log(error);
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: 'De pin betaling kon niet worden gecontroleerd'
+                    })
+                }
+            },
+
+            async resetPOS() {
+                this.lastOrder = this.order;
+                this.order = null;
+                this.toggle('orderConfirmationPopup');
+                this.initialize();
             },
 
             focus() {
