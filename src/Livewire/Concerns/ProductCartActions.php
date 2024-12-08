@@ -206,7 +206,7 @@ trait ProductCartActions
         }
 
         $productPrice = $this->product->currentPrice;
-        foreach ($this->allProductExtras() as $extraKey => $productExtra) {
+        foreach ($this->productExtras as $extraKey => $productExtra) {
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productValue) {
