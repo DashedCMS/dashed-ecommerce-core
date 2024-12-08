@@ -3,45 +3,38 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Models\Customsetting;
+use Filament\Forms\Get;
+use Livewire\Component;
+use Filament\Forms\Form;
+use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedCore\Classes\Sites;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedTranslations\Models\Translation;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Str;
-use Livewire\Component;
-use Filament\Forms\Contracts\HasForms;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns\CreateManualOrderActions;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class POSPage extends Component implements HasForms
 {
     use InteractsWithForms;
 
 
-//    public $loading = false;
-//
+    //    public $loading = false;
+    //
     public $subTotal = 0;
     public $discount = 0;
     public $vat = 0;
@@ -51,67 +44,67 @@ class POSPage extends Component implements HasForms
 
     public $cartInstance = 'handorder';
     public $orderOrigin = 'pos';
-//
-//    public $user_id;
-//    public $marketing;
-//    public $password;
-//    public $password_confirmation;
-//    public $first_name;
-//    public $last_name;
-//    public $email;
-//    public $phone_number;
-//    public $date_of_birth;
-//    public $gender;
-//    public $street;
-//    public $house_nr;
-//    public $zip_code;
-//    public $city;
-//    public $country;
-//    public $company_name;
-//    public $btw_id;
-//    public $invoice_street;
-//    public $invoice_house_nr;
-//    public $invoice_zip_code;
-//    public $invoice_city;
-//    public $invoice_country;
-//    public $note;
-//    public $discount_code;
-//    public ?string $activeDiscountCode = '';
-//    public $orderProducts = [];
-//    public $shipping_method_id;
-//    public $payment_method_id;
-//    public $paymentMethod;
-//    public $allProducts = [];
-//    public $products = [];
-//    public $searchedProducts = [];
-//    public $searchProductQuery;
-//    public $searchQueryInputmode = 'none';
-//    public $customProductPopup = false;
+    //
+    //    public $user_id;
+    //    public $marketing;
+    //    public $password;
+    //    public $password_confirmation;
+    //    public $first_name;
+    //    public $last_name;
+    //    public $email;
+    //    public $phone_number;
+    //    public $date_of_birth;
+    //    public $gender;
+    //    public $street;
+    //    public $house_nr;
+    //    public $zip_code;
+    //    public $city;
+    //    public $country;
+    //    public $company_name;
+    //    public $btw_id;
+    //    public $invoice_street;
+    //    public $invoice_house_nr;
+    //    public $invoice_zip_code;
+    //    public $invoice_city;
+    //    public $invoice_country;
+    //    public $note;
+    //    public $discount_code;
+    //    public ?string $activeDiscountCode = '';
+    //    public $orderProducts = [];
+    //    public $shipping_method_id;
+    //    public $payment_method_id;
+    //    public $paymentMethod;
+    //    public $allProducts = [];
+    //    public $products = [];
+    //    public $searchedProducts = [];
+    //    public $searchProductQuery;
+    //    public $searchQueryInputmode = 'none';
+    //    public $customProductPopup = false;
     public ?array $customProductData = [
         'quantity' => 1,
         'vat_rate' => 21,
     ];
-//    public ?array $searchOrderData = [];
-//    public $createDiscountPopup = false;
+    //    public ?array $searchOrderData = [];
+    //    public $createDiscountPopup = false;
     public ?array $createDiscountData = [];
-//    public $checkoutPopup = false;
-//    public $paymentPopup = false;
-//    public $orderConfirmationPopup = false;
-//    public $searchOrderPopup = false;
-//    public $posPaymentMethods = [];
-//    public $suggestedCashPaymentAmounts = [];
-//    public $cashPaymentAmount = null;
-//    public $orderOrigin;
-//    public $order;
-//    public $orderPayment;
-//    public $lastOrder;
-//    public $showOrder;
-//    public $posIdentifier = '';
-//    public bool $isPinTerminalPayment = false;
-//    public bool $pinTerminalError = false;
-//    public ?string $pinTerminalErrorMessage = null;
-//    public ?string $pinTerminalStatus = 'pending';
-//    public $fullscreen = false;
+    //    public $checkoutPopup = false;
+    //    public $paymentPopup = false;
+    //    public $orderConfirmationPopup = false;
+    //    public $searchOrderPopup = false;
+    //    public $posPaymentMethods = [];
+    //    public $suggestedCashPaymentAmounts = [];
+    //    public $cashPaymentAmount = null;
+    //    public $orderOrigin;
+    //    public $order;
+    //    public $orderPayment;
+    //    public $lastOrder;
+    //    public $showOrder;
+    //    public $posIdentifier = '';
+    //    public bool $isPinTerminalPayment = false;
+    //    public bool $pinTerminalError = false;
+    //    public ?string $pinTerminalErrorMessage = null;
+    //    public ?string $pinTerminalStatus = 'pending';
+    //    public $fullscreen = false;
 
     public array $cachableVariables = [
 //        'products' => [],
@@ -121,24 +114,24 @@ class POSPage extends Component implements HasForms
 
     protected $listeners = [
         'fullscreenValue',
-        'notify'
+        'notify',
     ];
 
     public function mount(): void
     {
-//        ShoppingCart::setInstance($this->cartInstance);
-//        $this->allProducts = Product::handOrderShowable()->get();
-//        $this->loadVariables();
-//        $this->fillPOSCart(true);
-//        $this->customProductForm->fill([
-//            'quantity' => 1,
-//            'vat_rate' => 21,
-//        ]);
-//        $this->createDiscountForm->fill([
-//            'type' => 'percentage',
-//        ]);
-//        $this->updateInfo(false);
-//        $this->lastOrder = Order::where('order_origin', 'pos')->latest()->first();
+        //        ShoppingCart::setInstance($this->cartInstance);
+        //        $this->allProducts = Product::handOrderShowable()->get();
+        //        $this->loadVariables();
+        //        $this->fillPOSCart(true);
+        //        $this->customProductForm->fill([
+        //            'quantity' => 1,
+        //            'vat_rate' => 21,
+        //        ]);
+        //        $this->createDiscountForm->fill([
+        //            'type' => 'percentage',
+        //        ]);
+        //        $this->updateInfo(false);
+        //        $this->lastOrder = Order::where('order_origin', 'pos')->latest()->first();
     }
 
     public function notify($type, $message): void
@@ -149,14 +142,14 @@ class POSPage extends Component implements HasForms
             ->send();
     }
 
-//    public function finishPOSCart()
-//    {
-//        $posCart = POSCart::where('user_id', auth()->user()->id)->where('identifier', $this->posIdentifier)->first();
-//        $posCart->status = 'finished';
-//        $posCart->save();
-//        $this->posIdentifier = uniqid();
-//    }
-//
+    //    public function finishPOSCart()
+    //    {
+    //        $posCart = POSCart::where('user_id', auth()->user()->id)->where('identifier', $this->posIdentifier)->first();
+    //        $posCart->status = 'finished';
+    //        $posCart->save();
+    //        $this->posIdentifier = uniqid();
+    //    }
+    //
     public function createOrder(): array
     {
         $this->updateInfo(false);
@@ -168,7 +161,7 @@ class POSPage extends Component implements HasForms
         $cartItems = ShoppingCart::cartItems($this->cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -204,7 +197,7 @@ class POSPage extends Component implements HasForms
             }
         }
 
-        if (!$shippingMethod && $this->orderOrigin != 'pos') {
+        if (! $shippingMethod && $this->orderOrigin != 'pos') {
             //            Notification::make()
             //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
             //                ->danger()
@@ -221,10 +214,10 @@ class POSPage extends Component implements HasForms
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -453,11 +446,11 @@ class POSPage extends Component implements HasForms
 //            'searchOrderForm',
         ];
     }
-//
-//    public function createOrderForm(Form $form): Form
-//    {
-//        return $form;
-//    }
+    //
+    //    public function createOrderForm(Form $form): Form
+    //    {
+    //        return $form;
+    //    }
 
     public function customProductForm(Form $form): Form
     {
@@ -500,50 +493,50 @@ class POSPage extends Component implements HasForms
             ->statePath('customProductData');
     }
 
-//    public function searchOrderForm(Form $form): Form
-//    {
-//        return $form
-//            ->schema([
-//                TextInput::make('order_id')
-//                    ->label('Zoek order op ID')
-//                    ->required()
-//                    ->autofocus()
-//                    ->columnSpanFull()
-//                    ->extraInputAttributes([
-//                        'class' => 'search-order',
-//                    ]),
-//            ])
-//            ->columns(2)
-//            ->statePath('searchOrderData');
-//    }
-//
-//    public function submitSearchOrderForm()
-//    {
-//        $orderId = str($this->searchOrderData['order_id'])->trim()->replace(' ', '')->replace('order-', '');
-//        $this->searchOrderData['order_id'] = $orderId;
-//        $order = Order::where('id', $orderId)
-//            ->orWhere('invoice_id', $orderId)
-//            ->first();
-//        if (!$order) {
-//            Notification::make()
-//                ->title('Order niet gevonden')
-//                ->danger()
-//                ->send();
-//            $this->showOrder = null;
-//
-//            return;
-//        }
-//
-//        $this->searchOrderPopup = false;
-//        $this->showOrder = $order;
-//        $this->searchOrderData['order_id'] = null;
-//    }
-//
-//    public function closeShowOrder()
-//    {
-//        $this->showOrder = null;
-//    }
-//
+    //    public function searchOrderForm(Form $form): Form
+    //    {
+    //        return $form
+    //            ->schema([
+    //                TextInput::make('order_id')
+    //                    ->label('Zoek order op ID')
+    //                    ->required()
+    //                    ->autofocus()
+    //                    ->columnSpanFull()
+    //                    ->extraInputAttributes([
+    //                        'class' => 'search-order',
+    //                    ]),
+    //            ])
+    //            ->columns(2)
+    //            ->statePath('searchOrderData');
+    //    }
+    //
+    //    public function submitSearchOrderForm()
+    //    {
+    //        $orderId = str($this->searchOrderData['order_id'])->trim()->replace(' ', '')->replace('order-', '');
+    //        $this->searchOrderData['order_id'] = $orderId;
+    //        $order = Order::where('id', $orderId)
+    //            ->orWhere('invoice_id', $orderId)
+    //            ->first();
+    //        if (!$order) {
+    //            Notification::make()
+    //                ->title('Order niet gevonden')
+    //                ->danger()
+    //                ->send();
+    //            $this->showOrder = null;
+    //
+    //            return;
+    //        }
+    //
+    //        $this->searchOrderPopup = false;
+    //        $this->showOrder = $order;
+    //        $this->searchOrderData['order_id'] = null;
+    //    }
+    //
+    //    public function closeShowOrder()
+    //    {
+    //        $this->showOrder = null;
+    //    }
+    //
     public function submitCustomProductForm()
     {
         $this->customProductForm->validate();
@@ -592,7 +585,7 @@ class POSPage extends Component implements HasForms
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -603,7 +596,7 @@ class POSPage extends Component implements HasForms
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -615,7 +608,7 @@ class POSPage extends Component implements HasForms
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -631,7 +624,7 @@ class POSPage extends Component implements HasForms
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -641,7 +634,7 @@ class POSPage extends Component implements HasForms
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (!$posCart->products) {
+        if (! $posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -671,7 +664,7 @@ class POSPage extends Component implements HasForms
             $discountCode->save();
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -686,86 +679,86 @@ class POSPage extends Component implements HasForms
     }
 
     //    public function removeDiscount()
-//    {
-//        $this->discount_code = '';
-//        $this->updateInfo(false);
-//    }
-//
-//
-//    public function printReceipt(Order $order, $isCopy = false)
-//    {
-//        $order->refresh();
-//        $order->printReceipt($isCopy);
-//    }
-//
-//    public function closeCheckout()
-//    {
-//        $this->checkoutPopup = false;
-//    }
-//
-//    public function closePayment()
-//    {
-//        if ($this->isPinTerminalPayment) {
-//            self::cancelPinTerminalPayment($this->order);
-//        }
-//
-//        if (!$this->order) {
-//            return;
-//        }
-//
-//        if ($this->order->isPaidFor()) {
-//            Notification::make()
-//                ->body(Translation::get('order-already-paid', 'payments', 'De bestelling is al betaald'))
-//                ->danger()
-//                ->send();
-//        } else {
-//            $this->order->delete();
-//            Notification::make()
-//                ->body(Translation::get('order-cancelled', 'payments', 'De bestelling is geannuleerd'))
-//                ->success()
-//                ->send();
-//        }
-//
-//        $this->order = null;
-//        $this->paymentPopup = false;
-//    }
-//
-//    public function closeOrderConfirmation()
-//    {
-//        $this->orderConfirmationPopup = false;
-//        $this->lastOrder = $this->order;
-//        $this->order = null;
-//        $this->cacheVariables();
-//    }
+    //    {
+    //        $this->discount_code = '';
+    //        $this->updateInfo(false);
+    //    }
+    //
+    //
+    //    public function printReceipt(Order $order, $isCopy = false)
+    //    {
+    //        $order->refresh();
+    //        $order->printReceipt($isCopy);
+    //    }
+    //
+    //    public function closeCheckout()
+    //    {
+    //        $this->checkoutPopup = false;
+    //    }
+    //
+    //    public function closePayment()
+    //    {
+    //        if ($this->isPinTerminalPayment) {
+    //            self::cancelPinTerminalPayment($this->order);
+    //        }
+    //
+    //        if (!$this->order) {
+    //            return;
+    //        }
+    //
+    //        if ($this->order->isPaidFor()) {
+    //            Notification::make()
+    //                ->body(Translation::get('order-already-paid', 'payments', 'De bestelling is al betaald'))
+    //                ->danger()
+    //                ->send();
+    //        } else {
+    //            $this->order->delete();
+    //            Notification::make()
+    //                ->body(Translation::get('order-cancelled', 'payments', 'De bestelling is geannuleerd'))
+    //                ->success()
+    //                ->send();
+    //        }
+    //
+    //        $this->order = null;
+    //        $this->paymentPopup = false;
+    //    }
+    //
+    //    public function closeOrderConfirmation()
+    //    {
+    //        $this->orderConfirmationPopup = false;
+    //        $this->lastOrder = $this->order;
+    //        $this->order = null;
+    //        $this->cacheVariables();
+    //    }
 
-//    public function cashPaymentForm(Form $form): Form
-//    {
-//        return $form
-//            ->schema([
-//                TextInput::make('cashPaymentAmount')
-//                    ->label('Prijs')
-//                    ->hiddenLabel()
-//                    ->placeholder('Anders...')
-//                    ->numeric()
-//                    ->minValue(0)
-//                    ->maxValue(999999)
-//                    ->inputMode('decimal')
-//                    ->required()
-//                    ->reactive()
-//                    ->debounce(300)
-//                    ->extraInputAttributes([
-//                        'class' => 'text-xl sm:text-xl md:text-xl py-2',
-//                    ])
-//                    ->extraFieldWrapperAttributes([
-//                        'class' => 'text-xl sm:text-xl md:text-xl py-2',
-//                    ])
-//                    ->extraAttributes([
-//                        'class' => 'text-xl sm:text-xl md:text-xl py-2',
-//                    ])
-//                    ->prefix('€'),
-//            ]);
-//    }
-//
+    //    public function cashPaymentForm(Form $form): Form
+    //    {
+    //        return $form
+    //            ->schema([
+    //                TextInput::make('cashPaymentAmount')
+    //                    ->label('Prijs')
+    //                    ->hiddenLabel()
+    //                    ->placeholder('Anders...')
+    //                    ->numeric()
+    //                    ->minValue(0)
+    //                    ->maxValue(999999)
+    //                    ->inputMode('decimal')
+    //                    ->required()
+    //                    ->reactive()
+    //                    ->debounce(300)
+    //                    ->extraInputAttributes([
+    //                        'class' => 'text-xl sm:text-xl md:text-xl py-2',
+    //                    ])
+    //                    ->extraFieldWrapperAttributes([
+    //                        'class' => 'text-xl sm:text-xl md:text-xl py-2',
+    //                    ])
+    //                    ->extraAttributes([
+    //                        'class' => 'text-xl sm:text-xl md:text-xl py-2',
+    //                    ])
+    //                    ->prefix('€'),
+    //            ]);
+    //    }
+    //
     public function selectPaymentMethod($paymentMethodId)
     {
         $response = $this->createOrder();
@@ -788,175 +781,175 @@ class POSPage extends Component implements HasForms
             $this->order = null;
         }
     }
-//
-//    public function setCashPaymentAmount($amount): void
-//    {
-//        $this->cashPaymentAmount = $amount;
-//        $this->markAsPaid();
-//    }
-//
-//    public function checkPinTerminalPayment(): void
-//    {
-//        if (!$this->order || $this->pinTerminalStatus != 'pending') {
-//            return;
-//        }
-//
-//        $this->order->refresh();
-//
-//        if ($this->order->isPaidFor()) {
-//            $this->pinTerminalStatus = 'paid';
-//            self::finishPaidOrder($this->order);
-//        } elseif ($this->order->status == 'cancelled') {
-//            $this->cancelPinTerminalPaymentByCustomer($this->order);
-//        }
-//    }
+    //
+    //    public function setCashPaymentAmount($amount): void
+    //    {
+    //        $this->cashPaymentAmount = $amount;
+    //        $this->markAsPaid();
+    //    }
+    //
+    //    public function checkPinTerminalPayment(): void
+    //    {
+    //        if (!$this->order || $this->pinTerminalStatus != 'pending') {
+    //            return;
+    //        }
+    //
+    //        $this->order->refresh();
+    //
+    //        if ($this->order->isPaidFor()) {
+    //            $this->pinTerminalStatus = 'paid';
+    //            self::finishPaidOrder($this->order);
+    //        } elseif ($this->order->status == 'cancelled') {
+    //            $this->cancelPinTerminalPaymentByCustomer($this->order);
+    //        }
+    //    }
 
-//
-//    public function cancelPinTerminalPayment(Order $order): void
-//    {
-//        $this->isPinTerminalPayment = false;
-//        $this->pinTerminalStatus = 'pending';
-//        $this->pinTerminalError = false;
-//        $this->pinTerminalErrorMessage = null;
-//
-//        try {
-//            $success = ecommerce()->builder('paymentServiceProviders')[$this->orderPayment->psp]['class']::cancelPinTerminalTransaction($this->orderPayment);
-//        } catch (\Exception $exception) {
-//            $success = false;
-//        }
-//        if (!$success) {
-//            Notification::make()
-//                ->danger()
-//                ->title(Translation::get('failed-to-stop-terminal-payment-try-again', 'cart', 'De pin betaling kon niet worden gestopt'))
-//                ->send();
-//        }
-//    }
-//
-//    public function cancelPinTerminalPaymentByCustomer(Order $order): void
-//    {
-//        $this->isPinTerminalPayment = true;
-//        $this->pinTerminalStatus = 'cancelled_by_customer';
-//        $this->pinTerminalError = true;
-//        $this->pinTerminalErrorMessage = 'Betaling geannuleerd door klant';
-//
-//        try {
-//            $success = ecommerce()->builder('paymentServiceProviders')[$this->orderPayment->psp]['class']::cancelPinTerminalTransaction($this->orderPayment);
-//        } catch (\Exception $exception) {
-//            $success = false;
-//        }
-//        if (!$success) {
-//            Notification::make()
-//                ->danger()
-//                ->title(Translation::get('failed-to-stop-terminal-payment-try-again', 'cart', 'De pin betaling kon niet worden gestopt'))
-//                ->send();
-//        }
-//    }
-//
-//    public function markAsPaid(bool $hasMultiplePayments = false): void
-//    {
-//        if ($this->paymentMethod->is_cash_payment) {
-//            if (!$this->cashPaymentAmount) {
-//                Notification::make()
-//                    ->title('Geen bedrag ingevoerd')
-//                    ->danger()
-//                    ->send();
-//
-//                return;
-//            } elseif (!$hasMultiplePayments && $this->cashPaymentAmount < $this->totalUnformatted) {
-//                Notification::make()
-//                    ->title('Bedrag is te laag')
-//                    ->danger()
-//                    ->send();
-//
-//                return;
-//            }
-//        }
-//
-//        $order = $this->order;
-//
-//        $orderPayment = new OrderPayment();
-//        $orderPayment->amount = $this->cashPaymentAmount ?: $this->totalUnformatted;
-//        $orderPayment->order_id = $order->id;
-//        $orderPayment->payment_method_id = $this->payment_method_id;
-//        $orderPayment->payment_method = $this->paymentMethod->name;
-//        $orderPayment->psp = 'own';
-//        $orderPayment->save();
-//        $orderPayment->changeStatus('paid');
-//        $this->orderPayment = $orderPayment;
-//
-//        if ($orderPayment->amount > $order->total) {
-//            $difference = $order->total - $orderPayment->amount;
-//
-//            $refundOrderPayment = new OrderPayment();
-//            $refundOrderPayment->amount = $difference;
-//            $refundOrderPayment->order_id = $order->id;
-//            $refundOrderPayment->payment_method_id = $this->payment_method_id;
-//            $refundOrderPayment->payment_method = $this->paymentMethod->name;
-//            $refundOrderPayment->psp = 'own';
-//            $refundOrderPayment->save();
-//            $refundOrderPayment->changeStatus('paid');
-//        }
-//
-//        $order->refresh();
-//        if ($this->paymentMethod->is_cash_payment && $this->cashPaymentAmount < $this->totalUnformatted && $hasMultiplePayments) {
-//            $paymentMethod = collect($this->posPaymentMethods)->whereNotNull('pin_terminal_id')->first();
-//            if (!$paymentMethod) {
-//                Notification::make()
-//                    ->title('Geen pin terminal gevonden, bestelling incorrect afgehandeld')
-//                    ->danger()
-//                    ->send();
-//
-//                return;
-//            }
-//            $this->payment_method_id = $paymentMethod['id'];
-//            $this->paymentMethod = PaymentMethod::find($paymentMethod['id']);
-//            self::startPinTerminalPayment();
-//        } else {
-//            self::finishPaidOrder($order);
-//        }
-//    }
-//
-//    public function createPaymentWithExtraPayment(): void
-//    {
-//        self::markAsPaid(true);
-//    }
-//
-//    public function finishPaidOrder(Order $order)
-//    {
-//        $order->changeStatus('paid');
-//        $order->changeFulfillmentStatus('handled');
-//
-//        $this->printReceipt($order);
-//        $hasCashPayment = false;
-//        foreach ($order->orderPayments as $orderPayment) {
-//            if ($orderPayment->paymentMethod->is_cash_payment) {
-//                $hasCashPayment = true;
-//            }
-//        }
-//        if ($hasCashPayment) {
-//            $this->openCashRegister();
-//        }
-//
-//        $this->paymentPopup = false;
-//        $this->products = [];
-//        $this->discount_code = '';
-//        $this->cashPaymentAmount = null;
-//        $this->finishPOSCart();
-//        $this->updateInfo(false);
-//        $this->orderConfirmationPopup = true;
-//    }
-//
-//    public function printLastOrder()
-//    {
-//        if ($this->lastOrder) {
-//            $this->printReceipt($this->lastOrder, true);
-//        } else {
-//            Notification::make()
-//                ->title('Geen order gevonden')
-//                ->danger()
-//                ->send();
-//        }
-//    }
+    //
+    //    public function cancelPinTerminalPayment(Order $order): void
+    //    {
+    //        $this->isPinTerminalPayment = false;
+    //        $this->pinTerminalStatus = 'pending';
+    //        $this->pinTerminalError = false;
+    //        $this->pinTerminalErrorMessage = null;
+    //
+    //        try {
+    //            $success = ecommerce()->builder('paymentServiceProviders')[$this->orderPayment->psp]['class']::cancelPinTerminalTransaction($this->orderPayment);
+    //        } catch (\Exception $exception) {
+    //            $success = false;
+    //        }
+    //        if (!$success) {
+    //            Notification::make()
+    //                ->danger()
+    //                ->title(Translation::get('failed-to-stop-terminal-payment-try-again', 'cart', 'De pin betaling kon niet worden gestopt'))
+    //                ->send();
+    //        }
+    //    }
+    //
+    //    public function cancelPinTerminalPaymentByCustomer(Order $order): void
+    //    {
+    //        $this->isPinTerminalPayment = true;
+    //        $this->pinTerminalStatus = 'cancelled_by_customer';
+    //        $this->pinTerminalError = true;
+    //        $this->pinTerminalErrorMessage = 'Betaling geannuleerd door klant';
+    //
+    //        try {
+    //            $success = ecommerce()->builder('paymentServiceProviders')[$this->orderPayment->psp]['class']::cancelPinTerminalTransaction($this->orderPayment);
+    //        } catch (\Exception $exception) {
+    //            $success = false;
+    //        }
+    //        if (!$success) {
+    //            Notification::make()
+    //                ->danger()
+    //                ->title(Translation::get('failed-to-stop-terminal-payment-try-again', 'cart', 'De pin betaling kon niet worden gestopt'))
+    //                ->send();
+    //        }
+    //    }
+    //
+    //    public function markAsPaid(bool $hasMultiplePayments = false): void
+    //    {
+    //        if ($this->paymentMethod->is_cash_payment) {
+    //            if (!$this->cashPaymentAmount) {
+    //                Notification::make()
+    //                    ->title('Geen bedrag ingevoerd')
+    //                    ->danger()
+    //                    ->send();
+    //
+    //                return;
+    //            } elseif (!$hasMultiplePayments && $this->cashPaymentAmount < $this->totalUnformatted) {
+    //                Notification::make()
+    //                    ->title('Bedrag is te laag')
+    //                    ->danger()
+    //                    ->send();
+    //
+    //                return;
+    //            }
+    //        }
+    //
+    //        $order = $this->order;
+    //
+    //        $orderPayment = new OrderPayment();
+    //        $orderPayment->amount = $this->cashPaymentAmount ?: $this->totalUnformatted;
+    //        $orderPayment->order_id = $order->id;
+    //        $orderPayment->payment_method_id = $this->payment_method_id;
+    //        $orderPayment->payment_method = $this->paymentMethod->name;
+    //        $orderPayment->psp = 'own';
+    //        $orderPayment->save();
+    //        $orderPayment->changeStatus('paid');
+    //        $this->orderPayment = $orderPayment;
+    //
+    //        if ($orderPayment->amount > $order->total) {
+    //            $difference = $order->total - $orderPayment->amount;
+    //
+    //            $refundOrderPayment = new OrderPayment();
+    //            $refundOrderPayment->amount = $difference;
+    //            $refundOrderPayment->order_id = $order->id;
+    //            $refundOrderPayment->payment_method_id = $this->payment_method_id;
+    //            $refundOrderPayment->payment_method = $this->paymentMethod->name;
+    //            $refundOrderPayment->psp = 'own';
+    //            $refundOrderPayment->save();
+    //            $refundOrderPayment->changeStatus('paid');
+    //        }
+    //
+    //        $order->refresh();
+    //        if ($this->paymentMethod->is_cash_payment && $this->cashPaymentAmount < $this->totalUnformatted && $hasMultiplePayments) {
+    //            $paymentMethod = collect($this->posPaymentMethods)->whereNotNull('pin_terminal_id')->first();
+    //            if (!$paymentMethod) {
+    //                Notification::make()
+    //                    ->title('Geen pin terminal gevonden, bestelling incorrect afgehandeld')
+    //                    ->danger()
+    //                    ->send();
+    //
+    //                return;
+    //            }
+    //            $this->payment_method_id = $paymentMethod['id'];
+    //            $this->paymentMethod = PaymentMethod::find($paymentMethod['id']);
+    //            self::startPinTerminalPayment();
+    //        } else {
+    //            self::finishPaidOrder($order);
+    //        }
+    //    }
+    //
+    //    public function createPaymentWithExtraPayment(): void
+    //    {
+    //        self::markAsPaid(true);
+    //    }
+    //
+    //    public function finishPaidOrder(Order $order)
+    //    {
+    //        $order->changeStatus('paid');
+    //        $order->changeFulfillmentStatus('handled');
+    //
+    //        $this->printReceipt($order);
+    //        $hasCashPayment = false;
+    //        foreach ($order->orderPayments as $orderPayment) {
+    //            if ($orderPayment->paymentMethod->is_cash_payment) {
+    //                $hasCashPayment = true;
+    //            }
+    //        }
+    //        if ($hasCashPayment) {
+    //            $this->openCashRegister();
+    //        }
+    //
+    //        $this->paymentPopup = false;
+    //        $this->products = [];
+    //        $this->discount_code = '';
+    //        $this->cashPaymentAmount = null;
+    //        $this->finishPOSCart();
+    //        $this->updateInfo(false);
+    //        $this->orderConfirmationPopup = true;
+    //    }
+    //
+    //    public function printLastOrder()
+    //    {
+    //        if ($this->lastOrder) {
+    //            $this->printReceipt($this->lastOrder, true);
+    //        } else {
+    //            Notification::make()
+    //                ->title('Geen order gevonden')
+    //                ->danger()
+    //                ->send();
+    //        }
+    //    }
 
     public function render()
     {

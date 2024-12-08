@@ -3,28 +3,28 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Models\Customsetting;
+use Paynl\Payment;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use App\Http\Controllers\Controller;
+use Filament\Notifications\Notification;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Filament\Notifications\Notification;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Illuminate\Support\Str;
-use Paynl\Payment;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
 {
@@ -41,13 +41,13 @@ class PointOfSaleApiController extends Controller
 
             return response()
                 ->json([
-                    'success' => true
+                    'success' => true,
                 ]);
         } catch (\Exception $e) {
             return response()
                 ->json([
                     'success' => false,
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ], 500);
         }
     }
@@ -73,10 +73,11 @@ class PointOfSaleApiController extends Controller
 
         //Todo: only add fields you need
         foreach ($products ?? [] as $productKey => &$product) {
-            if (!isset($product['customProduct']) || $product['customProduct'] == false) {
+            if (! isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
-                if (!$product) {
+                if (! $product) {
                     unset($products[$productKey]);
+
                     continue;
                 }
                 $product['image'] = $product->firstImage;
@@ -88,7 +89,7 @@ class PointOfSaleApiController extends Controller
                 'posIdentifier' => $posIdentifier ?? null,
                 'products' => $products ?? [],
                 'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -142,18 +143,18 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $activeDiscountCode = null;
             } else {
                 session(['discountCode' => $discountCode->code]);
 
-                if (!isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
+                if (! isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
                     $activeDiscountCode = $discountCode->code;
                 }
 
@@ -163,22 +164,22 @@ class PointOfSaleApiController extends Controller
         $posCart->discount_code = $activeDiscountCode ?? null;
         $posCart->save();
 
-//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
-//        $shippingMethod = '';
-//        foreach ($shippingMethods as $thisShippingMethod) {
-//            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
-//                $shippingMethod = $thisShippingMethod;
-//            }
-//        }
-//
-//        if (!$shippingMethod) {
-//            $this->shipping_method_id = null;
-//        }
+        //        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        //        $shippingMethod = '';
+        //        foreach ($shippingMethods as $thisShippingMethod) {
+        //            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
+        //                $shippingMethod = $thisShippingMethod;
+        //            }
+        //        }
+        //
+        //        if (!$shippingMethod) {
+        //            $this->shipping_method_id = null;
+        //        }
 
         $checkoutData = ShoppingCart::getCheckoutData($shippingMethodId ?? null, $paymentMethodId ?? null);
 
 
-//        $this->total = $checkoutData['total'];
+        //        $this->total = $checkoutData['total'];
         $discount = $checkoutData['discountFormatted'];
         $vat = $checkoutData['btwFormatted'];
         $vatPercentages = $checkoutData['btwPercentages'];
@@ -205,7 +206,7 @@ class PointOfSaleApiController extends Controller
                 'subTotal' => $subTotal ?? null,
                 'total' => $total ?? null,
                 'paymentMethods' => $paymentMethods ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -218,11 +219,11 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (!$order) {
+        if (! $order) {
             return response()
                 ->json([
                     'success' => false,
-                    'message' => 'Bestelling niet gevonden'
+                    'message' => 'Bestelling niet gevonden',
                 ], 404);
         }
 
@@ -232,7 +233,7 @@ class PointOfSaleApiController extends Controller
             ->json([
                 'products' => $products ?? [],
                 'discountCode' => $discountCode ?? null,
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -261,7 +262,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -284,14 +285,14 @@ class PointOfSaleApiController extends Controller
             return response()
                 ->json([
                     'products' => $products ?? [],
-                    'success' => true
+                    'success' => true,
                 ]);
         } else {
             return response()
                 ->json([
                     'products' => $products ?? [],
                     'message' => 'Product niet gevonden',
-                    'success' => false
+                    'success' => false,
                 ], 404);
         }
     }
@@ -309,7 +310,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (!$productAlreadyInCart) {
+        if (! $productAlreadyInCart) {
             $products[] = [
                 'id' => $selectedProduct['id'],
                 'identifier' => Str::random(),
@@ -342,12 +343,12 @@ class PointOfSaleApiController extends Controller
             ->orWhere('ean', $productSearchQuery)
             ->first();
 
-        if (!$selectedProduct) {
+        if (! $selectedProduct) {
             return response()
                 ->json([
                     'products' => $products ?? [],
                     'message' => 'Product niet gevonden',
-                    'success' => false
+                    'success' => false,
                 ], 404);
         }
 
@@ -356,7 +357,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -396,7 +397,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -414,7 +415,7 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => [],
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -430,7 +431,7 @@ class PointOfSaleApiController extends Controller
 
         return response()
             ->json([
-                'success' => true
+                'success' => true,
             ]);
     }
 
@@ -477,7 +478,7 @@ class PointOfSaleApiController extends Controller
             return response()
                 ->json([
                     'success' => false,
-                    'message' => $response['message']
+                    'message' => $response['message'],
                 ], 500);
         }
     }
@@ -491,10 +492,10 @@ class PointOfSaleApiController extends Controller
         $cartItems = ShoppingCart::cartItems($cartInstance);
         $checkoutData = ShoppingCart::getCheckoutData(null, $paymentMethodId);
 
-        if (!$cartItems) {
+        if (! $cartItems) {
             return [
                 'success' => false,
-                'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen')
+                'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen'),
             ];
         }
 
@@ -515,32 +516,32 @@ class PointOfSaleApiController extends Controller
         //            return;
         //        }
 
-//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
-//        $shippingMethod = '';
-//        foreach ($shippingMethods as $thisShippingMethod) {
-//            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
-//                $shippingMethod = $thisShippingMethod;
-//            }
-//        }
-//
-//        if (!$shippingMethod && $this->orderOrigin != 'pos') {
-//            Notification::make()
-//                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
-//                ->danger()
-//                ->send();
-//
-//            return [
-//                'success' => false,
-//            ];
-//        }
+        //        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        //        $shippingMethod = '';
+        //        foreach ($shippingMethods as $thisShippingMethod) {
+        //            if ($thisShippingMethod['id'] == $this->shipping_method_id) {
+        //                $shippingMethod = $thisShippingMethod;
+        //            }
+        //        }
+        //
+        //        if (!$shippingMethod && $this->orderOrigin != 'pos') {
+        //            Notification::make()
+        //                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+        //                ->danger()
+        //                ->send();
+        //
+        //            return [
+        //                'success' => false,
+        //            ];
+        //        }
 
         if ($posCart->discount_code) {
             $discountCode = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
 
-            if (!$discountCode) {
+            if (! $discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -548,53 +549,53 @@ class PointOfSaleApiController extends Controller
 
                 return [
                     'success' => false,
-                    'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig')
+                    'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig'),
                 ];
             }
         }
 
-//        if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
-//            if (User::where('email', $this->email)->count()) {
-//                Notification::make()
-//                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
-//                    ->danger()
-//                    ->send();
-//
-//                return [
-//                    'success' => false,
-//                ];
-//            }
-//
-//            $user = new User();
-//            $user->first_name = $this->first_name;
-//            $user->last_name = $this->last_name;
-//            $user->email = $this->email;
-//            $user->password = Hash::make($this->password);
-//            $user->save();
-//        }
+        //        if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
+        //            if (User::where('email', $this->email)->count()) {
+        //                Notification::make()
+        //                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
+        //                    ->danger()
+        //                    ->send();
+        //
+        //                return [
+        //                    'success' => false,
+        //                ];
+        //            }
+        //
+        //            $user = new User();
+        //            $user->first_name = $this->first_name;
+        //            $user->last_name = $this->last_name;
+        //            $user->email = $this->email;
+        //            $user->password = Hash::make($this->password);
+        //            $user->save();
+        //        }
 
         $order = new Order();
         $order->order_origin = $orderOrigin;
-//        $order->first_name = $this->first_name;
-//        $order->last_name = $this->last_name;
-//        $order->email = $this->email;
-//        $order->gender = $this->gender;
-//        $order->date_of_birth = $this->date_of_birth ? Carbon::parse($this->date_of_birth) : null;
-//        $order->phone_number = $this->phone_number;
-//        $order->street = $this->street;
-//        $order->house_nr = $this->house_nr;
-//        $order->zip_code = $this->zip_code;
-//        $order->city = $this->city;
-//        $order->country = $this->country;
-//        $order->marketing = $this->marketing ? 1 : 0;
-//        $order->company_name = $this->company_name;
-//        $order->btw_id = $this->btw_id;
-//        $order->note = $this->note;
-//        $order->invoice_street = $this->invoice_street;
-//        $order->invoice_house_nr = $this->invoice_house_nr;
-//        $order->invoice_zip_code = $this->invoice_zip_code;
-//        $order->invoice_city = $this->invoice_city;
-//        $order->invoice_country = $this->invoice_country;
+        //        $order->first_name = $this->first_name;
+        //        $order->last_name = $this->last_name;
+        //        $order->email = $this->email;
+        //        $order->gender = $this->gender;
+        //        $order->date_of_birth = $this->date_of_birth ? Carbon::parse($this->date_of_birth) : null;
+        //        $order->phone_number = $this->phone_number;
+        //        $order->street = $this->street;
+        //        $order->house_nr = $this->house_nr;
+        //        $order->zip_code = $this->zip_code;
+        //        $order->city = $this->city;
+        //        $order->country = $this->country;
+        //        $order->marketing = $this->marketing ? 1 : 0;
+        //        $order->company_name = $this->company_name;
+        //        $order->btw_id = $this->btw_id;
+        //        $order->note = $this->note;
+        //        $order->invoice_street = $this->invoice_street;
+        //        $order->invoice_house_nr = $this->invoice_house_nr;
+        //        $order->invoice_zip_code = $this->invoice_zip_code;
+        //        $order->invoice_city = $this->invoice_city;
+        //        $order->invoice_country = $this->invoice_country;
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $posCart->discount_code]);
@@ -631,9 +632,9 @@ class PointOfSaleApiController extends Controller
         if (isset($user)) {
             $order->user_id = $user->id;
         } else {
-//            if ($this->user_id) {
-//                $order->user_id = $this->user_id;
-//            }
+            //            if ($this->user_id) {
+            //                $order->user_id = $this->user_id;
+            //            }
         }
 
         $order->save();
