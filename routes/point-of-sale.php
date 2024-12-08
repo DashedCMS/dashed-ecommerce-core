@@ -43,5 +43,9 @@ Route::group(
             ->name('api.point-of-sale.clear-products');
         Route::post('/remove-discount', [PointOfSaleApiController::class, 'removeDiscount'])
             ->name('api.point-of-sale.remove-discount');
+        Route::post('/select-payment-method', [PointOfSaleApiController::class, 'selectPaymentMethod'])
+            ->name('api.point-of-sale.select-payment-method');
+        Route::post('/start-pin-terminal-payment', [PointOfSaleApiController::class, 'startPinTerminalPayment'])
+            ->name('api.point-of-sale.start-pin-terminal-payment');
     }
 );

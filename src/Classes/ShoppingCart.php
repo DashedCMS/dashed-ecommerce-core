@@ -714,7 +714,7 @@ class ShoppingCart
                 $productPrice = Product::getShoppingCartItemPrice($cartItem);
                 $options = [];
 
-                foreach ($cartItem->options as $productExtraOptionId => $productExtraOption) {
+                foreach ($cartItem->options['options'] as $productExtraOptionId => $productExtraOption) {
                     if (! $cartItemDeleted) {
                         if (! str($productExtraOptionId)->contains('product-extra-')) {
 
@@ -771,7 +771,7 @@ class ShoppingCart
                                         $hasOnlySingleOptionExtras = true;
                                         $optionsForBothItems = [];
 
-                                        foreach ($cartItem->options as $key => $option) {
+                                        foreach ($cartItem->options['options'] as $key => $option) {
                                             $productExtraOption = ProductExtraOption::find($key);
                                             if ($productExtraOption && ! $productExtraOption->calculate_only_1_quantity) {
                                                 $hasOnlySingleOptionExtras = false;
