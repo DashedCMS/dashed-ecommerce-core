@@ -2,17 +2,16 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use App\Providers\AppServiceProvider;
-use Dashed\DashedForms\Classes\Forms;
-use Filament\Forms\Components\Builder\Block;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
+use App\Providers\AppServiceProvider;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Spatie\LaravelPackageTools\Package;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
@@ -139,7 +138,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function packageBooted()
     {
-        if (!cms()->isCMSRoute() || app()->runningInConsole()) {
+        if (! cms()->isCMSRoute() || app()->runningInConsole()) {
             return;
         }
 
