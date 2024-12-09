@@ -13,7 +13,7 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::table('dashed__product', function (Blueprint $table) {
+        Schema::table('dashed__products', function (Blueprint $table) {
             $table->decimal('current_price', 10, 2)
                 ->after('price')
                 ->nullable();
