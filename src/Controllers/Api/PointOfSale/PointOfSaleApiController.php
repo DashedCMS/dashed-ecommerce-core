@@ -943,10 +943,8 @@ class PointOfSaleApiController extends Controller
 
     public function getAllProducts(Request $request): JsonResponse
     {
-
-        ray()->measure();
         $products = Product::handOrderShowable()
-            ->select(['id', 'name', 'images', 'price', 'ean', 'sku'])
+            ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price'])
             ->get()
             ->map(function ($product) {
                 $name = $product->getTranslation('name', app()->getLocale());
@@ -955,15 +953,13 @@ class PointOfSaleApiController extends Controller
                 return [
                     'id' => $product->id,
                     'name' => $name,
-//                    'image' => mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '',
+                    'image' => mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '',
                     'currentPrice' => $currentPrice,
                     'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
                     'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
                 ];
             })
             ->toArray();
-        ray()->measure();
-
 
         return response()
             ->json([
