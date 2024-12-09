@@ -134,14 +134,14 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();
         });
+
+        cms()->builder('builderBlockClasses', [
+            self::class => 'builderBlocks',
+        ]);
     }
 
-    public function packageBooted()
+    public static function builderBlocks()
     {
-        if (! cms()->isCMSRoute() || app()->runningInConsole()) {
-            return;
-        }
-
         $defaultBlocks = [
             Block::make('all-products')
                 ->label('Alle producten')
