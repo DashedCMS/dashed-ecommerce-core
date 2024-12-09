@@ -53,5 +53,7 @@ Route::group(
             ->name('api.point-of-sale.check-pin-terminal-payment');
         Route::post('/close-payment', [PointOfSaleApiController::class, 'closePayment'])
             ->name('api.point-of-sale.close-payment');
+        Route::post('/get-all-products', [PointOfSaleApiController::class, 'getAllProducts'])
+            ->name('api.point-of-sale.get-all-products');
     }
 );

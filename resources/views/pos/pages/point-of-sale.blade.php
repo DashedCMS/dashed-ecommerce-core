@@ -285,7 +285,7 @@
                                 </div>
                                 <span class="font-bold" x-html="total"></span>
                             </div>
-                            <hr />
+                            <hr/>
                             <div x-show="activeDiscountCode" x-cloak>
                                 <div class="text-sm font-bold flex justify-between items-center mb-2">
                                     <span>Korting</span>
@@ -715,6 +715,7 @@
             searchProductQuery: '',
             lastOrder: null,
             products: [],
+            allProducts: [],
             loadingSearchedProducts: false,
             discountCode: null,
             discount: null,
@@ -818,6 +819,37 @@
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: 'De winkelwagen kon niet worden gestart'
+                    })
+                }
+            },
+
+            async getAllProducts() {
+                try {
+                    let response = await fetch('{{ route('api.point-of-sale.get-all-products') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: this.userId
+                        })
+                    });
+
+                    let data = await response.json();
+
+                    if (!response.ok) {
+                        return $wire.dispatch('notify', {
+                            type: 'danger',
+                            message: data.message,
+                        })
+                    }
+
+                    this.allProducts = data.products;
+                } catch (error) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: 'De producten kon niet worden opgehaald'
                     })
                 }
             },
@@ -1355,6 +1387,15 @@
                 this.initialize();
             },
 
+            async getSearchedProducts() {
+                if (this.searchProductQuery === '') {
+                    this.searchedProducts = [];
+                }
+                this.searchedProducts = this.allProducts
+                    .filter(product => product.search.toLowerCase().includes(this.searchProductQuery.toLowerCase()))
+                    .slice(0, 25);
+            },
+
             focus() {
                 document.getElementById("search-product-query").focus();
             },
@@ -1378,11 +1419,12 @@
                 })
 
                 this.initialize();
+                this.getAllProducts();
 
                 $watch('searchProductQuery', (value, oldValue) => {
                     this.loadingSearchedProducts = true;
                     if (value.length > 2) {
-                        this.updateSearchedProducts();
+                        this.getSearchedProducts();
                     } else {
                         this.searchedProducts = [];
                     }
