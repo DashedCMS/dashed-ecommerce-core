@@ -1128,7 +1128,7 @@ class Product extends Model
         }
 
         $quantity = $cartItem->qty;
-        $options = $cartItem->options;
+        $options = $cartItem->options['options'];
 
         $price = 0;
 
