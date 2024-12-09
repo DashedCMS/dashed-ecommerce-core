@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Paynl\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -290,7 +291,7 @@ class PointOfSaleApiController extends Controller
             if ($product['id'] == $selectedProduct['id']) { //Todo: compare options once supported
                 $productAlreadyInCart = true;
                 $product['quantity']++;
-                $product['price'] = $selectedProduct->getOriginal('price') * $product['quantity'];
+                $product['price'] = $selectedProduct->currentPrice * $product['quantity'];
             }
         }
 
@@ -301,7 +302,7 @@ class PointOfSaleApiController extends Controller
                 'name' => $selectedProduct->getTranslation('name', app()->getLocale()),
                 'image' => mediaHelper()->getSingleMedia($selectedProduct->firstImage, ['widen' => 300])->url ?? '',
                 'quantity' => 1,
-                'price' => $selectedProduct->getOriginal('price'),
+                'price' => $selectedProduct->currentPrice,
                 'extra' => [],
             ];
         }
@@ -943,23 +944,25 @@ class PointOfSaleApiController extends Controller
 
     public function getAllProducts(Request $request): JsonResponse
     {
-        $products = Product::handOrderShowable()
-            ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price'])
-            ->get()
-            ->map(function ($product) {
-                $name = $product->getTranslation('name', app()->getLocale());
-                $currentPrice = $product->currentPrice;
+        $products = Cache::remember('pos_products', 60 * 60 * 24, function () {
+            return Product::handOrderShowable()
+                ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price'])
+                ->get()
+                ->map(function ($product) {
+                    $name = $product->getTranslation('name', app()->getLocale());
+                    $currentPrice = $product->currentPrice;
 
-                return [
-                    'id' => $product->id,
-                    'name' => $name,
-                    'image' => mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '',
-                    'currentPrice' => $currentPrice,
-                    'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
-                    'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
-                ];
-            })
-            ->toArray();
+                    return [
+                        'id' => $product->id,
+                        'name' => $name,
+                        'image' => mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '',
+                        'currentPrice' => $currentPrice,
+                        'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
+                        'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
+                    ];
+                })
+                ->toArray();
+        });
 
         return response()
             ->json([
