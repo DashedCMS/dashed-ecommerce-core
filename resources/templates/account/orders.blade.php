@@ -229,3 +229,5 @@
         </div>
     </div>
 </x-container>
+
+<x-dashed-core::global-blocks name="orders-page"/>

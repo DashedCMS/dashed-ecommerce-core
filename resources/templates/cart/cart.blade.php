@@ -83,5 +83,6 @@
                 'image' => Translation::get('image', 'cart', '', 'image'),
             ]"></x-blocks.header>
     @endif
-
 </div>
+
+<x-dashed-core::global-blocks name="cart-page"/>

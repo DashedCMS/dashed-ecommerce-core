@@ -370,3 +370,5 @@
         </x-container>
     </div>
 </div>
+
+<x-dashed-core::global-blocks name="products-overview-page"/>

@@ -182,3 +182,5 @@
         </div>
     </div>
 </main>
+
+<x-dashed-core::global-blocks name="view-order-page"/>

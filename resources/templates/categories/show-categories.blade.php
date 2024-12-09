@@ -48,3 +48,5 @@
         <x-blocks :content="$singleProductCategory->content"></x-blocks>
     @endif
 </div>
+
+<x-dashed-core::global-blocks name="category-overview-page"/>

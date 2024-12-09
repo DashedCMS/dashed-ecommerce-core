@@ -502,3 +502,5 @@
         ]"></x-blocks.header>
     @endif
 </div>
+
+<x-dashed-core::global-blocks name="checkout-page"/>
