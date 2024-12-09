@@ -7,6 +7,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Illuminate\Support\Facades\DB;
 
 class Products
 {
@@ -469,6 +470,8 @@ class Products
             ->publicShowable()
             ->max('price');
 
+        self::getFiltersV3($allProducts->pluck('id'), $activeFilters);
+
         return [
             'products' => $products,
             'minPrice' => $minPrice,
@@ -510,30 +513,38 @@ class Products
 
     public static function getFiltersV3($products = [], array $activeFilters = [])
     {
-        $productFilters = ProductFilter::where('hide_filter_on_overview_page', 0)
+        $productFilters = ProductFilter::with(['productFilterOptions.products'])
+            ->where('hide_filter_on_overview_page', 0)
             ->orderBy('created_at')
             ->get();
 
-        foreach ($productFilters as $productFilter) {
+        $productFilters->each(function ($productFilter) use ($activeFilters, $products) {
             $filterHasActiveOptions = false;
             $results = $activeFilters[$productFilter->name] ?? [];
-            foreach ($productFilter->productFilterOptions as $option) {
-                if ($results && array_key_exists($option->name, $results) && $results[$option->name]) {
-                    $option->checked = true;
-                } else {
-                    $option->checked = false;
-                }
-                $option->resultCount = 0;
-                if ($products) {
-                    //This is very slow with a lot of products
-                    $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
-                        $filterHasActiveOptions = true;
-                    }
-                }
+
+            $productFilterOptions = $productFilter->productFilterOptions;
+            $optionProductCounts = [];
+
+            if ($products) {
+                $optionProductCounts = DB::table('dashed__product_filter')
+                    ->select('product_filter_option_id', DB::raw('COUNT(*) as count'))
+                    ->whereIn('product_id', $products)
+                    ->whereIn('product_filter_option_id', $productFilterOptions->pluck('id'))
+                    ->groupBy('product_filter_option_id')
+                    ->pluck('count', 'product_filter_option_id');
             }
+
+            $productFilterOptions->each(function ($option) use ($results, &$filterHasActiveOptions, $optionProductCounts) {
+                $option->checked = $results && array_key_exists($option->name, $results) && $results[$option->name];
+                $option->resultCount = $optionProductCounts[$option->id] ?? 0;
+
+                if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                    $filterHasActiveOptions = true;
+                }
+            });
+
             $productFilter->hasActiveOptions = $filterHasActiveOptions;
-        }
+        });
 
         return $productFilters;
     }
