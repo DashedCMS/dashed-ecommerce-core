@@ -28,7 +28,7 @@
                                     </a>
                                 </h3>
                             </div>
-                            @if(count($item->options))
+                            @if(count($item->options['options']))
                                 <div class="my-2 grid text-sm">
                                     @foreach($item->options['options'] as $option)
                                         @if($loop->first)

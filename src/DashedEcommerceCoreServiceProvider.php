@@ -2,6 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use App\Providers\AppServiceProvider;
+use Dashed\DashedForms\Classes\Forms;
+use Filament\Forms\Components\Builder\Block;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Spatie\LaravelPackageTools\Package;
@@ -129,6 +135,74 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();
         });
+    }
+
+    public function packageBooted()
+    {
+        if (!cms()->isCMSRoute() || app()->runningInConsole()) {
+            return;
+        }
+
+        $defaultBlocks = [
+            Block::make('all-products')
+                ->label('Alle producten')
+                ->schema([
+                ]),
+            Block::make('few-products')
+                ->label('Paar producten')
+                ->schema([
+                    AppServiceProvider::getDefaultBlockFields(),
+                    TextInput::make('title')
+                        ->label('Titel'),
+                    TextInput::make('subtitle')
+                        ->label('Subtitel'),
+                    TextInput::make('amount_of_products')
+                        ->label('Aantal producten')
+                        ->integer()
+                        ->required()
+                        ->default(4)
+                        ->minValue(1)
+                        ->maxValue(100),
+                    Toggle::make('useCartRelatedItems')
+                        ->label('Gebruik gerelateerde producten uit winkelwagen om de lijst aan te vullen'),
+                    Select::make('products')
+                        ->label('Producten')
+                        ->helperText('Leeg laten om automatisch aan te vullen, indien je iets invult, worden alleen de ingevulde getoond')
+                        ->multiple()
+                        ->searchable()
+                        ->preload()
+                        ->options(function () {
+                            $options = [];
+
+                            foreach (Product::publicShowable()->get() as $product) {
+                                $options[$product->id] = $product->nameWithParents;
+                            }
+
+                            return $options;
+                        }),
+                ]),
+            Block::make('categories')
+                ->label('Categorieeen')
+                ->schema([
+                    AppServiceProvider::getDefaultBlockFields(),
+                    TextInput::make('title')
+                        ->label('Titel')
+                        ->required(),
+                    Select::make('categories')
+                        ->label('Categorieën')
+                        ->searchable()
+                        ->preload()
+                        ->multiple()
+                        ->options(function () {
+                            return ProductCategory::all()->mapWithKeys(function ($category) {
+                                return [$category->id => $category->nameWithParents];
+                            });
+                        }),
+                ]),
+        ];
+
+        cms()
+            ->builder('blocks', $defaultBlocks);
     }
 
     public function configurePackage(Package $package): void
