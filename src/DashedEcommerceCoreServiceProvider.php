@@ -222,14 +222,14 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
         cms()->builder(
             'frontendMiddlewares',
-            array_merge(cms()->builder('frontendMiddlewares'), [
+            [
                 EcommerceFrontendMiddleware::class,
-            ])
+            ]
         );
 
         cms()->builder(
             'routeModels',
-            array_merge(cms()->builder('routeModels'), [
+            [
                 'product' => [
                     'name' => 'Product',
                     'pluralName' => 'Products',
@@ -242,12 +242,12 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                     'class' => ProductCategory::class,
                     'nameField' => 'name',
                 ],
-            ])
+            ]
         );
 
         cms()->builder(
             'settingPages',
-            array_merge(cms()->builder('settingPages'), [
+            [
                 'invoicing' => [
                     'name' => 'Facturatie instellingen',
                     'description' => 'Instellingen voor de facturatie',
@@ -308,7 +308,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                     'icon' => 'banknotes',
                     'page' => POSSettingsPage::class,
                 ],
-            ])
+            ]
         );
 
         $package
