@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Illuminate\Support\Facades\DB;
 
 class Products
 {
@@ -538,7 +538,7 @@ class Products
                 $option->checked = $results && array_key_exists($option->name, $results) && $results[$option->name];
                 $option->resultCount = $optionProductCounts[$option->id] ?? 0;
 
-                if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                if (! $filterHasActiveOptions && $option->resultCount > 0) {
                     $filterHasActiveOptions = true;
                 }
             });
