@@ -31,7 +31,7 @@ class PointOfSaleApiController extends Controller
 {
     public function openCashRegister(Request $request)
     {
-        $response = POSHelper::openCashRegister();
+        $response = PinTerminal::openCashRegister();
 
         return response()->json($response, $response['success'] ? 200 : 400);
     }
@@ -55,7 +55,6 @@ class PointOfSaleApiController extends Controller
             $posCart->save();
         }
 
-        //Todo: only add fields you need
         foreach ($products ?? [] as $productKey => &$product) {
             if (! isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
@@ -175,7 +174,7 @@ class PointOfSaleApiController extends Controller
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
 
         foreach ($paymentMethods as &$paymentMethod) {
-            $paymentMethod['image'] = mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '';
+            $paymentMethod['image'] = $paymentMethod['image'] ? (mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '') : '';
         }
 
         return [
