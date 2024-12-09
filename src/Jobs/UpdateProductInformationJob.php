@@ -83,16 +83,19 @@ class UpdateProductInformationJob implements ShouldQueue
         foreach ($this->product->childProducts as $childProduct) {
             $childProduct->calculateStock();
             $childProduct->calculateTotalPurchases();
+            $childProduct->calculatePrices();
         }
 
         $this->product->calculateStock();
         $this->product->calculateTotalPurchases();
+        $this->product->calculatePrices();
         $this->product->missing_variations = count($this->product->missingVariations());
         $this->product->saveQuietly();
 
         if ($this->product->parent) {
             $this->product->parent->calculateStock();
             $this->product->parent->calculateTotalPurchases();
+            $this->product->parent->calculatePrices();
         }
 
         foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
@@ -101,6 +104,7 @@ class UpdateProductInformationJob implements ShouldQueue
                 $bundleParentProduct->calculateStock();
                 $bundleParentProduct->calculateTotalPurchases();
                 $bundleParentProduct->calculateDeliveryTime();
+                $bundleParentProduct->calculatePrices();
             }
         }
 
