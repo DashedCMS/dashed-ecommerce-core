@@ -1,11 +1,8 @@
-<div class="relative inline-flex w-full"
+<div class="relative inline-flex w-full h-screen"
      x-data="POSData()">
-    <div
-        class="absolute transitiona-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-primary-300 via-primary-300 to-primary-800 rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
-    </div>
-    <div class="p-8 m-8 border border-white rounded-lg h-[calc(100%) - 50px] overflow-hidden bg-black/90 z-10 w-full">
+    <div class="p-8 border border-white rounded-lg overflow-hidden bg-black/90 z-10 w-full h-full">
         <div class="grid grid-cols-10 divide-x divide-gray-500">
-            <div class="sm:col-span-5 sm:pr-8 flex flex-col gap-8">
+            <div class="sm:col-span-7 sm:pr-8 flex flex-col gap-8">
                 <div class="flex flex-wrap justify-between items-center">
                     <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
                     <div class="flex flex-wrap gap-2">
@@ -32,11 +29,11 @@
                     </span>
                         <input autofocus x-model="searchProductQuery"
                                id="search-product-query"
-                               :inputmode="searchQueryInputmode"
+                               :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                placeholder="Zoek een product op naam, SKU of barcode..."
                                class="text-black w-full rounded-lg pl-10 pr-10">
                         <p class="absolute right-2 top-2 text-black cursor-pointer"
-                           @click="toggle('searchQueryInputmode')">
+                           @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor"
@@ -148,7 +145,8 @@
                     <button
                         class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor"
                                  class="size-6">
                               <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
@@ -182,7 +180,7 @@
                     </button>
                 </div>
             </div>
-            <div class="sm:col-span-5 sm:pl-8 flex flex-col gap-8">
+            <div class="sm:col-span-3 sm:pl-8 flex flex-col gap-8">
                 <div class="flex flex-col gap-8">
                     <div class="flex flex-wrap justify-between items-center">
                         <p class="text-5xl font-bold">Winkelwagen</p>
@@ -197,7 +195,8 @@
                                 </svg>
                             </button>
                             <button id="exitFullscreenBtn" @click="toggleFullscreen"
-                                    x-show="!isFullscreen"
+                                    x-show="isFullscreen"
+                                    x-cloak
                                     class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                      stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -206,8 +205,7 @@
                                 </svg>
                             </button>
                             <button id="fullscreenBtn" @click="toggleFullscreen"
-                                    x-show="isFullscreen"
-                                    x-cloak
+                                    x-show="!isFullscreen"
                                     class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                      stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -717,7 +715,7 @@
             orderOrigin: 'pos',
             posIdentifier: '',
             userId: {{ auth()->user()->id }},
-            searchQueryInputmode: false,
+            searchQueryInputmode: $wire.entangle('searchQueryInputmode'),
             searchProductQuery: '',
             lastOrder: null,
             products: [],
@@ -822,6 +820,7 @@
                     this.products = data.products;
                     this.lastOrder = data.lastOrder;
                     this.retrieveCart();
+                    this.focus();
                 } catch (error) {
                     return $wire.dispatch('notify', {
                         type: 'danger',
@@ -1383,6 +1382,39 @@
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: 'De pin betaling kon niet worden gecontroleerd'
+                    })
+                }
+            },
+
+            async updateSearchQueryInputmode() {
+                this.searchQueryInputmode = !this.searchQueryInputmode;
+                try {
+                    let response = await fetch('{{ route('api.point-of-sale.update-search-query-input-mode') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            searchQueryInputmode: this.searchQueryInputmode,
+                            userId: this.userId,
+                        })
+                    });
+
+                    let data = await response.json();
+                    this.focus();
+
+                    if (!response.ok) {
+                        return $wire.dispatch('notify', {
+                            type: 'danger',
+                            message: data.message,
+                        })
+                    }
+
+                } catch (error) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: 'De input query status kon niet worden geupdate'
                     })
                 }
             },
