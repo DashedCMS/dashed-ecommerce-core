@@ -1,4 +1,4 @@
-<div class="relative inline-flex w-full h-screen"
+<div class="relative inline-flex w-full h-full overflow-y-hidden"
      x-data="POSData()">
     <div class="p-8 border border-white rounded-lg overflow-hidden bg-black/90 z-10 w-full h-full">
         <div class="grid grid-cols-10 divide-x divide-gray-500">
