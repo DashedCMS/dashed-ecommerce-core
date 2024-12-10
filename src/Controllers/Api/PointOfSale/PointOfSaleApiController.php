@@ -970,4 +970,19 @@ class PointOfSaleApiController extends Controller
                 'products' => $products,
             ]);
     }
+
+    public function updateSearchQueryInputmode(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $searchQueryInputmode = $data['searchQueryInputmode'] ?? null;
+        $userId = $data['userId'] ?? null;
+
+        Customsetting::set('pos_search_query_inputmode', $searchQueryInputmode);
+
+        return response()
+            ->json([
+                'success' => true,
+            ]);
+    }
 }

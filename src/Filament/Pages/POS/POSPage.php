@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
+use Dashed\DashedCore\Models\Customsetting;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -22,16 +23,7 @@ class POSPage extends Component implements HasForms
 {
     use InteractsWithForms;
 
-
-    //    public $loading = false;
-    //
-    public $subTotal = 0;
-    public $discount = 0;
-    public $vat = 0;
-    public $vatPercentages = [];
-    public $total = 0;
-    public $totalUnformatted = 0;
-
+    public $searchQueryInputmode = false;
     public $cartInstance = 'handorder';
     public $orderOrigin = 'pos';
 
@@ -49,6 +41,7 @@ class POSPage extends Component implements HasForms
 
     public function mount(): void
     {
+        $this->searchQueryInputmode = Customsetting::get('pos_search_query_inputmode', default: false);
     }
 
     public function notify($type, $message): void

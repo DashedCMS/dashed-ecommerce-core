@@ -31,6 +31,8 @@
             touch-action: manipulation;
         }
     </style>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 
 <body class="font-sans antialiased min-h-dvh bg-black text-white overflow-hidden">
