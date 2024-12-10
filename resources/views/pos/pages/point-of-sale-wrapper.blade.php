@@ -33,6 +33,7 @@
     </style>
 
     <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
 </head>
 
 <body class="font-sans antialiased min-h-dvh bg-black text-white overflow-hidden">
