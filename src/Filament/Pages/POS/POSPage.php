@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Models\Customsetting;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -13,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Filament\Forms\Concerns\InteractsWithForms;
