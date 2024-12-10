@@ -64,7 +64,7 @@
                                                             rx="2"/></svg>
                                                 </span>
                         </p>
-                        <div class="absolute z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
+                        <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
                              x-show="!loadingSearchedProducts && searchProductQuery && searchedProducts.length">
                             <div class="overflow-y-auto max-h-96">
                                 <ul class="border-t divide-y border-black/5 divide-black/5">
@@ -148,11 +148,11 @@
                     <button
                         class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-     class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round"
-        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
-</svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                 class="size-6">
+                              <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                            </svg>
                         </span>
                         <p>Klant toevoegen</p>
                     </button>
@@ -170,7 +170,7 @@
                                             </span>
                         <p>Kassa lade openen</p>
                     </button>
-                    <button wire:click="toggleVariable('searchOrderPopup')"
+                    <button @click="toggleVariable('showOrdersPopup')"
                             class="focus-search-order text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out h-[150px] flex flex-col justify-between p-4 font-medium text-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
@@ -196,22 +196,25 @@
                                           d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
                                 </svg>
                             </button>
-                            {{--                            <button id="exitFullscreenBtn"--}}
-                            {{--                                    class="@if(!$fullscreen) hidden @endif h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">--}}
-                            {{--                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"--}}
-                            {{--                                     stroke-width="1.5" stroke="currentColor" class="size-6">--}}
-                            {{--                                    <path stroke-linecap="round" stroke-linejoin="round"--}}
-                            {{--                                          d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"/>--}}
-                            {{--                                </svg>--}}
-                            {{--                            </button>--}}
-                            {{--                            <button id="fullscreenBtn"--}}
-                            {{--                                    class="@if($fullscreen) hidden @endif h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">--}}
-                            {{--                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"--}}
-                            {{--                                     stroke-width="1.5" stroke="currentColor" class="size-6">--}}
-                            {{--                                    <path stroke-linecap="round" stroke-linejoin="round"--}}
-                            {{--                                          d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/>--}}
-                            {{--                                </svg>--}}
-                            {{--                            </button>--}}
+                            <button id="exitFullscreenBtn" @click="toggleFullscreen"
+                                    x-show="!isFullscreen"
+                                    class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"/>
+                                </svg>
+                            </button>
+                            <button id="fullscreenBtn" @click="toggleFullscreen"
+                                    x-show="isFullscreen"
+                                    x-cloak
+                                    class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     {{--                <div class="p-4 rounded-lg border border-gray-400 grid gap-4">--}}
@@ -227,8 +230,9 @@
                                         <img x-cloak x-show="product.customProduct === true"
                                              src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop"
                                              class="object-cover rounded-lg w-20 h-20">
-                                        <span class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white"
-                                              x-html="product.quantity">
+                                        <span
+                                            class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white"
+                                            x-html="product.quantity">
                                         </span>
                                     </div>
                                     <div class="flex flex-col flex-wrap gap-1 flex-1">
@@ -497,7 +501,8 @@
                             <label for="cashPaymentAmount"
                                    class="text-xl font-bold">Anders</label>
                             <div class="mt-2">
-                                <div class="flex items-center rounded-md bg-white px-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-600">
+                                <div
+                                    class="flex items-center rounded-md bg-white px-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-600">
                                     <div class="shrink-0 select-none text-base text-gray-500 sm:text-lg pr-3">€</div>
                                     <input x-model="cashPaymentAmount"
                                            type="number"
@@ -548,8 +553,9 @@
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
-                <div x-show="isPinTerminalPayment && pinTerminalError && !['pending', 'waiting_for_clearance', 'timed_out', 'cancelled_by_customer'].includes(pinTerminalStatus)"
-                     class="grid gap-2">
+                <div
+                    x-show="isPinTerminalPayment && pinTerminalError && !['pending', 'waiting_for_clearance', 'timed_out', 'cancelled_by_customer'].includes(pinTerminalStatus)"
+                    class="grid gap-2">
                     <p class="text-3xl" x-html="pinTerminalError"></p>
                     <button @click="startPinTerminalPayment"
                             class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
@@ -747,6 +753,7 @@
             checkoutPopup: false,
             paymentPopup: false,
             orderConfirmationPopup: false,
+            isFullscreen: false,
 
             hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
 
@@ -1394,6 +1401,32 @@
                 this.searchedProducts = this.allProducts
                     .filter(product => product.search.toLowerCase().includes(this.searchProductQuery.toLowerCase()))
                     .slice(0, 25);
+            },
+
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                        document.documentElement.mozRequestFullScreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                        document.documentElement.msRequestFullscreen();
+                    }
+                    this.isFullscreen = true;
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.mozCancelFullScreen) { // Firefox
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) { // IE/Edge
+                        document.msExitFullscreen();
+                    }
+                    this.isFullscreen = false;
+                }
             },
 
             focus() {
