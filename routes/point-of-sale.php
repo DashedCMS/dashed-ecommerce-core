@@ -55,7 +55,11 @@ Route::group(
             ->name('api.point-of-sale.close-payment');
         Route::post('/get-all-products', [PointOfSaleApiController::class, 'getAllProducts'])
             ->name('api.point-of-sale.get-all-products');
+        Route::post('/api.point-of-sale.update-product-info', [PointOfSaleApiController::class, 'updateProductInfo'])
+            ->name('api.point-of-sale.update-product-info');
         Route::post('/update-search-query-input-mode', [PointOfSaleApiController::class, 'updateSearchQueryInputmode'])
             ->name('api.point-of-sale.update-search-query-input-mode');
+        Route::post('/retrieve-orders', [PointOfSaleApiController::class, 'retrieveOrders'])
+            ->name('api.point-of-sale.retrieve-orders');
     }
 );

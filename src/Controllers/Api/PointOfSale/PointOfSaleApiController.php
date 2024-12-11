@@ -57,9 +57,9 @@ class PointOfSaleApiController extends Controller
         }
 
         foreach ($products ?? [] as $productKey => &$product) {
-            if (! isset($product['customProduct']) || $product['customProduct'] == false) {
+            if (!isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
-                if (! $product) {
+                if (!$product) {
                     unset($products[$productKey]);
 
                     continue;
@@ -140,18 +140,18 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $activeDiscountCode = null;
             } else {
                 session(['discountCode' => $discountCode->code]);
 
-                if (! isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
+                if (!isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
                     $activeDiscountCode = $discountCode->code;
                 }
 
@@ -204,7 +204,7 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (! $order) {
+        if (!$order) {
             return response()
                 ->json([
                     'success' => false,
@@ -292,10 +292,11 @@ class PointOfSaleApiController extends Controller
                 $productAlreadyInCart = true;
                 $product['quantity']++;
                 $product['price'] = $selectedProduct->currentPrice * $product['quantity'];
+                $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
             }
         }
 
-        if (! $productAlreadyInCart) {
+        if (!$productAlreadyInCart) {
             $products[] = [
                 'id' => $selectedProduct['id'],
                 'identifier' => Str::random(),
@@ -303,6 +304,7 @@ class PointOfSaleApiController extends Controller
                 'image' => mediaHelper()->getSingleMedia($selectedProduct->firstImage, ['widen' => 300])->url ?? '',
                 'quantity' => 1,
                 'price' => $selectedProduct->currentPrice,
+                'priceFormatted' => CurrencyHelper::formatPrice($selectedProduct->currentPrice),
                 'extra' => [],
             ];
         }
@@ -328,7 +330,7 @@ class PointOfSaleApiController extends Controller
             ->orWhere('ean', $productSearchQuery)
             ->first();
 
-        if (! $selectedProduct) {
+        if (!$selectedProduct) {
             return response()
                 ->json([
                     'products' => $products ?? [],
@@ -480,7 +482,7 @@ class PointOfSaleApiController extends Controller
         $checkoutData = ShoppingCart::getCheckoutData(null, $paymentMethodId);
 
 
-        if (! count($cartItems)) {
+        if (!count($cartItems)) {
             return [
                 'success' => false,
                 'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen'),
@@ -526,10 +528,10 @@ class PointOfSaleApiController extends Controller
         if ($posCart->discount_code) {
             $discountCode = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
 
-            if (! $discountCode) {
+            if (!$discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+            } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -782,13 +784,13 @@ class PointOfSaleApiController extends Controller
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
         if ($paymentMethod->is_cash_payment) {
-            if (! $cashPaymentAmount) {
+            if (!$cashPaymentAmount) {
                 return response()
                     ->json([
                         'success' => false,
                         'message' => 'Geen bedrag ingevoerd',
                     ], 400);
-            } elseif (! $hasMultiplePayments && $cashPaymentAmount < $order->total) {
+            } elseif (!$hasMultiplePayments && $cashPaymentAmount < $order->total) {
                 return response()
                     ->json([
                         'success' => false,
@@ -823,7 +825,7 @@ class PointOfSaleApiController extends Controller
 
         if ($paymentMethod->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
             $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
-            if (! $paymentMethod) {
+            if (!$paymentMethod) {
                 return response()
                     ->json([
                         'success' => false,
@@ -951,11 +953,13 @@ class PointOfSaleApiController extends Controller
                 ->map(function ($product) {
                     $name = $product->getTranslation('name', app()->getLocale());
                     $currentPrice = $product->currentPrice;
+//                    $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
 
                     return [
                         'id' => $product->id,
                         'name' => $name,
-                        'image' => mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '',
+                        'stock' => $product->stock(),
+//                        'image' => $image ? "data:image/png;base64,".base64_encode(file_get_contents($image)) : '',
                         'currentPrice' => $currentPrice,
                         'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
                         'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
@@ -963,6 +967,26 @@ class PointOfSaleApiController extends Controller
                 })
                 ->toArray();
         });
+
+
+        return response()
+            ->json([
+                'success' => true,
+                'products' => $products,
+            ]);
+    }
+
+    public function updateProductInfo(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $products = $data['products'] ?? null;
+
+        foreach ($products as &$product) {
+            $thisProduct = Product::find($product['id']);
+            $product['stock'] = $thisProduct->stock();
+            $product['image'] = mediaHelper()->getSingleMedia($thisProduct->firstImage, ['widen' => 300])->url ?? '';
+        }
 
         return response()
             ->json([
@@ -983,6 +1007,148 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'success' => true,
+            ]);
+    }
+
+    public function retrieveOrders(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $userId = $data['userId'] ?? null;
+        $searchOrderQuery = $data['searchOrderQuery'] ?? null;
+
+        $searchOrderQuery = 'order-129';
+        if ($searchOrderQuery && str($searchOrderQuery)->startsWith('order-')) {
+            $orderId = str($searchOrderQuery)->replace('order-', '');
+            $order = Order::find($orderId);
+            if($order){
+                $vatPercentages = $order->vat_percentages;
+                foreach($vatPercentages as $percentage => &$value){
+                    $value = CurrencyHelper::formatPrice($value);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'order' => [
+                        'id' => $order->id,
+                        'invoiceId' => $order->invoice_id,
+                        'createdAt' => $order->created_at->format('d-m-Y H:i'),
+                        'total' => $order->total,
+                        'totalFormatted' => CurrencyHelper::formatPrice($order->total),
+                        'taxFormatted' => CurrencyHelper::formatPrice($order->btw),
+                        'discountFormatted' => $order->discount > 0 ? CurrencyHelper::formatPrice($order->discount) : '',
+                        'vatPercentages' => $vatPercentages,
+                        'totalProducts' => $order->orderProducts()->sum('quantity'),
+                        'status' => $order->status,
+                        'orderOrigin' => $order->order_origin,
+                        'time' => $order->created_at->format('H:i'),
+                        'shippingMethod' => $order->shippingMethod ? $order->shippingMethod->name : 'niet gekozen',
+                        'orderProducts' => $order->orderProducts->map(function ($orderProduct) {
+                            return [
+                                'name' => $orderProduct->name,
+                                'sku' => $orderProduct->sku,
+                                'quantity' => $orderProduct->quantity,
+                                'price' => $orderProduct->price,
+                                'priceFormatted' => CurrencyHelper::formatPrice($orderProduct->price),
+                                'image' => $orderProduct->product ? (mediaHelper()->getSingleMedia($orderProduct->product->firstImage, ['widen' => 300])->url ?? '') : '',
+                            ];
+                        }),
+                        'orderPayments' => $order->orderPayments->map(function ($orderPayment) {
+                            return [
+                                'amount' => $orderPayment->amount,
+                                'amountFormatted' => CurrencyHelper::formatPrice($orderPayment->amount),
+                                'paymentMethod' => $orderPayment->paymentMethod ? $orderPayment->paymentMethod->name : $orderPayment->payment_method,
+                                'status' => $orderPayment->status,
+                                'createdAt' => $orderPayment->created_at->format('d-m-Y H:i'),
+                            ];
+                        }),
+                    ]
+                ]);
+            }else{
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bestelling niet gevonden'
+                ]);
+            }
+        }
+
+        $firstOrder = null;
+        $now = now()->startOfDay();
+
+        $endDate = now()->subQuarter()->startOfDay();
+        if ($searchOrderQuery) {
+            $endDate = Order::latest()->first()->created_at ?? now()->subQuarter()->startOfDay();
+        }
+
+        $orders = Order::orderBy('created_at', 'desc')
+            ->where('created_at', '>=', $endDate)
+            ->quickSearch($searchOrderQuery)
+            ->isPaid()
+            ->get()
+            ->groupBy(function ($order) {
+                return $order->created_at->format('Y-m-d'); // Group orders by the date part
+            })
+            ->map(function ($orders, $date) {
+                return [
+                    'date' => Carbon::parse($date)->isToday() ? 'Vandaag' : (Carbon::parse($date)->isYesterday() ? 'Gisteren' : Carbon::parse($date)->format('d M')),
+                    'orders' => $orders->map(function ($order) {
+                        $vatPercentages = $order->vat_percentages;
+                        foreach($vatPercentages as $percentage => &$value){
+                            $value = CurrencyHelper::formatPrice($value);
+                        }
+                        return [
+                            'id' => $order->id,
+                            'invoiceId' => $order->invoice_id,
+                            'createdAt' => $order->created_at->format('d-m-Y H:i'),
+                            'total' => $order->total,
+                            'totalFormatted' => CurrencyHelper::formatPrice($order->total),
+                            'taxFormatted' => CurrencyHelper::formatPrice($order->btw),
+                            'discountFormatted' => $order->discount > 0 ? CurrencyHelper::formatPrice($order->discount) : '',
+                            'vatPercentages' => $vatPercentages,
+                            'totalProducts' => $order->orderProducts()->sum('quantity'),
+                            'status' => $order->status,
+                            'orderOrigin' => $order->order_origin,
+                            'time' => $order->created_at->format('H:i'),
+                            'shippingMethod' => $order->shippingMethod ? $order->shippingMethod->name : 'niet gekozen',
+                            'orderProducts' => $order->orderProducts->map(function ($orderProduct) {
+                                return [
+                                    'name' => $orderProduct->name,
+                                    'sku' => $orderProduct->sku,
+                                    'quantity' => $orderProduct->quantity,
+                                    'price' => $orderProduct->price,
+                                    'priceFormatted' => CurrencyHelper::formatPrice($orderProduct->price),
+                                    'image' => $orderProduct->product ? (mediaHelper()->getSingleMedia($orderProduct->product->firstImage, ['widen' => 300])->url ?? '') : '',
+                                ];
+                            }),
+                            'orderPayments' => $order->orderPayments->map(function ($orderPayment) {
+                                return [
+                                    'amount' => $orderPayment->amount,
+                                    'amountFormatted' => CurrencyHelper::formatPrice($orderPayment->amount),
+                                    'paymentMethod' => $orderPayment->paymentMethod ? $orderPayment->paymentMethod->name : $orderPayment->payment_method,
+                                    'status' => $orderPayment->status,
+                                    'createdAt' => $orderPayment->created_at->format('d-m-Y H:i'),
+                                ];
+                            }),
+                        ];
+                    }),
+                ];
+            })
+            ->values() // Reset the keys for easier handling in JSON responses
+            ->toArray();
+
+        foreach ($orders as $date) {
+            foreach ($date['orders'] as $order) {
+                if (!$firstOrder) {
+                    $firstOrder = $order;
+                }
+            }
+        }
+
+        return response()
+            ->json([
+                'success' => true,
+                'orders' => $orders,
+                'firstOrder' => $firstOrder,
             ]);
     }
 }

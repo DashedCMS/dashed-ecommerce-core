@@ -151,6 +151,7 @@ class POSPage extends Component implements HasForms
             'name' => $this->customProductData['name'],
             'quantity' => $this->customProductData['quantity'],
             'price' => $this->customProductData['price'] * $this->customProductData['quantity'],
+            'priceFormatted' => CurrencyHelper::formatPrice($this->customProductData['price'] * $this->customProductData['quantity']),
             'singlePrice' => $this->customProductData['price'],
             'vat_rate' => $this->customProductData['vat_rate'],
             'customProduct' => true,
@@ -196,7 +197,7 @@ class POSPage extends Component implements HasForms
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(999999)
-                    ->inputMode('decimal')
+                    ->inputMode('integer')
                     ->required()
                     ->prefix('€')
                     ->reactive()
