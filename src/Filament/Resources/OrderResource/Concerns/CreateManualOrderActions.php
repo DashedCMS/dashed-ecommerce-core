@@ -240,6 +240,8 @@ trait CreateManualOrderActions
                     }
                 }
 
+                $options['options'] = $options;
+
                 if ($product->id ?? false) {
                     \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
                 } else {
