@@ -61,5 +61,7 @@ Route::group(
             ->name('api.point-of-sale.update-search-query-input-mode');
         Route::post('/retrieve-orders', [PointOfSaleApiController::class, 'retrieveOrders'])
             ->name('api.point-of-sale.retrieve-orders');
+        Route::post('/cancel-order', [PointOfSaleApiController::class, 'cancelOrder'])
+            ->name('api.point-of-sale.cancel-order');
     }
 );

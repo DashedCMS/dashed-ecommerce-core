@@ -39,23 +39,30 @@ class CancelOrder extends Component implements HasForms, HasActions
 
     public function action(): Action
     {
+        $fillForm = [
+            'fulfillment_status' => $this->order->fulfillment_status,
+            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
+        ];
+
+        foreach($this->order->orderProducts as $orderProduct) {
+            $fillForm["order_product_$orderProduct->id"] = 0;
+        }
+
         return Action::make('action')
             ->label($this->buttonText ?: 'Annuleer bestelling')
             ->extraAttributes([
                 'class' => $this->buttonClass,
             ])
             ->color('primary')
-            ->fillForm([
-                'fulfillment_status' => $this->order->fulfillment_status,
-                'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
-            ])
+            ->fillForm($fillForm)
             ->form(function () {
                 $orderProductSchema = [];
                 foreach ($this->order->orderProducts as $orderProduct) {
-                    $orderProductSchema[] = TextInput::make("order_product_$orderProduct->id")
+                    $orderProductSchema[] = \LaraZeus\Quantity\Components\Quantity::make("order_product_$orderProduct->id")
                         ->label("$orderProduct->name retourneren")
                         ->numeric()
                         ->minValue(0)
+                        ->default(0)
                         ->maxValue($orderProduct->quantity)
                         ->helperText("{$orderProduct->quantity}x besteld voor " . CurrencyHelper::formatPrice($orderProduct->price));
                 }
@@ -67,29 +74,29 @@ class CancelOrder extends Component implements HasForms, HasActions
                                 ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
                         ])
                         ->hidden(in_array($this->order->order_origin, ['own', 'pos'])),
-                    Section::make('Retour aanmaken')
-                        ->schema([
-                            Placeholder::make('')
-                                ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
-                        ])
-                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
+//                    Section::make('Retour aanmaken')
+//                        ->schema([
+//                            Placeholder::make('')
+//                                ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
+//                        ])
+//                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Bestelde producten')
                         ->schema(array_merge($orderProductSchema, [
                             TextInput::make('extra_order_line_name')
                                 ->required()
-                                ->hidden(fn ($get) => ! $get('extra_order_line')),
+                                ->hidden(fn($get) => !$get('extra_order_line')),
                             TextInput::make('extra_order_line_price')
                                 ->required()
                                 ->numeric()
                                 ->minValue(0.01)
                                 ->maxValue(100000)
-                                ->hidden(fn ($get) => ! $get('extra_order_line')),
+                                ->hidden(fn($get) => !$get('extra_order_line')),
                         ]))
                         ->columns([
                             'default' => 1,
                             'lg' => 3,
                         ])
-                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
+                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Overige opties')
                         ->schema([
                             Select::make('fulfillment_status')
@@ -101,11 +108,8 @@ class CancelOrder extends Component implements HasForms, HasActions
                                 ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray()),
                             Toggle::make('send_customer_email')
                                 ->label('Moet de klant een mail krijgen van deze annulering/retournering?'),
-                            Toggle::make('create_credit_invoice')
-                                ->label('Moet er een creditfactuur gemaakt worden?'),
                             Toggle::make('products_must_be_returned')
-                                ->label('Moeten de producten geretourneerd worden? (Hiermee wordt er automatisch een
-                                    creditfactuur gemaakt)'),
+                                ->label('Moet de klant de producten nog retourneren?'),
                             Toggle::make('restock')
                                 ->label('Moet de voorraad weer terug geboekt worden?'),
                             Toggle::make('refund_discount_costs')
@@ -116,17 +120,13 @@ class CancelOrder extends Component implements HasForms, HasActions
                                     dan op 0 hierboven)')
                                 ->reactive(),
                         ])
-                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
+                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
                 ];
             })
             ->action(function ($data) {
-                if (in_array($this->order->order_origin, ['own', 'pos'])) {
+                if (in_array($this->order->order_origin, ['own', 'pos']) && $this->order->invoice_id != 'PROFORMA') {
                     $sendCustomerEmail = $data['send_customer_email'];
-                    $createCreditInvoice = $data['create_credit_invoice'];
                     $productsMustBeReturned = $data['products_must_be_returned'];
-                    if ($productsMustBeReturned) {
-                        $createCreditInvoice = true;
-                    }
                     $restock = $data['restock'];
                     $refundDiscountCosts = $data['refund_discount_costs'];
 
@@ -141,7 +141,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                     $extraOrderLineName = $data['extra_order_line_name'] ?? '';
                     $extraOrderLinePrice = $data['extra_order_line_price'] ?? '';
 
-                    if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
+                    if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
                         Notification::make()
                             ->title('Je moet tenminste 1 product laten retourneren.')
                             ->danger()
@@ -150,38 +150,33 @@ class CancelOrder extends Component implements HasForms, HasActions
                         return;
                     }
 
-                    if ($productsMustBeReturned || $this->order->invoice_id != 'PROFORMA') {
-                        $createCreditInvoice = true;
-                    }
+//                    if ($productsMustBeReturned) {
+//                        $createCreditInvoice = true;
+//                    }
 
-                    if (! $createCreditInvoice) {
-                        $this->order->changeStatus('cancelled', $sendCustomerEmail);
+//                    if (! $createCreditInvoice) {
+//                        $this->order->changeStatus('cancelled', $sendCustomerEmail);
+//
+//                        Notification::make()
+//                            ->title('Bestelling gemarkeerd als geannuleerd')
+//                            ->success()
+//                            ->send();
+//
+//                        if ($this->isPos) {
+//                            $this->closeActionModal();
+//                        } else {
+//                            return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
+//                        }
+//                    } else {
+                    $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id']);
 
-                        Notification::make()
-                            ->title('Bestelling gemarkeerd als geannuleerd')
-                            ->success()
-                            ->send();
+                    Notification::make()
+                        ->title('Bestelling gemarkeerd als geannuleerd')
+                        ->success()
+                        ->send();
 
-                        if ($this->isPos) {
-                            $this->closeActionModal();
-                        } else {
-                            return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
-                        }
-                    } else {
-                        $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $createCreditInvoice, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id']);
-
-                        Notification::make()
-                            ->title('Bestelling gemarkeerd als geannuleerd')
-                            ->success()
-                            ->send();
-
-                        if ($this->isPos) {
-                            $newOrder->printReceipt();
-                            $this->closeActionModal();
-                        } else {
-                            return redirect(route('filament.dashed.resources.orders.view', [$newOrder]));
-                        }
-                    }
+                    return redirect(route('filament.dashed.resources.orders.view', [$newOrder]));
+//                    }
                 } else {
                     $this->order->changeStatus('cancelled');
 
@@ -190,11 +185,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                         ->success()
                         ->send();
 
-                    if ($this->isPos) {
-                        $this->closeActionModal();
-                    } else {
-                        return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
-                    }
+                    return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
                 }
             });
     }
