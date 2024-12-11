@@ -3,10 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -17,7 +13,6 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -155,7 +150,7 @@ class POSPage extends Component implements HasForms
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -166,7 +161,7 @@ class POSPage extends Component implements HasForms
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -178,7 +173,7 @@ class POSPage extends Component implements HasForms
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -194,7 +189,7 @@ class POSPage extends Component implements HasForms
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -204,7 +199,7 @@ class POSPage extends Component implements HasForms
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (!$posCart->products) {
+        if (! $posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -234,7 +229,7 @@ class POSPage extends Component implements HasForms
             $discountCode->save();
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
