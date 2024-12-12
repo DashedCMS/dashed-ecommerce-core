@@ -140,6 +140,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 self::class => 'builderBlocks',
             ]);
         }
+
+        cms()->builder('publishOnUpdate', [
+            'dashed-ecommerce-core-config',
+            'dashed-ecommerce-core-assets',
+        ]);
     }
 
     public static function builderBlocks()
