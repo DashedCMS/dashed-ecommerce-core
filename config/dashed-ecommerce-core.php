@@ -1,0 +1,5 @@
+<?php
+
+return [
+    'registerDefaultBuilderBlocks' => true,
+];

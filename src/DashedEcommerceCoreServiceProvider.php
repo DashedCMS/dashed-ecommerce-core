@@ -135,9 +135,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             return $model->orders()->latest()->first();
         });
 
-        cms()->builder('builderBlockClasses', [
-            self::class => 'builderBlocks',
-        ]);
+        if (config('dashed-ecommerce-core.registerDefaultBuilderBlocks', true)) {
+            cms()->builder('builderBlockClasses', [
+                self::class => 'builderBlocks',
+            ]);
+        }
     }
 
     public static function builderBlocks()
@@ -316,6 +318,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->hasRoutes([
                 'frontend',
                 'point-of-sale',
+            ])
+            ->hasConfigFile([
+                'dashed-ecommerce-core',
             ])
             ->hasViews()
             ->hasCommands([
