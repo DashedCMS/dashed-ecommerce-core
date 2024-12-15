@@ -135,11 +135,16 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             return $model->orders()->latest()->first();
         });
 
+        $builderBlockClasses = [];
         if (config('dashed-ecommerce-core.registerDefaultBuilderBlocks', true)) {
-            cms()->builder('builderBlockClasses', [
-                self::class => 'builderBlocks',
-            ]);
+            $builderBlockClasses[] = 'builderBlocks';
         }
+
+        $builderBlockClasses[] = 'defaultPageBuilderBlocks';
+
+        cms()->builder('builderBlockClasses', [
+            self::class => $builderBlockClasses,
+        ]);
 
         cms()->builder('publishOnUpdate', [
             'dashed-ecommerce-core-config',
@@ -205,6 +210,27 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                             });
                         }),
                 ]),
+        ];
+
+        cms()
+            ->builder('blocks', $defaultBlocks);
+    }
+
+    public static function defaultPageBuilderBlocks()
+    {
+        $defaultBlocks = [
+            Block::make('orders-block')
+                ->label('Bestellingen')
+                ->schema([]),
+            Block::make('cart-block')
+                ->label('Winkelwagen')
+                ->schema([]),
+            Block::make('checkout-block')
+                ->label('Checkout')
+                ->schema([]),
+            Block::make('view-order-block')
+                ->label('Bestelling')
+                ->schema([]),
         ];
 
         cms()

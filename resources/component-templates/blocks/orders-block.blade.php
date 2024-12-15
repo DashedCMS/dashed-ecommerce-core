@@ -1,0 +1,1 @@
+<livewire:cart.cart />
