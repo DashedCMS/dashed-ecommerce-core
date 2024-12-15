@@ -72,6 +72,8 @@
             </x-container>
         </div>
 
+        <x-dashed-core::global-blocks name="cart-page"/>
+
         <x-blocks.few-products :data="[
     'title' => Translation::get('suggested-products', 'cart', 'Misschien vind je dit ook leuk'),
     'backgroundColor' => 'bg-primary-100'
@@ -84,5 +86,3 @@
             ]"></x-blocks.header>
     @endif
 </div>
-
-<x-dashed-core::global-blocks name="cart-page"/>

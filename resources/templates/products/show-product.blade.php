@@ -521,7 +521,9 @@
         </x-container>
 
         <x-blocks :content="$product->content"></x-blocks>
+
+        <div wire:ignore>
+            <x-dashed-core::global-blocks name="product-page"/>
+        </div>
     </div>
 </div>
-
-<x-dashed-core::global-blocks name="product-page"/>

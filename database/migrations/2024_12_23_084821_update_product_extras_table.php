@@ -45,11 +45,10 @@ return new class extends Migration {
         } catch (\Exception $e) {
         }
         try {
-
-        } catch (\Exception $e) {
             Schema::table('dashed__product_extras', function (Blueprint $table) {
                 $table->dropForeign('dashed__product_extras_product_id_foreign');
             });
+        } catch (\Exception $e) {
         }
         Schema::table('dashed__product_extras', function (Blueprint $table) {
             $table->dropColumn('product_id');

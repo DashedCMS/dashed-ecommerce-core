@@ -1,5 +1,5 @@
 <div class="bg-gray-100">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <x-container>
         <div class="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
             <h2 class="text-2xl font-bold text-gray-900">
                 {{ $productCategory->name ?? Translation::get('all-categories', 'categories', 'Alle categorieen') }}
@@ -42,11 +42,12 @@
                 </div>
             @endif
         </div>
-    </div>
+    </x-container>
 
     @if($singleProductCategory)
         <x-blocks :content="$singleProductCategory->content"></x-blocks>
     @endif
+
+    <x-dashed-core::global-blocks name="category-overview-page"/>
 </div>
 
-<x-dashed-core::global-blocks name="category-overview-page"/>

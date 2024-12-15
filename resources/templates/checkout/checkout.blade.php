@@ -494,13 +494,14 @@
                 </x-container>
             </section>
         </div>
-    @else
-        <x-blocks.header :data="[
+
+        <x-dashed-core::global-blocks name="checkout-page"/>
+
+</div>
+@else
+    <x-blocks.header :data="[
             'title' => Translation::get('no-items-in-cart', 'cart', 'Geen items in je winkelwagen!'),
             'subtitle' => Translation::get('keep-shopping', 'cart', 'Verder shoppen!'),
             'image' => Translation::get('image', 'cart', '', 'image'),
         ]"></x-blocks.header>
-    @endif
-</div>
-
-<x-dashed-core::global-blocks name="checkout-page"/>
+@endif
