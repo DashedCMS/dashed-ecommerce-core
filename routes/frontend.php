@@ -25,7 +25,6 @@ Route::post('/dashed/exchange', [TransactionController::class, 'exchange'])->nam
 
 Route::group(
     [
-        'prefix' => LaravelLocalization::setLocale(),
         'middleware' => ['web', FrontendMiddleware::class, LocaleSessionRedirect::class, LaravelLocalizationRedirectFilter::class, LaravelLocalizationViewPath::class],
     ],
     function () {

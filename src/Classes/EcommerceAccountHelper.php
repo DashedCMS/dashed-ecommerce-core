@@ -10,9 +10,9 @@ class EcommerceAccountHelper
     public static function getAccountOrdersUrl()
     {
         if (Auth::check()) {
-            return LaravelLocalization::localizeUrl(route('dashed.frontend.account.orders'));
+            return route('dashed.frontend.account.orders');
         } else {
-            return LaravelLocalization::localizeUrl(route('dashed.frontend.auth.login'));
+            return route('dashed.frontend.auth.login');
         }
     }
 }
