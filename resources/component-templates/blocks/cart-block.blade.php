@@ -1,1 +1,1 @@
-<livewire:account.orders />
+<livewire:cart.cart />

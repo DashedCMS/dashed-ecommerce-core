@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\DashedPages\Models\Page;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Classes\Sites;
@@ -44,12 +45,26 @@ class ShoppingCart
 
     public static function getCartUrl()
     {
-        return LaravelLocalization::localizeUrl(route('dashed.frontend.cart'));
+        $pageId = Customsetting::get('cart_page_id');
+        $page = Page::publicShowable()->where('id', $pageId)->first();
+
+        return $page->getUrl() ?? '#';
     }
 
     public static function getCheckoutUrl()
     {
-        return LaravelLocalization::localizeUrl(route('dashed.frontend.checkout'));
+        $pageId = Customsetting::get('checkout_page_id');
+        $page = Page::publicShowable()->where('id', $pageId)->first();
+
+        return $page->getUrl(native: false) ?? '#';
+    }
+
+    public static function getCompleteUrl()
+    {
+        $pageId = Customsetting::get('order_page_id');
+        $page = Page::publicShowable()->where('id', $pageId)->first();
+
+        return $page->getUrl() ?? '#';
     }
 
     public static function getStartTransactionUrl()

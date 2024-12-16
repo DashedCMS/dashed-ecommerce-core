@@ -2,16 +2,17 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedPages\Models\Page;
 use Illuminate\Support\Facades\Auth;
 
 class EcommerceAccountHelper
 {
     public static function getAccountOrdersUrl()
     {
-        if (Auth::check()) {
-            return route('dashed.frontend.account.orders');
-        } else {
-            return route('dashed.frontend.auth.login');
-        }
+        $pageId = auth()->check() ? Customsetting::get('orders_page_id') : Customsetting::get('login_page_id');
+        $page = Page::publicShowable()->where('id', $pageId)->first();
+
+        return $page->getUrl() ?? '#';
     }
 }

@@ -324,7 +324,7 @@ class TransactionController extends FrontendController
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
 
-            return redirect(url(route('dashed.frontend.checkout.complete')) . '?paymentId=' . $orderPayment->hash);
+            return redirect(url(ShoppingCart::getCompleteUrl()) . '?paymentId=' . $orderPayment->hash);
         } else {
             try {
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
