@@ -56,7 +56,7 @@ class ShoppingCart
         $pageId = Customsetting::get('checkout_page_id');
         $page = Page::publicShowable()->where('id', $pageId)->first();
 
-        return $page->getUrl(native: false) ?? '#';
+        return $page->getUrl() ?? '#';
     }
 
     public static function getCompleteUrl()
@@ -64,7 +64,7 @@ class ShoppingCart
         $pageId = Customsetting::get('order_page_id');
         $page = Page::publicShowable()->where('id', $pageId)->first();
 
-        return $page->getUrl() ?? '#';
+        return $page->getUrl(native: false) ?? '#';
     }
 
     public static function getStartTransactionUrl()
