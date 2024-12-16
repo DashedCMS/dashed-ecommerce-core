@@ -2,9 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedPages\Models\Page;
-use Illuminate\Support\Facades\Auth;
+use Dashed\DashedCore\Models\Customsetting;
 
 class EcommerceAccountHelper
 {

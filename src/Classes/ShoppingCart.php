@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedPages\Models\Page;
 use Exception;
 use Illuminate\Support\Str;
+use Dashed\DashedPages\Models\Page;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +19,6 @@ use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 
 class ShoppingCart
 {
