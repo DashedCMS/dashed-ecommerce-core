@@ -134,7 +134,7 @@ class Checkout extends Component
     public function retrievePaymentMethods()
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
-        if (Customsetting::get('first_payment_method_selected', null, true) && (! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
+        if (Customsetting::get('first_payment_method_selected', null, true) && (!$this->paymentMethod || !in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
@@ -144,7 +144,7 @@ class Checkout extends Component
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
-        if (Customsetting::get('first_shipping_method_selected', null, true) && (! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
+        if (Customsetting::get('first_shipping_method_selected', null, true) && (!$this->shippingMethod || !in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
@@ -272,7 +272,7 @@ class Checkout extends Component
                 'max:255',
             ],
             'password' => [
-                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && ! auth()->check()),
+                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && !auth()->check()),
                 'nullable',
                 'min:6',
                 'max:255',
@@ -385,9 +385,23 @@ class Checkout extends Component
             return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
         }
 
+        foreach (ecommerce()->builder('fulfillmentProviders') as $fulfillmentProvider) {
+            if ($fulfillmentProvider['class']::isConnected() && method_exists($fulfillmentProvider['class'], 'validateAddress')) {
+                $addressValid = $fulfillmentProvider['class']::validateAddress($this->street, $this->houseNr, $this->zipCode, $this->city, $this->country);
+                if (!$addressValid['success']) {
+                    Notification::make()
+                        ->danger()
+                        ->title(Translation::get('address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(), 'checkout', $addressValid['message']))
+                        ->send();
+
+                    return $this->dispatch('showAlert', 'error', Translation::get('address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(), 'checkout', $addressValid['message']));
+                }
+            }
+        }
+
         $cartItems = $this->cartItems;
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
@@ -405,13 +419,13 @@ class Checkout extends Component
         }
 
         $paymentMethodPresent = (bool)$paymentMethod;
-        if (! $paymentMethodPresent) {
+        if (!$paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $paymentMethodPresent = true;
                 }
             }
-            if (! $paymentMethodPresent) {
+            if (!$paymentMethodPresent) {
                 Notification::make()
                     ->danger()
                     ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
@@ -429,7 +443,7 @@ class Checkout extends Component
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid shipping method'))
@@ -462,7 +476,7 @@ class Checkout extends Component
                 }
             }
 
-            if (! $depositPaymentMethod) {
+            if (!$depositPaymentMethod) {
                 Notification::make()
                     ->danger()
                     ->title(Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))
@@ -474,10 +488,10 @@ class Checkout extends Component
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             session(['discountCode' => '']);
             $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
             session(['discountCode' => '']);
 
             Notification::make()
@@ -695,7 +709,7 @@ class Checkout extends Component
 
         $orderPayment->psp = $psp;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
