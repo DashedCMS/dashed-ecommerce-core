@@ -2,14 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Cache;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class UpdateProductCategoriesInformationJob implements ShouldQueue
 {

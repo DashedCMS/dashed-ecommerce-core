@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
+use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
@@ -38,11 +38,11 @@ class Products
             }
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -123,14 +123,14 @@ class Products
                     foreach ($productFilter->productFilterOptions as $option) {
                         if ($option->checked) {
                             $filterIsActive = true;
-                            if (!$productValidForFilter) {
+                            if (! $productValidForFilter) {
                                 if ($product->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $option->id)->exists()) {
                                     $productValidForFilter = true;
                                 }
                             }
                         }
                     }
-                    if ($filterIsActive && !$productValidForFilter) {
+                    if ($filterIsActive && ! $productValidForFilter) {
                         $productIsValid = false;
                     }
                 }
@@ -183,7 +183,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -320,7 +320,7 @@ class Products
 
     public static function getAllV2(int $pagination = 12, ?int $page = 1, ?string $orderBy = 'order', ?string $order = 'DESC', ?int $categoryId = null, ?string $search = null, ?array $activeFilters = [], ?bool $enableFilters = true, null|Collection|array $productFilters = [], bool $hasActiveFilters = false, ?array $priceRange = [])
     {
-        if (!in_array($orderBy, self::canFilterOnShortOrColumn())) {
+        if (! in_array($orderBy, self::canFilterOnShortOrColumn())) {
             $orderBy = '';
         }
         if (str($order)->lower() != 'asc' && str($order)->lower() != 'desc') {
@@ -351,11 +351,11 @@ class Products
             $order = '';
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -370,10 +370,10 @@ class Products
                 ->publicShowable()
                 ->orderBy($orderBy, $order);
 
-        if (!empty($priceRange['min'])) {
+        if (! empty($priceRange['min'])) {
             $allProducts = $allProducts->where('price', '>=', $priceRange['min']);
         }
-        if (!empty($priceRange['max'])) {
+        if (! empty($priceRange['max'])) {
             $allProducts = $allProducts->where('price', '<=', $priceRange['max']);
         }
 
@@ -394,8 +394,9 @@ class Products
                             ->exists()
                         : false;
 
-                    if ($filterIsActive && !$productValidForFilter) {
+                    if ($filterIsActive && ! $productValidForFilter) {
                         $productIsValid = false;
+
                         break;
                     }
                 }
@@ -413,12 +414,12 @@ class Products
             ->thisSite()
             ->publicShowable();
 
-//        if (!empty($priceRange['min'])) {
-//            $products->where('price', '>=', $priceRange['min']);
-//        }
-//        if (!empty($priceRange['max'])) {
-//            $products->where('price', '<=', $priceRange['max']);
-//        }
+        //        if (!empty($priceRange['min'])) {
+        //            $products->where('price', '>=', $priceRange['min']);
+        //        }
+        //        if (!empty($priceRange['max'])) {
+        //            $products->where('price', '<=', $priceRange['max']);
+        //        }
 
         $products = $products->with(['productFilters', 'shippingClasses', 'productCategories', 'parent'])
             ->paginate($pagination, ['*'], 'page', $page)
@@ -463,7 +464,7 @@ class Products
                 $option->resultCount = 0;
                 if ($products) {
                     $option->resultCount = $option->resultCount + $option->products()->whereIn('product_id', $products)->count();
-                    if (!$filterHasActiveOptions && $option->resultCount > 0) {
+                    if (! $filterHasActiveOptions && $option->resultCount > 0) {
                         $filterHasActiveOptions = true;
                     }
                 }
@@ -481,33 +482,33 @@ class Products
             ->orderBy('created_at')
             ->get();
 
-//        $productFilters->each(function ($productFilter) use ($activeFilters, $products) {
-//            $filterHasActiveOptions = false;
-//            $results = $activeFilters[$productFilter->name] ?? [];
-//
-//            $productFilterOptions = $productFilter->productFilterOptions;
-//            $optionProductCounts = [];
-//
-//            if ($products) {
-//                $optionProductCounts = DB::table('dashed__product_filter')
-//                    ->select('product_filter_option_id', DB::raw('COUNT(*) as count'))
-//                    ->whereIn('product_id', $products)
-//                    ->whereIn('product_filter_option_id', $productFilterOptions->pluck('id'))
-//                    ->groupBy('product_filter_option_id')
-//                    ->pluck('count', 'product_filter_option_id');
-//            }
-//
-//            $productFilterOptions->each(function ($option) use ($results, &$filterHasActiveOptions, $optionProductCounts) {
-//                $option->checked = $results && array_key_exists($option->name, $results) && $results[$option->name];
-//                $option->resultCount = $optionProductCounts[$option->id] ?? 0;
-//
-//                if (!$filterHasActiveOptions && $option->resultCount > 0) {
-//                    $filterHasActiveOptions = true;
-//                }
-//            });
-//
-//            $productFilter->hasActiveOptions = $filterHasActiveOptions;
-//        });
+        //        $productFilters->each(function ($productFilter) use ($activeFilters, $products) {
+        //            $filterHasActiveOptions = false;
+        //            $results = $activeFilters[$productFilter->name] ?? [];
+        //
+        //            $productFilterOptions = $productFilter->productFilterOptions;
+        //            $optionProductCounts = [];
+        //
+        //            if ($products) {
+        //                $optionProductCounts = DB::table('dashed__product_filter')
+        //                    ->select('product_filter_option_id', DB::raw('COUNT(*) as count'))
+        //                    ->whereIn('product_id', $products)
+        //                    ->whereIn('product_filter_option_id', $productFilterOptions->pluck('id'))
+        //                    ->groupBy('product_filter_option_id')
+        //                    ->pluck('count', 'product_filter_option_id');
+        //            }
+        //
+        //            $productFilterOptions->each(function ($option) use ($results, &$filterHasActiveOptions, $optionProductCounts) {
+        //                $option->checked = $results && array_key_exists($option->name, $results) && $results[$option->name];
+        //                $option->resultCount = $optionProductCounts[$option->id] ?? 0;
+        //
+        //                if (!$filterHasActiveOptions && $option->resultCount > 0) {
+        //                    $filterHasActiveOptions = true;
+        //                }
+        //            });
+        //
+        //            $productFilter->hasActiveOptions = $filterHasActiveOptions;
+        //        });
 
         return $productFilters;
     }

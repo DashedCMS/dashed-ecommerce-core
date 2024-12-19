@@ -2,11 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoryInformationJob;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
 
 class ProductCategory extends Model
 {
@@ -83,12 +82,12 @@ class ProductCategory extends Model
 
     public function getUrl($locale = null)
     {
-        if (!$locale) {
+        if (! $locale) {
             $locale = app()->getLocale();
         }
 
         return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale) {
-            if (!$this->childs->count()) {
+            if (! $this->childs->count()) {
                 if ($this->products->count() == 1) {
                     return $this->products->first()->getUrl($locale);
                 } else {
@@ -160,7 +159,7 @@ class ProductCategory extends Model
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
-                if (!$productCategory) {
+                if (! $productCategory) {
                     return 'pageNotFound';
                 }
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();
