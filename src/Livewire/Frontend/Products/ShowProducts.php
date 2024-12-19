@@ -47,6 +47,7 @@ class ShowProducts extends Component
 
     public function mount($productCategory = null, $enableFilters = true)
     {
+        dd('asdf');
         $this->productCategory = $productCategory;
 
         $this->pagination = request()->get('pagination', Customsetting::get('product_default_amount_of_products', null, 12));

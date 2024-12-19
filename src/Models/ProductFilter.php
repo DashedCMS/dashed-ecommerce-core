@@ -32,6 +32,10 @@ class ProductFilter extends Model
 
     protected $table = 'dashed__product_filters';
 
+    protected $with = [
+        'productFilterOptions'
+    ];
+
     protected static function booted()
     {
         static::deleting(function ($productFilter) {

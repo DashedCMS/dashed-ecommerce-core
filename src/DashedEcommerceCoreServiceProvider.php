@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -360,6 +361,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 CancelOldOrders::class,
                 SendInvoices::class,
                 UpdateProductInformations::class,
+                MigrateToV3::class,
             ]);
     }
 }
