@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 
 class CreateMissingProductVariationsJob implements ShouldQueue
@@ -22,14 +23,14 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     public $tries = 5;
     public $timeout = 1200;
 
-    public Product $product;
+    public ProductGroup $productGroup;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(Product $product)
+    public function __construct(ProductGroup $productGroup)
     {
-        $this->product = $product;
+        $this->productGroup = $productGroup;
     }
 
     /**
@@ -37,20 +38,20 @@ class CreateMissingProductVariationsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $missingVariations = $this->product->missingVariations();
+        $missingVariations = $this->productGroup->missingVariations();
 
         foreach ($missingVariations as $missingVariation) {
             $newProduct = new Product();
-            $newProduct->site_ids = $this->product->site_ids;
+            $newProduct->site_ids = $this->productGroup->site_ids;
             foreach (Locales::getLocales() as $locale) {
-                $name = $this->product->getTranslation('name', $locale['id']);
+                $name = $this->productGroup->getTranslation('name', $locale['id']);
                 foreach ($missingVariation as $optionId) {
                     $name .= ' | ' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
                 }
                 $newProduct->setTranslation('name', $locale['id'], $name);
             }
             foreach (Locales::getLocales() as $locale) {
-                $slug = $this->product->getTranslation('slug', $locale['id']);
+                $slug = $this->productGroup->getTranslation('slug', $locale['id']);
                 foreach ($missingVariation as $optionId) {
                     $slug .= '-' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
                 }
@@ -60,9 +61,7 @@ class CreateMissingProductVariationsJob implements ShouldQueue
             while (Product::withTrashed()->where('sku', $newProduct->sku)->exists()) {
                 $newProduct->sku = 'SKU' . rand(10000, 99999);
             }
-            $newProduct->type = 'variable';
-            $newProduct->parent_id = $this->product->id;
-            $newProduct->public = $this->product->public;
+            $newProduct->product_group_id = $this->productGroup->id;
             $newProduct->save();
 
             foreach ($missingVariation as $optionId) {
@@ -72,10 +71,8 @@ class CreateMissingProductVariationsJob implements ShouldQueue
                     'product_filter_option_id' => $optionId,
                 ]);
             }
-
-            UpdateProductInformationJob::dispatch($newProduct);
         }
 
-        UpdateProductInformationJob::dispatch($this->product);
+        UpdateProductInformationJob::dispatch($this->productGroup);
     }
 }

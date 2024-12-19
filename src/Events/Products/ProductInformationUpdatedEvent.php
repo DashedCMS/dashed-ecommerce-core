@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Events\Products;
 
 use Illuminate\Queue\SerializesModels;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
 class ProductInformationUpdatedEvent
 {
@@ -13,16 +13,16 @@ class ProductInformationUpdatedEvent
     use InteractsWithSockets;
     use SerializesModels;
 
-    public $product;
+    public ProductGroup $productGroup;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct(Product $product)
+    public function __construct(ProductGroup $productGroup)
     {
-        $this->product = $product;
+        $this->productGroup = $productGroup;
     }
 
     //    /**

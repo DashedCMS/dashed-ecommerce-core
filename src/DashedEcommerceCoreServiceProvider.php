@@ -13,6 +13,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -360,6 +361,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 CancelOldOrders::class,
                 SendInvoices::class,
                 UpdateProductInformations::class,
+                MigrateToV3::class,
             ]);
     }
 }

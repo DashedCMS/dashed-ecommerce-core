@@ -213,6 +213,14 @@
 
                         <p>Zoek bestelling</p>
                     </button>
+                    <button @click="refreshProducts()"
+                            class="focus-search-order text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+
+                        <p>Producten opnieuw ophalen</p>
+                    </button>
                 </div>
             </div>
             <div class="sm:col-span-3 sm:pl-8 flex flex-col gap-8 overflow-y-auto">
@@ -1331,7 +1339,7 @@
             }
         },
 
-        async getAllProducts() {
+        async getAllProducts(clearCache = false) {
             try {
                 let response = await fetch('{{ route('api.point-of-sale.get-all-products') }}', {
                     method: 'POST',
@@ -1340,7 +1348,8 @@
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        userId: this.userId
+                        userId: this.userId,
+                        clearCache: clearCache,
                     })
                 });
 
@@ -2082,6 +2091,15 @@
                     message: 'Kan de bestellingen niet ophalen'
                 })
             }
+        },
+
+        async refreshProducts() {
+            this.getAllProducts(true);
+
+            return $wire.dispatch('notify', {
+                type: 'success',
+                message: 'De producten zijn opgehaald',
+            })
         },
 
         toggleFullscreen() {

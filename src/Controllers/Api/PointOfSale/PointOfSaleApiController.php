@@ -947,8 +947,13 @@ class PointOfSaleApiController extends Controller
 
     public function getAllProducts(Request $request): JsonResponse
     {
-        $products = Cache::remember('pos_products', 60 * 60 * 24, function () {
-            return Product::handOrderShowable()
+        $clearCache = $request->get('clearCache', false);
+        if ($clearCache) {
+            Cache::forget('pos_products');
+        }
+
+        $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
+            $products = Product::handOrderShowable()
                 ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price'])
                 ->get()
                 ->map(function ($product) {
@@ -967,6 +972,8 @@ class PointOfSaleApiController extends Controller
                     ];
                 })
                 ->toArray();
+
+            return $products;
         });
 
 

@@ -14,6 +14,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
@@ -90,6 +91,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 OrderResource::class,
                 ProductTabResource::class,
                 ProductExtraResource::class,
+                ProductGroupResource::class,
             ]);
     }
 

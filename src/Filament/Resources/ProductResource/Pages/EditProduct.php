@@ -56,41 +56,20 @@ class EditProduct extends EditRecord
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        //        Only if is simple or variable && parent
-        if ((($data['type'] ?? 'variable') == 'variable' && ! ($data['parent_id'] ?? false)) || ($data['type'] ?? 'variable') == 'simple') {
-            $this->record->activeProductFilters()->detach();
-            foreach ($productFilters as $productFilter) {
-                if ($data["product_filter_$productFilter->id"] ?? false) {
-                    $id = $this->record->activeProductFilters()->attach($productFilter->id, [
-                        'use_for_variations' => $data["product_filter_{$productFilter->id}_use_for_variations"],
-                    ]);
-                }
-            }
-        }
-
-        if ((($data['type'] ?? 'variable') == 'variable' && ($data['parent_id'] ?? true)) || ($data['type'] ?? 'variable') == 'simple') {
-            $this->record->productFilters()->detach();
-            $this->record->enabledProductFilterOptions()->detach();
-            foreach ($productFilters as $productFilter) {
-                if ((($data["product_filter_$productFilter->id"] ?? false) && ($this->record->activeProductFilters->contains($productFilter->id)) || (($data['parent_id'] ?? false) && Product::find($data['parent_id']) && Product::find($data['parent_id'])->activeProductFilters->contains($productFilter->id)))) {
-                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                        if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
-                            $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
-                        }
-                        if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}_enabled"] ?? false) {
-                            $this->record->enabledProductFilterOptions()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
-                        }
+        $this->record->productFilters()->detach();
+        foreach ($productFilters as $productFilter) {
+            if ($this->record->productGroup->activeProductFilters()->where('product_filter_id', $productFilter->id)->exists()) {
+                foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                    if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
+                        $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
                     }
                 }
             }
         }
 
         foreach ($productFilters as $productFilter) {
-            unset($data["product_filter_{$productFilter->id}"]);
-            unset($data["product_filter_{$productFilter->id}_use_for_variations"]);
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 unset($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"]);
-                unset($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}_enabled"]);
             }
         }
 
@@ -130,19 +109,9 @@ class EditProduct extends EditRecord
     {
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
-        if ($this->record->parent) {
-            $activeProductFilters = $this->record->parent->activeProductFilters;
-        } else {
-            $activeProductFilters = $this->record->activeProductFilters;
-        }
-
         foreach ($productFilters as $productFilter) {
-            $data["product_filter_$productFilter->id"] = (bool)$activeProductFilters->contains($productFilter->id);
-            $data["product_filter_{$productFilter->id}_use_for_variations"] = $activeProductFilters->contains($productFilter->id) ? ($this->record->activeProductFilters()->wherePivot('product_filter_id', $productFilter->id)->first()->pivot->use_for_variations ?? 0) : 0;
-
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] = $this->record->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
-                $data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}_enabled"] = $this->record->enabledProductFilterOptions()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
             }
         }
 
@@ -159,12 +128,8 @@ class EditProduct extends EditRecord
 
     public function getBreadcrumbs(): array
     {
-        if (! $this->record->parent) {
-            return parent::getBreadcrumbs();
-        }
-
         $breadcrumbs = parent::getBreadcrumbs();
-        $breadcrumbs = array_merge([route('filament.dashed.resources.products.edit', [$this->record->parent->id]) => "{$this->record->parent->name}"], $breadcrumbs);
+        $breadcrumbs = array_merge([route('filament.dashed.resources.product-groups.edit', [$this->record->productGroup->id]) => "{$this->record->productGroup->name}"], $breadcrumbs);
         $breadcrumbs = array_merge([route('filament.dashed.resources.products.index') => "Producten"], $breadcrumbs);
 
         return $breadcrumbs;
@@ -260,7 +225,7 @@ class EditProduct extends EditRecord
             }
         }
 
-        UpdateProductInformationJob::dispatch($newProduct);
+        UpdateProductInformationJob::dispatch($newProduct->productGroup);
 
         return redirect(route('filament.dashed.resources.products.edit', [$newProduct]));
     }
