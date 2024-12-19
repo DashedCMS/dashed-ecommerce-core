@@ -104,7 +104,7 @@ class MigrateToV3 extends Command
                 $productGroup->save();
                 $connectThisProductToProductGroup = true;
                 $migrateRelations = false;
-                $deleteThisProduct = true;
+                $deleteThisProduct = false;
                 foreach (Locales::getLocalesArray() as $key => $locale) {
                     $productGroup->setTranslation('slug', $key, $product->getTranslation('slug', $key));
                 }
@@ -135,11 +135,12 @@ class MigrateToV3 extends Command
                 'product_id' => null,
             ]);
 
+            DB::table('dashed__product_category')->where('product_id', $product->id)->update([
+                'product_group_id' => $productGroup->id,
+                'product_id' => null,
+            ]);
+
             if ($migrateRelations) {
-                DB::table('dashed__product_category')->where('product_id', $product->id)->update([
-                    'product_group_id' => $productGroup->id,
-                    'product_id' => null,
-                ]);
                 DB::table('dashed__product_characteristic')->where('product_id', $product->id)->update([
                     'product_group_id' => $productGroup->id,
                     'product_id' => null,

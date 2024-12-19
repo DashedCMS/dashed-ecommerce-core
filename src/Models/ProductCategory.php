@@ -2,7 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoryInformationJob;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
@@ -32,7 +35,6 @@ class ProductCategory extends Model
     ];
 
     protected $with = [
-        'parentProductCategory',
     ];
 
     protected $casts = [
@@ -51,6 +53,10 @@ class ProductCategory extends Model
         static::updated(function ($productCategory) {
         });
 
+        static::saved(function ($productCategory) {
+            UpdateProductCategoriesInformationJob::dispatch();
+        });
+
         static::deleting(function ($productCategory) {
             foreach ($productCategory->getChilds() as $child) {
                 $child->delete();
@@ -61,11 +67,6 @@ class ProductCategory extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class);
-    }
-
-    public function parentProductCategory()
-    {
-        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function getProductsUrl()
@@ -80,26 +81,32 @@ class ProductCategory extends Model
         return url($url);
     }
 
-    public function getUrl()
+    public function getUrl($locale = null)
     {
-        if (! $this->childs->count()) {
-            if ($this->products->count() == 1) {
-                return $this->products->first()->getUrl();
-            } else {
-                return $this->getProductsUrl();
+        if (!$locale) {
+            $locale = app()->getLocale();
+        }
+
+        return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale) {
+            if (!$this->childs->count()) {
+                if ($this->products->count() == 1) {
+                    return $this->products->first()->getUrl($locale);
+                } else {
+                    return $this->getProductsUrl();
+                }
             }
-        }
 
-        $url = $this->slug;
-        $parentCategory = $this->parent;
-        while ($parentCategory) {
-            $url = $parentCategory->slug . '/' . $url;
-            $parentCategory = $parentCategory->parent;
-        }
+            $url = $this->slug;
+            $parentCategory = $this->parent;
+            while ($parentCategory) {
+                $url = $parentCategory->slug . '/' . $url;
+                $parentCategory = $parentCategory->parent;
+            }
 
-        $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
+            $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
 
-        return LaravelLocalization::localizeUrl($url);
+            return LaravelLocalization::localizeUrl($url);
+        });
     }
 
     public function hasChilds()
@@ -107,26 +114,30 @@ class ProductCategory extends Model
         return (bool)$this->getFirstChilds()->count();
     }
 
-    public function getChilds()
+    public function getChilds(): array
     {
-        $childs = [];
-        $childProductCategories = self::where('parent_id', $this->id)->get();
-        while ($childProductCategories->count()) {
-            $childProductCategoryIds = [];
-            foreach ($childProductCategories as $childProductCategory) {
-                $childProductCategoryIds[] = $childProductCategory->id;
-                $childs[] = $childProductCategory;
+        return Cache::rememberForever('product-category-childs-' . $this->id, function () {
+            $childs = [];
+            $childProductCategories = self::where('parent_id', $this->id)->get();
+            while ($childProductCategories->count()) {
+                $childProductCategoryIds = [];
+                foreach ($childProductCategories as $childProductCategory) {
+                    $childProductCategoryIds[] = $childProductCategory->id;
+                    $childs[] = $childProductCategory;
+                }
+                $childProductCategories = self::with(['products'])->whereIn('parent_id', $childProductCategoryIds)->get();
             }
-            $childProductCategories = self::with(['products'])->whereIn('parent_id', $childProductCategoryIds)->get();
-        }
 
-        return $childs;
+            return $childs;
+        });
     }
 
     public function getFirstChilds()
     {
-        return self::where('parent_id', $this->id)
-            ->get();
+        return Cache::rememberForever('product-category-first-childs-' . $this->id, function () {
+            return self::where('parent_id', $this->id)
+                ->get();
+        });
     }
 
     public function products()
@@ -149,7 +160,7 @@ class ProductCategory extends Model
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
-                if (! $productCategory) {
+                if (!$productCategory) {
                     return 'pageNotFound';
                 }
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();

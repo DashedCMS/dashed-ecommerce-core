@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Dashed\DashedCore\Models\Customsetting;
@@ -32,6 +34,8 @@ class ShowProducts extends Component
     public array $activeFilterQuery = [];
     public array $usableFilters = [];
     public bool $enableFilters = true;
+    public ?Collection $productFilters = null;
+    public bool $hasActiveFilters = false;
 
     public $event = [];
 
@@ -47,7 +51,6 @@ class ShowProducts extends Component
 
     public function mount($productCategory = null, $enableFilters = true)
     {
-        dd('asdf');
         $this->productCategory = $productCategory;
 
         $this->pagination = request()->get('pagination', Customsetting::get('product_default_amount_of_products', null, 12));
@@ -59,7 +62,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (! $value) {
+                if (!$value) {
                     unset($activeFilters[$filterKey][$optionKey]);
                 } else {
                     $activeFilters[$filterKey][$optionKey] = true;
@@ -106,7 +109,12 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->priceSlider, $this->enableFilters);
+        if ($this->enableFilters) {
+            $this->productFilters = Products::getFiltersV3([], $this->activeFilters);
+            $this->hasActiveFilters = collect($this->productFilters)->flatMap(fn($f) => $f->productFilterOptions)->contains('checked', true);
+        }
+
+        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->enableFilters, $this->productFilters, $this->hasActiveFilters, $this->priceSlider);
 
         $this->products = $response['products'];
         $this->filters = $response['filters'] ?? [];

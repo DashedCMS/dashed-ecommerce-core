@@ -86,7 +86,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            if (($this->productGroup->only_show_parent_product && $loop == 1) || ! $this->productGroup->only_show_parent_product) {
+            if (($this->productGroup->only_show_parent_product && $loop == 1) || !$this->productGroup->only_show_parent_product) {
                 $product->indexable = 1;
             } else {
                 $product->indexable = 0;
@@ -115,6 +115,8 @@ class UpdateProductInformationJob implements ShouldQueue
         $this->productGroup->total_stock = $this->productGroup->products->sum('total_stock');
         $this->productGroup->total_purchases = $this->productGroup->products->sum('total_purchases');
         $this->productGroup->saveQuietly();
+
+        UpdateProductCategoriesInformationJob::dispatch();
 
         ProductInformationUpdatedEvent::dispatch($this->productGroup);
     }
