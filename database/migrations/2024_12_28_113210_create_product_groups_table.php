@@ -233,13 +233,27 @@ return new class () extends Migration {
             $table->dropColumn('start_date');
             $table->dropColumn('end_date');
             $table->dropColumn('external_url');
-            $table->dropColumn('efulfillment_shop_id');
-            $table->dropColumn('efulfillment_shop_error');
             $table->dropColumn('only_show_parent_product');
             $table->dropColumn('copyable_to_childs');
             $table->dropColumn('missing_variations');
             $table->dropColumn('use_parent_stock');
         });
+
+        try{
+            Schema::table('dashed__products', function (Blueprint $table) {
+                $table->dropColumn('efulfillment_shop_id');
+            });
+        }catch (Exception $e) {
+
+        }
+
+        try{
+            Schema::table('dashed__products', function (Blueprint $table) {
+                $table->dropColumn('efulfillment_shop_error');
+            });
+        }catch (Exception $e) {
+
+        }
 
         try {
             Schema::table('dashed__product_enabled_filter_options', function (Blueprint $table) {
