@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Rel
 
 use Filament\Forms\Get;
 use Filament\Forms\Form;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -15,6 +14,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Collection;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -45,7 +45,7 @@ class ProductsRelationManager extends RelationManager
         return $table
             ->columns([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
+                    ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')

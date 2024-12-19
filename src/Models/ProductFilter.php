@@ -33,7 +33,7 @@ class ProductFilter extends Model
     protected $table = 'dashed__product_filters';
 
     protected $with = [
-        'productFilterOptions'
+        'productFilterOptions',
     ];
 
     protected static function booted()

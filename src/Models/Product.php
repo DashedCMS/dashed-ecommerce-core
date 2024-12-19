@@ -4,20 +4,18 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Exception;
 use Carbon\Carbon;
-use Dashed\DashedPages\Models\Page;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Dashed\DashedPages\Models\Page;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Gloudemans\Shoppingcart\CartItem;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -25,6 +23,7 @@ use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
@@ -90,7 +89,7 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
-            if ($product->is_bundle && $product->type == 'variable' && !$product->parent_id) {
+            if ($product->is_bundle && $product->type == 'variable' && ! $product->parent_id) {
                 $product->is_bundle = false;
                 $product->save();
                 $product->bundleProducts()->detach();
@@ -132,7 +131,7 @@ class Product extends Model
         $query->where(function ($query) use ($search) {
             $loop = 1;
             foreach (self::getTranslatableAttributes() as $attribute) {
-                if (!method_exists($this, $attribute)) {
+                if (! method_exists($this, $attribute)) {
                     if ($loop == 1) {
                         $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
                     } else {
@@ -169,24 +168,24 @@ class Product extends Model
 
     public function scopePublicShowable($query, bool $overridePublic = false)
     {
-//        if (auth()->check() && auth()->user()->role == 'admin' && $overridePublic) {
-//            return;
-//        }
+        //        if (auth()->check() && auth()->user()->role == 'admin' && $overridePublic) {
+        //            return;
+        //        }
 
         $query
             ->public()
             ->thisSite()
             ->indexable();
 
-//        $query = $query->where(function ($query) {
-//            $query->where('start_date', null);
-//        })->orWhere(function ($query) {
-//            $query->where('start_date', '<=', Carbon::now());
-//        })->where(function ($query) {
-//            $query->where('end_date', null);
-//        })->orWhere(function ($query) {
-//            $query->where('end_date', '>=', Carbon::now());
-//        });
+        //        $query = $query->where(function ($query) {
+        //            $query->where('start_date', null);
+        //        })->orWhere(function ($query) {
+        //            $query->where('start_date', '<=', Carbon::now());
+        //        })->where(function ($query) {
+        //            $query->where('end_date', null);
+        //        })->orWhere(function ($query) {
+        //            $query->where('end_date', '>=', Carbon::now());
+        //        });
 
         return $query;
         //        }
@@ -195,17 +194,17 @@ class Product extends Model
     public function scopeHandOrderShowable($query)
     {
         return;
-//        $query
-//            ->where(function ($query) {
-//                $query->where('type', '!=', 'variable')
-//                    ->where('sku', '!=', null)
-//                    ->where('price', '!=', null);
-//            })->orWhere(function ($query) {
-//                $query->where('type', 'variable')
-//                    ->where('parent_id', '!=', null)
-//                    ->where('sku', '!=', null)
-//                    ->where('price', '!=', null);
-//            });
+        //        $query
+        //            ->where(function ($query) {
+        //                $query->where('type', '!=', 'variable')
+        //                    ->where('sku', '!=', null)
+        //                    ->where('price', '!=', null);
+        //            })->orWhere(function ($query) {
+        //                $query->where('type', 'variable')
+        //                    ->where('parent_id', '!=', null)
+        //                    ->where('sku', '!=', null)
+        //                    ->where('price', '!=', null);
+        //            });
     }
 
     public function scopeTopLevel($query)
@@ -319,12 +318,12 @@ class Product extends Model
 
     public function getUrl($locale = null, $forceOwnUrl = false)
     {
-        if (!$locale) {
+        if (! $locale) {
             $locale = app()->getLocale();
         }
 
         return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . $forceOwnUrl, 60 * 5, function () use ($locale, $forceOwnUrl) {
-            if ($this->productGroup->only_show_parent_product && !$forceOwnUrl) {
+            if ($this->productGroup->only_show_parent_product && ! $forceOwnUrl) {
                 return $this->productGroup->getUrl();
             } else {
                 $url = '/' . Translation::get('products-slug', 'slug', 'products') . '/' . $this->slug;
@@ -340,147 +339,147 @@ class Product extends Model
 
     public function getStatusAttribute()
     {
-        if (!$this->public) {
+        if (! $this->public) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
 
-//    //Only used for old method/style
-//    public function filters()
-//    {
-//        $parentProduct = $this->parent;
-//
-//        if ($parentProduct) {
-//            $childProducts = $parentProduct->childProducts()->publicShowable()->get();
-//            $activeFilters = $parentProduct->activeProductFiltersForVariations;
-//        } else {
-//            $childProducts = [
-//                $this,
-//            ];
-//            $activeFilters = $this->activeProductFiltersForVariations;
-//        }
-//
-//        $showableFilters = [];
-//        $activeFiltersValues = [];
-//
-//        foreach ($activeFilters as $activeFilter) {
-//            $filterOptionValues = [];
-//            foreach ($childProducts as $childProduct) {
-//                $filterName = '';
-//                $activeFilterId = '';
-//                $activeFilterOptionIds = [];
-//                $activeFilterOptions = [];
-//
-//                foreach ($activeFilter->productFilterOptions as $option) {
-//                    if ($childProduct->productFilters()->where('product_filter_option_id', $option->id)->exists()) {
-//                        if ($filterName) {
-//                            $filterName .= ', ';
-//                            $activeFilterId .= '-';
-//                        }
-//                        $filterName .= $option->name;
-//                        $activeFilterId .= $option->id;
-//                        $activeFilterOptionIds[] = $option->id;
-//                        $activeFilterOptions[] = $option;
-//                    }
-//                }
-//
-//                //If something does not work correct, check if below code makes sure there is a active one
-//                //Array key must be string, otherwise Livewire renders it in order of id, instead of order from filter option
-//                if (count($activeFilterOptionIds) && (!array_key_exists('filter-' . $activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
-//                    $filterOptionValues['filter-' . $activeFilterId] = [
-//                        'id' => $activeFilter->id,
-//                        'name' => $filterName,
-//                        'order' => $activeFilterOptions[0]->order,
-//                        'activeFilterOptionIds' => $activeFilterOptionIds,
-//                        'value' => implode('-', $activeFilterOptionIds),
-//                        'active' => $this->id == $childProduct->id,
-//                        'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
-//                        'productId' => ($this->id == $childProduct->id) ? $this->id : '',
-//                        'in_stock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
-//                        'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
-//                        'isPreOrder' => ($this->id == $childProduct->id) ? $this->isPreorderable() : false,
-//                    ];
-//                    if ($this->id == $childProduct->id) {
-//                        $activeFiltersValues['filter-' . $activeFilterId] = [
-//                            'id' => $activeFilter->id,
-//                            'name' => $filterName,
-//                            'activeFilterOptionIds' => $activeFilterOptionIds,
-//                            'value' => implode('-', $activeFilterOptionIds),
-//                            'active' => $this->id == $childProduct->id,
-//                            'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
-//                            'productId' => ($this->id == $childProduct->id) ? $this->id : '',
-//                            'in_stock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
-//                            'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
-//                            'isPreOrder' => ($this->id == $childProduct->id) ? ($this->isPreorderable()) : false,
-//                        ];
-//
-//                        $activeFilterValue = implode('-', $activeFilterOptionIds);
-//                    }
-//                }
-//            }
-//
-//            $showableFilters[] = [
-//                'id' => $activeFilter->id,
-//                'name' => $activeFilter->name,
-//                'active' => $activeFilterValue ?? null,
-//                'defaultActive' => $activeFilterValue ?? null,
-//                'values' => $filterOptionValues,
-//                'contentBlocks' => $activeFilter->contentBlocks,
-//            ];
-//        }
-//
-//        foreach ($showableFilters as &$showableFilter) {
-//            $correctFilterOptions = 0;
-//            foreach ($showableFilter['values'] as &$showableFilterValue) {
-//                if (!$showableFilterValue['url']) {
-//                    foreach ($childProducts as $childProduct) {
-//                        if ($childProduct->id != $this->id) {
-//                            $productIsCorrectForFilter = true;
-//                            foreach ($showableFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
-//                                if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
-//                                    $productIsCorrectForFilter = false;
-//                                }
-//                            }
-//                            if ($productIsCorrectForFilter) {
-//                                foreach ($activeFiltersValues as $activeFilterValue) {
-//                                    if ($activeFilterValue['id'] != $showableFilterValue['id']) {
-//                                        $productHasCorrectFilterOption = true;
-//                                        foreach ($activeFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
-//                                            if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
-//                                                $productHasCorrectFilterOption = false;
-//                                            }
-//                                        }
-//                                        if (!$productHasCorrectFilterOption) {
-//                                            $productIsCorrectForFilter = false;
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                            if ($productIsCorrectForFilter) {
-//                                $showableFilterValue['url'] = $childProduct->getUrl();
-//                                $showableFilterValue['productId'] = $childProduct->id;
-//                                $showableFilterValue['in_stock'] = $childProduct->inStock();
-//                                $showableFilterValue['inStock'] = $childProduct->inStock();
-//                                $showableFilterValue['isPreOrder'] = $childProduct->isPreorderable();
-//                                $correctFilterOptions++;
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    $correctFilterOptions++;
-//                }
-//            }
-//            $showableFilter['correctFilterOptions'] = $correctFilterOptions;
-//        }
-//
-//        foreach ($showableFilters as &$showableFilter) {
-//            $showableFilter['values'] = collect($showableFilter['values'])->sortBy('order');
-//        }
-//
-//        return $showableFilters;
-//    }
+    //    //Only used for old method/style
+    //    public function filters()
+    //    {
+    //        $parentProduct = $this->parent;
+    //
+    //        if ($parentProduct) {
+    //            $childProducts = $parentProduct->childProducts()->publicShowable()->get();
+    //            $activeFilters = $parentProduct->activeProductFiltersForVariations;
+    //        } else {
+    //            $childProducts = [
+    //                $this,
+    //            ];
+    //            $activeFilters = $this->activeProductFiltersForVariations;
+    //        }
+    //
+    //        $showableFilters = [];
+    //        $activeFiltersValues = [];
+    //
+    //        foreach ($activeFilters as $activeFilter) {
+    //            $filterOptionValues = [];
+    //            foreach ($childProducts as $childProduct) {
+    //                $filterName = '';
+    //                $activeFilterId = '';
+    //                $activeFilterOptionIds = [];
+    //                $activeFilterOptions = [];
+    //
+    //                foreach ($activeFilter->productFilterOptions as $option) {
+    //                    if ($childProduct->productFilters()->where('product_filter_option_id', $option->id)->exists()) {
+    //                        if ($filterName) {
+    //                            $filterName .= ', ';
+    //                            $activeFilterId .= '-';
+    //                        }
+    //                        $filterName .= $option->name;
+    //                        $activeFilterId .= $option->id;
+    //                        $activeFilterOptionIds[] = $option->id;
+    //                        $activeFilterOptions[] = $option;
+    //                    }
+    //                }
+    //
+    //                //If something does not work correct, check if below code makes sure there is a active one
+    //                //Array key must be string, otherwise Livewire renders it in order of id, instead of order from filter option
+    //                if (count($activeFilterOptionIds) && (!array_key_exists('filter-' . $activeFilterId, $filterOptionValues) || $this->id == $childProduct->id)) {
+    //                    $filterOptionValues['filter-' . $activeFilterId] = [
+    //                        'id' => $activeFilter->id,
+    //                        'name' => $filterName,
+    //                        'order' => $activeFilterOptions[0]->order,
+    //                        'activeFilterOptionIds' => $activeFilterOptionIds,
+    //                        'value' => implode('-', $activeFilterOptionIds),
+    //                        'active' => $this->id == $childProduct->id,
+    //                        'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
+    //                        'productId' => ($this->id == $childProduct->id) ? $this->id : '',
+    //                        'in_stock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
+    //                        'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
+    //                        'isPreOrder' => ($this->id == $childProduct->id) ? $this->isPreorderable() : false,
+    //                    ];
+    //                    if ($this->id == $childProduct->id) {
+    //                        $activeFiltersValues['filter-' . $activeFilterId] = [
+    //                            'id' => $activeFilter->id,
+    //                            'name' => $filterName,
+    //                            'activeFilterOptionIds' => $activeFilterOptionIds,
+    //                            'value' => implode('-', $activeFilterOptionIds),
+    //                            'active' => $this->id == $childProduct->id,
+    //                            'url' => ($this->id == $childProduct->id) ? $this->getUrl() : '',
+    //                            'productId' => ($this->id == $childProduct->id) ? $this->id : '',
+    //                            'in_stock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
+    //                            'inStock' => ($this->id == $childProduct->id) ? $this->inStock() : false,
+    //                            'isPreOrder' => ($this->id == $childProduct->id) ? ($this->isPreorderable()) : false,
+    //                        ];
+    //
+    //                        $activeFilterValue = implode('-', $activeFilterOptionIds);
+    //                    }
+    //                }
+    //            }
+    //
+    //            $showableFilters[] = [
+    //                'id' => $activeFilter->id,
+    //                'name' => $activeFilter->name,
+    //                'active' => $activeFilterValue ?? null,
+    //                'defaultActive' => $activeFilterValue ?? null,
+    //                'values' => $filterOptionValues,
+    //                'contentBlocks' => $activeFilter->contentBlocks,
+    //            ];
+    //        }
+    //
+    //        foreach ($showableFilters as &$showableFilter) {
+    //            $correctFilterOptions = 0;
+    //            foreach ($showableFilter['values'] as &$showableFilterValue) {
+    //                if (!$showableFilterValue['url']) {
+    //                    foreach ($childProducts as $childProduct) {
+    //                        if ($childProduct->id != $this->id) {
+    //                            $productIsCorrectForFilter = true;
+    //                            foreach ($showableFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
+    //                                if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
+    //                                    $productIsCorrectForFilter = false;
+    //                                }
+    //                            }
+    //                            if ($productIsCorrectForFilter) {
+    //                                foreach ($activeFiltersValues as $activeFilterValue) {
+    //                                    if ($activeFilterValue['id'] != $showableFilterValue['id']) {
+    //                                        $productHasCorrectFilterOption = true;
+    //                                        foreach ($activeFilterValue['activeFilterOptionIds'] as $activeFilterOptionId) {
+    //                                            if (!$childProduct->productFilters()->where('product_filter_option_id', $activeFilterOptionId)->exists()) {
+    //                                                $productHasCorrectFilterOption = false;
+    //                                            }
+    //                                        }
+    //                                        if (!$productHasCorrectFilterOption) {
+    //                                            $productIsCorrectForFilter = false;
+    //                                        }
+    //                                    }
+    //                                }
+    //                            }
+    //                            if ($productIsCorrectForFilter) {
+    //                                $showableFilterValue['url'] = $childProduct->getUrl();
+    //                                $showableFilterValue['productId'] = $childProduct->id;
+    //                                $showableFilterValue['in_stock'] = $childProduct->inStock();
+    //                                $showableFilterValue['inStock'] = $childProduct->inStock();
+    //                                $showableFilterValue['isPreOrder'] = $childProduct->isPreorderable();
+    //                                $correctFilterOptions++;
+    //                            }
+    //                        }
+    //                    }
+    //                } else {
+    //                    $correctFilterOptions++;
+    //                }
+    //            }
+    //            $showableFilter['correctFilterOptions'] = $correctFilterOptions;
+    //        }
+    //
+    //        foreach ($showableFilters as &$showableFilter) {
+    //            $showableFilter['values'] = collect($showableFilter['values'])->sortBy('order');
+    //        }
+    //
+    //        return $showableFilters;
+    //    }
 
     public function simpleFilters(): array
     {
@@ -580,7 +579,7 @@ class Product extends Model
             $allBundleProductsDirectSellable = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (!$bundleProduct->hasDirectSellableStock()) {
+                if (! $bundleProduct->hasDirectSellableStock()) {
                     $allBundleProductsDirectSellable = false;
                 }
             }
@@ -623,7 +622,7 @@ class Product extends Model
             $allBundleProductsInStock = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (!$bundleProduct->inStock()) {
+                if (! $bundleProduct->inStock()) {
                     $allBundleProductsInStock = false;
                 }
             }
@@ -652,11 +651,11 @@ class Product extends Model
             $deliveryDate = null;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if ($bundleProduct->inStock() && !$bundleProduct->hasDirectSellableStock()) {
+                if ($bundleProduct->inStock() && ! $bundleProduct->hasDirectSellableStock()) {
                     if ($bundleProduct->expectedDeliveryInDays() > $deliveryDays) {
                         $deliveryDays = $bundleProduct->expectedDeliveryInDays();
                     }
-                    if ($bundleProduct->expectedInStockDate() && (!$deliveryDate || $bundleProduct->expectedInStockDate() > $deliveryDate)) {
+                    if ($bundleProduct->expectedInStockDate() && (! $deliveryDate || $bundleProduct->expectedInStockDate() > $deliveryDate)) {
                         $deliveryDate = $bundleProduct->expectedInStockDate();
                     }
                 }
@@ -684,17 +683,17 @@ class Product extends Model
 
     public function outOfStockSellable(): bool
     {
-        if (!$this->use_stock) {
+        if (! $this->use_stock) {
             if ($this->stock_status == 'out_of_stock') {
                 return false;
             }
         }
 
-        if (!$this->out_of_stock_sellable) {
+        if (! $this->out_of_stock_sellable) {
             return false;
         }
 
-        if ((Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && !$this->expectedInStockDateValid()) && !$this->expectedDeliveryInDays()) {
+        if ((Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && ! $this->expectedInStockDateValid()) && ! $this->expectedDeliveryInDays()) {
             return false;
         }
 
@@ -703,7 +702,7 @@ class Product extends Model
 
     public function isPreorderable()
     {
-        return $this->inStock() && !$this->hasDirectSellableStock() && $this->use_stock;
+        return $this->inStock() && ! $this->hasDirectSellableStock() && $this->use_stock;
     }
 
     public function expectedInStockDate()
@@ -719,7 +718,7 @@ class Product extends Model
     public function expectedInStockDateInWeeks(): float
     {
         $expectedInStockDate = self::expectedInStockDate();
-        if (!$expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
+        if (! $expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
             return 0;
         }
 
@@ -868,7 +867,7 @@ class Product extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -970,7 +969,7 @@ class Product extends Model
         $price += ($cartItem->model ? $cartItem->model->currentPrice : $cartItem->options['singlePrice']) * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
-            if (!str($productExtraOptionId)->contains('product-extra-')) {
+            if (! str($productExtraOptionId)->contains('product-extra-')) {
                 $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                 if ($thisProductExtraOption) {
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
@@ -1016,14 +1015,14 @@ class Product extends Model
 
         if ($slugComponents[0] == Translation::get('products-slug', 'slug', 'products') && count($slugComponents) == 2) {
             $product = Product::thisSite()->where('slug->' . App::getLocale(), $slugComponents[1]);
-            if (!auth()->check() || auth()->user()->role != 'admin') {
+            if (! auth()->check() || auth()->user()->role != 'admin') {
                 $product->publicShowable(true);
             }
             $product = $product->first();
 
-            if (!$product) {
+            if (! $product) {
                 foreach (Product::thisSite()->publicShowable(true)->get() as $possibleProduct) {
-                    if (!$product && $possibleProduct->slug == $slugComponents[1]) {
+                    if (! $product && $possibleProduct->slug == $slugComponents[1]) {
                         $product = $possibleProduct;
                     }
                 }
@@ -1033,7 +1032,7 @@ class Product extends Model
                 seo()->metaData('metaTitle', $product->metadata && $product->metadata->title ? $product->metadata->title : $product->name);
                 seo()->metaData('metaDescription', $product->metadata->description ?? '');
                 $metaImage = $product->metadata->image ?? '';
-                if (!$metaImage) {
+                if (! $metaImage) {
                     $metaImage = $product->firstImage;
                 }
                 if ($metaImage) {
@@ -1083,25 +1082,25 @@ class Product extends Model
             Toggle::make('out_of_stock_sellable')
                 ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                 ->reactive()
-                ->hidden(fn(Get $get) => !$get('use_stock')),
+                ->hidden(fn (Get $get) => ! $get('use_stock')),
             Toggle::make('low_stock_notification')
                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                 ->reactive()
-                ->hidden(fn(Get $get) => !$get('use_stock')),
+                ->hidden(fn (Get $get) => ! $get('use_stock')),
             TextInput::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
+                ->helperText(fn ($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()
-                ->hidden(fn(Get $get) => !$get('use_stock')),
+                ->hidden(fn (Get $get) => ! $get('use_stock')),
             DatePicker::make('expected_in_stock_date')
                 ->label('Wanneer komt dit product weer op voorraad')
                 ->reactive()
                 ->helperText('Gebruik 1 van deze 2 opties')
-                ->required(fn(Get $get) => !$get('expected_delivery_in_days'))
-                ->hidden(fn(Get $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
+                ->required(fn (Get $get) => ! $get('expected_delivery_in_days'))
+                ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
             TextInput::make('expected_delivery_in_days')
                 ->label('Levering in dagen')
                 ->helperText('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
@@ -1109,7 +1108,7 @@ class Product extends Model
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(1000)
-                ->required(fn(Get $get) => !$get('expected_in_stock_date') && $get('out_of_stock_sellable')),
+                ->required(fn (Get $get) => ! $get('expected_in_stock_date') && $get('out_of_stock_sellable')),
             TextInput::make('low_stock_notification_limit')
                 ->label('Lage voorraad melding')
                 ->helperText('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een melding')
@@ -1120,7 +1119,7 @@ class Product extends Model
                 ->maxValue(100000)
                 ->default(1)
                 ->numeric()
-                ->hidden(fn(Get $get) => !$get('use_stock') || !$get('low_stock_notification')),
+                ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
             Select::make('stock_status')
                 ->label('Is dit product op voorraad')
                 ->options([
@@ -1129,7 +1128,7 @@ class Product extends Model
                 ])
                 ->default('in_stock')
                 ->required()
-                ->hidden(fn(Get $get) => $get('use_stock')),
+                ->hidden(fn (Get $get) => $get('use_stock')),
             TextInput::make('limit_purchases_per_customer_limit')
                 ->type('number')
                 ->label('Hoeveel mag dit product gekocht worden per bestelling')
@@ -1138,7 +1137,7 @@ class Product extends Model
                 ->default(1)
                 ->required()
                 ->numeric()
-                ->hidden(fn(Get $get) => !$get('limit_purchases_per_customer')),
+                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
             Select::make('fulfillment_provider')
                 ->label('Door wie wordt dit product verstuurd?')
                 ->helperText('Laat leeg voor eigen fulfillment')
@@ -1150,7 +1149,7 @@ class Product extends Model
                     }
 
                     return $options;
-                })
+                }),
         ];
     }
 }

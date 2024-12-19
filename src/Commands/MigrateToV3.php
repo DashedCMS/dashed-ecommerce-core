@@ -2,20 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Models\ProductVariant;
-use Dashed\DashedEcommerceCore\Models\ProductVariation;
-use Illuminate\Console\Command;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Intervention\Image\Colors\Rgb\Channels\Blue;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class MigrateToV3 extends Command
 {
@@ -51,12 +43,12 @@ class MigrateToV3 extends Command
     public function handle()
     {
 
-        $this->info(Product::where('type' ,'variable')->where('parent_id', null)->count() + Product::where('type' ,'simple')->count());
+        $this->info(Product::where('type', 'variable')->where('parent_id', null)->count() + Product::where('type', 'simple')->count());
 
         $productIdsToDelete = [];
         $productGroupReplacements = [];
 
-//        ProductGroup::where('id', '!=', 0)->forceDelete();
+        //        ProductGroup::where('id', '!=', 0)->forceDelete();
 
         foreach (Product::withTrashed()->get() as $product) {
             $this->info('Migrating product ' . $product->id);
@@ -81,9 +73,9 @@ class MigrateToV3 extends Command
             $deleteParentProduct = false;
 
             if ($product->type == 'variable' && $product->parent_id) {
-                if(isset($productGroupReplacements[$product->parent_id]) && ProductGroup::where('id', $productGroupReplacements[$product->parent_id])->first()){
+                if (isset($productGroupReplacements[$product->parent_id]) && ProductGroup::where('id', $productGroupReplacements[$product->parent_id])->first()) {
                     $productGroup = ProductGroup::where('id', $productGroupReplacements[$product->parent_id])->first();
-                }else{
+                } else {
                     $productGroup->save();
                     $productGroupReplacements[$product->parent_id] = $productGroup->id;
                 }
@@ -94,10 +86,10 @@ class MigrateToV3 extends Command
                 foreach (Locales::getLocalesArray() as $key => $locale) {
                     $productGroup->setTranslation('slug', $key, $parentProduct->getTranslation('slug', $key));
                 }
-            } else if ($product->type == 'variable' && !$product->parent_id) {
-                if(isset($productGroupReplacements[$product->id]) && ProductGroup::where('id', $productGroupReplacements[$product->id])->first()){
+            } elseif ($product->type == 'variable' && ! $product->parent_id) {
+                if (isset($productGroupReplacements[$product->id]) && ProductGroup::where('id', $productGroupReplacements[$product->id])->first()) {
                     $productGroup = ProductGroup::where('id', $productGroupReplacements[$product->id])->first();
-                }else{
+                } else {
                     $productGroup->save();
                     $productGroupReplacements[$product->id] = $productGroup->id;
                 }
@@ -189,7 +181,7 @@ class MigrateToV3 extends Command
 
         Product::whereIn('id', $productIdsToDelete)->delete();
 
-        foreach(ProductGroup::all() as $productGroup){
+        foreach (ProductGroup::all() as $productGroup) {
             UpdateProductInformationJob::dispatch($productGroup);
         }
     }

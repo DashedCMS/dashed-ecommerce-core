@@ -2,14 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductVariant;
-use Dashed\DashedEcommerceCore\Models\ProductVariation;
-use Illuminate\Console\Command;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 class MigrateToV3Old extends Command
 {
@@ -50,7 +47,7 @@ class MigrateToV3Old extends Command
         dd('test');
         $productIdsToDelete = [];
 
-//        ProductVariant::where('id', '!=', 0)->forceDelete();
+        //        ProductVariant::where('id', '!=', 0)->forceDelete();
 
         foreach (Product::all() as $product) {
             $this->info('Migrating product ' . $product->id);
@@ -70,7 +67,7 @@ class MigrateToV3Old extends Command
                 $productVariant->product_id = $product->parent_id;
                 $productIdsToDelete[] = $product->id;
                 $shouldMigrateProductExtras = true;
-            } else if ($product->type == 'variable' && !$product->parent_id) {
+            } elseif ($product->type == 'variable' && ! $product->parent_id) {
                 continue;
             } elseif ($product->type == 'simple') {
                 $productVariant->product_id = $product->id;
@@ -108,8 +105,8 @@ class MigrateToV3Old extends Command
             $productVariant->height = $product->height;
             $productVariant->save();
 
-            if($shouldMigrateProductExtras){
-                foreach($product->productExtras as $productExtra){
+            if ($shouldMigrateProductExtras) {
+                foreach ($product->productExtras as $productExtra) {
                     $productExtra->product_id = null;
                     $productExtra->product_variant_id = $productVariant->id;
                     $productExtra->save();
@@ -122,7 +119,7 @@ class MigrateToV3Old extends Command
 
         foreach (Product::all() as $product) {
             $product->variants()->first()->update([
-                'default' => 1
+                'default' => 1,
             ]);
         }
 

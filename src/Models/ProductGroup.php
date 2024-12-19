@@ -2,30 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Exception;
-use Carbon\Carbon;
-use Dashed\DashedPages\Models\Page;
-use Illuminate\Support\Facades\App;
-use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\View;
-use Gloudemans\Shoppingcart\CartItem;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class ProductGroup extends Model
 {
@@ -132,22 +116,22 @@ class ProductGroup extends Model
             ->where('global', 0);
     }
 
-//    public function allProductExtras(): ?Collection
-//    {
-//        $productExtraIds = [];
-//
-//        $productExtraIds = array_merge($productExtraIds, $this->productExtras->pluck('id')->toArray());
-//        $productExtraIds = array_merge($productExtraIds, $this->globalProductExtras->pluck('id')->toArray());
-//
-//        if ($this->parent) {
-//            $productExtraIds = array_merge($productExtraIds, $this->parent->productExtras->pluck('id')->toArray());
-//            $productExtraIds = array_merge($productExtraIds, $this->parent->globalProductExtras->pluck('id')->toArray());
-//        }
-//
-//        return ProductExtra::whereIn('id', $productExtraIds)
-//            ->with(['ProductExtraOptions'])
-//            ->get();
-//    }
+    //    public function allProductExtras(): ?Collection
+    //    {
+    //        $productExtraIds = [];
+    //
+    //        $productExtraIds = array_merge($productExtraIds, $this->productExtras->pluck('id')->toArray());
+    //        $productExtraIds = array_merge($productExtraIds, $this->globalProductExtras->pluck('id')->toArray());
+    //
+    //        if ($this->parent) {
+    //            $productExtraIds = array_merge($productExtraIds, $this->parent->productExtras->pluck('id')->toArray());
+    //            $productExtraIds = array_merge($productExtraIds, $this->parent->globalProductExtras->pluck('id')->toArray());
+    //        }
+    //
+    //        return ProductExtra::whereIn('id', $productExtraIds)
+    //            ->with(['ProductExtraOptions'])
+    //            ->get();
+    //    }
 
     public function productExtras(): HasMany
     {

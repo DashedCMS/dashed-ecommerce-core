@@ -58,9 +58,9 @@ class PointOfSaleApiController extends Controller
         }
 
         foreach ($products ?? [] as $productKey => &$product) {
-            if (!isset($product['customProduct']) || $product['customProduct'] == false) {
+            if (! isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
-                if (!$product) {
+                if (! $product) {
                     unset($products[$productKey]);
 
                     continue;
@@ -141,18 +141,18 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             session(['discountCode' => '']);
             $activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
-            if (!$discountCode || !$discountCode->isValidForCart()) {
+            if (! $discountCode || ! $discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $activeDiscountCode = null;
             } else {
                 session(['discountCode' => $discountCode->code]);
 
-                if (!isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
+                if (! isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
                     $activeDiscountCode = $discountCode->code;
                 }
 
@@ -205,7 +205,7 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (!$order) {
+        if (! $order) {
             return response()
                 ->json([
                     'success' => false,
@@ -297,7 +297,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (!$productAlreadyInCart) {
+        if (! $productAlreadyInCart) {
             $products[] = [
                 'id' => $selectedProduct['id'],
                 'identifier' => Str::random(),
@@ -331,7 +331,7 @@ class PointOfSaleApiController extends Controller
             ->orWhere('ean', $productSearchQuery)
             ->first();
 
-        if (!$selectedProduct) {
+        if (! $selectedProduct) {
             return response()
                 ->json([
                     'products' => $products ?? [],
@@ -483,7 +483,7 @@ class PointOfSaleApiController extends Controller
         $checkoutData = ShoppingCart::getCheckoutData(null, $paymentMethodId);
 
 
-        if (!count($cartItems)) {
+        if (! count($cartItems)) {
             return [
                 'success' => false,
                 'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen'),
@@ -529,10 +529,10 @@ class PointOfSaleApiController extends Controller
         if ($posCart->discount_code) {
             $discountCode = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
 
-            if (!$discountCode) {
+            if (! $discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -785,13 +785,13 @@ class PointOfSaleApiController extends Controller
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
         if ($paymentMethod->is_cash_payment) {
-            if (!$cashPaymentAmount) {
+            if (! $cashPaymentAmount) {
                 return response()
                     ->json([
                         'success' => false,
                         'message' => 'Geen bedrag ingevoerd',
                     ], 400);
-            } elseif (!$hasMultiplePayments && $cashPaymentAmount < $order->total) {
+            } elseif (! $hasMultiplePayments && $cashPaymentAmount < $order->total) {
                 return response()
                     ->json([
                         'success' => false,
@@ -826,7 +826,7 @@ class PointOfSaleApiController extends Controller
 
         if ($paymentMethod->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
             $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
-            if (!$paymentMethod) {
+            if (! $paymentMethod) {
                 return response()
                     ->json([
                         'success' => false,
@@ -948,7 +948,7 @@ class PointOfSaleApiController extends Controller
     public function getAllProducts(Request $request): JsonResponse
     {
         $clearCache = $request->get('clearCache', false);
-        if($clearCache){
+        if ($clearCache) {
             Cache::forget('pos_products');
         }
 
@@ -1045,7 +1045,7 @@ class PointOfSaleApiController extends Controller
             $extraOrderLineName = $data['extraOrderLineName'] ?? '';
             $extraOrderLinePrice = $data['extraOrderLinePrice'] ?? '';
 
-            if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
+            if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Geen producten geretourneerd',
@@ -1168,7 +1168,7 @@ class PointOfSaleApiController extends Controller
 
         $orders = Order::orderBy('created_at', 'desc');
 
-        if (!$searchOrderQuery) {
+        if (! $searchOrderQuery) {
             $orders->where('created_at', '>=', $endDate);
         } else {
             $orders->quickSearch($searchOrderQuery);
@@ -1257,7 +1257,7 @@ class PointOfSaleApiController extends Controller
 
         foreach ($orders as $date) {
             foreach ($date['orders'] as $order) {
-                if (!$firstOrder) {
+                if (! $firstOrder) {
                     $firstOrder = $order;
                 }
             }

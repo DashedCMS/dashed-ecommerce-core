@@ -2,13 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Actions\CreateAction;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
-use Illuminate\Database\Eloquent\Builder;
 
 class ListProducts extends ListRecords
 {

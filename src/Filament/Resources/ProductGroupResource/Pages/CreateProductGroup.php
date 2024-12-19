@@ -3,12 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Filament\Resources\Pages\CreateRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedCore\Filament\Concerns\HasCreatableCMSActions;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 
 class CreateProductGroup extends CreateRecord
 {
