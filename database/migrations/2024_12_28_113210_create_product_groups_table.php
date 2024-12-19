@@ -239,22 +239,6 @@ return new class () extends Migration {
             $table->dropColumn('use_parent_stock');
         });
 
-        try{
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropColumn('efulfillment_shop_id');
-            });
-        }catch (Exception $e) {
-
-        }
-
-        try{
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropColumn('efulfillment_shop_error');
-            });
-        }catch (Exception $e) {
-
-        }
-
         try {
             Schema::table('dashed__product_enabled_filter_options', function (Blueprint $table) {
                 $table->dropForeign('qcommerce__product_enabled_filter_options_product_id_foreign');
