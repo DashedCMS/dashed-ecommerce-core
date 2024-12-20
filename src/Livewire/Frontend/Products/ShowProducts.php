@@ -2,14 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\Products;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
@@ -65,7 +63,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (!$value) {
+                if (! $value) {
                     unset($activeFilters[$filterKey][$optionKey]);
                 } else {
                     $activeFilters[$filterKey][$optionKey] = true;
@@ -110,12 +108,12 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-//        if ($isMount) {
+        //        if ($isMount) {
         $this->getProducts();
         if ($this->enableFilters) {
             $this->getFilters();
         }
-//        }
+        //        }
 
         $response = Products::getAll($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->filters, $this->enableFilters, $this->allProducts, $this->priceSlider);
         $this->products = $response['products'];
@@ -160,7 +158,7 @@ class ShowProducts extends Component
         $productFilters = $filtersWithCounts->map(function ($filterOptions, $filterId) use ($activeFilters) {
             $filterName = json_decode($filterOptions->first()->filter_name, true)[app()->getLocale()] ?? 'Onbekend';
 
-            $mappedOptions = $filterOptions->map(function ($option) use($filterName, $activeFilters) {
+            $mappedOptions = $filterOptions->map(function ($option) use ($filterName, $activeFilters) {
                 $option->option_name = json_decode($option->option_name, true)[app()->getLocale()] ?? 'Onbekend';
 
                 return (object)[
@@ -186,6 +184,7 @@ class ShowProducts extends Component
         $productFilters = $productFilters->filter(function ($productFilter) use ($activeOptions) {
             $productFilter->productFilterOptions = $productFilter->productFilterOptions->filter(function ($option) use ($activeOptions) {
                 $option->active = in_array($option->id, $activeOptions);
+
                 return $option->active;
             });
 
@@ -214,6 +213,7 @@ class ShowProducts extends Component
                     'productFilters.productFilterOptions',
                 ])
                 ->get();
+
             return $products;
         });
         $this->allProducts = $products;
