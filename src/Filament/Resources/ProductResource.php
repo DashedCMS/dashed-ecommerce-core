@@ -93,7 +93,6 @@ class ProductResource extends Resource
                     ->label('Product groep')
                     ->options(ProductGroup::all()->pluck('name', 'id')->toArray())
                     ->searchable()
-                    ->preload()
                     ->default(request()->get('productGroupId'))
 //                    ->disabled(fn ($livewire) => ! ($livewire instanceof CreateProduct) || request()->get('productGroupId'))
                     ->columnSpanFull()
@@ -281,27 +280,37 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
-        $productFilterSchema = [];
+//                function getFilters($record){
+//                    ray()->count('test');
+//
+//                    return [];
+//                }
 
-        foreach ($productFilters as $productFilter) {
-            $productFiltersSchema = [];
 
-            foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
-                    ->label("$productFilter->name: $productFilterOption->name")
-                    ->visible(fn ($record) => ($record->parent && $record->parent->enabledProductFilterOptions()->wherePivot('product_filter_option_id', $productFilterOption->id)->count()) || $record->type == 'simple');
-            }
-
-            $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
-                ->schema($productFiltersSchema)
-                ->collapsible()
-                ->collapsed()
-                ->visible(fn (Get $get, $record) => $record->productGroup->activeProductFilters()->where('product_filter_id', $productFilter->id)->count());
-        }
-        //
         $schema[] = Section::make('Filters beheren')
-            ->schema($productFilterSchema)
+//            ->schema(fn($record) => getFilters($record))
+            ->schema(function($record){
+                $productFilters = $record->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
+                $enabledProductFilterOptionIds = $record->productGroup->enabledProductFilterOptions()->pluck('product_filter_option_id')->toArray();
+                $productFilterSchema = [];
+
+                foreach ($productFilters as $productFilter) {
+                    $productFiltersSchema = [];
+
+                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                        $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
+                            ->label("$productFilter->name: $productFilterOption->name")
+                            ->visible(fn ($record) => in_array($productFilterOption->id, $enabledProductFilterOptionIds));
+                    }
+
+                    $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
+                        ->schema($productFiltersSchema)
+                        ->collapsible()
+                        ->collapsed();
+                }
+
+                return $productFilterSchema;
+            })
             ->columns([
                 'default' => 1,
                 'lg' => 2,
@@ -375,37 +384,32 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 2,
             ]);
-        //
+
         $schema[] = Section::make('Linkjes beheren')
             ->schema([
                 Select::make('shippingClasses')
                     ->multiple()
-                    ->preload()
                     ->relationship('shippingClasses', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link verzendklasses'),
                 Select::make('suggestedProducts')
                     ->multiple()
-                    ->preload()
                     ->relationship('suggestedProducts', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link voorgestelde producten'),
                 Select::make('crossSellProducts')
                     ->multiple()
-                    ->preload()
                     ->relationship('crossSellProducts', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link cross sell producten')
                     ->helperText('Dit mogen alleen maar producten zijn die zonder verplichte opties zijn'),
                 Select::make('globalProductExtras')
                     ->multiple()
-                    ->preload()
                     ->relationship('globalProductExtras', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link globale product extras'),
                 Select::make('globalProductTabs')
                     ->multiple()
-                    ->preload()
                     ->relationship('globalTabs', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link globale product tabs'),

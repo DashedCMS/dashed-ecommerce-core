@@ -119,7 +119,6 @@ class ProductGroupResource extends Resource
             ->multiple()
             ->label('Actieve filters')
             ->options($productFilters->pluck('name', 'id')->toArray())
-            ->preload()
             ->reactive()
             ->columnSpanFull()
             ->searchable();
@@ -244,21 +243,18 @@ class ProductGroupResource extends Resource
             ->schema([
                 Select::make('productCategories')
                     ->multiple()
-                    ->preload()
                     ->relationship('productCategories', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link aan categorieeën')
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd. Deze categorieen gelden voor alle varianten.'),
                 Select::make('suggestedProducts')
                     ->multiple()
-                    ->preload()
                     ->relationship('suggestedProducts', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->helperText('Indien je bij een variant ook voorgestelde producten koppelt, worden deze samengevoegd')
                     ->label('Link voorgestelde producten'),
                 Select::make('crossSellProducts')
                     ->multiple()
-                    ->preload()
                     ->relationship('crossSellProducts', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link cross sell producten')

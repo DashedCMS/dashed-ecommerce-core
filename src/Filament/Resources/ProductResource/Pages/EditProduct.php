@@ -32,10 +32,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -54,15 +54,13 @@ class EditProduct extends EditRecord
 
         $this->record->productCategories()->sync($selectedProductCategories);
 
-        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
+        $productFilters = $this->record->productGroup->activeProductFilters;
 
         $this->record->productFilters()->detach();
         foreach ($productFilters as $productFilter) {
-            if ($this->record->productGroup->activeProductFilters()->where('product_filter_id', $productFilter->id)->exists()) {
-                foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                    if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
-                        $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
-                    }
+            foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                if ($data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
+                    $this->record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
                 }
             }
         }
@@ -77,7 +75,7 @@ class EditProduct extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
+                if (!$thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -107,11 +105,12 @@ class EditProduct extends EditRecord
 
     public function mutateFormDataBeforeFill($data): array
     {
-        $productFilters = ProductFilter::with(['productFilterOptions'])->get();
+        $productFilters = $this->record->productGroup->activeProductFilters;
 
-        foreach ($productFilters as $productFilter) {
+        foreach ($this->record->productGroup->activeProductFilters as $productFilter) {
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                $data["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] = $this->record->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
+                $key = "product_filter_{$productFilter->id}_option_{$productFilterOption->id}";
+                $data[$key] = $this->record->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
             }
         }
 
