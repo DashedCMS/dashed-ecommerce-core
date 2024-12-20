@@ -2,10 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Dashed\DashedCore\Models\Customsetting;
-use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Products;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
@@ -14,6 +18,7 @@ class ShowProducts extends Component
     use WithPagination;
 
     private $products = null;
+    private $allProducts = null;
     private $filters = null;
     public ?ProductCategory $productCategory = null;
     public ?string $pagination = null;
@@ -33,7 +38,6 @@ class ShowProducts extends Component
     public array $activeFilterQuery = [];
     public array $usableFilters = [];
     public bool $enableFilters = true;
-    public ?Collection $productFilters = null;
     public bool $hasActiveFilters = false;
 
     public $event = [];
@@ -61,7 +65,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (! $value) {
+                if (!$value) {
                     unset($activeFilters[$filterKey][$optionKey]);
                 } else {
                     $activeFilters[$filterKey][$optionKey] = true;
@@ -87,8 +91,6 @@ class ShowProducts extends Component
 
     public function loadProducts(bool $isMount = false)
     {
-        //        if (!$this->products) {
-
         $activeFilterQuery = [];
         $usableFilters = [];
         foreach ($this->activeFilters as $filterKey => $filterValues) {
@@ -108,31 +110,113 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
+//        if ($isMount) {
+        $this->getProducts();
         if ($this->enableFilters) {
-            $this->productFilters = Products::getFiltersV3([], $this->activeFilters);
-            $this->hasActiveFilters = collect($this->productFilters)->flatMap(fn ($f) => $f->productFilterOptions)->contains('checked', true);
+            $this->getFilters();
         }
+//        }
 
-        $response = Products::getAllV2($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->activeFilters, $this->enableFilters, $this->productFilters, $this->hasActiveFilters, $this->priceSlider);
-
+        $response = Products::getAll($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->filters, $this->enableFilters, $this->allProducts, $this->priceSlider);
         $this->products = $response['products'];
-        $this->filters = $response['filters'] ?? [];
 
         $this->defaultSliderOptions = [
             'start' => [
-                (float)$response['minPrice'],
-                (float)$response['maxPrice'],
+                (float)$response['minPrice'] ?? 0,
+                (float)$response['maxPrice'] ?? 1000,
             ],
             'range' => [
-                'min' => [(float)$response['minPrice']],
-                'max' => [(float)$response['maxPrice']],
+                'min' => [(float)$response['minPrice'] ?? 0],
+                'max' => [(float)$response['maxPrice'] ?? 1000],
             ],
             'connect' => true,
             'behaviour' => 'tap-drag',
             'tooltips' => true,
             'step' => 1,
         ];
-        //        }
+    }
+
+    public function getFilters(): void
+    {
+        $filtersWithCounts = DB::table('dashed__product_filters as pf')
+            ->join('dashed__product_filter_options as pfo', 'pf.id', '=', 'pfo.product_filter_id')
+            ->leftJoin('dashed__product_filter as dpf', 'pfo.id', '=', 'dpf.product_filter_option_id')
+            ->select(
+                'pf.id as filter_id',
+                'pf.name as filter_name',
+                'pf.hide_filter_on_overview_page',
+                'pf.created_at',
+                'pfo.id as option_id',
+                'pfo.name as option_name',
+                DB::raw('COUNT(dpf.product_id) as option_count')
+            )
+            ->where('pf.hide_filter_on_overview_page', 0)
+            ->groupBy('pf.id', 'pfo.id')
+            ->orderBy('pf.created_at')
+            ->get()
+            ->groupBy('filter_id');
+
+        $activeFilters = $this->activeFilters;
+        $productFilters = $filtersWithCounts->map(function ($filterOptions, $filterId) use ($activeFilters) {
+            $filterName = json_decode($filterOptions->first()->filter_name, true)[app()->getLocale()] ?? 'Onbekend';
+
+            $mappedOptions = $filterOptions->map(function ($option) use($filterName, $activeFilters) {
+                $option->option_name = json_decode($option->option_name, true)[app()->getLocale()] ?? 'Onbekend';
+
+                return (object)[
+                    'id' => $option->option_id,
+                    'name' => $option->option_name,
+                    'checked' => $activeFilters[$filterName][$option->option_name] ?? false,
+                ];
+            });
+
+            return (object)[
+                'id' => $filterId,
+                'name' => $filterName,
+                'productFilterOptions' => $mappedOptions,
+            ];
+        });
+
+
+        $activeOptions = DB::table('dashed__product_filter')
+            ->whereIn('product_id', $this->allProducts->pluck('id'))
+            ->pluck('product_filter_option_id')
+            ->toArray();
+
+        $productFilters = $productFilters->filter(function ($productFilter) use ($activeOptions) {
+            $productFilter->productFilterOptions = $productFilter->productFilterOptions->filter(function ($option) use ($activeOptions) {
+                $option->active = in_array($option->id, $activeOptions);
+                return $option->active;
+            });
+
+            return $productFilter->productFilterOptions->isNotEmpty();
+        });
+
+        $this->filters = $productFilters;
+    }
+
+    public function getProducts(): void
+    {
+        $productCategory = $this->productCategory;
+        $products = Cache::rememberForever('products-for-show-products-' . ($productCategory->id ?? ''), function () use ($productCategory) {
+            $products = $productCategory ? $productCategory->products()
+                ->thisSite()
+                ->publicShowable()
+                ->with([
+                    'productFilters',
+                    'productFilters.productFilterOptions',
+                ])
+                ->get() : Product::query()
+                ->thisSite()
+                ->publicShowable()
+                ->with([
+                    'productFilters',
+                    'productFilters.productFilterOptions',
+                ])
+                ->get();
+            return $products;
+        });
+        $this->allProducts = $products;
     }
 
     public function setSortByValue($value)

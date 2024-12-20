@@ -1,10 +1,11 @@
 <div class="bg-white" x-data="{ filters: false }">
-    @if($productCategory && count($productCategory->getFirstChilds()))
+    @php($productCategory ? $productCategoryFirstChilds = $productCategory->getFirstChilds() : null)
+    @if($productCategory && count($productCategoryFirstChilds))
         <div class="mb-6" wire:ignore x-cloak>
             <x-container>
                 <div class="swiper swiper-categories">
                     <ul class="swiper-wrapper">
-                        @foreach($productCategory->getFirstChilds() as $child)
+                        @foreach($productCategoryFirstChilds as $child)
                             <li class="swiper-slide">
                                 <a href="{{ $child->getUrl() }}" class="group relative bg-white rounded-lg">
                                     @if($child->image)
@@ -14,16 +15,27 @@
                                                 config="dashed"
                                                 :mediaId="$child->image"
                                                 :manipulations="[
-                                                                                        'fit' => [600,600],
-                                                                                    ]"
+                                                        'fit' => [600,600],
+                                                    ]"
                                                 width="180"
                                                 height="180"
                                             />
                                         </div>
+                                        <div class="bg-primary-500/90 absolute bottom-0 w-full h-auto min-h-16 rounded-b-lg">
+                                            <p class="font-semibold text-center text-white">{{$child->name}}</p>
+                                        </div>
+                                    @else
+                                        <div class="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100 group-hover:opacity-75">
+                                            <svg class="h-full w-full object-cover object-center text-gray-300"
+                                                 fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path
+                                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2ZM7 13.5 9.5 16 16 9.5 14.5 8 8 14.5 9.5 16Z"/>
+                                            </svg>
+                                            <div class="bg-primary-500/90 absolute bottom-0 w-full h-auto min-h-16 rounded-b-lg">
+                                                <p class="font-semibold text-center text-white">{{$child->name}}</p>
+                                            </div>
+                                        </div>
                                     @endif
-                                    <div class="bg-primary-500/90 absolute bottom-0 w-full h-auto rounded-b-lg">
-                                        <p class="font-semibold text-center text-white">{{$child->name}}</p>
-                                    </div>
                                 </a>
                             </li>
                         @endforeach
@@ -66,11 +78,11 @@
                     </div>
 
                     <form class="mt-4 border-t border-gray-200">
-                        @if($productCategory && count($productCategory->getFirstChilds()))
+                        @if($productCategory && count($productCategoryFirstChilds))
                             <h3 class="sr-only">{{ Translation::get('underlying-categories', 'products', 'Onderliggende categorieen') }}</h3>
                             <ul role="list"
                                 class="mx-4 space-y-4 border-b border-gray-200 py-6 text-sm font-medium text-gray-900">
-                                @foreach ($productCategory->getFirstChilds() as $childCategory)
+                                @foreach ($productCategoryFirstChilds as $childCategory)
                                     <li>
                                         <a href="{{ $childCategory->getUrl() }}">{{$childCategory->name}}</a>
                                     </li>
@@ -89,16 +101,15 @@
                         </section>
 
                         @foreach ($filters ?? [] as $filter)
-                            @if($filter->hasActiveOptions)
-                                <div class="mx-4 border-b border-gray-200 py-6" x-data="{ showFilter: false }">
-                                    <h3 class="-my-3 flow-root">
-                                        <!-- Expand/collapse section button -->
-                                        <button type="button"
-                                                @click="showFilter = !showFilter"
-                                                class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500"
-                                                aria-controls="filter-section-0" aria-expanded="false">
-                                            <span class="font-medium text-gray-900">{{ $filter->name }}</span>
-                                            <span class="ml-6 flex items-center">
+                            <div class="mx-4 border-b border-gray-200 py-6" x-data="{ showFilter: false }">
+                                <h3 class="-my-3 flow-root">
+                                    <!-- Expand/collapse section button -->
+                                    <button type="button"
+                                            @click="showFilter = !showFilter"
+                                            class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500"
+                                            aria-controls="filter-section-0" aria-expanded="false">
+                                        <span class="font-medium text-gray-900">{{ $filter->name }}</span>
+                                        <span class="ml-6 flex items-center">
                                                 <svg x-show="!showFilter" class="h-5 w-5" viewBox="0 0 20 20"
                                                      fill="currentColor" aria-hidden="true" data-slot="icon">
                                                   <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
@@ -110,27 +121,24 @@
                                                         clip-rule="evenodd"/>
                                                 </svg>
                                               </span>
-                                        </button>
-                                    </h3>
-                                    <div class="pt-6" id="filter-section-0" x-show="showFilter" x-cloak
-                                         x-transition.opacity.scale.origin.top>
-                                        <div class="space-y-4">
-                                            @foreach ($filter->productFilterOptions as $option)
-                                                @if($option->resultCount > 0)
-                                                    <div class="flex items-center">
-                                                        <input id="filter-{{$filter->name}}-{{$option->id}}"
-                                                               type="checkbox"
-                                                               wire:model.live="activeFilters.{{$filter->name}}.{{ $option->name }}"
-                                                               class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                        <label for="filter-{{$filter->name}}-{{$option->id}}"
-                                                               class="ml-3 text-sm text-gray-600">{{$option->name}}</label>
-                                                    </div>
-                                                @endif
-                                            @endforeach
-                                        </div>
+                                    </button>
+                                </h3>
+                                <div class="pt-6" id="filter-section-0" x-show="showFilter" x-cloak
+                                     x-transition.opacity.scale.origin.top>
+                                    <div class="space-y-4">
+                                        @foreach ($filter->productFilterOptions as $option)
+                                            <div class="flex items-center">
+                                                <input id="filter-{{$filter->name}}-{{$option->id}}"
+                                                       type="checkbox"
+                                                       wire:model.live="activeFilters.{{$filter->name}}.{{ $option->name }}"
+                                                       class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                <label for="filter-{{$filter->name}}-{{$option->id}}"
+                                                       class="ml-3 text-sm text-gray-600">{{$option->name}}</label>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                            @endif
+                            </div>
                         @endforeach
                     </form>
                 </div>
@@ -259,11 +267,11 @@
 
                     <div class="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
                         <form class="hidden lg:block">
-                            @if($productCategory && count($productCategory->getFirstChilds()))
+                            @if($productCategory && count($productCategoryFirstChilds))
                                 <h3 class="sr-only">{{ Translation::get('underlying-categories', 'products', 'Onderliggende categorieen') }}</h3>
                                 <ul role="list"
                                     class="space-y-4 border-b border-gray-200 pb-6 text-sm font-medium text-gray-900">
-                                    @foreach ($productCategory->getFirstChilds() as $childCategory)
+                                    @foreach ($productCategoryFirstChilds as $childCategory)
                                         <li>
                                             <a href="{{ $childCategory->getUrl() }}">{{$childCategory->name}}</a>
                                         </li>
@@ -282,16 +290,15 @@
                             </section>
 
                             @foreach ($filters ?? [] as $filter)
-                                @if($filter->hasActiveOptions)
-                                    <div class="border-b border-gray-200 py-6" x-data="{ showFilter: false }">
-                                        <h3 class="-my-3 flow-root">
-                                            <!-- Expand/collapse section button -->
-                                            <button type="button"
-                                                    @click="showFilter = !showFilter"
-                                                    class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500"
-                                                    aria-controls="filter-section-0" aria-expanded="false">
-                                                <span class="font-medium text-gray-900">{{ $filter->name }}</span>
-                                                <span class="ml-6 flex items-center">
+                                <div class="border-b border-gray-200 py-6" x-data="{ showFilter: false }">
+                                    <h3 class="-my-3 flow-root">
+                                        <!-- Expand/collapse section button -->
+                                        <button type="button"
+                                                @click="showFilter = !showFilter"
+                                                class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500"
+                                                aria-controls="filter-section-0" aria-expanded="false">
+                                            <span class="font-medium text-gray-900">{{ $filter->name }}</span>
+                                            <span class="ml-6 flex items-center">
                                                 <svg x-show="!showFilter" class="h-5 w-5" viewBox="0 0 20 20"
                                                      fill="currentColor" aria-hidden="true" data-slot="icon">
                                                   <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
@@ -303,27 +310,24 @@
                                                         clip-rule="evenodd"/>
                                                 </svg>
                                               </span>
-                                            </button>
-                                        </h3>
-                                        <div class="pt-6" id="filter-section-0" x-show="showFilter" x-cloak
-                                             x-transition.opacity.scale.origin.top>
-                                            <div class="space-y-4">
-                                                @foreach ($filter->productFilterOptions as $option)
-                                                    @if($option->resultCount > 0)
-                                                        <div class="flex items-center">
-                                                            <input id="filter-{{$filter->name}}-{{$option->id}}"
-                                                                   type="checkbox"
-                                                                   wire:model.live="activeFilters.{{$filter->name}}.{{ $option->name }}"
-                                                                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                                                            <label for="filter-{{$filter->name}}-{{$option->id}}"
-                                                                   class="ml-3 text-sm text-gray-600">{{$option->name}}</label>
-                                                        </div>
-                                                    @endif
-                                                @endforeach
-                                            </div>
+                                        </button>
+                                    </h3>
+                                    <div class="pt-6" id="filter-section-0" x-show="showFilter" x-cloak
+                                         x-transition.opacity.scale.origin.top>
+                                        <div class="space-y-4">
+                                            @foreach ($filter->productFilterOptions as $option)
+                                                <div class="flex items-center">
+                                                    <input id="filter-{{$filter->name}}-{{$option->id}}"
+                                                           type="checkbox"
+                                                           wire:model.live="activeFilters.{{$filter->name}}.{{ $option->name }}"
+                                                           class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                                    <label for="filter-{{$filter->name}}-{{$option->id}}"
+                                                           class="ml-3 text-sm text-gray-600">{{$option->name}}</label>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
-                                @endif
+                                </div>
                             @endforeach
                         </form>
 

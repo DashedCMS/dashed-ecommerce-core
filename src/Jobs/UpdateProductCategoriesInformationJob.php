@@ -38,9 +38,10 @@ class UpdateProductCategoriesInformationJob implements ShouldQueue
         foreach ($productCategories as $productCategory) {
             foreach (Locales::getLocalesArray() as $locale => $name) {
                 Cache::forget('product-category-url-' . $productCategory->id . '-' . $locale);
-                Cache::forget('product-category-childs-' . $productCategory->id);
-                Cache::forget('product-category-first-childs-' . $productCategory->id);
             }
+            Cache::forget('product-category-childs-' . $productCategory->id);
+            Cache::forget('product-category-first-childs-' . $productCategory->id);
+            Cache::forget('products-for-show-products-' . $productCategory->id);
         }
 
         //Warm the cache

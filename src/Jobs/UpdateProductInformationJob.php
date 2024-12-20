@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
+use Illuminate\Support\Facades\Cache;
 
 class UpdateProductInformationJob implements ShouldQueue
 {
@@ -115,6 +116,9 @@ class UpdateProductInformationJob implements ShouldQueue
         $this->productGroup->total_stock = $this->productGroup->products->sum('total_stock');
         $this->productGroup->total_purchases = $this->productGroup->products->sum('total_purchases');
         $this->productGroup->saveQuietly();
+
+        Cache::forget('products-for-show-products-');
+        Cache::forget('pos_products');
 
         UpdateProductCategoriesInformationJob::dispatch();
 
