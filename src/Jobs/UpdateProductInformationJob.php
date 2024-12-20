@@ -110,6 +110,7 @@ class UpdateProductInformationJob implements ShouldQueue
                     $bundleParentProduct->calculatePrices();
                 }
             }
+            Cache::forget('product-showable-characteristics-' . $product->id);
             $loop++;
         }
 
@@ -121,6 +122,8 @@ class UpdateProductInformationJob implements ShouldQueue
 
         Cache::forget('products-for-show-products-');
         Cache::forget('pos_products');
+        Cache::forget('product-group-showable-characteristics-' . $this->productGroup->id);
+        Cache::forget('product-group-showable-characteristics-without-filters-' . $this->productGroup->id);
 
         if ($this->updateCategories) {
             UpdateProductCategoriesInformationJob::dispatch();

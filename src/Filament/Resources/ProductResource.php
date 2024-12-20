@@ -31,6 +31,7 @@ use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
@@ -279,16 +280,16 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        //                function getFilters($record){
-        //                    ray()->count('test');
-        //
-        //                    return [];
-        //                }
+//                function getFilters($record){
+//                    ray()->count('test');
+//
+//                    return [];
+//                }
 
 
         $schema[] = Section::make('Filters beheren')
 //            ->schema(fn($record) => getFilters($record))
-            ->schema(function ($record) {
+            ->schema(function($record){
                 $productFilters = $record->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
                 $enabledProductFilterOptionIds = $record->productGroup->enabledProductFilterOptions()->pluck('product_filter_option_id')->toArray();
                 $productFilterSchema = [];
@@ -376,7 +377,7 @@ class ProductResource extends Resource
                     ->default(1),
                 mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true),
                 cms()->getFilamentBuilderBlock(),
-            ], static::customBlocksTab(cms()->builder('productBlocks'))))
+            ], static::customBlocksTab('productBlocks')))
             ->collapsible()
             ->persistCollapsed()
             ->columns([
@@ -494,7 +495,7 @@ class ProductResource extends Resource
                                     ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
                             ])
                             ->columnSpan(2),
-                    ], static::customBlocksTab(cms()->builder('productExtraOptionBlocks')))),
+                    ], static::customBlocksTab('productExtraOptionBlocks'))),
             ])
             ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
             ->collapsible()

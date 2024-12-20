@@ -68,7 +68,7 @@ class ProductFilterResource extends Resource
                             ])
                             ->required(),
                     ])),
-            ], static::customBlocksTab(cms()->builder('productFilterBlocks'))));
+            ], static::customBlocksTab('productFilterBlocks')));
     }
 
     public static function table(Table $table): Table

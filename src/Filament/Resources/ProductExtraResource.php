@@ -135,7 +135,7 @@ class ProductExtraResource extends Resource
                             $set('products', Product::all()->pluck('id')->toArray());
                         }),
                     ),
-            ], static::customBlocksTab(cms()->builder('productExtraOptionBlocks'))));
+            ], static::customBlocksTab('productExtraOptionBlocks')));
     }
 
     public static function table(Table $table): Table

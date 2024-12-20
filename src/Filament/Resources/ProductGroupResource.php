@@ -231,7 +231,7 @@ class ProductGroupResource extends Resource
                 mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true)
                     ->helperText('Afbeeldingen van een variant worden VOOR de afbeelding van de product groep getoond'),
                 cms()->getFilamentBuilderBlock(),
-            ], static::customBlocksTab(cms()->builder('productBlocks'))))
+            ], static::customBlocksTab('productBlocks')))
             ->collapsible()
             ->persistCollapsed()
             ->columns([
@@ -355,7 +355,7 @@ class ProductGroupResource extends Resource
                                     ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
                             ])
                             ->columnSpan(2),
-                    ], static::customBlocksTab(cms()->builder('productExtraOptionBlocks')))),
+                    ], static::customBlocksTab('productExtraOptionBlocks'))),
             ])
             ->hidden(fn ($livewire) => $livewire instanceof CreateProductGroup)
             ->collapsible()

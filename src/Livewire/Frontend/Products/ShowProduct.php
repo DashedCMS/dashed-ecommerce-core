@@ -16,8 +16,9 @@ class ShowProduct extends Component
 
     public function mount(Product $product)
     {
-        $this->parentProduct = $product->parent ? $product->parent : $product;
+        $this->productGroup = $product->productGroup;
         $this->originalProduct = $product;
+        $this->product = $product;
 
         $this->fillInformation(true);
     }

@@ -62,7 +62,7 @@ class ProductCategoryResource extends Resource
                             ->maxLength(255),
                         mediaHelper()->field('image', 'Afbeelding'),
                         cms()->getFilamentBuilderBlock(),
-                    ], static::customBlocksTab(cms()->builder('productCategoryBlocks'))))
+                    ], static::customBlocksTab('productCategoryBlocks')))
                     ->columns(2),
                 Section::make('Algemene informatie')
                     ->schema(static::publishTab()),

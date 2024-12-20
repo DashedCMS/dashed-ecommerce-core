@@ -77,7 +77,7 @@ class ProductTabResource extends Resource
                                 }),
                             ),
                     ])),
-            ], static::customBlocksTab(cms()->builder('productTabBlocks'))));
+            ], static::customBlocksTab('productTabBlocks')));
     }
 
     public static function table(Table $table): Table

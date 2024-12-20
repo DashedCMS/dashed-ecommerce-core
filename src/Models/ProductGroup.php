@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedPages\Models\Page;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,6 +11,8 @@ use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 class ProductGroup extends Model
 {
@@ -204,5 +207,138 @@ class ProductGroup extends Model
         }
 
         return $result;
+    }
+
+    public function simpleFilters(): array
+    {
+        $filters = [];
+
+        foreach ($this->activeProductFilters as $filter) {
+            if ($filter->pivot->use_for_variations) {
+                $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
+
+                if (count($filterOptions)) {
+                    foreach ($filterOptions as &$filterOption) {
+                        $filterOption['name'] = $filterOption['name'][App::getLocale()] ?? $filterOption['name'][0];
+                    }
+
+                    $filters[] = [
+                        'id' => $filter->id,
+                        'name' => $filter['name'],
+                        'options' => $filterOptions,
+                        'type' => $filter->type,
+                        'active' => null,
+                    ];
+                }
+            }
+        }
+
+        return $filters;
+    }
+
+    public function showableCharacteristics($withoutIds = [])
+    {
+        return Cache::rememberForever("product-group-showable-characteristics-" . $this->id, function () use ($withoutIds) {
+            $characteristics = [];
+
+            $activeFilters = $this->activeProductFilters;
+
+            foreach ($activeFilters as $activeFilter) {
+                $value = '';
+                foreach ($activeFilter->productFilterOptions as $option) {
+                    if ($this->enabledProductFilterOptions()->where('product_filter_option_id', $option->id)->exists()) {
+                        if ($value) {
+                            $value .= ', ';
+                        }
+                        $value .= $option->name;
+                    }
+                }
+                $characteristics[] = [
+                    'name' => $activeFilter->name,
+                    'value' => $value,
+                ];
+            }
+
+            $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
+            foreach ($allProductCharacteristics as $productCharacteristic) {
+                $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                    $characteristics[] = [
+                        'name' => $productCharacteristic->name,
+                        'value' => $thisProductCharacteristic->value,
+                    ];
+                }
+            }
+
+            return $characteristics;
+        });
+    }
+
+    public function showableCharacteristicsWithoutFilters($withoutIds = [])
+    {
+        return Cache::rememberForever("product-group-showable-characteristics-without-filters-" . $this->id, function () use ($withoutIds) {
+            $characteristics = [];
+
+            $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
+            foreach ($allProductCharacteristics as $productCharacteristic) {
+                $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                    $characteristics[] = [
+                        'name' => $productCharacteristic->name,
+                        'value' => $thisProductCharacteristic->value,
+                    ];
+                }
+            }
+
+            return $characteristics;
+        });
+    }
+
+    public function allProductTabs(): ?Collection
+    {
+        $productTabIds = [];
+
+        $productTabIds = array_merge($productTabIds, $this->tabs->pluck('id')->toArray());
+        $productTabIds = array_merge($productTabIds, $this->globalTabs->pluck('id')->toArray());
+
+        return ProductTab::whereIn('id', $productTabIds)
+            ->get();
+    }
+
+    public function breadcrumbs()
+    {
+        $breadcrumbs = [
+            [
+                'name' => $this->name,
+                'url' => $this->getUrl(),
+            ],
+        ];
+
+        $productCategory = $this->productCategories()->first();
+
+        //Check if has child, to make sure all categories show in breadcrumbs
+        while ($productCategory && $productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first()) {
+            $productCategory = $productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first();
+        }
+
+        if ($productCategory) {
+            while ($productCategory) {
+                $breadcrumbs[] = [
+                    'name' => $productCategory->name,
+                    'url' => $productCategory->getUrl(),
+                ];
+                $productCategory = ProductCategory::find($productCategory->parent_id);
+            }
+        }
+
+        $homePage = Page::isHome()->publicShowable()->first();
+        if ($homePage) {
+            $breadcrumbs[] = [
+                'name' => $homePage->name,
+                'url' => $homePage->getUrl(),
+            ];
+        }
+
+        return array_reverse($breadcrumbs);
     }
 }

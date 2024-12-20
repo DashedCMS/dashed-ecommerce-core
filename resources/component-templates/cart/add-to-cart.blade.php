@@ -31,7 +31,7 @@
                 type="number" value="1" id="qty"
                 name="qty" disabled
                 wire:model="quantity"
-                min="1" max="{{$product->stock()}}">
+                min="1" max="{{$product?->stock()}}">
 
             <div
                 wire:click="setQuantity('{{ $quantity + 1 }}')"
