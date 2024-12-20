@@ -24,13 +24,15 @@ class UpdateProductInformationJob implements ShouldQueue
     public $timeout = 1200;
 
     public ProductGroup $productGroup;
+    public bool $updateCategories;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(ProductGroup $productGroup)
+    public function __construct(ProductGroup $productGroup, bool $updateCategories = true)
     {
         $this->productGroup = $productGroup;
+        $this->updateCategories = $updateCategories;
     }
 
     /**
@@ -87,7 +89,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            if (($this->productGroup->only_show_parent_product && $loop == 1) || ! $this->productGroup->only_show_parent_product) {
+            if (($this->productGroup->only_show_parent_product && $loop == 1) || !$this->productGroup->only_show_parent_product) {
                 $product->indexable = 1;
             } else {
                 $product->indexable = 0;
@@ -120,7 +122,9 @@ class UpdateProductInformationJob implements ShouldQueue
         Cache::forget('products-for-show-products-');
         Cache::forget('pos_products');
 
-        UpdateProductCategoriesInformationJob::dispatch();
+        if ($this->updateCategories) {
+            UpdateProductCategoriesInformationJob::dispatch();
+        }
 
         ProductInformationUpdatedEvent::dispatch($this->productGroup);
     }

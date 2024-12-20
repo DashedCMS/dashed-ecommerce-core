@@ -95,7 +95,7 @@ class ProductResource extends Resource
                     ->searchable()
                     ->preload()
                     ->default(request()->get('productGroupId'))
-                    ->disabled(fn ($livewire) => ! ($livewire instanceof CreateProduct) || request()->get('productGroupId'))
+//                    ->disabled(fn ($livewire) => ! ($livewire instanceof CreateProduct) || request()->get('productGroupId'))
                     ->columnSpanFull()
                     ->required(),
                 Toggle::make('public')
@@ -240,7 +240,7 @@ class ProductResource extends Resource
                 TextInput::make('weight')
                     ->label('Gewicht')
                     ->helperText('Berekend in KG')
-                    ->maxLength(100000)
+                    ->maxValue(100000)
                     ->numeric()
                     ->columnSpan([
                         'default' => 1,
@@ -249,7 +249,7 @@ class ProductResource extends Resource
                 TextInput::make('length')
                     ->label('Lengte')
                     ->helperText('Berekend in CM')
-                    ->maxLength(100000)
+                    ->maxValue(100000)
                     ->numeric()
                     ->columnSpan([
                         'default' => 1,
@@ -258,7 +258,7 @@ class ProductResource extends Resource
                 TextInput::make('width')
                     ->label('Breedte')
                     ->helperText('Berekend in CM')
-                    ->maxLength(100000)
+                    ->maxValue(100000)
                     ->numeric()
                     ->columnSpan([
                         'default' => 1,
@@ -267,7 +267,7 @@ class ProductResource extends Resource
                 TextInput::make('height')
                     ->label('Hoogte')
                     ->helperText('Berekend in CM')
-                    ->maxLength(100000)
+                    ->maxValue(100000)
                     ->numeric()
                     ->columnSpan([
                         'default' => 1,
