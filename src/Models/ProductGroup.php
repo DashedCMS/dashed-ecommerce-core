@@ -3,6 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Dashed\DashedPages\Models\Page;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,8 +13,6 @@ use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 
 class ProductGroup extends Model
 {
@@ -262,7 +262,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -282,7 +282,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,

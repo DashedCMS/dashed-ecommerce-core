@@ -31,7 +31,6 @@ use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
@@ -280,16 +279,16 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-//                function getFilters($record){
-//                    ray()->count('test');
-//
-//                    return [];
-//                }
+        //                function getFilters($record){
+        //                    ray()->count('test');
+        //
+        //                    return [];
+        //                }
 
 
         $schema[] = Section::make('Filters beheren')
 //            ->schema(fn($record) => getFilters($record))
-            ->schema(function($record){
+            ->schema(function ($record) {
                 $productFilters = $record->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
                 $enabledProductFilterOptionIds = $record->productGroup->enabledProductFilterOptions()->pluck('product_filter_option_id')->toArray();
                 $productFilterSchema = [];
