@@ -151,6 +151,14 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             'dashed-ecommerce-core-config',
             'dashed-ecommerce-core-assets',
         ]);
+
+
+        cms()->builder('blockDisabledForCache', [
+            'orders-block',
+            'cart-block',
+            'checkout-block',
+            'view-order-block',
+        ]);
     }
 
     public static function builderBlocks()

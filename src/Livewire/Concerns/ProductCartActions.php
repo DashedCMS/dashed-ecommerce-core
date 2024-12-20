@@ -49,6 +49,7 @@ trait ProductCartActions
     public $breadcrumbs = [];
     public $productCategories = [];
     public $contentBlocks = [];
+    public $content = [];
 
     public function checkCart(?string $status = null, ?string $message = null)
     {
@@ -163,8 +164,8 @@ trait ProductCartActions
         }
 
         $this->name = $this->product->name ?? $this->productGroup->name;
-        $this->images = $this->product ? $this->product->images : [];
-        $this->images = array_merge($this->images, $this->productGroup->images);
+        $this->images = $this->product ? (is_array($this->product->images) ? $this->product->images : []) : [];
+        $this->images = array_merge($this->images, is_array($this->productGroup->images) ? $this->productGroup->images : []);
         $this->originalImages = [];
         foreach ($this->images as $image) {
             $this->originalImages[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
@@ -173,12 +174,19 @@ trait ProductCartActions
         $this->shortDescription = $this->product->short_description ?? $this->productGroup->short_description;
         $this->sku = $this->product->sku ?? '';
         $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();
+        $this->content = $this->product ? $this->product->content : $this->productGroup->content;
         $this->contentBlocks = $this->product ? $this->product->contentBlocks : $this->productGroup->contentBlocks;
         if ($this->product) {
-            foreach ($this->productGroup->contentBlocks as $contentBlock) {
-                dd($this->contentBlocks, $contentBlock);
+            if(!count($this->content ?: [])){
+                $this->content = $this->productGroup->content;
+            }
+            foreach ($this->productGroup->contentBlocks as $block => $contentBlock) {
+                if(!$this->contentBlocks[$block]){
+                    $this->contentBlocks[$block] = $contentBlock;
+                }
             }
         }
+
         $this->calculateCurrentPrices();
         if (! $isMount) {
             $this->dispatch('productUpdated', [
