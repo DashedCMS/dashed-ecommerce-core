@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -89,7 +90,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            if (($this->productGroup->only_show_parent_product && $loop == 1) || ! $this->productGroup->only_show_parent_product) {
+            if (($this->productGroup->only_show_parent_product && $loop == 1) || !$this->productGroup->only_show_parent_product) {
                 $product->indexable = 1;
             } else {
                 $product->indexable = 0;
@@ -111,6 +112,10 @@ class UpdateProductInformationJob implements ShouldQueue
                 }
             }
             Cache::forget('product-showable-characteristics-' . $product->id);
+            foreach (Locales::getLocalesArray() as $locale => $localeName) {
+                Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-yes');
+                Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-no');
+            }
             $loop++;
         }
 

@@ -1,8 +1,9 @@
 <div>
-    <x-blocks.breadcrumbs :breadcrumbs="$product->breadcrumbs()"/>
     <div class="mt-8">
         <x-container>
-            <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
+            @if($product)
+                <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
+            @endif
             <div class="mx-auto max-w-2xl lg:max-w-none">
                 <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
                     <div class="flex flex-col-reverse lg:sticky lg:top-32">
@@ -174,9 +175,9 @@
                             </div>
                         </div>
                         <h2 class="text-3xl font-bold tracking-tight text-gray-900">{{ $name }}</h2>
-                        @if($product->productCategories()->count())
+                        @if($productCategories->count())
                             <div class="flex flex-wrap gap-2">
-                                @foreach($product->productCategories as $productCategory)
+                                @foreach($productCategories as $productCategory)
                                     <a href="{{ $productCategory->getUrl() }}"
                                        class="mt-1 text-sm bg-primary-500 font-bold text-white px-2 py-1 rounded-lg hover:bg-primary-500/70 trans">{{$productCategory->name}}</a>
                                 @endforeach
@@ -318,8 +319,8 @@
                         {{--                            </div>--}}
                         {{--                        @endif--}}
 
-                        <div wire:key="product-cross-sells-{{ $product->id }}">
-                            @if(count($crossSellProducts))
+                        <div wire:key="product-cross-sells-{{ $productGroup->id }}">
+                            @if(count($crossSellProducts ?: []))
                                 <div class="mt-6 grid gap-4">
                                     <h3 class="text-sm font-bold text-gray-900 text-center">{{ Translation::get('product-cross-sell', 'product', 'Vaak samen gekocht') }}</h3>
                                     <div class="grid gap-4">
@@ -331,7 +332,7 @@
                             @endif
                         </div>
 
-                        <div class="mt-6 grid gap-6" wire:key="product-tabs-{{ $product->id }}" x-data="{
+                        <div class="mt-6 grid gap-6" wire:key="product-tabs-{{ $productGroup->id }}" x-data="{
                                 activeTab: '',
 
                                 openTab(tab) {
@@ -408,7 +409,7 @@
                                 </div>
                             @endif
 
-                            @if(count($product->contentBlocks['faqs'] ?? []))
+                            @if(count($contentBlocks['faqs'] ?? []))
                                 <div class="bg-gray-100">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
                                          @click="openTab('faq')">
@@ -434,7 +435,7 @@
                                         x-transition.opacity.scale.origin.top
                                     >
                                         <div class="grid gap-4" x-data="{ openFaq: '' }">
-                                            @foreach($product->contentBlocks['faqs'] ?? [] as $faq)
+                                            @foreach($contentBlocks['faqs'] ?? [] as $faq)
                                                 <div class="bg-white">
                                                     <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
                                                          @click="openFaq == '{{ $loop->iteration }}' ? openFaq = '' : openFaq = '{{ $loop->iteration }}'">
@@ -472,7 +473,7 @@
                                 </div>
                             @endif
 
-                            @foreach($productTabs as $key => $productTab)
+                            @foreach($productTabs ?: [] as $key => $productTab)
                                 <div class="bg-gray-100">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
                                          @click="openTab('tab-{{ $key }}')">
@@ -520,7 +521,7 @@
             </div>
         </x-container>
 
-        <x-blocks :content="$product->content"></x-blocks>
+        <x-blocks :content="$content"></x-blocks>
 
         <div wire:ignore>
             <x-dashed-core::global-blocks name="product-page"/>

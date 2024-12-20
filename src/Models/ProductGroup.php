@@ -2,7 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Classes\Locales;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 use Dashed\DashedPages\Models\Page;
+use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +18,7 @@ use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Illuminate\Support\Facades\View;
 
 class ProductGroup extends Model
 {
@@ -262,7 +268,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -282,7 +288,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -340,5 +346,47 @@ class ProductGroup extends Model
         }
 
         return array_reverse($breadcrumbs);
+    }
+
+    public function getUrl($activeLocale = null, bool $native = true)
+    {
+        $originalLocale = app()->getLocale();
+
+        if (!$activeLocale) {
+            $activeLocale = $originalLocale;
+        }
+
+        $overviewPage = Product::getOverviewPage();
+        if ($overviewPage) {
+            $url = "{$overviewPage->getUrl($activeLocale)}/{$this->getTranslation('slug', $activeLocale)}";
+        } else {
+            $url = $this->getTranslation('slug', $activeLocale);
+        }
+
+        if (!str($url)->startsWith('/')) {
+            $url = '/' . $url;
+        }
+        if ($activeLocale != Locales::getFirstLocale()['id'] && !str($url)->startsWith("/{$activeLocale}")) {
+            $url = '/' . $activeLocale . $url;
+        }
+
+        return $native ? $url : url($url);
+    }
+
+    public static function getOverviewPage(): ?Page
+    {
+        return Product::getOverviewPage();
+    }
+
+    public static function canHaveParent(): bool
+    {
+        return false;
+    }
+
+    public static function returnForRoute(): array
+    {
+        return [
+            'livewireComponent' => ShowProduct::class,
+        ];
     }
 }

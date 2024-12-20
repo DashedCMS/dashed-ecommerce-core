@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -272,6 +273,12 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->builder(
             'routeModels',
             [
+                'productGroup' => [
+                    'name' => 'ProductGroep',
+                    'pluralName' => 'Product groepen',
+                    'class' => ProductGroup::class,
+                    'nameField' => 'name',
+                ],
                 'product' => [
                     'name' => 'Product',
                     'pluralName' => 'Products',

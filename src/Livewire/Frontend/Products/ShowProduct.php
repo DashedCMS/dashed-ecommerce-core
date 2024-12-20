@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
@@ -14,11 +15,11 @@ class ShowProduct extends Component
         'setProductExtraCustomValue',
     ];
 
-    public function mount(Product $product)
+    public function mount($product = null, $productGroup = null)
     {
-        $this->productGroup = $product->productGroup;
-        $this->originalProduct = $product;
-        $this->product = $product;
+        $this->productGroup = $productGroup ?: $product->productGroup;
+        $this->originalProduct = $product ?? null;
+        $this->product = $product ?? null;
 
         $this->fillInformation(true);
     }
