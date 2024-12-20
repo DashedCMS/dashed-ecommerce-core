@@ -177,11 +177,11 @@ trait ProductCartActions
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
         $this->contentBlocks = $this->product ? $this->product->contentBlocks : $this->productGroup->contentBlocks;
         if ($this->product) {
-            if(!count($this->content ?: [])){
+            if (! count($this->content ?: [])) {
                 $this->content = $this->productGroup->content;
             }
             foreach ($this->productGroup->contentBlocks as $block => $contentBlock) {
-                if(!$this->contentBlocks[$block]){
+                if (! $this->contentBlocks[$block]) {
                     $this->contentBlocks[$block] = $contentBlock;
                 }
             }
