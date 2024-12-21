@@ -41,10 +41,10 @@ class Cart extends Component
         $this->discount = $shoppingCartAmounts['discount'];
         $this->tax = $shoppingCartAmounts['tax'];
         $this->total = $shoppingCartAmounts['total'];
-//        $this->subtotal = ShoppingCart::subtotal(true);
-//        $this->discount = ShoppingCart::totalDiscount(true);
-//        $this->tax = ShoppingCart::btw(true);
-//        $this->total = ShoppingCart::total(true);
+        //        $this->subtotal = ShoppingCart::subtotal(true);
+        //        $this->discount = ShoppingCart::totalDiscount(true);
+        //        $this->tax = ShoppingCart::btw(true);
+        //        $this->total = ShoppingCart::total(true);
     }
 
     public function getCartItemsProperty()
