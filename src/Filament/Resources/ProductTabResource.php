@@ -66,7 +66,6 @@ class ProductTabResource extends Resource
                             ->label('Gekoppelde producten')
                             ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->searchable()
-                            ->preload()
                             ->multiple()
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->hintAction(
