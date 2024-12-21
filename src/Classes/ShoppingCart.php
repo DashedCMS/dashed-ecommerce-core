@@ -100,7 +100,7 @@ class ShoppingCart
         if ($discountCode) {
             $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
             } else {
                 if ($discountCode->type == 'percentage') {
@@ -127,41 +127,13 @@ class ShoppingCart
         }
     }
 
-    public static function subtotal($formatResult = false, $shippingMethodId = null, $paymentMethodId = null)
+    public static function subtotal($formatResult = false, $shippingMethodId = null, $paymentMethodId = null, $total = null)
     {
-        $cartTotal = self::total(false, false, $shippingMethodId, $paymentMethodId);
+        $cartTotal = $total ?: self::total(false, false, $shippingMethodId, $paymentMethodId);
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
+        if (!$calculateInclusiveTax) {
             $cartTotal -= self::btw(false, false);
-            //            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
-        }
-
-        if ($formatResult) {
-            return CurrencyHelper::formatPrice($cartTotal);
-        } else {
-            return number_format($cartTotal, 2, '.', '');
-        }
-
-        $cartTotal = 0;
-        foreach (self::cartItems() as $cartItem) {
-            $cartTotal += Product::getShoppingCartItemPrice($cartItem);
-            //            $cartTotal = $cartTotal + ($cartItem->model->currentPrice * $cartItem->qty);
-        }
-
-        if ($shippingMethodId) {
-            $shippingMethod = ShippingMethod::find($shippingMethodId);
-            if ($shippingMethod) {
-                $cartTotal += $shippingMethod->costsForCart;
-            }
-        }
-
-        if ($paymentMethodId) {
-            foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
-                if ($paymentMethod['id'] == $paymentMethodId) {
-                    $cartTotal += $paymentMethod['extra_costs'];
-                }
-            }
         }
 
         if ($formatResult) {
@@ -171,7 +143,7 @@ class ShoppingCart
         }
     }
 
-    public static function total($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
+    public static function total($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $tax = null, $discount = null)
     {
         $cartTotal = 0;
         foreach (self::cartItems() as $cartItem) {
@@ -180,12 +152,13 @@ class ShoppingCart
         }
 
         if ($calculateDiscount) {
-            $cartTotal = $cartTotal - self::totalDiscount();
+            $cartTotal = $cartTotal - ($discount ?: self::totalDiscount());
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
-        if (! $calculateInclusiveTax) {
-            $cartTotal = $cartTotal + self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
+        if (!$calculateInclusiveTax) {
+            $tax = $tax ?: self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
+            $cartTotal = $cartTotal + $tax;
         }
 
         if ($shippingMethodId) {
@@ -209,6 +182,8 @@ class ShoppingCart
             return number_format($cartTotal, 2, '.', '');
         }
     }
+
+
 
     public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
     {
@@ -230,6 +205,36 @@ class ShoppingCart
             return CurrencyHelper::formatPrice($depositAmount);
         } else {
             return number_format($depositAmount, 2, '.', '');
+        }
+    }
+
+    public static function amounts($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
+    {
+        $discount = self::totalDiscount(false);
+        $tax = self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
+        $total = self::total(false, false, $shippingMethodId, $paymentMethodId, $tax, $discount);
+        $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
+
+        if ($formatResult) {
+            return [
+                'subTotal' => CurrencyHelper::formatPrice($subTotal),
+                'discount' => CurrencyHelper::formatPrice($discount),
+                'tax' => CurrencyHelper::formatPrice($tax),
+                'total' => CurrencyHelper::formatPrice($total),
+//                'shippingCosts' => CurrencyHelper::formatPrice($shippingCosts),
+//                'paymentCosts' => CurrencyHelper::formatPrice($paymentCosts),
+//                'depositAmount' => CurrencyHelper::formatPrice($depositAmount),
+            ];
+        } else {
+            return [
+                'subTotal' => number_format($subTotal, 2, '.', ''),
+                'discount' => number_format($discount, 2, '.', ''),
+                'tax' => number_format($tax, 2, '.', ''),
+                'total' => number_format($total, 2, '.', ''),
+//                'shippingCosts' => number_format($shippingCosts, 2, '.', ''),
+//                'paymentCosts' => number_format($paymentCosts, 2, '.', ''),
+//                'depositAmount' => number_format($depositAmount, 2, '.', ''),
+            ];
         }
     }
 
@@ -323,7 +328,7 @@ class ShoppingCart
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
 
-        if (! $vatRate) {
+        if (!$vatRate) {
             $vatRate = self::vatRateForShippingMethod($shippingMethodId);
         }
 
@@ -382,7 +387,7 @@ class ShoppingCart
         if ($calculateDiscount) {
             $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $discountCode = null;
             }
@@ -426,7 +431,7 @@ class ShoppingCart
                     $taxTotal += $price;
                     if (($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate) > 0) {
                         //                        dump($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate);
-                        if (! isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
+                        if (!isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
                             $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] = 0;
                         }
                         if ($discountCode && $discountCode->type == 'percentage') {
@@ -448,25 +453,16 @@ class ShoppingCart
         $totalVatPerPercentage = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-            if (! isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
+            if (!isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
                 $vatPercentageOfTotals[number_format($percentage, 0)] = 0;
             }
-            if (! isset($totalVatPerPercentage[number_format($percentage, 0)])) {
+            if (!isset($totalVatPerPercentage[number_format($percentage, 0)])) {
                 $totalVatPerPercentage[number_format($percentage, 0)] = 0;
             }
             $vatPercentageOfTotals[number_format($percentage, 0)] += $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
             $totalVatPerPercentage[number_format($percentage, 0)] += $totalAmountForVat > 0.00 ? ($totalAmountForVat / (100 + $percentage) * $percentage) : 0;
         }
 
-        //        dd([
-        //            'totalAmountForVats' => $totalAmountForVats,
-        //            'totalVatPerPercentage' => $totalVatPerPercentage,
-        //            'vatPercentageOfTotals' => $vatPercentageOfTotals,
-        //            'vatRates' => $vatRates,
-        //            'vatRatesCount' => $vatRatesCount,
-        //            'taxTotal' => $taxTotal,
-        //            'discountCode' => $discountCode,
-        //        ]);
         return [
             'totalAmountForVats' => $totalAmountForVats,
             'totalVatPerPercentage' => $totalVatPerPercentage,
@@ -513,7 +509,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -617,7 +613,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -679,211 +675,117 @@ class ShoppingCart
     {
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
         }
 
         $cartItems = self::cartItems();
-        $parentItemsToCheck = [];
+        $parentItemsToCheck = collect();
 
+// Loop through cart items
         foreach ($cartItems as $cartItem) {
+            if (!$cartItem->model) {
+                continue;
+            }
+
             $cartItemDeleted = false;
+            $model = $cartItem->model;
 
-            if (! $cartItem->model) {
-
-            } elseif ($cartItem->model->trashed() || ! Product::where('id', $cartItem->model->id)->publicShowable()->count()) {
+            // Handle removed or unavailable products
+            if ($model->trashed() || !$model->publicShowable()) {
                 Cart::remove($cartItem->rowId);
                 $cartItemDeleted = true;
+
                 Notification::make()
                     ->body(Translation::get('product-removed', 'cart', ':product: is uit je winkelwagen gehaald omdat het product niet meer beschikbaar is.', 'text', [
-                        'product' => $cartItem->model->name,
+                        'product' => $model->name,
                     ]))
                     ->danger()
                     ->send();
-            } elseif ($checkStock && $cartItem->model->stock() < $cartItem->qty) {
-                if ($cartItem->model->stock()) {
-                    Cart::update($cartItem->rowId, $cartItem->model->stock());
+            }
+
+            // Handle stock checks
+            if ($checkStock && !$cartItemDeleted && $model->stock() < $cartItem->qty) {
+                $newStock = $model->stock();
+                if ($newStock > 0) {
+                    Cart::update($cartItem->rowId, $newStock);
                     Notification::make()
                         ->body(Translation::get('product-less-stock', 'cart', ':product: is verlaagd in je winkelwagen omdat er maar :stock: voorraad is.', 'text', [
-                            'product' => $cartItem->model->name,
-                            'stock' => $cartItem->model->stock(),
+                            'product' => $model->name,
+                            'stock' => $newStock,
                         ]))
                         ->danger()
                         ->send();
                 } else {
                     Cart::remove($cartItem->rowId);
                     $cartItemDeleted = true;
+
                     Notification::make()
                         ->body(Translation::get('product-out-of-stock', 'cart', ':product: is uit je winkelwagen gehaald omdat er geen voorraad meer is.', 'text', [
-                            'product' => $cartItem->model->name,
+                            'product' => $model->name,
                         ]))
                         ->danger()
                         ->send();
                 }
-            } elseif ($cartItem->model->limit_purchases_per_customer && $cartItem->qty > $cartItem->model->limit_purchases_per_customer_limit) {
-                Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
             }
 
-            if (! $cartItemDeleted && $cartItem->model) {
-                $productPrice = Product::getShoppingCartItemPrice($cartItem);
-                $options = [];
+            // Handle purchase limits
+            if (!$cartItemDeleted && $model->limit_purchases_per_customer && $cartItem->qty > $model->limit_purchases_per_customer_limit) {
+                Cart::update($cartItem->rowId, $model->limit_purchases_per_customer_limit);
+            }
 
-                foreach ($cartItem->options['options'] as $productExtraOptionId => $productExtraOption) {
-                    if (! $cartItemDeleted) {
-                        if (! str($productExtraOptionId)->contains('product-extra-')) {
-
-                            $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
-                            if ($thisProductExtraOption) {
-                                $options[$productExtraOptionId] = [
-                                    'name' => $productExtraOption['name'],
-                                    'value' => $thisProductExtraOption->value,
-                                ];
-                                //                                if ($thisProductExtraOption->calculate_only_1_quantity) {
-                                //                                    $productPrice = $productPrice + ($thisProductExtraOption->price / $cartItem->qty);
-                                //                                } else {
-                                //                                    $productPrice = $productPrice + $thisProductExtraOption->price;
-                                //                                }
-                            } elseif ($thisProductExtraOption) {
-                                Cart::remove($cartItem->rowId);
-                                $cartItemDeleted = true;
-                            }
-                        }
+            // Merge cart items with the same product and options
+            if (!$cartItemDeleted) {
+                foreach ($cartItems as $otherCartItem) {
+                    if ($cartItem->rowId === $otherCartItem->rowId || !$otherCartItem->model) {
+                        continue;
                     }
-                }
-                if (! $cartItemDeleted) {
-                    //                    $cartItem->model->currentPrice = $productPrice;
 
-                    foreach ($cartItems as $otherCartItem) {
-                        try {
-                            Cart::get($cartItem->rowId);
-                            $cartItemExists = true;
-                        } catch (Exception $exception) {
-                            $cartItemExists = false;
+                    if ($model->id === $otherCartItem->model->id && $cartItem->options === $otherCartItem->options) {
+                        $newQuantity = $cartItem->qty + $otherCartItem->qty;
+
+                        if ($model->limit_purchases_per_customer && $newQuantity > $model->limit_purchases_per_customer_limit) {
+                            $newQuantity = $model->limit_purchases_per_customer_limit;
                         }
 
-                        try {
-                            Cart::get($otherCartItem->rowId);
-                            $otherCartItemExists = true;
-                        } catch (Exception $exception) {
-                            $otherCartItemExists = false;
-                        }
-
-                        if ($cartItemExists && $otherCartItemExists) {
-                            if ($cartItem->rowId != $otherCartItem->rowId) {
-                                if ($cartItem->model && $otherCartItem->model && $cartItem->model->id == $otherCartItem->model->id) {
-                                    if ($cartItem->options == $otherCartItem->options) {
-                                        $newQuantity = $cartItem->qty + $otherCartItem->qty;
-
-                                        if ($cartItem->model->limit_purchases_per_customer && $newQuantity > $cartItem->model->limit_purchases_per_customer_limit) {
-                                            Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
-                                            Cart::remove($otherCartItem->rowId);
-                                        } else {
-                                            Cart::update($cartItem->rowId, $newQuantity);
-                                            Cart::remove($otherCartItem->rowId);
-                                        }
-                                    } else {
-                                        $hasOnlySingleOptionExtras = true;
-                                        $optionsForBothItems = [];
-
-                                        foreach ($cartItem->options['options'] as $key => $option) {
-                                            $productExtraOption = ProductExtraOption::find($key);
-                                            if ($productExtraOption && ! $productExtraOption->calculate_only_1_quantity) {
-                                                $hasOnlySingleOptionExtras = false;
-                                            }
-                                            if (! isset($optionsForBothItems[$key])) {
-                                                $optionsForBothItems[$key] = $option;
-                                            }
-                                        }
-                                        foreach ($otherCartItem->options as $key => $option) {
-                                            $productExtraOption = ProductExtraOption::find($key);
-                                            if (! $productExtraOption || ! $productExtraOption->calculate_only_1_quantity) {
-                                                $hasOnlySingleOptionExtras = false;
-                                            }
-                                            if (! isset($optionsForBothItems[$key])) {
-                                                $optionsForBothItems[$key] = $option;
-                                            }
-                                        }
-
-                                        if ($hasOnlySingleOptionExtras) {
-                                            $newQuantity = $cartItem->qty + $otherCartItem->qty;
-
-                                            if ($cartItem->model->limit_purchases_per_customer && $newQuantity > $cartItem->model->limit_purchases_per_customer_limit) {
-                                                Cart::remove($cartItem->rowId);
-                                                Cart::remove($otherCartItem->rowId);
-                                                Cart::add($cartItem->model->id, $cartItem->model->name, $cartItem->model->limit_purchases_per_customer_limit, $productPrice, $optionsForBothItems)->associate(Product::class);
-                                            } else {
-                                                Cart::remove($cartItem->rowId);
-                                                Cart::remove($otherCartItem->rowId);
-                                                Cart::add($cartItem->model->id, $cartItem->model->name, $newQuantity, $productPrice, $optionsForBothItems)->associate(Product::class);
-                                            }
-                                        }
-                                    }
-
-
-                                    //                                $newQuantity = $cartItem->qty + $quantity;
-                                    //
-                                    //                                if ($product->limit_purchases_per_customer && $newQuantity > $cartItem->model->limit_purchases_per_customer_limit) {
-                                    //                                    Cart::update($cartItem->rowId, $cartItem->model->limit_purchases_per_customer_limit);
-                                    //
-                                    //                                    ShoppingCart::removeInvalidItems();
-                                    //                                    return redirect()->back()->with('error', Translation::get('product-only-1-purchase-per-customer', 'cart', 'You can only purchase one of this product'))->withInput();
-                                    //                                }
-                                    //
-                                    //                                Cart::update($cartItem->rowId, $newQuantity);
-                                }
-                            }
-                        }
-
-
-                        try {
-                            Cart::update($cartItem->rowId, [
-                                'price' => $productPrice / $cartItem->qty,
-                            ]);
-                        } catch (Exception $exception) {
-                        }
+                        Cart::update($cartItem->rowId, $newQuantity);
+                        Cart::remove($otherCartItem->rowId);
                     }
                 }
             }
 
-            if (! $cartItemDeleted && $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->use_parent_stock ?? false) {
-                if (! in_array($cartItem->model->parent->id, $parentItemsToCheck)) {
-                    $parentItemsToCheck[] = $cartItem->model->parent->id;
-                }
+            // Collect parent product groups for stock checks
+            if (!$cartItemDeleted && $model->productGroup && $model->productGroup->use_parent_stock ?? false) {
+                $parentItemsToCheck->push($model->productGroup->id);
             }
         }
 
-        if ($parentItemsToCheck) {
-            foreach ($parentItemsToCheck as $parentId) {
-                $parentProduct = Product::find($parentId);
-                $cartItems = self::cartItems();
-
-                $maxStock = $parentProduct->stock();
-                $maxLimit = $parentProduct->limit_purchases_per_customer_limit;
-                $currentAmount = 0;
-
-                foreach ($cartItems as $cartItem) {
-                    if ($cartItem->model && $cartItem->model->parent && $cartItem->model->parent->id == $parentId) {
-                        if ($currentAmount >= $maxStock || $currentAmount >= $maxLimit) {
-                            Notification::make()
-                                ->danger()
-                                ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
-                                ->send();
-                            Cart::remove($cartItem->rowId);
-                        } else {
-                            $currentAmount += $cartItem->qty;
-
-                            if ($currentAmount > $maxStock || $currentAmount > $maxLimit) {
-                                Notification::make()
-                                    ->danger()
-                                    ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
-                                    ->send();
-                                Cart::update($cartItem->rowId, $maxStock);
-                            }
-                        }
-                    }
-                }
+// Check parent product group stock
+        $parentItemsToCheck->unique()->each(function ($parentId) {
+            $parentProduct = Product::find($parentId);
+            if (!$parentProduct) {
+                return;
             }
-        }
+
+            $cartItems = self::cartItems()->filter(function ($cartItem) use ($parentId) {
+                return $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->id === $parentId;
+            });
+
+            $maxStock = $parentProduct->stock();
+            $maxLimit = $parentProduct->limit_purchases_per_customer_limit;
+            $currentAmount = $cartItems->sum('qty');
+
+            if ($currentAmount > $maxStock || $currentAmount > $maxLimit) {
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
+                    ->send();
+
+                $cartItems->each(function ($cartItem) use ($maxStock) {
+                    Cart::remove($cartItem->rowId);
+                });
+            }
+        });
     }
 
     public static function emptyMyCart()
@@ -959,43 +861,35 @@ class ShoppingCart
 
     public static function getCrossSellAndSuggestedProducts(int $limit = 4, bool $removeIfAlreadyPresentInShoppingCart = true): Collection
     {
-        $suggestedProductIds = [];
+        $suggestedProductIds = collect();
+
         $cartItems = self::cartItems();
-        $productIdsInCart = [];
+        $productIdsInCart = $cartItems->pluck('model.id')->toArray();
 
         foreach ($cartItems as $cartItem) {
-            $productIdsInCart[] = $cartItem->model->id;
-        }
-
-        foreach ($cartItems as $cartItem) {
-            if ($cartItem->model->crossSellProducts) {
-                $suggestedProductIds = array_merge($suggestedProductIds, $cartItem->model->crossSellProducts->pluck('id')->toArray());
-            }
-        }
-        foreach ($cartItems as $cartItem) {
-            if ($cartItem->model->suggestedProducts) {
-                $suggestedProductIds = array_merge($suggestedProductIds, $cartItem->model->suggestedProducts->pluck('id')->toArray());
-            }
+            $suggestedProductIds = $suggestedProductIds
+                ->merge($cartItem->model->crossSellProducts?->pluck('id') ?? [])
+                ->merge($cartItem->model->suggestedProducts?->pluck('id') ?? []);
         }
 
         if ($removeIfAlreadyPresentInShoppingCart) {
-            foreach ($suggestedProductIds as $key => $id) {
-                if (in_array($id, $productIdsInCart)) {
-                    unset($suggestedProductIds[$key]);
-                }
-            }
+            $suggestedProductIds = $suggestedProductIds->diff($productIdsInCart);
         }
 
-        if (count($suggestedProductIds) > $limit) {
-            $suggestedProductIds = array_slice($suggestedProductIds, 0, $limit);
+        $suggestedProductIds = $suggestedProductIds->unique();
+
+        if ($suggestedProductIds->count() < $limit) {
+            $additionalSuggestedProductIds = Product::publicShowable()
+                ->whereNotIn('id', $suggestedProductIds->toArray())
+                ->inRandomOrder()
+                ->limit($limit - $suggestedProductIds->count())
+                ->pluck('id');
+
+            $suggestedProductIds = $suggestedProductIds->merge($additionalSuggestedProductIds);
         }
 
-        if (count($suggestedProductIds) < $limit) {
-            $limit -= count($suggestedProductIds);
-            $additionalSuggestedProductIds = Product::publicShowable()->whereNotIn('id', $suggestedProductIds)->inRandomOrder()->limit($limit)->pluck('id')->toArray();
-            $suggestedProductIds = array_merge($suggestedProductIds, $additionalSuggestedProductIds);
-        }
-
-        return Product::whereIn('id', $suggestedProductIds)->publicShowable()->get();
+        return Product::whereIn('id', $suggestedProductIds->take($limit)->toArray())
+            ->publicShowable()
+            ->get();
     }
 }

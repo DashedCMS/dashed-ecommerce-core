@@ -36,10 +36,15 @@ class Cart extends Component
 
     public function fillPrices()
     {
-        $this->subtotal = ShoppingCart::subtotal(true);
-        $this->discount = ShoppingCart::totalDiscount(true);
-        $this->tax = ShoppingCart::btw(true);
-        $this->total = ShoppingCart::total(true);
+        $shoppingCartAmounts = ShoppingCart::amounts(true);
+        $this->subtotal = $shoppingCartAmounts['subTotal'];
+        $this->discount = $shoppingCartAmounts['discount'];
+        $this->tax = $shoppingCartAmounts['tax'];
+        $this->total = $shoppingCartAmounts['total'];
+//        $this->subtotal = ShoppingCart::subtotal(true);
+//        $this->discount = ShoppingCart::totalDiscount(true);
+//        $this->tax = ShoppingCart::btw(true);
+//        $this->total = ShoppingCart::total(true);
     }
 
     public function getCartItemsProperty()
