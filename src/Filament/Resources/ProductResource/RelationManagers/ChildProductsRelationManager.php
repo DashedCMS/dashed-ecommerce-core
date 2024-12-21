@@ -51,6 +51,8 @@ class ChildProductsRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen'),
+                TextColumn::make('total_stock')
+                    ->label('Voorraad'),
                 IconColumn::make('status')
                     ->label('Status')
                     ->trueIcon('heroicon-o-check-circle')

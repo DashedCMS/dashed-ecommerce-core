@@ -273,16 +273,16 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->builder(
             'routeModels',
             [
-                'productGroup' => [
-                    'name' => 'ProductGroep',
-                    'pluralName' => 'Product groepen',
-                    'class' => ProductGroup::class,
-                    'nameField' => 'name',
-                ],
                 'product' => [
                     'name' => 'Product',
                     'pluralName' => 'Products',
                     'class' => Product::class,
+                    'nameField' => 'name',
+                ],
+                'productGroup' => [
+                    'name' => 'ProductGroep',
+                    'pluralName' => 'Product groepen',
+                    'class' => ProductGroup::class,
                     'nameField' => 'name',
                 ],
                 'productCategory' => [

@@ -539,6 +539,9 @@ class ProductResource extends Resource
                     ->label('Naam')
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
+                TextColumn::make('total_stock')
+                    ->label('Voorraad')
+                    ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
                     ->sortable(),
