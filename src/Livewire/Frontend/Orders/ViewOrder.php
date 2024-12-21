@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Orders;
 
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedTranslations\Models\Translation;
-use Illuminate\Contracts\Cache\LockTimeoutException;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\View;
 use Livewire\Component;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 
 class ViewOrder extends Component
 {
