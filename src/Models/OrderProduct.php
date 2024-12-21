@@ -63,7 +63,7 @@ class OrderProduct extends Model
         });
 
         static::saved(function ($orderProduct) {
-            if ($orderProduct->product && $orderProduct->product->productGroup) {
+            if ($orderProduct->product) {
                 UpdateProductInformationJob::dispatch($orderProduct->product->productGroup, false);
             }
         });
