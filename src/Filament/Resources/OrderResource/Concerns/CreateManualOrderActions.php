@@ -215,10 +215,6 @@ trait CreateManualOrderActions
 
         $this->loading = true;
 
-        if ($refreshFromDatabase) {
-            $this->fillPOSCart(false, $this->posIdentifier);
-        }
-
         foreach ($this->products ?: [] as $chosenProduct) {
             $product = Product::find($chosenProduct['id']);
             if (($chosenProduct['quantity'] ?? 0) > 0) {
@@ -307,58 +303,7 @@ trait CreateManualOrderActions
                 ->send();
         }
 
-        if ($refreshFromDatabase) {
-            $this->savePOSCart();
-            $this->cacheVariables();
-        }
-
         $this->loading = false;
-    }
-
-    public function fillPOSCart($isMount = false, ?string $identifier = null)
-    {
-        if ($isMount) {
-            $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
-            if ($posCart) {
-                $this->products = $posCart->products;
-                $this->discount_code = $posCart->discount_code;
-                $this->posIdentifier = $posCart->identifier;
-            } else {
-                $this->posIdentifier = uniqid();
-            }
-        } elseif ($identifier) {
-            $posCart = POSCart::where('user_id', auth()->user()->id)->where('identifier', $identifier)->first();
-            if ($posCart) {
-                $this->products = $posCart->products;
-                $this->discount_code = $posCart->discount_code;
-                $this->posIdentifier = $posCart->identifier;
-            }
-        }
-
-        foreach ($this->products as &$product) {
-            $product['product'] = Product::find($product['product']['id'] ?? 0);
-        }
-    }
-
-    public function savePOSCart()
-    {
-        $posCart = POSCart::where('user_id', auth()->user()->id)->where('identifier', $this->posIdentifier)->first();
-        if (! $posCart) {
-            $posCart = new POSCart();
-            $posCart->user_id = auth()->user()->id;
-            $posCart->identifier = $this->posIdentifier;
-        }
-        $posCart->products = $this->products;
-        $posCart->discount_code = $this->discount_code;
-        $posCart->save();
-    }
-
-    public function finishPOSCart()
-    {
-        $posCart = POSCart::where('user_id', auth()->user()->id)->where('identifier', $this->posIdentifier)->first();
-        $posCart->status = 'finished';
-        $posCart->save();
-        $this->posIdentifier = uniqid();
     }
 
     public function createOrder(): array
