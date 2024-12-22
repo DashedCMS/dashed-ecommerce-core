@@ -73,6 +73,6 @@ class CreateMissingProductVariationsJob implements ShouldQueue
             }
         }
 
-        UpdateProductInformationJob::dispatch($this->productGroup);
+        UpdateProductInformationJob::dispatch($this->productGroup, false);
     }
 }
