@@ -3,11 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Jobs\CreateMissingProductVariationsJob;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Filament\Resources\Pages\CreateRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedCore\Filament\Concerns\HasCreatableCMSActions;
+use Dashed\DashedEcommerceCore\Jobs\CreateMissingProductVariationsJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 
 class CreateProductGroup extends CreateRecord
