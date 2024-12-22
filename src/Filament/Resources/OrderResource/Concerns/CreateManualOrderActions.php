@@ -19,7 +19,6 @@ use Filament\Forms\Components\FileUpload;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
-use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Filament\Forms\Concerns\InteractsWithForms;
