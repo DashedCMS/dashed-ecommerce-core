@@ -182,7 +182,7 @@ class ShoppingCart
         }
     }
 
-    public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
+    public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $total)
     {
         $depositAmount = 0;
 
@@ -190,8 +190,8 @@ class ShoppingCart
             foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == $paymentMethodId) {
                     if ($paymentMethod['deposit_calculation']) {
-                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', self::total(false, $calculateDiscount, $shippingMethodId, null), $paymentMethod['deposit_calculation']);
-                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL}', self::total(false, $calculateDiscount, $shippingMethodId, $paymentMethodId), $paymentMethod['deposit_calculation']);
+                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', $total ?: self::total(false, $calculateDiscount, $shippingMethodId, null), $paymentMethod['deposit_calculation']);
+                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL}', $total ?: self::total(false, $calculateDiscount, $shippingMethodId, $paymentMethodId), $paymentMethod['deposit_calculation']);
                         $depositAmount = eval('return ' . $paymentMethod['deposit_calculation'] . ';');
                     }
                 }
@@ -527,9 +527,10 @@ class ShoppingCart
                     }
                 }
 
+                $total = self::total();
                 $shippingMethods = $shippingZone->shippingMethods()
-                    ->where('minimum_order_value', '<=', self::total())
-                    ->where('maximum_order_value', '>=', self::total())
+                    ->where('minimum_order_value', '<=', $total)
+                    ->where('maximum_order_value', '>=', $total)
 //                    ->where(function ($query) use ($distanceRange) {
 //                        $query->where('distance_range_enabled', 1)
 //                            ->where('distance_range', '>=', $distanceRange);
@@ -639,9 +640,9 @@ class ShoppingCart
         return $paymentMethods;
     }
 
-    public static function getPaymentMethods($type = 'online')
+    public static function getPaymentMethods($type = 'online', $total = null)
     {
-        $paymentMethods = PaymentMethod::where('available_from_amount', '<=', self::total())->where('site_id', Sites::getActive())->where('active', 1)->where('type', $type)->orderBy('order', 'asc')->get()->toArray();
+        $paymentMethods = PaymentMethod::where('available_from_amount', '<=', $total ?: self::total())->where('site_id', Sites::getActive())->where('active', 1)->where('type', $type)->orderBy('order', 'asc')->get()->toArray();
 
         foreach ($paymentMethods as &$paymentMethod) {
             $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';
@@ -804,12 +805,13 @@ class ShoppingCart
 
     public static function getCheckoutData($shippingMethodId, $paymentMethodId)
     {
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethodId, $paymentMethodId);
-        $discount = ShoppingCart::totalDiscount();
-        $btw = ShoppingCart::btw(false, true, $shippingMethodId, $paymentMethodId);
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethodId, $paymentMethodId);
-        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethodId, $paymentMethodId);
-        $total = ShoppingCart::total(false, true, $shippingMethodId, $paymentMethodId);
+        $discount = self::totalDiscount(false);
+        $tax = self::btw(false, true, $shippingMethodId, $paymentMethodId);
+        $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount);
+        $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
+
+        $taxPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethodId, $paymentMethodId);
+        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethodId, $paymentMethodId, $total);
         $depositPaymentMethods = [];
         if ($depositAmount > 0.00) {
             $depositPaymentMethods = ShoppingCart::getPaymentMethodsForDeposit($paymentMethodId);
@@ -826,7 +828,7 @@ class ShoppingCart
 
         $isPostPayMethod = false;
         if ($paymentMethodId) {
-            foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
+            foreach (ShoppingCart::getPaymentMethods(null, $total) as $paymentMethod) {
                 if ($paymentMethod['id'] == $paymentMethodId) {
                     $paymentCosts = $paymentMethod['extra_costs'];
                     $isPostPayMethod = $paymentMethod['postpay'];
@@ -839,9 +841,9 @@ class ShoppingCart
             'subTotalFormatted' => CurrencyHelper::formatPrice($subTotal),
             'discount' => $discount,
             'discountFormatted' => CurrencyHelper::formatPrice($discount),
-            'btw' => $btw,
-            'btwPercentages' => $btwPercentages,
-            'btwFormatted' => CurrencyHelper::formatPrice($btw),
+            'btw' => $tax,
+            'btwPercentages' => $taxPercentages,
+            'btwFormatted' => CurrencyHelper::formatPrice($tax),
             'total' => $total,
             'totalFormatted' => CurrencyHelper::formatPrice($total),
             'shippingCosts' => $shippingCosts,
