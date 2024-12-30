@@ -927,4 +927,9 @@ class Product extends Model
             'livewireComponent' => ShowProduct::class,
         ];
     }
+
+    public function volumeDiscounts(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductGroupVolumeDiscount::class, 'dashed__product_group_volume_discount_product', 'product_id', 'product_group_volume_discount_id');
+    }
 }

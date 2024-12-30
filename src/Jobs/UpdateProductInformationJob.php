@@ -90,7 +90,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            if (($this->productGroup->only_show_parent_product && $loop == 1) || ! $this->productGroup->only_show_parent_product) {
+            if (($this->productGroup->only_show_parent_product && $loop == 1) || !$this->productGroup->only_show_parent_product) {
                 $product->indexable = 1;
             } else {
                 $product->indexable = 0;
@@ -129,6 +129,10 @@ class UpdateProductInformationJob implements ShouldQueue
         Cache::forget('pos_products');
         Cache::forget('product-group-showable-characteristics-' . $this->productGroup->id);
         Cache::forget('product-group-showable-characteristics-without-filters-' . $this->productGroup->id);
+
+        foreach ($this->productGroup->volumeDiscounts as $volumeDiscount) {
+            $volumeDiscount->connectAllProducts();
+        }
 
         if ($this->updateCategories) {
             UpdateProductCategoriesInformationJob::dispatch();

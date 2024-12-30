@@ -385,4 +385,9 @@ class ProductGroup extends Model
             'livewireComponent' => ShowProduct::class,
         ];
     }
+
+    public function volumeDiscounts(): HasMany
+    {
+        return $this->hasMany(ProductGroupVolumeDiscount::class);
+    }
 }
