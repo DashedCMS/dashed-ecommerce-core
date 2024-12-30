@@ -182,7 +182,7 @@ class ShoppingCart
         }
     }
 
-    public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $total)
+    public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $total = null)
     {
         $depositAmount = 0;
 
@@ -756,6 +756,24 @@ class ShoppingCart
             if (! $cartItemDeleted && $model->productGroup && $model->productGroup->use_parent_stock ?? false) {
                 $parentItemsToCheck->push($model->productGroup->id);
             }
+
+            $price = $cartItem->options['originalPrice'];
+
+            if($model->volumeDiscounts){
+                $volumeDiscount = $model->volumeDiscounts()->where('min_quantity', '<=', $cartItem->qty)->orderBy('min_quantity', 'desc')->first();
+                if($volumeDiscount){
+                    if(!$cartItem->options['originalPrice']){
+                        Cart::update($cartItem->rowId, [
+                            'options' => array_merge($cartItem->options, ['originalPrice' => $cartItem->price]),
+                        ]);
+                    }
+                    $price = $volumeDiscount->getPrice($price);
+                }
+            }
+
+            Cart::update($cartItem->rowId, [
+                'price' => $price,
+            ]);
         }
 
         // Check parent product group stock

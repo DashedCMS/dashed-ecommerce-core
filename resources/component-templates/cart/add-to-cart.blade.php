@@ -16,9 +16,14 @@
                 :extraKey="$extraKey"/>
         @endforeach
     @endif
+
+    @if($product)
+        <x-product.volume-discounts :product="$product" :volumeDiscounts="$volumeDiscounts"/>
+    @endif
+
     <div class="mt-4 flex flex-wrap gap-4">
         <div
-            class="inline-flex items-center justify-between md:justify-start p-4 transition bg-black/5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800 w-full md:w-fit">
+            class="inline-flex items-center justify-between md:justify-start p-4 transition bg-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-800 w-full md:w-fit rounded-lg">
             <div
                 wire:click="setQuantity('{{ $quantity - 1 }}')"
                 class="grid w-6 h-6 bg-white rounded shadow-xl cursor-pointer place-items-center text-primary-800 hover:bg-primary-800 hover:text-white shadow-primary-800/10 ring-1 ring-black/5 trans"
@@ -40,6 +45,7 @@
                 <x-lucide-plus class="w-4 h-4"/>
             </div>
         </div>
+
         <div class="grid gap-4 grow">
             @if($product && $product->inStock())
                 <button type="submit"

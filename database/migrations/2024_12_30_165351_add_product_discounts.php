@@ -23,7 +23,7 @@ return new class extends Migration {
                 ->nullable();
             $table->integer('discount_percentage')
                 ->nullable();
-            $table->decimal('min_quantity')
+            $table->integer('min_quantity')
                 ->default(1);
             $table->boolean('active_for_all_variants')
                 ->default(true);

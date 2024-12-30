@@ -32,9 +32,9 @@
                                 <div class="my-2 grid text-sm">
                                     @foreach($item->options['options'] as $option)
                                         @if($loop->first)
-                                            <p class="">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                            <p class="">{{$option['name'] . ': ' . strtolower($option['value'])}}</p>
                                         @else
-                                            <p class="pt-2 mt-2 border-t border-gray-200">{{$option['name'] . ':'}}{{$option['value']}}</p>
+                                            <p class="pt-2 mt-2 border-t border-gray-200">{{$option['name'] . ': ' . strtolower($option['value'])}}</p>
                                         @endif
                                     @endforeach
                                 </div>
@@ -50,8 +50,7 @@
                         </div>
 
                         <div class="mt-4">
-                            <div
-                                class="inline-flex items-center p-1 transition rounded @if($forceWhite) bg-white @else bg-gray-100 @endif focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-500">
+                            <div class="inline-flex items-center p-1 transition rounded @if($forceWhite) bg-white @else bg-gray-100 @endif focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-500">
                                 <button
                                     wire:click="changeQuantity('{{ $item->rowId }}', '{{ $item->qty - 1 }}')"
                                     class="grid w-6 h-6 bg-primary-500 rounded shadow-xl place-items-center text-white hover:bg-primary-500 hover:text-white shadow-primary-500/10 ring-1 ring-black/5"

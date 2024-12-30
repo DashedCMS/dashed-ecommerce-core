@@ -186,35 +186,39 @@
 
                         <div class="mt-3">
                             <h2 class="sr-only">{{ Translation::get('product-information', 'products', 'Product information') }}</h2>
-                            <div class="flex flex-wrap gap-2 items-center">
-                                @if($discountPrice)
-                                    <span class="line-through text-red-500 mr-2 font-normal">
+                            @if($product)
+                                <div class="flex flex-wrap gap-2 items-center">
+                                    @if($discountPrice > 0)
+                                        <span class="line-through text-red-500 mr-2 font-normal">
                                     {{CurrencyHelper::formatPrice($discountPrice)}}
                                 </span>
-                                @endif
-                                <p class="text-3xl tracking-tight font-bold text-gray-900">{{ CurrencyHelper::formatPrice($price) }}</p>
-                            </div>
-                            {{--                                @if(Customsetting::get('taxes_prices_include_taxes'))--}}
-                            {{--                                    {{ Translation::get('product-including-tax', 'products', 'incl. TAX') }}--}}
-                            {{--                                @else--}}
-                            {{--                                    {{ Translation::get('product-excluding-tax', 'products', 'excl. TAX') }}--}}
-                            {{--                                @endif--}}
+                                    @endif
+                                    <p class="text-3xl tracking-tight font-bold text-gray-900">{{ CurrencyHelper::formatPrice($price) }}</p>
+                                    @if(Customsetting::get('taxes_prices_include_taxes'))
+                                        {{ Translation::get('product-including-tax', 'products', 'incl. TAX') }}
+                                    @else
+                                        {{ Translation::get('product-excluding-tax', 'products', 'excl. TAX') }}
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
                         <div class="mt-6 grid gap-2">
-                            <x-product.stock-text :product="$product"/>
+                            @if($product)
+                                <x-product.stock-text :product="$product"/>
 
-                            <div class="flex items-center text-sm">
-                                <x-dashed-files::image
-                                    class="h-8 rounded-lg mr-2"
-                                    :mediaId="Translation::get('pay-in-terms-logo', 'products', '', 'image')"
-                                />
-                                <div>
-                                    {!! Translation::get('pay-in-terms', 'products', 'Betaal in 3 termijnen: <b>:term:</b> per termijn', 'text', [
-                                    'term' => CurrencyHelper::formatPrice($price / 3),
-                                    ]) !!}
+                                <div class="flex items-center text-sm">
+                                    <x-dashed-files::image
+                                        class="h-8 rounded-lg mr-2"
+                                        :mediaId="Translation::get('pay-in-terms-logo', 'products', '', 'image')"
+                                    />
+                                    <div>
+                                        {!! Translation::get('pay-in-terms', 'products', 'Betaal in 3 termijnen: <b>:term:</b> per termijn', 'text', [
+                                        'term' => CurrencyHelper::formatPrice($price / 3),
+                                        ]) !!}
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
 
                             <div class="flex items-center text-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -287,7 +291,7 @@
 
                         <div class="mt-6">
                             <x-cart.add-to-cart :product="$product" :filters="$filters" :productExtras="$productExtras"
-                                                :extras="$extras"
+                                                :extras="$extras" :volumeDiscounts="$volumeDiscounts"
                                                 :quantity="$quantity" :price="$price" :discountPrice="$discountPrice"/>
                         </div>
 
@@ -340,7 +344,7 @@
                                 },
                             }">
                             @if($description)
-                                <div class="bg-gray-100">
+                                <div class="bg-gray-100 rounded-lg">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
                                          @click="openTab('description')">
                                         <h3>{{ Translation::get('product-description', 'products', 'Beschrijving') }}</h3>
@@ -371,7 +375,7 @@
                             @endif
 
                             @if($characteristics)
-                                <div class="bg-gray-100">
+                                <div class="bg-gray-100 rounded-lg">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
                                          @click="openTab('characteristics')">
                                         <h3>{{ Translation::get('product-characteristics', 'product', 'Productkenmerken') }}</h3>
@@ -410,7 +414,7 @@
                             @endif
 
                             @if(count($contentBlocks['faqs'] ?? []))
-                                <div class="bg-gray-100">
+                                <div class="bg-gray-100 rounded-lg">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
                                          @click="openTab('faq')">
                                         <h3>{{ Translation::get('faq', 'product', 'Veelgestelde vragen') }}</h3>
@@ -474,7 +478,7 @@
                             @endif
 
                             @foreach($productTabs ?: [] as $key => $productTab)
-                                <div class="bg-gray-100">
+                                <div class="bg-gray-100 rounded-lg">
                                     <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
                                          @click="openTab('tab-{{ $key }}')">
                                         <h3>{{ $productTab->name }}</h3>
