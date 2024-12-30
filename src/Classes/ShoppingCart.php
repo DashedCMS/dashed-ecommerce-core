@@ -759,10 +759,10 @@ class ShoppingCart
 
             $price = $cartItem->options['originalPrice'];
 
-            if($model->volumeDiscounts){
+            if ($model->volumeDiscounts) {
                 $volumeDiscount = $model->volumeDiscounts()->where('min_quantity', '<=', $cartItem->qty)->orderBy('min_quantity', 'desc')->first();
-                if($volumeDiscount){
-                    if(!$cartItem->options['originalPrice']){
+                if ($volumeDiscount) {
+                    if (! $cartItem->options['originalPrice']) {
                         Cart::update($cartItem->rowId, [
                             'options' => array_merge($cartItem->options, ['originalPrice' => $cartItem->price]),
                         ]);

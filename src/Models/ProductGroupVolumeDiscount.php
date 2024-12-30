@@ -2,21 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedPages\Models\Page;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
-use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class ProductGroupVolumeDiscount extends Model
 {
@@ -58,6 +49,7 @@ class ProductGroupVolumeDiscount extends Model
     public function getPrice($price, bool $formatResult = false): string|float
     {
         $price -= $this->getDiscountedPrice($price, false);
+
         return $formatResult ? CurrencyHelper::formatPrice($price) : $price;
     }
 
@@ -69,6 +61,7 @@ class ProductGroupVolumeDiscount extends Model
         } else {
             $discountedPrice = $discountedPrice - $this->discount_amount;
         }
+
         return $formatResult ? CurrencyHelper::formatPrice($discountedPrice) : $discountedPrice;
     }
 
