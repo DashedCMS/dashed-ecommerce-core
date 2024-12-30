@@ -2,20 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedPages\Models\Page;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
-use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class ProductGroupVolumeDiscount extends Model
 {
