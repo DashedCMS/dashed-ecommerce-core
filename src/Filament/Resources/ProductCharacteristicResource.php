@@ -30,7 +30,7 @@ class ProductCharacteristicResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static ?string $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product kenmerken';
     protected static ?string $label = 'Product kenmerk';
     protected static ?string $pluralLabel = 'Product kenmerken';

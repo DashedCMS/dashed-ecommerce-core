@@ -49,7 +49,7 @@ class ProductGroupResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static ?string $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product groepen';
     protected static ?string $label = 'Product groep';
     protected static ?string $pluralLabel = 'Product groepen';

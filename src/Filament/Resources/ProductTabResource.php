@@ -35,7 +35,7 @@ class ProductTabResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationIcon = 'heroicon-o-plus';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static ?string $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product tabs';
     protected static ?string $label = 'Product tab';
     protected static ?string $pluralLabel = 'Product tabs';

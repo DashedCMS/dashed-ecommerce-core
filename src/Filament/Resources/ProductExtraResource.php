@@ -36,7 +36,7 @@ class ProductExtraResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationIcon = 'heroicon-o-beaker';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static ?string $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product extras';
     protected static ?string $label = 'Product extra';
     protected static ?string $pluralLabel = 'Product extras';
