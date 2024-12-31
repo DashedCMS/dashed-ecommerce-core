@@ -240,7 +240,9 @@ class POSPage extends Component implements HasForms
 
         $this->createDiscountData = [];
 
-        $this->dispatch('discountCodeCreated');
+        $this->dispatch('discountCodeCreated', [
+            'discountCode' => $discountCode->code,
+        ]);
     }
 
     public function render()

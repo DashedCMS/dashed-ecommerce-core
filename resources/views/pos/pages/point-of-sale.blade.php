@@ -1679,6 +1679,8 @@
                     })
                 }
 
+                this.discountCode = null;
+
                 this.retrieveCart();
             } catch (error) {
                 return $wire.dispatch('notify', {
@@ -2175,6 +2177,7 @@
             })
 
             $wire.on('discountCodeCreated', (variable) => {
+                this.discountCode = variable[0].discountCode;
                 this.createDiscountPopup = false;
                 this.focus();
                 this.retrieveCart();
