@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Exports;
 
 use App\Models\User;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 class PricePerProductForUserExport implements FromArray
 {

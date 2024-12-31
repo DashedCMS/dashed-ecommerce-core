@@ -2,26 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages;
 
-use Dashed\DashedEcommerceCore\Exports\OrderListExport;
-use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
-use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\LocaleSwitcher;
-use Filament\Forms\Components\FileUpload;
-use Filament\Notifications\Livewire\Notifications;
-use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Forms\Components\FileUpload;
+use Illuminate\Contracts\Support\Htmlable;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
+use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 
 class EditPricePerUser extends EditRecord
 {
-
     protected static string $resource = PricePerUserResource::class;
 
     public function getTitle(): string|Htmlable
@@ -55,7 +48,7 @@ class EditPricePerUser extends EditRecord
                             'required',
                             'file',
                             'mimes:csv,xlsx',
-                        ])
+                        ]),
                 ])
                 ->action(function () {
 

@@ -3,33 +3,24 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use App\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\EditPricePerUser;
-use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\ListPricePerUser;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
-use FilamentTiptapEditor\TiptapEditor;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Actions\Action;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductTab;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\EditProductTab;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\ListProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
+use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\EditPricePerUser;
+use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\ListPricePerUser;
 
 class PricePerUserResource extends Resource
 {
@@ -55,8 +46,8 @@ class PricePerUserResource extends Resource
                 ->schema([
                     Placeholder::make('pricePerUser')
                         ->label('Prijs per gebruiker')
-                        ->content('Vul hier een prijs per product in voor de gebruiker, of doe het in bulk met de export/import functie.')
-                ])
+                        ->content('Vul hier een prijs per product in voor de gebruiker, of doe het in bulk met de export/import functie.'),
+                ]),
         ];
 
         $productSchema = [];
@@ -84,9 +75,9 @@ class PricePerUserResource extends Resource
                             $values = $get('product_ids');
                             $values = array_diff($values, [$product->id]);
                             $set('product_ids', $values);
-                        })
+                        }),
                 ])
-                ->visible(fn(Get $get) => collect($get('product_ids'))->contains($product->id))
+                ->visible(fn (Get $get) => collect($get('product_ids'))->contains($product->id))
                 ->columns(2);
         }
 

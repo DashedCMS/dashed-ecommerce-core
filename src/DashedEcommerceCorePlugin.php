@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -14,6 +13,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
