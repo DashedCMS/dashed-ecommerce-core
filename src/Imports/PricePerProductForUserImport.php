@@ -3,40 +3,16 @@
 namespace Dashed\DashedEcommerceCore\Imports;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Maatwebsite\Excel\Concerns\ToArray;
+use Maatwebsite\Excel\Concerns\ToCollection;
 
-class PricePerProductForUserImport implements FromArray
+class PricePerProductForUserImport implements ToCollection
 {
-    protected User $user;
-
-    public function __construct(User $user)
+    public function collection(Collection $rows): array
     {
-        $this->user = $user;
-    }
-
-    public function array(): array
-    {
-        $productsArray = [
-            [
-                'Product ID (niet wijzigen)',
-                'Product',
-                'Prijs',
-                'Kortings prijs',
-            ],
-        ];
-
-        foreach (Product::all() as $product) {
-            $productsArray[] = [
-                $product->id,
-                $product->name,
-                $product->priceForUser($this->user, false),
-                $product->discountPriceForUser($this->user, false),
-            ];
-        }
-
-        return [
-            $productsArray,
-        ];
+        return $rows;
     }
 }

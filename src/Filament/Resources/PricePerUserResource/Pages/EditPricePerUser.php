@@ -43,15 +43,16 @@ class EditPricePerUser extends EditRecord
                 ->form([
                     FileUpload::make('file')
                         ->label('Bestand')
-                        ->acceptedFileTypes(['.csv', '.xslx'])
                         ->rules([
                             'required',
                             'file',
                             'mimes:csv,xlsx',
                         ]),
                 ])
-                ->action(function () {
+                ->action(function ($data) {
 
+                    $rows = Excel::toCollection(new PricePerProductForUserImport($this->record), $data['file']->getRealPath());
+dd($rows);
                 }),
         ];
     }
