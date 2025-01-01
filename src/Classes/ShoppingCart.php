@@ -132,7 +132,23 @@ class ShoppingCart
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
         if (! $calculateInclusiveTax) {
-            $cartTotal -= self::btw(false, false);
+//            dd($cartTotal, self::btw(false, false, $shippingMethodId, $paymentMethodId));
+            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
+
+            if ($shippingMethodId) {
+                $shippingMethod = ShippingMethod::find($shippingMethodId);
+                if ($shippingMethod) {
+                    $cartTotal -= $shippingMethod->costsForCart;
+                }
+            }
+
+            if ($paymentMethodId) {
+                foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
+                    if ($paymentMethod['id'] == $paymentMethodId) {
+                        $cartTotal -= $paymentMethod['extra_costs'];
+                    }
+                }
+            }
         }
 
         if ($formatResult) {

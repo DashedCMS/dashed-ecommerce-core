@@ -2,8 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages;
 
+use Dashed\DashedEcommerceCore\Imports\PricePerProductForUserImport;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -43,6 +45,8 @@ class EditPricePerUser extends EditRecord
                 ->form([
                     FileUpload::make('file')
                         ->label('Bestand')
+                        ->disk('local')
+                        ->directory('imports')
                         ->rules([
                             'required',
                             'file',
@@ -51,8 +55,14 @@ class EditPricePerUser extends EditRecord
                 ])
                 ->action(function ($data) {
 
-                    $rows = Excel::toCollection(new PricePerProductForUserImport($this->record), $data['file']->getRealPath());
-                    dd($rows);
+                    $file = Storage::disk('local')->path($data['file']);
+                    Excel::import(new PricePerProductForUserImport($this->record), $file);
+
+                    Notification::make()
+                        ->title('Importeren')
+                        ->body('Het importeren is gelukt, refresh de pagina.')
+                        ->success()
+                        ->send();
                 }),
         ];
     }

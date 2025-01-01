@@ -57,11 +57,11 @@ class PricePerUserResource extends Resource
                 ->schema([
                     TextInput::make($product->id . '_price')
                         ->label('Prijs')
-                        ->helperText('Huidige prijs: ' . CurrencyHelper::formatPrice($product->current_price))
+                        ->helperText('Huidige prijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('current_price')))
                         ->required()
                         ->numeric(),
                     TextInput::make($product->id . '_discount_price')
-                        ->helperText('Huidige kortingsprijs: ' . CurrencyHelper::formatPrice($product->discount_price))
+                        ->helperText('Huidige kortingsprijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('discount_price')))
                         ->label('Korting prijs')
                         ->numeric(),
                 ])
