@@ -2,23 +2,21 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
-use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
-use Dashed\DashedEcommerceCore\Imports\PricePerProductForUserImport;
-use Dashed\DashedEcommerceCore\Imports\ProductsToEditImport;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\LocaleSwitcher;
-use Filament\Forms\Components\FileUpload;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
+use Dashed\DashedEcommerceCore\Imports\ProductsToEditImport;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ListProducts extends ListRecords
 {
@@ -49,7 +47,7 @@ class ListProducts extends ListRecords
                         ->success()
                         ->send();
 
-                    return Excel::download(new ProductsToEdit, 'Producten van ' . Customsetting::get('site_name') . '.xlsx');
+                    return Excel::download(new ProductsToEdit(), 'Producten van ' . Customsetting::get('site_name') . '.xlsx');
                 }),
             Action::make('import')
                 ->label('Importeer')
@@ -69,7 +67,7 @@ class ListProducts extends ListRecords
                 ->action(function ($data) {
 
                     $file = Storage::disk('local')->path($data['file']);
-                    Excel::import(new ProductsToEditImport, $file);
+                    Excel::import(new ProductsToEditImport(), $file);
 
                     Notification::make()
                         ->title('Importeren')

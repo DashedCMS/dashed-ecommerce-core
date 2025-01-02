@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Exports;
 
-use App\Models\User;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Dashed\DashedEcommerceCore\Models\Product;
 
