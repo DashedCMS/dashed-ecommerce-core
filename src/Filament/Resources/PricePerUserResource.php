@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use App\Models\User;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -18,6 +17,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Actions\Action;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\EditPricePerUser;
@@ -60,7 +60,7 @@ class PricePerUserResource extends Resource
                     TextInput::make($productCategory->id . '_category_discount_price')
                         ->label('Korting bedrag')
                         ->prefix('€')
-                        ->required(fn(Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
+                        ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
                         ->minValue(1)
                         ->reactive()
                         ->numeric(),
@@ -70,7 +70,7 @@ class PricePerUserResource extends Resource
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
-                        ->required(fn(Get $get) => $get($productCategory->id . '_category_discount_price') === null)
+                        ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_price') === null)
                         ->reactive()
                         ->numeric(),
                 ])
@@ -86,7 +86,7 @@ class PricePerUserResource extends Resource
                             $set('product_category_ids', $values);
                         }),
                 ])
-                ->visible(fn(Get $get) => collect($get('product_category_ids'))->contains($productCategory->id))
+                ->visible(fn (Get $get) => collect($get('product_category_ids'))->contains($productCategory->id))
                 ->columns(2);
         }
 
@@ -113,7 +113,7 @@ class PricePerUserResource extends Resource
                         ->label('Korting bedrag')
                         ->prefix('€')
                         ->helperText('Product prijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('current_price')))
-                        ->required(fn(Get $get) => $get($product->id . '_discount_percentage') === null)
+                        ->required(fn (Get $get) => $get($product->id . '_discount_percentage') === null)
                         ->minValue(1)
                         ->maxValue($product->getRawOriginal('current_price') - 1)
                         ->reactive()
@@ -124,7 +124,7 @@ class PricePerUserResource extends Resource
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
-                        ->required(fn(Get $get) => $get($product->id . '_discount_price') === null)
+                        ->required(fn (Get $get) => $get($product->id . '_discount_price') === null)
                         ->reactive()
                         ->numeric(),
                 ])
@@ -140,7 +140,7 @@ class PricePerUserResource extends Resource
                             $set('product_ids', $values);
                         }),
                 ])
-                ->visible(fn(Get $get) => collect($get('product_ids'))->contains($product->id))
+                ->visible(fn (Get $get) => collect($get('product_ids'))->contains($product->id))
                 ->columns(3);
         }
 

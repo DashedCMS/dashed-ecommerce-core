@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Imports;
 
 use App\Models\User;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class ProductsToEditImport implements ToArray
 {

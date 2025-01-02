@@ -3,12 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Imports;
 
 use App\Models\User;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToArray;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class PricePerCategoryForUserImport implements ToArray
 {

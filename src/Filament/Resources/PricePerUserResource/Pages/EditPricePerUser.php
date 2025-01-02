@@ -2,11 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages;
 
-use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
-use Dashed\DashedEcommerceCore\Imports\PricePerCategoryForUserImport;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -16,8 +11,13 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Contracts\Support\Htmlable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
 use Dashed\DashedEcommerceCore\Imports\PricePerProductForUserImport;
+use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
+use Dashed\DashedEcommerceCore\Imports\PricePerCategoryForUserImport;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 
 class EditPricePerUser extends EditRecord
