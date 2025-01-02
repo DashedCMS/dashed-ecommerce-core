@@ -37,7 +37,7 @@ class EcommerceManager
 
     public function builder(string $name, null|string|array $blocks = null): self|array
     {
-        if (!$blocks) {
+        if (! $blocks) {
             return static::$builders[$name] ?? [];
         }
 
@@ -59,7 +59,7 @@ class EcommerceManager
 
     public function widgets(string $name, ?array $blocks = null): self|array
     {
-        if (!$blocks) {
+        if (! $blocks) {
             return static::$widgets[$name];
         }
 
@@ -70,7 +70,7 @@ class EcommerceManager
 
     public function buttonActions(string $name, ?array $blocks = null): self|array
     {
-        if (!$blocks) {
+        if (! $blocks) {
             return static::$buttonActions[$name];
         }
 
