@@ -108,6 +108,17 @@
                                             />
                                         </div>
 
+                                        @foreach($customFields as $key => $customField)
+                                            <x-fields.input
+                                                :required="$customField['required']"
+                                                :type="$customField['type']"
+                                                :model="'customFieldValues.' . $key"
+                                                :id="$key"
+                                                :label="$customField['label']"
+                                                placeholder="{{ $customField['placeholder'] }}"
+                                            />
+                                        @endforeach
+
                                         <div class="grid lg:grid-cols-2 gap-2 my-6 lg:col-span-2">
                                             <input placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
                                                    class="form-input"
@@ -494,14 +505,13 @@
                 </x-container>
             </section>
         </div>
-
-        <x-dashed-core::global-blocks name="checkout-page"/>
-
-</div>
-@else
-    <x-blocks.header :data="[
+    @else
+        <x-blocks.header :data="[
             'title' => Translation::get('no-items-in-cart', 'cart', 'Geen items in je winkelwagen!'),
             'subtitle' => Translation::get('keep-shopping', 'cart', 'Verder shoppen!'),
             'image' => Translation::get('image', 'cart', '', 'image'),
         ]"></x-blocks.header>
-@endif
+    @endif
+</div>
+
+<x-dashed-core::global-blocks name="checkout-page"/>

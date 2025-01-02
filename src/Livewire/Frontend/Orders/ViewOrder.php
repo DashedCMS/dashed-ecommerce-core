@@ -15,6 +15,7 @@ class ViewOrder extends Component
     public Order $order;
     public Collection $orderProducts;
     public Collection $notes;
+    public array $customOrderFields = [];
 
     public function mount()
     {
@@ -29,7 +30,7 @@ class ViewOrder extends Component
         $orderPayment = null;
 
         foreach ($possibleIdValues as $possibleIdValue) {
-            if (! $orderPayment) {
+            if (!$orderPayment) {
                 $paymentId = request()->get($possibleIdValue);
                 if ($paymentId) {
                     $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
@@ -37,7 +38,7 @@ class ViewOrder extends Component
             }
         }
 
-        if (! $orderPayment) {
+        if (!$orderPayment) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -49,7 +50,7 @@ class ViewOrder extends Component
             $hasAccessToOrder = true;
         }
 
-        if (! $hasAccessToOrder) {
+        if (!$hasAccessToOrder) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -86,6 +87,17 @@ class ViewOrder extends Component
         $this->order = $order;
         $this->orderProducts = $order->orderProducts;
         $this->notes = $order->publicLogs;
+
+        foreach (ecommerce()->builder('customOrderFields') as $key => $field) {
+            $key = str($key)->snake()->toString();
+
+            if ($order->$key) {
+                $this->customOrderFields[$key] = [
+                    'label' => $field['label'],
+                    'value' => $order->$key
+                ];
+            }
+        }
     }
 
     public function render()

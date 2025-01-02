@@ -2,12 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedTranslations\Models\Translation;
+
 class EcommerceManager
 {
     protected static $builders = [
         'paymentServiceProviders' => [],
         'fulfillmentProviders' => [],
-        'customOrderFields' => [],
+        'customOrderFields' => [
+//            Example:
+//            'orderNumber' => [
+//                'label' => Translation::get('order-number', 'custom-order-fields', 'Bestel nummer'),
+//                'placeholder' => Translation::get('order-number-placeholder', 'custom-order-fields', ''),
+//                'type' => 'text',
+//                'required' => false,
+//                'default' => null,
+//                'rules' => [
+//                    'nullable',
+//                    'max:255',
+//                ],
+//                'showOnInvoice' => true,
+//            ]
+        ],
     ];
 
     protected static $buttonActions = [
@@ -21,7 +37,7 @@ class EcommerceManager
 
     public function builder(string $name, null|string|array $blocks = null): self|array
     {
-        if (! $blocks) {
+        if (!$blocks) {
             return static::$builders[$name] ?? [];
         }
 
@@ -43,7 +59,7 @@ class EcommerceManager
 
     public function widgets(string $name, ?array $blocks = null): self|array
     {
-        if (! $blocks) {
+        if (!$blocks) {
             return static::$widgets[$name];
         }
 
@@ -54,7 +70,7 @@ class EcommerceManager
 
     public function buttonActions(string $name, ?array $blocks = null): self|array
     {
-        if (! $blocks) {
+        if (!$blocks) {
             return static::$buttonActions[$name];
         }
 

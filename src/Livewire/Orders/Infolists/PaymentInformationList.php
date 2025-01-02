@@ -32,6 +32,18 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
 
     public function infolist(Infolist $infolist): Infolist
     {
+        $customOrderFields = [];
+
+        foreach (ecommerce()->builder('customOrderFields') as $key => $field) {
+            $key = str($key)->snake()->toString();
+
+            if ($this->order->$key) {
+                $customOrderFields[] = TextEntry::make($key)
+                    ->label($field['label'])
+                    ->getStateUsing(fn($record) => $record->$key);
+            }
+        }
+
         return $infolist
             ->record($this->order)
             ->schema([
@@ -43,7 +55,7 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->label('IP'),
                         TextEntry::make('note')
                             ->label('Notitie')
-                            ->getStateUsing(fn ($record) => $record->note ?: 'Geen notitie'),
+                            ->getStateUsing(fn($record) => $record->note ?: 'Geen notitie'),
                         IconEntry::make('marketing')
                             ->label('Marketing geaccepteerd')
                             ->trueIcon('heroicon-o-check-circle')
@@ -52,16 +64,16 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->label('Factuur ID'),
                         TextEntry::make('paymentMethod')
                             ->label('Betalingsmethode')
-                            ->getStateUsing(fn ($record) => $record->paymentMethod ?? 'Niet gevonden'),
+                            ->getStateUsing(fn($record) => $record->paymentMethod ?? 'Niet gevonden'),
                         TextEntry::make('psp')
                             ->label('PSP')
-                            ->visible(fn ($record) => $record->psp),
+                            ->visible(fn($record) => $record->psp),
                         TextEntry::make('psp_id')
                             ->label('PSP ID')
-                            ->visible(fn ($record) => $record->psp),
+                            ->visible(fn($record) => $record->psp),
                         TextEntry::make('order_origin')
                             ->label('Verzendmethode')
-                            ->getStateUsing(fn ($record) => $record->shippingMethod->name ?? 'Niet gevonden'),
+                            ->getStateUsing(fn($record) => $record->shippingMethod->name ?? 'Niet gevonden'),
                         TextEntry::make('subtotal')
                             ->label('Subtotaal')
                             ->money('EUR'),
@@ -70,7 +82,7 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->money('EUR'),
                         TextEntry::make('discountCode.code')
                             ->label('Kortingscode')
-                            ->visible(fn ($record) => $record->discountCode),
+                            ->visible(fn($record) => $record->discountCode),
                         TextEntry::make('btw')
                             ->label('BTW')
                             ->money('EUR'),
@@ -90,6 +102,10 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
                             ->label('Totaal')
                             ->money('EUR'),
                     ])
+                    ->columns(4),
+                Fieldset::make('Extra informatie')
+                    ->schema($customOrderFields)
+                    ->visible(count($customOrderFields))
                     ->columns(4),
             ]);
     }
