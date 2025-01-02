@@ -132,7 +132,7 @@ class ShoppingCart
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
         if (! $calculateInclusiveTax) {
-            //            dd($cartTotal, self::btw(false, false, $shippingMethodId, $paymentMethodId));
+//            dd($cartTotal, self::btw(false, false, $shippingMethodId, $paymentMethodId));
             $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
 
             if ($shippingMethodId) {
