@@ -86,11 +86,28 @@ class UpdateProductInformationJob implements ShouldQueue
         $loop = 1;
 
         foreach ($this->productGroup->products as $product) {
-            $product->productCategories()->sync($this->productGroup->productCategories);
+            $categories = $this->productGroup->productCategories;
+            $product->productCategories()->sync($categories);
+
+            foreach ($categories as $category) {
+                foreach (DB::table('dashed__product_category_user')->where('product_category_id', $category->id)->get() as $productCategoryUser) {
+                    DB::table('dashed__product_user')->updateOrInsert(
+                        [
+                            'product_id' => $product->id,
+                            'user_id' => $productCategoryUser->user_id,
+                        ],
+                        [
+                            'discount_price' => $productCategoryUser->discount_price,
+                            'discount_percentage' => $productCategoryUser->discount_percentage,
+                        ]
+                    );
+                }
+            }
+
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            if (($this->productGroup->only_show_parent_product && $loop == 1) || ! $this->productGroup->only_show_parent_product) {
+            if (($this->productGroup->only_show_parent_product && $loop == 1) || !$this->productGroup->only_show_parent_product) {
                 $product->indexable = 1;
             } else {
                 $product->indexable = 0;

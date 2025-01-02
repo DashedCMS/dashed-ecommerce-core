@@ -3,6 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Imports;
 
 use App\Models\User;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToArray;
 
@@ -19,18 +22,23 @@ class PricePerProductForUserImport implements ToArray
     {
         unset($rows[0]);
 
+        $productGroupIds = [];
+
         foreach ($rows as $row) {
-            if ($row[2] || $row[3]) {
+            $product = Product::find($row[0]);
+            if (($row[3] || $row[4]) && $product) {
                 DB::table('dashed__product_user')->updateOrInsert(
                     [
                         'product_id' => $row[0],
                         'user_id' => $this->user->id,
                     ],
                     [
-                        'price' => $row[2],
                         'discount_price' => $row[3],
+                        'discount_percentage' => $row[4],
                     ]
                 );
+
+                $productGroupIds[] = $product->product_group_id;
             } else {
                 DB::table('dashed__product_user')
                     ->where('product_id', $row[0])
@@ -39,5 +47,8 @@ class PricePerProductForUserImport implements ToArray
             }
         }
 
+        foreach (ProductGroup::whereIn('id', $productGroupIds)->get() as $productGroup) {
+            UpdateProductInformationJob::dispatch($productGroup, false);
+        }
     }
 }

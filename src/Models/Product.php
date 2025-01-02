@@ -89,7 +89,7 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
-            if (! $product->is_bundle) {
+            if (!$product->is_bundle) {
                 $product->bundleProducts()->detach();
             }
 
@@ -129,7 +129,7 @@ class Product extends Model
         $query->where(function ($query) use ($search) {
             $loop = 1;
             foreach (self::getTranslatableAttributes() as $attribute) {
-                if (! method_exists($this, $attribute)) {
+                if (!method_exists($this, $attribute)) {
                     if ($loop == 1) {
                         $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
                     } else {
@@ -251,7 +251,7 @@ class Product extends Model
 
     public function getDiscountPriceAttribute()
     {
-        return $this->discountPriceForUser();
+//        return $this->discountPriceForUser();
 
         return $this->getRawOriginal('discount_price');
     }
@@ -309,16 +309,16 @@ class Product extends Model
 
     public function getUrl($locale = null, $forceOwnUrl = false)
     {
-        if (! $locale) {
+        if (!$locale) {
             $locale = app()->getLocale();
         }
 
         return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . ($forceOwnUrl ? 'yes' : 'no'), 60 * 5, function () use ($locale, $forceOwnUrl) {
-            if ($this->productGroup->only_show_parent_product && ! $forceOwnUrl) {
+            if ($this->productGroup->only_show_parent_product && !$forceOwnUrl) {
                 return $this->productGroup->getUrl();
             } else {
                 $overviewPage = Product::getOverviewPage();
-                if (! $overviewPage) {
+                if (!$overviewPage) {
                     return 'link-product-overview-page';
                 }
                 $url = $overviewPage->getUrl() . '/' . $this->slug;
@@ -334,7 +334,7 @@ class Product extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->public) {
+        if (!$this->public) {
             return false;
         } else {
             return true;
@@ -404,6 +404,32 @@ class Product extends Model
 
         $this->discount_price = $discountPrice;
         $this->saveQuietly();
+
+        foreach (User::all() as $user) {
+            $productUser = DB::table('dashed__product_user')
+                ->where('product_id', $this->id)
+                ->where('user_id', $user->id)
+                ->first();
+            if ($productUser) {
+                $productPrice = $this->current_price;
+                if ($productUser->discount_price) {
+                    $productPrice -= $productUser->discount_price;
+                } elseif ($productUser->discount_percentage) {
+                    $productPrice -= $productPrice / 100 * $productUser->discount_percentage;
+                }
+
+                if ($productPrice < 0) {
+                    $productPrice = 0.01;
+                }
+
+                DB::table('dashed__product_user')
+                    ->where('product_id', $this->id)
+                    ->where('user_id', $user->id)
+                    ->update([
+                        'price' => $productPrice,
+                    ]);
+            }
+        }
     }
 
     public function hasDirectSellableStock(): bool
@@ -412,7 +438,7 @@ class Product extends Model
             $allBundleProductsDirectSellable = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (! $bundleProduct->hasDirectSellableStock()) {
+                if (!$bundleProduct->hasDirectSellableStock()) {
                     $allBundleProductsDirectSellable = false;
                 }
             }
@@ -429,7 +455,8 @@ class Product extends Model
         return false;
     }
 
-    public function directSellableStock()
+    public
+    function directSellableStock()
     {
         if ($this->use_stock) {
             return $this->stock - $this->reservedStock();
@@ -442,12 +469,14 @@ class Product extends Model
         }
     }
 
-    public function inStock(): bool
+    public
+    function inStock(): bool
     {
         return $this->in_stock;
     }
 
-    public function calculateInStock(): void
+    public
+    function calculateInStock(): void
     {
         $inStock = false;
 
@@ -455,7 +484,7 @@ class Product extends Model
             $allBundleProductsInStock = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (! $bundleProduct->inStock()) {
+                if (!$bundleProduct->inStock()) {
                     $allBundleProductsInStock = false;
                 }
             }
@@ -469,7 +498,8 @@ class Product extends Model
         $this->saveQuietly();
     }
 
-    public function calculateTotalPurchases(): void
+    public
+    function calculateTotalPurchases(): void
     {
         $purchases = $this->purchases;
 
@@ -477,18 +507,19 @@ class Product extends Model
         $this->saveQuietly();
     }
 
-    public function calculateDeliveryTime(): void
+    public
+    function calculateDeliveryTime(): void
     {
         if ($this->is_bundle) {
             $deliveryDays = 0;
             $deliveryDate = null;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if ($bundleProduct->inStock() && ! $bundleProduct->hasDirectSellableStock()) {
+                if ($bundleProduct->inStock() && !$bundleProduct->hasDirectSellableStock()) {
                     if ($bundleProduct->expectedDeliveryInDays() > $deliveryDays) {
                         $deliveryDays = $bundleProduct->expectedDeliveryInDays();
                     }
-                    if ($bundleProduct->expectedInStockDate() && (! $deliveryDate || $bundleProduct->expectedInStockDate() > $deliveryDate)) {
+                    if ($bundleProduct->expectedInStockDate() && (!$deliveryDate || $bundleProduct->expectedInStockDate() > $deliveryDate)) {
                         $deliveryDate = $bundleProduct->expectedInStockDate();
                     }
                 }
@@ -514,44 +545,49 @@ class Product extends Model
         }
     }
 
-    public function outOfStockSellable(): bool
+    public
+    function outOfStockSellable(): bool
     {
-        if (! $this->use_stock) {
+        if (!$this->use_stock) {
             if ($this->stock_status == 'out_of_stock') {
                 return false;
             }
         }
 
-        if (! $this->out_of_stock_sellable) {
+        if (!$this->out_of_stock_sellable) {
             return false;
         }
 
-        if ((Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && ! $this->expectedInStockDateValid()) && ! $this->expectedDeliveryInDays()) {
+        if ((Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && !$this->expectedInStockDateValid()) && !$this->expectedDeliveryInDays()) {
             return false;
         }
 
         return true;
     }
 
-    public function isPreorderable()
+    public
+    function isPreorderable()
     {
-        return $this->inStock() && ! $this->hasDirectSellableStock() && $this->use_stock;
+        return $this->inStock() && !$this->hasDirectSellableStock() && $this->use_stock;
     }
 
-    public function expectedInStockDate()
+    public
+    function expectedInStockDate()
     {
         return $this->expected_in_stock_date ? $this->expected_in_stock_date->format('d-m-Y') : null;
     }
 
-    public function expectedInStockDateValid()
+    public
+    function expectedInStockDateValid()
     {
         return $this->expected_in_stock_date >= now();
     }
 
-    public function expectedInStockDateInWeeks(): float
+    public
+    function expectedInStockDateInWeeks(): float
     {
         $expectedInStockDate = self::expectedInStockDate();
-        if (! $expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
+        if (!$expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
             return 0;
         }
 
@@ -563,14 +599,16 @@ class Product extends Model
         return $diffInWeeks;
     }
 
-    public function expectedDeliveryInDays(): int
+    public
+    function expectedDeliveryInDays(): int
     {
         $expectedDeliveryInDays = $this->expected_delivery_in_days ?: 0;
 
         return $expectedDeliveryInDays;
     }
 
-    public function purchasable()
+    public
+    function purchasable()
     {
         if ($this->inStock() || $this->outOfStockSellable()) {
             return true;
@@ -579,56 +617,66 @@ class Product extends Model
         return false;
     }
 
-    public function parent()
+    public
+    function parent()
     {
         return $this->belongsTo(ProductGroup::class, 'product_group_id')
             ->withTrashed();
     }
 
-    public function productCategories()
+    public
+    function productCategories()
     {
         return $this->belongsToMany(ProductCategory::class, 'dashed__product_category');
     }
 
-    public function suggestedProducts()
+    public
+    function suggestedProducts()
     {
         return $this->belongsToMany(Product::class, 'dashed__product_suggested_product', 'product_id', 'suggested_product_id');
     }
 
-    public function crossSellProducts()
+    public
+    function crossSellProducts()
     {
         return $this->belongsToMany(Product::class, 'dashed__product_crosssell_product', 'product_id', 'crosssell_product_id');
     }
 
-    public function shippingClasses()
+    public
+    function shippingClasses()
     {
         return $this->belongsToMany(ShippingClass::class, 'dashed__product_shipping_class');
     }
 
-    public function tabs()
+    public
+    function tabs()
     {
         return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product', 'product_id', 'tab_id')
             ->orderBy('order');
     }
 
-    public function globalTabs()
+    public
+    function globalTabs()
     {
         return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product', 'product_id', 'tab_id')
             ->where('global', 1);
     }
 
-    public function ownTabs()
+    public
+    function ownTabs()
     {
         return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product', 'product_id', 'tab_id')
             ->where('global', 0);
     }
 
-    public function productCharacteristics()
+    public
+    function productCharacteristics()
     {
         return $this->hasMany(ProductCharacteristic::class);
     }
 
-    public function allProductExtras(): ?Collection
+    public
+    function allProductExtras(): ?Collection
     {
         $productExtraIds = [];
 
@@ -645,7 +693,8 @@ class Product extends Model
             ->get();
     }
 
-    public function allProductTabs(): ?Collection
+    public
+    function allProductTabs(): ?Collection
     {
         $productTabIds = [];
 
@@ -661,30 +710,35 @@ class Product extends Model
             ->get();
     }
 
-    public function productExtras(): HasMany
+    public
+    function productExtras(): HasMany
     {
         return $this->hasMany(ProductExtra::class)
             ->with(['productExtraOptions']);
     }
 
-    public function globalProductExtras(): BelongsToMany
+    public
+    function globalProductExtras(): BelongsToMany
     {
         return $this->belongsToMany(ProductExtra::class, 'dashed__product_extra_product', 'product_id', 'product_extra_id')
             ->where('global', 1)
             ->with(['productExtraOptions']);
     }
 
-    public function bundleProducts(): BelongsToMany
+    public
+    function bundleProducts(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'dashed__product_bundle_products', 'product_id', 'bundle_product_id');
     }
 
-    public function productGroup(): BelongsTo
+    public
+    function productGroup(): BelongsTo
     {
         return $this->belongsTo(ProductGroup::class);
     }
 
-    public function showableCharacteristics($withoutIds = [])
+    public
+    function showableCharacteristics($withoutIds = [])
     {
         return Cache::rememberForever("product-showable-characteristics-" . $this->id, function () use ($withoutIds) {
             $characteristics = [];
@@ -710,7 +764,7 @@ class Product extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -722,7 +776,8 @@ class Product extends Model
         });
     }
 
-    public function getCharacteristicById(int|array $id): array
+    public
+    function getCharacteristicById(int|array $id): array
     {
         if (is_array($id)) {
             $productCharacteristic = $this->productCharacteristics()->whereIn('product_characteristic_id', $id)->get();
@@ -748,7 +803,8 @@ class Product extends Model
         return [];
     }
 
-    public function getSuggestedProducts(int $limit = 4, bool $random = true, $includeFromProductGroup = false): Collection
+    public
+    function getSuggestedProducts(int $limit = 4, bool $random = true, $includeFromProductGroup = false): Collection
     {
         if ($includeFromProductGroup) {
             $suggestedProductIds = array_merge($this->suggestedProducts->pluck('id')->toArray(), $this->productGroup->suggestedProducts->pluck('id')->toArray());
@@ -803,7 +859,7 @@ class Product extends Model
         $price += ($cartItem->model ? $cartItem->model->currentPrice : $cartItem->options['singlePrice']) * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
-            if (! str($productExtraOptionId)->contains('product-extra-')) {
+            if (!str($productExtraOptionId)->contains('product-extra-')) {
                 $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                 if ($thisProductExtraOption) {
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
@@ -861,25 +917,25 @@ class Product extends Model
             Toggle::make('out_of_stock_sellable')
                 ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                 ->reactive()
-                ->hidden(fn (Get $get) => ! $get('use_stock')),
+                ->hidden(fn(Get $get) => !$get('use_stock')),
             Toggle::make('low_stock_notification')
                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                 ->reactive()
-                ->hidden(fn (Get $get) => ! $get('use_stock')),
+                ->hidden(fn(Get $get) => !$get('use_stock')),
             TextInput::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn ($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
+                ->helperText(fn($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()
-                ->hidden(fn (Get $get) => ! $get('use_stock')),
+                ->hidden(fn(Get $get) => !$get('use_stock')),
             DatePicker::make('expected_in_stock_date')
                 ->label('Wanneer komt dit product weer op voorraad')
                 ->reactive()
                 ->helperText('Gebruik 1 van deze 2 opties')
-                ->required(fn (Get $get) => ! $get('expected_delivery_in_days'))
-                ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
+                ->required(fn(Get $get) => !$get('expected_delivery_in_days'))
+                ->hidden(fn(Get $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
             TextInput::make('expected_delivery_in_days')
                 ->label('Levering in dagen')
                 ->helperText('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
@@ -887,7 +943,7 @@ class Product extends Model
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(1000)
-                ->required(fn (Get $get) => ! $get('expected_in_stock_date') && $get('out_of_stock_sellable')),
+                ->required(fn(Get $get) => !$get('expected_in_stock_date') && $get('out_of_stock_sellable')),
             TextInput::make('low_stock_notification_limit')
                 ->label('Lage voorraad melding')
                 ->helperText('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een melding')
@@ -898,7 +954,7 @@ class Product extends Model
                 ->maxValue(100000)
                 ->default(1)
                 ->numeric()
-                ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
+                ->hidden(fn(Get $get) => !$get('use_stock') || !$get('low_stock_notification')),
             Select::make('stock_status')
                 ->label('Is dit product op voorraad')
                 ->options([
@@ -907,7 +963,7 @@ class Product extends Model
                 ])
                 ->default('in_stock')
                 ->required()
-                ->hidden(fn (Get $get) => $get('use_stock')),
+                ->hidden(fn(Get $get) => $get('use_stock')),
             TextInput::make('limit_purchases_per_customer_limit')
                 ->type('number')
                 ->label('Hoeveel mag dit product gekocht worden per bestelling')
@@ -916,7 +972,7 @@ class Product extends Model
                 ->default(1)
                 ->required()
                 ->numeric()
-                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+                ->hidden(fn(Get $get) => !$get('limit_purchases_per_customer')),
             Select::make('fulfillment_provider')
                 ->label('Door wie wordt dit product verstuurd?')
                 ->helperText('Laat leeg voor eigen fulfillment')
@@ -952,7 +1008,7 @@ class Product extends Model
 
     public function priceForUser(?User $user = null, bool $fillFromProduct = true)
     {
-        if (! $user && auth()->check()) {
+        if (!$user && auth()->check()) {
             $user = auth()->user();
         }
 
@@ -966,19 +1022,19 @@ class Product extends Model
         return ($fillFromProduct ? $this->getRawOriginal('current_price') : null);
     }
 
-    public function discountPriceForUser(?User $user = null, bool $fillFromProduct = true): ?float
+    public function discountPriceForUser(?User $user = null): ?float
     {
-        if (! $user && auth()->check()) {
+        if (!$user && auth()->check()) {
             $user = auth()->user();
         }
 
-        if ($user) {
-            return DB::table('dashed__product_user')
-                ->where('user_id', $user->id)
-                ->where('product_id', $this->id)
-                ->value('discount_price') ?? ($fillFromProduct ? $this->getRawOriginal('discount_price') : null);
-        }
+//        if ($user) {
+//            return DB::table('dashed__product_user')
+//                ->where('user_id', $user->id)
+//                ->where('product_id', $this->id)
+//                ->value('discount_price') ?? ($fillFromProduct ? $this->getRawOriginal('discount_price') : null);
+//        }
 
-        return ($fillFromProduct ? $this->getRawOriginal('discount_price') : null);
+        return $this->getRawOriginal('discount_price');
     }
 }

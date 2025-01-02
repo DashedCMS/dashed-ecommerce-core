@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use App\Models\User;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -40,15 +41,64 @@ class PricePerUserResource extends Resource
     public static function form(Form $form): Form
     {
         $products = Product::all();
+        $productCategories = ProductCategory::all();
 
         $schema = [
             Section::make()
                 ->schema([
                     Placeholder::make('pricePerUser')
                         ->label('Prijs per gebruiker')
-                        ->content('Vul hier een prijs per product in voor de gebruiker, of doe het in bulk met de export/import functie.'),
+                        ->content('Vul hier een korting per product in voor de gebruiker, of doe het in bulk met de export/import functie. De categorieen overschrijven ALTIJD de producten, en met het verwijderen van een categorie uit de lijst worden de producten van die categorie ook verwijderd.'),
                 ]),
         ];
+
+        $productCategorySchema = [];
+
+        foreach ($productCategories as $productCategory) {
+            $productCategorySchema[] = Section::make($productCategory->name)
+                ->schema([
+                    TextInput::make($productCategory->id . '_category_discount_price')
+                        ->label('Korting bedrag')
+                        ->prefix('€')
+                        ->required(fn(Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
+                        ->minValue(1)
+                        ->reactive()
+                        ->numeric(),
+                    TextInput::make($productCategory->id . '_category_discount_percentage')
+                        ->label('Korting percentage')
+                        ->suffix('%')
+                        ->minValue(1)
+                        ->maxValue(100)
+                        ->nullable()
+                        ->required(fn(Get $get) => $get($productCategory->id . '_category_discount_price') === null)
+                        ->reactive()
+                        ->numeric(),
+                ])
+                ->headerActions([
+                    Action::make('delete')
+                        ->label('Verwijder')
+                        ->hiddenLabel()
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->action(function (Set $set, Get $get) use ($productCategory) {
+                            $values = $get('product_category_ids');
+                            $values = array_diff($values, [$productCategory->id]);
+                            $set('product_category_ids', $values);
+                        }),
+                ])
+                ->visible(fn(Get $get) => collect($get('product_category_ids'))->contains($productCategory->id))
+                ->columns(2);
+        }
+
+        $schema[] = Section::make()
+            ->schema(array_merge([
+                Select::make('product_category_ids')
+                    ->label('Product categorieen')
+                    ->multiple()
+                    ->options($productCategories->pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->reactive(),
+            ], $productCategorySchema));
 
         $productSchema = [];
 
@@ -57,12 +107,25 @@ class PricePerUserResource extends Resource
                 ->schema([
                     TextInput::make($product->id . '_price')
                         ->label('Prijs')
-                        ->helperText('Huidige prijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('current_price')))
-                        ->required()
-                        ->numeric(),
+                        ->prefix('€')
+                        ->disabled(),
                     TextInput::make($product->id . '_discount_price')
-                        ->helperText('Huidige kortingsprijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('discount_price')))
-                        ->label('Korting prijs')
+                        ->label('Korting bedrag')
+                        ->prefix('€')
+                        ->helperText('Product prijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('current_price')))
+                        ->required(fn(Get $get) => $get($product->id . '_discount_percentage') === null)
+                        ->minValue(1)
+                        ->maxValue($product->getRawOriginal('current_price') - 1)
+                        ->reactive()
+                        ->numeric(),
+                    TextInput::make($product->id . '_discount_percentage')
+                        ->label('Korting percentage')
+                        ->suffix('%')
+                        ->minValue(1)
+                        ->maxValue(100)
+                        ->nullable()
+                        ->required(fn(Get $get) => $get($product->id . '_discount_price') === null)
+                        ->reactive()
                         ->numeric(),
                 ])
                 ->headerActions([
@@ -77,8 +140,8 @@ class PricePerUserResource extends Resource
                             $set('product_ids', $values);
                         }),
                 ])
-                ->visible(fn (Get $get) => collect($get('product_ids'))->contains($product->id))
-                ->columns(2);
+                ->visible(fn(Get $get) => collect($get('product_ids'))->contains($product->id))
+                ->columns(3);
         }
 
         $schema[] = Section::make()
