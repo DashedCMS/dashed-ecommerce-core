@@ -7,6 +7,7 @@ class EcommerceManager
     protected static $builders = [
         'paymentServiceProviders' => [],
         'fulfillmentProviders' => [],
+        'customOrderFields' => [],
     ];
 
     protected static $buttonActions = [
@@ -18,16 +19,27 @@ class EcommerceManager
         'orders' => [],
     ];
 
-    public function builder(string $name, ?array $blocks = null): self|array
+    public function builder(string $name, null|string|array $blocks = null): self|array
     {
         if (! $blocks) {
-            return static::$builders[$name];
+            return static::$builders[$name] ?? [];
         }
 
-        static::$builders[$name] = $blocks;
+        static::$builders[$name] = array_merge(static::$builders[$name] ?? [], $blocks);
 
         return $this;
     }
+
+//    public function builder(string $name, ?array $blocks = null): self|array
+//    {
+//        if (! $blocks) {
+//            return static::$builders[$name];
+//        }
+//
+//        static::$builders[$name] = $blocks;
+//
+//        return $this;
+//    }
 
     public function widgets(string $name, ?array $blocks = null): self|array
     {
