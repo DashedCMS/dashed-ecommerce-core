@@ -45,7 +45,7 @@ class ProductSettingsPage extends Page
             $formData["orders_page_id_{$site['id']}"] = Customsetting::get('orders_page_id', $site['id']);
             $formData["order_page_id_{$site['id']}"] = Customsetting::get('order_page_id', $site['id']);
             $formData["product_category_index_page_enabled_{$site['id']}"] = Customsetting::get('product_category_index_page_enabled', $site['id'], true);
-            $formData["fill_with_first_product_if_product_group_loaded_{$site['id']}"] = Customsetting::get('fill_with_first_product_if_product_group_loaded', $site['id'], true);
+            $formData["fill_with_first_product_if_product_group_loaded_{$site['id']}"] = Customsetting::get('fill_with_first_product_if_product_group_loaded', $site['id'], false);
         }
 
         $this->form->fill($formData);
