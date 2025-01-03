@@ -21,10 +21,6 @@ return new class extends Migration {
                 ->after('new_price')
                 ->nullable();
         });
-
-        foreach (\Dashed\DashedEcommerceCore\Models\Product::all() as $product) {
-            \Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob::dispatch($product);
-        }
     }
 
     /**

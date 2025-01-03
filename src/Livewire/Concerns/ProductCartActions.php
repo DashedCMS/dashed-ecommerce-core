@@ -231,14 +231,14 @@ trait ProductCartActions
             }
         }
 
-        if (! $this->variationExists && $this->productGroup->products->count()) {
+        if (! $this->variationExists && $this->productGroup->products->count() && Customsetting::get('fill_with_first_product_if_product_group_loaded', null, false)) {
             $this->product = $this->productGroup->products->first();
             $this->variationExists = true;
-            $this->fillFilters(true, true);
+            $this->fillFilters(true);
         }
     }
 
-    public function fillFilters(bool $isMount = false, bool $test = false): void
+    public function fillFilters(bool $isMount = false): void
     {
         $this->allFiltersFilled = true;
         $filters = $this->filters;
