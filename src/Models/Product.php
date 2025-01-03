@@ -249,11 +249,11 @@ class Product extends Model
         //        return $this->getRawOriginal('current_price');
     }
 
-    public function getDiscountPriceAttribute()
+    public function getDiscountPriceAttribute(): ?float
     {
         //        return $this->discountPriceForUser();
 
-        return $this->getRawOriginal('discount_price');
+        return $this->getRawOriginal('discount_price') > 0 ? $this->getRawOriginal('discount_price') : null;
     }
 
     /**
