@@ -65,6 +65,7 @@ class MigrateToV3 extends Command
 
             $productGroup->site_ids = $product->site_ids ?: [];
             $productGroup->order = $product->order ?: 1;
+            $productGroup->only_show_parent_product = $product->only_show_parent_product;
 
             $connectThisProductToProductGroup = false;
             $connectUnderlyingProductsToProductGroup = false;
