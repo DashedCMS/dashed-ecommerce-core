@@ -92,6 +92,7 @@ class ProductResource extends Resource
                     ->label('Product groep')
                     ->options(ProductGroup::all()->pluck('name', 'id')->toArray())
                     ->searchable()
+                    ->helperText('Dit waren voorheen bovenliggende producten, voortaan moet ELK product onder een product groep hangen')
                     ->default(request()->get('productGroupId'))
 //                    ->disabled(fn ($livewire) => ! ($livewire instanceof CreateProduct) || request()->get('productGroupId'))
                     ->columnSpanFull()
