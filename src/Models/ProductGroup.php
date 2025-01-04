@@ -264,7 +264,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -284,7 +284,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -348,7 +348,7 @@ class ProductGroup extends Model
     {
         $originalLocale = app()->getLocale();
 
-        if (!$activeLocale) {
+        if (! $activeLocale) {
             $activeLocale = $originalLocale;
         }
 
@@ -359,10 +359,10 @@ class ProductGroup extends Model
             $url = $this->getTranslation('slug', $activeLocale);
         }
 
-        if (!str($url)->startsWith('/')) {
+        if (! str($url)->startsWith('/')) {
             $url = '/' . $url;
         }
-        if ($activeLocale != Locales::getFirstLocale()['id'] && !str($url)->startsWith("/{$activeLocale}")) {
+        if ($activeLocale != Locales::getFirstLocale()['id'] && ! str($url)->startsWith("/{$activeLocale}")) {
             $url = '/' . $activeLocale . $url;
         }
 
