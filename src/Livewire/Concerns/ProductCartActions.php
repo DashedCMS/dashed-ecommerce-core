@@ -147,7 +147,7 @@ trait ProductCartActions
         $this->productTabs = $this->product ? $this->product->allProductTabs() : $this->productGroup->allProductTabs();
 
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
-            if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false)) {
+            if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false) && $this->product) {
                 return redirect($this->product->getUrl(forceOwnUrl: true));
             }
             $this->productExtras = $this->product?->allProductExtras();

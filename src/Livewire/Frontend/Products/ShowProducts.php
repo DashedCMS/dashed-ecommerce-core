@@ -199,15 +199,13 @@ class ShowProducts extends Component
         $productCategory = $this->productCategory;
         $products = Cache::rememberForever('products-for-show-products-' . ($productCategory->id ?? ''), function () use ($productCategory) {
             $products = $productCategory ? $productCategory->products()
-                ->thisSite()
-                ->publicShowable()
+                ->publicShowableWithIndex()
                 ->with([
                     'productFilters',
                     'productFilters.productFilterOptions',
                 ])
                 ->get() : Product::query()
-                ->thisSite()
-                ->publicShowable()
+                ->publicShowableWithIndex()
                 ->with([
                     'productFilters',
                     'productFilters.productFilterOptions',
