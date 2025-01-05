@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Dashed\DashedPages\Models\Page;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
