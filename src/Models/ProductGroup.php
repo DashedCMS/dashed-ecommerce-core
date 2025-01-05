@@ -221,7 +221,7 @@ class ProductGroup extends Model
 
                 if (count($filterOptions)) {
                     foreach ($filterOptions as &$filterOption) {
-                        $filterOption['name'] = $filterOption['name'][App::getLocale()] ?? $filterOption['name'][0];
+                        $filterOption['name'] = $filterOption['name'][app()->getLocale()] ?? ($filterOption['name'][array_key_first($filterOption['name'])] ?? 'onbekend');
                     }
 
                     $filters[] = [
