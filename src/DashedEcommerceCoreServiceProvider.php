@@ -133,6 +133,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 ->orderBy('created_at', 'DESC');
         });
 
+        User::addDynamicRelation('allOrders', function (User $model) {
+            return $model->hasMany(Order::class)
+                ->orderBy('created_at', 'DESC');
+        });
+
         User::addDynamicRelation('lastOrder', function (User $model) {
             return $model->orders()->latest()->first();
         });
