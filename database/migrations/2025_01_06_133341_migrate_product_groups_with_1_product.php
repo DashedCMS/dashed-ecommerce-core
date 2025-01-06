@@ -23,10 +23,6 @@ return new class extends Migration {
                     $product->setTranslation('description', $key, '');
                     $product->setTranslation('content', $key, []);
                 }
-                $product->images = [];
-                $product->short_description = [];
-                $product->description = [];
-                $product->content = [];
                 $productGroup->save();
                 $product->save();
             }
