@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Account;
 
-use Dashed\DashedCore\Classes\AccountHelper;
 use Livewire\Component;
+use Dashed\DashedCore\Classes\AccountHelper;
 use Illuminate\Database\Eloquent\Collection;
 
 class Orders extends Component
