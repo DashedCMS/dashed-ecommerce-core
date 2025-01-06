@@ -18,6 +18,10 @@ return new class extends Migration {
                     $productGroup->setTranslation('images', $key, $product->getTranslation('images', $key));
                     $productGroup->setTranslation('description', $key, $product->getTranslation('description', $key));
                     $productGroup->setTranslation('short_description', $key, $product->getTranslation('short_description', $key));
+                    $product->setTranslation('images', $key, []);
+                    $product->setTranslation('short_description', $key, '');
+                    $product->setTranslation('description', $key, '');
+                    $product->setTranslation('content', $key, []);
                 }
                 $product->images = [];
                 $product->short_description = [];
