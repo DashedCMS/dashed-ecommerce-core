@@ -86,7 +86,7 @@ class ProductResource extends Resource
                     ->label('Actief op sites')
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                     ->default([Sites::getFirstSite()['id']])
-                    ->hidden(fn(Get $get) => !(Sites::getAmountOfSites() > 1))
+                    ->hidden(fn (Get $get) => ! (Sites::getAmountOfSites() > 1))
                     ->required(),
                 Select::make('product_group_id')
                     ->label('Product groep')
@@ -106,7 +106,7 @@ class ProductResource extends Resource
                     ->reactive(),
                 Toggle::make('use_bundle_product_price')
                     ->label('Gebruik onderliggend bundel product prijs')
-                    ->visible(fn($get) => $get('is_bundle'))
+                    ->visible(fn ($get) => $get('is_bundle'))
                     ->reactive(),
                 Repeater::make('bundleProducts')
                     ->relationship('bundleProducts')
@@ -128,8 +128,8 @@ class ProductResource extends Resource
                         Select::make('bundle_product_id')
                             ->label('Bundel product')
                             ->searchable()
-                            ->getSearchResultsUsing(fn(string $query) => Product::isNotBundle()->where('name', 'like', "%{$query}%")->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelUsing(fn($value): ?string => Product::find($value)?->name)
+                            ->getSearchResultsUsing(fn (string $query) => Product::isNotBundle()->where('name', 'like', "%{$query}%")->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelUsing(fn ($value): ?string => Product::find($value)?->name)
                             ->required(),
                     ])
                     ->required()
@@ -139,7 +139,7 @@ class ProductResource extends Resource
                             return function (string $attribute, $value, Closure $fail) {
                                 $bundleProductIds = [];
                                 foreach ($value as $bundleProduct) {
-                                    if (!in_array($bundleProduct['bundle_product_id'], $bundleProductIds)) {
+                                    if (! in_array($bundleProduct['bundle_product_id'], $bundleProductIds)) {
                                         $bundleProductIds[] = $bundleProduct['bundle_product_id'];
                                     } else {
                                         $fail("You cannot add more then 1 of the same product in the bundle products.");
@@ -148,7 +148,7 @@ class ProductResource extends Resource
                             };
                         },
                     ])
-                    ->visible(fn(Get $get) => $get('is_bundle')),
+                    ->visible(fn (Get $get) => $get('is_bundle')),
             ])
             ->columns(2)
             ->collapsible()
@@ -160,7 +160,7 @@ class ProductResource extends Resource
                 'default' => 1,
                 'lg' => 4,
             ])
-            ->hidden(fn($record, Get $get) => ($record && $record->productGroup->use_parent_stock) || $get('is_bundle'))
+            ->hidden(fn ($record, Get $get) => ($record && $record->productGroup->use_parent_stock) || $get('is_bundle'))
             ->persistCollapsed()
             ->collapsible();
 
@@ -303,7 +303,7 @@ class ProductResource extends Resource
                         foreach ($productFilter->productFilterOptions as $productFilterOption) {
                             $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                                 ->label("$productFilter->name: $productFilterOption->name")
-                                ->visible(fn($record) => in_array($productFilterOption->id, $enabledProductFilterOptionIds));
+                                ->visible(fn ($record) => in_array($productFilterOption->id, $enabledProductFilterOptionIds));
                         }
 
                         $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
@@ -321,7 +321,7 @@ class ProductResource extends Resource
             ])
             ->persistCollapsed()
             ->collapsible()
-            ->hidden(fn($livewire) => $livewire instanceof CreateProduct);
+            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct);
 
         $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
         $productCharacteristicSchema = [];
@@ -342,7 +342,7 @@ class ProductResource extends Resource
             ])
             ->persistCollapsed()
             ->collapsed()
-            ->hidden(fn($livewire, Get $get, $record) => $livewire instanceof CreateProduct);
+            ->hidden(fn ($livewire, Get $get, $record) => $livewire instanceof CreateProduct);
 
         $schema[] = Section::make('Content beheren')
             ->schema(array_merge([
@@ -352,7 +352,7 @@ class ProductResource extends Resource
                     ->required(),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->unique('dashed__products', 'slug', fn($record) => $record)
+                    ->unique('dashed__products', 'slug', fn ($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren'),
                 TiptapEditor::make('description')
                     ->label('Uitgebreide beschrijving')
@@ -394,28 +394,28 @@ class ProductResource extends Resource
                 Select::make('shippingClasses')
                     ->multiple()
                     ->relationship('shippingClasses', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link verzendklasses'),
                 Select::make('suggestedProducts')
                     ->multiple()
                     ->relationship('suggestedProducts', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link voorgestelde producten'),
                 Select::make('crossSellProducts')
                     ->multiple()
                     ->relationship('crossSellProducts', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link cross sell producten')
                     ->helperText('Dit mogen alleen maar producten zijn die zonder verplichte opties zijn'),
                 Select::make('globalProductExtras')
                     ->multiple()
                     ->relationship('globalProductExtras', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link globale product extras'),
                 Select::make('globalProductTabs')
                     ->multiple()
                     ->relationship('globalTabs', 'name')
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                     ->label('Link globale product tabs'),
             ])
             ->columns([
@@ -458,28 +458,28 @@ class ProductResource extends Resource
                                 'dateTime' => 'Datum + tijd',
                             ])
                             ->default('text')
-                            ->visible(fn(Get $get) => $get('type') == 'input')
-                            ->required(fn(Get $get) => $get('type') == 'input'),
+                            ->visible(fn (Get $get) => $get('type') == 'input')
+                            ->required(fn (Get $get) => $get('type') == 'input'),
                         TextInput::make('min_length')
                             ->label('Minimale lengte/waarde')
                             ->numeric()
-                            ->visible(fn(Get $get) => $get('type') == 'input')
-                            ->required(fn(Get $get) => $get('type') == 'input'),
+                            ->visible(fn (Get $get) => $get('type') == 'input')
+                            ->required(fn (Get $get) => $get('type') == 'input'),
                         TextInput::make('max_length')
                             ->label('Maximale lengte/waarde')
                             ->numeric()
-                            ->visible(fn(Get $get) => $get('type') == 'input')
-                            ->required(fn(Get $get) => $get('type') == 'input')
+                            ->visible(fn (Get $get) => $get('type') == 'input')
+                            ->required(fn (Get $get) => $get('type') == 'input')
                             ->reactive(),
                         Toggle::make('required')
                             ->label('Verplicht'),
                         Repeater::make('productExtraOptions')
                             ->relationship('productExtraOptions')
-                            ->cloneable(fn(Get $get) => $get('type') != 'checkbox')
+                            ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
                             ->label('Opties van deze product extra')
-                            ->visible(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                            ->required(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                            ->maxItems(fn(Get $get) => $get('type') == 'checkbox' ? 1 : 50)
+                            ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                            ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                            ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
                             ->reactive()
                             ->schema([
                                 TextInput::make('value')
@@ -501,7 +501,7 @@ class ProductResource extends Resource
                             ->columnSpan(2),
                     ], static::customBlocksTab('productExtraOptionBlocks'))),
             ])
-            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
+            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
             ->collapsible()
             ->persistCollapsed();
 
@@ -521,7 +521,7 @@ class ProductResource extends Resource
                             ->required(),
                     ]),
             ])
-            ->hidden(fn($livewire) => $livewire instanceof CreateProduct)
+            ->hidden(fn ($livewire) => $livewire instanceof CreateProduct)
             ->collapsible()
             ->persistCollapsed();
 
@@ -538,7 +538,7 @@ class ProductResource extends Resource
         return $table
             ->columns(array_merge([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
+                    ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
@@ -571,14 +571,14 @@ class ProductResource extends Resource
                                     ->minValue(0)
                                     ->maxValue(100000)
                                     ->required()
-                                    ->default(fn($record) => $record->price),
+                                    ->default(fn ($record) => $record->price),
                                 TextInput::make('new_price')
                                     ->label('Vorige prijs (de hogere prijs)')
                                     ->helperText('Voorbeeld: 14.25')
                                     ->prefix('€')
                                     ->minValue(0)
                                     ->maxValue(100000)
-                                    ->default(fn($record) => $record->new_price),
+                                    ->default(fn ($record) => $record->new_price),
                             ])
                             ->columns([
                                 'default' => 1,
@@ -664,14 +664,14 @@ class ProductResource extends Resource
                         Select::make('product_group_id')
                             ->label('Product groep')
                             ->multiple()
-                            ->options(fn() => ProductGroup::whereHas('products', function ($query) {
+                            ->options(fn () => ProductGroup::whereHas('products', function ($query) {
                                 $query->whereNull('deleted_at');
                             })->pluck('name', 'id')->map(function ($name, $id) {
                                 return $name;
                             })->toArray()),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
-                        if (!$data['product_group_id']) {
+                        if (! $data['product_group_id']) {
                             return $query;
                         }
 
@@ -689,11 +689,11 @@ class ProductResource extends Resource
                             ->options(ProductCategory::all()->pluck('name', 'id')),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
-                        if (!$data['categories']) {
+                        if (! $data['categories']) {
                             return $query;
                         }
 
-                        return $query->whereHas('productCategories', fn(\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
+                        return $query->whereHas('productCategories', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
                     }),
             ]);
     }

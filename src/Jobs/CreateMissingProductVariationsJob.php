@@ -40,9 +40,9 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     {
         $missingVariations = $this->productGroup->missingVariations();
 
-        if(!count($missingVariations) && !$this->productGroup->products->count()){
+        if (! count($missingVariations) && ! $this->productGroup->products->count()) {
             $missingVariations = [
-                []
+                [],
             ];
         }
 
