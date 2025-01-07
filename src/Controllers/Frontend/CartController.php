@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Storage;
 use Gloudemans\Shoppingcart\Facades\Cart;
@@ -61,7 +62,7 @@ class CartController extends FrontendController
 
     public function applyDiscountCode(Request $request)
     {
-        if (! $request->discount_code) {
+        if (!$request->discount_code) {
             session(['discountCode' => '']);
 
             ShoppingCart::removeInvalidItems();
@@ -71,7 +72,7 @@ class CartController extends FrontendController
 
         $discountCode = DiscountCode::usable()->where('code', $request->discount_code)->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
 
             ShoppingCart::removeInvalidItems();
@@ -89,7 +90,7 @@ class CartController extends FrontendController
     public function addToCart(Request $request, Product $product)
     {
         $quantity = $request->qty;
-        if (! $quantity || ! is_numeric($quantity)) {
+        if (!$quantity || !is_numeric($quantity)) {
             $quantity = 1;
         }
 
@@ -100,7 +101,7 @@ class CartController extends FrontendController
         foreach ($product->allProductExtras() as $productExtra) {
             if ($productExtra->type == 'single') {
                 $productValue = $request['product-extra-' . $productExtra->id];
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     ShoppingCart::removeInvalidItems();
 
                     return redirect()->back()->with('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'))->withInput();
@@ -121,7 +122,7 @@ class CartController extends FrontendController
             } else {
                 foreach ($productExtra->productExtraOptions as $option) {
                     $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && ! $productOptionValue) {
+                    if ($productExtra->required && !$productOptionValue) {
                         ShoppingCart::removeInvalidItems();
 
                         return redirect()->back()->with('error', Translation::get('not-all-required-options-chosen', 'cart', 'Not all extra`s have a selected option.'))->withInput();
@@ -162,7 +163,7 @@ class CartController extends FrontendController
             }
         }
 
-        if (! $cartUpdated) {
+        if (!$cartUpdated) {
             if ($product->limit_purchases_per_customer && $quantity > $product->limit_purchases_per_customer_limit) {
                 Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
 
@@ -193,11 +194,11 @@ class CartController extends FrontendController
     public function updateToCart(Request $request, $rowId)
     {
         $quantity = $request->qty;
-        if (! is_numeric($quantity)) {
+        if (!is_numeric($quantity)) {
             $quantity = 1;
         }
 
-        if (! $quantity) {
+        if (!$quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 Cart::remove($rowId);
             }
@@ -238,7 +239,7 @@ class CartController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (! $hasAccessToOrder || ! $order->downloadInvoiceUrl()) {
+        if (!$hasAccessToOrder || !$order->downloadInvoiceUrl()) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
@@ -255,10 +256,11 @@ class CartController extends FrontendController
             $hasAccessToOrder = true;
         }
 
-        if (! $hasAccessToOrder || ! $order->downloadPackingslipUrl()) {
+        if (!$hasAccessToOrder || !$order->downloadPackingslipUrl()) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
         return Storage::disk('dashed')->download('dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
     }
 }
+

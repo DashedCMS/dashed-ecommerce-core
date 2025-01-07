@@ -479,7 +479,7 @@ class Order extends Model
             $this->generateInvoiceId();
             $order = $this;
             if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
-                $view = View::make('dashed-ecommerce-core::invoices.credit-invoice', compact('order'));
+                $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
@@ -1013,6 +1013,16 @@ class Order extends Model
         return null;
     }
 
+    public function invoicePath(): ?string
+    {
+        return '/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf';
+    }
+
+    public function packingSlipPath(): ?string
+    {
+        return 'dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf';
+    }
+
     public function getUrl()
     {
         $completeUrl = ShoppingCart::getCompleteUrl();
@@ -1160,5 +1170,20 @@ class Order extends Model
                 'expected_delivery_date' => $expectedDeliveryDate,
             ]);
         }
+    }
+
+    public function customOrderFields(): array
+    {
+        $customOrderFields = [];
+
+        foreach (ecommerce()->builder('customOrderFields') as $key => $field) {
+            $key = str($key)->snake()->toString();
+
+            if ($this->order->$key) {
+                $customOrderFields[$field['label']] = $record->$key;
+            }
+        }
+
+        return $customOrderFields;
     }
 }

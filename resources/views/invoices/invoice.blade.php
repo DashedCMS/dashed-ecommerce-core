@@ -1,223 +1,138 @@
-<!doctype html>
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>{{Translation::get('invoice', 'invoice', 'Invoice')}} {{Customsetting::get('site_name')}}</title>
-    <style>
-        .invoice-box {
-            max-width: 800px;
-            margin: auto;
-            padding: 30px;
-            border: 1px solid #eee;
-            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
-            font-size: 16px;
-            line-height: 24px;
-            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-            color: #555;
-        }
+<x-dashed-ecommerce-core::invoices.master :title="Translation::get('invoice-for', 'invoice', 'Factuur voor :siteName:', 'text', [
+            'siteName' => Customsetting::get('site_name')
+        ])">
+    @if ($order->status == 'return')
+        <h1>{{ Translation::get('credit-invoice', 'invoice', 'Creditfactuur') }}</h1>
+    @else
+        <h1>{{ Translation::get('invoice', 'invoice', 'Factuur') }}</h1>
+    @endif
 
-        .invoice-box table {
-            width: 100%;
-            text-align: left;
-        }
-
-        .invoice-box table td {
-            padding: 5px;
-            vertical-align: top;
-        }
-
-        .invoice-box table tr td:nth-child(2) {
-            text-align: right;
-        }
-
-        .invoice-box table tr.top table td {
-            padding-bottom: 20px;
-        }
-
-        .invoice-box table tr.top table td.title {
-            font-size: 45px;
-            line-height: 45px;
-            color: #333;
-        }
-
-        .invoice-box table tr.information table td {
-            padding-bottom: 40px;
-        }
-
-        .invoice-box table tr.heading td {
-            background: #eee;
-            border-bottom: 1px solid #ddd;
-            font-weight: bold;
-            height: 10px;
-        }
-
-        .invoice-box table tr.details td {
-            padding-bottom: 20px;
-        }
-
-        .invoice-box table tr.item td {
-            border-bottom: 1px solid #eee;
-        }
-
-        .invoice-box table tr.item.last td {
-            border-bottom: none;
-        }
-
-        .invoice-box table tr.total td:nth-child(2) {
-            border-top: 2px solid #eee;
-            font-weight: bold;
-        }
-
-        @media only screen and (max-width: 600px) {
-            .invoice-box table tr.top table td {
-                width: 100%;
-                display: block;
-                text-align: center;
-            }
-
-            .invoice-box table tr.information table td {
-                width: 100%;
-                display: block;
-                text-align: center;
-            }
-        }
-
-        .logo-parent {
-            text-align: left !important;
-        }
-
-        .logo {
-            width: 125px !important;
-            height: auto !important;
-        }
-
-        .left {
-        }
-
-        .h1-top {
-            color: #33B679;
-            display: inline-block;
-
-            text-transform: uppercase;
-            font-size: 20px;
-
-            position: absolute;
-            left: 200px;
-            width: 125%;
-        }
-
-        .contact-table {
-            position: relative;
-            float: right;
-            bottom: 25px;
-        }
-
-        .border-product {
-            border: 1px solid black;
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-<div class="invoice-box">
-    <table cellpadding="0" cellspacing="0">
-        <tr class="top">
-            <td colspan="2">
-                <table>
-                    <tr>
-                        <td class='logo-parent'>
-                            @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
-                            @if($logo)
-                                <img
-                                    src="{{mediaHelper()->getSingleMedia($logo)->url ?? ''}}"
-                                    class="logo">
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="">
-                            @if($order->company_name)
-                                {{$order->company_name}} <br>
-                            @endif
-                            {{ $order->invoiceName }}<br>
-                            @if($order->btw_id)
-                                {{$order->btw_id}} <br>
-                            @endif
-                            @if($order->invoice_street)
-                                {{ $order->invoice_street }} {{ $order->invoice_house_nr }} <br>
-                                {{ $order->invoice_zip_code }} {{ $order->invoice_city }} <br>
-                                {{ $order->invoice_country }}
-                            @else
-                                {{ $order->street }} {{ $order->house_nr }}<br>
-                                {{ $order->zip_code }} {{ $order->city }}<br>
-                                {{ $order->country }}
-                            @endif
-                        </td>
-                        <td class="">
-                            {{Customsetting::get('company_name')}}<br>
-                            {{Customsetting::get('company_street')}} {{Customsetting::get('company_street_number')}}<br>
-                            {{Customsetting::get('company_postal_code')}} {{Customsetting::get('company_city')}}<br>
-                            {{Customsetting::get('company_country')}}
-                            @if(Customsetting::get('company_kvk'))
-                                <br>
-                                {{Translation::get('kvk', 'invoice', 'KVK')}}: {{Customsetting::get('company_kvk')}}
-                            @endif
-                            @if(Customsetting::get('company_btw'))
-                                <br>
-                                {{Translation::get('btw', 'invoice', 'BTW')}}: {{Customsetting::get('company_btw')}}
-                            @endif
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
+    <table class="table-details">
         <tr>
-            <td><b>{{Translation::get('invoice', 'invoice', 'Invoice')}}:</b><br><br>
-            </td>
-        </tr>
-        <tr>
-            <div class='left' style="width:100%; display:block;margin-left:5px;">
-                <div style="width:35%; display:inline-block; position:relative;top:0;">
+            <td class="receiver">
+                <h2>{{ Translation::get('customer-information', 'invoice', 'Uw gegevens') }}</h2>
+
+                @if ($order->company_name)
                     <p>
-                        {{Translation::get('invoice-number', 'invoice', 'Invoice number')}}: <br>
-                        {{Translation::get('invoice-date', 'invoice', 'Invoice date')}}: <br>
-                        {{Translation::get('payment-method', 'invoice', 'Payment method') . ':'}}<br>
-                        {{Translation::get('shipping-method', 'invoice', 'Shipping method') . ':'}}
-                        @if($order->status == 'partially_paid')
-                            <br>
-                            {{Translation::get('amount-paid', 'invoice', 'Amount paid') . ':'}}<br>
-                            {{Translation::get('amount-to-pay', 'invoice', 'Amount to pay') . ':'}}
-                        @endif
+                        <b>{{ $order->company_name }}</b>
                     </p>
-                </div>
-                <div style="width:31%;display:inline-block; position:relative;top:0;">
-                    <p>
-                        <span>{{$order->invoice_id}}</span><br>
-                        <span>{{$order->created_at->format('d-m-Y')}}</span><br>
-                        <span>{{$order->paymentMethod}}</span><br>
-                        <span>{{$order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'invoice', 'niet gekozen')}}</span><br>
-                        @if($order->status == 'partially_paid')
-                            <span>{{CurrencyHelper::formatPrice($order->paidAmount)}}</span><br>
-                            <span>{{CurrencyHelper::formatPrice($order->openAmount)}}</span><br>
-                        @endif
-                    </p>
-                </div>
-            </div>
-        </tr>
-    </table>
-    <table>
-        <tr>
+                @endif
+
+                @if($order->btw_id)
+                    <p>{{ Translation::get('tax-id', 'invoice', 'BTW') }} {{ $order->btw_id }}</p>
+                @endif
+
+                @if($order->invoice_street)
+                    <p>{{ $order->invoice_street }} {{ $order->invoice_house_nr . ', ' . $order->invoice_zip_code }}</p>
+
+                    <p>{{ $order->invoice_zip_code . ', ' . $order->invoice_country }}</p>
+                @else
+                    <p>{{ $order->street }} {{ $order->house_nr . ', ' . $order->zip_code }}</p>
+
+                    <p>{{ $order->zip_code . ', ' . $order->country }}</p>
+                @endif
+
+                @if($order->email)
+                    <p>{{ $order->email }}</p>
+                @endif
+
+                @if($order->phone_number)
+                    <p>{{ $order->phone_number }}</p>
+                @endif
+            </td>
+
+            <td></td>
+
             <td>
-                <b>{{Translation::get('note', 'invoice', 'Note')}}:</b>
+                @php($logo = Translation::get('invoice-logo', 'invoice', '', 'image'))
+                @if(!$logo)
+                    @php($logo = Customsetting::get('site_logo', Sites::getActive(), ''))
+                @endif
+                @if($logo)
+                    <img
+                        src="{{mediaHelper()->getSingleMedia($logo)->url ?? ''}}"
+                        class="logo"
+                        alt=""
+                    >
+                @endif
             </td>
         </tr>
     </table>
-    <div>
-        <table class="border-product">
-            @foreach($order->orderProducts as $orderProduct)
+
+    @if ($order->note)
+        <table class="table-note">
+            <tr>
+                <th>{{ Translation::get('note', 'invoice', 'Opmerking') }}</th>
+            </tr>
+
+            <tr>
+                <td>{{ $order->note }}</td>
+            </tr>
+        </table>
+    @endif
+
+    <hr class="divider">
+
+    <table class="table-dates">
+        <tr>
+            <th>{{ Translation::get('invoice-number', 'invoice', 'Factuur nummer') }}</th>
+            <th>{{ Translation::get('invoice-date', 'invoice', 'Factuur datum') }}</th>
+            <th>{{ Translation::get('payment-method', 'invoice', 'Betaal methode') }}</th>
+            <th>{{ Translation::get('shipping-method', 'invoice', 'Verzend methode') }}</th>
+        </tr>
+
+        <tr>
+            <td>{{ $order->invoice_id }}</td>
+            <td>{{ $order->created_at->format('d-m-Y') }}</td>
+            <td>{{ $order->paymentMethod ?: Translation::get('payment-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
+            <td>{{ $order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
+        </tr>
+    </table>
+
+    @if(count($order->customOrderFields()))
+        <table class="table-dates">
+            <tr>
+                @foreach ($order->customOrderFields() as $label => $value)
+                    <th>{{ $label }}</th>
+                @endforeach
+            </tr>
+
+            <tr>
+                @foreach ($order->customOrderFields() as $label => $value)
+                    <td>{{ $value }}</td>
+                @endforeach
+            </tr>
+        </table>
+    @endif
+
+    @if($order->status == 'partially_paid')
+        <table class="table-dates">
+            <tr>
+                <th>{{ Translation::get('amount-paid', 'invoice', 'Al betaald') }}</th>
+                <th>{{ Translation::get('amount-to-pay', 'invoice', 'Nog te betalen') }}</th>
+            </tr>
+
+            <tr>
+                <td>{{ CurrencyHelper::formatPrice($order->paidAmount) }}</td>
+                <td>{{ CurrencyHelper::formatPrice($order->openAmount) }}</td>
+            </tr>
+        </table>
+    @endif
+
+    <div class="order">
+        <h3>{{ Translation::get('order', 'invoice', 'Bestelling') }}</h3>
+
+        <table>
+            <tr>
+                <th colspan="2">{{ Translation::get('product-name', 'invoice', 'Omschrijving') }}</th>
+                <th class="numeric">{{ Translation::get('quantity', 'invoice', 'Aantal') }}</th>
+                <th class="numeric">{{ Translation::get('total', 'invoice', 'Totaal') }}</th>
+            </tr>
+
+            @foreach ($order->orderProducts as $orderProduct)
                 <tr>
-                    <td>
-                        {{$orderProduct->name}} {{$orderProduct->quantity}}x
+                    <td colspan="2">
+                        {{ $orderProduct->name }}
                         @if($orderProduct->product_extras)
                             @foreach($orderProduct->product_extras as $option)
                                 <br>
@@ -225,101 +140,98 @@
                             @endforeach
                         @endif
                     </td>
-                    <td>
+
+                    <td class="numeric">
+                        {{$orderProduct->quantity}}x
+                    </td>
+
+                    <td class="numeric">
                         {{CurrencyHelper::formatPrice($orderProduct->price, 'EUR', true)}}
                     </td>
                 </tr>
             @endforeach
-            <tr>
-                <td>
-                    <hr>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    {{Translation::get('subtotal', 'invoice', 'Subtotal') . ':'}}
-                </td>
-                <td>
-                    {{CurrencyHelper::formatPrice($order->subtotal, 'EUR', true)}}
-                </td>
-            </tr>
-            @if(!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice)
-                @if($order->vat_percentages)
-                    @foreach($order->vat_percentages as $vatPercentage => $vatAmount)
-                        <tr>
-                            <td>
-                                {{Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
-                                    'percentage' => number_format($vatPercentage, 0),
-                                ]) . ':'}}
-                            </td>
-                            <td>
-                                {{CurrencyHelper::formatPrice($vatAmount, 'EUR', true)}}
-                            </td>
-                        </tr>
-                    @endforeach
-                @endif
-                @if(count($order->vat_percentages ?: []) != 1)
-                    <tr>
-                        <td>
-                            {{Translation::get('btw', 'invoice', 'BTW') . ':'}}
-                        </td>
-                        <td>
-                            {{CurrencyHelper::formatPrice($order->btw, 'EUR', true)}}
-                        </td>
-                    </tr>
-                @endif
-            @endif
-            {{--            <tr>--}}
-            {{--                <td>--}}
-            {{--                    {{Translation::get('shipping-costs', 'invoice', 'Shipping costs')}}:--}}
-            {{--                </td>--}}
-            {{--                <td>--}}
-            {{--                    @if($order->shipping_costs != 0.00)--}}
-            {{--                        {{CurrencyHelper::formatPrice($order->shipping_costs, 'EUR', true)}} @else {{Translation::get('free-shipping', 'invoice', 'Free')}} @endif--}}
-            {{--                </td>--}}
-            {{--            </tr>--}}
-            {{--            @if($order->payment_costs != 0.00)--}}
-            {{--                <tr>--}}
-            {{--                    <td>--}}
-            {{--                        {{Translation::get('payment-costs', 'invoice', 'Betalingsmethode kosten')}}:--}}
-            {{--                    </td>--}}
-            {{--                    <td>--}}
-            {{--                        {{CurrencyHelper::formatPrice($order->payment_costs, 'EUR', true)}}--}}
-            {{--                    </td>--}}
-            {{--                </tr>--}}
-            {{--            @endif--}}
-            @if($order->discount != 0.00)
-                <tr>
-                    <td>
-                        {{Translation::get('discount', 'invoice', 'Discount')}}:
-                    </td>
-                    <td>
-                        {{CurrencyHelper::formatPrice($order->discount, 'EUR', true)}}
-                    </td>
-                </tr>
-            @endif
-            <tr>
-                <td>
-                    {{Translation::get('total', 'invoice', 'Total')}}:
-                </td>
-                <td>
-                    {{CurrencyHelper::formatPrice($order->total, 'EUR', true)}}
-                </td>
-            </tr>
         </table>
     </div>
-    <div style="height:50px">
+
+    <div class="order">
+        <h2>{{ Translation::get('totals', 'invoice', 'Totalen') }}</h2>
+
+        @if((!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice))
+            @if(count($order->vat_percentages ?? []) > 1)
+                <table>
+                    <tr>
+                        <th colspan="2"></th>
+                        <th class="numeric">{{ Translation::get('vat', 'invoice', 'BTW') }}</th>
+                        <th class="numeric">{{ Translation::get('subtotal', 'invoice', 'Subtotaal') }}</th>
+                    </tr>
+
+                    @foreach($order->vat_percentages as $vatPercentage => $vatAmount)
+                        <tr>
+                            <td colspan="2"></td>
+                            <td class="numeric">{{ Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
+                                    'percentage' => number_format($vatPercentage, 0),
+                                ]) }}</td>
+                            <td class="numeric">{{ CurrencyHelper::formatPrice($vatAmount, 'EUR', true) }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+            @endif
+
+            <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($order->vat_percentages ?? []) == 1 ? ' ' . array_key_first($order->vat_percentages) . '%' : '') .  ': ' . CurrencyHelper::formatPrice($order->btw, 'EUR', true) }}</p>
+        @endif
+
+
+        <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPrice($order->subtotal, 'EUR', true) }}</p>
+
+        @if($order->discount != 0.00)
+            <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPrice($order->discount, 'EUR', true) }}</p>
+        @endif
+
+        <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPrice($order->total, 'EUR', true) }}</p>
     </div>
-    <div>
-        <hr>
-        <div style="width:30%;display:inline-block;">
-            {{Customsetting::get('site_name')}}
-        </div>
-        <div
-            style="float:right;display:inline-block;"><a
-                href="mailto:{{Customsetting::get('site_to_email')}}">{{Customsetting::get('site_to_email')}}</a>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+
+    <table class="table-details">
+        <tr>
+            <td class="sender" colspan="3">
+                <h2>{{ Translation::get('our-information', 'invoice', 'Onze gegevens') }}</h2>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="sender">
+                <p>
+                    <b>{{ Customsetting::get('company_name') }}</b>
+                </p>
+
+                <p>{{ Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') }}</p>
+
+                <p>{{ Customsetting::get('company_city') . ', ' . Customsetting::get('company_country') }}</p>
+            </td>
+
+            <td class="sender">
+                <p>
+                    <b>{{ Translation::get('company-info', 'invoice', 'Bedrijfsgegevens') }}</b>
+                </p>
+
+                @if(Customsetting::get('company_kvk'))
+                    <p>{{ Translation::get('kvk', 'invoice', 'KVK') }} {{ Customsetting::get('company_kvk') }}</p>
+                @endif
+                @if(Customsetting::get('company_btw'))
+                    <p>{{ Translation::get('btw', 'invoice', 'BTW') }} {{ Customsetting::get('company_btw') }}</p>
+                @endif
+            </td>
+
+            <td class="sender">
+                <p>
+                    <b>{{ Translation::get('company-contact', 'invoice', 'Contact') }}</b>
+                </p>
+
+                <p>{{ Customsetting::get('site_to_email') }}</p>
+
+                <p>{{ Customsetting::get('company_phone_number') }}</p>
+
+                <p>{{ url('/') }}</p>
+            </td>
+        </tr>
+    </table>
+</x-dashed-ecommerce-core::invoices.master>
