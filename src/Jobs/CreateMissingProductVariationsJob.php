@@ -40,6 +40,12 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     {
         $missingVariations = $this->productGroup->missingVariations();
 
+        if(!count($missingVariations) && !$this->productGroup->products->count()){
+            $missingVariations = [
+                []
+            ];
+        }
+
         foreach ($missingVariations as $missingVariation) {
             $newProduct = new Product();
             $newProduct->site_ids = $this->productGroup->site_ids;
