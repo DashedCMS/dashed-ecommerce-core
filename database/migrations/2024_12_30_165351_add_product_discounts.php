@@ -35,8 +35,10 @@ return new class extends Migration {
         Schema::create('dashed__product_group_volume_discount_product', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_group_volume_discount_id')
-                ->constrained('dashed__product_group_volume_discounts', null, 'dpgvd')
+            $table->foreignId('product_group_volume_discount_id');
+            $table->foreign('product_group_volume_discount_id', 'dpgvd')
+                ->references('id')
+                ->on('dashed__product_group_volume_discounts')
                 ->cascadeOnDelete();
 
             $table->foreignId('product_id')
