@@ -2,25 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
-use Dashed\DashedEcommerceCore\Models\FulfillmentCompany;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
-use  Filament\Forms\Components\Placeholder;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use LaraZeus\Quantity\Components\Quantity;
+use Dashed\DashedEcommerceCore\Models\FulfillmentCompany;
 
 /**
  * Handles sending orders to fulfillment companies and manages the associated operations.
@@ -54,7 +48,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
         $this->buttonClass = $buttonClass;
         $orderProducts = $this->order->orderProducts;
         foreach ($orderProducts as $key => $orderProduct) {
-            if (!$orderProduct->fulfillmentCompany) {
+            if (! $orderProduct->fulfillmentCompany) {
                 unset($orderProducts[$key]);
             }
         }
@@ -80,7 +74,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
         ];
 
         foreach ($this->order->orderProducts()->orderBy('fulfillment_provider')->get() as $orderProduct) {
-            $fillForm["order_product_{$orderProduct->id}_send_to_fulfiller"] = !$orderProduct->send_to_fulfiller;
+            $fillForm["order_product_{$orderProduct->id}_send_to_fulfiller"] = ! $orderProduct->send_to_fulfiller;
         }
 
         return $fillForm;
@@ -99,7 +93,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
         return Section::make('Overige opties')
             ->schema([
                 Toggle::make('sendProductsToCustomer')
-                    ->label('Verstuur producten naar de klant')
+                    ->label('Verstuur producten naar de klant'),
             ])
             ->columns(['default' => 1, 'lg' => 3]);
     }
@@ -109,7 +103,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
         return Section::make('Bestelde producten')
             ->schema($this->getOrderProductSchema())
             ->columns(['default' => 1, 'lg' => 2])
-            ->hidden(!in_array($this->order->order_origin, ['own', 'pos']));
+            ->hidden(! in_array($this->order->order_origin, ['own', 'pos']));
     }
 
     private function getOrderProductSchema(): array
@@ -137,16 +131,17 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
             }
         }
 
-        if (!$hasOrderProductSelected) {
+        if (! $hasOrderProductSelected) {
             Notification::make()
                 ->title('Geen producten geselecteerd')
                 ->body('Selecteer minimaal één product om door te sturen naar de fulfilment partij.')
                 ->danger()
                 ->send();
+
             return;
         }
 
-        foreach($fulfillmentCompanies as $fulfillmentProvider => $orderProducts) {
+        foreach ($fulfillmentCompanies as $fulfillmentProvider => $orderProducts) {
             $fulfillmentCompany = FulfillmentCompany::find($fulfillmentProvider);
             $fulfillmentCompany->sendOrder($this->order, $orderProducts, $data['sendProductsToCustomer']);
         }

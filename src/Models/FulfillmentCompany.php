@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Support\Facades\Mail;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail;
 
 class FulfillmentCompany extends Model
 {

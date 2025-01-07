@@ -39,7 +39,7 @@ class ViewStatusses extends Component implements HasForms, HasInfolists
                 [
                     'color' => $this->order->orderProducts()->where('fulfillment_provider', $key)->where('send_to_fulfiller', false)->count() ? 'warning' : 'success',
                     'status' => 'Fulfillment voor ' . $fulfillmentCompany,
-                ]
+                ],
             ]);
         }
 
