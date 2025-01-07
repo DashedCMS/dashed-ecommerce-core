@@ -11,7 +11,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('dashed__order_products', function (Blueprint $table) {
-            $table->string('fulfillment_provider');
+            $table->string('fulfillment_provider')
+                ->nullable();
             $table->boolean('send_to_fulfiller')
                 ->default(false);
         });
