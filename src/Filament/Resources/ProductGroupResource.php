@@ -469,7 +469,7 @@ class ProductGroupResource extends Resource
                     ->label('Aantal producten')
                     ->sortable(),
             ], static::visitableTableColumns()))
-            ->reorderable('order')
+//            ->reorderable('order')
             ->actions([
                 EditAction::make()
                     ->button(),

@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 use Closure;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
@@ -550,6 +551,11 @@ class ProductResource extends Resource
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
                     ->sortable(),
+                IconColumn::make('indexable')
+                    ->label('Tonen in overzicht')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->sortable(),
             ], static::visitableTableColumns()))
             ->reorderable('order')
             ->actions([
@@ -694,6 +700,22 @@ class ProductResource extends Resource
                         }
 
                         return $query->whereHas('productCategories', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
+                    }),
+                Filter::make('indexable')
+                    ->form([
+                        Select::make('indexable')
+                            ->options([
+                                1 => 'Ja',
+                                0 => 'Nee',
+                            ])
+                            ->label('Getoond in overzicht'),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                        if ($data['indexable'] === null || $data['indexable'] === '') {
+                            return $query;
+                        }
+
+                        return $query->where('indexable', $data['indexable']);
                     }),
             ]);
     }
