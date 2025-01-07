@@ -38,7 +38,9 @@ class OrderConfirmationForFulfillerMail extends Mailable
      */
     public function build()
     {
-        $mail = $this->view(env('SITE_THEME', 'dashed') . '.emails.confirm-order-for-fulfiller')
+        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.confirm-order-for-fulfiller') ? env('SITE_THEME', 'dashed') . '.emails.confirm-order-for-fulfiller' : 'dashed-ecommerce-core::emails.confirm-order-for-fulfiller';
+
+        $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('order-confirmation-for-fulfiller-email-subject', 'orders', 'Bestelling #:orderId: vanuit :siteName:', 'text', [
                 'orderId' => $this->order->invoice_id,

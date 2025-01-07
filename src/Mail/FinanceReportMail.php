@@ -33,7 +33,9 @@ class FinanceReportMail extends Mailable
      */
     public function build()
     {
-        $mail = $this->view(env('SITE_THEME', 'dashed') . '.emails.exported-invoice')
+        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.exported-invoice') ? env('SITE_THEME', 'dashed') . '.emails.exported-invoice' : 'dashed-ecommerce-core::emails.exported-invoice';
+
+        $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('exported-finance-report-email-subject', 'finance-report', 'Exported finance report'))
             ->with([

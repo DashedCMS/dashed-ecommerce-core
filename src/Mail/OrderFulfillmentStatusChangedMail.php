@@ -46,7 +46,9 @@ class OrderFulfillmentStatusChangedMail extends Mailable
             $subject = str($subject)->replace(":" . str($variable)->camel() . ":", $this->order[$variable]);
         }
 
-        return $this->view(env('SITE_THEME', 'dashed') . '.emails.notification')
+        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.notification') ? env('SITE_THEME', 'dashed') . '.emails.notification' : 'dashed-core::emails.notification';
+
+        return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject($subject)
             ->with([

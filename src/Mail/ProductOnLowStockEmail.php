@@ -24,7 +24,9 @@ class ProductOnLowStockEmail extends Mailable
 
     public function build()
     {
-        return $this->view(env('SITE_THEME', 'dashed') . '.emails.product-low-stock')
+        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.product-low-stock') ? env('SITE_THEME', 'dashed') . '.emails.product-low-stock' : 'dashed-ecommerce-core::emails.product-low-stock';
+
+        return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('product-low-stock-email-subject', 'products', 'Product :productName: low on stock', 'text', [
                 'productName' => $this->product->name,

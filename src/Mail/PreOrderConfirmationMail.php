@@ -33,9 +33,11 @@ class PreOrderConfirmationMail extends Mailable
      */
     public function build()
     {
+        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.confirm-pre-order') ? env('SITE_THEME', 'dashed') . '.emails.confirm-pre-order' : 'dashed-ecommerce-core::emails.confirm-pre-order';
+
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        $mail = $this->view(env('SITE_THEME', 'dashed') . '.emails.confirm-pre-order')
+        $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('pre-order-confirmation-email-subject', 'pre-orders', 'Pre order confirmation for order #:orderId:', 'text', [
                 'orderId' => $this->order->invoice_id,

@@ -33,9 +33,11 @@ class OrderConfirmationMail extends Mailable
      */
     public function build()
     {
+        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.confirm-order') ? env('SITE_THEME', 'dashed') . '.emails.confirm-order' : 'dashed-ecommerce-core::emails.confirm-order';
+
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        $mail = $this->view(env('SITE_THEME', 'dashed') . '.emails.confirm-order')
+        $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
             ->subject(Translation::get('order-confirmation-email-subject', 'orders', 'Order confirmation for order #:orderId:', 'text', [
                 'orderId' => $this->order->invoice_id,
