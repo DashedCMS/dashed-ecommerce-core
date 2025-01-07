@@ -2,20 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
-use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 use Livewire\Component;
-use Filament\Forms\Contracts\HasForms;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns\CreateManualOrderActions;
+use Illuminate\Support\Facades\Http;
+use Filament\Notifications\Notification;
+use Dashed\DashedEcommerceCore\Models\POSCart;
 
 class POSCustomerPage extends Component
 {
@@ -32,7 +22,6 @@ class POSCustomerPage extends Component
     public $vat;
     public array $vatPercentages = [];
 
-
     public function mount(): void
     {
         $this->getProducts();
@@ -45,7 +34,7 @@ class POSCustomerPage extends Component
             $response = Http::post(route('api.point-of-sale.retrieve-cart'), [
                 'cartInstance' => $this->cartInstance,
                 'posIdentifier' => $posCart->identifier,
-                'discountCode' => $posCart->discount_code
+                'discountCode' => $posCart->discount_code,
             ])
             ->json();
 
