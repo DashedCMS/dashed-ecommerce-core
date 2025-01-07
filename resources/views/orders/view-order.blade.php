@@ -32,6 +32,7 @@
                     @livewire('add-payment-to-order', ['order' => $record])
                 @endif
                 @livewire('cancel-order', ['order' => $record])
+                @livewire('send-order-to-fulfillment-companies', ['order' => $record])
                 @livewire('send-order-confirmation-to-email', ['order' => $record])
             @else
                 @livewire('change-order-retour-status', ['order' => $record])

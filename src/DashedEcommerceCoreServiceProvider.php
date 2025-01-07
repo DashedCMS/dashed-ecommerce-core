@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -100,6 +101,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('change-order-retour-status', ChangeOrderRetourStatus::class);
         Livewire::component('add-payment-to-order', AddPaymentToOrder::class);
         Livewire::component('cancel-order', CancelOrder::class);
+        Livewire::component('send-order-to-fulfillment-companies', SendOrderToFulfillmentCompanies::class);
         Livewire::component('send-order-confirmation-to-email', SendOrderConfirmationToEmail::class);
         Livewire::component('create-order-log', CreateOrderLog::class);
         Livewire::component('order-shipping-information-list', ShippingInformationList::class);

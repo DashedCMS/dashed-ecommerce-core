@@ -29,19 +29,25 @@ class ViewOrder extends ViewRecord
         $packingSlipUrl = $this->record->downloadPackingslipUrl();
 
         return array_merge([
-            Action::make('Bekijk in website')
+            Action::make('viewInWebsite')
+                ->hiddenLabel()
+                ->icon('heroicon-s-globe-alt')
                 ->button()
                 ->url($this->record->getUrl())
                 ->openUrlInNewTab(),
-            Action::make('Bewerk bestelling')
+            Action::make('edit')
+                ->hiddenLabel()
+                ->icon('heroicon-s-pencil-square')
                 ->button()
                 ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
-            Action::make('Download factuur')
+            Action::make('Factuur')
                 ->button()
+                ->icon('heroicon-s-arrow-down-tray')
                 ->url($invoiceUrl)
                 ->visible((bool)$invoiceUrl),
-            Action::make('Download pakbon')
+            Action::make('Pakbon')
                 ->button()
+                ->icon('heroicon-s-arrow-down-tray')
                 ->url($packingSlipUrl)
                 ->visible((bool)$packingSlipUrl),
         ], ecommerce()->buttonActions('order'));

@@ -34,6 +34,15 @@ class ViewStatusses extends Component implements HasForms, HasInfolists
         $labels = array_merge($labels, [$this->order->orderStatus()]);
         $labels = array_merge($labels, [$this->order->fulfillmentStatus()]);
 
+        foreach ($this->order->fulfillmentCompanies() as $key => $fulfillmentCompany) {
+            $labels = array_merge($labels, [
+                [
+                    'color' => $this->order->orderProducts()->where('fulfillment_provider', $key)->where('send_to_fulfiller', false)->count() ? 'warning' : 'success',
+                    'status' => 'Fulfillment voor ' . $fulfillmentCompany,
+                ]
+            ]);
+        }
+
         $statusses = [];
 
         foreach ($labels as $label) {

@@ -10,14 +10,14 @@ use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 
 class ListFulfillmentCompany extends ListRecords
 {
-    use Translatable;
+//    use Translatable;
 
     protected static string $resource = FulfillmentCompanyResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            LocaleSwitcher::make(),
+//            LocaleSwitcher::make(),
             CreateAction::make(),
         ];
     }

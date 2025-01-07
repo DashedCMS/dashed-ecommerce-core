@@ -11,22 +11,20 @@ use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 
 class EditFulfillmentCompany extends EditRecord
 {
-    use Translatable;
+//    use Translatable;
 
     protected static string $resource = FulfillmentCompanyResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            LocaleSwitcher::make(),
+//            LocaleSwitcher::make(),
             DeleteAction::make(),
         ];
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
-
         return $data;
     }
 }

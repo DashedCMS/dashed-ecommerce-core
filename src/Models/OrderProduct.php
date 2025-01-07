@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -52,6 +53,7 @@ class OrderProduct extends Model
             if ($orderProduct->product) {
                 $orderProduct->vat_rate = $orderProduct->product->vat_rate;
                 $orderProduct->btw = $orderProduct->price / (100 + ($orderProduct->vat_rate ?? 21)) * ($orderProduct->vat_rate ?? 21);
+                $orderProduct->fulfillment_provider = $orderProduct->product->fulfillment_provider;
             } else {
                 if (! $orderProduct->vat_rate && $orderProduct->btw > 0.00) {
                     $orderProduct->vat_rate = round($orderProduct->btw / ($orderProduct->price - $orderProduct->btw), 2) * 100;
@@ -93,5 +95,10 @@ class OrderProduct extends Model
     public function getVatWithoutDiscountAttribute()
     {
         return TaxHelper::calculateTax($this->price + $this->discount, $this->vat_rate);
+    }
+
+    public function fulfillmentCompany(): BelongsTo
+    {
+        return $this->belongsTo(FulfillmentCompany::class, 'fulfillment_provider');
     }
 }

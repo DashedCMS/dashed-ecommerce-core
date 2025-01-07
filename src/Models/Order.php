@@ -417,7 +417,7 @@ class Order extends Model
             $order = Order::find($this->id);
             //            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again done', isDebugLog: true);
             $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
-            if (! Storage::disk('dashed')->exists($invoicePath)) {
+            if (!Storage::disk('dashed')->exists($invoicePath)) {
                 //                OrderLog::createLog(orderId: $this->id, note: 'Invoice does not exists yet, creating view', isDebugLog: true);
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', [
                     'order' => $order,
@@ -448,7 +448,7 @@ class Order extends Model
                 //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent done', isDebugLog: true);
             }
 
-            if (! $this->invoice_send_to_customer) {
+            if (!$this->invoice_send_to_customer) {
                 //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob', isDebugLog: true);
                 SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
                 //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob done', isDebugLog: true);
@@ -460,7 +460,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (!Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -478,7 +478,7 @@ class Order extends Model
         if (in_array($this->order_origin, ['own', 'pos']) && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (!Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -659,6 +659,8 @@ class Order extends Model
             $this->deductDiscount();
             //            OrderLog::createLog(orderId: $this->id, note: 'Deducted discount', isDebugLog: true);
 
+            $this->sendAutomaticFulfillmentProducts();
+
             //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start', isDebugLog: true);
             OrderMarkedAsPaidEvent::dispatch($this);
             //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch end', isDebugLog: true);
@@ -822,11 +824,11 @@ class Order extends Model
                 $newOrder->btw += $taxPrice;
 
                 $vatRate = number_format($orderProduct->vat_rate, 0);
-                if (! isset($vatPercentagesForOrder[$vatRate])) {
+                if (!isset($vatPercentagesForOrder[$vatRate])) {
                     $vatPercentagesForOrder[$vatRate] = 0;
                 }
                 $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
-                if (! isset($vatPercentagesCount[$vatRate])) {
+                if (!isset($vatPercentagesCount[$vatRate])) {
                     $vatPercentagesCount[$vatRate] = 0;
                 }
                 $vatPercentagesCount[$vatRate] += $chosenOrderProduct['refundQuantity'];
@@ -858,11 +860,11 @@ class Order extends Model
             $newOrder->btw += $taxPrice;
 
             $vatRate = 21; //Hardcoded BTW percentage
-            if (! isset($vatPercentagesForOrder[$vatRate])) {
+            if (!isset($vatPercentagesForOrder[$vatRate])) {
                 $vatPercentagesForOrder[$vatRate] = 0;
             }
             $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
-            if (! isset($vatPercentagesCount[$vatRate])) {
+            if (!isset($vatPercentagesCount[$vatRate])) {
                 $vatPercentagesCount[$vatRate] = 0;
             }
             $vatPercentagesCount[$vatRate] += 1;
@@ -947,8 +949,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
-            if (! Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && !$this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+            if (!Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -1032,7 +1034,7 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (! $this->credit_for_order_id) {
+        if (!$this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
@@ -1161,7 +1163,7 @@ class Order extends Model
 
     public function addTrackAndTrace(?string $supplier = null, ?string $deliveryCompany = null, ?string $code = null, ?string $url = null, ?string $expectedDeliveryDate = null): void
     {
-        if (! $this->trackAndTraces()->where('supplier', $supplier)->where('delivery_company', $deliveryCompany)->where('code', $code)->exists()) {
+        if (!$this->trackAndTraces()->where('supplier', $supplier)->where('delivery_company', $deliveryCompany)->where('code', $code)->exists()) {
             $this->trackAndTraces()->create([
                 'supplier' => $supplier,
                 'delivery_company' => $deliveryCompany,
@@ -1179,11 +1181,36 @@ class Order extends Model
         foreach (ecommerce()->builder('customOrderFields') as $key => $field) {
             $key = str($key)->snake()->toString();
 
-            if ($this->order->$key) {
-                $customOrderFields[$field['label']] = $record->$key;
+            if ($this->$key) {
+                $customOrderFields[$field['label']] = $this->$key;
             }
         }
 
         return $customOrderFields;
+    }
+
+    public function fulfillmentCompanies(): array
+    {
+        $fulfillmentCompanies = [];
+
+        foreach ($this->orderProducts as $orderProduct) {
+            if ($orderProduct && $orderProduct->fulfillment_provider) {
+                if ($orderProduct->product->fulfillmentCompany) {
+                    $fulfillmentCompanies[$orderProduct->fulfillmentCompany->id] = $orderProduct->fulfillmentCompany->name;
+                } else {
+                    $fulfillmentCompanies[$orderProduct->fulfillment_provider] = $orderProduct->fulfillment_provider;
+                }
+            }
+        }
+
+        return $fulfillmentCompanies;
+    }
+
+    public function sendAutomaticFulfillmentProducts(): void
+    {
+        foreach(FulfillmentCompany::where('process_automatically', true)->get() as $fulfillmentCompany) {
+            $orderProducts = $this->orderProducts()->where('fulfillment_provider', $fulfillmentCompany->id)->get();
+            $fulfillmentCompany->sendOrder($this, $orderProducts);
+        }
     }
 }

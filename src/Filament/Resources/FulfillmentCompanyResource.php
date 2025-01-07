@@ -2,7 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Classes\Sites;
@@ -23,7 +26,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource\Pag
 
 class FulfillmentCompanyResource extends Resource
 {
-    use Translatable;
+//    use Translatable;
 
     protected static ?string $model = FulfillmentCompany::class;
 
@@ -47,22 +50,18 @@ class FulfillmentCompanyResource extends Resource
     {
         return $form
             ->schema([
-//                Section::make('Globale informatie')
-//                    ->schema([
-//                        Select::make('site_id')
-//                            ->label('Actief op site')
-//                            ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
-//                            ->hidden(function () {
-//                                return ! (Sites::getAmountOfSites() > 1);
-//                            })
-//                            ->required(),
-//                    ])
-//                    ->hidden(function () {
-//                        return ! (Sites::getAmountOfSites() > 1);
-//                    })
-//                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
-//                Section::make('Betaalmethode')
-//                    ->schema($contentSchema),
+                TextInput::make('name')
+                    ->label('Naam')
+                    ->maxLength(255)
+                    ->required(),
+                TextInput::make('email')
+                    ->label('Email')
+                    ->maxLength(255)
+                    ->email()
+                    ->required(),
+                Toggle::make('process_automatically')
+                    ->label('Automatisch verwerken')
+                    ->helperText('Als je dit aan zet worden bestelling met producten van dit fulfillment bedrijf automatisch naar het bedrijf gemaild.'),
             ]);
     }
 
@@ -72,7 +71,18 @@ class FulfillmentCompanyResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable(query: SearchQuery::make())
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('email')
+                    ->label('Email')
+                    ->url(fn ($record) => "mailto:{$record->email}")
+                    ->searchable()
+                    ->sortable(),
+                IconColumn::make('process_automatically')
+                    ->label('Automatisch verwerken')
+                    ->trueIcon('heroicon-s-check-circle')
+                    ->falseIcon('heroicon-s-x-circle')
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('products_count')
                     ->label('Aantal producten')
