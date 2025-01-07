@@ -155,6 +155,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             self::class => $builderBlockClasses,
         ]);
 
+        cms()->builder('createDefaultPages', [
+            self::class => 'createDefaultPages',
+        ]);
+
         cms()->builder('publishOnUpdate', [
             'dashed-ecommerce-core-config',
             'dashed-ecommerce-core-assets',
@@ -385,5 +389,83 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 UpdateProductInformations::class,
                 MigrateToV3::class,
             ]);
+    }
+
+    public static function createDefaultPages(): void
+    {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            $page->setTranslation('name', 'nl', 'Producten');
+            $page->setTranslation('slug', 'nl', 'producten');
+            $page->setTranslation('content', 'nl', [
+                [
+                    'data' => [],
+                    'type' => 'all-products',
+                ]
+            ]);
+            $page->save();
+
+            \Dashed\DashedCore\Models\Customsetting::set('product_overview_page_id', $page->id);
+        }
+
+        if (!\Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            $page->setTranslation('name', 'nl', 'Bestellingen');
+            $page->setTranslation('slug', 'nl', 'bestellingen');
+            $page->setTranslation('content', 'nl', [
+                [
+                    'data' => [],
+                    'type' => 'orders-block',
+                ]
+            ]);
+            $page->save();
+
+        \Dashed\DashedCore\Models\Customsetting::set('orders_page_id', $page->id);
+        }
+
+        if (!\Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            $page->setTranslation('name', 'nl', 'Bestelling');
+            $page->setTranslation('slug', 'nl', 'bestelling');
+            $page->setTranslation('content', 'nl', [
+                [
+                    'data' => [],
+                    'type' => 'view-order-block',
+                ]
+            ]);
+            $page->save();
+
+            \Dashed\DashedCore\Models\Customsetting::set('order_page_id', $page->id);
+        }
+
+        if (!\Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            $page->setTranslation('name', 'nl', 'Winkelwagen');
+            $page->setTranslation('slug', 'nl', 'winkelwagen');
+            $page->setTranslation('content', 'nl', [
+                [
+                    'data' => [],
+                    'type' => 'cart-block',
+                ]
+            ]);
+            $page->save();
+
+            \Dashed\DashedCore\Models\Customsetting::set('cart_page_id', $page->id);
+        }
+
+        if (!\Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            $page->setTranslation('name', 'nl', 'Afrekenen');
+            $page->setTranslation('slug', 'nl', 'afrekenen');
+            $page->setTranslation('content', 'nl', [
+                [
+                    'data' => [],
+                    'type' => 'checkout-block',
+                ]
+            ]);
+            $page->save();
+
+            \Dashed\DashedCore\Models\Customsetting::set('checkout_page_id', $page->id);
+        }
     }
 }
