@@ -99,8 +99,7 @@ class Product extends Model
         static::deleting(function ($product) {
             $product->productCategories()->detach();
             $product->productFilters()->detach();
-            $product->activeProductFilters()->detach();
-            $product->shippingClass()->detach();
+            $product->shippingClasses()->detach();
         });
     }
 
