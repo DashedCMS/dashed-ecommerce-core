@@ -44,8 +44,8 @@ class ProductGroup extends Model
 
     protected static function booted()
     {
-        static::saved(function ($product) {
-            UpdateProductInformationJob::dispatch($product);
+        static::saved(function ($productGroup) {
+            UpdateProductInformationJob::dispatch($productGroup);
         });
 
 

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Console\Command;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
@@ -39,9 +40,9 @@ class UpdateProductInformations extends Command
      */
     public function handle()
     {
-        $products = Product::get();
-        foreach ($products as $product) {
-            UpdateProductInformationJob::dispatch($product);
+        $productGroups = ProductGroup::get();
+        foreach ($productGroups as $productGroup) {
+            UpdateProductInformationJob::dispatch($productGroup, false);
         }
     }
 }

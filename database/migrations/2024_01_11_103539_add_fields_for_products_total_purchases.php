@@ -16,10 +16,6 @@ return new class () extends Migration {
             $table->integer('total_purchases')
                 ->default(0);
         });
-
-        foreach (Product::withTrashed()->get() as $product) {
-            UpdateProductInformationJob::dispatch($product);
-        }
     }
 
     /**
