@@ -333,8 +333,8 @@ class Products
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        if(! $products) {
-            if($categoryId){
+        if (! $products) {
+            if ($categoryId) {
                 $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
                 $products = $productCategory->products()
                     ->search($search)
