@@ -17,7 +17,7 @@
             @elseif($data['useCartRelatedItems'] ?? false)
                 @php($products = ShoppingCart::getCrossSellAndSuggestedProducts($data['amount_of_products'] ?? 4))
             @else
-                @php($products = Products::getAllV2($data['amount_of_products'] ?? 4, orderBy: 'latest', enableFilters: false)['products'] ?? [])
+                @php($products = Products::getAll($data['amount_of_products'] ?? 4, orderBy: 'latest', enableFilters: false)['products'] ?? [])
             @endif
             @if(count($products))
                 <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mt-4">

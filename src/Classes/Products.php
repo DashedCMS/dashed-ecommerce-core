@@ -333,21 +333,32 @@ class Products
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
+        if(! $products) {
+            if($categoryId){
+                $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
+                $products = $productCategory->products()
+                    ->search($search)
+                    ->publicShowable()
+                    ->orderBy($orderBy, $order)
+                    ->with(['productFilters', 'productCategories', 'productGroup'])
+                    ->get();
+            } else {
+                $products = Product::search($search)
+                    ->publicShowable()
+                    ->orderBy($orderBy, $order)
+                    ->with(['productFilters', 'productCategories', 'productGroup'])
+                    ->get();
+            }
+        }
+
         $correctProductIds = [];
 
         $productFilters = DB::table('dashed__product_filter')
-            ->whereIn('product_id', $products->pluck('id'))
-            ->get()
-            ->groupBy('product_id');
-
-        $correctProductIds = [];
-
-        $productFilters = DB::table('dashed__product_filter')
-            ->whereIn('product_id', $products->pluck('id'))
+            ->whereIn('product_id', $products->pluck('id' ?? []))
             ->get()
             ->groupBy('product_filter_id');
 
-        $validProductIds = collect($products->pluck('id'));
+        $validProductIds = collect($products->pluck('id') ?? []);
 
         foreach ($filters as $filter) {
             $checkedOptionIds = collect($filter->productFilterOptions)->where('checked', true)->pluck('id');
