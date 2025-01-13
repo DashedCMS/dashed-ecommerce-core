@@ -165,11 +165,10 @@ class EditProduct extends EditRecord
         }
         $newProduct->save();
 
-        $this->record->load('productCategories', 'shippingClasses', 'productFilters', 'activeProductFilters', 'productCharacteristics', 'productExtras');
+        $this->record->load('productCategories', 'shippingClasses', 'productFilters', 'productCharacteristics', 'productExtras');
 
         $newProduct->productCategories()->sync($this->record->productCategories);
         $newProduct->shippingClasses()->sync($this->record->shippingClasses);
-        $newProduct->activeProductFilters()->sync($this->record->activeProductFilters);
         $newProduct->bundleProducts()->sync($this->record->bundleProducts);
 
         foreach (DB::table('dashed__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
