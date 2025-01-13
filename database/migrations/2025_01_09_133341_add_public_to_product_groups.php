@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::table('dashed__product_groups', function (Blueprint $table) {
             $table->boolean('public')
-                ->default(false);
+                ->default(true);
         });
     }
 
