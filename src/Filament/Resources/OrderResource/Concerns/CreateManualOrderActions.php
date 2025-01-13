@@ -235,15 +235,17 @@ trait CreateManualOrderActions
                     }
                 }
 
-                $options['options'] = $options;
+                $attributes['discountPrice'] = $productPrice; //No discount
+                $attributes['originalPrice'] = $productPrice;
+                $attributes['options'] = $options;
 
                 if ($product->id ?? false) {
-                    \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
+                    \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes)->associate(Product::class);
                 } else {
-                    $options['customProduct'] = true;
-                    $options['vat_rate'] = $chosenProduct['vat_rate'];
-                    $options['singlePrice'] = $chosenProduct['singlePrice'];
-                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options);
+                    $attributes['customProduct'] = true;
+                    $attributes['vat_rate'] = $chosenProduct['vat_rate'];
+                    $attributes['singlePrice'] = $chosenProduct['singlePrice'];
+                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes);
                 }
             }
         }
