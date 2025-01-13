@@ -81,8 +81,12 @@ class ProductGroupResource extends Resource
                     ->label('Actief op sites')
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                     ->default([Sites::getFirstSite()['id']])
-                    ->hidden(fn (Get $get) => ! (Sites::getAmountOfSites() > 1))
+                    ->hidden(fn(Get $get) => !(Sites::getAmountOfSites() > 1))
                     ->required(),
+                Toggle::make('public')
+                    ->label('Openbaar')
+                    ->default(true)
+                    ->helperText('Als je deze op NIET openbaar zet, worden alle variaties verborgen'),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina'),
                 Toggle::make('use_parent_stock')
@@ -144,14 +148,14 @@ class ProductGroupResource extends Resource
                 ->collapsible()
                 ->persistCollapsed()
                 ->columns(2)
-                ->visible(fn (Get $get) => in_array($productFilter->id, $get('productFilters')));
+                ->visible(fn(Get $get) => in_array($productFilter->id, $get('productFilters')));
         }
         //
         $schema[] = Section::make('Filters beheren')
             ->headerActions([
                 \Filament\Forms\Components\Actions\Action::make('createMissingVariations')
-                    ->label(fn ($record) => "Ontbrekende variaties aanmaken (" . count($record->missing_variations ?? []) . ")")
-                    ->visible(fn ($livewire, $record, $get) => count($record->missing_variations ?? []) && $livewire instanceof EditProductGroup)
+                    ->label(fn($record) => "Ontbrekende variaties aanmaken (" . count($record->missing_variations ?? []) . ")")
+                    ->visible(fn($livewire, $record, $get) => count($record->missing_variations ?? []) && $livewire instanceof EditProductGroup)
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         CreateMissingProductVariationsJob::dispatch($record);
@@ -189,8 +193,8 @@ class ProductGroupResource extends Resource
                 'lg' => 3,
             ])
             ->persistCollapsed()
-            ->collapsed(fn ($livewire) => $livewire instanceof EditProductGroup)
-            ->hidden(fn ($livewire, Get $get, $record) => $livewire instanceof CreateProductGroup || ($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)));
+            ->collapsed(fn($livewire) => $livewire instanceof EditProductGroup)
+            ->hidden(fn($livewire, Get $get, $record) => $livewire instanceof CreateProductGroup || ($get('type') == 'variable' && (!$record && !$get('parent_id') || $record && !$record->parent_id)));
 
         $schema[] = Section::make('Content beheren')
             ->schema(array_merge([
@@ -200,7 +204,7 @@ class ProductGroupResource extends Resource
                     ->required(),
                 TextInput::make('slug')
                     ->label('Slug')
-                    ->unique('dashed__product_groups', 'slug', fn ($record) => $record)
+                    ->unique('dashed__product_groups', 'slug', fn($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren'),
                 TiptapEditor::make('description')
                     ->label('Uitgebreide beschrijving')
@@ -243,33 +247,33 @@ class ProductGroupResource extends Resource
                 Select::make('productCategories')
                     ->multiple()
                     ->relationship('productCategories', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                     ->label('Link aan categorieeën')
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd. Deze categorieen gelden voor alle varianten.'),
                 Select::make('suggestedProducts')
                     ->multiple()
                     ->relationship('suggestedProducts', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                     ->helperText('Indien je bij een variant ook voorgestelde producten koppelt, worden deze samengevoegd')
                     ->label('Link voorgestelde producten'),
                 Select::make('crossSellProducts')
                     ->multiple()
                     ->relationship('crossSellProducts', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                     ->label('Link cross sell producten')
                     ->helperText('Dit mogen alleen maar producten zijn die zonder verplichte opties zijn. Indien je bij een variant ook cross sell producten koppelt, worden deze samengevoegd'),
                 Select::make('globalProductExtras')
                     ->multiple()
                     ->preload()
                     ->relationship('globalProductExtras', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
                     ->helperText('Indien je bij een variant ook product extras koppelt, worden deze samengevoegd')
                     ->label('Link globale product extras'),
                 Select::make('globalProductTabs')
                     ->multiple()
                     ->preload()
                     ->relationship('globalTabs', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
                     ->helperText('Indien je bij een variant ook product tabs koppelt, worden deze samengevoegd')
                     ->label('Link globale product tabs'),
             ])
@@ -313,28 +317,28 @@ class ProductGroupResource extends Resource
                                 'dateTime' => 'Datum + tijd',
                             ])
                             ->default('text')
-                            ->visible(fn (Get $get) => $get('type') == 'input')
-                            ->required(fn (Get $get) => $get('type') == 'input'),
+                            ->visible(fn(Get $get) => $get('type') == 'input')
+                            ->required(fn(Get $get) => $get('type') == 'input'),
                         TextInput::make('min_length')
                             ->label('Minimale lengte/waarde')
                             ->numeric()
-                            ->visible(fn (Get $get) => $get('type') == 'input')
-                            ->required(fn (Get $get) => $get('type') == 'input'),
+                            ->visible(fn(Get $get) => $get('type') == 'input')
+                            ->required(fn(Get $get) => $get('type') == 'input'),
                         TextInput::make('max_length')
                             ->label('Maximale lengte/waarde')
                             ->numeric()
-                            ->visible(fn (Get $get) => $get('type') == 'input')
-                            ->required(fn (Get $get) => $get('type') == 'input')
+                            ->visible(fn(Get $get) => $get('type') == 'input')
+                            ->required(fn(Get $get) => $get('type') == 'input')
                             ->reactive(),
                         Toggle::make('required')
                             ->label('Verplicht'),
                         Repeater::make('productExtraOptions')
                             ->relationship('productExtraOptions')
-                            ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
+                            ->cloneable(fn(Get $get) => $get('type') != 'checkbox')
                             ->label('Opties van deze product extra')
-                            ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                            ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                            ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
+                            ->visible(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                            ->required(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                            ->maxItems(fn(Get $get) => $get('type') == 'checkbox' ? 1 : 50)
                             ->reactive()
                             ->schema([
                                 TextInput::make('value')
@@ -356,7 +360,7 @@ class ProductGroupResource extends Resource
                             ->columnSpan(2),
                     ], static::customBlocksTab('productExtraOptionBlocks'))),
             ])
-            ->hidden(fn ($livewire) => $livewire instanceof CreateProductGroup)
+            ->hidden(fn($livewire) => $livewire instanceof CreateProductGroup)
             ->collapsible()
             ->persistCollapsed();
 
@@ -376,7 +380,7 @@ class ProductGroupResource extends Resource
                             ->required(),
                     ]),
             ])
-            ->hidden(fn ($livewire) => $livewire instanceof CreateProductGroup)
+            ->hidden(fn($livewire) => $livewire instanceof CreateProductGroup)
             ->collapsible()
             ->persistCollapsed();
 
@@ -406,13 +410,13 @@ class ProductGroupResource extends Resource
                             ->label('Kortings prijs')
                             ->numeric()
                             ->required()
-                            ->visible(fn (Get $get) => $get('type') == 'fixed')
+                            ->visible(fn(Get $get) => $get('type') == 'fixed')
                             ->prefix('€'),
                         TextInput::make('discount_percentage')
                             ->label('Kortings percentage')
                             ->numeric()
                             ->required()
-                            ->visible(fn (Get $get) => $get('type') == 'percentage')
+                            ->visible(fn(Get $get) => $get('type') == 'percentage')
                             ->suffix('%'),
                         Toggle::make('active_for_all_variants')
                             ->label('Actief voor alle varianten')
@@ -426,9 +430,9 @@ class ProductGroupResource extends Resource
                                 return Product::where('product_group_id', $livewire->record->id ?? 0)->pluck('name', 'id');
                             })
                             ->columnSpanFull()
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                             ->label('Korting alleen voor deze producten')
-                            ->visible(fn (Get $get) => ! $get('active_for_all_variants'))
+                            ->visible(fn(Get $get) => !$get('active_for_all_variants'))
                             ->required(),
                     ])
                     ->columns([
@@ -440,7 +444,7 @@ class ProductGroupResource extends Resource
                 'default' => 1,
                 'lg' => 2,
             ])
-            ->hidden(fn ($livewire) => $livewire instanceof CreateProductGroup)
+            ->hidden(fn($livewire) => $livewire instanceof CreateProductGroup)
             ->persistCollapsed()
             ->collapsible();
 
@@ -463,7 +467,7 @@ class ProductGroupResource extends Resource
                 TextColumn::make('products_sum_purchases')
 //                    ->sum('products', 'purchases')
                     ->label('Aantal verkopen')
-                    ->getStateUsing(fn (ProductGroup $record) => $record->products->sum('total_purchases')),
+                    ->getStateUsing(fn(ProductGroup $record) => $record->products->sum('total_purchases')),
                 TextColumn::make('products_count')
                     ->counts('products')
                     ->label('Aantal producten')
@@ -489,11 +493,11 @@ class ProductGroupResource extends Resource
                             ->options(ProductCategory::all()->pluck('name', 'id')),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
-                        if (! $data['categories']) {
+                        if (!$data['categories']) {
                             return $query;
                         }
 
-                        return $query->whereHas('productCategories', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
+                        return $query->whereHas('productCategories', fn(\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
                     }),
             ]);
     }
