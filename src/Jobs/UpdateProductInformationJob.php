@@ -108,7 +108,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateTotalPurchases();
             $product->calculatePrices();
             $hasIndexableProduct = false;
-            if ((($this->productGroup->only_show_parent_product && !$hasIndexableProduct) || !$this->productGroup->only_show_parent_product) && $this->public && $this->productGroup->public) {
+            if ((($this->productGroup->only_show_parent_product && ! $hasIndexableProduct) || ! $this->productGroup->only_show_parent_product) && $this->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
             } else {
