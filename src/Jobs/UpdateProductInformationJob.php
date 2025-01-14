@@ -85,6 +85,8 @@ class UpdateProductInformationJob implements ShouldQueue
 
         $loop = 1;
 
+        $hasIndexableProduct = false;
+
         foreach ($this->productGroup->products as $product) {
             $categories = $this->productGroup->productCategories;
             $product->productCategories()->sync($categories);
@@ -107,8 +109,7 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            $hasIndexableProduct = false;
-            if ((($this->productGroup->only_show_parent_product && ! $hasIndexableProduct) || ! $this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
+            if ((($this->productGroup->only_show_parent_product && !$hasIndexableProduct) || !$this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
             } else {
