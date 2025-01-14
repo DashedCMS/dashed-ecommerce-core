@@ -53,10 +53,14 @@ class ChildProductsRelationManager extends RelationManager
                     ->label('Aantal verkopen'),
                 TextColumn::make('total_stock')
                     ->label('Voorraad'),
-                IconColumn::make('status')
-                    ->label('Status')
+                ImageColumn::make('image')
+                    ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
+                    ->label(''),
+                IconColumn::make('indexable')
+                    ->label('Tonen in overzicht')
                     ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle'),
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->sortable(),
             ])
             ->actions([
                 Action::make('quickActions')
