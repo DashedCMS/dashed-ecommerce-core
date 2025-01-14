@@ -56,6 +56,11 @@ class ChildProductsRelationManager extends RelationManager
                 ImageColumn::make('image')
                     ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
                     ->label(''),
+                IconColumn::make('public')
+                    ->label('Openbaar')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->sortable(),
                 IconColumn::make('indexable')
                     ->label('Tonen in overzicht')
                     ->trueIcon('heroicon-o-check-circle')
