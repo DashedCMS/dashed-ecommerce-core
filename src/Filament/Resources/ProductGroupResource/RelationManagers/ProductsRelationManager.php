@@ -59,6 +59,11 @@ class ProductsRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen'),
+                IconColumn::make('indexable')
+                    ->label('Tonen in overzicht')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->sortable(),
                 IconColumn::make('status')
                     ->label('Status')
                     ->trueIcon('heroicon-o-check-circle')
