@@ -87,7 +87,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                         TextEntry::make('fulfiller')
                             ->hiddenLabel()
                             ->visible((bool)$orderProduct->fulfillment_provider)
-                            ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . $orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider)
+                            ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
                             ->badge()
                             ->columnSpanFull()
                             ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
