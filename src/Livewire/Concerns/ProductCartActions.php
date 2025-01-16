@@ -162,7 +162,7 @@ trait ProductCartActions
             $this->originalImages[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
         }
         $this->description = ($this->product && $this->product->description) ? tiptap_converter()->asHTML($this->product->description) : tiptap_converter()->asHTML($this->productGroup->description);
-        $this->shortDescription = $this->product->short_description ?? $this->productGroup->short_description;
+        $this->shortDescription = $this->product && $this->product->short_description ? $this->product->short_description : $this->productGroup->short_description;
         $this->sku = $this->product->sku ?? '';
         $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
