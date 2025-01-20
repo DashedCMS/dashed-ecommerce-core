@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -32,10 +31,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (!$thisRecord->images) {
+            if (! $thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (!$images) {
-                    if (!is_array($images)) {
+                if (! $images) {
+                    if (! is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -66,7 +65,7 @@ class EditProduct extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (!$thisProductCharacteristic) {
+                if (! $thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
