@@ -111,12 +111,14 @@ class ProductGroup extends Model
     public function globalTabs()
     {
         return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product', 'product_group_id', 'tab_id')
+            ->orderBy('order')
             ->where('global', 1);
     }
 
     public function ownTabs()
     {
         return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product', 'product_group_id', 'tab_id')
+            ->orderBy('order')
             ->where('global', 0);
     }
 
@@ -140,12 +142,14 @@ class ProductGroup extends Model
     public function productExtras(): HasMany
     {
         return $this->hasMany(ProductExtra::class)
+            ->orderBy('order')
             ->with(['productExtraOptions']);
     }
 
     public function globalProductExtras(): BelongsToMany
     {
         return $this->belongsToMany(ProductExtra::class, 'dashed__product_extra_product', 'product_group_id', 'product_extra_id')
+            ->orderBy('order')
             ->where('global', 1)
             ->with(['productExtraOptions']);
     }

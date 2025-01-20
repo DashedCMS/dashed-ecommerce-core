@@ -676,6 +676,7 @@ class Product extends Model
         }
 
         return ProductExtra::whereIn('id', $productExtraIds)
+            ->orderBy('order')
             ->with(['ProductExtraOptions'])
             ->get();
     }
@@ -693,12 +694,14 @@ class Product extends Model
         }
 
         return ProductTab::whereIn('id', $productTabIds)
+            ->orderBy('order')
             ->get();
     }
 
     public function productExtras(): HasMany
     {
         return $this->hasMany(ProductExtra::class)
+            ->orderBy('order')
             ->with(['productExtraOptions']);
     }
 
@@ -706,6 +709,7 @@ class Product extends Model
     {
         return $this->belongsToMany(ProductExtra::class, 'dashed__product_extra_product', 'product_id', 'product_extra_id')
             ->where('global', 1)
+            ->orderBy('order')
             ->with(['productExtraOptions']);
     }
 

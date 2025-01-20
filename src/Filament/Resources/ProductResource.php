@@ -489,7 +489,7 @@ class ProductResource extends Resource
                         Repeater::make('productExtraOptions')
                             ->relationship('productExtraOptions')
                             ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
-                            ->reorderable()
+                            ->reorderable('order')
                             ->label('Opties van deze product extra')
                             ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
                             ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
