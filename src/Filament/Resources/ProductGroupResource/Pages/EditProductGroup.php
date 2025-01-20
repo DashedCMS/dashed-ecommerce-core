@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -12,7 +13,6 @@ use Dashed\DashedCore\Classes\Locales;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
@@ -33,10 +33,10 @@ class EditProductGroup extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -51,9 +51,9 @@ class EditProductGroup extends EditRecord
     {
         $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
-        //        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
+        $selectedProductCategories = ProductCategories::getFromIdsWithParents($this->record->productCategories()->pluck('product_category_id'));
 
-        //        $this->record->productCategories()->sync($selectedProductCategories);
+        $this->record->productCategories()->sync($selectedProductCategories);
 
         $productFilters = ProductFilter::with(['productFilterOptions'])->get();
 
@@ -83,7 +83,7 @@ class EditProductGroup extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
+                if (!$thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_group_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -157,7 +157,6 @@ class EditProductGroup extends EditRecord
         $newProductGroup = $this->record->replicate();
         $newProductGroup->total_purchases = 0;
         $newProductGroup->total_stock = 0;
-        $newProductGroup->sku = 'SKU' . rand(10000, 99999);
         foreach (Locales::getLocales() as $locale) {
             $newProductGroup->setTranslation('slug', $locale['id'], $newProductGroup->getTranslation('slug', $locale['id']));
             while (ProductGroup::where('slug->' . $locale['id'], $newProductGroup->getTranslation('slug', $locale['id']))->count()) {
@@ -169,7 +168,6 @@ class EditProductGroup extends EditRecord
         $this->record->load('activeProductFilters', 'enabledProductFilterOptions', 'productCharacteristics', 'productCategories', 'suggestedProducts', 'crossSellProducts', 'tabs', 'productExtras');
 
         $newProductGroup->activeProductFilters()->sync($this->record->activeProductFilters);
-        $newProductGroup->enabledProductFilterOptions()->sync($this->record->enabledProductFilterOptions);
         $newProductGroup->productCategories()->sync($this->record->productCategories);
         $newProductGroup->tabs()->sync($this->record->tabs);
 
@@ -181,8 +179,8 @@ class EditProductGroup extends EditRecord
             ]);
         }
 
-        foreach (DB::table('dashed__product_filter')->where('product_group_id', $this->record->id)->get() as $productFilter) {
-            DB::table('dashed__product_filter')->insert([
+        foreach (DB::table('dashed__product_enabled_filter_options')->where('product_group_id', $this->record->id)->get() as $productFilter) {
+            DB::table('dashed__product_enabled_filter_options')->insert([
                 'product_group_id' => $newProductGroup->id,
                 'product_filter_id' => $productFilter->product_filter_id,
                 'product_filter_option_id' => $productFilter->product_filter_option_id,
