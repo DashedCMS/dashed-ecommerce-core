@@ -220,6 +220,36 @@ class ProductsRelationManager extends RelationManager
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
+                BulkAction::make('public')
+                    ->color('primary')
+                    ->label('Openbaar maken')
+                    ->action(function (Collection $records, array $data): void {
+                        foreach ($records as $record) {
+                            $record->public = 1;
+                            $record->save();
+                        }
+
+                        Notification::make()
+                            ->title('De producten zijn aangepast')
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                BulkAction::make('hidden')
+                    ->color('primary')
+                    ->label('Verbergen')
+                    ->action(function (Collection $records, array $data): void {
+                        foreach ($records as $record) {
+                            $record->public = 0;
+                            $record->save();
+                        }
+
+                        Notification::make()
+                            ->title('De producten zijn aangepast')
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
                 DeleteBulkAction::make(),
             ])
             ->headerActions([
