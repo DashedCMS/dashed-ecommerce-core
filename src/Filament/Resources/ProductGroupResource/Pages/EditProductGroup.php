@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -141,7 +142,7 @@ class EditProductGroup extends EditRecord
         $buttons[] = self::viewAction();
 
         $buttons[] = Action::make('Dupliceer product groep')
-            ->action('duplicateProduct')
+            ->action('duplicateProductGroup')
             ->color('warning');
 
         $buttons[] = self::translateAction();
@@ -151,79 +152,80 @@ class EditProductGroup extends EditRecord
         return $buttons;
     }
 
-    //    public function duplicateProduct()
-    //    {
-    //        $newProduct = $this->record->replicate();
-    //        $newProduct->purchases = 0;
-    //        $newProduct->sku = 'SKU' . rand(10000, 99999);
-    //        foreach (Locales::getLocales() as $locale) {
-    //            $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']));
-    //            while (Product::where('slug->' . $locale['id'], $newProduct->getTranslation('slug', $locale['id']))->count()) {
-    //                $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']) . Str::random(1));
-    //            }
-    //        }
-    //        $newProduct->save();
-    //
-    //        $this->record->load('productCategories', 'shippingClasses', 'productFilters', 'activeProductFilters', 'productCharacteristics', 'productExtras');
-    //
-    //        $newProduct->productCategories()->sync($this->record->productCategories);
-    //        $newProduct->shippingClasses()->sync($this->record->shippingClasses);
-    //        $newProduct->activeProductFilters()->sync($this->record->activeProductFilters);
-    //        $newProduct->bundleProducts()->sync($this->record->bundleProducts);
-    //
-    //        foreach (DB::table('dashed__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
-    //            DB::table('dashed__product_characteristic')->insert([
-    //                'product_id' => $newProduct->id,
-    //                'product_characteristic_id' => $productCharacteristic->product_characteristic_id,
-    //                'value' => $productCharacteristic->value,
-    //            ]);
-    //        }
-    //
-    //        foreach (DB::table('dashed__product_filter')->where('product_id', $this->record->id)->get() as $productFilter) {
-    //            DB::table('dashed__product_filter')->insert([
-    //                'product_id' => $newProduct->id,
-    //                'product_filter_id' => $productFilter->product_filter_id,
-    //                'product_filter_option_id' => $productFilter->product_filter_option_id,
-    //            ]);
-    //        }
-    //
-    //        foreach (DB::table('dashed__product_suggested_product')->where('product_id', $this->record->id)->get() as $suggestedProduct) {
-    //            DB::table('dashed__product_suggested_product')->insert([
-    //                'product_id' => $newProduct->id,
-    //                'suggested_product_id' => $suggestedProduct->suggested_product_id,
-    //                'order' => $suggestedProduct->order,
-    //            ]);
-    //        }
-    //
-    //        foreach (DB::table('dashed__product_crosssell_product')->where('product_id', $this->record->id)->get() as $crossSellProduct) {
-    //            DB::table('dashed__product_crosssell_product')->insert([
-    //                'product_id' => $newProduct->id,
-    //                'crosssell_product_id' => $crossSellProduct->crosssell_product_id,
-    //                'order' => $crossSellProduct->order,
-    //            ]);
-    //        }
-    //
-    //        foreach (DB::table('dashed__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
-    //            $newProductExtra = new ProductExtra();
-    //            $newProductExtra->product_id = $newProduct->id;
-    //            foreach (json_decode($productExtra->name, true) as $locale => $name) {
-    //                $newProductExtra->setTranslation('name', $locale, $name);
-    //            }
-    //            $newProductExtra->type = $productExtra->type;
-    //            $newProductExtra->required = $productExtra->required;
-    //            $newProductExtra->save();
-    //
-    //            foreach (DB::table('dashed__product_extra_options')->where('product_extra_id', $productExtra->id)->whereNull('deleted_at')->get() as $productExtraOption) {
-    //                DB::table('dashed__product_extra_options')->insert([
-    //                    'product_extra_id' => $newProductExtra->id,
-    //                    'value' => $productExtraOption->value,
-    //                    'price' => $productExtraOption->price,
-    //                ]);
-    //            }
-    //        }
-    //
-    //        UpdateProductInformationJob::dispatch($newProduct);
-    //
-    //        return redirect(route('filament.dashed.resources.products.edit', [$newProduct]));
-    //    }
+        public function duplicateProductGroup()
+        {
+            $newProductGroup = $this->record->replicate();
+            $newProductGroup->total_purchases = 0;
+            $newProductGroup->total_stock = 0;
+            $newProductGroup->sku = 'SKU' . rand(10000, 99999);
+            foreach (Locales::getLocales() as $locale) {
+                $newProductGroup->setTranslation('slug', $locale['id'], $newProductGroup->getTranslation('slug', $locale['id']));
+                while (ProductGroup::where('slug->' . $locale['id'], $newProductGroup->getTranslation('slug', $locale['id']))->count()) {
+                    $newProductGroup->setTranslation('slug', $locale['id'], $newProductGroup->getTranslation('slug', $locale['id']) . Str::random(1));
+                }
+            }
+            $newProductGroup->save();
+
+            $this->record->load('activeProductFilters', 'enabledProductFilterOptions', 'productCharacteristics', 'productCategories', 'suggestedProducts', 'crossSellProducts', 'tabs', 'productExtras');
+
+            $newProductGroup->activeProductFilters()->sync($this->record->activeProductFilters);
+            $newProductGroup->enabledProductFilterOptions()->sync($this->record->enabledProductFilterOptions);
+            $newProductGroup->productCategories()->sync($this->record->productCategories);
+            $newProductGroup->tabs()->sync($this->record->tabs);
+
+            foreach (DB::table('dashed__product_characteristic')->where('product_group_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
+                DB::table('dashed__product_characteristic')->insert([
+                    'product_group_id' => $newProductGroup->id,
+                    'product_characteristic_id' => $productCharacteristic->product_characteristic_id,
+                    'value' => $productCharacteristic->value,
+                ]);
+            }
+
+            foreach (DB::table('dashed__product_filter')->where('product_group_id', $this->record->id)->get() as $productFilter) {
+                DB::table('dashed__product_filter')->insert([
+                    'product_group_id' => $newProductGroup->id,
+                    'product_filter_id' => $productFilter->product_filter_id,
+                    'product_filter_option_id' => $productFilter->product_filter_option_id,
+                ]);
+            }
+
+            foreach (DB::table('dashed__product_suggested_product')->where('product_group_id', $this->record->id)->get() as $suggestedProduct) {
+                DB::table('dashed__product_suggested_product')->insert([
+                    'product_group_id' => $newProductGroup->id,
+                    'suggested_product_id' => $suggestedProduct->suggested_product_id,
+                    'order' => $suggestedProduct->order,
+                ]);
+            }
+
+            foreach (DB::table('dashed__product_crosssell_product')->where('product_group_id', $this->record->id)->get() as $crossSellProduct) {
+                DB::table('dashed__product_crosssell_product')->insert([
+                    'product_group_id' => $newProductGroup->id,
+                    'crosssell_product_id' => $crossSellProduct->crosssell_product_id,
+                    'order' => $crossSellProduct->order,
+                ]);
+            }
+
+            foreach (DB::table('dashed__product_extras')->where('product_group_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
+                $newProductGroupExtra = new ProductExtra();
+                $newProductGroupExtra->product_group_id = $newProductGroup->id;
+                foreach (json_decode($productExtra->name, true) as $locale => $name) {
+                    $newProductGroupExtra->setTranslation('name', $locale, $name);
+                }
+                $newProductGroupExtra->type = $productExtra->type;
+                $newProductGroupExtra->required = $productExtra->required;
+                $newProductGroupExtra->save();
+
+                foreach (DB::table('dashed__product_extra_options')->where('product_extra_id', $productExtra->id)->whereNull('deleted_at')->get() as $productExtraOption) {
+                    DB::table('dashed__product_extra_options')->insert([
+                        'product_extra_id' => $newProductGroupExtra->id,
+                        'value' => $productExtraOption->value,
+                        'price' => $productExtraOption->price,
+                    ]);
+                }
+            }
+
+            UpdateProductInformationJob::dispatch($newProductGroup);
+
+            return redirect(route('filament.dashed.resources.product-groups.edit', [$newProductGroup]));
+        }
 }
