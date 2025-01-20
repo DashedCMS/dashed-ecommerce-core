@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -11,6 +10,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
 use Dashed\DashedCore\Classes\Locales;
 use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
@@ -32,10 +32,10 @@ class EditProduct extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (!$thisRecord->images) {
+            if (! $thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (!$images) {
-                    if (!is_array($images)) {
+                if (! $images) {
+                    if (! is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -80,7 +80,7 @@ class EditProduct extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (!$thisProductCharacteristic) {
+                if (! $thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -112,7 +112,7 @@ class EditProduct extends EditRecord
     {
         $this->record->productFilters()->detach();
         $filtersToSync = Customsetting::get('product_filters_to_sync_for_' . $this->record->id);
-        foreach($filtersToSync as $filterToSync) {
+        foreach ($filtersToSync as $filterToSync) {
             $this->record->productFilters()->attach($filterToSync['product_filter_id'], ['product_filter_option_id' => $filterToSync['product_filter_option_id']]);
         }
 
