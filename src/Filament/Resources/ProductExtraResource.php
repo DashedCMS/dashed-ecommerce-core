@@ -98,6 +98,7 @@ class ProductExtraResource extends Resource
                     ->relationship('productExtraOptions')
                     ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
                     ->label('Opties van deze product extra')
+                    ->reorderable()
                     ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
                     ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
                     ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)

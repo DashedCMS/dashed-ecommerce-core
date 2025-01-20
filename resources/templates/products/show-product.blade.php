@@ -53,7 +53,8 @@
                                     @endforeach
                                 </ul>
                                 @if(count($images) > 1)
-                                    <div class="z-10 flex items-center justify-between gap-2 pointer-events-none absolute w-full h-full inset-y-0 px-4">
+                                    <div
+                                        class="z-10 flex items-center justify-between gap-2 pointer-events-none absolute w-full h-full inset-y-0 px-4">
                                         <button
                                             class="p-4 rounded-full bg-primary-500 swiper-button-prev z-10 pointer-events-auto"
                                         >
@@ -68,7 +69,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @if(count($images) > 1)
+                            @if(count($images))
                                 <div class="swiper swiper-thumbs mt-4">
                                     <ul
                                         class="swiper-wrapper">
@@ -170,7 +171,8 @@
 
                                 <p class="text-primary-800 text-xs flex gap-1 items-center justify-start">
                                     {{ (floor(Customsetting::get('google_maps_review_count') / 10) * 10)  . '+'}}
-                                    <span class="font-bold"> {{ Translation::get('reviews', 'product', 'reviews') }}</span>
+                                    <span
+                                        class="font-bold"> {{ Translation::get('reviews', 'product', 'reviews') }}</span>
                                 </p>
                             </div>
                         </div>
@@ -223,8 +225,10 @@
                             <div class="flex items-center text-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                      class="h-8 mr-2 text-primary-500">
-                                    <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z"/>
-                                    <path d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z"/>
+                                    <path
+                                        d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z"/>
+                                    <path
+                                        d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z"/>
                                     <path d="M19.5 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z"/>
                                 </svg>
 
@@ -441,8 +445,9 @@
                                         <div class="grid gap-4" x-data="{ openFaq: '' }">
                                             @foreach($contentBlocks['faqs'] ?? [] as $faq)
                                                 <div class="bg-white">
-                                                    <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
-                                                         @click="openFaq == '{{ $loop->iteration }}' ? openFaq = '' : openFaq = '{{ $loop->iteration }}'">
+                                                    <div
+                                                        class="flex flex-wrap items-center justify-between cursor-pointer p-4"
+                                                        @click="openFaq == '{{ $loop->iteration }}' ? openFaq = '' : openFaq = '{{ $loop->iteration }}'">
                                                         <h3>{{ $faq['title'] }}</h3>
                                                         <svg x-cloak x-show="openFaq != '{{ $loop->iteration }}'"
                                                              xmlns="http://www.w3.org/2000/svg"
@@ -511,17 +516,19 @@
                     </div>
                 </div>
 
-                <section aria-labelledby="related-heading"
-                         class="mt-10 border-t border-gray-200 px-4 py-16 sm:px-0">
-                    <h2 id="related-heading"
-                        class="text-xl md:text-3xl font-bold text-primary-500">{{Translation::get('suggested-products', 'product', 'Aanbevolen producten')}}</h2>
+                @if(count($suggestedProducts))
+                    <section aria-labelledby="related-heading"
+                             class="mt-10 border-t border-gray-200 px-4 py-16 sm:px-0">
+                        <h2 id="related-heading"
+                            class="text-xl md:text-3xl font-bold text-primary-500">{{Translation::get('suggested-products', 'product', 'Aanbevolen producten')}}</h2>
 
-                    <div class="mt-8 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
-                        @foreach($suggestedProducts as $suggestedProduct)
-                            <x-product.product :product="$suggestedProduct"/>
-                        @endforeach
-                    </div>
-                </section>
+                        <div class="mt-8 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+                            @foreach($suggestedProducts as $suggestedProduct)
+                                <x-product.product :product="$suggestedProduct"/>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
             </div>
         </x-container>
 
