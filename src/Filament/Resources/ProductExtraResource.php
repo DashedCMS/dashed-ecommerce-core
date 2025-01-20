@@ -98,7 +98,8 @@ class ProductExtraResource extends Resource
                     ->relationship('productExtraOptions')
                     ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
                     ->label('Opties van deze product extra')
-                    ->reorderable('order')
+                    ->reorderable()
+                    ->orderColumn('order')
                     ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
                     ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
                     ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
@@ -130,10 +131,10 @@ class ProductExtraResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->hintAction(
                         Action::make('addAllProducts')
-                        ->label('Voeg alle producten toe')
-                        ->action(function (Set $set) {
-                            $set('products', Product::all()->pluck('id')->toArray());
-                        }),
+                            ->label('Voeg alle producten toe')
+                            ->action(function (Set $set) {
+                                $set('products', Product::all()->pluck('id')->toArray());
+                            }),
                     ),
             ], static::customBlocksTab('productExtraOptionBlocks')));
     }
