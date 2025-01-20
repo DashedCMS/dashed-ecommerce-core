@@ -309,6 +309,18 @@ class ProductResource extends Resource
 
                         $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
                             ->schema($productFiltersSchema)
+                            ->saveRelationshipsUsing(function ($record, $state) {
+                                $record->productFilters()->detach();
+                                $productFilters = $record->productGroup->activeProductFilters;
+
+                                foreach ($productFilters as $productFilter) {
+                                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                                        if ($state["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
+                                            $record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
+                                        }
+                                    }
+                                }
+                            })
                             ->collapsible()
                             ->collapsed();
                     }
