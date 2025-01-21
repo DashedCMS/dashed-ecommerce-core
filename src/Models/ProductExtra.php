@@ -62,6 +62,7 @@ class ProductExtra extends Model
 
     public function productExtraOptions(): HasMany
     {
-        return $this->hasMany(ProductExtraOption::class);
+        return $this->hasMany(ProductExtraOption::class)
+            ->orderBy('order');
     }
 }

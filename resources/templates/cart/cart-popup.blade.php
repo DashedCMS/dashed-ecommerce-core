@@ -51,7 +51,7 @@
                         @endif
 
                         <div x-data="{ progress: {{ $freeShippingPercentage }} }">
-                            <div class="w-full bg-gray-200 rounded-full h-4">
+                            <div class="w-full bg-gray-200 rounded-full h-4 border-2 border-gray-200">
                                 <div class="bg-primary-600 h-full rounded-full" :style="`width: ${progress}%;`"></div>
                             </div>
                         </div>
