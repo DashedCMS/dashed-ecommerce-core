@@ -6,7 +6,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Broadcasting\InteractsWithSockets;
 
 class OrderCreatedEvent

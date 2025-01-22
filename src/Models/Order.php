@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
@@ -30,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
 use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
