@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
@@ -72,6 +73,10 @@ class Order extends Model
             $order->locale = App::getLocale();
             $order->initials = $order->first_name ? strtoupper($order->first_name[0]) . '.' : '';
             $order->site_id = Sites::getActive();
+        });
+
+        static::created(function ($order) {
+            OrderCreatedEvent::dispatch($order);
         });
     }
 
