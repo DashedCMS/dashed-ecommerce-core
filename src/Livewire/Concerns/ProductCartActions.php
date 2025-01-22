@@ -31,6 +31,7 @@ trait ProductCartActions
     public ?Collection $productTabs = null;
     public ?Collection $productExtras = null;
     public ?array $extras = [];
+    public ?array $hiddenOptions = [];
     public string|int $quantity = 1;
     public array $files = [];
     public string $cartType = 'default';
@@ -467,10 +468,11 @@ trait ProductCartActions
         $attributes['discountPrice'] = $discountedProductPrice;
         $attributes['originalPrice'] = $productPrice;
         $attributes['options'] = $options;
+        $attributes['hiddenOptions'] = $this->hiddenOptions;
 
         $cartItems = ShoppingCart::cartItems($this->cartType);
         foreach ($cartItems as $cartItem) {
-            if ($cartItem->model && $cartItem->model->id == $product->id && $attributes['options'] == $cartItem->options['options']) {
+            if ($cartItem->model && $cartItem->model->id == $product->id && $attributes['options'] == $cartItem->options['options'] && $attributes['hiddenOptions'] == $cartItem->options['hiddenOptions']) {
                 $newQuantity = $cartItem->qty + $this->quantity;
 
                 if ($product->limit_purchases_per_customer && $newQuantity > $product->limit_purchases_per_customer_limit) {
@@ -501,6 +503,7 @@ trait ProductCartActions
         }
 
         $this->quantity = 1;
+        $this->hiddenOptions = [];
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 

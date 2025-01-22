@@ -234,7 +234,7 @@ class ProductGroupResource extends Resource
                 mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true)
                     ->helperText('Afbeeldingen van een variant worden VOOR de afbeelding van de product groep getoond'),
                 cms()->getFilamentBuilderBlock(),
-            ], static::customBlocksTab('productBlocks')))
+            ], array_merge(static::customBlocksTab('productBlocks'), static::customBlocksTab('productGroupBlocks'))))
             ->collapsible()
             ->persistCollapsed()
             ->columns([

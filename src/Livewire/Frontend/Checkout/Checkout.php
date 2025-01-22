@@ -633,6 +633,7 @@ class Checkout extends Component
                 ];
             }
             $orderProduct->product_extras = $productExtras;
+            $orderProduct->hidden_options = $cartItem->options['hidden_options'] ?? [];
 
             if ($cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
                 $orderProduct->is_pre_order = true;
