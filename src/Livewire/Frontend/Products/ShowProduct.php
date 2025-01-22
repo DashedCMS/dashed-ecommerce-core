@@ -11,7 +11,7 @@ class ShowProduct extends Component
 
     protected $listeners = [
         'setProductExtraCustomValue',
-        'addToCart'
+        'addToCart',
     ];
 
     public function mount($product = null, $productGroup = null)
