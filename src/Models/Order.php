@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -25,6 +24,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 
 class Checkout extends Component
 {
