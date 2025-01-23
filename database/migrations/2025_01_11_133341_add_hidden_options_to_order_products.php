@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::table('dashed__order_products', function (Blueprint $table) {
             $table->json('hidden_options')
                 ->nullable();
-            $table->text('custom_image')
+            $table->longText('custom_image')
                 ->nullable();
         });
     }

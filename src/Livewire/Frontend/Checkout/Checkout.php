@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -633,7 +634,7 @@ class Checkout extends Component
                 ];
             }
             $orderProduct->product_extras = $productExtras;
-            $orderProduct->hidden_options = $cartItem->options['hidden_options'] ?? [];
+            $orderProduct->hidden_options = $cartItem->options['hiddenOptions'] ?? [];
 
             if ($cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
                 $orderProduct->is_pre_order = true;
@@ -756,6 +757,8 @@ class Checkout extends Component
         $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
         $orderLog->tag = 'order.created';
         $orderLog->save();
+
+        OrderCreatedEvent::dispatch($order);
 
         if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
             $newPaymentStatus = 'waiting_for_confirmation';

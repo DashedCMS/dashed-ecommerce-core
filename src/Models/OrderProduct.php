@@ -34,6 +34,7 @@ class OrderProduct extends Model
 
     protected $casts = [
         'product_extras' => 'array',
+        'hidden_options' => 'array',
     ];
 
     public function scopeSearch($query, ?string $search)
