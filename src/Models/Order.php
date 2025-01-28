@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
@@ -582,7 +583,7 @@ class Order extends Model
     {
         foreach ($this->orderProducts as $orderProduct) {
             if ($orderProduct->product) {
-                UpdateProductInformationJob::dispatch($orderProduct->product->productGroup, false);
+                UpdateProductStockInformationJob::dispatch($orderProduct->product->productGroup);
             }
         }
     }
