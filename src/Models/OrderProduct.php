@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\TaxHelper;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 
 class OrderProduct extends Model
 {
@@ -68,7 +67,7 @@ class OrderProduct extends Model
 
         static::saved(function ($orderProduct) {
             if ($orderProduct->product) {
-//                UpdateProductStockInformationJob::dispatch($orderProduct->product->productGroup, false)->onQueue('ecommerce');
+                //                UpdateProductStockInformationJob::dispatch($orderProduct->product->productGroup, false)->onQueue('ecommerce');
             }
         });
     }
