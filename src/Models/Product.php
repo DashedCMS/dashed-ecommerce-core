@@ -93,7 +93,7 @@ class Product extends Model
             }
 
             ProductSavedEvent::dispatch($product);
-            UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce')->onQueue('ecommerce');
+            UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
         });
 
         static::deleting(function ($product) {
