@@ -582,7 +582,7 @@ class Order extends Model
     {
         foreach ($this->orderProducts as $orderProduct) {
             if ($orderProduct->product) {
-                UpdateProductStockInformationJob::dispatch($orderProduct->product->productGroup);
+                UpdateProductStockInformationJob::dispatch($orderProduct->product);
             }
         }
     }

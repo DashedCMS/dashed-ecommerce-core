@@ -23,6 +23,7 @@ class UpdateProductInformationJob implements ShouldQueue
 
     public $tries = 5;
     public $timeout = 1200;
+    public $queue = 'ecommerce';
 
     public ProductGroup $productGroup;
     public bool $updateCategories;
@@ -43,45 +44,6 @@ class UpdateProductInformationJob implements ShouldQueue
     {
         $this->productGroup->missing_variations = $this->productGroup->missingVariations();
         $this->productGroup->saveQuietly();
-
-        //        if ($this->product->type == 'variable' && ! $this->product->parent_id && count($this->product->copyable_to_childs ?? [])) {
-        //            foreach ($this->product->childProducts as $childProduct) {
-        //                if (in_array('productCategories', $this->product->copyable_to_childs)) {
-        //                    $childProduct->productCategories()->sync($this->product->productCategories);
-        //                }
-        //                if (in_array('shippingClasses', $this->product->copyable_to_childs)) {
-        //                    $childProduct->shippingClasses()->sync($this->product->shippingClasses);
-        //                }
-        //                if (in_array('suggestedProducts', $this->product->copyable_to_childs)) {
-        //                    $childProduct->suggestedProducts()->sync($this->product->suggestedProducts);
-        //                }
-        //                if (in_array('crossSellProducts', $this->product->copyable_to_childs)) {
-        //                    $childProduct->crossSellProducts()->sync($this->product->crossSellProducts);
-        //                }
-        //                if (in_array('content', $this->product->copyable_to_childs)) {
-        //                    $childProduct->content = $this->product->getOriginal('content');
-        //                }
-        //                if (in_array('description', $this->product->copyable_to_childs)) {
-        //                    $childProduct->description = $this->product->getOriginal('description');
-        //                }
-        //                if (in_array('short_description', $this->product->copyable_to_childs)) {
-        //                    $childProduct->short_description = $this->product->getOriginal('short_description');
-        //                }
-        //                if (in_array('images', $this->product->copyable_to_childs)) {
-        //                    $childProduct->images = $this->product->getOriginal('images');
-        //                }
-        //                if (in_array('customBlocks', $this->product->copyable_to_childs)) {
-        //                    if ($childProduct->customBlocks) {
-        //                        $childProduct->customBlocks->delete();
-        //                    }
-        //                    $newCustomBlocks = $this->product->customBlocks->replicate();
-        //                    $newCustomBlocks->blockable_id = $childProduct->id;
-        //                    $newCustomBlocks->saveQuietly();
-        //                }
-        //
-        //                $childProduct->saveQuietly();
-        //            }
-        //        }
 
         $loop = 1;
 

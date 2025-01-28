@@ -357,7 +357,7 @@ class Product extends Model
 
     public function stock()
     {
-        return $this->total_stock;
+        return $this->total_stock - $this->reservedStock();
     }
 
     public function calculateStock()
@@ -377,7 +377,7 @@ class Product extends Model
             if ($this->outOfStockSellable()) {
                 $stock = 100000;
             } else {
-                $stock = $this->stock - $this->reservedStock();
+                $stock = $this->stock;
             }
         } else {
             if ($this->stock_status == 'in_stock') {
@@ -467,7 +467,7 @@ class Product extends Model
     public function directSellableStock()
     {
         if ($this->use_stock) {
-            return $this->stock - $this->reservedStock();
+            return $this->stock();
         } else {
             if ($this->stock_status == 'in_stock') {
                 return 100000;

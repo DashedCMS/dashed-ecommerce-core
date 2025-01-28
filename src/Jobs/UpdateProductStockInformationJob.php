@@ -4,6 +4,8 @@ namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,15 +23,16 @@ class UpdateProductStockInformationJob implements ShouldQueue
 
     public $tries = 5;
     public $timeout = 1200;
+    public $queue = 'ecommerce';
 
-    public ProductGroup $productGroup;
+    public Product $product;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(ProductGroup $productGroup)
+    public function __construct(Product $product)
     {
-        $this->productGroup = $productGroup;
+        $this->product = $product;
     }
 
     /**
@@ -37,28 +40,24 @@ class UpdateProductStockInformationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        foreach ($this->productGroup->products as $product) {
-            $product->calculateStock();
-            $product->calculateTotalPurchases();
+        $this->product->calculateStock();
+        $this->product->calculateTotalPurchases();
 
-            if ($product->is_bundle) {
-                $product->calculateDeliveryTime();
-            }
+        if ($this->product->is_bundle) {
+            $this->product->calculateDeliveryTime();
+        }
 
-            foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $product->id)->pluck('product_id') as $productId) {
-                $bundleParentProduct = Product::find($productId);
-                if ($bundleParentProduct) {
-                    $bundleParentProduct->calculateStock();
-                    $bundleParentProduct->calculateTotalPurchases();
-                    $bundleParentProduct->calculateDeliveryTime();
-                }
+        foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $this->product->id)->pluck('product_id') as $productId) {
+            $bundleParentProduct = Product::find($productId);
+            if ($bundleParentProduct) {
+                $bundleParentProduct->calculateStock();
+                $bundleParentProduct->calculateTotalPurchases();
+                $bundleParentProduct->calculateDeliveryTime();
             }
         }
 
-        $this->productGroup->total_stock = $this->productGroup->products->sum('total_stock');
-        $this->productGroup->total_purchases = $this->productGroup->products->sum('total_purchases');
-        $this->productGroup->saveQuietly();
-
-        ProductInformationUpdatedEvent::dispatch($this->productGroup);
+        $this->product->productGroup->total_stock = $this->product->productGroup->products->sum('total_stock');
+        $this->product->productGroup->total_purchases = $this->product->productGroup->products->sum('total_purchases');
+        $this->product->productGroup->saveQuietly();
     }
 }
