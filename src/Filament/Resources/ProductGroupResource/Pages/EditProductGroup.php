@@ -221,7 +221,7 @@ class EditProductGroup extends EditRecord
             }
         }
 
-        UpdateProductInformationJob::dispatch($newProductGroup);
+        UpdateProductInformationJob::dispatch($newProductGroup)->onQueue('ecommerce');
 
         return redirect(route('filament.dashed.resources.product-groups.edit', [$newProductGroup]));
     }

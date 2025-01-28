@@ -23,7 +23,6 @@ class UpdateProductInformationJob implements ShouldQueue
 
     public $tries = 5;
     public $timeout = 1200;
-    public $queue = 'ecommerce';
 
     public ProductGroup $productGroup;
     public bool $updateCategories;
@@ -117,7 +116,7 @@ class UpdateProductInformationJob implements ShouldQueue
         }
 
         if ($this->updateCategories) {
-            UpdateProductCategoriesInformationJob::dispatch();
+            UpdateProductCategoriesInformationJob::dispatch()->onQueue('ecommerce');
         }
 
         ProductInformationUpdatedEvent::dispatch($this->productGroup);

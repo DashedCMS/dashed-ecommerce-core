@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -67,7 +68,7 @@ class OrderProduct extends Model
 
         static::saved(function ($orderProduct) {
             if ($orderProduct->product) {
-                UpdateProductInformationJob::dispatch($orderProduct->product->productGroup, false);
+//                UpdateProductStockInformationJob::dispatch($orderProduct->product->productGroup, false)->onQueue('ecommerce');
             }
         });
     }

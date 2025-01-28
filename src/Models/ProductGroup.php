@@ -45,7 +45,7 @@ class ProductGroup extends Model
     protected static function booted()
     {
         static::saved(function ($productGroup) {
-            UpdateProductInformationJob::dispatch($productGroup);
+            UpdateProductInformationJob::dispatch($productGroup)->onQueue('ecommerce');
         });
 
 

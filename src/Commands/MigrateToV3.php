@@ -184,7 +184,7 @@ class MigrateToV3 extends Command
         Product::whereIn('id', $productIdsToDelete)->delete();
 
         foreach (ProductGroup::all() as $productGroup) {
-            UpdateProductInformationJob::dispatch($productGroup, false);
+            UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
         }
     }
 }

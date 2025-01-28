@@ -41,7 +41,7 @@ class UpdateProductInformations extends Command
     {
         $productGroups = ProductGroup::get();
         foreach ($productGroups as $productGroup) {
-            UpdateProductInformationJob::dispatch($productGroup, false);
+            UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
         }
     }
 }

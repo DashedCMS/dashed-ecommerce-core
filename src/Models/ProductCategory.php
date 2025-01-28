@@ -53,7 +53,7 @@ class ProductCategory extends Model
         });
 
         static::saved(function ($productCategory) {
-            UpdateProductCategoriesInformationJob::dispatch();
+            UpdateProductCategoriesInformationJob::dispatch()->onQueue('ecommerce');
         });
 
         static::deleting(function ($productCategory) {

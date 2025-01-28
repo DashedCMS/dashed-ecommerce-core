@@ -19,7 +19,6 @@ class UpdateProductStockInformationJob implements ShouldQueue
 
     public $tries = 5;
     public $timeout = 1200;
-    public $queue = 'ecommerce';
 
     public Product $product;
 

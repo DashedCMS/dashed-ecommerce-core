@@ -217,7 +217,7 @@ class EditPricePerUser extends EditRecord
         }
 
         foreach (ProductGroup::whereIn('id', $productGroupIds)->get() as $productGroup) {
-            UpdateProductInformationJob::dispatch($productGroup, false);
+            UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
         }
 
         $data = [];
