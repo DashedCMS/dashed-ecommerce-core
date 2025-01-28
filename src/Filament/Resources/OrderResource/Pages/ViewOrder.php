@@ -25,6 +25,7 @@ class ViewOrder extends ViewRecord
 
     protected function getActions(): array
     {
+
         $invoiceUrl = $this->record->downloadInvoiceUrl();
         $packingSlipUrl = $this->record->downloadPackingslipUrl();
 

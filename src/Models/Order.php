@@ -1209,7 +1209,7 @@ class Order extends Model
     public function sendAutomaticFulfillmentProducts(): void
     {
         foreach (FulfillmentCompany::where('process_automatically', true)->get() as $fulfillmentCompany) {
-            $orderProducts = $this->orderProducts()->where('fulfillment_provider', $fulfillmentCompany->id)->get();
+            $orderProducts = $this->orderProducts()->where('fulfillment_provider', $fulfillmentCompany->id)->get()->toArray();
             $fulfillmentCompany->sendOrder($this, $orderProducts);
         }
     }
