@@ -30,13 +30,13 @@ class OrderTrackAndTrace extends Model
                     Mail::to($trackAndTrace->order->email)->send(new TrackandTraceMail($trackAndTrace));
                     $orderLog = new OrderLog();
                     $orderLog->order_id = $trackAndTrace->order->id;
-                    $orderLog->user_id = auth()->user()->id;
+                    $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
                     $orderLog->tag = 'order.t&t.send';
                     $orderLog->save();
                 } catch (\Exception $e) {
                     $orderLog = new OrderLog();
-                    $orderLog->order_id = $this->order->id;
-                    $orderLog->user_id = auth()->user()->id;
+                    $orderLog->order_id = $trackAndTrace->order->id;
+                    $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
                     $orderLog->tag = 'order.t&t.not-send';
                     $orderLog->save();
                 }
