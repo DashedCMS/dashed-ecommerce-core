@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedCore\DashedCorePlugin;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -170,6 +171,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             'cart-block',
             'checkout-block',
             'view-order-block',
+        ]);
+
+        cms()->builder('plugins', [
+            new DashedEcommerceCorePlugin(),
         ]);
     }
 
