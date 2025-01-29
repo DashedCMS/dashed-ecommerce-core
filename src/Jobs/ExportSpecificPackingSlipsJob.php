@@ -3,21 +3,13 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use App\Models\User;
-use Carbon\Carbon;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\View;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 
 class ExportSpecificPackingSlipsJob implements ShouldQueue
 {
