@@ -144,10 +144,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             return $model->orders()->latest()->first();
         });
 
-        $builderBlockClasses = [];
-        if (config('dashed-ecommerce-core.registerDefaultBuilderBlocks', true)) {
-            $builderBlockClasses[] = 'builderBlocks';
-        }
+//        $builderBlockClasses = [];
+//        if (config('dashed-ecommerce-core.registerDefaultBuilderBlocks', true)) {
+//            $builderBlockClasses[] = 'builderBlocks';
+//        }
 
         $builderBlockClasses[] = 'defaultPageBuilderBlocks';
 
