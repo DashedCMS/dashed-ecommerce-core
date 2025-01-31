@@ -16,10 +16,10 @@
                         </svg>
                     </div>
                 @endif
-                <x-drift::image
+                <x-dashed-files::image
                     class="w-full h-full"
                     config="dashed"
-                    :path="$option['image']"
+                    :mediaId="$option['image']"
                     :alt="$option['name']"
                     :manipulations="[
                                                 'fit' => [150,150],

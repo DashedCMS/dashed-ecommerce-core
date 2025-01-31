@@ -5,10 +5,10 @@
             <div class="flex">
                 <div class="flex-shrink-0">
                     @if($item->model->firstImage)
-                        <x-drift::image
+                        <x-dashed-files::image
                             class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
                             config="dashed"
-                            :path="$item->model->firstImage"
+                            :mediaId="$item->model->firstImage"
                             :alt=" $item->model->name"
                             :manipulations="[
                                                     'widen' => 400,
@@ -98,10 +98,10 @@
                             <div class="flex">
                                 <div class="flex-shrink-0">
                                     @if($bundleProduct->firstImage)
-                                        <x-drift::image
+                                        <x-dashed-files::image
                                             class="h-12 w-12 rounded-md object-cover object-center"
                                             config="dashed"
-                                            :path="$bundleProduct->firstImage"
+                                            :mediaId="$bundleProduct->firstImage"
                                             :alt=" $bundleProduct->name"
                                             :manipulations="[
                                                     'widen' => 400,

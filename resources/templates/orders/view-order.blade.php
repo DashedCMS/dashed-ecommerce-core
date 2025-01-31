@@ -54,10 +54,10 @@
                     @foreach($order->orderProducts as $orderProduct)
                         <li class="flex space-x-6 py-6">
                             @if($orderProduct->product && $orderProduct->product->firstImage)
-                                <x-drift::image
+                                <x-dashed-files::image
                                     class="h-24 w-24 flex-none rounded-md bg-gray-100 object-cover object-center"
                                     config="dashed"
-                                    :path="$orderProduct->product->firstImage"
+                                    :mediaId="$orderProduct->product->firstImage"
                                     :alt=" $orderProduct->product->name"
                                     :manipulations="[
                                                     'widen' => 100,

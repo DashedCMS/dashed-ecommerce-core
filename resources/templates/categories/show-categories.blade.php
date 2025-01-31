@@ -12,10 +12,10 @@
                             <div class="group relative">
                                 <div class="relative h-80 w-full overflow-hidden rounded-lg bg-white sm:aspect-h-1 sm:aspect-w-2 lg:aspect-h-1 lg:aspect-w-1 group-hover:opacity-75 sm:h-64">
                                     @if($productCategory->image)
-                                        <x-drift::image
+                                        <x-dashed-files::image
                                             class="h-full w-full object-cover object-center"
                                             config="dashed"
-                                            :path="$productCategory->image"
+                                            :mediaId="$productCategory->image"
                                             :alt="$productCategory->name"
                                             :manipulations="[
                                                     'fit' => [600,600],

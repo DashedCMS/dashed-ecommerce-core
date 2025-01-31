@@ -147,10 +147,10 @@
                         <div class="my-4 flex flex-wrap items-center md:gap-8">
                             <div class="flex flex-wrap items-center justify-start gap-2">
                                 <div class="flex gap-2 items-center justify-center">
-                                    <x-drift::image
+                                    <x-dashed-files::image
                                         class="w-6 rounded-xl"
                                         config="dashed"
-                                        :path="Translation::get('product-review-image', 'product', '', 'image')"
+                                        :mediaId="Translation::get('product-review-image', 'product', '', 'image')"
                                         alt=""
                                         :manipulations="[
                                                         'widen' => 500,

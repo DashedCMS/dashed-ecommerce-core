@@ -11,10 +11,10 @@
         <div>
             <div class="w-full aspect-[4/3] overflow-hidden">
                 @if($product->firstImage)
-                    <x-drift::image
+                    <x-dashed-files::image
                         class="w-full aspect-[4/3] object-cover object-center group-hover:scale-110 transform trans"
                         config="dashed"
-                        :path="$product->firstImage"
+                        :mediaId="$product->firstImage"
                         :alt="$product->name"
                         :manipulations="[
                             'widen' => 1000,

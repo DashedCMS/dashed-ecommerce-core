@@ -5,10 +5,10 @@
         <div class="relative h-72 w-full overflow-hidden rounded-lg">
             @if($product->firstImage)
                 <a href="{{$product->getUrl()}}">
-                    <x-drift::image
+                    <x-dashed-files::image
                             class="h-full w-full object-cover object-center"
                             config="dashed"
-                            :path="$product->firstImage"
+                            :mediaId="$product->firstImage"
                             :alt=" $product->name"
                             :manipulations="[
                                         'fit' => [300,300],

@@ -42,10 +42,10 @@
                                 <li class="grid relative items-center grid-cols-2 gap-6 p-4 lg:grid-cols-3">
                                     @if($product->firstImage)
                                         <a href="{{ $product->getUrl() }}">
-                                            <x-drift::image
+                                            <x-dashed-files::image
                                                 class="object-cover aspect-[3/2] rounded-lg"
                                                 config="dashed"
-                                                :path="$product->firstImage"
+                                                :mediaId="$product->firstImage"
                                                 :alt="$product->name"
                                                 :manipulations="[
                                                         'widen' => 300,

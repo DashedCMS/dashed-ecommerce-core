@@ -1,9 +1,9 @@
 <div class="bg-gray-100 p-4 relative group flex gap-4">
     @if($product->firstImage)
-        <x-drift::image
+        <x-dashed-files::image
                 class="w-28 h-28 aspect-square object-cover object-center group-hover:scale-110 transform trans"
                 config="dashed"
-                :path="$product->firstImage"
+                :mediaId="$product->firstImage"
                 :alt="$product->name"
                 :manipulations="[
                     'widen' => 200,
