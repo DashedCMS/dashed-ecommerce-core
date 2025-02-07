@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceChannable\Filament\Pages\Settings\ChannableSettingsPage;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -182,8 +183,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         $defaultBlocks = [
             Block::make('all-products')
                 ->label('Alle producten')
-                ->schema([
-                ]),
+                ->schema([]),
             Block::make('few-products')
                 ->label('Paar producten')
                 ->schema([
@@ -285,95 +285,20 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ]
         );
 
-        cms()->builder(
-            'routeModels',
-            [
-                'product' => [
-                    'name' => 'Product',
-                    'pluralName' => 'Products',
-                    'class' => Product::class,
-                    'nameField' => 'name',
-                ],
-                'productGroup' => [
-                    'name' => 'ProductGroep',
-                    'pluralName' => 'Product groepen',
-                    'class' => ProductGroup::class,
-                    'nameField' => 'name',
-                ],
-                'productCategory' => [
-                    'name' => 'Product categorie',
-                    'pluralName' => 'Product categorieën',
-                    'class' => ProductCategory::class,
-                    'nameField' => 'name',
-                ],
-            ]
-        );
+        cms()->registerRouteModel(Product::class, 'Product');
+        cms()->registerRouteModel(ProductGroup::class, 'Product groep');
+        cms()->registerRouteModel(ProductCategory::class, 'Product categorie');
 
-        cms()->builder(
-            'settingPages',
-            [
-                'invoicing' => [
-                    'name' => 'Facturatie instellingen',
-                    'description' => 'Instellingen voor de facturatie',
-                    'icon' => 'document-check',
-                    'page' => InvoiceSettingsPage::class,
-                ],
-                'order' => [
-                    'name' => 'Bestellingen',
-                    'description' => 'Instellingen voor de bestellingen',
-                    'icon' => 'banknotes',
-                    'page' => OrderSettingsPage::class,
-                ],
-                'paymentMethods' => [
-                    'name' => 'Betaalmethodes',
-                    'description' => 'Stel handmatige betaalmethodes in',
-                    'icon' => 'credit-card',
-                    'page' => PaymentMethodResource::class,
-                ],
-                'vat' => [
-                    'name' => 'BTW instellingen',
-                    'description' => 'Beheren hoe je winkel belastingen in rekening brengt',
-                    'icon' => 'receipt-percent',
-                    'page' => VATSettingsPage::class,
-                ],
-                'product' => [
-                    'name' => 'Product instellingen',
-                    'description' => 'Beheren instellingen over je producten',
-                    'icon' => 'shopping-bag',
-                    'page' => ProductSettingsPage::class,
-                ],
-                'checkout' => [
-                    'name' => 'Afreken instellingen',
-                    'description' => 'Je online betaalprocess aanpassen',
-                    'icon' => 'shopping-cart',
-                    'page' => CheckoutSettingsPage::class,
-                ],
-                'shippingClass' => [
-                    'name' => 'Verzendklasses',
-                    'description' => 'Is een product breekbaar of veel groter? Reken een meerprijs',
-                    'icon' => 'truck',
-                    'page' => ShippingClassResource::class,
-                ],
-                'shippingZone' => [
-                    'name' => 'Verzendzones',
-                    'description' => 'Bepaal waar je allemaal naartoe verstuurd',
-                    'icon' => 'truck',
-                    'page' => ShippingZoneResource::class,
-                ],
-                'shippingMethod' => [
-                    'name' => 'Verzendmethodes',
-                    'description' => 'Maak verzendmethodes aan',
-                    'icon' => 'truck',
-                    'page' => ShippingMethodResource::class,
-                ],
-                'pos' => [
-                    'name' => 'Point of Sale',
-                    'description' => 'Bewerk je POS',
-                    'icon' => 'banknotes',
-                    'page' => POSSettingsPage::class,
-                ],
-            ]
-        );
+        cms()->registerSettingsPage(InvoiceSettingsPage::class, 'Facturatie instellingen', 'document-check', 'Instellingen voor de facturatie');
+        cms()->registerSettingsPage(OrderSettingsPage::class, 'Bestellingen', 'banknotes', 'Instellingen voor de bestellingen');
+        cms()->registerSettingsPage(PaymentMethodResource::class, 'Betaalmethodes', 'credit-card', 'Stel handmatige betaalmethodes in');
+        cms()->registerSettingsPage(VATSettingsPage::class, 'BTW instellingen', 'receipt-percent', 'Beheren hoe je winkel belastingen in rekening brengt');
+        cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');
+        cms()->registerSettingsPage(CheckoutSettingsPage::class, 'Afreken instellingen', 'shopping-cart', 'Je online betaalprocess aanpassen');
+        cms()->registerSettingsPage(ShippingClassResource::class, 'Verzendklasses', 'truck', 'Is een product breekbaar of veel groter? Reken een meerprijs');
+        cms()->registerSettingsPage(ShippingZoneResource::class, 'Verzendzones', 'truck', 'Bepaal waar je allemaal naartoe verstuurd');
+        cms()->registerSettingsPage(ShippingMethodResource::class, 'Verzendmethodes', 'truck', 'Maak verzendmethodes aan');
+        cms()->registerSettingsPage(POSSettingsPage::class, 'Point of Sale', 'banknotes', 'Bewerk je POS');
 
         $package
             ->name('dashed-ecommerce-core')
@@ -397,7 +322,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public static function createDefaultPages(): void
     {
-        if (! \Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Producten');
             $page->setTranslation('slug', 'nl', 'producten');
@@ -412,7 +337,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('product_overview_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Bestellingen');
             $page->setTranslation('slug', 'nl', 'bestellingen');
@@ -427,7 +352,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('orders_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Bestelling');
             $page->setTranslation('slug', 'nl', 'bestelling');
@@ -442,7 +367,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('order_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Winkelwagen');
             $page->setTranslation('slug', 'nl', 'winkelwagen');
@@ -457,7 +382,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('cart_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Afrekenen');
             $page->setTranslation('slug', 'nl', 'afrekenen');
