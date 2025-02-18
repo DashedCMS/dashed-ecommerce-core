@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Forms\Get;
 use Filament\Forms\Form;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Filters\Filter;
@@ -460,6 +461,9 @@ class ProductGroupResource extends Resource
     {
         return $table
             ->columns(array_merge([
+                ImageColumn::make('image')
+                    ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url: null)
+                    ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
                     ->searchable(query: SearchQuery::make())
