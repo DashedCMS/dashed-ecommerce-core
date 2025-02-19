@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class Products
@@ -39,11 +37,11 @@ class Products
             }
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -138,7 +136,7 @@ class Products
 
     public static function getAll(int $pagination = 12, ?int $page = 1, ?string $orderBy = 'order', ?string $order = 'DESC', ?int $categoryId = null, ?string $search = null, null|array|\Illuminate\Support\Collection $filters = [], ?bool $enableFilters = true, null|array|Collection $products = null, ?array $priceRange = [])
     {
-        if (!in_array($orderBy, self::canFilterOnShortOrColumn())) {
+        if (! in_array($orderBy, self::canFilterOnShortOrColumn())) {
             $orderBy = '';
         }
         if (str($order)->lower() != 'asc' && str($order)->lower() != 'desc') {
@@ -168,15 +166,15 @@ class Products
             $order = '';
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        if (!$products) {
+        if (! $products) {
             if ($categoryId) {
                 $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
                 $products = $productCategory->products()
@@ -227,10 +225,10 @@ class Products
             ->orderBy($orderBy, $order)
             ->orderBy('id');
 
-        if (!empty($priceRange['min'])) {
+        if (! empty($priceRange['min'])) {
             $products = $products->where('price', '>=', $priceRange['min']);
         }
-        if (!empty($priceRange['max'])) {
+        if (! empty($priceRange['max'])) {
             $products = $products->where('price', '<=', $priceRange['max']);
         }
 
@@ -257,7 +255,7 @@ class Products
     public static function getRecentlyViewed(int $limit = 12, ProductGroup $productGroup = null)
     {
         $recentlyViewedProductGroups = session('recentlyViewedProducts', []);
-        if($productGroup && in_array($productGroup->id, $recentlyViewedProductGroups)) {
+        if ($productGroup && in_array($productGroup->id, $recentlyViewedProductGroups)) {
             $key = array_search($productGroup->id, $recentlyViewedProductGroups);
             unset($recentlyViewedProductGroups[$key]);
         }
