@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Livewire\Orders\CreateTrackAndTrace;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -34,6 +33,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPage;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\LogsList;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
+use Dashed\DashedEcommerceCore\Livewire\Orders\CreateTrackAndTrace;
 use Dashed\DashedEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
