@@ -321,13 +321,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public static function createDefaultPages(): void
     {
-        if (! \Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Producten');
             $page->setTranslation('slug', 'nl', 'producten');
             $page->setTranslation('content', 'nl', [
                 [
-                    'data' => [],
+                    'data' => [
+                        'in_container' => true,
+                        'top_margin' => true,
+                        'bottom_margin' => true,
+                    ],
                     'type' => 'all-products',
                 ],
             ]);
@@ -336,13 +340,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('product_overview_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Bestellingen');
             $page->setTranslation('slug', 'nl', 'bestellingen');
             $page->setTranslation('content', 'nl', [
                 [
-                    'data' => [],
+                    'data' => [
+                        'in_container' => true,
+                        'top_margin' => true,
+                        'bottom_margin' => true,
+                    ],
                     'type' => 'orders-block',
                 ],
             ]);
@@ -351,13 +359,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('orders_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Bestelling');
             $page->setTranslation('slug', 'nl', 'bestelling');
             $page->setTranslation('content', 'nl', [
                 [
-                    'data' => [],
+                    'data' => [
+                        'in_container' => true,
+                        'top_margin' => true,
+                        'bottom_margin' => true,
+                    ],
                     'type' => 'view-order-block',
                 ],
             ]);
@@ -366,13 +378,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('order_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Winkelwagen');
             $page->setTranslation('slug', 'nl', 'winkelwagen');
             $page->setTranslation('content', 'nl', [
                 [
-                    'data' => [],
+                    'data' => [
+                        'in_container' => true,
+                        'top_margin' => true,
+                        'bottom_margin' => true,
+                    ],
                     'type' => 'cart-block',
                 ],
             ]);
@@ -381,13 +397,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('cart_page_id', $page->id);
         }
 
-        if (! \Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
+        if (!\Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             $page->setTranslation('name', 'nl', 'Afrekenen');
             $page->setTranslation('slug', 'nl', 'afrekenen');
             $page->setTranslation('content', 'nl', [
                 [
-                    'data' => [],
+                    'data' => [
+                        'in_container' => true,
+                        'top_margin' => true,
+                        'bottom_margin' => true,
+                    ],
                     'type' => 'checkout-block',
                 ],
             ]);

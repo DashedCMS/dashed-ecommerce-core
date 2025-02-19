@@ -529,6 +529,20 @@
                         </div>
                     </section>
                 @endif
+
+                @if($recentlyViewedProducts)
+                    <section aria-labelledby="related-heading"
+                             class="mt-10 border-t border-gray-200 px-4 py-16 sm:px-0">
+                        <h2 id="related-heading"
+                            class="text-xl md:text-3xl font-bold text-primary-500">{{Translation::get('recent-viewed', 'product', 'Recent bekeken')}}</h2>
+
+                        <div class="mt-8 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">
+                            @foreach($recentlyViewedProducts as $product)
+                                <x-product.product :product="$product"/>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
             </div>
         </x-container>
 

@@ -20,6 +20,14 @@ class ShowProduct extends Component
         $this->originalProduct = $product ?? null;
         $this->product = $product ?? null;
 
+        $recentlyViewedProductGroups = session('recentlyViewedProducts', []);
+        if(in_array($this->productGroup->id, $recentlyViewedProductGroups)) {
+            $key = array_search($this->productGroup->id, $recentlyViewedProductGroups);
+            unset($recentlyViewedProductGroups[$key]);
+        }
+        $recentlyViewedProductGroups[] = $this->productGroup->id;
+        session(['recentlyViewedProducts' => $recentlyViewedProductGroups]);
+
         $this->fillInformation(true);
     }
 

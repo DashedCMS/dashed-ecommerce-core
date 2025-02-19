@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Dashed\DashedEcommerceCore\Classes\Products;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
@@ -27,6 +28,7 @@ trait ProductCartActions
     public $characteristics;
     public $suggestedProducts;
     public $crossSellProducts;
+    public $recentlyViewedProducts;
     public array $filters = [];
     public ?Collection $productTabs = null;
     public ?Collection $productExtras = null;
@@ -116,6 +118,7 @@ trait ProductCartActions
             $this->productCategories = $this->productGroup->productCategories;
             $this->filters = $this->productGroup->simpleFilters();
             $this->paymentMethods = PaymentMethod::active()->where('type', 'online')->orderBy('order', 'asc')->get();
+            $this->recentlyViewedProducts = Products::getRecentlyViewed(limit: 4, productGroup: $this->productGroup);
         } else {
             if ($this->productGroup->products()->publicShowable()->count() > 1) {
                 $this->product = null;
