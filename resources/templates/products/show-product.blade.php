@@ -516,7 +516,7 @@
                     </div>
                 </div>
 
-                @if(count($suggestedProducts))
+                @if($suggestedProducts && $suggestedProducts->count())
                     <section aria-labelledby="related-heading"
                              class="mt-10 border-t border-gray-200 px-4 py-16 sm:px-0">
                         <h2 id="related-heading"

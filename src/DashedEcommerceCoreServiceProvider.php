@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Livewire\Orders\CreateTrackAndTrace;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -111,6 +112,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('order-logs-list', LogsList::class);
         Livewire::component('order-customer-information-block-list', CustomerInformationBlockList::class);
         Livewire::component('order-view-statusses', ViewStatusses::class);
+        Livewire::component('order-create-track-and-trace', CreateTrackAndTrace::class);
 
         //Frontend components
         Livewire::component('cart.cart', Cart::class);
