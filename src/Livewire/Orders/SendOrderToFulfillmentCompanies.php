@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
-use Filament\Forms\Components\FileUpload;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Toggle;
