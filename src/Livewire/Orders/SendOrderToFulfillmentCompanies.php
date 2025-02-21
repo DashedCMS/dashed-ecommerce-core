@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Filament\Forms\Components\FileUpload;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Toggle;
@@ -94,8 +95,9 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
             ->schema([
                 Toggle::make('sendProductsToCustomer')
                     ->label('Verstuur producten naar de klant'),
+                mediaHelper()->field('files', 'Bijlagen', multiple: true),
             ])
-            ->columns(['default' => 1, 'lg' => 3]);
+            ->columns(['default' => 1, 'lg' => 2]);
     }
 
     private function getOrderProductsSection(): Section
@@ -143,7 +145,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
 
         foreach ($fulfillmentCompanies as $fulfillmentProvider => $orderProducts) {
             $fulfillmentCompany = FulfillmentCompany::find($fulfillmentProvider);
-            $fulfillmentCompany->sendOrder($this->order, $orderProducts, $data['sendProductsToCustomer']);
+            $fulfillmentCompany->sendOrder($this->order, $orderProducts, $data['sendProductsToCustomer'], $data['files']);
         }
 
         Notification::make()

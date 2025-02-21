@@ -104,6 +104,8 @@ class OrderLog extends Model
             $string = 'heeft de T&T codes verstuurd naar de klant.';
         } elseif ($this->tag == 'order.t&t.not-send') {
             $string = 'heeft de T&T codes NIET verstuurd naar de klant.';
+        } elseif ($this->tag == 'order.track-and-trace.created') {
+            $string = 'heeft een Track en Trace codes aangemaakt.';
         } elseif ($this->tag == 'order.fulfillment-status-update-to-unhandled.mail.send') {
             $string = 'heeft de fulfillment status update voor Niet afgehandeld laten versturen.';
         } elseif ($this->tag == 'order.fulfillment-status-update-to-unhandled.mail.not-send') {
