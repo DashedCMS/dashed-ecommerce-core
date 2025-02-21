@@ -18,17 +18,19 @@ class OrderConfirmationForFulfillerMail extends Mailable
     public Order $order;
     public array $orderProducts;
     public bool $sendProductsToCustomer;
+    public array $files;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Order $order, array $orderProducts, bool $sendProductsToCustomer)
+    public function __construct(Order $order, array $orderProducts, bool $sendProductsToCustomer, array $files)
     {
         $this->order = $order;
         $this->orderProducts = $orderProducts;
         $this->sendProductsToCustomer = $sendProductsToCustomer;
+        $this->files = $files;
     }
 
     /**
@@ -52,6 +54,11 @@ class OrderConfirmationForFulfillerMail extends Mailable
                 'sendProductsToCustomer' => $this->sendProductsToCustomer,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
+
+        foreach ($this->files as $file) {
+            $media = mediaHelper()->getSingleMedia($file);
+            $mail->attachFromStorageDisk('dashed', $media->path);
+        }
 
         return $mail;
     }
