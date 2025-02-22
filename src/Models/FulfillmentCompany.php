@@ -42,7 +42,7 @@ class FulfillmentCompany extends Model
 
     public function sendOrder(Order $order, array $orderProducts, bool $sendProductsToCustomer = true, null|array|Collection $files = []): void
     {
-//        try {
+        //        try {
         Mail::to($this->email)->send(new OrderConfirmationForFulfillerMail($order, $orderProducts, $sendProductsToCustomer, $files));
 
         foreach ($orderProducts as $orderProduct) {
@@ -51,8 +51,8 @@ class FulfillmentCompany extends Model
         }
 
         OrderLog::createLog(orderId: $order->id, note: 'Producten verstuurd naar ' . $this->name . ' om te verwerken.');
-//        } catch (\Exception $e) {
-//            OrderLog::createLog(orderId: $order->id, note: 'Producten niet verzonden naar ' . $this->name . ' om de volgende reden: ' . $e->getMessage());
-//        }
+        //        } catch (\Exception $e) {
+        //            OrderLog::createLog(orderId: $order->id, note: 'Producten niet verzonden naar ' . $this->name . ' om de volgende reden: ' . $e->getMessage());
+        //        }
     }
 }
