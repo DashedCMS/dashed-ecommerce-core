@@ -189,6 +189,32 @@
                         </span>
                         <p>Klant toevoegen</p>
                     </button>
+                    <button @click="toggle('chooseShippingMethodPopup')"
+                            x-cloak x-show="!shippingMethod"
+                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                                            <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+</svg>
+
+                                            </span>
+                        <p>Verzendmethode toepassen</p>
+                    </button>
+                    <button @click="removeShippingMethod"
+                            x-cloak x-show="shippingMethod"
+                            class="text-left rounded-lg bg-red-500/40 hover:bg-red-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                                            <span>
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+</svg>
+
+                                            </span>
+                        <p>Verzendmethode verwijderen</p>
+                    </button>
                     <button @click="openCashRegister"
                             x-cloak x-show="hasCashRegister"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
@@ -215,8 +241,10 @@
                     </button>
                     <button @click="refreshProducts()"
                             class="focus-search-order text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
                         </svg>
 
                         <p>Producten opnieuw ophalen</p>
@@ -393,6 +421,34 @@
         </div>
     </div>
     <div
+        x-show="chooseShippingMethodPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="toggle('createDiscountPopup')"></div>
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative">
+            <div class="bg-white rounded-lg p-8 grid gap-4">
+                <div class="absolute top-2 right-2 text-black cursor-pointer"
+                     @click="toggle('createDiscountPopup')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="size-10">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold">Selecteer een verzendmethode</p>
+                <div class="grid gap-4 grid-cols-1 md:grid-cols-2">
+                    <template x-for="shippingMethod in shippingMethods">
+                        <button @click="setShippingMethod(shippingMethod.id)"
+                                class="p-4 text-xl rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full"
+                                x-html="shippingMethod.fullName">
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div
         x-show="checkoutPopup"
         x-cloak
         x-transition.opacity.scale.origin
@@ -550,21 +606,30 @@
                             <span>Wachten op betaling...</span>
                         </button>
                     </template>
-                    <button @click="closePayment" x-show="!isPinTerminalPayment"
+                    <button @click="resetPOS()" x-show="postPay"
+                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                        Terug naar POS
+                    </button>
+                    <a x-bind:href="orderUrl" x-show="postPay"
+                       target="_blank"
+                       class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                        Bestelling bekijken
+                    </a>
+                    <button @click="closePayment" x-show="!isPinTerminalPayment && !postPay"
                             class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Annuleren
                     </button>
-                    <button disabled x-show="!cashPaymentAmount && !isPinTerminalPayment"
+                    <button disabled x-show="!cashPaymentAmount && !isPinTerminalPayment && !postPay"
                             class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Vul een bedrag in
                     </button>
                     <button @click="createPaymentWithExtraPayment"
-                            x-show="!isPinTerminalPayment && cashPaymentAmount && Math.floor(cashPaymentAmount) < Math.floor(totalUnformatted)"
+                            x-show="!isPinTerminalPayment && cashPaymentAmount && Math.floor(cashPaymentAmount) < Math.floor(totalUnformatted) && !postPay"
                             class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Restbedrag bijpinnen
                     </button>
                     <button @click="markAsPaid"
-                            x-show="!isPinTerminalPayment && Math.floor(cashPaymentAmount) >= Math.floor(totalUnformatted)"
+                            x-show="!isPinTerminalPayment && Math.floor(cashPaymentAmount) >= Math.floor(totalUnformatted) && !postPay"
                             class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Markeer als betaald
                     </button>
@@ -720,12 +785,18 @@
                                         </div>
                                         <div class="ml-auto flex items-center gap-4">
                                             <p class="text-md" x-html="order.totalFormatted"></p>
-                                            <p class="p-1 border-8 border-green-200 bg-green-500 rounded-full" x-show="order.status == 'paid'"></p>
-                                            <p class="p-1 border-8 border-green-200 bg-green-500 rounded-full" x-show="order.status == 'partially_paid'"></p>
-                                            <p class="p-1 border-8 border-green-200 bg-green-500 rounded-full" x-show="order.status == 'waiting_for_confirmation'"></p>
-                                            <p class="p-1 border-8 border-blue-200 bg-blue-500 rounded-full" x-show="order.status == 'pending'"></p>
-                                            <p class="p-1 border-8 border-red-200 bg-red-500 rounded-full" x-show="order.status == 'cancelled'"></p>
-                                            <p class="p-1 border-8 border-orange-200 bg-orange-500 rounded-full" x-show="order.status == 'return'"></p>
+                                            <p class="p-1 border-8 border-green-200 bg-green-500 rounded-full"
+                                               x-show="order.status == 'paid'"></p>
+                                            <p class="p-1 border-8 border-green-200 bg-green-500 rounded-full"
+                                               x-show="order.status == 'partially_paid'"></p>
+                                            <p class="p-1 border-8 border-green-200 bg-green-500 rounded-full"
+                                               x-show="order.status == 'waiting_for_confirmation'"></p>
+                                            <p class="p-1 border-8 border-blue-200 bg-blue-500 rounded-full"
+                                               x-show="order.status == 'pending'"></p>
+                                            <p class="p-1 border-8 border-red-200 bg-red-500 rounded-full"
+                                               x-show="order.status == 'cancelled'"></p>
+                                            <p class="p-1 border-8 border-orange-200 bg-orange-500 rounded-full"
+                                               x-show="order.status == 'return'"></p>
                                         </div>
                                     </div>
                                 </template>
@@ -1011,9 +1082,12 @@
                                     </p>
                                     <p>|</p>
                                     <p class="text-gray-400 flex gap-1 items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                            <path fill-rule="evenodd" d="M1.5 9.832v1.793c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875V9.832a3 3 0 0 0-.722-1.952l-3.285-3.832A3 3 0 0 0 16.215 3h-8.43a3 3 0 0 0-2.278 1.048L2.222 7.88A3 3 0 0 0 1.5 9.832ZM7.785 4.5a1.5 1.5 0 0 0-1.139.524L3.881 8.25h3.165a3 3 0 0 1 2.496 1.336l.164.246a1.5 1.5 0 0 0 1.248.668h2.092a1.5 1.5 0 0 0 1.248-.668l.164-.246a3 3 0 0 1 2.496-1.336h3.165l-2.765-3.226a1.5 1.5 0 0 0-1.139-.524h-8.43Z" clip-rule="evenodd" />
-                                            <path d="M2.813 15c-.725 0-1.313.588-1.313 1.313V18a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-1.688c0-.724-.588-1.312-1.313-1.312h-4.233a3 3 0 0 0-2.496 1.336l-.164.246a1.5 1.5 0 0 1-1.248.668h-2.092a1.5 1.5 0 0 1-1.248-.668l-.164-.246A3 3 0 0 0 7.046 15H2.812Z" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                             class="size-6">
+                                            <path fill-rule="evenodd"
+                                                  d="M1.5 9.832v1.793c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875V9.832a3 3 0 0 0-.722-1.952l-3.285-3.832A3 3 0 0 0 16.215 3h-8.43a3 3 0 0 0-2.278 1.048L2.222 7.88A3 3 0 0 0 1.5 9.832ZM7.785 4.5a1.5 1.5 0 0 0-1.139.524L3.881 8.25h3.165a3 3 0 0 1 2.496 1.336l.164.246a1.5 1.5 0 0 0 1.248.668h2.092a1.5 1.5 0 0 0 1.248-.668l.164-.246a3 3 0 0 1 2.496-1.336h3.165l-2.765-3.226a1.5 1.5 0 0 0-1.139-.524h-8.43Z"
+                                                  clip-rule="evenodd"/>
+                                            <path d="M2.813 15c-.725 0-1.313.588-1.313 1.313V18a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-1.688c0-.724-.588-1.312-1.313-1.312h-4.233a3 3 0 0 0-2.496 1.336l-.164.246a1.5 1.5 0 0 1-1.248.668h-2.092a1.5 1.5 0 0 1-1.248-.668l-.164-.246A3 3 0 0 0 7.046 15H2.812Z"/>
                                         </svg>
 
                                         <span x-html="selectedOrder.fulfillmenStatus"></span>
@@ -1250,6 +1324,11 @@
         orderPayments: [],
         firstPaymentMethod: null,
         pinTerminalIntervalId: null,
+        shippingMethod: null,
+        shippingMethodId: null,
+        shippingMethods: [],
+        postPay: null,
+        orderUrl: null,
         totalQuantity() {
             return this.products.reduce((sum, product) => sum + product.quantity, 0);
         },
@@ -1261,6 +1340,7 @@
         ordersPopup: false,
         cancelOrderPopup: false,
         orderConfirmationPopup: false,
+        chooseShippingMethodPopup: false,
         isFullscreen: false,
 
         hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
@@ -1329,6 +1409,7 @@
                 this.posIdentifier = data.posIdentifier;
                 this.products = data.products;
                 this.lastOrder = data.lastOrder;
+                this.shippingMethods = data.shippingMethods;
                 this.retrieveCart();
                 this.focus();
             } catch (error) {
@@ -1690,6 +1771,46 @@
             }
         },
 
+        async setShippingMethod(shippingMethodId) {
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.select-shipping-method') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        cartInstance: this.cartInstance,
+                        orderOrigin: this.orderOrigin,
+                        shippingMethodId: shippingMethodId,
+                        userId: this.userId,
+                    })
+                });
+
+                let data = await response.json();
+                this.focus();
+
+                if (!response.ok) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.shippingMethod = data.shippingMethod;
+                this.shippingMethodId = data.shippingMethod.id;
+
+                this.toggle('chooseShippingMethodPopup');
+
+            } catch (error) {
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De verzendmethode kon niet worden geselecteerd'
+                })
+            }
+        },
+
         async selectPaymentMethod(paymentMethodId) {
             try {
                 let response = await fetch('{{ route('api.point-of-sale.select-payment-method') }}', {
@@ -1721,6 +1842,8 @@
                 this.chosenPaymentMethod = data.paymentMethod;
                 this.suggestedCashPaymentAmounts = data.suggestedCashPaymentAmounts;
                 this.order = data.order;
+                this.postPay = data.postPay;
+                this.orderUrl = data.orderUrl;
 
                 this.toggle('checkoutPopup');
                 this.toggle('paymentPopup');
@@ -1968,7 +2091,10 @@
         async resetPOS() {
             this.lastOrder = this.order;
             this.order = null;
-            this.toggle('orderConfirmationPopup');
+            this.paymentPopup = false;
+            this.orderUrl = null;
+            this.postPay = false;
+            this.orderConfirmationPopup = false;
             this.initialize();
         },
 
