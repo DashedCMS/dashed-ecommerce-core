@@ -1,9 +1,5 @@
 <div class="relative z-[100]" role="dialog" aria-modal="true" x-data="{ showCartPopup: @entangle('showCartPopup') }"
      x-init="
-    window.addEventListener('productAddedToCart', (event) => {
-        showCartPopup = true;
-    });
-
     window.addEventListener('openCartPopup', (event) => {
         showCartPopup = true;
     });

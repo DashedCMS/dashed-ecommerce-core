@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Support\Collection;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
@@ -39,19 +40,19 @@ class FulfillmentCompany extends Model
         return $this->hasMany(Product::class, 'fulfillment_provider');
     }
 
-    public function sendOrder(Order $order, array $orderProducts, bool $sendProductsToCustomer = true): void
+    public function sendOrder(Order $order, array $orderProducts, bool $sendProductsToCustomer = true, null|array|Collection $files = []): void
     {
-        try {
-            Mail::to($this->email)->send(new OrderConfirmationForFulfillerMail($order, $orderProducts, $sendProductsToCustomer));
+//        try {
+        Mail::to($this->email)->send(new OrderConfirmationForFulfillerMail($order, $orderProducts, $sendProductsToCustomer, $files));
 
-            foreach ($orderProducts as $orderProduct) {
-                $orderProduct->send_to_fulfiller = 1;
-                $orderProduct->save();
-            }
-
-            OrderLog::createLog(orderId: $order->id, note: 'Producten verstuurd naar ' . $this->name . ' om te verwerken.');
-        } catch (\Exception $e) {
-            OrderLog::createLog(orderId: $order->id, note: 'Producten niet verzonden naar ' . $this->name . ' om de volgende reden: ' . $e->getMessage());
+        foreach ($orderProducts as $orderProduct) {
+            $orderProduct->send_to_fulfiller = 1;
+            $orderProduct->save();
         }
+
+        OrderLog::createLog(orderId: $order->id, note: 'Producten verstuurd naar ' . $this->name . ' om te verwerken.');
+//        } catch (\Exception $e) {
+//            OrderLog::createLog(orderId: $order->id, note: 'Producten niet verzonden naar ' . $this->name . ' om de volgende reden: ' . $e->getMessage());
+//        }
     }
 }

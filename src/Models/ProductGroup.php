@@ -415,4 +415,13 @@ class ProductGroup extends Model
 
         return false;
     }
+
+    public function getFirstImageAttribute(): ?string
+    {
+        if (is_array($this->images) && count($this->images)) {
+            return $this->images[0];
+        }
+
+        return null;
+    }
 }

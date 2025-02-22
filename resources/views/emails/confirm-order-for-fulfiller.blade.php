@@ -337,7 +337,7 @@
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 26px; font-weight: bold; line-height: 30px; text-align: left; color: #4F4F4F;">
                                                                     {{Translation::get('order-confirmation-for-fulfiller-email-title', 'orders', 'Bestelling #:orderId: vanuit :siteName:', 'text', [
                 'orderId' => $order->invoice_id,
-                'siteName' => Customsetting::get('company_name'),
+                'siteName' => Customsetting::get('site_name'),
             ])}}
                                                                 </div>
                                                             </td>

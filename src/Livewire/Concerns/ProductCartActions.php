@@ -510,7 +510,13 @@ trait ProductCartActions
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
-        $this->dispatch('productAddedToCart');
+        $this->dispatch('productAddedToCart', [
+            'product' => $product,
+            'quantity' => $this->quantity,
+            'options' => $options,
+        ]);
+
+        session(['lastAddedProductInCart' => $product]);
 
         if ($redirectChoice == 'same') {
             return $this->checkCart('success', Translation::get('product-added-to-cart', $this->cartType, 'The product has been added to your cart'));

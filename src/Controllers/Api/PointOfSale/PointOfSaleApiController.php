@@ -993,7 +993,7 @@ class PointOfSaleApiController extends Controller
         foreach ($products as &$product) {
             $thisProduct = Product::find($product['id']);
             $product['stock'] = $thisProduct->stock();
-            $product['image'] = mediaHelper()->getSingleMedia($thisProduct->firstImage, ['widen' => 300])->url ?? '';
+            $product['image'] = $thisProduct->firstImage ? (mediaHelper()->getSingleMedia($thisProduct->firstImage, ['widen' => 300])->url ?? '') : '';
         }
 
         return response()

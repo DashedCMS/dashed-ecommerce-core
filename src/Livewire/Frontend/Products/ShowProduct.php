@@ -28,6 +28,18 @@ class ShowProduct extends Component
         $recentlyViewedProductGroups[] = $this->productGroup->id;
         session(['recentlyViewedProducts' => $recentlyViewedProductGroups]);
 
+        $metaModel = $this->product ?: $this->productGroup;
+
+        seo()->metaData('metaTitle', $metaModel->metadata && $metaModel->metadata->title ? $metaModel->metadata->title : $metaModel->name);
+        seo()->metaData('metaDescription', $metaModel->metadata->description ?? '');
+        $metaImage = $metaModel->metadata->image ?? '';
+        if (! $metaImage) {
+            $metaImage = $metaModel->firstImage;
+        }
+        if ($metaImage) {
+            seo()->metaData('metaImage', $metaImage);
+        }
+
         $this->fillInformation(true);
     }
 

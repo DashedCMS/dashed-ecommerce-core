@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Filament\Forms\Components\FileUpload;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Toggle;
@@ -48,7 +49,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
         $this->buttonClass = $buttonClass;
         $orderProducts = $this->order->orderProducts;
         foreach ($orderProducts as $key => $orderProduct) {
-            if (! $orderProduct->fulfillmentCompany) {
+            if (!$orderProduct->fulfillmentCompany) {
                 unset($orderProducts[$key]);
             }
         }
@@ -69,12 +70,12 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
 
     private function getInitialFormData(): array
     {
-        $fillForm = [
-            'sendProductsToCustomer' => true,
-        ];
+//        $fillForm = [
+//            'sendProductsToCustomer' => true,
+//        ];
 
         foreach ($this->order->orderProducts()->orderBy('fulfillment_provider')->get() as $orderProduct) {
-            $fillForm["order_product_{$orderProduct->id}_send_to_fulfiller"] = ! $orderProduct->send_to_fulfiller;
+            $fillForm["order_product_{$orderProduct->id}_send_to_fulfiller"] = !$orderProduct->send_to_fulfiller;
         }
 
         return $fillForm;
@@ -82,39 +83,54 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
 
     private function getFormSchema(): array
     {
-        return [
-            $this->getOrderProductsSection(),
+        return $this->getOrderProductsSection();
+        return array_merge($this->getOrderProductsSection(), [
             $this->getOtherOptionsSection(),
-        ];
+        ]);
     }
 
-    private function getOtherOptionsSection(): Section
+//    private function getOtherOptionsSection(): Section
+//    {
+//        return Section::make('Overige opties')
+//            ->schema([
+//                Toggle::make('sendProductsToCustomer')
+//                    ->label('Verstuur producten naar de klant'),
+//                mediaHelper()->field('files', 'Bijlagen', multiple: true),
+//            ])
+//            ->columns(['default' => 1, 'lg' => 2]);
+//    }
+
+    private function getOrderProductsSection(): array
     {
-        return Section::make('Overige opties')
-            ->schema([
-                Toggle::make('sendProductsToCustomer')
-                    ->label('Verstuur producten naar de klant'),
-                mediaHelper()->field('files', 'Bijlagen', multiple: true),
-            ])
-            ->columns(['default' => 1, 'lg' => 2]);
+        $sections = [];
+
+        foreach (FulfillmentCompany::all() as $fulfillmentCompany) {
+            if ($this->orderProducts->where('fulfillment_provider', $fulfillmentCompany->id)->count()) {
+                $sections[] = Section::make('Bestelde producten voor ' . $fulfillmentCompany->name)
+                    ->schema(array_merge($this->getOrderProductSchema($fulfillmentCompany),
+                            [
+                                Toggle::make('sendProductsToCustomer_' . $fulfillmentCompany->id)
+                                    ->label('Verstuur producten naar de klant'),
+                                mediaHelper()->field('files_' . $fulfillmentCompany->id, 'Bijlagen', multiple: true, defaultFolder: 'orders/' . $this->order->invoice_id),
+                            ]
+                        )
+                    )
+                    ->columns(['default' => 1, 'lg' => 2])
+                    ->hidden(!in_array($this->order->order_origin, ['own', 'pos']));
+            }
+        }
+
+        return $sections;
     }
 
-    private function getOrderProductsSection(): Section
+    private function getOrderProductSchema(FulfillmentCompany $fulfillmentCompany): array
     {
-        return Section::make('Bestelde producten')
-            ->schema($this->getOrderProductSchema())
-            ->columns(['default' => 1, 'lg' => 2])
-            ->hidden(! in_array($this->order->order_origin, ['own', 'pos']));
-    }
-
-    private function getOrderProductSchema(): array
-    {
-        return $this->orderProducts->map(function ($orderProduct) {
+        return $this->orderProducts->where('fulfillment_provider', $fulfillmentCompany->id)->map(function ($orderProduct) {
             return Section::make()
                 ->label($orderProduct->name)
                 ->schema([
                     Toggle::make("order_product_{$orderProduct->id}_send_to_fulfiller")
-                        ->label("{$orderProduct->name} {$orderProduct->quantity}x versturen naar {$orderProduct->fulfillmentCompany->name}")
+                        ->label("{$orderProduct->name} {$orderProduct->quantity}x versturen")
                         ->helperText($orderProduct->send_to_fulfiller ? 'Dit product is al doorgestuurd naar de fulfilment partij.' : 'Dit product moet nog doorgestuurd worden naar de fulfilment partij.'),
                 ]);
         })->toArray();
@@ -132,7 +148,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
             }
         }
 
-        if (! $hasOrderProductSelected) {
+        if (!$hasOrderProductSelected) {
             Notification::make()
                 ->title('Geen producten geselecteerd')
                 ->body('Selecteer minimaal één product om door te sturen naar de fulfilment partij.')
@@ -144,7 +160,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
 
         foreach ($fulfillmentCompanies as $fulfillmentProvider => $orderProducts) {
             $fulfillmentCompany = FulfillmentCompany::find($fulfillmentProvider);
-            $fulfillmentCompany->sendOrder($this->order, $orderProducts, $data['sendProductsToCustomer'], $data['files']);
+            $fulfillmentCompany->sendOrder($this->order, $orderProducts, $data['sendProductsToCustomer_' . $fulfillmentCompany->id], $data['files_' . $fulfillmentCompany->id]);
         }
 
         Notification::make()
