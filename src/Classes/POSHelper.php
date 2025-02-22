@@ -7,10 +7,10 @@ use Dashed\DashedEcommerceCore\Models\POSCart;
 
 class POSHelper
 {
-    public static function finishPaidOrder(Order $order, POSCart $posCart): array
+    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled'): array
     {
-        $order->changeStatus('paid');
-        $order->changeFulfillmentStatus('handled');
+        $order->changeStatus($orderStatus);
+        $order->changeFulfillmentStatus($fulfillmentStatus);
 
         try {
             $order->printReceipt();
