@@ -47,6 +47,10 @@ Route::group(
             ->name('api.point-of-sale.select-payment-method');
         Route::post('/select-shipping-method', [PointOfSaleApiController::class, 'selectShippingMethod'])
             ->name('api.point-of-sale.select-shipping-method');
+        Route::post('/remove-shipping-method', [PointOfSaleApiController::class, 'removeShippingMethod'])
+            ->name('api.point-of-sale.remove-shipping-method');
+        Route::post('/update-customer-data', [PointOfSaleApiController::class, 'updateCustomerData'])
+            ->name('api.point-of-sale.update-customer-data');
         Route::post('/start-pin-terminal-payment', [PointOfSaleApiController::class, 'startPinTerminalPayment'])
             ->name('api.point-of-sale.start-pin-terminal-payment');
         Route::post('/mark-as-paid', [PointOfSaleApiController::class, 'markAsPaid'])

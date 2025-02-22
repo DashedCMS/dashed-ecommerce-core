@@ -138,6 +138,7 @@
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2" x-cloak x-show="!searchProductQuery">
                     <button @click="toggle('customProductPopup')"
+                            :class="{'bg-orange-500/40 hover:bg-orange-500/70': customProductPopup}"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -164,6 +165,7 @@
                         <p>Korting verwijderen</p>
                     </button>
                     <button @click="toggle('createDiscountPopup')"
+                            :class="{'bg-orange-500/40 hover:bg-orange-500/70': createDiscountPopup}"
                             x-cloak x-show="!activeDiscountCode"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
@@ -178,6 +180,8 @@
                         <p>Korting toepassen</p>
                     </button>
                     <button
+                        @click="toggle('customerDataPopup')"
+                        :class="{'bg-orange-500/40 hover:bg-orange-500/70': customerDataPopup}"
                         class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -187,9 +191,10 @@
                                     d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
                             </svg>
                         </span>
-                        <p>Klant toevoegen</p>
+                        <p>Klantgegevens toevoegen</p>
                     </button>
                     <button @click="toggle('chooseShippingMethodPopup')"
+                            :class="{'bg-orange-500/40 hover:bg-orange-500/70': chooseShippingMethodPopup}"
                             x-cloak x-show="!shippingMethod"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
@@ -328,6 +333,13 @@
                                 </div>
                                 <hr>
                             </div>
+                            <div x-show="shippingMethod" x-cloak>
+                                <div class="text-sm font-bold flex justify-between items-center mb-2">
+                                    <span>Verzendmethode</span>
+                                    <span class="font-bold" x-html="shippingCosts"></span>
+                                </div>
+                                <hr>
+                            </div>
                             {{--                        <hr/>--}}
                             {{--                        <span class="text-sm font-bold flex justify-between items-center">--}}
                             {{--                        <span>Subtotaal</span>--}}
@@ -425,11 +437,11 @@
         x-cloak
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-        <div class="absolute h-full w-full" @click="toggle('createDiscountPopup')"></div>
+        <div class="absolute h-full w-full" @click="toggle('chooseShippingMethodPopup')"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative">
             <div class="bg-white rounded-lg p-8 grid gap-4">
                 <div class="absolute top-2 right-2 text-black cursor-pointer"
-                     @click="toggle('createDiscountPopup')">
+                     @click="toggle('chooseShippingMethodPopup')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -438,12 +450,7 @@
                 </div>
                 <p class="text-3xl font-bold">Selecteer een verzendmethode</p>
                 <div class="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    <template x-for="shippingMethod in shippingMethods">
-                        <button @click="setShippingMethod(shippingMethod.id)"
-                                class="p-4 text-xl rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full"
-                                x-html="shippingMethod.fullName">
-                        </button>
-                    </template>
+
                 </div>
             </div>
         </div>
@@ -692,6 +699,42 @@
             </div>
         </template>
     </div>
+    <div
+        x-show="customerDataPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="toggle('customerDataPopup')"></div>
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
+            <div class="bg-white rounded-lg p-8 grid gap-4">
+                <div class="absolute top-2 right-2 text-black cursor-pointer"
+                     @click="toggle('customerDataPopup')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="size-10">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold">
+                        Voeg klantgegevens toe aan de bestelling
+                    </p>
+                </div>
+
+                <form wire:submit.prevent="submitCustomerDataForm">
+                    <div class="grid gap-4">
+                        {{ $this->customerDataForm }}
+                        <div>
+                            <button type="submit"
+                                    class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                Klantgegevens opslaan
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="fixed inset-0 flex items-center justify-center z-50 text-black" x-cloak x-show="ordersPopup"
          x-transition.opacity.scale.origin>
         <div class="absolute h-full w-full" @click="showOrdersPopup"></div>
@@ -844,7 +887,8 @@
                                                         </p>
                                                     </div>
                                                     <div class="ml-auto grow text-right">
-                                                        <div class="flex items-center gap-2 rounded-lg bg-primary-800 p-2 ml-auto w-fit text-white">
+                                                        <div
+                                                            class="flex items-center gap-2 rounded-lg bg-primary-800 p-2 ml-auto w-fit text-white">
                                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                                                  fill="currentColor"
                                                                  class="size-10 text-primary-500 hover:text-primary-700 cursor-pointer"
@@ -869,29 +913,34 @@
                                                 </div>
                                             </template>
                                             <div class="bg-white p-4 rounded-lg grid gap-4">
-                                                <div @click="selectedOrder.cancelData.extraOrderLine = !selectedOrder.cancelData.extraOrderLine"
-                                                     class="cursor-pointer flex items-center gap-2">
+                                                <div
+                                                    @click="selectedOrder.cancelData.extraOrderLine = !selectedOrder.cancelData.extraOrderLine"
+                                                    class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
                                                             :class="selectedOrder.cancelData.extraOrderLine ? 'bg-primary-600' : 'bg-gray-200'"
                                                             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
-                                                <span :class="selectedOrder.cancelData.extraOrderLine ? 'translate-x-5' : 'translate-x-0'"
-                                                      class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
-                                                <span :class="selectedOrder.cancelData.extraOrderLine ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.extraOrderLine ? 'translate-x-5' : 'translate-x-0'"
+                                                    class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                                <span
+                                                    :class="selectedOrder.cancelData.extraOrderLine ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                                                     <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor"
                                                           stroke-width="2" stroke-linecap="round"
                                                           stroke-linejoin="round"/>
                                                   </svg>
                                                 </span>
-                                                <span :class="selectedOrder.cancelData.extraOrderLine ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.extraOrderLine ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-primary-600" fill="currentColor"
                                                        viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
+                                                    <path
+                                                        d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
                                                   </svg>
                                                 </span>
                                               </span>
@@ -908,29 +957,34 @@
                                                            placeholder="Extra bestel regel prijs"
                                                            class="text-black w-full rounded-lg text-md">
                                                 </div>
-                                                <div @click="selectedOrder.cancelData.sendCustomerEmail = !selectedOrder.cancelData.sendCustomerEmail"
-                                                     class="cursor-pointer flex items-center gap-2">
+                                                <div
+                                                    @click="selectedOrder.cancelData.sendCustomerEmail = !selectedOrder.cancelData.sendCustomerEmail"
+                                                    class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
                                                             :class="selectedOrder.cancelData.sendCustomerEmail ? 'bg-primary-600' : 'bg-gray-200'"
                                                             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
-                                                <span :class="selectedOrder.cancelData.sendCustomerEmail ? 'translate-x-5' : 'translate-x-0'"
-                                                      class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
-                                                <span :class="selectedOrder.cancelData.sendCustomerEmail ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.sendCustomerEmail ? 'translate-x-5' : 'translate-x-0'"
+                                                    class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                                <span
+                                                    :class="selectedOrder.cancelData.sendCustomerEmail ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                                                     <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor"
                                                           stroke-width="2" stroke-linecap="round"
                                                           stroke-linejoin="round"/>
                                                   </svg>
                                                 </span>
-                                                <span :class="selectedOrder.cancelData.sendCustomerEmail ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.sendCustomerEmail ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-primary-600" fill="currentColor"
                                                        viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
+                                                    <path
+                                                        d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
                                                   </svg>
                                                 </span>
                                               </span>
@@ -938,58 +992,68 @@
                                                     <p>Moet de klant een mail krijgen van deze
                                                         annulering/retournering?</p>
                                                 </div>
-                                                <div @click="selectedOrder.cancelData.productsMustBeReturned = !selectedOrder.cancelData.productsMustBeReturned"
-                                                     class="cursor-pointer flex items-center gap-2">
+                                                <div
+                                                    @click="selectedOrder.cancelData.productsMustBeReturned = !selectedOrder.cancelData.productsMustBeReturned"
+                                                    class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
                                                             :class="selectedOrder.cancelData.productsMustBeReturned ? 'bg-primary-600' : 'bg-gray-200'"
                                                             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
-                                                <span :class="selectedOrder.cancelData.productsMustBeReturned ? 'translate-x-5' : 'translate-x-0'"
-                                                      class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
-                                                <span :class="selectedOrder.cancelData.productsMustBeReturned ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.productsMustBeReturned ? 'translate-x-5' : 'translate-x-0'"
+                                                    class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                                <span
+                                                    :class="selectedOrder.cancelData.productsMustBeReturned ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                                                     <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor"
                                                           stroke-width="2" stroke-linecap="round"
                                                           stroke-linejoin="round"/>
                                                   </svg>
                                                 </span>
-                                                <span :class="selectedOrder.cancelData.productsMustBeReturned ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.productsMustBeReturned ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-primary-600" fill="currentColor"
                                                        viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
+                                                    <path
+                                                        d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
                                                   </svg>
                                                 </span>
                                               </span>
                                                     </button>
                                                     <p>Moet de klant de producten nog retourneren?</p>
                                                 </div>
-                                                <div @click="selectedOrder.cancelData.restock = !selectedOrder.cancelData.restock"
-                                                     class="cursor-pointer flex items-center gap-2">
+                                                <div
+                                                    @click="selectedOrder.cancelData.restock = !selectedOrder.cancelData.restock"
+                                                    class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
                                                             :class="selectedOrder.cancelData.restock ? 'bg-primary-600' : 'bg-gray-200'"
                                                             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
-                                                <span :class="selectedOrder.cancelData.restock ? 'translate-x-5' : 'translate-x-0'"
-                                                      class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
-                                                <span :class="selectedOrder.cancelData.restock ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.restock ? 'translate-x-5' : 'translate-x-0'"
+                                                    class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                                <span
+                                                    :class="selectedOrder.cancelData.restock ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                                                     <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor"
                                                           stroke-width="2" stroke-linecap="round"
                                                           stroke-linejoin="round"/>
                                                   </svg>
                                                 </span>
-                                                <span :class="selectedOrder.cancelData.restock ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.restock ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-primary-600" fill="currentColor"
                                                        viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
+                                                    <path
+                                                        d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
                                                   </svg>
                                                 </span>
                                               </span>
@@ -1003,23 +1067,27 @@
                                                             :class="selectedOrder.cancelData.refundDiscountCosts ? 'bg-primary-600' : 'bg-gray-200'"
                                                             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
-                                                <span :class="selectedOrder.cancelData.refundDiscountCosts ? 'translate-x-5' : 'translate-x-0'"
-                                                      class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
-                                                <span :class="selectedOrder.cancelData.refundDiscountCosts ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.refundDiscountCosts ? 'translate-x-5' : 'translate-x-0'"
+                                                    class="pointer-events-none relative inline-block size-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                                                <span
+                                                    :class="selectedOrder.cancelData.refundDiscountCosts ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 12 12">
                                                     <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor"
                                                           stroke-width="2" stroke-linecap="round"
                                                           stroke-linejoin="round"/>
                                                   </svg>
                                                 </span>
-                                                <span :class="selectedOrder.cancelData.refundDiscountCosts ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
-                                                      class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
-                                                      aria-hidden="true">
+                                                <span
+                                                    :class="selectedOrder.cancelData.refundDiscountCosts ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out'"
+                                                    class="absolute inset-0 flex size-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out"
+                                                    aria-hidden="true">
                                                   <svg class="size-3 text-primary-600" fill="currentColor"
                                                        viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
+                                                    <path
+                                                        d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z"/>
                                                   </svg>
                                                 </span>
                                               </span>
@@ -1087,7 +1155,8 @@
                                             <path fill-rule="evenodd"
                                                   d="M1.5 9.832v1.793c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875V9.832a3 3 0 0 0-.722-1.952l-3.285-3.832A3 3 0 0 0 16.215 3h-8.43a3 3 0 0 0-2.278 1.048L2.222 7.88A3 3 0 0 0 1.5 9.832ZM7.785 4.5a1.5 1.5 0 0 0-1.139.524L3.881 8.25h3.165a3 3 0 0 1 2.496 1.336l.164.246a1.5 1.5 0 0 0 1.248.668h2.092a1.5 1.5 0 0 0 1.248-.668l.164-.246a3 3 0 0 1 2.496-1.336h3.165l-2.765-3.226a1.5 1.5 0 0 0-1.139-.524h-8.43Z"
                                                   clip-rule="evenodd"/>
-                                            <path d="M2.813 15c-.725 0-1.313.588-1.313 1.313V18a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-1.688c0-.724-.588-1.312-1.313-1.312h-4.233a3 3 0 0 0-2.496 1.336l-.164.246a1.5 1.5 0 0 1-1.248.668h-2.092a1.5 1.5 0 0 1-1.248-.668l-.164-.246A3 3 0 0 0 7.046 15H2.812Z"/>
+                                            <path
+                                                d="M2.813 15c-.725 0-1.313.588-1.313 1.313V18a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-1.688c0-.724-.588-1.312-1.313-1.312h-4.233a3 3 0 0 0-2.496 1.336l-.164.246a1.5 1.5 0 0 1-1.248.668h-2.092a1.5 1.5 0 0 1-1.248-.668l-.164-.246A3 3 0 0 0 7.046 15H2.812Z"/>
                                         </svg>
 
                                         <span x-html="selectedOrder.fulfillmenStatus"></span>
@@ -1325,8 +1394,9 @@
         firstPaymentMethod: null,
         pinTerminalIntervalId: null,
         shippingMethod: null,
-        shippingMethodId: null,
         shippingMethods: [],
+        shippingCosts: null,
+        shippingCostsUnformatted: null,
         postPay: null,
         orderUrl: null,
         totalQuantity() {
@@ -1335,6 +1405,7 @@
 
         customProductPopup: false,
         createDiscountPopup: false,
+        customerDataPopup: false,
         checkoutPopup: false,
         paymentPopup: false,
         ordersPopup: false,
@@ -1342,6 +1413,25 @@
         orderConfirmationPopup: false,
         chooseShippingMethodPopup: false,
         isFullscreen: false,
+
+        firstName: $wire.entangle('firstName'),
+        lastName: $wire.entangle('lastName'),
+        phoneNumber: $wire.entangle('phoneNumber'),
+        email: $wire.entangle('email'),
+        street: $wire.entangle('street'),
+        houseNr: $wire.entangle('houseNr'),
+        zipCode: $wire.entangle('zipCode'),
+        city: $wire.entangle('city'),
+        country: $wire.entangle('country'),
+        company: $wire.entangle('company'),
+        btwId: $wire.entangle('btwId'),
+        invoiceStreet: $wire.entangle('invoiceStreet'),
+        invoiceHouseNr: $wire.entangle('invoiceHouseNr'),
+        invoiceZipCode: $wire.entangle('invoiceZipCode'),
+        invoiceCity: $wire.entangle('invoiceCity'),
+        invoiceCountry: $wire.entangle('invoiceCountry'),
+        note: $wire.entangle('note'),
+        customFields: $wire.entangle('customFields'),
 
         hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
 
@@ -1410,6 +1500,25 @@
                 this.products = data.products;
                 this.lastOrder = data.lastOrder;
                 this.shippingMethods = data.shippingMethods;
+                this.shippingMethod = data.shippingMethod;
+                this.firstName = data.firstName;
+                this.lastName = data.lastName;
+                this.phoneNumber = data.phoneNumber;
+                this.email = data.email;
+                this.street = data.street;
+                this.houseNr = data.houseNr;
+                this.zipCode = data.zipCode;
+                this.city = data.city;
+                this.company = data.company;
+                this.country = data.country;
+                this.btwId = data.btwId;
+                this.invoiceStreet = data.invoiceStreet;
+                this.invoiceHouseNr = data.invoiceHouseNr;
+                this.invoiceZipCode = data.invoiceZipCode;
+                this.invoiceCity = data.invoiceCity;
+                this.invoiceCountry = data.invoiceCountry;
+                this.note = data.note;
+                this.customFields = data.customFields;
                 this.retrieveCart();
                 this.focus();
             } catch (error) {
@@ -1485,6 +1594,8 @@
                     this.subTotal = data.subTotal;
                     this.total = data.total;
                     this.totalUnformatted = data.totalUnformatted;
+                    this.shippingCosts = data.shippingCosts;
+                    this.shippingCostsUnformatted = data.shippingCostsUnformatted;
                     this.paymentMethods = data.paymentMethods;
                 }
 
@@ -1799,14 +1910,53 @@
                 }
 
                 this.shippingMethod = data.shippingMethod;
-                this.shippingMethodId = data.shippingMethod.id;
 
                 this.toggle('chooseShippingMethodPopup');
+                this.retrieveCart();
+                this.focus();
 
             } catch (error) {
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De verzendmethode kon niet worden geselecteerd'
+                })
+            }
+        },
+
+        async removeShippingMethod() {
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.remove-shipping-method') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        cartInstance: this.cartInstance,
+                        orderOrigin: this.orderOrigin,
+                        userId: this.userId,
+                    })
+                });
+
+                let data = await response.json();
+                this.focus();
+
+                if (!response.ok) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.shippingMethod = null;
+                this.retrieveCart();
+                this.focus();
+
+            } catch (error) {
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De verzendmethode kon niet worden verwijderd'
                 })
             }
         },
@@ -1856,6 +2006,43 @@
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De betaalmethode kon niet worden geselecteerd'
+                })
+            }
+        },
+
+        async saveCustomerData() {
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.update-customer-data') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        cartInstance: this.cartInstance,
+                        orderOrigin: this.orderOrigin,
+                        userId: this.userId,
+                    })
+                });
+
+                let data = await response.json();
+                this.focus();
+
+                if (!response.ok) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.toggle('customerDataPopup');
+                this.retrieveCart();
+
+            } catch (error) {
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De klant gegevens kon niet worden opgeslagen'
                 })
             }
         },
@@ -2095,6 +2282,23 @@
             this.orderUrl = null;
             this.postPay = false;
             this.orderConfirmationPopup = false;
+            this.firstName = null;
+            this.lastName = null;
+            this.email = null;
+            this.phoneNumber = null;
+            this.street = null;
+            this.houseNr = null;
+            this.zipCode = null;
+            this.city = null;
+            this.country = null;
+            this.company = null;
+            this.btwId = null;
+            this.invoiceStreet = null;
+            this.invoiceHouseNr = null;
+            this.invoiceZipCode = null;
+            this.invoiceCity = null;
+            this.invoiceCountry = null;
+            this.note = null;
             this.initialize();
         },
 
@@ -2307,6 +2511,11 @@
                 this.createDiscountPopup = false;
                 this.focus();
                 this.retrieveCart();
+            })
+
+            $wire.on('saveCustomerData', (variable) => {
+                this.focus();
+                this.saveCustomerData();
             })
 
             this.initialize();

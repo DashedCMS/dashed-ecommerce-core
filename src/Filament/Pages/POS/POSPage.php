@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -25,6 +26,24 @@ class POSPage extends Component implements HasForms
     public $searchQueryInputmode = false;
     public $cartInstance = 'handorder';
     public $orderOrigin = 'pos';
+    public $firstName = '';
+    public $lastName = '';
+    public $phoneNumber = '';
+    public $email = '';
+    public $street = '';
+    public $houseNr = '';
+    public $zipCode = '';
+    public $city = '';
+    public $country = '';
+    public $company = '';
+    public $btwId = '';
+    public $invoiceStreet = '';
+    public $invoiceHouseNr = '';
+    public $invoiceZipCode = '';
+    public $invoiceCity = '';
+    public $invoiceCountry = '';
+    public $note = '';
+    public $customFields = [];
 
     public ?array $customProductData = [
         'quantity' => 1,
@@ -32,6 +51,7 @@ class POSPage extends Component implements HasForms
     ];
     public ?array $createDiscountData = [];
     public ?array $cancelOrderData = [];
+    public ?array $customerData = [];
     public $cashPaymentAmount = null;
 
     protected $listeners = [
@@ -57,6 +77,7 @@ class POSPage extends Component implements HasForms
         return [
             'customProductForm',
             'createDiscountForm',
+            'customerDataForm',
         ];
     }
 
@@ -150,7 +171,7 @@ class POSPage extends Component implements HasForms
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -161,7 +182,7 @@ class POSPage extends Component implements HasForms
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'amount')
+                    ->visible(fn(Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -173,7 +194,7 @@ class POSPage extends Component implements HasForms
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'percentage')
+                    ->visible(fn(Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -189,7 +210,7 @@ class POSPage extends Component implements HasForms
                         return $options;
                     })
                     ->required()
-                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -199,7 +220,7 @@ class POSPage extends Component implements HasForms
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (! $posCart->products) {
+        if (!$posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -229,7 +250,7 @@ class POSPage extends Component implements HasForms
             $discountCode->save();
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -243,6 +264,121 @@ class POSPage extends Component implements HasForms
         $this->dispatch('discountCodeCreated', [
             'discountCode' => $discountCode->code,
         ]);
+    }
+
+    public function customerDataForm(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('firstName')
+                    ->label('Voornaam')
+                    ->maxLength(255),
+                TextInput::make('lastName')
+                    ->label('Achternaam')
+                    ->maxLength(255),
+                TextInput::make('email')
+                    ->label('Email')
+                    ->type('email')
+                    ->email()
+                    ->minLength(4)
+                    ->maxLength(255),
+                TextInput::make('phoneNumber')
+                    ->label('Telefoon nummer')
+                    ->maxLength(255),
+                TextInput::make('street')
+                    ->label('Straat')
+                    ->maxLength(255)
+                    ->lazy()
+                    ->reactive(),
+                TextInput::make('houseNr')
+                    ->label('Huisnummer')
+                    ->nullable()
+                    ->required(fn(Get $get) => $get('street'))
+                    ->maxLength(255),
+                TextInput::make('zipCode')
+                    ->label('Postcode')
+                    ->required(fn(Get $get) => $get('street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('city')
+                    ->label('Stad')
+                    ->required(fn(Get $get) => $get('street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('country')
+                    ->label('Land')
+                    ->required()
+                    ->nullable()
+                    ->maxLength(255)
+                    ->lazy()
+                    ->columnSpanFull(),
+                TextInput::make('company')
+                    ->label('Bedrijfsnaam')
+                    ->maxLength(255),
+                TextInput::make('btwId')
+                    ->label('BTW id')
+                    ->maxLength(255),
+                TextInput::make('invoiceStreet')
+                    ->label('Factuur straat')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->reactive(),
+                TextInput::make('invoiceHouseNr')
+                    ->label('Factuur huisnummer')
+                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('invoiceZipCode')
+                    ->label('Factuur postcode')
+                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('invoiceCity')
+                    ->label('Factuur stad')
+                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255),
+                TextInput::make('invoiceCountry')
+                    ->label('Factuur land')
+                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->maxLength(255)
+                    ->columnSpanFull(),
+                Textarea::make('note')
+                    ->label('Notitie')
+                    ->nullable()
+                    ->maxLength(5000)
+                    ->columnSpanFull(),
+            ])
+            ->columns(2);
+    }
+
+    public function submitCustomerDataForm()
+    {
+        $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
+
+        $this->customerDataForm->validate();
+
+        $posCart->first_name = $this->firstName;
+        $posCart->last_name = $this->lastName;
+        $posCart->phone_number = $this->phoneNumber;
+        $posCart->email = $this->email;
+        $posCart->street = $this->street;
+        $posCart->house_nr = $this->houseNr;
+        $posCart->zip_code = $this->zipCode;
+        $posCart->city = $this->city;
+        $posCart->country = $this->country;
+        $posCart->company = $this->company;
+        $posCart->btw_id = $this->btwId;
+        $posCart->invoice_street = $this->invoiceStreet;
+        $posCart->invoice_house_nr = $this->invoiceHouseNr;
+        $posCart->invoice_zip_code = $this->invoiceZipCode;
+        $posCart->invoice_city = $this->invoiceCity;
+        $posCart->invoice_country = $this->invoiceCountry;
+        $posCart->note = $this->note;
+        $posCart->save();
+
+        $this->dispatch('saveCustomerData');
     }
 
     public function render()

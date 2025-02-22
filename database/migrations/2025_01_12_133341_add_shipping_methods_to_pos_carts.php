@@ -22,6 +22,8 @@ return new class extends Migration {
                 ->nullable();
             $table->string('email')
                 ->nullable();
+            $table->string('phone_number')
+                ->nullable();
             $table->string('street')
                 ->nullable();
             $table->string('house_nr')
