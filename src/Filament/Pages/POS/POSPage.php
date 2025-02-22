@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -11,6 +10,7 @@ use Illuminate\Support\Str;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
@@ -171,7 +171,7 @@ class POSPage extends Component implements HasForms
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -182,7 +182,7 @@ class POSPage extends Component implements HasForms
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -194,7 +194,7 @@ class POSPage extends Component implements HasForms
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -210,7 +210,7 @@ class POSPage extends Component implements HasForms
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -220,7 +220,7 @@ class POSPage extends Component implements HasForms
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (!$posCart->products) {
+        if (! $posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -250,7 +250,7 @@ class POSPage extends Component implements HasForms
             $discountCode->save();
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -293,16 +293,16 @@ class POSPage extends Component implements HasForms
                 TextInput::make('houseNr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zipCode')
                     ->label('Postcode')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('country')
@@ -325,22 +325,22 @@ class POSPage extends Component implements HasForms
                     ->reactive(),
                 TextInput::make('invoiceHouseNr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceZipCode')
                     ->label('Factuur postcode')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceCity')
                     ->label('Factuur stad')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceCountry')
                     ->label('Factuur land')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255)
                     ->columnSpanFull(),
