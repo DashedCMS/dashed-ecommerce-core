@@ -839,7 +839,7 @@ class Product extends Model
 
         $price = 0;
 
-        $price += ($cartItem->model ? $cartItem->model->currentPrice : $cartItem->options['singlePrice']) * $quantity;
+        $price += ((!$cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false)) ? $cartItem->options['singlePrice'] : $cartItem->model->currentPrice) * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
             if (! str($productExtraOptionId)->contains('product-extra-')) {

@@ -197,14 +197,13 @@
                             :class="{'bg-orange-500/40 hover:bg-orange-500/70': chooseShippingMethodPopup}"
                             x-cloak x-show="!shippingMethod"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
-                                            <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round"
-        d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
-</svg>
-
-                                            </span>
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="size-6">
+                              <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                            </svg>
+                        </span>
                         <p>Verzendmethode toepassen</p>
                     </button>
                     <button @click="removeShippingMethod"
@@ -264,7 +263,7 @@
                             <div class="relative">
                                 <img :src="product.image" x-cloak x-show="product.image"
                                      class="object-cover rounded-lg w-20 h-20">
-                                <img x-cloak x-show="product.customProduct === true"
+                                <img x-cloak x-show="!product.image && product.customProduct === true"
                                      src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop"
                                      class="object-cover rounded-lg w-20 h-20">
                                 <span
@@ -294,8 +293,15 @@
                                         </svg>
                                     </button>
                                     <button
+                                        @click="openChangeProductPricePopup(product)"
+                                        class="ml-auto h-12 w-12 bg-orange-500 text-white hover:bg-orange-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                        </svg>
+                                    </button>
+                                    <button
                                         @click="changeQuantity(product.identifier, 0)"
-                                        class="ml-8 h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        class="h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -395,6 +401,35 @@
                         <button type="submit"
                                 class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                             Toevoegen
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div
+        x-show="changeProductPricePopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="toggle('changeProductPricePopup')"></div>
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative">
+            <div class="absolute top-2 right-2 text-black cursor-pointer"
+                 @click="toggle('changeProductPricePopup')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                     stroke="currentColor" class="size-10">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+            </div>
+            <p class="text-3xl font-bold">Product prijs aanpassen</p>
+            <form wire:submit.prevent="submitChangeProductForm">
+                <div class="grid gap-4">
+                    {{ $this->changeProductForm }}
+                    <div>
+                        <button type="submit"
+                                class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            Aanpassen
                         </button>
                     </div>
                 </div>
@@ -705,7 +740,7 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="toggle('customerDataPopup')"></div>
-        <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px] h-[95%] overflow-y-auto">
             <div class="bg-white rounded-lg p-8 grid gap-4">
                 <div class="absolute top-2 right-2 text-black cursor-pointer"
                      @click="toggle('customerDataPopup')">
@@ -1399,6 +1434,7 @@
         shippingCostsUnformatted: null,
         postPay: null,
         orderUrl: null,
+        productToChange: $wire.entangle('productToChange'),
         totalQuantity() {
             return this.products.reduce((sum, product) => sum + product.quantity, 0);
         },
@@ -1412,6 +1448,7 @@
         cancelOrderPopup: false,
         orderConfirmationPopup: false,
         chooseShippingMethodPopup: false,
+        changeProductPricePopup: false,
         isFullscreen: false,
 
         firstName: $wire.entangle('firstName'),
@@ -1873,13 +1910,17 @@
 
                 this.discountCode = null;
 
-                this.retrieveCart();
             } catch (error) {
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De korting kon niet worden verwijderd'
                 })
             }
+        },
+
+        async openChangeProductPricePopup(product) {
+            this.productToChange = product;
+            this.toggle('changeProductPricePopup');
         },
 
         async setShippingMethod(shippingMethodId) {
@@ -2516,6 +2557,12 @@
             $wire.on('saveCustomerData', (variable) => {
                 this.focus();
                 this.saveCustomerData();
+            })
+
+            $wire.on('productChanged', (variable) => {
+                this.focus();
+                this.toggle('changeProductPricePopup');
+                this.retrieveCart();
             })
 
             this.initialize();
