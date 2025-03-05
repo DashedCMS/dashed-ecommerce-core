@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -75,6 +76,20 @@ class ProductTabResource extends Resource
                                     $set('products', Product::all()->pluck('id')->toArray());
                                 }),
                             ),
+                        Select::make('productCategories')
+                            ->relationship('productCategories', 'name')
+                            ->label('Gekoppelde categorieen')
+                            ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->searchable()
+                            ->multiple()
+                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                            ->hintAction(
+                                Action::make('addAllCategories')
+                                    ->label('Voeg alle categorieen toe')
+                                    ->action(function (Set $set) {
+                                        $set('productCategories', ProductCategory::all()->pluck('id')->toArray());
+                                    }),
+                            )
                     ])),
             ], static::customBlocksTab('productTabBlocks')));
     }

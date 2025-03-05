@@ -19,4 +19,7 @@
             </option>
         @endforeach
     </select>
+    @if($extra->helper_text)
+        <p class="text-sm">{{ $extra->helper_text }}</p>
+    @endif
 </div>

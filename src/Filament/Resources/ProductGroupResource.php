@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -291,75 +292,7 @@ class ProductGroupResource extends Resource
                     ->relationship('productExtras')
                     ->columns(2)
                     ->cloneable()
-                    ->schema(array_merge([
-                        TextInput::make('name')
-                            ->label('Naam')
-                            ->required()
-                            ->maxLength(255),
-                        Select::make('type')
-                            ->label('Type')
-                            ->options([
-                                'single' => '1 optie',
-                                'multiple' => 'Meerdere opties',
-                                'checkbox' => 'Checkbox',
-                                'input' => 'Invulveld',
-                                'image' => 'Afbeelding kiezen',
-                                'file' => 'Upload bestand',
-                            ])
-                            ->default('single')
-                            ->required()
-                            ->reactive(),
-                        Select::make('input_type')
-                            ->label('Input type')
-                            ->options([
-                                'text' => 'Tekst',
-                                'numeric' => 'Getal',
-                                'date' => 'Datum',
-                                'dateTime' => 'Datum + tijd',
-                            ])
-                            ->default('text')
-                            ->visible(fn (Get $get) => $get('type') == 'input')
-                            ->required(fn (Get $get) => $get('type') == 'input'),
-                        TextInput::make('min_length')
-                            ->label('Minimale lengte/waarde')
-                            ->numeric()
-                            ->visible(fn (Get $get) => $get('type') == 'input')
-                            ->required(fn (Get $get) => $get('type') == 'input'),
-                        TextInput::make('max_length')
-                            ->label('Maximale lengte/waarde')
-                            ->numeric()
-                            ->visible(fn (Get $get) => $get('type') == 'input')
-                            ->required(fn (Get $get) => $get('type') == 'input')
-                            ->reactive(),
-                        Toggle::make('required')
-                            ->label('Verplicht'),
-                        Repeater::make('productExtraOptions')
-                            ->relationship('productExtraOptions')
-                            ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
-                            ->label('Opties van deze product extra')
-                            ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                            ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                            ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
-                            ->reactive()
-                            ->schema([
-                                TextInput::make('value')
-                                    ->label('Waarde')
-                                    ->required()
-                                    ->maxLength(255),
-                                TextInput::make('price')
-                                    ->required()
-                                    ->label('Meerprijs van deze optie')
-                                    ->prefix('€')
-                                    ->helperText('Voorbeeld: 10.25')
-                                    ->numeric()
-                                    ->minValue(0.00)
-                                    ->maxValue(10000),
-                                mediaHelper()->field('image', 'Afbeelding'),
-                                Toggle::make('calculate_only_1_quantity')
-                                    ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
-                            ])
-                            ->columnSpan(2),
-                    ], static::customBlocksTab('productExtraOptionBlocks'))),
+                    ->schema(array_merge(ProductExtra::getFilamentFields(), static::customBlocksTab('productExtraOptionBlocks'))),
             ])
             ->hidden(fn ($livewire) => $livewire instanceof CreateProductGroup)
             ->collapsible()

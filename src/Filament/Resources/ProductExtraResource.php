@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -52,91 +53,41 @@ class ProductExtraResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(array_merge([
-                TextInput::make('name')
-                    ->label('Naam')
-                    ->required()
-                    ->maxLength(255),
-                Select::make('type')
-                    ->label('Type')
-                    ->options([
-                        'single' => '1 optie',
-                        'multiple' => 'Meerdere opties',
-                        'checkbox' => 'Checkbox',
-                        'input' => 'Invulveld',
-                        'image' => 'Afbeelding kiezen',
-                        'file' => 'Upload bestand',
-                    ])
-                    ->default('single')
-                    ->required()
-                    ->reactive(),
-                Select::make('input_type')
-                    ->label('Input type')
-                    ->options([
-                        'text' => 'Tekst',
-                        'numeric' => 'Getal',
-                        'date' => 'Datum',
-                        'dateTime' => 'Datum + tijd',
-                    ])
-                    ->default('text')
-                    ->visible(fn (Get $get) => $get('type') == 'input')
-                    ->required(fn (Get $get) => $get('type') == 'input'),
-                TextInput::make('min_length')
-                    ->label('Minimale lengte/waarde')
-                    ->numeric()
-                    ->visible(fn (Get $get) => $get('type') == 'input')
-                    ->required(fn (Get $get) => $get('type') == 'input'),
-                TextInput::make('max_length')
-                    ->label('Maximale lengte/waarde')
-                    ->numeric()
-                    ->visible(fn (Get $get) => $get('type') == 'input')
-                    ->required(fn (Get $get) => $get('type') == 'input')
-                    ->reactive(),
-                Toggle::make('required')
-                    ->label('Verplicht'),
-                Repeater::make('productExtraOptions')
-                    ->relationship('productExtraOptions')
-                    ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
-                    ->label('Opties van deze product extra')
-                    ->reorderable()
-                    ->orderColumn('order')
-                    ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                    ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                    ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
-                    ->reactive()
-                    ->schema([
-                        TextInput::make('value')
-                            ->label('Waarde')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('price')
-                            ->required()
-                            ->label('Meerprijs van deze optie')
-                            ->prefix('€')
-                            ->helperText('Voorbeeld: 10.25')
-                            ->numeric()
-                            ->minValue(0.00)
-                            ->maxValue(10000),
-                        mediaHelper()->field('image', 'Afbeelding'),
-                        Toggle::make('calculate_only_1_quantity')
-                            ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
-                    ])
-                    ->columnSpan(2),
-                Select::make('products')
-                    ->relationship('products', 'name')
-                    ->label('Gekoppelde producten')
-                    ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                    ->searchable()
-                    ->multiple()
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
-                    ->hintAction(
-                        Action::make('addAllProducts')
-                            ->label('Voeg alle producten toe')
-                            ->action(function (Set $set) {
-                                $set('products', Product::all()->pluck('id')->toArray());
-                            }),
-                    ),
-            ], static::customBlocksTab('productExtraOptionBlocks')));
+            ->schema(array_merge(
+                ProductExtra::getFilamentFields(),
+                [
+
+                    Select::make('products')
+                        ->relationship('products', 'name')
+                        ->label('Gekoppelde producten')
+                        ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->searchable()
+                        ->multiple()
+                        ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                        ->hintAction(
+                            Action::make('addAllProducts')
+                                ->label('Voeg alle producten toe')
+                                ->action(function (Set $set) {
+                                    $set('products', Product::all()->pluck('id')->toArray());
+                                }),
+                        ),
+                    Select::make('productCategories')
+                        ->relationship('productCategories', 'name')
+                        ->label('Gekoppelde categorieen')
+                        ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->searchable()
+                        ->multiple()
+                        ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                        ->hintAction(
+                            Action::make('addAllCategories')
+                                ->label('Voeg alle categorieen toe')
+                                ->action(function (Set $set) {
+                                    $set('productCategories', ProductCategory::all()->pluck('id')->toArray());
+                                }),
+                        )
+                ],
+                static::customBlocksTab('productExtraOptionBlocks')
+            ));
     }
 
     public static function table(Table $table): Table

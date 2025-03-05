@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
@@ -221,5 +222,17 @@ class ProductCategory extends Model
                 }
             }
         }
+    }
+
+    public function globalProductExtras(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductExtra::class, 'dashed__product_extra_product_category', 'product_category_id', 'product_extra_id')
+            ->with(['productExtraOptions']);
+    }
+
+    public function globalTabs(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product_category', 'product_category_id', 'product_tab_id')
+            ->where('global', 1);
     }
 }

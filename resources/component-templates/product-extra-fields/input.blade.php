@@ -16,4 +16,7 @@
                name="product-extra-{{$extra->id}}"
                wire:model.live.debounce.500ms="extras.{{ $extraKey }}.value">
     </div>
+    @if($extra->helper_text)
+        <p class="text-sm">{{ $extra->helper_text }}</p>
+    @endif
 </div>

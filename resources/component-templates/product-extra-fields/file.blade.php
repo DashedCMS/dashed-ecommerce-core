@@ -11,4 +11,7 @@
                name="product-extra-{{$extra->id}}"
                wire:model.live="files.{{ $extra->id }}.value">
     </div>
+    @if($extra->helper_text)
+        <p class="text-sm">{{ $extra->helper_text }}</p>
+    @endif
 </div>
