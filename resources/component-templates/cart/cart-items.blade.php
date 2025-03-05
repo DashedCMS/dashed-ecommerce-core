@@ -32,9 +32,13 @@
                                 <div class="my-2 grid text-sm">
                                     @foreach($item->options['options'] as $option)
                                         @if($loop->first)
-                                            <p class="">{{$option['name'] . ': ' . strtolower($option['value'])}}</p>
+                                            <p class="">{{$option['name'] . (($option['price'] ?? null) > 0 ? ' ' . Translation::get('product-extra-for-price', 'cart', 'voor :price:', 'text', [
+    'price' => \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($option['price'])
+]) : '') . ': '}}{{$option['value']}}</p>
                                         @else
-                                            <p class="pt-2 mt-2 border-t border-gray-200">{{$option['name'] . ': ' . strtolower($option['value'])}}</p>
+                                            <p class="pt-2 mt-2 border-t border-gray-200">{{$option['name'] . (($option['price'] ?? null) > 0 ? ' ' . Translation::get('product-extra-for-price', 'cart', 'voor :price:', 'text', [
+    'price' => \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($option['price'])
+]) : '') . ': '}}{{$option['value']}}</p>
                                         @endif
                                     @endforeach
                                 </div>
