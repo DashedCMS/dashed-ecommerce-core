@@ -2,26 +2,26 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Filament\Actions\Action;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
+use Filament\Actions\Action;
 use Dashed\DashedCore\Models\User;
 use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Rawilk\Printing\Facades\Printing;
 use Dashed\DashedCore\Classes\Locales;
+use Filament\Forms\Components\Section;
 use FilamentTiptapEditor\TiptapEditor;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
-use Rawilk\Printing\Facades\Printing;
 
 class OrderSettingsPage extends Page
 {
@@ -96,7 +96,7 @@ class OrderSettingsPage extends Page
                         ->label('Printer connectie type'),
                     TextInput::make("invoice_printer_connector_descriptor")
                         ->label('Naam van de printer')
-                        ->required(fn(Get $get) => $get("receipt_printer_connector_type")),
+                        ->required(fn (Get $get) => $get("receipt_printer_connector_type")),
                 ])
                 ->columns(2),
         ];
@@ -153,11 +153,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
-                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" actie')
                     ->reactive()
@@ -167,11 +167,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail onderwerp')
-                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" actie')
                     ->reactive()
@@ -181,11 +181,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail onderwerp')
-                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" actie')
                     ->reactive()
@@ -195,11 +195,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail onderwerp')
-                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" actie')
                     ->reactive()
@@ -209,11 +209,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail onderwerp')
-                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
 
             $tabs[] = Tab::make($locale['id'])
@@ -244,7 +244,7 @@ class OrderSettingsPage extends Page
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -253,7 +253,7 @@ class OrderSettingsPage extends Page
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -301,6 +301,7 @@ class OrderSettingsPage extends Page
                 ->visible(Customsetting::get('invoice_printer_connector_type', null, false))
                 ->action(function () {
                     dd(Printing::printers());
+
                     try {
                         $printer = new ReceiptPrinter();
                         $printer->init(
