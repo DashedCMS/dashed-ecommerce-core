@@ -2,16 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Filament\Forms\Components\Actions\Action;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -108,18 +105,18 @@ class ProductExtra extends Model
                     'dateTime' => 'Datum + tijd',
                 ])
                 ->default('text')
-                ->visible(fn(Get $get) => $get('type') == 'input')
-                ->required(fn(Get $get) => $get('type') == 'input'),
+                ->visible(fn (Get $get) => $get('type') == 'input')
+                ->required(fn (Get $get) => $get('type') == 'input'),
             TextInput::make('min_length')
                 ->label('Minimale lengte/waarde')
                 ->numeric()
-                ->visible(fn(Get $get) => $get('type') == 'input')
-                ->required(fn(Get $get) => $get('type') == 'input'),
+                ->visible(fn (Get $get) => $get('type') == 'input')
+                ->required(fn (Get $get) => $get('type') == 'input'),
             TextInput::make('max_length')
                 ->label('Maximale lengte/waarde')
                 ->numeric()
-                ->visible(fn(Get $get) => $get('type') == 'input')
-                ->required(fn(Get $get) => $get('type') == 'input')
+                ->visible(fn (Get $get) => $get('type') == 'input')
+                ->required(fn (Get $get) => $get('type') == 'input')
                 ->reactive(),
             TextInput::make('helper_text')
                 ->label('Help tekst'),
@@ -135,13 +132,13 @@ class ProductExtra extends Model
                 ->columnSpanFull(),
             Repeater::make('productExtraOptions')
                 ->relationship('productExtraOptions')
-                ->cloneable(fn(Get $get) => $get('type') != 'checkbox')
+                ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
                 ->label('Opties van deze product extra')
                 ->reorderable()
                 ->orderColumn('order')
-                ->visible(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                ->required(fn(Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                ->maxItems(fn(Get $get) => $get('type') == 'checkbox' ? 1 : 50)
+                ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
                 ->reactive()
                 ->schema([
                     TextInput::make('value')

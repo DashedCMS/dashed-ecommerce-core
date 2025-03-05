@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -21,6 +20,7 @@ use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductTab;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\EditProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\ListProductTab;
@@ -79,17 +79,17 @@ class ProductTabResource extends Resource
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->label('Gekoppelde categorieen')
-                            ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->searchable()
                             ->multiple()
-                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->hintAction(
                                 Action::make('addAllCategories')
                                     ->label('Voeg alle categorieen toe')
                                     ->action(function (Set $set) {
                                         $set('productCategories', ProductCategory::all()->pluck('id')->toArray());
                                     }),
-                            )
+                            ),
                     ])),
             ], static::customBlocksTab('productTabBlocks')));
     }

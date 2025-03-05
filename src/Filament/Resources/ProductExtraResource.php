@@ -2,19 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Repeater;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Forms\Components\Actions\Action;
@@ -22,6 +17,7 @@ use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\EditProductExtra;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\ListProductExtra;
@@ -60,10 +56,10 @@ class ProductExtraResource extends Resource
                     Select::make('products')
                         ->relationship('products', 'name')
                         ->label('Gekoppelde producten')
-                        ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                         ->searchable()
                         ->multiple()
-                        ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                         ->hintAction(
                             Action::make('addAllProducts')
                                 ->label('Voeg alle producten toe')
@@ -74,17 +70,17 @@ class ProductExtraResource extends Resource
                     Select::make('productCategories')
                         ->relationship('productCategories', 'name')
                         ->label('Gekoppelde categorieen')
-                        ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                         ->searchable()
                         ->multiple()
-                        ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                         ->hintAction(
                             Action::make('addAllCategories')
                                 ->label('Voeg alle categorieen toe')
                                 ->action(function (Set $set) {
                                     $set('productCategories', ProductCategory::all()->pluck('id')->toArray());
                                 }),
-                        )
+                        ),
                 ],
                 static::customBlocksTab('productExtraOptionBlocks')
             ));

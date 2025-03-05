@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -32,6 +31,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;

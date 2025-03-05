@@ -670,7 +670,7 @@ class Product extends Model
         $productExtraIds = array_merge($productExtraIds, $this->productExtras->pluck('id')->toArray());
         $productExtraIds = array_merge($productExtraIds, $this->globalProductExtras->pluck('id')->toArray());
 
-        foreach($this->productCategories as $productCategory){
+        foreach ($this->productCategories as $productCategory) {
             $productExtraIds = array_merge($productExtraIds, $productCategory->globalProductExtras->pluck('id')->toArray());
         }
 
@@ -692,7 +692,7 @@ class Product extends Model
         $productTabIds = array_merge($productTabIds, $this->tabs->pluck('id')->toArray());
         $productTabIds = array_merge($productTabIds, $this->globalTabs->pluck('id')->toArray());
 
-        foreach($this->productCategories as $productCategory){
+        foreach ($this->productCategories as $productCategory) {
             $productTabIds = array_merge($productTabIds, $productCategory->globalTabs->pluck('id')->toArray());
         }
 
