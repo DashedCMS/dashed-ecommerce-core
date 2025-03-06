@@ -314,7 +314,8 @@ class OrderSettingsPage extends Page
 
                         $printJob = Printing::newPrintTask()
                             ->printer($printer->id())
-                            ->file(public_path('test.pdf'))
+                            ->content('Jasper is een sukkel')
+//                            ->file(public_path('test.pdf'))
                             ->send();
 
                         dd($printJob->id()); // the id number returned from the print server
