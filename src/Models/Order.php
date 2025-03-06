@@ -1228,7 +1228,7 @@ class Order extends Model
 
         $printerName = Customsetting::get('invoice_printer_connector_descriptor');
         if ($printerName) {
-            $response = Printing::print($printerName, $pdfPath);
+            Printing::print($printerName, $pdfPath);
         }
 
         $pdfPath = Storage::disk('public')->delete($pdfPath);
@@ -1247,7 +1247,7 @@ class Order extends Model
 
         $printerName = Customsetting::get('packing_slip_printer_connector_descriptor');
         if ($printerName) {
-            $response = Printing::print($printerName, $pdfPath);
+            Printing::print($printerName, $pdfPath);
         }
 
         $pdfPath = Storage::disk('public')->delete($pdfPath);

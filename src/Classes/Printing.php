@@ -6,7 +6,7 @@ use Filament\Notifications\Notification;
 
 class Printing
 {
-    public static function print(string $printerName, string $pdfPath): bool
+    public static function print(string $printerName, string $pdfPath): void
     {
         try {
             $output = [];
