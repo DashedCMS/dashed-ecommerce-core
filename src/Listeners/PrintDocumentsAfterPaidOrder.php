@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Listeners;
 
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Jobs\PrintDocumentsAfterPaidOrderJob;
 
 class PrintDocumentsAfterPaidOrder
 {
@@ -19,8 +20,6 @@ class PrintDocumentsAfterPaidOrder
      */
     public function handle(OrderMarkedAsPaidEvent $event): void
     {
-        $order = $event->order;
-        $order->printInvoice();
-        $order->printPackingSlip();
+        PrintDocumentsAfterPaidOrderJob::dispatch($event->order);
     }
 }
