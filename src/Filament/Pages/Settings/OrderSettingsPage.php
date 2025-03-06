@@ -303,27 +303,27 @@ class OrderSettingsPage extends Page
                     $printers = Printing::printers();
 
                     foreach ($printers as $printer) {
-//                        try {
-                            //                            $printer = new ReceiptPrinter();
-                            //                            $printer->init(
-                            //                                Customsetting::get('invoice_printer_connector_type'),
-                            //                                Customsetting::get('invoice_printer_connector_descriptor')
-                            //                            );
+                        //                        try {
+                        //                            $printer = new ReceiptPrinter();
+                        //                            $printer->init(
+                        //                                Customsetting::get('invoice_printer_connector_type'),
+                        //                                Customsetting::get('invoice_printer_connector_descriptor')
+                        //                            );
 
-                            $printJob = Printing::newPrintTask()
-                                ->printer($printer->id())
-                                ->file(public_path('test.pdf'))
-                                ->send();
+                        $printJob = Printing::newPrintTask()
+                            ->printer($printer->id())
+                            ->file(public_path('test.pdf'))
+                            ->send();
 
-                            dd($printJob->id()); // the id number returned from the print server
+                        dd($printJob->id()); // the id number returned from the print server
 
-//                        } catch (\Exception $e) {
-//                            Notification::make()
-//                                ->title('Er is een fout opgetreden')
-//                                ->body($e->getMessage())
-//                                ->danger()
-//                                ->send();
-//                        }
+                        //                        } catch (\Exception $e) {
+                        //                            Notification::make()
+                        //                                ->title('Er is een fout opgetreden')
+                        //                                ->body($e->getMessage())
+                        //                                ->danger()
+                        //                                ->send();
+                        //                        }
                     }
                 }),
         ];
