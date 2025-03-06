@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Filament\Notifications\Notification;
-use Illuminate\Support\Str;
 
 class Printing
 {
@@ -20,6 +19,7 @@ class Printing
                     ->body(implode("\n", $output))
                     ->danger()
                     ->send();
+
                 return;
             }
 
@@ -27,6 +27,7 @@ class Printing
                 ->title('Printen gelukt')
                 ->success()
                 ->send();
+
             return;
         } catch (\Exception $e) {
             Notification::make()
@@ -34,6 +35,7 @@ class Printing
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
+
             return;
         }
     }
