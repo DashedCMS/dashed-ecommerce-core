@@ -310,7 +310,7 @@ class OrderSettingsPage extends Page
                         //                                Customsetting::get('invoice_printer_connector_descriptor')
                         //                            );
 
-                        dump($printer->id());
+//                        dump($printer->id());
 
                         $printJob = Printing::newPrintTask()
                             ->printer($printer->id())
