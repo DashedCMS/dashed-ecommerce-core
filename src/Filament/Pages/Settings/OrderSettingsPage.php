@@ -302,6 +302,8 @@ class OrderSettingsPage extends Page
                 ->action(function () {
                     $printers = Printing::printers();
 
+                    dump($printers);
+
                     foreach ($printers as $printer) {
                         //                        try {
                         //                            $printer = new ReceiptPrinter();
@@ -310,7 +312,7 @@ class OrderSettingsPage extends Page
                         //                                Customsetting::get('invoice_printer_connector_descriptor')
                         //                            );
 
-                        //                        dump($printer->id());
+                                                dump($printer->id());
 
                         $printJob = Printing::newPrintTask()
                             ->printer($printer->id())
