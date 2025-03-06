@@ -985,11 +985,6 @@ class Order extends Model
         }
     }
 
-    public function invoicePath(): string
-    {
-        return '/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf';
-    }
-
     public function downloadInvoiceUrl(): ?string
     {
         if (Storage::disk('dashed')->exists($this->invoicePath())) {
