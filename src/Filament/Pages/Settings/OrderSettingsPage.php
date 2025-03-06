@@ -303,7 +303,7 @@ class OrderSettingsPage extends Page
                     $printers = Printing::printers();
 
                     foreach ($printers as $printer) {
-                        try {
+//                        try {
                             //                            $printer = new ReceiptPrinter();
                             //                            $printer->init(
                             //                                Customsetting::get('invoice_printer_connector_type'),
@@ -317,13 +317,13 @@ class OrderSettingsPage extends Page
 
                             dd($printJob->id()); // the id number returned from the print server
 
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->title('Er is een fout opgetreden')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
+//                        } catch (\Exception $e) {
+//                            Notification::make()
+//                                ->title('Er is een fout opgetreden')
+//                                ->body($e->getMessage())
+//                                ->danger()
+//                                ->send();
+//                        }
                     }
                 }),
         ];
