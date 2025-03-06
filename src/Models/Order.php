@@ -985,15 +985,20 @@ class Order extends Model
         }
     }
 
+    public function invoicePath(): string
+    {
+        return '/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf';
+    }
+
     public function downloadInvoiceUrl(): ?string
     {
-        if (Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
+        if (Storage::disk('dashed')->exists($this->invoicePath())) {
             return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
         }
 
         $this->createInvoice();
 
-        if (Storage::disk('dashed')->exists('/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
+        if (Storage::disk('dashed')->exists($this->invoicePath())) {
             return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
         }
 
