@@ -118,7 +118,7 @@ class OrderSettingsPage extends Page
                         ->label('Naam van de printer')
                         ->required(fn (Get $get) => $get("packing_slip_printer_connector_type"))
                         ->reactive()
-                        ->helperText('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
+                        ->helperText('Als je dit koppelt worden de pakbonnen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
                 ])
                 ->columns(2),
         ];
