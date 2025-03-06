@@ -47,8 +47,8 @@ class OrderSettingsPage extends Page
 
         $formData["order_index_show_other_statuses"] = Customsetting::get('order_index_show_other_statuses', null, true) ? true : false;
         $formData["order_index_show_order_products"] = Customsetting::get('order_index_show_order_products', null, false) ? true : false;
-        //        $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
-        //        $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
+        $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
+        $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
 
         foreach ($locales as $locale) {
             $formData["fulfillment_status_unhandled_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_unhandled_enabled', null, false, $locale['id']) ? true : false;
@@ -84,21 +84,22 @@ class OrderSettingsPage extends Page
                 ->label('Toon de extra statussen op het bestellingsoverzicht'),
             Toggle::make("order_index_show_order_products")
                 ->label('Toon de bestelde producten op het bestellingsoverzicht'),
-//            Section::make('Facturen printer')
-//                ->schema([
-//                    Select::make("invoice_printer_connector_type")
-//                        ->options([
-//                            'cups' => 'cups',
-//                            'network' => 'network',
-//                            'windows' => 'windows',
-//                        ])
-//                        ->reactive()
-//                        ->label('Printer connectie type'),
-//                    TextInput::make("invoice_printer_connector_descriptor")
-//                        ->label('Naam van de printer')
-//                        ->required(fn (Get $get) => $get("receipt_printer_connector_type")),
-//                ])
-//                ->columns(2),
+            Section::make('Facturen printer')
+                ->schema([
+                    Select::make("invoice_printer_connector_type")
+                        ->options([
+                            'cups' => 'cups',
+                            'network' => 'network',
+                            'windows' => 'windows',
+                        ])
+                        ->reactive()
+                        ->label('Printer connectie type'),
+                    TextInput::make("invoice_printer_connector_descriptor")
+                        ->label('Naam van de printer')
+                        ->required(fn(Get $get) => $get("receipt_printer_connector_type"))
+                        ->helperText('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
+                ])
+                ->columns(2),
         ];
 
         $tabGroups[] = Card::make()
@@ -153,11 +154,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" actie')
                     ->reactive()
@@ -167,11 +168,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" actie')
                     ->reactive()
@@ -181,11 +182,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" actie')
                     ->reactive()
@@ -195,11 +196,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" actie')
                     ->reactive()
@@ -209,11 +210,11 @@ class OrderSettingsPage extends Page
                     ]),
                 TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail onderwerp')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
                 TiptapEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
+                    ->hidden(fn($get) => !$get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
 
             $tabs[] = Tab::make($locale['id'])
@@ -244,7 +245,7 @@ class OrderSettingsPage extends Page
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -253,7 +254,7 @@ class OrderSettingsPage extends Page
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -282,8 +283,8 @@ class OrderSettingsPage extends Page
             Customsetting::set('fulfillment_status_handled_email_content', $this->form->getState()["fulfillment_status_handled_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
         }
 
-        //        Customsetting::set('invoice_printer_connector_type', $this->form->getState()["invoice_printer_connector_type"], $site['id']);
-        //        Customsetting::set('invoice_printer_connector_descriptor', $this->form->getState()["invoice_printer_connector_descriptor"], $site['id']);
+        Customsetting::set('invoice_printer_connector_type', $this->form->getState()["invoice_printer_connector_type"], $site['id']);
+        Customsetting::set('invoice_printer_connector_descriptor', $this->form->getState()["invoice_printer_connector_descriptor"], $site['id']);
 
         $this->form->fill($formState);
 
@@ -295,42 +296,42 @@ class OrderSettingsPage extends Page
 
     protected function getActions(): array
     {
-        //        return [
-        //            Action::make('testInvoicePrinter')
-        //                ->label('Test factuur printer')
-        //                ->visible(Customsetting::get('invoice_printer_connector_type', null, false))
-        //                ->action(function () {
-        //                    $printers = Printing::printers();
-        //
-        //                    dump($printers);
-        //
-        //                    foreach ($printers as $printer) {
-        //                        //                        try {
-        //                        //                            $printer = new ReceiptPrinter();
-        //                        //                            $printer->init(
-        //                        //                                Customsetting::get('invoice_printer_connector_type'),
-        //                        //                                Customsetting::get('invoice_printer_connector_descriptor')
-        //                        //                            );
-        //
-        //                        dump($printer->id());
-        //
-        //                        $printJob = Printing::newPrintTask()
-        //                            ->printer($printer->id())
-        //                            ->content('Jasper is een sukkel')
-        ////                            ->file(public_path('test.pdf'))
-        //                            ->send();
-        //
-        //                        dd($printJob->id()); // the id number returned from the print server
-        //
-        //                        //                        } catch (\Exception $e) {
-        //                        //                            Notification::make()
-        //                        //                                ->title('Er is een fout opgetreden')
-        //                        //                                ->body($e->getMessage())
-        //                        //                                ->danger()
-        //                        //                                ->send();
-        //                        //                        }
-        //                    }
-        //                }),
-        //        ];
+        return [
+            Action::make('testInvoicePrinter')
+                ->label('Test factuur printer')
+                ->visible(Customsetting::get('invoice_printer_connector_type', null, false))
+                ->action(function () {
+                    $printers = Printing::printers();
+
+                    dump($printers);
+
+                    foreach ($printers as $printer) {
+                        //                        try {
+                        //                            $printer = new ReceiptPrinter();
+                        //                            $printer->init(
+                        //                                Customsetting::get('invoice_printer_connector_type'),
+                        //                                Customsetting::get('invoice_printer_connector_descriptor')
+                        //                            );
+
+                        dump($printer->id());
+
+                        $printJob = Printing::newPrintTask()
+                            ->printer($printer->id())
+                            ->content('Jasper is een sukkel')
+//                            ->file(public_path('test.pdf'))
+                            ->send();
+
+                        dd($printJob->id()); // the id number returned from the print server
+
+                        //                        } catch (\Exception $e) {
+                        //                            Notification::make()
+                        //                                ->title('Er is een fout opgetreden')
+                        //                                ->body($e->getMessage())
+                        //                                ->danger()
+                        //                                ->send();
+                        //                        }
+                    }
+                }),
+        ];
     }
 }
