@@ -312,8 +312,7 @@ class OrderSettingsPage extends Page
 
                         //                        dump($printer->id());
 
-                        $printJob = Printing::driver('cups')
-                            ->newPrintTask()
+                        $printJob = Printing::newPrintTask()
                             ->printer($printer->id())
                             ->content('Jasper is een sukkel')
 //                            ->file(public_path('test.pdf'))
