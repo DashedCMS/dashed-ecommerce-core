@@ -1,18 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        foreach(\Dashed\DashedEcommerceCore\Models\Order::withTrashed()->get() as $order){
-            if($order->total < 0 && $order->discount > 0){
+        foreach (\Dashed\DashedEcommerceCore\Models\Order::withTrashed()->get() as $order) {
+            if ($order->total < 0 && $order->discount > 0) {
                 $order->discount = $order->discount * -1;
                 $order->save();
             }

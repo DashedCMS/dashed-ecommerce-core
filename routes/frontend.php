@@ -1,21 +1,19 @@
 <?php
 
-use Dashed\DashedCore\Middleware\AdminMiddleware;
-use Dashed\DashedCore\Middleware\AuthMiddleware;
-use Dashed\DashedCore\Middleware\FrontendMiddleware;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
-use Dashed\DashedEcommerceCore\Middleware\HandleInertiaRequests;
-use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\Route;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Middleware\AuthMiddleware;
+use Dashed\DashedCore\Middleware\AdminMiddleware;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Middleware\FrontendMiddleware;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
-use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
-use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\LaravelLocalization\Middleware\LocaleSessionRedirect;
-use Inertia\Inertia;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
+use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
+use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
@@ -30,22 +28,22 @@ Route::group(
 //        'middleware' => ['web', FrontendMiddleware::class, LocaleSessionRedirect::class, LaravelLocalizationRedirectFilter::class, LaravelLocalizationViewPath::class],
     ],
     function () {
-//        if (Customsetting::get('checkout_account') != 'disabled') {
-//            Route::group([
-//                'middleware' => [AuthMiddleware::class],
-//            ], function () {
-                //Account routes
-//                Route::prefix('/' . Translation::get('account-slug', 'slug', 'account'))->group(function () {
-//                    Route::get('/' . Translation::get('account-orders-slug', 'slug', 'orders'), [AccountController::class, 'orders'])->name('dashed.frontend.account.orders');
-//                });
-//            });
-//        }
+        //        if (Customsetting::get('checkout_account') != 'disabled') {
+        //            Route::group([
+        //                'middleware' => [AuthMiddleware::class],
+        //            ], function () {
+        //Account routes
+        //                Route::prefix('/' . Translation::get('account-slug', 'slug', 'account'))->group(function () {
+        //                    Route::get('/' . Translation::get('account-orders-slug', 'slug', 'orders'), [AccountController::class, 'orders'])->name('dashed.frontend.account.orders');
+        //                });
+        //            });
+        //        }
 
         //Cart routes
-//        Route::get('/' . Translation::get('cart-slug', 'slug', 'cart'), [CartController::class, 'cart'])->name('dashed.frontend.cart');
-//        Route::get('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [CartController::class, 'checkout'])->name('dashed.frontend.checkout');
-//        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [TransactionController::class, 'startTransaction'])->name('dashed.frontend.start-transaction');
-//        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [TransactionController::class, 'complete'])->name('dashed.frontend.checkout.complete');
+        //        Route::get('/' . Translation::get('cart-slug', 'slug', 'cart'), [CartController::class, 'cart'])->name('dashed.frontend.cart');
+        //        Route::get('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [CartController::class, 'checkout'])->name('dashed.frontend.checkout');
+        //        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [TransactionController::class, 'startTransaction'])->name('dashed.frontend.start-transaction');
+        //        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [TransactionController::class, 'complete'])->name('dashed.frontend.checkout.complete');
         Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->name('dashed.frontend.download-invoice');
         Route::get('/download-packing-slip/{orderHash}', [CartController::class, 'downloadPackingSlip'])->name('dashed.frontend.download-packing-slip');
         Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->name('dashed.frontend.cart.apply-discount-code');

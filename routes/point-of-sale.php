@@ -1,21 +1,7 @@
 <?php
 
-use Dashed\DashedCore\Middleware\AdminMiddleware;
-use Dashed\DashedCore\Middleware\AuthMiddleware;
-use Dashed\DashedCore\Middleware\FrontendMiddleware;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
-use Dashed\DashedEcommerceCore\Middleware\HandleInertiaRequests;
-use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\Route;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
-use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
-use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
-use Dashed\LaravelLocalization\Middleware\LocaleSessionRedirect;
-use Inertia\Inertia;
+use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 Route::group(
     [
