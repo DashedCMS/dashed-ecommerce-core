@@ -524,7 +524,7 @@
                                                                 <td class="product-img" width="40%" align="center"
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; vertical-align: top; line-height: 1; padding: 15px 0 20px 0; border-bottom: 1px dashed #D8D8D8; font-size: 14px;"
                                                                     valign="top"><a
-                                                                        href="{{$orderProduct->product ? $orderProduct->product->getUrl() : '#'}}"
+                                                                        href="{{$orderProduct->product ? url($orderProduct->product->getUrl()) : '#'}}"
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
                                                                         @if(optional($orderProduct->product)->firstImage)
                                                                             <img
@@ -537,7 +537,7 @@
                                                                     valign="top">
                                                                     <div class="product-info"
                                                                          style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; width: 100%; min-height: 80px; margin-bottom: 20px;">
-                                                                        <a href="{{$orderProduct->product ? $orderProduct->product->getUrl() : '#'}}"
+                                                                        <a href="{{$orderProduct->product ? url($orderProduct->product->getUrl()) : '#'}}"
                                                                            style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; display: block; color: #333; font-weight: bold; line-height: 20px; text-decoration: none;">
                                                                             {{ $orderProduct->name }} </a>
                                                                         @if($orderProduct->product_extras)

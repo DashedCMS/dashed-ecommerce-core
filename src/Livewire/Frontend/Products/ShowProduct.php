@@ -37,6 +37,7 @@ class ShowProduct extends Component
             $metaImage = $metaModel->firstImage;
         }
         if ($metaImage) {
+            dd($metaImage);
             seo()->metaData('metaImage', $metaImage);
         }
 
