@@ -208,18 +208,21 @@ return new class () extends Migration {
             });
         } catch (\Exception $e) {
         }
+
         try {
             Schema::table('dashed__products', function (Blueprint $table) {
                 $table->dropForeign('qcommerce__products_parent_product_id_foreign');
             });
         } catch (\Exception $e) {
         }
+
         try {
             Schema::table('dashed__products', function (Blueprint $table) {
                 $table->dropForeign('dashed__products_parent_id_foreign');
             });
         } catch (\Exception $e) {
         }
+
         try {
             Schema::table('dashed__products', function (Blueprint $table) {
                 $table->dropForeign('dashed__products_parent_product_id_foreign');
@@ -239,19 +242,19 @@ return new class () extends Migration {
             $table->dropColumn('use_parent_stock');
         });
 
-        try{
+        try {
             Schema::table('dashed__products', function (Blueprint $table) {
                 $table->dropColumn('efulfillment_shop_id');
             });
-        }catch (Exception $e) {
+        } catch (Exception $e) {
 
         }
 
-        try{
+        try {
             Schema::table('dashed__products', function (Blueprint $table) {
                 $table->dropColumn('efulfillment_shop_error');
             });
-        }catch (Exception $e) {
+        } catch (Exception $e) {
 
         }
 
@@ -261,6 +264,7 @@ return new class () extends Migration {
             });
         } catch (\Exception $e) {
         }
+
         try {
             Schema::table('dashed__product_enabled_filter_options', function (Blueprint $table) {
                 $table->dropForeign('dashed__product_enabled_filter_options_product_id_foreign');

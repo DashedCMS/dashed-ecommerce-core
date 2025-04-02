@@ -1,10 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class () extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +11,7 @@ return new class extends Migration {
         foreach (\Dashed\DashedEcommerceCore\Models\Order::withTrashed()->get() as $order) {
             if (count($order->vat_percentages) < 2) {
                 $order->vat_percentages = [
-                    21 => $order->btw
+                    21 => $order->btw,
                 ];
                 $order->save();
             }
