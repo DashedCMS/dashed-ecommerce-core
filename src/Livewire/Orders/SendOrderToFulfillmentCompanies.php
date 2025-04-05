@@ -25,7 +25,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
     use InteractsWithActions;
 
     public Order $order;
-    public Collection $orderProducts;
+    public Collection $orderProductsToSent;
     public bool $isPos = false;
     public ?string $buttonText = '';
     public ?string $buttonClass = '';
@@ -53,6 +53,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
             }
         }
         $this->orderProducts = $orderProducts;
+        $this->order->refresh(); //Otherwise orderProducts is empty for other livewire components, idk why
     }
 
     public function action(): Action
@@ -111,10 +112,10 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
                         array_merge(
                             $this->getOrderProductSchema($fulfillmentCompany),
                             [
-                                    Toggle::make('sendProductsToCustomer_' . $fulfillmentCompany->id)
-                                        ->label('Verstuur producten naar de klant'),
-                                    mediaHelper()->field('files_' . $fulfillmentCompany->id, 'Bijlagen', multiple: true, defaultFolder: 'orders/' . $this->order->invoice_id),
-                                ]
+                                Toggle::make('sendProductsToCustomer_' . $fulfillmentCompany->id)
+                                    ->label('Verstuur producten naar de klant'),
+                                mediaHelper()->field('files_' . $fulfillmentCompany->id, 'Bijlagen', multiple: true, defaultFolder: 'orders/' . $this->order->invoice_id),
+                            ]
                         )
                     )
                     ->columns(['default' => 1, 'lg' => 2])
