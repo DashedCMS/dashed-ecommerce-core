@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
+use Illuminate\Database\Eloquent\Model;
 
 class EditProductGroup extends EditRecord
 {
@@ -32,10 +33,10 @@ class EditProductGroup extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
+            if (!$thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
+                if (!$images) {
+                    if (!is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -46,7 +47,8 @@ class EditProductGroup extends EditRecord
         parent::mount($record);
     }
 
-    protected function mutateFormDataBeforeSave(array $data): array
+
+    protected function handleRecordUpdate(Model $record, array $data): Model
     {
         $data['site_ids'] = $data['site_ids'] ?? [Sites::getFirstSite()['id']];
 
@@ -82,7 +84,7 @@ class EditProductGroup extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
+                if (!$thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_group_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
@@ -108,7 +110,9 @@ class EditProductGroup extends EditRecord
         unset($data['productCharacteristics']);
         unset($data['productExtras']);
 
-        return $data;
+        $record->update($data);
+
+        return $record;
     }
 
     public function mutateFormDataBeforeFill($data): array
