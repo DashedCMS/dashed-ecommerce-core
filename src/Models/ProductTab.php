@@ -45,4 +45,9 @@ class ProductTab extends Model
     {
         return $this->belongsToMany(Product::class, 'dashed__product_tab_product', 'tab_id', 'product_id');
     }
+
+    public function productCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductCategory::class, 'dashed__product_tab_product_category', 'product_tab_id', 'product_category_id');
+    }
 }

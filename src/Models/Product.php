@@ -324,17 +324,17 @@ class Product extends Model
 
         return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . ($forceOwnUrl ? 'yes' : 'no'), 60 * 5, function () use ($locale, $forceOwnUrl) {
             if ($this->productGroup->only_show_parent_product && ! $forceOwnUrl) {
-                return $this->productGroup->getUrl();
+                return $this->productGroup->getUrl($locale);
             } else {
                 $overviewPage = Product::getOverviewPage();
                 if (! $overviewPage) {
                     return 'link-product-overview-page';
                 }
-                $url = $overviewPage->getUrl() . '/' . $this->slug;
+                $url = $overviewPage->getUrl($locale) . '/' . $this->slug;
             }
 
             if ($locale != config('app.locale')) {
-                $url = app()->getLocale() . '/' . $url;
+                $url = $locale . '/' . $url;
             }
 
             return LaravelLocalization::localizeUrl($url);

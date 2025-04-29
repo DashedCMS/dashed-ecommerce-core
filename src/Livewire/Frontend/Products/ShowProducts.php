@@ -17,7 +17,7 @@ class ShowProducts extends Component
 
     private $products = null;
     private $allProducts = null;
-    private $filters = null;
+    private $filters = [];
     public ?ProductCategory $productCategory = null;
     public ?string $pagination = null;
     public ?string $orderBy = null;
