@@ -2,7 +2,9 @@
     @foreach($extra->productExtraOptions as $option)
         <label for="product-extra-{{$option->id}}"
                class="block text-md font-bold text-gray-700">
-            {{$extra->name}}{{$extra->required ? '*' : ''}}:
+            {{$extra->name}}{{$extra->required ? '*' : ''}} @if($extra->price > 0)
+                (+ {{CurrencyHelper::formatPrice($extra->price)}})
+            @endif:
         </label>
         <div class="relative flex items-start">
             <div class="flex h-6 items-center">

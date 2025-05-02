@@ -405,6 +405,18 @@ class ProductGroup extends Model
         return false;
     }
 
+    public function stock()
+    {
+        $stock = 0;
+
+        foreach($this->products as $product) {
+            $stock += $product->total_stock;
+            $stock -= $product->reservedStock();
+        }
+
+        return $stock;
+    }
+
     public function hasDirectSellableStock(): bool
     {
         foreach ($this->products as $product) {
