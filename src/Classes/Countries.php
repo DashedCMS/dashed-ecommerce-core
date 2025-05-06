@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Illuminate\Support\Str;
 
 class Countries
@@ -42,5 +43,19 @@ class Countries
     public static function getCountries()
     {
         return json_decode(file_get_contents(__DIR__ . '/countries.json'), true);
+    }
+
+    public static function getAllSelectedCountryCodes(): array
+    {
+        $countryCodes = [];
+
+        foreach(ShippingZones::getActiveRegions() as $region) {
+            $countryCode = self::getCountryIsoCode($region['value']);
+            if($countryCode && !in_array($countryCode, $countryCodes)) {
+                $countryCodes[] = $countryCode;
+            }
+        }
+
+        return $countryCodes;
     }
 }
