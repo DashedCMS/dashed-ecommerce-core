@@ -26,18 +26,85 @@
         <meta itemprop="priceValidUntil" content="{{now()->addYear()}}">
 
         <div itemprop="hasMerchantReturnPolicy" itemscope itemtype="http://schema.org/MerchantReturnPolicy">
-            <meta itemprop="returnPolicyCategory" content="http://schema.org/Refundable">
+            <meta itemprop="returnPolicyCategory" content="http://schema.org/Returnable">
             <meta itemprop="merchantReturnDays" content="30">
             <meta itemprop="returnPolicySeasonalOverride" content="false">
             <meta itemprop="returnMethod" content="http://schema.org/ReturnByMail">
             <meta itemprop="returnFees" content="http://schema.org/FreeReturn">
+            @foreach(\Dashed\DashedEcommerceCore\Classes\Countries::getAllSelectedCountryCodes() as $countryCode)
+            <div itemprop="applicableCountry" itemscope itemtype="http://schema.org/Country">
+                <meta itemprop="name" content="{{ $countryCode }}">
+            </div>
+            @endforeach
         </div>
 
         @foreach(\Dashed\DashedEcommerceCore\Classes\Countries::getAllSelectedCountryCodes() as $countryCode)
+                <div itemprop="shippingDetails" itemscope itemtype="http://schema.org/OfferShippingDetails">
+                    <div itemprop="shippingDestination" itemscope itemtype="http://schema.org/DefinedRegion">
+                        <meta itemprop="addressCountry" content="NL">
+                    </div>
+                    <div itemprop="deliveryTime" itemscope itemtype="http://schema.org/ShippingDeliveryTime">
+                        <div itemprop="handlingTime" itemscope itemtype="http://schema.org/QuantitativeValue">
+                            <meta itemprop="minValue" content="0">
+                            <meta itemprop="maxValue" content="0">
+                            <meta itemprop="unitCode" content="d"> {{-- d = dagen --}}
+                        </div>
+                        <div itemprop="transitTime" itemscope itemtype="http://schema.org/QuantitativeValue">
+                            <meta itemprop="minValue" content="1">
+                            <meta itemprop="maxValue" content="1">
+                            <meta itemprop="unitCode" content="d">
+                        </div>
+                    </div>
+                    <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
+
+                    <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">
+                        <meta itemprop="minPrice" content="99.01">
+                        <meta itemprop="priceCurrency" content="EUR">
+                    </div>
+                    <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
+                        <meta itemprop="value" content="0.00">
+                        <meta itemprop="currency" content="EUR">
+                    </div>
+                </div>
+
+                <div itemprop="shippingDetails" itemscope itemtype="http://schema.org/OfferShippingDetails">
+                    <div itemprop="shippingDestination" itemscope itemtype="http://schema.org/DefinedRegion">
+                        <meta itemprop="addressCountry" content="NL">
+                    </div>
+                    <div itemprop="deliveryTime" itemscope itemtype="http://schema.org/ShippingDeliveryTime">
+                        <div itemprop="handlingTime" itemscope itemtype="http://schema.org/QuantitativeValue">
+                            <meta itemprop="minValue" content="0">
+                            <meta itemprop="maxValue" content="0">
+                            <meta itemprop="unitCode" content="d"> {{-- d = dagen --}}
+                        </div>
+                        <div itemprop="transitTime" itemscope itemtype="http://schema.org/QuantitativeValue">
+                            <meta itemprop="minValue" content="1">
+                            <meta itemprop="maxValue" content="1">
+                            <meta itemprop="unitCode" content="d">
+                        </div>
+                    </div>
+                    <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
+
+                    <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">
+                        <meta itemprop="maxPrice" content="99.00">
+                        <meta itemprop="priceCurrency" content="EUR">
+                    </div>
+                    <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
+                        <meta itemprop="value" content="{{ Translation::get('max-shipping-price-for-' . $countryCode, 'shipping', '4.95') }}">
+                        <meta itemprop="currency" content="EUR">
+                    </div>
+                </div>
+
             <div itemprop="shippingDetails" itemscope itemtype="http://schema.org/OfferShippingDetails">
-                <meta itemprop="shippingDestination" content="{{ $countryCode }}">
+                <div itemprop="shippingDestination" itemscope itemtype="http://schema.org/DefinedRegion">
+                    <meta itemprop="addressCountry" content="{{ $countryCode }}">
+                </div>
                 <meta itemprop="deliveryTime" content="P1D">
-                <meta itemprop="shippingRate" content="0.00">
+                <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
+                    <meta itemprop="value" content="0.00">
+                    <meta itemprop="maxValue" content="{{ Translation::get('max-shipping-price-for-' . $countryCode, 'shipping', '4.95') }}">
+                    <meta itemprop="currency" content="EUR">
+                </div>
                 <meta itemprop="shippingRateCurrency" content="EUR">
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
             </div>
