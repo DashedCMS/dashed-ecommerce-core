@@ -3,6 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
@@ -58,12 +60,18 @@ class DiscountCodeResource extends Resource
                 Section::make('Content')
                     ->schema(
                         array_merge([
+                            Toggle::make('is_global_discount')
+                                ->label('Is globale korting')
+                                ->helperText('Als deze optie is aangevinkt, wordt de kortingscode automatisch toegepast en is er geen code nodig.')
+                                ->reactive()
+                                ->columnSpanFull()
+                                ->hidden(fn($livewire) => !$livewire instanceof CreateDiscountCode),
                             Select::make('site_ids')
                                 ->multiple()
                                 ->label('Actief op sites')
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
-                                    return ! (Sites::getAmountOfSites() > 1);
+                                    return !(Sites::getAmountOfSites() > 1);
                                 })
                                 ->required(),
                             TextInput::make('name')
@@ -74,20 +82,21 @@ class DiscountCodeResource extends Resource
                                 ->label('Code')
                                 ->helperText('Deze code vullen mensen in om af te rekenen.')
                                 ->required()
-                                ->unique('dashed__discount_codes', 'code', fn ($record) => $record)
+                                ->unique('dashed__discount_codes', 'code', fn($record) => $record)
+                                ->hidden(fn(Get $get) => $get('is_global_discount'))
                                 ->minLength(3)
                                 ->maxLength(100),
                             Toggle::make('create_multiple_codes')
                                 ->label('Meerdere codes aanmaken')
                                 ->reactive()
-                                ->hidden(fn ($livewire) => ! $livewire instanceof CreateDiscountCode),
+                                ->hidden(fn($livewire, Get $get) => !$livewire instanceof CreateDiscountCode || $get('is_global_discount')),
                             TextInput::make('amount_of_codes')
                                 ->label('Hoeveel kortingscodes moeten er aangemaakt worden')
                                 ->helperText('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
                                 ->type('number')
                                 ->required()
                                 ->maxValue(500)
-                                ->hidden(fn ($get) => ! $get('create_multiple_codes')),
+                                ->hidden(fn(Get $get) => !$get('create_multiple_codes') || $get('is_global_discount')),
                             Textarea::make('note')
                                 ->label('Notitie')
                                 ->helperText('Notitie voor intern gebruik')
@@ -106,7 +115,7 @@ class DiscountCodeResource extends Resource
                             ->label('Vul een einddatum in voor de kortingscode')
                             ->nullable()
                             ->date()
-                            ->after(fn ($get) => $get('start_date') ? 'start_date' : null),
+                            ->after(fn($get) => $get('start_date') ? 'start_date' : null),
                     ]),
                 Section::make('Informatie')
                     ->schema(array_merge([
@@ -125,7 +134,7 @@ class DiscountCodeResource extends Resource
                             ->minValue(1)
                             ->maxValue(100)
                             ->required()
-                            ->hidden(fn ($get) => $get('type') != 'percentage'),
+                            ->hidden(fn($get) => $get('type') != 'percentage'),
                         TextInput::make('discount_amount')
                             ->label('Kortingswaarde')
                             ->helperText('Hoeveel euro korting krijg je met deze code')
@@ -134,7 +143,7 @@ class DiscountCodeResource extends Resource
                             ->maxValue(100000)
                             ->numeric()
                             ->required()
-                            ->hidden(fn ($get) => $get('type') != 'amount'),
+                            ->hidden(fn($get) => $get('type') != 'amount'),
                         Radio::make('valid_for')
                             ->label('Van toepassing op')
                             ->reactive()
@@ -146,19 +155,19 @@ class DiscountCodeResource extends Resource
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                            ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                             ->label('Selecteer producten waar deze kortingscode voor geldt')
                             ->required()
-                            ->hidden(fn ($get) => $get('valid_for') != 'products'),
+                            ->hidden(fn($get) => $get('valid_for') != 'products'),
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                            ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                             ->label('Selecteer categorieën waar deze kortingscode voor geldt')
-                            ->required(fn ($get) => $get('valid_for') == 'categories')
-                            ->hidden(fn ($get) => $get('valid_for') != 'categories'),
+                            ->required(fn($get) => $get('valid_for') == 'categories')
+                            ->hidden(fn($get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
                             ->label('Minimale eisen')
                             ->reactive()
@@ -174,7 +183,7 @@ class DiscountCodeResource extends Resource
                             ->maxValue(100000)
                             ->numeric()
                             ->required()
-                            ->hidden(fn ($get) => $get('minimal_requirements') != 'products'),
+                            ->hidden(fn($get) => $get('minimal_requirements') != 'products'),
                         TextInput::make('minimum_amount')
                             ->label('Minimum aankoopbedrag')
                             ->prefix('€')
@@ -182,17 +191,19 @@ class DiscountCodeResource extends Resource
                             ->maxValue(100000)
                             ->required()
                             ->numeric()
-                            ->hidden(fn ($get) => $get('minimal_requirements') != 'amount'),
+                            ->hidden(fn(Get $get) => $get('minimal_requirements') != 'amount'),
                         Toggle::make('use_stock')
                             ->label('Een limiet instellen voor het aantal gebruiken van deze kortingscode')
+                            ->hidden(fn(Get $get) => $get('is_global_discount'))
                             ->reactive(),
                         TextInput::make('stock')
                             ->label('Hoe vaak mag de kortingscode nog gebruikt worden')
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100000)
-                            ->visible(fn ($get) => $get('use_stock')),
+                            ->visible(fn(Get $get) => $get('use_stock') && !$get('is_global_discount')),
                         Toggle::make('limit_use_per_customer')
+                            ->hidden(fn(Get $get) => $get('is_global_discount'))
                             ->label('Deze kortingscode mag 1x per klant gebruikt worden'),
                     ])),
             ]);
@@ -208,13 +219,18 @@ class DiscountCodeResource extends Resource
                     ->sortable(),
                 TextColumn::make('code')
                     ->label('Code')
+                    ->default('-')
                     ->searchable()
                     ->sortable(),
+                IconColumn::make('is_global_discount')
+                    ->label('Globale korting')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle'),
                 TextColumn::make('site_ids')
                     ->label('Actief op site(s)')
                     ->sortable()
                     ->badge()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('amountOfUses')
                     ->label('Aantal gebruiken')

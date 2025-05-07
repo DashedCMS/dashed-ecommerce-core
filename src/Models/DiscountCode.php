@@ -157,7 +157,7 @@ class DiscountCode extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->start_date && ! $this->end_date) {
+        if (!$this->start_date && !$this->end_date) {
             return 'active';
         } else {
             if ($this->start_date && $this->end_date) {
@@ -208,7 +208,7 @@ class DiscountCode extends Model
         }
     }
 
-    public function isValidForCart($email = null)
+    public function isValidForCart($email = null): bool
     {
         $itemsInCart = ShoppingCart::cartItems();
 
@@ -223,7 +223,7 @@ class DiscountCode extends Model
                     $emailIsValid = true;
                 }
             }
-            if (! $emailIsValid) {
+            if (!$emailIsValid) {
                 return false;
             }
         }
@@ -295,5 +295,40 @@ class DiscountCode extends Model
         }
 
         return true;
+    }
+
+    //Only used for global discounts
+    public function isValidForProduct(Product $product): bool
+    {
+        if (!$this->is_global_discount) {
+            return false;
+        }
+
+        if ($this->start_date && $this->start_date > now()) {
+            return false;
+        }
+
+        if ($this->end_date && $this->end_date < now()) {
+            return false;
+        }
+
+        if ($this->valid_for == 'categories') {
+            if ($this->productCategories()->whereIn('product_category_id', $product->productCategories()->pluck('product_category_id'))->exists()) {
+                return true;
+            }
+        } elseif ($this->valid_for == 'products') {
+            if ($this->products()->where('product_id', $product->id)->exists()) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function scopeIsGlobalDiscount($query)
+    {
+        return $query->where('is_global_discount', true);
     }
 }

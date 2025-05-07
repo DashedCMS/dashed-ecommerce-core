@@ -19,6 +19,7 @@ class CreateDiscountCode extends CreateRecord
         return [
             Action::make('Genereer een code')
                 ->button()
+                ->visible(fn (): bool => !$this->data['is_global_discount'])
                 ->action('generateRandomCode'),
         ];
     }
