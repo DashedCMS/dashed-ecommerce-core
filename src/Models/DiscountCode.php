@@ -3,6 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductPricesJob;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
@@ -46,6 +48,8 @@ class DiscountCode extends Model
     protected $casts = [
         'site_ids' => 'array',
         'valid_customers' => 'array',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -65,6 +69,36 @@ class DiscountCode extends Model
             }
             $discountCode->code = $code;
         });
+
+        static::saved(function ($discountCode) {
+            $discountCode->updateProductPrices();
+        });
+
+        static::deleted(function ($discountCode) {
+            $discountCode->updateProductPrices();
+        });
+    }
+
+    public function updateProductPrices(): void
+    {
+        if ($this->is_global_discount) {
+            if ($this->valid_for == 'categories') {
+                $products = Product::whereHas('productCategories', function ($query) {
+                    $query->whereIn('product_category_id', $this->productCategories()->pluck('product_category_id'));
+                })->get();
+                $productGroups = ProductGroup::whereIn('id', $products->pluck('product_group_id'))->get();
+            } elseif ($this->valid_for == 'products') {
+                $products = Product::whereIn('id', $this->products()->pluck('product_id'))->get();
+                $productGroups = ProductGroup::whereIn('id', $products->pluck('product_group_id'))->get();
+            } else {
+                $productGroups = ProductGroup::all();
+            }
+
+            foreach ($productGroups as $productGroup) {
+                UpdateProductPricesJob::dispatch($productGroup)
+                    ->onQueue('ecommerce');
+            }
+        }
     }
 
     public function getActivitylogOptions(): LogOptions

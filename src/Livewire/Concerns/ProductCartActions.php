@@ -197,7 +197,6 @@ trait ProductCartActions
         }
 
         $this->globalDiscounts = $globalDiscounts;
-        dd($this->globalDiscounts);
 
         $this->calculateCurrentPrices();
 

@@ -205,6 +205,29 @@
                             @endif
                         </div>
 
+                        @if(count($globalDiscounts))
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                @foreach($globalDiscounts as $globalDiscount)
+                                    <div class="text-sm bg-primary-dark font-bold text-primary-light px-2 py-1 rounded-lg  trans">
+                                        @if($globalDiscount->end_date)
+                                            {{ Translation::get('global-discount-with-end-date', 'products', ':name:: :value::discountType: korting tot :endDate:', 'text', [
+        'name'  =>$globalDiscount->name,
+        'discountType' => $globalDiscount->type == 'percentage' ? '%' : '',
+        'value' => $globalDiscount->type == 'percentage' ? $globalDiscount->discount_percentage : CurrencyHelper::formatPrice($globalDiscount->discount_amount),
+        'endDate' => $globalDiscount->end_date->format('d-m-Y H:i')
+    ]) }}
+                                        @else
+                                            {{ Translation::get('global-discount', 'products', ':name:: :value::discountType: korting', 'text', [
+        'name'  =>$globalDiscount->name,
+        'discountType' => $globalDiscount->type == 'percentage' ? '%' : '',
+        'value' => $globalDiscount->type == 'percentage' ? $globalDiscount->discount_percentage : CurrencyHelper::formatPrice($globalDiscount->discount_amount),
+    ]) }}
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
                         <div class="mt-6 grid gap-2">
                             @if($product)
                                 <x-product.stock-text :product="$product"/>

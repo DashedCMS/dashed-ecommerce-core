@@ -412,6 +412,26 @@ class Product extends Model
         }
 
         $this->discount_price = $discountPrice;
+
+        $discountFromGlobalDiscounts = 0;
+        foreach (DiscountCode::isGlobalDiscount()->get() as $discountCode) {
+            if($discountCode->isValidForProduct($this)){
+                if($discountCode->type == 'percentage'){
+                    $discountFromGlobalDiscounts += $currentPrice / 100 * $discountCode->discount_percentage;
+                }else{
+                    $discountFromGlobalDiscounts += $discountCode->discount_amount;
+                }
+            }
+        }
+
+        if($discountFromGlobalDiscounts > 0){
+            $this->discount_price = $currentPrice;
+            $this->current_price = $currentPrice - $discountFromGlobalDiscounts;
+        }
+        if($this->current_price < 0){
+            $this->current_price = 0.01;
+        }
+
         $this->saveQuietly();
 
         foreach (User::all() as $user) {

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Dashed\DashedCore\Classes\Locales;
+use Dashed\DashedEcommerceCore\Commands\UpdateExpiredGlobalDiscountCodes;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -85,6 +86,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 ->everyFifteenMinutes();
             $schedule->command(UpdateProductInformations::class)
                 ->twiceDaily()
+                ->withoutOverlapping();
+            $schedule->command(UpdateExpiredGlobalDiscountCodes::class)
+                ->everyFiveMinutes()
                 ->withoutOverlapping();
         });
 
@@ -319,6 +323,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 SendInvoices::class,
                 UpdateProductInformations::class,
                 MigrateToV3::class,
+                UpdateExpiredGlobalDiscountCodes::class,
             ]);
     }
 

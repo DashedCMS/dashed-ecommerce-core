@@ -159,17 +159,18 @@ class DiscountCodeResource extends Resource
                             ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                             ->label('Selecteer producten waar deze kortingscode voor geldt')
                             ->required()
-                            ->hidden(fn($get) => $get('valid_for') != 'products'),
+                            ->hidden(fn(Get $get) => $get('valid_for') != 'products'),
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->multiple()
                             ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
                             ->label('Selecteer categorieën waar deze kortingscode voor geldt')
-                            ->required(fn($get) => $get('valid_for') == 'categories')
-                            ->hidden(fn($get) => $get('valid_for') != 'categories'),
+                            ->required(fn(Get $get) => $get('valid_for') == 'categories')
+                            ->hidden(fn(Get $get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
                             ->label('Minimale eisen')
+                            ->hidden(fn(Get $get) => $get('is_global_discount'))
                             ->reactive()
                             ->options([
                                 null => 'Geen',
@@ -183,7 +184,7 @@ class DiscountCodeResource extends Resource
                             ->maxValue(100000)
                             ->numeric()
                             ->required()
-                            ->hidden(fn($get) => $get('minimal_requirements') != 'products'),
+                            ->hidden(fn($get) => $get('minimal_requirements') != 'products' || $get('is_global_discount')),
                         TextInput::make('minimum_amount')
                             ->label('Minimum aankoopbedrag')
                             ->prefix('€')
@@ -191,7 +192,7 @@ class DiscountCodeResource extends Resource
                             ->maxValue(100000)
                             ->required()
                             ->numeric()
-                            ->hidden(fn(Get $get) => $get('minimal_requirements') != 'amount'),
+                            ->hidden(fn(Get $get) => $get('minimal_requirements') != 'amount' || $get('is_global_discount')),
                         Toggle::make('use_stock')
                             ->label('Een limiet instellen voor het aantal gebruiken van deze kortingscode')
                             ->hidden(fn(Get $get) => $get('is_global_discount'))
