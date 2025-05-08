@@ -293,9 +293,13 @@ trait ProductCartActions
             if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->price) {
                 $productPrice += $productExtra->price;
             }
+
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productValue) {
+                    if($productValue === true){
+                        $productValue = $extraKey;
+                    }
                     $productExtraOption = ProductExtraOption::find($productValue);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
