@@ -99,6 +99,9 @@ class ProductResource extends Resource
 //                    ->disabled(fn ($livewire) => ! ($livewire instanceof CreateProduct) || request()->get('productGroupId'))
                     ->columnSpanFull()
                     ->required(),
+                Toggle::make('public')
+                    ->label('Openbaar')
+                    ->default(1),
                 Toggle::make('is_bundle')
                     ->label('Bundel product')
                     ->helperText('Bestaat dit product uit meerdere andere producten?')
