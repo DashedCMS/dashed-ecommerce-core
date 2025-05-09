@@ -434,6 +434,12 @@ class ProductGroup extends Model
             return $this->images[0];
         }
 
+        foreach($this->products as $product) {
+            if ($product->firstImage) {
+                return $product->firstImage;
+            }
+        }
+
         return null;
     }
 }
