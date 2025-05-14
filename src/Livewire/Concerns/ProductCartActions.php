@@ -191,7 +191,7 @@ trait ProductCartActions
         $globalDiscounts = [];
 
         foreach (DiscountCode::isGlobalDiscount()->get() as $discountCode) {
-            if($discountCode->isValidForProduct($this->product)){
+            if ($discountCode->isValidForProduct($this->product)) {
                 $globalDiscounts[] = $discountCode;
             }
         }
@@ -297,8 +297,8 @@ trait ProductCartActions
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productValue) {
-                    if($productValue === true){
-                        $productValue = $extraKey;
+                    if ($productValue === true) {
+                        $productValue = $this->extras[$extraKey]['id'];
                     }
                     $productExtraOption = ProductExtraOption::find($productValue);
                     if ($productExtraOption->calculate_only_1_quantity) {
