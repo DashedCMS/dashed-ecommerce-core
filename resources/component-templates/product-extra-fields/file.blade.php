@@ -1,7 +1,9 @@
 <div>
     <label for="product-extra-{{$extra->id}}"
            class="block text-md font-bold text-gray-700">
-        {{$extra->name}}{{$extra->required ? '*' : ''}}:
+        {{$extra->name}}{{$extra->required ? '*' : ''}}@if($extra->price > 0)
+            (+ {{CurrencyHelper::formatPrice($extra->price)}})
+        @endif:
     </label>
     <div class="relative flex items-start">
         <input type="file"

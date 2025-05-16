@@ -1,7 +1,9 @@
 <div>
     <label for="product-extra-{{$extra->id}}"
            class="inline-block text-md font-bold text-gray-700">
-        {{$extra->name}}{{$extra->required ? '*' : ''}}
+        {{$extra->name}}{{$extra->required ? '*' : ''}}@if($extra->price > 0)
+            (+ {{CurrencyHelper::formatPrice($extra->price)}})
+        @endif
     </label>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
         @foreach($extra->productExtraOptions as $option)
