@@ -24,8 +24,8 @@ class ProductsToEdit implements FromArray
             $productsArray[] = [
                 $product->id,
                 $product->name,
-                $product->getRawOriginal('current_price'),
-                $product->getRawOriginal('discount_price'),
+                $product->getRawOriginal('price'),
+                $product->getRawOriginal('new_price'),
                 $product->getRawOriginal('ean'),
                 $product->getRawOriginal('vat_rate'),
             ];
