@@ -15,6 +15,8 @@ class ProductsToEdit implements FromArray
                 'Product',
                 'Prijs',
                 'Kortings prijs',
+                'EAN',
+                'BTW percentage',
             ],
         ];
 
