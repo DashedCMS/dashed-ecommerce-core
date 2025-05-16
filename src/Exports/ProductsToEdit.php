@@ -24,6 +24,8 @@ class ProductsToEdit implements FromArray
                 $product->name,
                 $product->getRawOriginal('current_price'),
                 $product->getRawOriginal('discount_price'),
+                $product->getRawOriginal('ean'),
+                $product->getRawOriginal('vat_rate'),
             ];
         }
 
