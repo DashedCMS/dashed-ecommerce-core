@@ -10,12 +10,6 @@ use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class ProductsToEditImport implements ToArray
 {
-    public User $user;
-
-    public function __construct(User $user)
-    {
-        $this->user = $user;
-    }
 
     public function array(array $rows): void
     {
