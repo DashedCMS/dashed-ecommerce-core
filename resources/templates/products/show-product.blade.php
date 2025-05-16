@@ -391,12 +391,12 @@
                                         {{--                                        </svg>--}}
                                     </div>
                                     <div
-                                        class="px-4 pb-4"
+                                        class="px-4 pb-4 prose-base"
                                         {{--                                            x-cloak--}}
                                         {{--                                            x-show="activeTab == 'description'"--}}
                                         x-transition.opacity.scale.origin.top
                                     >
-                                        {!! $description !!}
+                                        {!! tiptap_converter()->asHTML($description) !!}
                                     </div>
                                 </div>
                             @endif
