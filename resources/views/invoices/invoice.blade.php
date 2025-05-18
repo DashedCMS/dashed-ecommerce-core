@@ -200,7 +200,7 @@
         <tr>
             <td class="sender">
                 <p>
-                    <b>{{ Customsetting::get('company_name') }}</b>
+                    <b>{{ Customsetting::get('site_name') }}</b>
                 </p>
 
                 <p>{{ Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') }}</p>
@@ -218,6 +218,9 @@
                 @endif
                 @if(Customsetting::get('company_btw'))
                     <p>{{ Translation::get('btw', 'invoice', 'BTW') }} {{ Customsetting::get('company_btw') }}</p>
+                @endif
+                @if(Customsetting::get('company_bank_number'))
+                    <p>{{ Translation::get('bank-number', 'invoice', 'Bank') }} {{ Customsetting::get('company_bank_number') }}</p>
                 @endif
             </td>
 
