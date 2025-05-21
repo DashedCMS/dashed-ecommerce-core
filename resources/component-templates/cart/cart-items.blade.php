@@ -79,7 +79,7 @@
                                     <button
                                         wire:click="changeQuantity('{{ $item->rowId }}', '0')"
                                         type="button"
-                                        class="-m-2 inline-flex p-2 text-white hover:text-red-500 rounded-full bg-primary-700 trans">
+                                        class="-m-2 inline-flex p-2 text-white hover:bg-red-500 rounded-full bg-primary-700 trans">
                                         <span class="sr-only">{{ Translation::get('remove', 'cart', 'Verwijder') }}</span>
                                         <x-lucide-trash class="h-5 w-5"/>
                                     </button>

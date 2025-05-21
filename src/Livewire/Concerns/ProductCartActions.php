@@ -349,7 +349,7 @@ trait ProductCartActions
                 $productPrice += $productExtra->price;
                 $productExtraPrice += $productExtra->price;
             }
-            if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
+            if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
@@ -358,6 +358,11 @@ trait ProductCartActions
                 }
 
                 if ($productValue) {
+
+                    if ($productValue === true) {
+                        $productValue = $this->extras[$extraKey]['id'];
+                    }
+
                     $productExtraOption = ProductExtraOption::find($productValue);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
