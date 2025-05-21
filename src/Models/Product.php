@@ -875,8 +875,10 @@ class Product extends Model
                 if ($thisProductExtraOption) {
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
                         $price += $thisProductExtraOption->price;
+                        $price += $thisProductExtraOption->productExtra->price;
                     } else {
                         $price += ($thisProductExtraOption->price * $quantity);
+                        $price += ($thisProductExtraOption->productExtra->price * $quantity);
                     }
                 }
             }

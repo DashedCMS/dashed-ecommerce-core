@@ -300,6 +300,7 @@ trait ProductCartActions
                     if ($productValue === true) {
                         $productValue = $this->extras[$extraKey]['id'];
                     }
+
                     $productExtraOption = ProductExtraOption::find($productValue);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
@@ -348,6 +349,7 @@ trait ProductCartActions
             if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->price) {
                 $productPrice += $productExtra->price;
                 $productExtraPrice += $productExtra->price;
+                $discountedProductPrice += $productExtra->price;
             }
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
@@ -358,7 +360,6 @@ trait ProductCartActions
                 }
 
                 if ($productValue) {
-
                     if ($productValue === true) {
                         $productValue = $this->extras[$extraKey]['id'];
                     }
@@ -388,6 +389,9 @@ trait ProductCartActions
                 }
 
                 if ($productValue) {
+                    if ($productValue === true) {
+                        $productValue = $this->extras[$extraKey]['id'];
+                    }
                     $productExtraOption = ProductExtraOption::find($productValue);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
@@ -453,6 +457,9 @@ trait ProductCartActions
                 }
 
                 if ($productValue) {
+                    if ($productValue === true) {
+                        $productValue = $this->extras[$extraKey]['id'];
+                    }
                     $options['product-extra-input-' . $productExtra->id] = [
                         'name' => $productExtra->name,
                         'value' => $productValue,
