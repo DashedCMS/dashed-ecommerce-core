@@ -115,6 +115,11 @@ class ShoppingCart
             }
         }
 
+//        $total = self::total(false, false);
+//        if($totalDiscount > $total){
+//            $totalDiscount = $total - 0.01;
+//        }
+
         if ($totalDiscount) {
             if ($formatResult) {
                 return CurrencyHelper::formatPrice($totalDiscount);
@@ -149,6 +154,10 @@ class ShoppingCart
                     }
                 }
             }
+        }
+
+        if($cartTotal < 0){
+            $cartTotal = 0.01;
         }
 
         if ($formatResult) {
@@ -191,6 +200,10 @@ class ShoppingCart
                     $cartTotal += $paymentMethod['extra_costs'];
                 }
             }
+        }
+
+        if($cartTotal < 0){
+            $cartTotal = 0.01;
         }
 
         if ($formatResult) {
@@ -283,6 +296,10 @@ class ShoppingCart
 
         if ($paymentMethodId) {
             $taxTotal += self::vatForPaymentMethod($paymentMethodId);
+        }
+
+        if($taxTotal < 0){
+            $taxTotal = 0;
         }
 
         if ($formatResult) {
