@@ -240,7 +240,7 @@ class ShoppingCart
     {
         $discount = self::totalDiscount(false);
         $tax = self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
-        $total = self::total(false, false, $shippingMethodId, $paymentMethodId, $tax, $discount);
+        $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount);
         $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
 
         if ($formatResult) {
