@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
@@ -69,12 +70,16 @@ class ProductCategory extends Model
         return $this->belongsTo(self::class);
     }
 
-    public function getProductsUrl()
+    public function getProductsUrl($locale = null)
     {
-        $url = $this->slug;
+        if (!$locale) {
+            $locale = app()->getLocale();
+        }
+
+        $url = $this->getTranslation('slug', $locale);
         $parentCategory = $this->parent;
         while ($parentCategory) {
-            $url = $parentCategory->slug . '/' . $url;
+            $url = $parentCategory->getTranslation('slug', $locale) . '/' . $url;
             $parentCategory = $parentCategory->parent;
         }
 
@@ -83,29 +88,41 @@ class ProductCategory extends Model
 
     public function getUrl($locale = null)
     {
-        if (! $locale) {
+        $originalLocale = app()->getLocale();
+
+        if (!$locale) {
             $locale = app()->getLocale();
         }
 
-        return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale) {
-            if (! $this->childs->count()) {
+        return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale, $originalLocale) {
+            if (!$this->childs->count()) {
                 if ($this->products->count() == 1) {
                     return $this->products->first()->getUrl($locale);
                 } else {
-                    return $this->getProductsUrl();
+                    return $this->getProductsUrl($locale);
                 }
             }
 
-            $url = $this->slug;
+            $url = $this->getTranslation('slug', $locale);
             $parentCategory = $this->parent;
             while ($parentCategory) {
-                $url = $parentCategory->slug . '/' . $url;
+                $url = $parentCategory->getTranslation('slug', $locale) . '/' . $url;
                 $parentCategory = $parentCategory->parent;
             }
 
+            app()->setLocale($locale);
             $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
+            app()->setLocale($originalLocale);
 
-            return LaravelLocalization::localizeUrl($url);
+            if (!str($url)->startsWith('/')) {
+                $url = '/' . $url;
+            }
+
+            if ($locale != Locales::getFirstLocale()['id'] && !str($url)->startsWith("/{$locale}")) {
+                $url = '/' . $locale . $url;
+            }
+
+            return $url;
         });
     }
 
@@ -160,7 +177,7 @@ class ProductCategory extends Model
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
-                if (! $productCategory) {
+                if (!$productCategory) {
                     return 'pageNotFound';
                 }
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();
