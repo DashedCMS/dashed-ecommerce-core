@@ -233,6 +233,7 @@ class ProductGroup extends Model
                         'options' => $filterOptions,
                         'type' => $filter->type,
                         'active' => null,
+                        'contentBlocks' => $filter->contentBlocks,
                     ];
                 }
             }
