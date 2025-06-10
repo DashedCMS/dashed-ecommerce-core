@@ -136,8 +136,8 @@ class ProductExtra extends Model
                 ->label('Opties van deze product extra')
                 ->reorderable()
                 ->orderColumn('order')
-                ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
-                ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker')
+                ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker' || $get('type') == 'image')
+                ->required(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker' || $get('type') == 'image')
                 ->maxItems(fn (Get $get) => $get('type') == 'checkbox' ? 1 : 50)
                 ->reactive()
                 ->schema([
