@@ -222,8 +222,7 @@ class ProductGroupResource extends Resource
                     ->label('Slug')
                     ->unique('dashed__product_groups', 'slug', fn($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren'),
-                TiptapEditor::make('description')
-                    ->label('Uitgebreide beschrijving')
+                cms()->editorField('description', 'Uitgebreide beschrijving')
                     ->rules([
                         'max:10000',
                     ])
@@ -323,8 +322,7 @@ class ProductGroupResource extends Resource
                             ->label('Naam')
                             ->required()
                             ->maxLength(100),
-                        TiptapEditor::make('content')
-                            ->label('Content')
+                        cms()->editorField('content', 'Content')
                             ->required(),
                     ]),
             ])

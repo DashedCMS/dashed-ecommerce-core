@@ -396,7 +396,7 @@
                                         {{--                                            x-show="activeTab == 'description'"--}}
                                         x-transition.opacity.scale.origin.top
                                     >
-                                        {!! tiptap_converter()->asHTML($description) !!}
+                                        {!! cms()->convertToHtml($description) !!}
                                     </div>
                                 </div>
                             @endif
@@ -495,7 +495,7 @@
                                                         x-transition.opacity.scale.origin.top
                                                     >
                                                         <div class="grid gap-4">
-                                                            {!! tiptap_converter()->asHTML($faq['content']) !!}
+                                                            {!! cms()->convertToHtml($faq['content']) !!}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -531,7 +531,7 @@
                                         {{--                                            x-show="activeTab == 'tab-{{ $key }}'"--}}
                                         x-transition.opacity.scale.origin.top
                                     >
-                                        {!! tiptap_converter()->asHTML($productTab->content) !!}
+                                        {!! cms()->convertToHtml($productTab->content) !!}
                                     </div>
                                 </div>
                             @endforeach

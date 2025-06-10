@@ -59,8 +59,7 @@ class ProductTabResource extends Resource
                             ->label('Naam')
                             ->required()
                             ->maxLength(100),
-                        TiptapEditor::make('content')
-                            ->label('Content')
+                        cms()->editorField('content', 'Content')
                             ->required(),
                         Select::make('products')
                             ->relationship('products', 'name')

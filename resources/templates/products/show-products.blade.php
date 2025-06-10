@@ -258,7 +258,7 @@
 
                     @if($productCategory && ($productCategory->contentBlocks['top-content'] ?? false))
                         <div class="prose max-w-full w-full mt-4">
-                            {!! tiptap_converter()->asHTML($productCategory->contentBlocks['top-content']) !!}
+                            {!! cms()->convertToHtml($productCategory->contentBlocks['top-content']) !!}
                         </div>
                     @endif
                 </div>

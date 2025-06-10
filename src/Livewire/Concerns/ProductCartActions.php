@@ -171,7 +171,7 @@ trait ProductCartActions
         foreach ($this->images as $image) {
             $this->originalImages[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
         }
-        $this->description = ($this->product && $this->product->description) ? tiptap_converter()->asHTML($this->product->description) : tiptap_converter()->asHTML($this->productGroup->description);
+        $this->description = ($this->product && $this->product->description) ? cms()->convertToHtml($this->product->description) : cms()->convertToHtml($this->productGroup->description);
         $this->shortDescription = $this->product && $this->product->short_description ? $this->product->short_description : $this->productGroup->short_description;
         $this->sku = $this->product->sku ?? '';
         $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();

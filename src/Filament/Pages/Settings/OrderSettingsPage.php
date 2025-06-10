@@ -176,8 +176,7 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
-                TiptapEditor::make("fulfillment_status_unhandled_email_content_{$locale['id']}")
-                    ->label('Fulfillment status "Niet afgehandeld" mail inhoud')
+                cms()->editorField("fulfillment_status_unhandled_email_content_{$locale['id']}", 'Fulfillment status "Niet afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
@@ -190,8 +189,7 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "In behandeling" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
-                TiptapEditor::make("fulfillment_status_in_treatment_email_content_{$locale['id']}")
-                    ->label('Fulfillment status "In behandeling" mail inhoud')
+                cms()->editorField("fulfillment_status_in_treatment_email_content_{$locale['id']}", 'Fulfillment status "In behandeling" mail inhoud')
                     ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
@@ -204,8 +202,7 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Ingepakt" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
-                TiptapEditor::make("fulfillment_status_packed_email_content_{$locale['id']}")
-                    ->label('Fulfillment status "Ingepakt" mail inhoud')
+                cms()->editorField("fulfillment_status_packed_email_content_{$locale['id']}", 'Fulfillment status "Ingepakt" mail inhoud')
                     ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
@@ -218,8 +215,7 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Verzonden" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
-                TiptapEditor::make("fulfillment_status_shipped_email_content_{$locale['id']}")
-                    ->label('Fulfillment status "Verzonden" mail inhoud')
+                cms()->editorField("fulfillment_status_shipped_email_content_{$locale['id']}", 'Fulfillment status "Verzonden" mail inhoud')
                     ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
@@ -232,8 +228,7 @@ class OrderSettingsPage extends Page
                 TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
                     ->label('Fulfillment status "Afgehandeld" mail onderwerp')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
-                TiptapEditor::make("fulfillment_status_handled_email_content_{$locale['id']}")
-                    ->label('Fulfillment status "Afgehandeld" mail inhoud')
+                cms()->editorField("fulfillment_status_handled_email_content_{$locale['id']}", 'Fulfillment status "Afgehandeld" mail inhoud')
                     ->directory('/dashed/orders/images')
                     ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
