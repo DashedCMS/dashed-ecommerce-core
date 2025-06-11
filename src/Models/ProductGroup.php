@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedPages\Models\Page;
+use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
@@ -268,7 +270,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -288,7 +290,7 @@ class ProductGroup extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -352,7 +354,7 @@ class ProductGroup extends Model
     {
         $originalLocale = app()->getLocale();
 
-        if (! $activeLocale) {
+        if (!$activeLocale) {
             $activeLocale = $originalLocale;
         }
 
@@ -363,10 +365,10 @@ class ProductGroup extends Model
             $url = $this->getTranslation('slug', $activeLocale);
         }
 
-        if (! str($url)->startsWith('/')) {
+        if (!str($url)->startsWith('/')) {
             $url = '/' . $url;
         }
-        if ($activeLocale != Locales::getFirstLocale()['id'] && ! str($url)->startsWith("/{$activeLocale}")) {
+        if ($activeLocale != Locales::getFirstLocale()['id'] && !str($url)->startsWith("/{$activeLocale}")) {
             $url = '/' . $activeLocale . $url;
         }
 
@@ -410,7 +412,7 @@ class ProductGroup extends Model
     {
         $stock = 0;
 
-        foreach($this->products as $product) {
+        foreach ($this->products as $product) {
             $stock += $product->total_stock;
             $stock -= $product->reservedStock();
         }
@@ -435,12 +437,43 @@ class ProductGroup extends Model
             return $this->images[0];
         }
 
-        foreach($this->products as $product) {
+        foreach ($this->products as $product) {
             if ($product->firstImage) {
                 return $product->firstImage;
             }
         }
 
         return null;
+    }
+
+    public function fromPrice(): string
+    {
+        $lowestPrice = $this->products->min('price');
+
+        return Translation::get('product-price-from', 'product', 'Vanaf :price:', 'text', [
+            'price' => $lowestPrice ? CurrencyHelper::formatPrice($lowestPrice) : '€0,00',
+        ]);
+    }
+
+    public function betweenPrice(): string
+    {
+        $lowestPrice = $this->products->min('price');
+        $highestPrice = $this->products->max('price');
+
+        if($lowestPrice === $highestPrice){
+            return Translation::get('product-price-static', 'product', ':price:', 'text', [
+                'price' => $lowestPrice ? CurrencyHelper::formatPrice($lowestPrice) : '€0,00',
+            ]);
+        }
+
+        return Translation::get('product-price-between', 'product', ':lowestPrice: tot :highestPrice:', 'text', [
+            'lowestPrice' => $lowestPrice ? CurrencyHelper::formatPrice($lowestPrice) : '€0,00',
+            'highestPrice' => $highestPrice ? CurrencyHelper::formatPrice($highestPrice) : '€0,00',
+        ]);
+    }
+
+    public function showSingleProduct(): bool
+    {
+        return $this->only_show_parent_product || $this->products->count() <= 1;
     }
 }

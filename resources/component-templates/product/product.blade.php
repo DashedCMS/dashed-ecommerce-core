@@ -36,7 +36,14 @@
                                     {{CurrencyHelper::formatPrice($product->discountPrice)}}
                                 </span>
                 @endif
-                <p class="text-xl tracking-tight font-medium text-gray-900">{{ CurrencyHelper::formatPrice($product->currentPrice) }}</p>
+                <p class="text-xl tracking-tight font-medium text-gray-900">
+                    @if($product->productGroup->showSingleProduct())
+                        {{ $product->productGroup->fromPrice() }}
+                        {{--                    {{ $product->productGroup->betweenPrice() }}--}}
+                    @else
+                        {{ CurrencyHelper::formatPrice($product->currentPrice) }}
+                    @endif
+                </p>
             </div>
 
             <div class="mb-3 flex items-center">
