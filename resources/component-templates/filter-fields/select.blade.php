@@ -3,6 +3,11 @@
            class="inline-block text-md font-bold mb-2">
         {{$filter['name']}}
     </label>
+    @if($filter['contentBlocks']['content'] ?? false)
+        <div class="mb-4 prose">
+            {!! cms()->convertToHtml($filter['contentBlocks']['content']) !!}
+        </div>
+    @endif
     <select
             class="form-input"
             id="filter-{{$filter['id']}}"

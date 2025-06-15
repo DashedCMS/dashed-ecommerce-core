@@ -53,18 +53,15 @@
                                     @endforeach
                                 </ul>
                                 @if(count($images) > 1)
-                                    <div
-                                        class="z-10 flex items-center justify-between gap-2 pointer-events-none absolute w-full h-full inset-y-0 px-4">
+                                    <div class="z-10 flex items-center justify-between gap-2 pointer-events-none absolute w-full h-full inset-y-0 px-4">
                                         <button
-                                            class="p-4 rounded-full bg-primary-500 swiper-button-prev z-10 pointer-events-auto"
+                                            class="p-4 rounded-full bg-secondary swiper-button-prev z-10 pointer-events-auto h-12 w-12"
                                         >
-                                            <x-lucide-arrow-left class="size-6 text-primary-200"/>
                                         </button>
 
                                         <button
-                                            class="p-4 rounded-full bg-primary-500 swiper-button-next z-10 pointer-events-auto"
+                                            class="p-4 rounded-full bg-secondary swiper-button-next z-10 pointer-events-auto h-12 w-12"
                                         >
-                                            <x-lucide-arrow-right class="size-6 text-primary-200"/>
                                         </button>
                                     </div>
                                 @endif

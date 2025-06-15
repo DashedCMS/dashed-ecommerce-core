@@ -294,7 +294,7 @@ trait ProductCartActions
                 $productPrice += $productExtra->price;
             }
 
-            if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
+            if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productValue) {
                     if ($productValue === true) {
@@ -302,6 +302,18 @@ trait ProductCartActions
                     }
 
                     $productExtraOption = ProductExtraOption::find($productValue);
+                    dd($this->extras[$extraKey], $productValue, $productExtraOption);
+                    if ($productExtraOption->calculate_only_1_quantity) {
+                        $productPrice += ($productExtraOption->price / $this->quantity);
+                    } else {
+                        $productPrice += $productExtraOption->price;
+                    }
+                }
+            } else if ($productExtra->type == 'checkbox') {
+                //As long as this only can have 1 option, this will work
+                $productValue = $this->extras[$extraKey]['value'] ?? null;
+                if ($productValue) {
+                    $productExtraOption = ProductExtraOption::find($this->extras[$extraKey]['product_extra_options'][0]['id'] ?? null);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
                     } else {
@@ -351,7 +363,7 @@ trait ProductCartActions
                 $productExtraPrice += $productExtra->price;
                 $discountedProductPrice += $productExtra->price;
             }
-            if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker' || $productExtra->type == 'checkbox') {
+            if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
@@ -381,6 +393,7 @@ trait ProductCartActions
                     ];
                 }
             } elseif ($productExtra->type == 'checkbox') {
+                //As long as this only can have 1 option, this will work
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
                 if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
@@ -389,10 +402,7 @@ trait ProductCartActions
                 }
 
                 if ($productValue) {
-                    if ($productValue === true) {
-                        $productValue = $this->extras[$extraKey]['id'];
-                    }
-                    $productExtraOption = ProductExtraOption::find($productValue);
+                    $productExtraOption = ProductExtraOption::find($this->extras[$extraKey]['product_extra_options'][0]['id'] ?? null);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
                         $productExtraPrice += ($productExtraOption->price / $this->quantity);

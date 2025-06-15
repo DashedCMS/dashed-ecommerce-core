@@ -3,6 +3,11 @@
            class="inline-block text-md font-bold mb-2">
         {{$filter['name']}}
     </label>
+    @if($filter['contentBlocks']['content'] ?? false)
+        <div class="mb-4 prose">
+            {!! cms()->convertToHtml($filter['contentBlocks']['content']) !!}
+        </div>
+    @endif
     <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
         @foreach($filter['options'] as $option)
             <div class="grid items-center cursor-pointer relative"
@@ -22,8 +27,8 @@
                     :mediaId="$option['image']"
                     :alt="$option['name']"
                     :manipulations="[
-                                                'fit' => [150,150],
-                                            ]"
+                        'fit' => [150,150],
+                    ]"
                 />
                 <span class="font-brand text-center">{{$option['name']}}</span>
             </div>

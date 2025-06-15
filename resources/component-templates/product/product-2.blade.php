@@ -3,7 +3,7 @@
     <div class="img-box rounded-t-3xl w-full aspect-square overflow-hidden border-gray-200 border bg-primary/50">
         @if($product->firstImage)
             <x-dashed-files::image
-                class="w-full h-auto transition-all duration-700 group-hover:scale-[1.05] rounded-t-2xl object-cover block group-hover:hidden"
+                class="w-full h-auto rounded-t-2xl object-cover block group-hover:hidden"
                 config="dashed"
                 :mediaId="$product->firstImage"
                 :alt="$product->name"
@@ -12,8 +12,9 @@
                         ]"
             />
             <x-dashed-files::image
-                class="w-full h-auto transition-all duration-700 group-hover:scale-[1.05] rounded-t-2xl object-cover hidden group-hover:block"
+                class="w-full h-auto rounded-t-2xl object-cover hidden group-hover:block"
                 config="dashed"
+                loading="defer"
                 :mediaId="$product->productGroup->images[1] ?? $product->firstImage"
                 :alt="$product->name"
                 :manipulations="[
