@@ -825,7 +825,7 @@ class Product extends Model
 
         if (count($suggestedProductIds) < $limit) {
             $randomProductIds = Product::thisSite()
-                ->publicShowable()
+                ->publicShowableWithIndex()
                 ->where('id', '!=', $this->id)
                 ->whereNotIn('id', array_merge($suggestedProductIds, [$this->id]))
                 ->limit($limit - count($suggestedProductIds))
