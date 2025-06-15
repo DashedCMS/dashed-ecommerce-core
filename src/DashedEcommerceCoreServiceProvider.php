@@ -369,6 +369,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             $page->save();
 
             \Dashed\DashedCore\Models\Customsetting::set('orders_page_id', $page->id);
+
+            $page->metadata()->create([
+                'noindex' => true,
+            ]);
         }
 
         if (!\Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
@@ -390,6 +394,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             $page->save();
 
             \Dashed\DashedCore\Models\Customsetting::set('order_page_id', $page->id);
+
+            $page->metadata()->create([
+                'noindex' => true,
+            ]);
         }
 
         if (!\Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
