@@ -42,7 +42,7 @@ class FinanceExportMail extends Mailable
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf', Customsetting::get('site_name') . ' - exported invoice.pdf');
+        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf', Customsetting::get('company_name') . ' - exported invoice.pdf');
 
         return $mail;
     }

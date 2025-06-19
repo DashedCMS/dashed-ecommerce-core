@@ -330,7 +330,7 @@ class Product extends Model
                 if (! $overviewPage) {
                     return 'link-product-overview-page';
                 }
-                $url = $overviewPage->getUrl($locale) . '/' . $this->slug;
+                $url = $overviewPage->getUrl($locale) . '/' . $this->getTranslation('slug', $locale);
             }
 
             if ($locale != config('app.locale')) {

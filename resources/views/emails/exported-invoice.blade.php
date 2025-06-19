@@ -236,7 +236,7 @@
                                                                 <td style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;width: 160px;"
                                                                     width="160"><a href="{{url('/')}}" target="_blank"
                                                                                    style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; padding: 0 10px;">
-                                                                        <img alt="{{Customsetting::get('site_name')}}"
+                                                                        <img alt="{{Customsetting::get('company_name')}}"
                                                                              height="auto"
                                                                              src="{{mediaHelper()->getSingleMedia($logo, 'medium')->url ?? ''}}"
                                                                              style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;"
@@ -415,7 +415,7 @@
                                                     style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                                     <div
                                                         style="font-family:OpenSans, Helvetica, Tahoma, Arial, sans-serif;font-size:12px;font-weight:400;line-height:20px;text-align:center;color:#4F4F4F;">
-                                                        <br/> &copy; {{date('Y')}} {{Customsetting::get('site_name')}}
+                                                        <br/> &copy; {{date('Y')}} {{Customsetting::get('company_name')}}
                                                         <br/>
                                                     </div>
                                                 </td>

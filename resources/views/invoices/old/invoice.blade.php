@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>{{Translation::get('invoice', 'invoice', 'Invoice')}} {{Customsetting::get('site_name')}}</title>
+    <title>{{Translation::get('invoice', 'invoice', 'Invoice')}} {{Customsetting::get('company_name')}}</title>
     <style>
         .invoice-box {
             max-width: 800px;
@@ -313,7 +313,7 @@
     <div>
         <hr>
         <div style="width:30%;display:inline-block;">
-            {{Customsetting::get('site_name')}}
+            {{Customsetting::get('company_name')}}
         </div>
         <div
             style="float:right;display:inline-block;"><a

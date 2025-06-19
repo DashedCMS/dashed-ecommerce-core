@@ -47,7 +47,7 @@ class ListProducts extends ListRecords
                         ->success()
                         ->send();
 
-                    return Excel::download(new ProductsToEdit(), 'Producten van ' . Customsetting::get('site_name') . '.xlsx');
+                    return Excel::download(new ProductsToEdit(), 'Producten van ' . Customsetting::get('company_name') . '.xlsx');
                 }),
             Action::make('import')
                 ->label('Importeer')

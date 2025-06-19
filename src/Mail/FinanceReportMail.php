@@ -42,7 +42,7 @@ class FinanceReportMail extends Mailable
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', Customsetting::get('site_name') . ' - exported finance report.pdf');
+        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', Customsetting::get('company_name') . ' - exported finance report.pdf');
 
         return $mail;
     }

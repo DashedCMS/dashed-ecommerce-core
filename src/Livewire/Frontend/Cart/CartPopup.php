@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Livewire\Component;
 use Illuminate\Support\Collection;
 use Dashed\DashedTranslations\Models\Translation;
@@ -41,7 +42,8 @@ class CartPopup extends Component
         $this->cartTotal = ShoppingCart::total();
         $this->cartSubtotal = ShoppingCart::subtotal();
         $this->cartTax = ShoppingCart::btw();
-        $this->freeShippingThreshold = Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
+        $freeShippingMethod = ShippingMethod::where('sort', 'free_delivery')->first();
+        $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
         $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;
         if ($isUnderThreshold) {
             $this->freeShippingPercentage = ($this->cartTotal / $this->freeShippingThreshold) * 100;

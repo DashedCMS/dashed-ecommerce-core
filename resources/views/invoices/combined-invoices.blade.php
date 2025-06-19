@@ -1,5 +1,5 @@
 <x-dashed-ecommerce-core::invoices.master :title="Translation::get('combined-invoice-for', 'invoice', 'Verzamel factuur voor :siteName:', 'text', [
-            'siteName' => Customsetting::get('site_name')
+            'siteName' => Customsetting::get('company_name')
         ])">
     <h1>{{ Translation::get('combined-invoice', 'invoice', 'Verzamelfactuur') }}</h1>
 

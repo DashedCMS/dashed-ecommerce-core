@@ -1,5 +1,5 @@
 <x-dashed-ecommerce-core::invoices.master :title="Translation::get('invoice-for', 'invoice', 'Factuur voor :siteName:', 'text', [
-            'siteName' => Customsetting::get('site_name')
+            'siteName' => Customsetting::get('company_name')
         ])">
     <h1>{{ Translation::get('packing-slip', 'invoice', 'Pakbon') }}</h1>
 

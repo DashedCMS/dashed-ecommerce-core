@@ -280,7 +280,7 @@
     <div>
         <hr>
         <div style="width:30%;display:inline-block;">
-            {{Customsetting::get('site_name')}}
+            {{Customsetting::get('company_name')}}
         </div>
         <div
             style="float:right;display:inline-block;"><a
