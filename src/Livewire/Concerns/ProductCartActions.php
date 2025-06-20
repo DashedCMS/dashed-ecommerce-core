@@ -252,7 +252,11 @@ trait ProductCartActions
         }
 
         if (!$this->variationExists && $this->productGroup->products->count() && Customsetting::get('fill_with_first_product_if_product_group_loaded', null, false)) {
-            $this->product = $this->productGroup->products->first();
+            if ($this->productGroup->firstSelectedProduct) {
+                $this->product = $this->productGroup->firstSelectedProduct;
+            } else {
+                $this->product = $this->productGroup->products->first();
+            }
             $this->variationExists = true;
             $this->fillFilters(true);
         }
