@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedPages\Models\Page;
 use Dashed\DashedTranslations\Models\Translation;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
@@ -64,9 +65,9 @@ class ProductGroup extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function firstSelectedProduct(): HasOne
+    public function firstSelectedProduct(): BelongsTo
     {
-        return $this->hasOne(Product::class, 'first_selected_product_id');
+        return $this->belongsTo(Product::class, 'first_selected_product_id');
     }
 
     public function activeProductFilters()

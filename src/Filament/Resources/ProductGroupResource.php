@@ -98,6 +98,13 @@ class ProductGroupResource extends Resource
                     ->helperText('Let op: dit is slechts een extra check, de voorraad van het variaties gelden ook')
                     ->default(0)
                     ->reactive(),
+                Select::make('first_selected_product_id')
+                    ->label('Eerste geselecteerde product')
+                    ->relationship('firstSelectedProduct', 'name')
+                    ->preload()
+                    ->searchable()
+                ->helperText('Indien je een product selecteert, wordt deze standaard geselecteerd op de product groep pagina'),
+
 //                Select::make('copyable_to_childs') //Todo: this should be done automaticly now
 //                    ->label('Welke onderdelen moeten gekopieerd worden naar alle variaties?')
 //                    ->multiple()
