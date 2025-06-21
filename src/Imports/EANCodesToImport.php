@@ -13,8 +13,6 @@ class EANCodesToImport implements ToArray
 
     public function array(array $rows): void
     {
-        unset($rows[0]);
-
         foreach ($rows as $row) {
             $EANCode = $row[0];
             if(!Product::where('ean', $EANCode)->exists()) {
