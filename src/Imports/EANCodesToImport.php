@@ -19,7 +19,7 @@ class EANCodesToImport implements ToArray
                 $product = Product::whereNull('ean')->first();
                 if ($product) {
                     $product->ean = $EANCode;
-                    $product->save();
+                    $product->saveQuietly();
                 }
             }
         }
