@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Locales;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
+use Filament\Forms\Components\Select;
+use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -70,7 +70,7 @@ class ProductGroupStatisticsPage extends Page
             ->where('created_at', '>=', $beginDate)
             ->where('created_at', '<=', $endDate);
 
-        if($this->locale){
+        if ($this->locale) {
             $orderIds = $orderIds->where('locale', $this->locale);
         }
 
@@ -125,6 +125,7 @@ class ProductGroupStatisticsPage extends Page
                 'search' => $search,
                 'beginDate' => $beginDate,
                 'endDate' => $endDate,
+                'locale' => $this->locale,
             ],
             'data' => $statistics,
             'products' => $productGroups,

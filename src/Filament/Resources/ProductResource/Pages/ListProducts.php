@@ -2,9 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Dashed\DashedEcommerceCore\Imports\EANCodesToImport;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\LocaleSwitcher;
+use Filament\Forms\Components\Placeholder;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
@@ -68,6 +70,36 @@ class ListProducts extends ListRecords
 
                     $file = Storage::disk('local')->path($data['file']);
                     Excel::import(new ProductsToEditImport(), $file);
+
+                    Notification::make()
+                        ->title('Importeren')
+                        ->body('Het importeren is gelukt, refresh de pagina.')
+                        ->success()
+                        ->send();
+                }),
+            Action::make('importEANCodes')
+                ->label('Importeer EAN codes')
+                ->icon('heroicon-s-qr-code')
+                ->hiddenLabel()
+                ->form([
+                    Placeholder::make('placeholder')
+                        ->label('Importeer EAN codes voor producten')
+                        ->content('Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . Product::whereNull('ean')->count() . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
+                        ->columnSpanFull(),
+                    FileUpload::make('file')
+                        ->label('Bestand')
+                        ->disk('local')
+                        ->directory('imports')
+                        ->rules([
+                            'required',
+                            'file',
+                            'mimes:csv,xlsx',
+                        ]),
+                ])
+                ->action(function ($data) {
+
+                    $file = Storage::disk('local')->path($data['file']);
+                    Excel::import(new EANCodesToImport(), $file);
 
                     Notification::make()
                         ->title('Importeren')
