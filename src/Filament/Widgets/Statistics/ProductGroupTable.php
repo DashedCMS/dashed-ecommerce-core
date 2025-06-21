@@ -6,10 +6,10 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Filament\Tables\Columns\TextColumn;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
-class ProductTable extends TableWidget
+class ProductGroupTable extends TableWidget
 {
     protected int|string|array $columnSpan = 'full';
     protected static ?string $pollingInterval = '1s';
@@ -46,23 +46,20 @@ class ProductTable extends TableWidget
                 $orderProducts = OrderProduct::whereIn('order_id', $orderIds)->get();
                 $this->orderProducts = $orderProducts;
 
-                return Product::whereRaw('LOWER(name) like ?', '%' . strtolower($this->graphData['filters']['search']) . '%');
+                return ProductGroup::whereRaw('LOWER(name) like ?', '%' . strtolower($this->graphData['filters']['search']) . '%');
             })
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Product'),
+                    ->label('Product group'),
                 TextColumn::make('quantitySold')
                     ->label('Aantal verkocht')
-                    ->getStateUsing(fn($record) => $this->orderProducts->where('product_id', $record->id)->sum('quantity')),
-                TextColumn::make('currentStock')
-                    ->label('Voorraad')
-                    ->getStateUsing(fn($record) => $record->use_stock ? $record->stock : ($record->stock_status == 'in_stock' ? 100000 : 0)),
+                    ->getStateUsing(fn ($record) => $this->orderProducts->whereIn('product_id', $record->products->pluck('id'))->sum('quantity')),
                 TextColumn::make('amountSold')
                     ->money('EUR')
                     ->label('Totaal opgeleverd')
-                    ->getStateUsing(fn($record) => $this->orderProducts->where('product_id', $record->id)->sum('price')),
+                    ->getStateUsing(fn ($record) => $this->orderProducts->whereIn('product_id', $record->products->pluck('id'))->sum('price')),
             ]);
     }
 }

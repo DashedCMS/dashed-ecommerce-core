@@ -13,18 +13,19 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 
-class ProductStatisticsPage extends Page
+class ProductGroupStatisticsPage extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
-    protected static ?string $navigationLabel = 'Product statistieken';
+    protected static ?string $navigationLabel = 'Product group statistieken';
     protected static ?string $navigationGroup = 'Statistics';
-    protected static ?string $title = 'Product statistieken';
+    protected static ?string $title = 'Product group statistieken';
     protected static ?int $navigationSort = 100000;
 
     protected static string $view = 'dashed-ecommerce-core::statistics.pages.product-statistics';
@@ -61,7 +62,7 @@ class ProductStatisticsPage extends Page
         $endDate = $this->endDate ? Carbon::parse($this->endDate) : now()->addDay();
 
         $search = $this->search;
-        $products = Product::whereRaw('LOWER(name) like ?', '%' . strtolower($search) . '%')
+        $productGroups = ProductGroup::whereRaw('LOWER(name) like ?', '%' . strtolower($search) . '%')
             ->latest()
             ->get();
 
@@ -81,11 +82,11 @@ class ProductStatisticsPage extends Page
         $totalAmountSold = 0;
         $averageCostPerProduct = 0;
 
-        foreach ($products as $product) {
-            $product->quantitySold = $orderProducts->where('product_id', $product->id)->sum('quantity');
-            $product->amountSold = $orderProducts->where('product_id', $product->id)->sum('price');
-            $totalQuantitySold += $product->quantitySold;
-            $totalAmountSold += $product->amountSold;
+        foreach ($productGroups as $productGroup) {
+            $productGroup->quantitySold = $orderProducts->whereIn('product_id', $productGroup->products->pluck('id'))->sum('quantity');
+            $productGroup->amountSold = $orderProducts->whereIn('product_id', $productGroup->products->pluck('id'))->sum('price');
+            $totalQuantitySold += $productGroup->quantitySold;
+            $totalAmountSold += $productGroup->amountSold;
         }
 
         if ($totalQuantitySold) {
@@ -102,7 +103,7 @@ class ProductStatisticsPage extends Page
 
         $graphBeginDate = $beginDate->copy();
         while ($graphBeginDate < $endDate) {
-            $graph['data'][] = OrderProduct::whereIn('id', $orderProducts->pluck('id'))->whereIn('product_id', $products->pluck('id'))->where('created_at', '>=', $graphBeginDate->copy()->startOfDay())->where('created_at', '<=', $graphBeginDate->copy()->endOfDay())->sum('quantity');
+            $graph['data'][] = OrderProduct::whereIn('id', $orderProducts->pluck('id'))->whereIn('product_id', Product::whereIn('product_group_id', $productGroups->pluck('id'))->pluck('id'))->where('created_at', '>=', $graphBeginDate->copy()->startOfDay())->where('created_at', '<=', $graphBeginDate->copy()->endOfDay())->sum('quantity');
             $graph['labels'][] = $graphBeginDate->format('d-m-Y');
             $graphBeginDate->addDay();
         }
@@ -126,7 +127,7 @@ class ProductStatisticsPage extends Page
                 'endDate' => $endDate,
             ],
             'data' => $statistics,
-            'products' => $products,
+            'products' => $productGroups,
         ];
 
         $this->dispatch('updateGraphData', $graphData);
@@ -179,9 +180,9 @@ class ProductStatisticsPage extends Page
     protected function getFooterWidgets(): array
     {
         return [
-            ProductChart::make(),
-            ProductCards::make(),
-            ProductTable::make(),
+            ProductGroupChart::make(),
+            ProductGroupCards::make(),
+            ProductGroupTable::make(),
         ];
     }
 

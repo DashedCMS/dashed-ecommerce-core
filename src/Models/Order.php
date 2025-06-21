@@ -296,7 +296,7 @@ class Order extends Model
     //        return $query->where('pushable_to_eboekhouden', 1)->where('pushed_to_eboekhouden', 0);
     //    }
 
-    public function scopeSearch($query, $search)
+    public function scopeSearch($query, $search = null)
     {
         $search = strtolower($search ?: request()->get('search'));
         if ($search) {

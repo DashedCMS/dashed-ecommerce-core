@@ -4,6 +4,9 @@ namespace Dashed\DashedEcommerceCore;
 
 use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedEcommerceCore\Commands\UpdateExpiredGlobalDiscountCodes;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -98,6 +101,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('product-chart', ProductChart::class);
         Livewire::component('product-cards', ProductCards::class);
         Livewire::component('product-table', ProductTable::class);
+        Livewire::component('product-group-chart', ProductGroupChart::class);
+        Livewire::component('product-group-cards', ProductGroupCards::class);
+        Livewire::component('product-group-table', ProductGroupTable::class);
         Livewire::component('discount-chart', DiscountChart::class);
         Livewire::component('discount-cards', DiscountCards::class);
         Livewire::component('discount-table', DiscountTable::class);
