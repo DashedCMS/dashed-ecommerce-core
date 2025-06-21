@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Dashed\DashedEcommerceCore\Imports\EANCodesToImport;
+use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\LocaleSwitcher;
@@ -98,12 +99,11 @@ class ListProducts extends ListRecords
                 ])
                 ->action(function ($data) {
 
-                    $file = Storage::disk('local')->path($data['file']);
-                    Excel::import(new EANCodesToImport(), $file);
+                    ImportEANCodes::dispatch($data['file']);
 
                     Notification::make()
                         ->title('Importeren')
-                        ->body('Het importeren is gelukt, refresh de pagina.')
+                        ->body('Het importeren wordt op de achtergrond uitgevoerd.')
                         ->success()
                         ->send();
                 }),
