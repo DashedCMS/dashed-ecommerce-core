@@ -204,7 +204,8 @@ class ProductGroupResource extends Resource
         foreach (Locales::getLocales() as $locale) {
             foreach ($productCharacteristics as $productCharacteristic) {
                 $productCharacteristicSchema[] = TextInput::make("product_characteristic_{$productCharacteristic->id}_{$locale['id']}")
-                    ->label($productCharacteristic->getTranslation('name', $locale['id']) . ' (' . $locale['id'] . ')');
+                    ->label($productCharacteristic->getTranslation('name', $locale['id']) . ' (' . $locale['id'] . ')')
+                    ->helperText($productCharacteristic->notes);
             }
         }
 
