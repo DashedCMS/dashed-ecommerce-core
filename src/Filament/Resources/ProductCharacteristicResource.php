@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -62,6 +63,11 @@ class ProductCharacteristicResource extends Resource
                                     ->default(1)
                                     ->minLength(1)
                                     ->maxLength(100),
+                                Textarea::make('notes')
+                                    ->label('Notitie')
+                                    ->rows(3)
+                                    ->columnSpanFull()
+                                    ->helperText('Intern gebruik, niet zichtbaar voor klanten'),
                                 Toggle::make('hide_from_public')
                                     ->label('Dit kenmerk verbergen op de website'),
                             ])
