@@ -306,7 +306,6 @@ trait ProductCartActions
                     }
 
                     $productExtraOption = ProductExtraOption::find($productValue);
-                    dd($this->extras[$extraKey], $productValue, $productExtraOption);
                     if ($productExtraOption->calculate_only_1_quantity) {
                         $productPrice += ($productExtraOption->price / $this->quantity);
                     } else {
