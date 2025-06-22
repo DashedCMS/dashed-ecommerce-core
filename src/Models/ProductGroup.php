@@ -289,6 +289,24 @@ class ProductGroup extends Model
         });
     }
 
+    public function allCharacteristicsWithoutFilters($withoutIds = [])
+    {
+        $characteristics = [];
+
+        $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
+        foreach ($allProductCharacteristics as $productCharacteristic) {
+            $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
+            if ($thisProductCharacteristic && $thisProductCharacteristic->value && !in_array($productCharacteristic->id, $withoutIds)) {
+                $characteristics[] = [
+                    'name' => $productCharacteristic->name,
+                    'value' => $thisProductCharacteristic->value,
+                ];
+            }
+        }
+
+        return $characteristics;
+    }
+
     public function showableCharacteristicsWithoutFilters($withoutIds = [])
     {
         return Cache::rememberForever("product-group-showable-characteristics-without-filters-" . $this->id, function () use ($withoutIds) {
@@ -467,7 +485,7 @@ class ProductGroup extends Model
         $lowestPrice = $this->products->min('price');
         $highestPrice = $this->products->max('price');
 
-        if($lowestPrice === $highestPrice){
+        if ($lowestPrice === $highestPrice) {
             return Translation::get('product-price-static', 'product', ':price:', 'text', [
                 'price' => $lowestPrice ? CurrencyHelper::formatPrice($lowestPrice) : '€0,00',
             ]);
