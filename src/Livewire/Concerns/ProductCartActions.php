@@ -166,7 +166,13 @@ trait ProductCartActions
 
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? (is_array($this->product->images) ? $this->product->images : []) : [];
-        $this->images = array_merge($this->images, is_array($this->productGroup->images) ? $this->productGroup->images : []);
+        $productGroupImages = is_array($this->productGroup->images) ? $this->productGroup->images : [];
+        foreach($productGroupImages as $productGroupImage){
+            if(!in_array($productGroupImage, $this->images)) {
+                $this->images[] = $productGroupImage;
+            }
+        }
+
         $this->originalImages = [];
         foreach ($this->images as $image) {
             $this->originalImages[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
