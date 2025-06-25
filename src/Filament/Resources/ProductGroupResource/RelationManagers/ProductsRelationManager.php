@@ -45,7 +45,7 @@ class ProductsRelationManager extends RelationManager
         return $table
             ->columns([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : ($record->productGroup->images ? mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url : null))
+                    ->getStateUsing(fn ($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : ($record->productGroup->images ? (mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url ?? '') : null))
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
