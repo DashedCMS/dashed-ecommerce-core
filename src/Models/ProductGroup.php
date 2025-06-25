@@ -501,4 +501,15 @@ class ProductGroup extends Model
     {
         return $this->only_show_parent_product || $this->products->count() <= 1;
     }
+
+    public function removeInvalidImages(): void
+    {
+        $images = $this->images ?: [];
+        foreach($images as $image){
+            if(mediaHelper()->getSingleMedia($image, 'original') === null){
+                $this->images = array_diff($this->images, [$image]);
+            }
+        }
+        $this->saveQuietly();
+    }
 }

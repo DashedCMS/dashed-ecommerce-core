@@ -92,6 +92,8 @@ class Product extends Model
                 $product->bundleProducts()->detach();
             }
 
+            $product->removeInvalidImages();
+
             ProductSavedEvent::dispatch($product);
             UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
         });
@@ -1099,4 +1101,16 @@ class Product extends Model
     {
         return $this->belongsTo(FulfillmentCompany::class, 'fulfillment_provider');
     }
+
+    public function removeInvalidImages(): void
+    {
+        $images = $this->images ?: [];
+        foreach($images as $image){
+            if(mediaHelper()->getSingleMedia($image, 'original') === null){
+                $this->images = array_diff($this->images, [$image]);
+            }
+        }
+        $this->saveQuietly();
+    }
 }
+
