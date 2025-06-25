@@ -49,9 +49,9 @@ class ProductGroup extends Model
     protected static function booted()
     {
         static::saved(function ($productGroup) {
+            $productGroup->removeInvalidImages();
             UpdateProductInformationJob::dispatch($productGroup)->onQueue('ecommerce');
         });
-
 
         static::deleting(function ($productGroup) {
             foreach ($productGroup->products as $product) {
