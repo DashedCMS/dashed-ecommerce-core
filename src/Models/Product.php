@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Classes\Locales;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -1104,11 +1105,15 @@ class Product extends Model
 
     public function removeInvalidImages(): void
     {
-        $images = $this->images ?: [];
-        foreach($images as $image){
-            if(mediaHelper()->getSingleMedia($image, 'original') === null){
-                $this->images = array_diff($this->images, [$image]);
+        foreach (Locales::getActivatedLocalesFromSites() as $locale) {
+            $images = $this->getTranslation('images', $locale);
+            foreach ($images as $key => $image) {
+                if (!mediaHelper()->getSingleMedia($image, 'original')) {
+                    unset($images[$key]);
+                }
             }
+            $images = array_values($images);
+            $this->setTranslation('images', $locale, $images);
         }
         $this->saveQuietly();
     }
