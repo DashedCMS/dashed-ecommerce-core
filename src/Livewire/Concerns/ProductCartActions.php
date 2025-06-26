@@ -166,18 +166,8 @@ trait ProductCartActions
         }
 
         $this->name = $this->product->name ?? $this->productGroup->name;
-        $this->images = $this->product ? (is_array($this->product->images) ? $this->product->images : []) : [];
-        $productGroupImages = is_array($this->productGroup->images) ? $this->productGroup->images : [];
-        foreach($productGroupImages as $productGroupImage){
-            if(!in_array($productGroupImage, $this->images)) {
-                $this->images[] = $productGroupImage;
-            }
-        }
-
-        $this->originalImages = [];
-        foreach ($this->images as $image) {
-            $this->originalImages[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
-        }
+        $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
+        $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;
         $this->description = ($this->product && $this->product->description) ? cms()->convertToHtml($this->product->description) : cms()->convertToHtml($this->productGroup->description);
         $this->shortDescription = $this->product && $this->product->short_description ? $this->product->short_description : $this->productGroup->short_description;
         $this->sku = $this->product->sku ?? '';

@@ -1119,5 +1119,31 @@ class Product extends Model
         }
         $this->saveQuietly();
     }
+
+    public function getImagesToShowAttribute(): array
+    {
+        $images = is_array($this->images) ? $this->images : [];
+
+        if (is_array($this->productGroup->images) && count($this->productGroup->images)) {
+            foreach ($this->productGroup->images as $image) {
+                if (!in_array($image, $images)) {
+                    $images[] = $image;
+                }
+            }
+        }
+
+        return $images;
+    }
+
+    public function getOriginalImagesToShowAttribute(): array
+    {
+        $images = [];
+
+        foreach ($this->imagesToShow as $image) {
+            $images[] = mediaHelper()->getSingleMedia($image, 'original')->url ?? '';
+        }
+
+        return $images;
+    }
 }
 

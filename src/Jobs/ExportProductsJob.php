@@ -30,14 +30,16 @@ class ExportProductsJob implements ShouldQueue
     public string $sort;
     public string $email;
     public string $hash;
+    public string $onlyPublicShowable;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $email)
+    public function __construct(string $email, bool $onlyPublicShowable = false)
     {
         $this->email = $email;
         $this->hash = Str::random();
+        $this->onlyPublicShowable = $onlyPublicShowable;
     }
 
     /**
@@ -45,10 +47,14 @@ class ExportProductsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $products = Product::notParentProduct()
-            ->search()
-            ->latest()
-            ->get();
+        $products = Product::search()
+            ->latest();
+
+        if ($this->onlyPublicShowable) {
+            $products = $products->publicShowable();
+        }
+
+        $products = $products->get();
 
         Excel::store(new ProductListExport($products), '/dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx', 'dashed');
 

@@ -2,6 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Exports;
 
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 
 class ProductListExport implements FromArray
@@ -40,11 +43,33 @@ class ProductListExport implements FromArray
                 'Lengte',
                 'Breedte',
                 'Hoogte',
+                'Eerste afbeelding',
+                'Afbeeldingen',
             ],
         ];
 
+        foreach (ProductFilter::all() as $productFilter) {
+            $productsArray[0][] = $productFilter->name;
+        }
+
         foreach ($this->products as $product) {
-            $productsArray[] = [
+
+            $filters = [];
+            foreach (ProductFilter::all() as $productFilter) {
+                $productFilterOptions = DB::table('dashed__product_filter')
+                    ->where('product_id', $product->id)
+                    ->where('product_filter_id', $productFilter->id)
+                    ->pluck('product_filter_option_id')
+                    ->toArray();
+                $productFilterOptions = ProductFilterOption::whereIn('id', $productFilterOptions)->get();
+                $productFilterOptionNames = [];
+                foreach ($productFilterOptions as $productFilterOption) {
+                    $productFilterOptionNames[] = $productFilterOption->name;
+                }
+                $filters[] = implode(', ', $productFilterOptionNames);
+            }
+
+            $productsArray[] = array_merge([
                 $product->name,
                 $product->slug,
                 $product->price,
@@ -68,7 +93,9 @@ class ProductListExport implements FromArray
                 $product->length ?: '-',
                 $product->width ?: '-',
                 $product->height ?: '-',
-            ];
+                $product->originalImagesToShow[0] ?? null,
+                is_array($product->originalImagesToShow) ? implode(',', $product->originalImagesToShow) : null,
+            ], $filters);
         }
 
         return [
