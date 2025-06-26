@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Illuminate\Support\Facades\DB;
 
 class ProductGroup extends Model
 {
@@ -226,10 +227,13 @@ class ProductGroup extends Model
     public function simpleFilters(): array
     {
         $filters = [];
+        $productIds = $this->products()->publicShowable()->pluck('id')->toArray();
 
         foreach ($this->activeProductFilters as $filter) {
             if ($filter->pivot->use_for_variations) {
-                $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
+                $productFilterOptionIds = DB::table('dashed__product_filter')->where('product_filter_id', $filter['id'])->whereIn('product_id', $productIds)->pluck('product_filter_option_id')->toArray();
+                $filterOptions = $filter->productFilterOptions()->whereIn('id', $productFilterOptionIds)->get()->toArray();
+//                $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
 
                 if (count($filterOptions)) {
                     foreach ($filterOptions as &$filterOption) {
@@ -246,6 +250,7 @@ class ProductGroup extends Model
                     ];
                 }
             }
+//            dd($filters);
         }
 
         return $filters;

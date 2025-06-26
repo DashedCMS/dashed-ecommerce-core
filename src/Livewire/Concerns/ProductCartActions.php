@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
@@ -235,7 +236,7 @@ trait ProductCartActions
 
     public function findVariation(): void
     {
-        foreach ($this->productGroup->products as $product) {
+        foreach ($this->productGroup->products()->publicShowable()->get() as $product) {
             $productIsValid = true;
             foreach ($this->filters as $filter) {
                 if (!$filter['active'] || !$product->productFilters()->where('product_filter_option_id', $filter['active'])->count()) {
@@ -261,7 +262,7 @@ trait ProductCartActions
             if ($this->productGroup->firstSelectedProduct) {
                 $this->product = $this->productGroup->firstSelectedProduct;
             } else {
-                $this->product = $this->productGroup->products->first();
+                $this->product = $this->productGroup->products()->publicShowable()->first();
             }
             $this->variationExists = true;
             $this->fillFilters(true);
