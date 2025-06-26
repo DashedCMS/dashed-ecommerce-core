@@ -32,7 +32,7 @@ class EditPricePerUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('export')
+            Action::make('exportProducts')
                 ->label('Producten')
                 ->icon('heroicon-s-arrow-down-tray')
                 ->action(function () {
@@ -44,7 +44,7 @@ class EditPricePerUser extends EditRecord
 
                     return Excel::download(new PricePerProductForUserExport($this->record), 'Prijzen voor ' . $this->record->name . '.xlsx');
                 }),
-            Action::make('import')
+            Action::make('importProducts')
                 ->label('Producten')
                 ->icon('heroicon-s-arrow-up-tray')
                 ->form([

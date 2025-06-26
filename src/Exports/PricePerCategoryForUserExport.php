@@ -20,8 +20,8 @@ class PricePerCategoryForUserExport implements FromArray
     {
         $productCategoriesArray = [
             [
-                'Categorie ID',
-                'Categorie',
+                'Product Categorie ID',
+                'Product Categorie',
                 'Kortings bedrag (aanpassen)',
                 'Kortings percentage (aanpassen)',
             ],

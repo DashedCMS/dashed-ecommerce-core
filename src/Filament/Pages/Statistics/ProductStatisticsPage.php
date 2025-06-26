@@ -163,7 +163,13 @@ class ProductStatisticsPage extends Page
                     Select::make('locale')
                         ->label('Locale')
                         ->nullable()
-                        ->options(Locales::getActivatedLocalesFromSites())
+                        ->options(function(){
+                            $locales = [];
+                            foreach(Locales::getActivatedLocalesFromSites() as $locale) {
+                                $locales[$locale] = $locale;
+                            }
+                            return $locales;
+                        })
                         ->reactive(),
                     TextInput::make('search')
                         ->label('Zoekterm')
