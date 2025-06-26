@@ -1107,13 +1107,15 @@ class Product extends Model
     {
         foreach (Locales::getActivatedLocalesFromSites() as $locale) {
             $images = $this->getTranslation('images', $locale);
-            foreach ($images as $key => $image) {
-                if (!mediaHelper()->getSingleMedia($image, 'original')) {
-                    unset($images[$key]);
+            if (is_array($images)) {
+                foreach ($images as $key => $image) {
+                    if (!mediaHelper()->getSingleMedia($image, 'original')) {
+                        unset($images[$key]);
+                    }
                 }
+                $images = array_values($images);
+                $this->setTranslation('images', $locale, $images);
             }
-            $images = array_values($images);
-            $this->setTranslation('images', $locale, $images);
         }
         $this->saveQuietly();
     }
