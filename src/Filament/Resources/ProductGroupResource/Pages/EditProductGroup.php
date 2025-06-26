@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -109,6 +110,16 @@ class EditProductGroup extends EditRecord
 
         unset($data['productCharacteristics']);
         unset($data['productExtras']);
+
+        foreach ($data['new_images'] ?? [] as $key => $image) {
+            $url = Storage::disk('dashed')->url($image);
+
+            $data['images'][] = mediaHelper()->uploadFromPath($url, 'producten', true);
+
+            Storage::disk('dashed')->delete($image);
+        }
+
+        unset($data['new_images']);
 
         $record->update($data);
 

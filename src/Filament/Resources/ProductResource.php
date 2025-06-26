@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -393,7 +394,16 @@ class ProductResource extends Resource
                     ->minValue(1)
                     ->maxValue(100000)
                     ->default(1),
-                mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true),
+                FileUpload::make('new_images')
+                    ->label('Nieuwe afbeeldingen')
+                    ->visible(fn($livewire) => $livewire instanceof EditProduct)
+                    ->helperText('Deze afbeeldingen worden toegevoegd aan de product groep en achter de rest van de afbeeldingen geplaatst. Deze worden opgeslagen in de map: producten')
+                    ->image()
+                    ->preserveFilenames()
+                    ->multiple()
+                    ->columnSpanFull(),
+                mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true, defaultFolder: 'producten')
+                    ->columnSpanFull(),
                 cms()->getFilamentBuilderBlock(),
             ], static::customBlocksTab('productBlocks')))
             ->collapsible()

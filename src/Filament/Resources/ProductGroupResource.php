@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
@@ -103,7 +104,7 @@ class ProductGroupResource extends Resource
                     ->relationship('firstSelectedProduct', 'name')
                     ->preload()
                     ->searchable()
-                ->helperText('Indien je een product selecteert, wordt deze standaard geselecteerd op de product groep pagina'),
+                    ->helperText('Indien je een product selecteert, wordt deze standaard geselecteerd op de product groep pagina'),
 
 //                Select::make('copyable_to_childs') //Todo: this should be done automaticly now
 //                    ->label('Welke onderdelen moeten gekopieerd worden naar alle variaties?')
@@ -254,7 +255,16 @@ class ProductGroupResource extends Resource
                     ->minValue(1)
                     ->maxValue(100000)
                     ->default(1),
-                mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true)
+                FileUpload::make('new_images')
+                    ->label('Nieuwe afbeeldingen')
+                    ->visible(fn($livewire) => $livewire instanceof EditProductGroup)
+                    ->helperText('Deze afbeeldingen worden toegevoegd aan de product groep en achter de rest van de afbeeldingen geplaatst. Deze worden opgeslagen in de map: producten')
+                    ->image()
+                    ->preserveFilenames()
+                    ->multiple()
+                    ->columnSpanFull(),
+                mediaHelper()->field('images', 'Afbeeldingen', required: false, multiple: true, defaultFolder: 'producten')
+                    ->columnSpanFull()
                     ->helperText('Afbeeldingen van een variant worden VOOR de afbeelding van de product groep getoond'),
                 cms()->getFilamentBuilderBlock(),
             ], array_merge(static::customBlocksTab('productBlocks'), static::customBlocksTab('productGroupBlocks'))))
