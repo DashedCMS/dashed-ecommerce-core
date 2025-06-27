@@ -497,7 +497,7 @@ class Checkout extends Component
             }
         }
 
-        $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
+        $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->where('is_global_discount', false)->first();
 
         if (! $discountCode) {
             session(['discountCode' => '']);
