@@ -26,15 +26,15 @@ class PricePerProductForUserImport implements ToArray
 
         foreach ($rows as $row) {
             $product = Product::find($row[0]);
-            if (($row[3] || $row[4]) && $product) {
+            if ((($row[2] ?? false) || ($row[3] ?? false)) && $product) {
                 DB::table('dashed__product_user')->updateOrInsert(
                     [
                         'product_id' => $row[0],
                         'user_id' => $this->user->id,
                     ],
                     [
-                        'discount_price' => $row[3],
-                        'discount_percentage' => $row[4],
+                        'discount_price' => $row[2],
+                        'discount_percentage' => $row[3],
                     ]
                 );
 
