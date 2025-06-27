@@ -29,7 +29,7 @@ class PricePerProductForUserExport implements FromArray
         ];
 
         foreach (Product::all() as $product) {
-            $product = DB::table('dashed__product_user')
+            $userProduct = DB::table('dashed__product_user')
                 ->where('user_id', $this->user->id)
                 ->where('product_id', $product->id)
                 ->first();
