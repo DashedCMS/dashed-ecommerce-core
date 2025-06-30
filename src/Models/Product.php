@@ -279,7 +279,7 @@ class Product extends Model
     {
         if (is_array($this->images) && count($this->images)) {
             return $this->images[0];
-        } elseif (is_array($this->productGroup->images) && count($this->productGroup->images)) {
+        } elseif ($this->productGroup && is_array($this->productGroup->images) && count($this->productGroup->images)) {
             return $this->productGroup->images[0];
         }
 

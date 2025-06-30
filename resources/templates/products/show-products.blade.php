@@ -3,7 +3,13 @@
     @if($productCategory && count($productCategoryFirstChilds))
         <div class="mb-6" wire:ignore x-cloak>
             <x-container>
-                <div class="swiper swiper-categories">
+                <div class="swiper"
+                     data-slides-per-view-default="2"
+                     data-slides-per-view="4"
+                     data-slides-per-view-md="6"
+                     data-space-between="16"
+                     data-loop="true"
+                >
                     <ul class="swiper-wrapper">
                         @foreach($productCategoryFirstChilds as $child)
                             <li class="swiper-slide">
@@ -21,7 +27,7 @@
                                                 height="180"
                                             />
                                         </div>
-                                        <div class="bg-primary-500/90 absolute bottom-0 w-full h-auto min-h-16 rounded-b-lg">
+                                        <div class="bg-primary/90 absolute bottom-0 w-full h-auto min-h-16 rounded-b-lg">
                                             <p class="font-semibold text-center text-white">{{$child->name}}</p>
                                         </div>
                                     @else
@@ -31,7 +37,7 @@
                                                 <path
                                                     d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2ZM7 13.5 9.5 16 16 9.5 14.5 8 8 14.5 9.5 16Z"/>
                                             </svg>
-                                            <div class="bg-primary-500/90 absolute bottom-0 w-full h-auto min-h-16 rounded-b-lg">
+                                            <div class="bg-primary/90 absolute bottom-0 w-full h-auto min-h-16 rounded-b-lg">
                                                 <p class="font-semibold text-center text-white">{{$child->name}}</p>
                                             </div>
                                         </div>
