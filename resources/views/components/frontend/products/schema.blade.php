@@ -113,25 +113,25 @@
             </div>
         @endforeach
     </div>
-</div>
 
-@script
-<script>
-    $wire.on('productAddedToCart', (event) => {
-        dataLayer.push({
-            'event': 'addToCart',
-            'ecommerce': {
-                'currencyCode': 'EUR',
-                'add': {
-                    'products': [{
-                        'name': event[0].productName,
-                        'id': event[0].product.id,
-                        'price': event[0].price,
-                        'quantity': event[0].quantity,
-                    }]
+    @script
+    <script>
+        $wire.on('productAddedToCart', (event) => {
+            dataLayer.push({
+                'event': 'addToCart',
+                'ecommerce': {
+                    'currencyCode': 'EUR',
+                    'add': {
+                        'products': [{
+                            'name': event[0].productName,
+                            'id': event[0].product.id,
+                            'price': event[0].price,
+                            'quantity': event[0].quantity,
+                        }]
+                    }
                 }
-            }
+            });
         });
-    });
-</script>
-@endscript
+    </script>
+    @endscript
+</div>
