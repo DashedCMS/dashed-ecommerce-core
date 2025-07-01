@@ -573,6 +573,7 @@ trait ProductCartActions
                 ->associate(Product::class);
         }
 
+        $quantity = $this->quantity;
         $this->quantity = 1;
         $this->hiddenOptions = [];
 
@@ -581,7 +582,7 @@ trait ProductCartActions
         $this->dispatch('productAddedToCart', [
             'product' => $product,
             'productName' => $product->name,
-            'quantity' => $this->quantity,
+            'quantity' => $quantity,
             'price' => number_format($productPrice, 2, '.', ''),
             'options' => $options,
         ]);
