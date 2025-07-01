@@ -580,7 +580,9 @@ trait ProductCartActions
 
         $this->dispatch('productAddedToCart', [
             'product' => $product,
+            'productName' => $product->name,
             'quantity' => $this->quantity,
+            'price' => number_format($productPrice, 2, '.', ''),
             'options' => $options,
         ]);
 

@@ -117,17 +117,17 @@
 
 @script
 <script>
-    $wire.on('productAddedToCart', () => {
+    $wire.on('productAddedToCart', (event) => {
         dataLayer.push({
             'event': 'addToCart',
             'ecommerce': {
                 'currencyCode': 'EUR',
                 'add': {
                     'products': [{
-                        'name': '{{ $product->name }}',
-                        'id': '{{ $product->id }}',
-                        'price': {{ number_format($product->currentPrice, 2, '.', '') }},
-                        'quantity': 1
+                        'name': event[0].productName,
+                        'id': event[0].product.id,
+                        'price': event[0].price,
+                        'quantity': event[0].quantity,
                     }]
                 }
             }
