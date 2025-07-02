@@ -98,6 +98,13 @@ class ViewOrder extends Component
                 ];
             }
         }
+
+        if($this->order->isPaidFor() && !$this->order->paid_signal_send){
+            $this->dispatch('orderPaid', [
+                'orderId' => $this->order->id,
+                'total' => number_format($this->order->total, 2, '.', ''),
+            ]);
+        }
     }
 
     public function render()

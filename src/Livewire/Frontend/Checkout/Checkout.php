@@ -134,6 +134,8 @@ class Checkout extends Component
         $this->retrievePaymentMethods();
         $this->retrieveShippingMethods();
         $this->fillPrices();
+
+        $this->dispatch('checkoutInitiated');
     }
 
     public function getCartItemsProperty()
@@ -355,6 +357,8 @@ class Checkout extends Component
 
     public function submit()
     {
+        $this->dispatch('checkoutSubmitted');
+
         $this->checkCart();
 
         $validator = Validator::make([

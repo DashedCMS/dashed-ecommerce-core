@@ -27,6 +27,8 @@ class Searchbar extends Component
             $this->products = null;
             $this->showSearchbar = false;
         }
+
+        $this->dispatch('searchInitiated');
     }
 
     public function updatedSearch()

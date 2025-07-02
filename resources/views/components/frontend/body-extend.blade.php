@@ -10,17 +10,10 @@
         @endforeach
     @endif
 
-    @if(isset($order) && $order->isPaidFor())
-        @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_store_id'))
-            <script>
-                fbq('track', 'Purchase', {currency: "EUR", value: {{number_format($order->total, 2, '.', '')}}});
-            </script>
-        @endif
-    @endif
-
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.on('productAddedToCart', (event) => {
+                @if(Customsetting::get('google_tagmanager_id'))
                 dataLayer.push({
                     'event': 'addToCart',
                     'ecommerce': {
@@ -35,6 +28,28 @@
                         }
                     }
                 });
+                @endif
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                fbq('track', 'AddToCart');
+                @endif
+            });
+
+            Livewire.on('checkoutInitiated', (event) => {
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                fbq('track', 'InitiateCheckout');
+                @endif
+            });
+
+            Livewire.on('checkoutSubmitted', (event) => {
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                fbq('track', 'AddPaymentInfo');
+                @endif
+            });
+
+            Livewire.on('orderPaid', (event) => {
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                fbq('track', 'Purchase', {currency: "EUR", value: event.total});
+                @endif
             });
         });
     </script>
