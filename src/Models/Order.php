@@ -1122,7 +1122,7 @@ class Order extends Model
 
     public function printReceipt($isCopy = false)
     {
-        $store_name = Customsetting::get('company_name');
+        $store_name = Customsetting::get('site_name');
         $store_address = Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') . ' ' . Customsetting::get('company_city');
         $store_phone = Customsetting::get('company_phone_number');
         $store_email = Customsetting::get('site_to_email');

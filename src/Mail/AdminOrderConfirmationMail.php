@@ -38,14 +38,14 @@ class AdminOrderConfirmationMail extends Mailable
         $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.admin-confirm-order') ? env('SITE_THEME', 'dashed') . '.emails.admin-confirm-order' : 'dashed-ecommerce-core::emails.admin-confirm-order';
 
         return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))->subject(Translation::get('admin-order-confirmation-email-subject', 'orders', 'Order received #:orderId:', 'text', [
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))->subject(Translation::get('admin-order-confirmation-email-subject', 'orders', 'Order received #:orderId:', 'text', [
                 'orderId' => $this->order->invoice_id,
             ]))
             ->with([
                 'order' => $this->order,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])->attach($invoicePath, [
-                'as' => Customsetting::get('company_name') . ' - ' . $this->order->invoice_id . '.pdf',
+                'as' => Customsetting::get('site_name') . ' - ' . $this->order->invoice_id . '.pdf',
                 'mime' => 'application/pdf',
             ]);
     }

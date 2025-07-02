@@ -49,7 +49,7 @@ class OrderFulfillmentStatusChangedMail extends Mailable
         $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.notification') ? env('SITE_THEME', 'dashed') . '.emails.notification' : 'dashed-core::emails.notification';
 
         return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
             ->subject($subject)
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),

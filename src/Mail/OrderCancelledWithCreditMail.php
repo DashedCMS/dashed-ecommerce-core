@@ -38,7 +38,7 @@ class OrderCancelledWithCreditMail extends Mailable
         $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.cancelled-order') ? env('SITE_THEME', 'dashed') . '.emails.cancelled-order' : 'dashed-ecommerce-core::emails.cancelled-order';
 
         $mail = $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
             ->subject(Translation::get('order-cancelled-email-subject', 'orders', 'Order #:orderId: has been cancelled', 'text', [
                 'orderId' => $this->order->parentCreditOrder->invoice_id,
             ]))
@@ -46,7 +46,7 @@ class OrderCancelledWithCreditMail extends Mailable
                 'order' => $this->order,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])->attach($invoicePath, [
-                'as' => Customsetting::get('company_name') . ' - ' . $this->order->invoice_id . '.pdf',
+                'as' => Customsetting::get('site_name') . ' - ' . $this->order->invoice_id . '.pdf',
                 'mime' => 'application/pdf',
             ]);
 

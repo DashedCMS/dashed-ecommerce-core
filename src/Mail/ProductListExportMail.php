@@ -39,13 +39,13 @@ class ProductListExportMail extends Mailable
         $productListPath = Storage::disk('dashed')->url('dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx');
 
         return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
             ->subject(Translation::get('exported-product-list-email-subject', 'products', 'Exported product list'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])
             ->attach($productListPath, [
-                'as' => Customsetting::get('company_name') . ' - exported product list.xlsx',
+                'as' => Customsetting::get('site_name') . ' - exported product list.xlsx',
                 'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);
     }

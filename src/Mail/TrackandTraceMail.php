@@ -26,7 +26,7 @@ class TrackandTraceMail extends Mailable
         $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.track-and-trace') ? env('SITE_THEME', 'dashed') . '.emails.track-and-trace' : 'dashed-ecommerce-core::emails.track-and-trace';
 
         return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
             ->subject(Translation::get('order-track-and-trace-email-subject', 'track-and-trace', 'Er is een track&trace beschikbaar  voor bestelling :orderId:', 'text', [
                 'orderId' => $this->trackAndTrace->order->invoice_id,
             ]))->with([

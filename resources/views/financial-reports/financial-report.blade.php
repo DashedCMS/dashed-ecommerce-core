@@ -5,7 +5,7 @@
     <title>{{Translation::get('financial-report', 'financial-report', 'Financial report :startDate: - :endDate:', 'text', [
     'startDate' => $startDate->format('d-m-Y'),
     'endDate' => $endDate->format('d-m-Y'),
-])}} {{Customsetting::get('company_name')}}</title>
+])}} {{Customsetting::get('site_name')}}</title>
 
     {{--    <link rel="preconnect" href="https://fonts.googleapis.com">--}}
     {{--    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>--}}
@@ -67,7 +67,7 @@
         <div>
             <p style="font-size: 25px; font-weight: 600;">
                 {{Translation::get('financial-report', 'financial-report', 'Financial report from :siteName:', 'text', [
-    'siteName'=>Customsetting::get('company_name')
+    'siteName'=>Customsetting::get('site_name')
     ])}}
             </p>
         </div>

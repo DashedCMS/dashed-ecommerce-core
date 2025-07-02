@@ -39,13 +39,13 @@ class OrderListExportMail extends Mailable
         $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.exported-order-list') ? env('SITE_THEME', 'dashed') . '.emails.exported-order-list' : 'dashed-ecommerce-core::emails.exported-order-list';
 
         return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
             ->subject(Translation::get('exported-order-list-email-subject', 'orders', 'Exported order list'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])
             ->attach($orderListPath, [
-                'as' => Customsetting::get('company_name') . ' - exported order list.xlsx',
+                'as' => Customsetting::get('site_name') . ' - exported order list.xlsx',
                 'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);
     }

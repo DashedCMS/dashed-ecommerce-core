@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>{{Translation::get('packing-slip', 'packing-slip', 'Packing slip')}} {{Customsetting::get('company_name')}}</title>
+    <title>{{Translation::get('packing-slip', 'packing-slip', 'Packing slip')}} {{Customsetting::get('site_name')}}</title>
     <style>
         .invoice-box {
             max-width: 800px;
@@ -149,7 +149,7 @@
                             {{ $order->country }}
                         </td>
                         <td class="">
-                            {{Customsetting::get('company_name')}}<br>
+                            {{Customsetting::get('site_name')}}<br>
                             {{Customsetting::get('company_street')}} {{Customsetting::get('company_street_number')}}<br>
                             {{Customsetting::get('company_postal_code')}} {{Customsetting::get('company_city')}}<br>
                             {{Customsetting::get('company_country')}}
@@ -238,7 +238,7 @@
     <div>
         <hr>
         <div style="width:30%;display:inline-block;">
-            {{Customsetting::get('company_name')}}
+            {{Customsetting::get('site_name')}}
         </div>
         <div
             style="float:right;display:inline-block;"><a

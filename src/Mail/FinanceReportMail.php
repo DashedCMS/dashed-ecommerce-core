@@ -36,13 +36,13 @@ class FinanceReportMail extends Mailable
         $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.exported-invoice') ? env('SITE_THEME', 'dashed') . '.emails.exported-invoice' : 'dashed-ecommerce-core::emails.exported-invoice';
 
         $mail = $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('company_name'))
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
             ->subject(Translation::get('exported-finance-report-email-subject', 'finance-report', 'Exported finance report'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', Customsetting::get('company_name') . ' - exported finance report.pdf');
+        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', Customsetting::get('site_name') . ' - exported finance report.pdf');
 
         return $mail;
     }
