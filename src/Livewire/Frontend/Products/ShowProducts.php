@@ -63,7 +63,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (! $value || $value === 'false') {
+                if (!$value || $value === 'false') {
                     unset($activeFilters[$filterKey][$optionKey]);
                 } else {
                     $activeFilters[$filterKey][$optionKey] = true;
@@ -227,6 +227,11 @@ class ShowProducts extends Component
     {
         $this->activeFilters[$filterKey][$optionKey] = false;
         $this->loadProducts();
+    }
+
+    public function updatedSearch()
+    {
+        $this->dispatch('searchInitiated');
     }
 
     public function render()
