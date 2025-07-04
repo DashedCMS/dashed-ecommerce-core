@@ -15,10 +15,11 @@
             Livewire.on('productAddedToCart', (event) => {
                 @if(Customsetting::get('google_tagmanager_id'))
                 dataLayer.push({
-                    'event': 'addToCart',
+                    'event': 'add_to_cart',
                     'ecommerce': {
-                        'currencyCode': 'EUR',
-                        'add': {
+                        'currency': 'EUR',
+                        'cartTotal': event[0].cartTotal,
+                        'items': {
                             'products': [{
                                 'name': event[0].productName,
                                 'id': event[0].product.id,
@@ -34,9 +35,70 @@
                 @endif
             });
 
+            Livewire.on('productRemovedFromCart', (event) => {
+                @if(Customsetting::get('google_tagmanager_id'))
+                dataLayer.push({
+                    'event': 'remove_from_cart',
+                    'ecommerce': {
+                        'currency': 'EUR',
+                        'cartTotal': event[0].cartTotal,
+                        'items': {
+                            'products': [{
+                                'name': event[0].productName,
+                                'id': event[0].product.id,
+                                'price': event[0].price,
+                            }]
+                        }
+                    }
+                });
+                @endif
+            });
+
             Livewire.on('checkoutInitiated', (event) => {
                 @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
                 fbq('track', 'InitiateCheckout');
+                @endif
+                @if(Customsetting::get('google_tagmanager_id'))
+                dataLayer.push({
+                    'event': 'begin_checkout',
+                    'ecommerce': {
+                        'currency': 'EUR',
+                        'value': event[0].cartTotal,
+                        'items': event[0].items
+                    }
+                });
+                @endif
+            });
+
+            Livewire.on('cartInitiated', (event) => {
+                @if(Customsetting::get('google_tagmanager_id'))
+                dataLayer.push({
+                    'event': 'view_cart',
+                    'ecommerce': {
+                        'currency': 'EUR',
+                        'value': event[0].cartTotal,
+                        'items': event[0].items
+                    }
+                });
+                @endif
+            });
+
+            Livewire.on('viewProduct', (event) => {
+                @if(Customsetting::get('google_tagmanager_id'))
+                dataLayer.push({
+                    'event': 'view_item',
+                    'ecommerce': {
+                        'currency': 'EUR',
+                        'value': event[0].cartTotal,
+                        'items': {
+                            'products': [{
+                                'name': event[0].productName,
+                                'id': event[0].product.id,
+                                'price': event[0].price,
+                            }]
+                        }
+                    }
+                });
                 @endif
             });
 

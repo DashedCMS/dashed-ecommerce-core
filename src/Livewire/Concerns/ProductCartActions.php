@@ -222,6 +222,16 @@ trait ProductCartActions
                 'discountPrice' => $this->discountPrice,
             ]);
         }
+
+        if ($this->product) {
+            $this->dispatch('viewProduct', [
+                'product' => $this->product,
+                'productName' => $this->product->name,
+                'quantity' => $this->quantity,
+                'price' => number_format($this->price, 2, '.', ''),
+                'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+            ]);
+        }
     }
 
     public function findVariation(): void
@@ -585,6 +595,7 @@ trait ProductCartActions
             'quantity' => $quantity,
             'price' => number_format($productPrice, 2, '.', ''),
             'options' => $options,
+            'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
         ]);
 
         session(['lastAddedProductInCart' => $product]);

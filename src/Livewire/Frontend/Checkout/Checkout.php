@@ -135,7 +135,26 @@ class Checkout extends Component
         $this->retrieveShippingMethods();
         $this->fillPrices();
 
-        $this->dispatch('checkoutInitiated');
+        $itemLoop = 0;
+        $items = [];
+
+        foreach($this->cartItems as $cartItem) {
+            $items[] = [
+                'item_id' => $cartItem->model->id,
+                'item_name' => $cartItem->model->name,
+                'index' => $itemLoop,
+                'discount' => $cartItem->model->discount_price > 0 ? number_format(($cartItem->model->discount_price - $cartItem->model->current_price), 2, '.', '') : 0,
+                'item_catogory' => $cartItem->model->productCategories ? $cartItem->model->productCategories()->first()->name : '',
+                'price' => number_format($cartItem->price, 2, '.', ''),
+                'quantity' => $cartItem->qty,
+            ];
+            $itemLoop++;
+        }
+
+        $this->dispatch('checkoutInitiated', [
+            'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+            'items' => $items,
+        ]);
     }
 
     public function getCartItemsProperty()

@@ -35,7 +35,16 @@ trait CartActions
 
         if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
+                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
+
+                $this->dispatch('productRemovedFromCart', [
+                    'product' => $cartItem->model,
+                    'productName' => $cartItem->model->name,
+                    'quantity' => $quantity,
+                    'price' => number_format($cartItem->model->price, 2, '.', ''),
+                    'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+                ]);
             }
 
             $this->checkCart('success', Translation::get('product-removed-from-cart', $this->cartType, 'The product has been removed from your cart'));
