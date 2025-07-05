@@ -84,26 +84,26 @@ class Checkout extends Component
 
     public function mount(Product $product)
     {
-        $this->invoiceAddress = auth()->check() && auth()->user()->lastOrder() && auth()->user()->lastOrder()->invoice_street ? true : (Customsetting::get('checkout_delivery_address_standard_invoice_address') ? false : true);
-        $this->isCompany = auth()->check() && auth()->user()->lastOrder() && auth()->user()->lastOrder()->company_name ? true : (Customsetting::get('checkout_form_company_name') == 'required' ? true : false);
-        $this->country = auth()->check() && auth()->user()->lastOrder() && auth()->user()->lastOrder()->country ? auth()->user()->lastOrder()->country : 'Nederland';
-        $this->dateOfBirth = optional(auth()->user())->lastOrder()->date_of_birth ?? '';
-        $this->gender = optional(auth()->user())->lastOrder()->gender ?? '';
-        $this->email = optional(auth()->user())->lastOrder()->email ?? '';
-        $this->firstName = optional(auth()->user())->lastOrder()->first_name ?? '';
-        $this->lastName = optional(auth()->user())->lastOrder()->last_name ?? '';
-        $this->street = optional(auth()->user())->lastOrder()->street ?? '';
-        $this->houseNr = optional(auth()->user())->lastOrder()->house_nr ?? '';
-        $this->zipCode = optional(auth()->user())->lastOrder()->zip_code ?? '';
-        $this->city = optional(auth()->user())->lastOrder()->city ?? '';
-        $this->company = optional(auth()->user())->lastOrder()->company_name ?? '';
-        $this->taxId = optional(auth()->user())->lastOrder()->btw_id ?? '';
-        $this->phoneNumber = optional(auth()->user())->lastOrder()->phone_number ?? '';
-        $this->invoiceStreet = optional(auth()->user())->lastOrder()->invoice_street ?? '';
-        $this->invoiceHouseNr = optional(auth()->user())->lastOrder()->invoice_house_nr ?? '';
-        $this->invoiceZipCode = optional(auth()->user())->lastOrder()->invoice_zip_code ?? '';
-        $this->invoiceCity = optional(auth()->user())->lastOrder()->invoice_city ?? '';
-        $this->invoiceCountry = optional(auth()->user())->lastOrder()->invoice_country ?? '';
+        $this->invoiceAddress = auth()->check() && auth()->user()->lastOrderFromAllOrders() && auth()->user()->lastOrderFromAllOrders()->invoice_street ? true : (Customsetting::get('checkout_delivery_address_standard_invoice_address') ? false : true);
+        $this->isCompany = auth()->check() && auth()->user()->lastOrderFromAllOrders() && auth()->user()->lastOrderFromAllOrders()->company_name ? true : (Customsetting::get('checkout_form_company_name') == 'required' ? true : false);
+        $this->country = auth()->check() && auth()->user()->lastOrderFromAllOrders() && auth()->user()->lastOrderFromAllOrders()->country ? auth()->user()->lastOrderFromAllOrders()->country : 'Nederland';
+        $this->dateOfBirth = optional(auth()->user())->lastOrderFromAllOrders()->date_of_birth ?? '';
+        $this->gender = optional(auth()->user())->lastOrderFromAllOrders()->gender ?? '';
+        $this->email = optional(auth()->user())->lastOrderFromAllOrders()->email ?? '';
+        $this->firstName = optional(auth()->user())->lastOrderFromAllOrders()->first_name ?? '';
+        $this->lastName = optional(auth()->user())->lastOrderFromAllOrders()->last_name ?? '';
+        $this->street = optional(auth()->user())->lastOrderFromAllOrders()->street ?? '';
+        $this->houseNr = optional(auth()->user())->lastOrderFromAllOrders()->house_nr ?? '';
+        $this->zipCode = optional(auth()->user())->lastOrderFromAllOrders()->zip_code ?? '';
+        $this->city = optional(auth()->user())->lastOrderFromAllOrders()->city ?? '';
+        $this->company = optional(auth()->user())->lastOrderFromAllOrders()->company_name ?? '';
+        $this->taxId = optional(auth()->user())->lastOrderFromAllOrders()->btw_id ?? '';
+        $this->phoneNumber = optional(auth()->user())->lastOrderFromAllOrders()->phone_number ?? '';
+        $this->invoiceStreet = optional(auth()->user())->lastOrderFromAllOrders()->invoice_street ?? '';
+        $this->invoiceHouseNr = optional(auth()->user())->lastOrderFromAllOrders()->invoice_house_nr ?? '';
+        $this->invoiceZipCode = optional(auth()->user())->lastOrderFromAllOrders()->invoice_zip_code ?? '';
+        $this->invoiceCity = optional(auth()->user())->lastOrderFromAllOrders()->invoice_city ?? '';
+        $this->invoiceCountry = optional(auth()->user())->lastOrderFromAllOrders()->invoice_country ?? '';
 
         $this->accountRequired = Customsetting::get('checkout_account', default: 2);
         $this->firstAndLastnameRequired = Customsetting::get('checkout_form_name', default: 0);

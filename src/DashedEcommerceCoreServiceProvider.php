@@ -157,6 +157,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             return $model->orders()->latest()->first();
         });
 
+        User::addDynamicRelation('lastOrderFromAllOrders', function (User $model) {
+            return $model->allOrders()->latest()->first();
+        });
+
         //        $builderBlockClasses = [];
         //        if (config('dashed-ecommerce-core.registerDefaultBuilderBlocks', true)) {
         //            $builderBlockClasses[] = 'builderBlocks';
