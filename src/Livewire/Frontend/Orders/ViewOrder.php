@@ -99,13 +99,30 @@ class ViewOrder extends Component
             }
         }
 
-        if($this->order->isPaidFor() && !$this->order->paid_signal_send){
+        if($this->order->isPaidFor()){
+            $itemLoop = 0;
+            $items = [];
+
+            foreach($this->order->orderProducts as $orderProduct) {
+                $items[] = [
+                    'item_id' => $orderProduct->product->id ?? $orderProduct->id,
+                    'item_name' => $orderProduct->name,
+                    'index' => $itemLoop,
+                    'discount' => $orderProduct->discount > 0 ? number_format($orderProduct->discount, 2, '.', '') : 0,
+                    'item_catogory' => ($orderProduct->product && $orderProduct->product->productCategories) ? $orderProduct->product->productCategories()->first()->name : '',
+                    'price' => number_format($orderProduct->price / $orderProduct->quantity, 2, '.', ''),
+                    'quantity' => $orderProduct->quantity,
+                ];
+                $itemLoop++;
+            }
+
             $this->dispatch('orderPaid', [
                 'orderId' => $this->order->id,
                 'total' => number_format($this->order->total, 2, '.', ''),
+                'discountCode' => $this->order->discountCode ? $this->order->discountCode->code : '',
+                'tax' => number_format($this->order->btw, 2, '.', ''),
+                'items' => $items,
             ]);
-            $this->order->paid_signal_send = true;
-            $this->order->save();
         }
     }
 
