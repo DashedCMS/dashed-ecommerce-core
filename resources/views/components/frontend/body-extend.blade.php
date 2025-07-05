@@ -114,7 +114,7 @@
                 @endif
                 @if(Customsetting::get('google_tagmanager_id'))
                 dataLayer.push({
-                    'event': 'view_item',
+                    'event': 'purchase',
                     'ecommerce': {
                         'currency': 'EUR',
                         'value': event[0].total,
