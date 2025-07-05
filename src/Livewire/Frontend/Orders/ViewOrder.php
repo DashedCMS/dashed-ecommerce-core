@@ -104,6 +104,8 @@ class ViewOrder extends Component
                 'orderId' => $this->order->id,
                 'total' => number_format($this->order->total, 2, '.', ''),
             ]);
+            $this->order->paid_signal_send = true;
+            $this->order->save();
         }
     }
 

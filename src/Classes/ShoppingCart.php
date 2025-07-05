@@ -89,7 +89,7 @@ class ShoppingCart
         Cart::instance($cartType);
     }
 
-    public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null)
+    public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null, $shippingMethodId = null, $paymentMethodId = null)
     {
         $totalDiscount = 0;
 
@@ -238,7 +238,7 @@ class ShoppingCart
 
     public static function amounts($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
     {
-        $discount = self::totalDiscount(false);
+        $discount = self::totalDiscount(false, null, $shippingMethodId, $paymentMethodId);
         $tax = self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
         $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount);
         $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
@@ -873,7 +873,7 @@ class ShoppingCart
 
     public static function getCheckoutData($shippingMethodId, $paymentMethodId)
     {
-        $discount = self::totalDiscount(false);
+        $discount = self::totalDiscount(false, null, $shippingMethodId, $paymentMethodId);
         $tax = self::btw(false, true, $shippingMethodId, $paymentMethodId);
         $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount);
         $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
