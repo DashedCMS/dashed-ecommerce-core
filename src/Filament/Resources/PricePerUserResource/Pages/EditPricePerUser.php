@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages;
 
+use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -60,8 +61,7 @@ class EditPricePerUser extends EditRecord
                 ])
                 ->action(function ($data) {
 
-                    $file = Storage::disk('local')->path($data['file']);
-                    Excel::import(new PricePerProductForUserImport($this->record), $file);
+                    ImportPricesPerUserPerProduct::dispatch($this->record, $data['file']);
 
                     Notification::make()
                         ->title('Importeren')
@@ -97,8 +97,7 @@ class EditPricePerUser extends EditRecord
                 ])
                 ->action(function ($data) {
 
-                    $file = Storage::disk('local')->path($data['file']);
-                    Excel::import(new PricePerCategoryForUserImport($this->record), $file);
+                    ImportPricesPerUserPerProduct::dispatch($this->record, $data['file']);
 
                     Notification::make()
                         ->title('Importeren')
