@@ -48,7 +48,7 @@ class PricePerUserResource extends Resource
                 ->schema([
                     Placeholder::make('pricePerUser')
                         ->label('Prijs per gebruiker')
-                        ->content('Vul hier een korting per product in voor de gebruiker, of doe het in bulk met de export/import functie. De categorieen overschrijven ALTIJD de producten, en met het verwijderen van een categorie uit de lijst worden de producten van die categorie ook verwijderd.'),
+                        ->content('Vul hier een korting per product in voor de gebruiker, of doe het in bulk met de export/import functie. De categorieen overschrijven ALTIJD de producten, en met het verwijderen van een categorie uit de lijst worden de producten van die categorie ook verwijderd. Na het opslaan moet je even wachten tot het verwerkt is, refresh na 30 seconden om verdere aanpassingen door te voeren.'),
                 ]),
         ];
 
