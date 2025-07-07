@@ -114,27 +114,27 @@ class EditPricePerUser extends EditRecord
         $products = Product::all();
         $productCategories = ProductCategory::all();
 
-        $data['product_ids'] = DB::table('dashed__product_user')
-            ->where('user_id', $this->record->id)
-            ->pluck('product_id')
-            ->toArray();
+//        $data['product_ids'] = DB::table('dashed__product_user')
+//            ->where('user_id', $this->record->id)
+//            ->pluck('product_id')
+//            ->toArray();
 
         $data['product_category_ids'] = DB::table('dashed__product_category_user')
             ->where('user_id', $this->record->id)
             ->pluck('product_category_id')
             ->toArray();
 
-        foreach ($products as $product) {
-            if (in_array($product->id, $data['product_ids'])) {
-                $productUser = DB::table('dashed__product_user')
-                    ->where('user_id', $this->record->id)
-                    ->where('product_id', $product->id)
-                    ->first();
-                $data[$product->id . '_price'] = $productUser->price ?? null;
-                $data[$product->id . '_discount_price'] = $productUser->discount_price ?? null;
-                $data[$product->id . '_discount_percentage'] = $productUser->discount_percentage ?? null;
-            }
-        }
+//        foreach ($products as $product) {
+//            if (in_array($product->id, $data['product_ids'])) {
+//                $productUser = DB::table('dashed__product_user')
+//                    ->where('user_id', $this->record->id)
+//                    ->where('product_id', $product->id)
+//                    ->first();
+//                $data[$product->id . '_price'] = $productUser->price ?? null;
+//                $data[$product->id . '_discount_price'] = $productUser->discount_price ?? null;
+//                $data[$product->id . '_discount_percentage'] = $productUser->discount_percentage ?? null;
+//            }
+//        }
 
         foreach ($productCategories as $productCategory) {
             if (in_array($productCategory->id, $data['product_category_ids'])) {

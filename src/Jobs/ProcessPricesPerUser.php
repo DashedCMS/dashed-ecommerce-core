@@ -50,30 +50,30 @@ class ProcessPricesPerUser implements ShouldQueue
         $data = $this->data;
         $user = $this->user;
 
-        $products = Product::all();
+//        $products = Product::all();
         $productCategories = ProductCategory::all();
 
         $productGroupIds = [];
 
-        foreach ($products as $product) {
-            if (in_array($product->id, $data['product_ids'])) {
-                $price = $data[$product->id . '_discount_price'];
-                $discountPercentage = $data[$product->id . '_discount_percentage'];
-
-                DB::table('dashed__product_user')
-                    ->updateOrInsert(
-                        ['product_id' => $product->id, 'user_id' => $user->id],
-                        ['discount_price' => $price, 'discount_percentage' => $discountPercentage]
-                    );
-
-                $productGroupIds[] = $product->product_group_id;
-            }
-        }
-
-        DB::table('dashed__product_user')
-            ->where('user_id', $user->id)
-            ->whereNotIn('product_id', $data['product_ids'])
-            ->delete();
+//        foreach ($products as $product) {
+//            if (in_array($product->id, $data['product_ids'])) {
+//                $price = $data[$product->id . '_discount_price'];
+//                $discountPercentage = $data[$product->id . '_discount_percentage'];
+//
+//                DB::table('dashed__product_user')
+//                    ->updateOrInsert(
+//                        ['product_id' => $product->id, 'user_id' => $user->id],
+//                        ['discount_price' => $price, 'discount_percentage' => $discountPercentage]
+//                    );
+//
+//                $productGroupIds[] = $product->product_group_id;
+//            }
+//        }
+//
+//        DB::table('dashed__product_user')
+//            ->where('user_id', $user->id)
+//            ->whereNotIn('product_id', $data['product_ids'])
+//            ->delete();
 
         foreach ($productCategories as $productCategory) {
             if (in_array($productCategory->id, $data['product_category_ids'])) {
