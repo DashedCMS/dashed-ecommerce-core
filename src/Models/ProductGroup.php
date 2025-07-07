@@ -478,7 +478,23 @@ class ProductGroup extends Model
 
     public function fromPrice(): string
     {
-        $lowestPrice = $this->products->min('price');
+        $user = null;
+
+        if (!$user && auth()->check()) {
+            $user = auth()->user();
+        }
+
+        if ($user) {
+            $lowestPrice = DB::table('dashed__product_user')
+                ->where('user_id', $user->id)
+                ->whereIn('product_id', $this->products->pluck('id'))
+                ->orderBy('price', 'asc')
+                ->value('price');
+        }
+
+        if (!isset($lowestPrice) || !$lowestPrice) {
+            $lowestPrice = $this->products->min('price');
+        }
 
         return Translation::get('product-price-from', 'product', 'Vanaf :price:', 'text', [
             'price' => $lowestPrice ? CurrencyHelper::formatPrice($lowestPrice) : '€0,00',
@@ -487,8 +503,32 @@ class ProductGroup extends Model
 
     public function betweenPrice(): string
     {
-        $lowestPrice = $this->products->min('price');
-        $highestPrice = $this->products->max('price');
+        $user = null;
+
+        if (!$user && auth()->check()) {
+            $user = auth()->user();
+        }
+
+        if ($user) {
+            $lowestPrice = DB::table('dashed__product_user')
+                ->where('user_id', $user->id)
+                ->whereIn('product_id', $this->products->pluck('id'))
+                ->orderBy('price', 'asc')
+                ->value('price');
+            $highestPrice = DB::table('dashed__product_user')
+                ->where('user_id', $user->id)
+                ->whereIn('product_id', $this->products->pluck('id'))
+                ->orderBy('price', 'desc')
+                ->value('price');
+        }
+
+        if (!isset($lowestPrice) || !$lowestPrice) {
+            $lowestPrice = $this->products->min('price');
+        }
+
+        if (!isset($highestPrice) || !$highestPrice) {
+            $highestPrice = $this->products->max('price');
+        }
 
         if ($lowestPrice === $highestPrice) {
             return Translation::get('product-price-static', 'product', ':price:', 'text', [
