@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Filament\Notifications\Notification;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -32,11 +33,12 @@ trait CartActions
     public function changeQuantity(string $rowId, int $quantity)
     {
         ShoppingCart::setInstance($this->cartType);
-
         if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
+
+                EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $cartItem->model->id);
 
                 $this->dispatch('productRemovedFromCart', [
                     'product' => $cartItem->model,
@@ -51,6 +53,11 @@ trait CartActions
         } else {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
+                if($cartItem->qty > $quantity) {
+                    EcommerceActionLog::createLog('remove_from_cart', ($cartItem->qty - $quantity), productId: $cartItem->model->id);
+                } else {
+                    EcommerceActionLog::createLog('add_to_cart', ($quantity - $cartItem->qty), productId: $cartItem->model->id);
+                }
                 \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
             }
 

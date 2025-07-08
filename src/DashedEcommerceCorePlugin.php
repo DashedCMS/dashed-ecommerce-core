@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\CartActionsPieChartWidget;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -80,6 +81,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 AlltimeRevenueStats::class,
                 PaymentMethodPieChartWidget::class,
                 DashboardFunLineChartStats::class,
+                CartActionsPieChartWidget::class,
             ])
             ->resources([
                 PaymentMethodResource::class,

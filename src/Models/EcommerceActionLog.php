@@ -19,8 +19,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class EcommerceActionLog extends Model
 {
-    use SoftDeletes;
-
     protected $table = 'dashed__ecommerce_action_logs';
 
     public static function boot()
@@ -82,5 +80,19 @@ class EcommerceActionLog extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public static function createLog(string $actionType, int $quantity = 1, ?int $productGroupId = null, ?int $productId = null, ?int $orderId = null): EcommerceActionLog
+    {
+        $actionLog = new self();
+        $actionLog->action_type = $actionType;
+        $actionLog->quantity = $quantity;
+        $actionLog->product_group_id = $productGroupId;
+        $actionLog->product_id = $productId;
+        $actionLog->order_id = $orderId;
+        $actionLog->user_id = auth()->id();
+        $actionLog->save();
+
+        return $actionLog;
     }
 }

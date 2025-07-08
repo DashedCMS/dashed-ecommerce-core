@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
@@ -558,12 +559,14 @@ trait ProductCartActions
 
                 if ($product->limit_purchases_per_customer && $newQuantity > $product->limit_purchases_per_customer_limit) {
                     Cart::update($cartItem->rowId, $product->limit_purchases_per_customer_limit);
+                    EcommerceActionLog::createLog('add_to_cart', $product->limit_purchases_per_customer_limit - $cartItem->qty, productId: $product->id);
 
                     return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', $this->cartType, 'You can only purchase :quantity: of this product', 'text', [
                         'quantity' => $product->limit_purchases_per_customer_limit,
                     ]));
                 }
 
+                EcommerceActionLog::createLog('add_to_cart', $newQuantity - $cartItem->qty, productId: $product->id);
                 Cart::update($cartItem->rowId, $newQuantity);
                 $cartUpdated = true;
             }
@@ -573,12 +576,14 @@ trait ProductCartActions
             if ($product->limit_purchases_per_customer && $this->quantity > $product->limit_purchases_per_customer_limit) {
                 Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $attributes)
                     ->associate(Product::class);
+                EcommerceActionLog::createLog('add_to_cart', $product->limit_purchases_per_customer_limit, productId: $product->id);
 
                 return $this->checkCart('danger', Translation::get('product-only-x-purchase-per-customer', $this->cartType, 'You can only purchase :quantity: of this product', 'text', [
                     'quantity' => $product->limit_purchases_per_customer_limit,
                 ]));
             }
 
+            EcommerceActionLog::createLog('add_to_cart', $this->quantity, productId: $product->id);
             Cart::add($product->id, $product->name, $this->quantity, $productPrice, $attributes)
                 ->associate(Product::class);
         }
