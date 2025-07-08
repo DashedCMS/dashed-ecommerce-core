@@ -113,6 +113,11 @@ class Product extends Model
             ->withPivot(['product_filter_option_id']);
     }
 
+    public function ecommerceActionLogs(): HasMany
+    {
+        return $this->hasMany(EcommerceActionLog::class);
+    }
+
     public function scopeSearch($query, ?string $search = null)
     {
         $minPrice = request()->get('min-price') ? request()->get('min-price') : null;

@@ -149,6 +149,11 @@ class ProductGroup extends Model
     //            ->get();
     //    }
 
+    public function ecommerceActionLogs(): HasMany
+    {
+        return $this->hasMany(EcommerceActionLog::class);
+    }
+
     public function productExtras(): HasMany
     {
         return $this->hasMany(ProductExtra::class)
