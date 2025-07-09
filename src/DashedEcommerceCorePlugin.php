@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\CartActionsPieChartWidget;
 use Filament\Panel;
@@ -72,6 +73,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 POSSettingsPage::class,
                 POSCustomerPageRedirect::class,
                 ProductGroupStatisticsPage::class,
+                ActionsStatisticsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,
