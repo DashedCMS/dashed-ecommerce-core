@@ -91,6 +91,7 @@ class EcommerceActionLog extends Model
         $actionLog->product_id = $productId;
         $actionLog->order_id = $orderId;
         $actionLog->user_id = auth()->id();
+        $actionLog->ip = request()->ip();
         $actionLog->save();
 
         return $actionLog;
