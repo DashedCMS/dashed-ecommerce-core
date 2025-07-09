@@ -3,7 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Pages\Page;
@@ -26,7 +28,7 @@ class ActionsStatisticsPage extends Page
     protected static ?string $title = 'Actie statistieken';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'dashed-ecommerce-core::statistics.pages.revenue-statistics';
+    protected static string $view = 'dashed-ecommerce-core::statistics.pages.action-statistics';
 
     public $startDate;
     public $endDate;
@@ -77,10 +79,10 @@ class ActionsStatisticsPage extends Page
         $statistics = [
             'totalAddToCarts' => $addToCartActions->sum('quantity'),
             'totalRemoveFromCarts' => $removeFromCartActions->sum('quantity'),
-            'averagePerDayAddToCarts' => number_format($addToCartActions->sum('quantity') / $beginDate->diffInDays($endDate), 2, '.', ','),
-            'averagePerDayRemoveFromCarts' => number_format($removeFromCartActions->sum('quantity') / $beginDate->diffInDays($endDate), 2, '.', ','),
-            'mostAddedProduct' => $products->sortByDesc('add_to_cart_count')->first(),
-            'mostRemovedProduct' => $products->sortByDesc('remove_from_cart_count')->first(),
+            'averagePerDayAddToCarts' => number_format($addToCartActions->sum('quantity') / ($beginDate->diffInDays($endDate) ?: 1), 2, '.', ','),
+            'averagePerDayRemoveFromCarts' => number_format($removeFromCartActions->sum('quantity') / ($beginDate->diffInDays($endDate) ?: 1), 2, '.', ','),
+            'mostAddedProduct' => ($products->sortByDesc('add_to_cart_count')->first()->name ?? 'geen product') . ' (' . ($products->sortByDesc('add_to_cart_count')->first()->add_to_cart_count ?? '0') . ')',
+            'mostRemovedProduct' => ($products->sortByDesc('remove_from_cart_count')->first()->name ?? 'geen product') . ' (' . ($products->sortByDesc('remove_from_cart_count')->first()->remove_from_cart_count ?? '0') . ')',
         ];
 
         $graph = [];
@@ -99,14 +101,14 @@ class ActionsStatisticsPage extends Page
             'graph' => [
                 'datasets' => [
                     [
-                        'label' => 'Stats',
+                        'label' => 'Add to carts',
                         'data' => $graph['data'] ?? [],
                         'backgroundColor' => 'orange',
                         'borderColor' => "orange",
                         'fill' => 'start',
                     ],
                     [
-                        'label' => 'Stats',
+                        'label' => 'Remove from carts',
                         'data' => $graph['data2'] ?? [],
                         'backgroundColor' => 'blue',
                         'borderColor' => "blue",
@@ -115,8 +117,14 @@ class ActionsStatisticsPage extends Page
                 ],
                 'labels' => $graph['labels'] ?? [],
             ],
+            'filters' => [
+                'beginDate' => $beginDate,
+                'endDate' => $endDate,
+            ],
             'data' => $statistics,
         ];
+
+        $graphData['products'] = $products;
 
         $this->graphData = $graphData;
         $this->dispatch('updateGraphData', $graphData);
@@ -147,7 +155,8 @@ class ActionsStatisticsPage extends Page
     {
         return [
             ActionStatisticsChart::make(),
-//            RevenueCards::make(),
+            ActionStatisticsCards::make(),
+            ActionStatisticsTable::make(),
         ];
     }
 

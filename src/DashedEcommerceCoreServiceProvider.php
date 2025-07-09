@@ -4,6 +4,9 @@ namespace Dashed\DashedEcommerceCore;
 
 use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedEcommerceCore\Commands\UpdateExpiredGlobalDiscountCodes;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
@@ -107,6 +110,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('discount-chart', DiscountChart::class);
         Livewire::component('discount-cards', DiscountCards::class);
         Livewire::component('discount-table', DiscountTable::class);
+        Livewire::component('action-statistics-chart', ActionStatisticsChart::class);
+        Livewire::component('action-statistics-cards', ActionStatisticsCards::class);
+        Livewire::component('action-statistics-table', ActionStatisticsTable::class);
 
         //Backend components
         Livewire::component('change-order-fulfillment-status', ChangeOrderFulfillmentStatus::class);
