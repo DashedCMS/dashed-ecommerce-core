@@ -109,7 +109,7 @@ class ViewOrder extends Component
                     'item_name' => $orderProduct->name,
                     'index' => $itemLoop,
                     'discount' => $orderProduct->discount > 0 ? number_format($orderProduct->discount, 2, '.', '') : 0,
-                    'item_catogory' => ($orderProduct->product && $orderProduct->product->productCategories) ? $orderProduct->product->productCategories()->first()->name : '',
+                    'item_category' => ($orderProduct->product && $orderProduct->product->productCategories->count()) ? $orderProduct->product->productCategories()->first()->name : '',
                     'price' => number_format($orderProduct->price / $orderProduct->quantity, 2, '.', ''),
                     'quantity' => $orderProduct->quantity,
                 ];

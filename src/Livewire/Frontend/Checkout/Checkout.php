@@ -144,7 +144,7 @@ class Checkout extends Component
                 'item_name' => $cartItem->model->name,
                 'index' => $itemLoop,
                 'discount' => $cartItem->model->discount_price > 0 ? number_format(($cartItem->model->discount_price - $cartItem->model->current_price), 2, '.', '') : 0,
-                'item_catogory' => $cartItem->model->productCategories ? $cartItem->model->productCategories()->first()->name : '',
+                'item_category' => $cartItem->model->productCategories ? $cartItem->model->productCategories()->first()->name : '',
                 'price' => number_format($cartItem->price, 2, '.', ''),
                 'quantity' => $cartItem->qty,
             ];
