@@ -371,6 +371,7 @@ class ProductResource extends Resource
                     ->unique('dashed__products', 'slug', fn($record) => $record)
                     ->helperText('Laat leeg om automatisch te laten genereren'),
                 cms()->editorField('description', 'Uitgebreide beschrijving')
+                    ->helperText('Mogelijke variablen: :name:, :categorie naam:')
                     ->rules([
                         'max:10000',
                     ])
@@ -380,6 +381,7 @@ class ProductResource extends Resource
                     ]),
                 Textarea::make('short_description')
                     ->label('Korte beschrijving')
+                    ->helperText('Mogelijke variablen: :name:, :categorie naam:')
                     ->rows(5)
                     ->maxLength(2500),
                 Textarea::make('search_terms')
