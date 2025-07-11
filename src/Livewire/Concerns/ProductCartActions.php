@@ -665,13 +665,22 @@ trait ProductCartActions
             'name' => $this->product->name ?? $this->productGroup->name,
         ];
 
-        foreach($variables as $key => $value) {
+        foreach ($this->filters as $filterKey => $filter) {
+            $filterName = str($filter['name'])->lower()->toString();
+            if ($filter['active'] && collect($filter['options'])->where('id', $filter['active'])->count()) {
+                $variables[$filterName] = collect($filter['options'])->where('id', $filter['active'])->first()['name'];
+            } else {
+                $variables[$filterName] = implode(', ', collect($filter['options'])->pluck('name')->toArray());
+            }
+        }
+
+        foreach ($variables as $key => $value) {
             if (is_array($content)) {
                 $content = array_map(function ($item) use ($key, $value) {
-                    return str_replace('{' . $key . '}', $value, $item);
+                    return str_replace(':' . $key . ':', $value, $item);
                 }, $content);
             } else {
-                $content = str_replace('{' . $key . '}', $value, $content);
+                $content = str_replace(':' . $key . ':', $value, $content);
             }
         }
 
