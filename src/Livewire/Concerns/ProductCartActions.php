@@ -169,8 +169,8 @@ trait ProductCartActions
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
         $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;
-        $this->description = ($this->product && $this->product->description) ? cms()->convertToHtml($this->product->description) : cms()->convertToHtml($this->productGroup->description);
-        $this->shortDescription = $this->product && $this->product->short_description ? $this->product->short_description : $this->productGroup->short_description;
+        $this->description = self::replaceContentVariables(($this->product && $this->product->description) ? cms()->convertToHtml($this->product->description) : cms()->convertToHtml($this->productGroup->description));
+        $this->shortDescription = self::replaceContentVariables($this->product && $this->product->short_description ? $this->product->short_description : $this->productGroup->short_description);
         $this->sku = $this->product->sku ?? '';
         $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
@@ -657,5 +657,24 @@ trait ProductCartActions
 
         $this->extras[$extraKey]['value'] = $value;
         $this->fillInformation();
+    }
+
+    public function replaceContentVariables(?string $content): ?string
+    {
+        $variables = [
+            'name' => $this->product->name ?? $this->productGroup->name,
+        ];
+
+        foreach($variables as $key => $value) {
+            if (is_array($content)) {
+                $content = array_map(function ($item) use ($key, $value) {
+                    return str_replace('{' . $key . '}', $value, $item);
+                }, $content);
+            } else {
+                $content = str_replace('{' . $key . '}', $value, $content);
+            }
+        }
+
+        return $content;
     }
 }
