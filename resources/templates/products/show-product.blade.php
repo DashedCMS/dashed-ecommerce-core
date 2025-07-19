@@ -4,6 +4,9 @@
             @if($product)
                 <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
             @endif
+            @if($productFaqs)
+                <x-dashed-ecommerce-core::frontend.products.faq-schema :faqs="$productFaqs"/>
+            @endif
             <div class="mx-auto max-w-2xl lg:max-w-none">
                 <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
                     <div class="flex flex-col-reverse lg:sticky lg:top-32 bg-pattern rounded-lg">
@@ -152,8 +155,10 @@
                             <div class="flex items-center text-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                      class="h-8 mr-2 text-primary">
-                                    <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z"/>
-                                    <path d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z"/>
+                                    <path
+                                        d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z"/>
+                                    <path
+                                        d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z"/>
                                     <path d="M19.5 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z"/>
                                 </svg>
 
@@ -352,68 +357,71 @@
                                 </div>
                             @endif
 
-                            @if(count($product->contentBlocks['faqs'] ?? []))
-                                <div class="bg-gray-100 rounded-lg">
-                                    <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
-                                         @click="openTab('faq')">
-                                        <h3>{{ Translation::get('faq', 'product', 'Veelgestelde vragen') }}</h3>
-                                        {{--                                        <svg x-cloak x-show="activeTab != 'faq'" xmlns="http://www.w3.org/2000/svg"--}}
-                                        {{--                                             viewBox="0 0 24 24" fill="currentColor" class="size-6">--}}
-                                        {{--                                            <path fill-rule="evenodd"--}}
-                                        {{--                                                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"--}}
-                                        {{--                                                  clip-rule="evenodd"/>--}}
-                                        {{--                                        </svg>--}}
-                                        {{--                                        <svg x-show="activeTab == 'faq'"--}}
-                                        {{--                                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"--}}
-                                        {{--                                             class="size-6">--}}
-                                        {{--                                            <path fill-rule="evenodd"--}}
-                                        {{--                                                  d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"--}}
-                                        {{--                                                  clip-rule="evenodd"/>--}}
-                                        {{--                                        </svg>--}}
-                                    </div>
-                                    <div
-                                        class="px-4 pb-4"
-                                        {{--                                            x-cloak--}}
-                                        {{--                                            x-show="activeTab == 'faq'"--}}
-                                        x-transition.opacity.scale.origin.top
-                                    >
-                                        <div class="grid gap-4" x-data="{ openFaq: '' }">
-                                            @foreach($product->contentBlocks['faqs'] ?? [] as $faq)
-                                                <div class="bg-white">
-                                                    <div class="flex flex-wrap items-center justify-between cursor-pointer p-4"
-                                                         @click="openFaq == '{{ $loop->iteration }}' ? openFaq = '' : openFaq = '{{ $loop->iteration }}'">
-                                                        <h3>{{ $faq['title'] }}</h3>
-                                                        <svg x-cloak x-show="openFaq != '{{ $loop->iteration }}'"
-                                                             xmlns="http://www.w3.org/2000/svg"
-                                                             viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                                                            <path fill-rule="evenodd"
-                                                                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
-                                                                  clip-rule="evenodd"/>
-                                                        </svg>
-                                                        <svg x-show="openFaq == '{{ $loop->iteration }}'"
-                                                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                             fill="currentColor"
-                                                             class="size-6">
-                                                            <path fill-rule="evenodd"
-                                                                  d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
-                                                                  clip-rule="evenodd"/>
-                                                        </svg>
-                                                    </div>
-                                                    <div
-                                                        class="px-4 pb-4"
-                                                        x-cloak
-                                                        x-show="openFaq == '{{ $loop->iteration }}'"
-                                                        x-transition.opacity.scale.origin.top
-                                                    >
-                                                        <div class="grid gap-4">
-                                                            {!! cms()->convertToHtml($faq['content']) !!}
+                            @if($productFaqs->count())
+                                @foreach($productFaqs as $faqGroup)
+                                    <div class="bg-gray-100">
+                                        <div class="flex flex-wrap items-center justify-between cursor-pointer-not p-4"
+                                             @click="openTab('faq')">
+                                            <h3>{{ $faqGroup->name }}</h3>
+                                            {{--                                        <svg x-cloak x-show="activeTab != 'faq'" xmlns="http://www.w3.org/2000/svg"--}}
+                                            {{--                                             viewBox="0 0 24 24" fill="currentColor" class="size-6">--}}
+                                            {{--                                            <path fill-rule="evenodd"--}}
+                                            {{--                                                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"--}}
+                                            {{--                                                  clip-rule="evenodd"/>--}}
+                                            {{--                                        </svg>--}}
+                                            {{--                                        <svg x-show="activeTab == 'faq'"--}}
+                                            {{--                                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"--}}
+                                            {{--                                             class="size-6">--}}
+                                            {{--                                            <path fill-rule="evenodd"--}}
+                                            {{--                                                  d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"--}}
+                                            {{--                                                  clip-rule="evenodd"/>--}}
+                                            {{--                                        </svg>--}}
+                                        </div>
+                                        <div
+                                            class="px-4 pb-4"
+                                            {{--                                            x-cloak--}}
+                                            {{--                                            x-show="activeTab == 'faq'"--}}
+                                            x-transition.opacity.scale.origin.top
+                                        >
+                                            <div class="grid gap-4" x-data="{ openFaq: '' }">
+                                                @foreach($faqGroup->questions as $faq)
+                                                    <div class="bg-white">
+                                                        <div
+                                                            class="flex flex-wrap items-center justify-between cursor-pointer p-4"
+                                                            @click="openFaq == '{{ $loop->iteration }}' ? openFaq = '' : openFaq = '{{ $loop->iteration }}'">
+                                                            <h3>{{ $faq['question'] }}</h3>
+                                                            <svg x-cloak x-show="openFaq != '{{ $loop->iteration }}'"
+                                                                 xmlns="http://www.w3.org/2000/svg"
+                                                                 viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                                                <path fill-rule="evenodd"
+                                                                      d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
+                                                                      clip-rule="evenodd"/>
+                                                            </svg>
+                                                            <svg x-show="openFaq == '{{ $loop->iteration }}'"
+                                                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                                                 fill="currentColor"
+                                                                 class="size-6">
+                                                                <path fill-rule="evenodd"
+                                                                      d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
+                                                                      clip-rule="evenodd"/>
+                                                            </svg>
+                                                        </div>
+                                                        <div
+                                                            class="px-4 pb-4"
+                                                            x-cloak
+                                                            x-show="openFaq == '{{ $loop->iteration }}'"
+                                                            x-transition.opacity.scale.origin.top
+                                                        >
+                                                            <div class="grid gap-4">
+                                                                {!! cms()->convertToHtml($faq['answer']) !!}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            @endforeach
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endforeach
                             @endif
 
                             @foreach($productTabs as $key => $productTab)

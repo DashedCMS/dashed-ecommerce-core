@@ -763,10 +763,10 @@ class Product extends Model
             $productTabIds = array_merge($productTabIds, $productCategory->globalFaqs->pluck('id')->toArray());
         }
 
-        if ($this->productGroup) {
-            $productTabIds = array_merge($productTabIds, $this->productGroup->faqs->pluck('id')->toArray());
-            $productTabIds = array_merge($productTabIds, $this->productGroup->globalFaqs->pluck('id')->toArray());
-        }
+//        if ($this->productGroup) {
+//            $productTabIds = array_merge($productTabIds, $this->productGroup->faqs->pluck('id')->toArray());
+//            $productTabIds = array_merge($productTabIds, $this->productGroup->globalFaqs->pluck('id')->toArray());
+//        }
 
         return ProductFaq::whereIn('id', $productTabIds)
             ->orderBy('order')

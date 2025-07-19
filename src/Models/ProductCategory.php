@@ -252,4 +252,10 @@ class ProductCategory extends Model
         return $this->belongsToMany(ProductTab::class, 'dashed__product_tab_product_category', 'product_category_id', 'product_tab_id')
             ->where('global', 1);
     }
+
+    public function globalFaqs(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product_category', 'product_category_id', 'product_faq_id')
+            ->where('global', 1);
+    }
 }
