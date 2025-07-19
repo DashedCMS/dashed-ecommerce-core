@@ -17,12 +17,12 @@ class ProductFaq extends Model
 
     protected $fillable = [
         'name',
-        'content',
+        'questions',
     ];
 
     public $translatable = [
         'name',
-        'content',
+        'questions',
     ];
 
     protected $table = 'dashed__product_faqs';
