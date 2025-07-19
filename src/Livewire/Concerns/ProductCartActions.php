@@ -35,6 +35,7 @@ trait ProductCartActions
     public array $filters = [];
     public ?Collection $productTabs = null;
     public ?Collection $productExtras = null;
+    public ?Collection $productFaqs = null;
     public ?array $extras = [];
     public ?array $hiddenOptions = [];
     public string|int $quantity = 1;
@@ -157,6 +158,7 @@ trait ProductCartActions
         $this->suggestedProducts = $this->product ? $this->product->getSuggestedProducts(includeFromProductGroup: true) : $this->productGroup->suggestedProducts;
         $this->crossSellProducts = $this->product ? $this->product->getCrossSellProducts(includeFromProductGroup: true) : $this->productGroup->crossSellProducts;
         $this->productTabs = $this->product ? $this->product->allProductTabs() : $this->productGroup->allProductTabs();
+        $this->productFaqs = $this->product ? $this->product->allProductFaqs() : $this->productGroup->allProductFaqs();
 
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || !$this->productExtras) {
             if (!$isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false) && $this->product) {

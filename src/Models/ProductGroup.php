@@ -132,6 +132,26 @@ class ProductGroup extends Model
             ->where('global', 0);
     }
 
+    public function faqs()
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_group_id', 'faq_id')
+            ->orderBy('order');
+    }
+
+    public function globalFaqs()
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_group_id', 'faq_id')
+            ->orderBy('order')
+            ->where('global', 1);
+    }
+
+    public function ownFaqs()
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_group_id', 'faq_id')
+            ->orderBy('order')
+            ->where('global', 0);
+    }
+
     //    public function allProductExtras(): ?Collection
     //    {
     //        $productExtraIds = [];
@@ -345,6 +365,17 @@ class ProductGroup extends Model
         $productTabIds = array_merge($productTabIds, $this->globalTabs->pluck('id')->toArray());
 
         return ProductTab::whereIn('id', $productTabIds)
+            ->get();
+    }
+
+    public function allProductFqs(): ?Collection
+    {
+        $productFaqIds = [];
+
+        $productFaqIds = array_merge($productFaqIds, $this->faqs->pluck('id')->toArray());
+        $productFaqIds = array_merge($productFaqIds, $this->globalFaqs->pluck('id')->toArray());
+
+        return ProductFaq::whereIn('id', $productFaqIds)
             ->get();
     }
 

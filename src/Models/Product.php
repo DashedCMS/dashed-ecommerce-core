@@ -686,6 +686,24 @@ class Product extends Model
             ->where('global', 0);
     }
 
+    public function faqs()
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_id', 'faq_id')
+            ->orderBy('order');
+    }
+
+    public function globalFaqs()
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_id', 'faq_id')
+            ->where('global', 1);
+    }
+
+    public function ownFaqs()
+    {
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_id', 'faq_id')
+            ->where('global', 0);
+    }
+
     public function productCharacteristics()
     {
         return $this->hasMany(ProductCharacteristic::class);
@@ -730,6 +748,27 @@ class Product extends Model
         }
 
         return ProductTab::whereIn('id', $productTabIds)
+            ->orderBy('order')
+            ->get();
+    }
+
+    public function allProductFaqs(): ?Collection
+    {
+        $productTabIds = [];
+
+        $productTabIds = array_merge($productTabIds, $this->faqs->pluck('id')->toArray());
+        $productTabIds = array_merge($productTabIds, $this->globalFaqs->pluck('id')->toArray());
+
+        foreach ($this->productCategories as $productCategory) {
+            $productTabIds = array_merge($productTabIds, $productCategory->globalFaqs->pluck('id')->toArray());
+        }
+
+        if ($this->productGroup) {
+            $productTabIds = array_merge($productTabIds, $this->productGroup->faqs->pluck('id')->toArray());
+            $productTabIds = array_merge($productTabIds, $this->productGroup->globalFaqs->pluck('id')->toArray());
+        }
+
+        return ProductFaq::whereIn('id', $productTabIds)
             ->orderBy('order')
             ->get();
     }

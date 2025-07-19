@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore;
 
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\CartActionsPieChartWidget;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
@@ -91,6 +92,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ShippingZoneResource::class,
                 ShippingMethodResource::class,
                 DiscountCodeResource::class,
+                ProductFaqResource::class,
                 ProductResource::class,
                 ProductCategoryResource::class,
                 ProductFilterResource::class,
