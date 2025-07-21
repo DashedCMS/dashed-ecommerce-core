@@ -754,13 +754,13 @@ class Product extends Model
 
     public function allProductFaqs(): ?Collection
     {
-        $productTabIds = [];
+        $productFaqIds = [];
 
-        $productTabIds = array_merge($productTabIds, $this->faqs->pluck('id')->toArray());
-        $productTabIds = array_merge($productTabIds, $this->globalFaqs->pluck('id')->toArray());
+        $productFaqIds = array_merge($productFaqIds, $this->faqs->pluck('id')->toArray() ?? []);
+        $productFaqIds = array_merge($productFaqIds, $this->globalFaqs->pluck('id')->toArray() ?? []);
 
         foreach ($this->productCategories as $productCategory) {
-            $productTabIds = array_merge($productTabIds, $productCategory->globalFaqs->pluck('id')->toArray());
+            $productFaqIds = array_merge($productFaqIds, $productCategory->globalFaqs->pluck('id')->toArray() ?? []);
         }
 
 //        if ($this->productGroup) {
@@ -768,7 +768,7 @@ class Product extends Model
 //            $productTabIds = array_merge($productTabIds, $this->productGroup->globalFaqs->pluck('id')->toArray());
 //        }
 
-        return ProductFaq::whereIn('id', $productTabIds)
+        return ProductFaq::whereIn('id', $productFaqIds)
             ->orderBy('order')
             ->get();
     }
