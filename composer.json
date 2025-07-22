@@ -33,9 +33,9 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.63",
-        "orchestra/testbench": "^9",
-        "pestphp/pest": "^2.35",
-        "pestphp/pest-plugin-laravel": "^2.4"
+        "orchestra/testbench": "^10",
+        "pestphp/pest": "^3.8",
+        "pestphp/pest-plugin-laravel": "^3.0"
     },
     "autoload": {
         "psr-4": {
