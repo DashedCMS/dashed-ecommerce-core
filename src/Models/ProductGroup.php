@@ -368,7 +368,7 @@ class ProductGroup extends Model
             ->get();
     }
 
-    public function allProductFqs(): ?Collection
+    public function allProductFaqs(): ?Collection
     {
         $productFaqIds = [];
 
