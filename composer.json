@@ -20,7 +20,7 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "daltcore/lara-pdf-merger": "^2.0",
         "dashed/livewire-range-slider": "^1.0",
-        "dashed/receiptprinter": "dev-master",
+        "dashed/receiptprinter": "^1.0",
         "dompdf/dompdf": "^3.1",
         "hardevine/shoppingcart": "^3.4",
         "lara-zeus/quantity": "^2.0",
