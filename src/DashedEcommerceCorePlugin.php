@@ -2,16 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\CartActionsPieChartWidget;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
@@ -39,11 +36,14 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\CartActionsPieChartWidget;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DashboardFunLineChartStats;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
 

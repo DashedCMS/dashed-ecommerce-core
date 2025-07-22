@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Exports;
 
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
-use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
+use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 
 class ProductListExport implements FromArray
 {

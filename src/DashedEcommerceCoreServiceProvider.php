@@ -2,19 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedEcommerceCore\Commands\UpdateExpiredGlobalDiscountCodes;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Dashed\DashedCore\Classes\Locales;
 use Spatie\LaravelPackageTools\Package;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Console\Scheduling\Schedule;
@@ -60,6 +53,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
+use Dashed\DashedEcommerceCore\Commands\UpdateExpiredGlobalDiscountCodes;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
@@ -72,8 +66,14 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
@@ -345,7 +345,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public static function createDefaultPages(): void
     {
-        if (!\Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
+        if (! \Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             foreach (Locales::getActivatedLocalesFromSites() as $locale) {
                 $page->setTranslation('name', $locale, 'Producten');
@@ -366,7 +366,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('product_overview_page_id', $page->id);
         }
 
-        if (!\Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
+        if (! \Dashed\DashedCore\Models\Customsetting::get('orders_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             foreach (Locales::getActivatedLocalesFromSites() as $locale) {
                 $page->setTranslation('name', $locale, 'Bestellingen');
@@ -391,7 +391,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ]);
         }
 
-        if (!\Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
+        if (! \Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             foreach (Locales::getActivatedLocalesFromSites() as $locale) {
                 $page->setTranslation('name', $locale, 'Bestelling');
@@ -416,7 +416,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ]);
         }
 
-        if (!\Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
+        if (! \Dashed\DashedCore\Models\Customsetting::get('cart_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             foreach (Locales::getActivatedLocalesFromSites() as $locale) {
                 $page->setTranslation('name', $locale, 'Winkelwagen');
@@ -437,7 +437,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedCore\Models\Customsetting::set('cart_page_id', $page->id);
         }
 
-        if (!\Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
+        if (! \Dashed\DashedCore\Models\Customsetting::get('checkout_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             foreach (Locales::getActivatedLocalesFromSites() as $locale) {
                 $page->setTranslation('name', $locale, 'Afrekenen');

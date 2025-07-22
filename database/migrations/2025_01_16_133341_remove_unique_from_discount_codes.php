@@ -10,19 +10,19 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        try{
+        try {
             Schema::table('dashed__discount_codes', function (Blueprint $table) {
                 $table->dropUnique('dashed__discount_codes_code_unique');
             });
-        }catch (Exception $exception){
+        } catch (Exception $exception) {
 
         }
 
-        try{
+        try {
             Schema::table('dashed__discount_codes', function (Blueprint $table) {
                 $table->dropUnique('qcommerce__discount_codes_code_unique');
             });
-        }catch (Exception $exception){
+        } catch (Exception $exception) {
 
         }
 

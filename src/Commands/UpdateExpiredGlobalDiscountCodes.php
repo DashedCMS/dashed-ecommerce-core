@@ -2,10 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Illuminate\Console\Command;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 
 class UpdateExpiredGlobalDiscountCodes extends Command
 {

@@ -18,7 +18,7 @@ class EditDiscountCode extends EditRecord
         return [
             Action::make('Genereer een code')
                 ->button()
-                ->visible(fn (): bool => !$this->data['is_global_discount'])
+                ->visible(fn (): bool => ! $this->data['is_global_discount'])
                 ->action('generateRandomCode'),
             DeleteAction::make(),
         ];

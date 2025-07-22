@@ -3,19 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use App\Models\User;
-use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductPricesJob;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
-use Spatie\Activitylog\LogOptions;
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EcommerceActionLog extends Model
 {

@@ -3,11 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
 use Filament\Widgets\ChartWidget;
-use Filament\Widgets\PieChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use PhpOffice\PhpSpreadsheet\Chart\Chart;
 
 class PaymentMethodPieChartWidget extends ChartWidget
 {

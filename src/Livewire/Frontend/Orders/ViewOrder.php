@@ -99,11 +99,11 @@ class ViewOrder extends Component
             }
         }
 
-        if($this->order->isPaidFor()){
+        if ($this->order->isPaidFor()) {
             $itemLoop = 0;
             $items = [];
 
-            foreach($this->order->orderProducts as $orderProduct) {
+            foreach ($this->order->orderProducts as $orderProduct) {
                 $items[] = [
                     'item_id' => $orderProduct->product->id ?? $orderProduct->id,
                     'item_name' => $orderProduct->name,

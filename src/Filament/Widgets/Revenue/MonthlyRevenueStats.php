@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 class MonthlyRevenueStats extends StatsOverviewWidget
 {
     protected ?string $heading = 'Maandelijkse omzetstatistieken';
+
     protected function getCards(): array
     {
         $statistics = Cache::remember('monthly-revenue-stats', 60 * 60, function () {

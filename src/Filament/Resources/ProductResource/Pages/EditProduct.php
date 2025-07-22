@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -10,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
 use Dashed\DashedCore\Classes\Locales;
+use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;

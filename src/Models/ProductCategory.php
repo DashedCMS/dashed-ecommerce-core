@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
 
 class ProductCategory extends Model
@@ -72,7 +71,7 @@ class ProductCategory extends Model
 
     public function getProductsUrl($locale = null)
     {
-        if (!$locale) {
+        if (! $locale) {
             $locale = app()->getLocale();
         }
 
@@ -90,12 +89,12 @@ class ProductCategory extends Model
     {
         $originalLocale = app()->getLocale();
 
-        if (!$locale) {
+        if (! $locale) {
             $locale = app()->getLocale();
         }
 
         return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale, $originalLocale) {
-            if (!$this->childs->count()) {
+            if (! $this->childs->count()) {
                 if ($this->products->count() == 1) {
                     return $this->products->first()->getUrl($locale);
                 } else {
@@ -114,11 +113,11 @@ class ProductCategory extends Model
             $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
             app()->setLocale($originalLocale);
 
-            if (!str($url)->startsWith('/')) {
+            if (! str($url)->startsWith('/')) {
                 $url = '/' . $url;
             }
 
-            if ($locale != Locales::getFirstLocale()['id'] && !str($url)->startsWith("/{$locale}")) {
+            if ($locale != Locales::getFirstLocale()['id'] && ! str($url)->startsWith("/{$locale}")) {
                 $url = '/' . $locale . $url;
             }
 
@@ -177,7 +176,7 @@ class ProductCategory extends Model
         if ($productCategory) {
             array_shift($slugComponents);
             foreach ($slugComponents as $slugComponent) {
-                if (!$productCategory) {
+                if (! $productCategory) {
                     return 'pageNotFound';
                 }
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();

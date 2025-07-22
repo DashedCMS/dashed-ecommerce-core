@@ -165,11 +165,12 @@ class ProductGroupStatisticsPage extends Page
                     Select::make('locale')
                         ->label('Locale')
                         ->nullable()
-                        ->options(function(){
+                        ->options(function () {
                             $locales = [];
-                            foreach(Locales::getActivatedLocalesFromSites() as $locale) {
+                            foreach (Locales::getActivatedLocalesFromSites() as $locale) {
                                 $locales[$locale] = $locale;
                             }
+
                             return $locales;
                         })
                         ->reactive(),

@@ -2,24 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages;
 
-use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
-use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerUser;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Contracts\Support\Htmlable;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerUser;
+use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
 use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
-use Dashed\DashedEcommerceCore\Imports\PricePerProductForUserImport;
 use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
-use Dashed\DashedEcommerceCore\Imports\PricePerCategoryForUserImport;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 
 class EditPricePerUser extends EditRecord
@@ -114,27 +109,27 @@ class EditPricePerUser extends EditRecord
         $products = Product::all();
         $productCategories = ProductCategory::all();
 
-//        $data['product_ids'] = DB::table('dashed__product_user')
-//            ->where('user_id', $this->record->id)
-//            ->pluck('product_id')
-//            ->toArray();
+        //        $data['product_ids'] = DB::table('dashed__product_user')
+        //            ->where('user_id', $this->record->id)
+        //            ->pluck('product_id')
+        //            ->toArray();
 
         $data['product_category_ids'] = DB::table('dashed__product_category_user')
             ->where('user_id', $this->record->id)
             ->pluck('product_category_id')
             ->toArray();
 
-//        foreach ($products as $product) {
-//            if (in_array($product->id, $data['product_ids'])) {
-//                $productUser = DB::table('dashed__product_user')
-//                    ->where('user_id', $this->record->id)
-//                    ->where('product_id', $product->id)
-//                    ->first();
-//                $data[$product->id . '_price'] = $productUser->price ?? null;
-//                $data[$product->id . '_discount_price'] = $productUser->discount_price ?? null;
-//                $data[$product->id . '_discount_percentage'] = $productUser->discount_percentage ?? null;
-//            }
-//        }
+        //        foreach ($products as $product) {
+        //            if (in_array($product->id, $data['product_ids'])) {
+        //                $productUser = DB::table('dashed__product_user')
+        //                    ->where('user_id', $this->record->id)
+        //                    ->where('product_id', $product->id)
+        //                    ->first();
+        //                $data[$product->id . '_price'] = $productUser->price ?? null;
+        //                $data[$product->id . '_discount_price'] = $productUser->discount_price ?? null;
+        //                $data[$product->id . '_discount_percentage'] = $productUser->discount_percentage ?? null;
+        //            }
+        //        }
 
         foreach ($productCategories as $productCategory) {
             if (in_array($productCategory->id, $data['product_category_ids'])) {

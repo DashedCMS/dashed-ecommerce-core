@@ -138,7 +138,7 @@ class Checkout extends Component
         $itemLoop = 0;
         $items = [];
 
-        foreach($this->cartItems as $cartItem) {
+        foreach ($this->cartItems as $cartItem) {
             $items[] = [
                 'item_id' => $cartItem->model->id,
                 'item_name' => $cartItem->model->name,

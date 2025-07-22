@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
-use Dashed\DashedEcommerceCore\Models\ProductFaq;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 
 class EditProductFaq extends EditRecord
 {

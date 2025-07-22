@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -10,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
 use Dashed\DashedCore\Classes\Locales;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
@@ -20,7 +21,6 @@ use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
-use Illuminate\Database\Eloquent\Model;
 
 class EditProductGroup extends EditRecord
 {
@@ -34,10 +34,10 @@ class EditProductGroup extends EditRecord
     {
         $thisRecord = $this->resolveRecord($record);
         foreach (Locales::getLocales() as $locale) {
-            if (!$thisRecord->images) {
+            if (! $thisRecord->images) {
                 $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (!$images) {
-                    if (!is_array($images)) {
+                if (! $images) {
+                    if (! is_array($images)) {
                         $thisRecord->setTranslation('images', $locale['id'], []);
                         $thisRecord->save();
                     }
@@ -47,7 +47,6 @@ class EditProductGroup extends EditRecord
 
         parent::mount($record);
     }
-
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
@@ -85,7 +84,7 @@ class EditProductGroup extends EditRecord
         foreach ($productCharacteristics as $productCharacteristic) {
             if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
                 $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (!$thisProductCharacteristic) {
+                if (! $thisProductCharacteristic) {
                     $thisProductCharacteristic = new ProductCharacteristic();
                     $thisProductCharacteristic->product_group_id = $this->record->id;
                     $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;

@@ -2,17 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Dashed\DashedEcommerceCore\Imports\EANCodesToImport;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Cache;
-use Dashed\DashedCore\Classes\Locales;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
+use Dashed\DashedEcommerceCore\Imports\EANCodesToImport;
 
 class ImportEANCodes implements ShouldQueue
 {

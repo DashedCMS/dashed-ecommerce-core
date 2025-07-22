@@ -2,23 +2,20 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedEcommerceCore\Imports\EANCodesToImport;
-use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
-use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\LocaleSwitcher;
-use Filament\Forms\Components\Placeholder;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
 use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
-use Dashed\DashedEcommerceCore\Imports\ProductsToEditImport;
+use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
 use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 

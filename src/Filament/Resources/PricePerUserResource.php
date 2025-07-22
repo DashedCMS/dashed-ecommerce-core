@@ -102,57 +102,57 @@ class PricePerUserResource extends Resource
 
         $productSchema = [];
 
-//        foreach ($products as $product) {
-//            $productSchema[] = Section::make($product->name)
-//                ->schema([
-//                    TextInput::make($product->id . '_price')
-//                        ->label('Prijs')
-//                        ->prefix('€')
-//                        ->disabled(),
-//                    TextInput::make($product->id . '_discount_price')
-//                        ->label('Korting bedrag')
-//                        ->prefix('€')
-//                        ->helperText('Product prijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('current_price')))
-//                        ->required(fn (Get $get) => $get($product->id . '_discount_percentage') === null)
-//                        ->minValue(1)
-//                        ->maxValue($product->getRawOriginal('current_price') - 1)
-//                        ->reactive()
-//                        ->numeric(),
-//                    TextInput::make($product->id . '_discount_percentage')
-//                        ->label('Korting percentage')
-//                        ->suffix('%')
-//                        ->minValue(1)
-//                        ->maxValue(100)
-//                        ->nullable()
-//                        ->required(fn (Get $get) => $get($product->id . '_discount_price') === null)
-//                        ->reactive()
-//                        ->numeric(),
-//                ])
-//                ->headerActions([
-//                    Action::make('delete')
-//                        ->label('Verwijder')
-//                        ->hiddenLabel()
-//                        ->icon('heroicon-o-trash')
-//                        ->color('danger')
-//                        ->action(function (Set $set, Get $get) use ($product) {
-//                            $values = $get('product_ids');
-//                            $values = array_diff($values, [$product->id]);
-//                            $set('product_ids', $values);
-//                        }),
-//                ])
-//                ->visible(fn (Get $get) => collect($get('product_ids'))->contains($product->id))
-//                ->columns(3);
-//        }
-//
-//        $schema[] = Section::make()
-//            ->schema(array_merge([
-//                Select::make('product_ids')
-//                    ->label('Product')
-//                    ->multiple()
-//                    ->options($products->pluck('name', 'id')->toArray())
-//                    ->searchable()
-//                    ->reactive(),
-//            ], $productSchema));
+        //        foreach ($products as $product) {
+        //            $productSchema[] = Section::make($product->name)
+        //                ->schema([
+        //                    TextInput::make($product->id . '_price')
+        //                        ->label('Prijs')
+        //                        ->prefix('€')
+        //                        ->disabled(),
+        //                    TextInput::make($product->id . '_discount_price')
+        //                        ->label('Korting bedrag')
+        //                        ->prefix('€')
+        //                        ->helperText('Product prijs: ' . CurrencyHelper::formatPrice($product->getRawOriginal('current_price')))
+        //                        ->required(fn (Get $get) => $get($product->id . '_discount_percentage') === null)
+        //                        ->minValue(1)
+        //                        ->maxValue($product->getRawOriginal('current_price') - 1)
+        //                        ->reactive()
+        //                        ->numeric(),
+        //                    TextInput::make($product->id . '_discount_percentage')
+        //                        ->label('Korting percentage')
+        //                        ->suffix('%')
+        //                        ->minValue(1)
+        //                        ->maxValue(100)
+        //                        ->nullable()
+        //                        ->required(fn (Get $get) => $get($product->id . '_discount_price') === null)
+        //                        ->reactive()
+        //                        ->numeric(),
+        //                ])
+        //                ->headerActions([
+        //                    Action::make('delete')
+        //                        ->label('Verwijder')
+        //                        ->hiddenLabel()
+        //                        ->icon('heroicon-o-trash')
+        //                        ->color('danger')
+        //                        ->action(function (Set $set, Get $get) use ($product) {
+        //                            $values = $get('product_ids');
+        //                            $values = array_diff($values, [$product->id]);
+        //                            $set('product_ids', $values);
+        //                        }),
+        //                ])
+        //                ->visible(fn (Get $get) => collect($get('product_ids'))->contains($product->id))
+        //                ->columns(3);
+        //        }
+        //
+        //        $schema[] = Section::make()
+        //            ->schema(array_merge([
+        //                Select::make('product_ids')
+        //                    ->label('Product')
+        //                    ->multiple()
+        //                    ->options($products->pluck('name', 'id')->toArray())
+        //                    ->searchable()
+        //                    ->reactive(),
+        //            ], $productSchema));
 
         return $form
             ->schema($schema);

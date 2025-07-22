@@ -3,8 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductPricesJob;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
@@ -14,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductPricesJob;
 
 class DiscountCode extends Model
 {
@@ -191,7 +190,7 @@ class DiscountCode extends Model
 
     public function getStatusAttribute()
     {
-        if (!$this->start_date && !$this->end_date) {
+        if (! $this->start_date && ! $this->end_date) {
             return 'active';
         } else {
             if ($this->start_date && $this->end_date) {
@@ -257,7 +256,7 @@ class DiscountCode extends Model
                     $emailIsValid = true;
                 }
             }
-            if (!$emailIsValid) {
+            if (! $emailIsValid) {
                 return false;
             }
         }
@@ -334,7 +333,7 @@ class DiscountCode extends Model
     //Only used for global discounts
     public function isValidForProduct(Product $product): bool
     {
-        if (!$this->is_global_discount) {
+        if (! $this->is_global_discount) {
             return false;
         }
 

@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Filament\Notifications\Notification;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 trait CartActions
 {
@@ -53,7 +53,7 @@ trait CartActions
         } else {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
-                if($cartItem->qty > $quantity) {
+                if ($cartItem->qty > $quantity) {
                     EcommerceActionLog::createLog('remove_from_cart', ($cartItem->qty - $quantity), productId: $cartItem->model->id);
                 } else {
                     EcommerceActionLog::createLog('add_to_cart', ($quantity - $cartItem->qty), productId: $cartItem->model->id);

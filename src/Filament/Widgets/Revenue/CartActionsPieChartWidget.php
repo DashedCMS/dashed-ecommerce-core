@@ -2,13 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Widgets\ChartWidget;
-use Filament\Widgets\PieChartWidget;
 use Illuminate\Support\Facades\Cache;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 class CartActionsPieChartWidget extends ChartWidget
 {

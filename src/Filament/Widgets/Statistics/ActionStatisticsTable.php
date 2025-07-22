@@ -2,14 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Statistics;
 
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Filament\Tables\Columns\TextColumn;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 class ActionStatisticsTable extends TableWidget
 {
@@ -64,12 +61,12 @@ class ActionStatisticsTable extends TableWidget
                     ->sortable()
                     ->label('Product'),
                 TextColumn::make('add_to_cart_count')
-                    ->getStateUsing(fn($record) => $this->addedToCartActions->where('product_id', $record->id)->sum('quantity'))
+                    ->getStateUsing(fn ($record) => $this->addedToCartActions->where('product_id', $record->id)->sum('quantity'))
                     ->searchable()
                     ->sortable()
                     ->label('Added to cart'),
                 TextColumn::make('remove_from_cart_count')
-                    ->getStateUsing(fn($record) => $this->removedFromCartActions->where('product_id', $record->id)->sum('quantity'))
+                    ->getStateUsing(fn ($record) => $this->removedFromCartActions->where('product_id', $record->id)->sum('quantity'))
                     ->searchable()
                     ->sortable()
                     ->label('Remove from cart'),

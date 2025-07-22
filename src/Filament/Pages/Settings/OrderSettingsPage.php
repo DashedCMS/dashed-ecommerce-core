@@ -13,7 +13,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\Section;
-use FilamentTiptapEditor\TiptapEditor;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;

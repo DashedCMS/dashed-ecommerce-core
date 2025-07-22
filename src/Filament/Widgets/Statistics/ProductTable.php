@@ -55,14 +55,14 @@ class ProductTable extends TableWidget
                     ->label('Product'),
                 TextColumn::make('quantitySold')
                     ->label('Aantal verkocht')
-                    ->getStateUsing(fn($record) => $this->orderProducts->where('product_id', $record->id)->sum('quantity')),
+                    ->getStateUsing(fn ($record) => $this->orderProducts->where('product_id', $record->id)->sum('quantity')),
                 TextColumn::make('currentStock')
                     ->label('Voorraad')
-                    ->getStateUsing(fn($record) => $record->use_stock ? $record->stock : ($record->stock_status == 'in_stock' ? 100000 : 0)),
+                    ->getStateUsing(fn ($record) => $record->use_stock ? $record->stock : ($record->stock_status == 'in_stock' ? 100000 : 0)),
                 TextColumn::make('amountSold')
                     ->money('EUR')
                     ->label('Totaal opgeleverd')
-                    ->getStateUsing(fn($record) => $this->orderProducts->where('product_id', $record->id)->sum('price')),
+                    ->getStateUsing(fn ($record) => $this->orderProducts->where('product_id', $record->id)->sum('price')),
             ]);
     }
 }
