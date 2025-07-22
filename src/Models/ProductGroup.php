@@ -134,20 +134,20 @@ class ProductGroup extends Model
 
     public function faqs()
     {
-        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_group_id', 'faq_id')
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product_group', 'product_group_id', 'faq_id')
             ->orderBy('order');
     }
 
     public function globalFaqs()
     {
-        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_group_id', 'faq_id')
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product_group', 'product_group_id', 'faq_id')
             ->orderBy('order')
             ->where('global', 1);
     }
 
     public function ownFaqs()
     {
-        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product', 'product_group_id', 'faq_id')
+        return $this->belongsToMany(ProductFaq::class, 'dashed__product_faq_product_group', 'product_group_id', 'faq_id')
             ->orderBy('order')
             ->where('global', 0);
     }
