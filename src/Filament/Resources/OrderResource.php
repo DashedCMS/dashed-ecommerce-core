@@ -293,7 +293,7 @@ class OrderResource extends Resource
                         return $query
                             ->when(
                                 $data['start_date'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' >= ', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                             );
                     }),
                 Filter::make('end_date')
@@ -305,7 +305,7 @@ class OrderResource extends Resource
                         return $query
                             ->when(
                                 $data['end_date'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', ' <= ', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
             ])
