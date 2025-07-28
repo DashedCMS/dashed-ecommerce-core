@@ -1,13 +1,13 @@
 @php
     $faqQuestions = [];
     foreach($faqs as $faqGroup) {
-        foreach($faqGroup as $faq) {
+        foreach($faqGroup->questions as $faq) {
             $faqQuestions[] = [
                 '@type' => 'Question',
-                'name' => $faq['question'],
+                'name' => $faq['question'] ?? '',
                 'acceptedAnswer' => [
                     '@type' => 'Answer',
-                    'text' => $faq['answer']
+                    'text' => $faq['answer'] ?? ''
                 ]
             ];
         }
