@@ -795,6 +795,14 @@ class Checkout extends Component
                 if (env('APP_ENV') == 'local') {
                     throw new \Exception('Cannot start payment: ' . $exception->getMessage());
                 } else {
+
+                    $orderLog = new OrderLog();
+                    $orderLog->order_id = $order->id;
+                    $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
+                    $orderLog->tag = 'order.note.created';
+                    $orderLog->note = Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started:') . ' ' . $exception->getMessage();
+                    $orderLog->save();
+
                     Notification::make()
                         ->danger()
                         ->title(Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))
