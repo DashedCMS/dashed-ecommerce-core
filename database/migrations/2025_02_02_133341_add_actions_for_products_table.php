@@ -34,9 +34,24 @@ return new class () extends Migration {
             $table->string('action_type');
             $table->integer('quantity')
                 ->default(1);
-
+            
+            $table->ipAddress('ip');
 
             $table->timestamps();
+        });
+        
+        Schema::table('dashed__products', function (Blueprint $table) {
+            $table->integer('add_to_cart_count')
+                ->default(0);
+            $table->integer('remove_from_cart_count')
+                ->default(0);
+        });
+
+        Schema::table('dashed__product_groups', function (Blueprint $table) {
+            $table->integer('add_to_cart_count')
+                ->default(0);
+            $table->integer('remove_from_cart_count')
+                ->default(0);
         });
     }
 

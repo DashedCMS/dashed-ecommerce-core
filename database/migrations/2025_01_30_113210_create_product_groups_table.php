@@ -20,6 +20,9 @@ return new class () extends Migration {
             $table->json('name');
             $table->json('slug');
 
+            $table->boolean('public')
+                ->default(true);
+
             $table->json('images')
                 ->nullable();
 
@@ -45,6 +48,14 @@ return new class () extends Migration {
                 ->default(0);
             $table->json('missing_variations')
                 ->nullable();
+            $table->dateTime('start_date')
+                ->nullable();
+            $table->dateTime('end_date')
+                ->nullable();
+            $table->foreignId('first_selected_product_id')
+                ->nullable()
+                ->constrained('dashed__products')
+                ->nullOnDelete();
 
             $table->softDeletes();
             $table->timestamps();
@@ -77,6 +88,7 @@ return new class () extends Migration {
                 ->constrained('dashed__product_groups')
                 ->cascadeOnDelete();
         });
+
         Schema::table('dashed__product_characteristic', function (Blueprint $table) {
             $table->foreignId('product_id')
                 ->nullable()
@@ -200,80 +212,42 @@ return new class () extends Migration {
                 ->change();
         });
 
-        \Illuminate\Support\Facades\Artisan::call('dashed:migrate-to-v3');
+        Schema::create('dashed__product_group_volume_discounts', function (Blueprint $table) {
+            $table->id();
 
-        try {
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropForeign('qcommerce__products_parent_id_foreign');
-            });
-        } catch (\Exception $e) {
-        }
+            $table->foreignId('product_group_id')
+                ->constrained('dashed__product_groups')
+                ->cascadeOnDelete();
 
-        try {
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropForeign('qcommerce__products_parent_product_id_foreign');
-            });
-        } catch (\Exception $e) {
-        }
+            $table->string('type')
+                ->default('percentage');
+            $table->decimal('discount_price')
+                ->nullable();
+            $table->integer('discount_percentage')
+                ->nullable();
+            $table->integer('min_quantity')
+                ->default(1);
+            $table->boolean('active_for_all_variants')
+                ->default(true);
 
-        try {
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropForeign('dashed__products_parent_id_foreign');
-            });
-        } catch (\Exception $e) {
-        }
-
-        try {
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropForeign('dashed__products_parent_product_id_foreign');
-            });
-        } catch (\Exception $e) {
-        }
-
-        Schema::table('dashed__products', function (Blueprint $table) {
-            $table->dropColumn('parent_id');
-            $table->dropColumn('type');
-            $table->dropColumn('start_date');
-            $table->dropColumn('end_date');
-            $table->dropColumn('external_url');
-            $table->dropColumn('only_show_parent_product');
-            $table->dropColumn('copyable_to_childs');
-            $table->dropColumn('missing_variations');
-            $table->dropColumn('use_parent_stock');
+            $table->softDeletes();
+            $table->timestamps();
         });
 
-        try {
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropColumn('efulfillment_shop_id');
-            });
-        } catch (Exception $e) {
+        Schema::create('dashed__product_group_volume_discount_product', function (Blueprint $table) {
+            $table->id();
 
-        }
+            $table->foreignId('product_group_volume_discount_id');
+            $table->foreign('product_group_volume_discount_id', 'dpgvd')
+                ->references('id')
+                ->on('dashed__product_group_volume_discounts')
+                ->cascadeOnDelete();
 
-        try {
-            Schema::table('dashed__products', function (Blueprint $table) {
-                $table->dropColumn('efulfillment_shop_error');
-            });
-        } catch (Exception $e) {
-
-        }
-
-        try {
-            Schema::table('dashed__product_enabled_filter_options', function (Blueprint $table) {
-                $table->dropForeign('qcommerce__product_enabled_filter_options_product_id_foreign');
-            });
-        } catch (\Exception $e) {
-        }
-
-        try {
-            Schema::table('dashed__product_enabled_filter_options', function (Blueprint $table) {
-                $table->dropForeign('dashed__product_enabled_filter_options_product_id_foreign');
-            });
-        } catch (\Exception $e) {
-        }
-        Schema::table('dashed__product_enabled_filter_options', function (Blueprint $table) {
-            $table->dropColumn('product_id');
+            $table->foreignId('product_id')
+                ->constrained('dashed__products')
+                ->cascadeOnDelete();
         });
+
     }
 
     /**
