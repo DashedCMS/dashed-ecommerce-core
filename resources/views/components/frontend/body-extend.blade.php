@@ -120,7 +120,7 @@
                         'value': event[0].total,
                         'transaction_id': event[0].orderId,
                         'items': event[0].items,
-                        'coupoon': event[0].discountCode,
+                        'coupon': event[0].discountCode,
                         'tax': event[0].tax,
                     }
                 });
