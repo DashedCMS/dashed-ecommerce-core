@@ -111,6 +111,7 @@ trait CartActions
         $this->depositAmount = $checkoutData['depositAmount'];
         $this->depositPaymentMethods = $checkoutData['depositPaymentMethods'];
         $this->postpayPaymentMethod = $checkoutData['postpayPaymentMethod'];
+        $this->getSuggestedProducts();
     }
 
     public function getSuggestedProducts()

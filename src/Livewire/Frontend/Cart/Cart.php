@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Illuminate\Support\Collection;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
@@ -23,6 +24,7 @@ class Cart extends Component
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
     public string $cartType = 'default';
+    public ?Collection $crossSellProducts;
 
     public function mount(string $cartType = 'default')
     {
@@ -31,7 +33,6 @@ class Cart extends Component
         $this->discountCode = session('discountCode', '');
         $this->checkCart();
         $this->fillPrices();
-        $this->getSuggestedProducts();
 
         $itemLoop = 0;
         $items = [];
@@ -66,6 +67,7 @@ class Cart extends Component
         //        $this->discount = ShoppingCart::totalDiscount(true);
         //        $this->tax = ShoppingCart::btw(true);
         //        $this->total = ShoppingCart::total(true);
+        $this->getSuggestedProducts();
     }
 
     public function getCartItemsProperty()

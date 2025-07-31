@@ -1,6 +1,8 @@
 <div class="bg-gray-100 p-4 relative group flex gap-4">
+    <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
     @if($product->firstImage)
-        <x-dashed-files::image
+        <a href="{{ $product->getUrl() }}">
+            <x-dashed-files::image
                 class="w-28 h-28 aspect-square object-cover object-center group-hover:scale-110 transform trans"
                 config="dashed"
                 :mediaId="$product->firstImage"
@@ -8,11 +10,12 @@
                 :manipulations="[
                     'widen' => 200,
                 ]"
-        />
+            />
+        </a>
     @endif
 
     <header class="text-black font-medium uppercase flex flex-col text-left grow">
-        <p>{{ $product->name }}</p>
+        <a href="{{ $product->getUrl() }}"><p>{{ $product->name }}</p></a>
 
         <div class="flex flex-wrap gap-2 md:gap-6 items-center">
             <div class="my-2 flex flex-wrap gap-2 items-center">
@@ -25,7 +28,7 @@
             </div>
 
             <div class="flex items-center">
-                <x-product.stock-text :product="$product" />
+                <x-product.stock-text :product="$product"/>
             </div>
         </div>
 
