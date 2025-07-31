@@ -1,4 +1,5 @@
-<div class="{{ $data['backgroundColor'] ?? 'bg-white' }} @if($data['top_margin'] ?? true) pt-24 sm:pt-36 @endif @if($data['bottom_margin'] ?? true) pb-24 sm:pb-36 @endif">
+<div
+    class="{{ $data['backgroundColor'] ?? 'bg-white' }} @if($data['top_margin'] ?? true) pt-24 sm:pt-36 @endif @if($data['bottom_margin'] ?? true) pb-24 sm:pb-36 @endif">
     <x-container :show="$data['in_container'] ?? true">
         <div class="mx-auto max-w-2xl lg:max-w-none">
             <div class="text-center"
@@ -18,6 +19,9 @@
                 @php($products = ShoppingCart::getCrossSellAndSuggestedProducts($data['amount_of_products'] ?? 4))
             @else
                 @php($products = Products::getAll($data['amount_of_products'] ?? 4, orderBy: 'latest', enableFilters: false)['products'] ?? [])
+            @endif
+            @if(count($products) < ($data['amount_of_products'] ?? 4))
+                @php($products = $products->merge(Products::getAll(($data['amount_of_products'] ?? 4) - count($products), orderBy: 'latest', enableFilters: false)['products'] ?? []))
             @endif
             @if(count($products))
                 <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mt-4">

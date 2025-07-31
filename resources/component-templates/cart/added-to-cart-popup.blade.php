@@ -1,4 +1,4 @@
-<div class="relative z-[100]" role="dialog" aria-modal="true" x-data="{ showCartPopup: true }"
+<div class="relative z-[100]" role="dialog" aria-modal="true" x-data="{ showCartPopup: false }"
      x-init="
     window.addEventListener('productAddedToCart', (event) => {
         showCartPopup = true;
