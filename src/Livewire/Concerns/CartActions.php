@@ -46,6 +46,7 @@ trait CartActions
                     'quantity' => $quantity,
                     'price' => number_format($cartItem->model->price, 2, '.', ''),
                     'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+                    'category' => $cartItem->model->productCategories->first()?->name ?? null,
                 ]);
             }
 

@@ -232,6 +232,7 @@ trait ProductCartActions
                 'quantity' => $this->quantity,
                 'price' => number_format($this->price, 2, '.', ''),
                 'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+                'category' => $this->product->productCategories->first()?->name ?? null,
             ]);
         }
     }
@@ -602,6 +603,7 @@ trait ProductCartActions
             'price' => number_format($productPrice, 2, '.', ''),
             'options' => $options,
             'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+            'category' => $product->productCategories->first()?->name ?? null,
         ]);
 
         session(['lastAddedProductInCart' => $product]);

@@ -123,6 +123,8 @@ class ViewOrder extends Component
                 'tax' => number_format($this->order->btw, 2, '.', ''),
                 'items' => $items,
                 'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
+                'email' => $this->order->email,
+                'phoneNumber' => $this->order->phone_number,
             ]);
         }
     }

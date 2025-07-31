@@ -25,6 +25,7 @@
                                 'id': event[0].product.id,
                                 'price': event[0].price,
                                 'quantity': event[0].quantity,
+                                'item_category': event[0].category,
                             }]
                         }
                     }
@@ -47,6 +48,7 @@
                                 'name': event[0].productName,
                                 'id': event[0].product.id,
                                 'price': event[0].price,
+                                'item_category': event[0].category,
                             }]
                         }
                     }
@@ -95,6 +97,7 @@
                                 'name': event[0].productName,
                                 'id': event[0].product.id,
                                 'price': event[0].price,
+                                'item_category': event[0].category,
                             }]
                         }
                     }
@@ -122,7 +125,9 @@
                         'items': event[0].items,
                         'coupon': event[0].discountCode,
                         'tax': event[0].tax,
-                        'new_customer': event[0].newCustomer
+                        'new_customer': event[0].newCustomer,
+                        'email': event[0].email,
+                        'phone_number': event[0].phoneNumber
                     }
                 });
                 @endif
