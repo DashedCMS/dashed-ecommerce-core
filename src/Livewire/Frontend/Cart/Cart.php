@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -24,7 +25,6 @@ class Cart extends Component
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
     public string $cartType = 'default';
-    public ?Collection $crossSellProducts;
 
     public function mount(string $cartType = 'default')
     {

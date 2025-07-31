@@ -938,12 +938,13 @@ class ShoppingCart
         $suggestedProductIds = collect();
 
         $cartItems = self::cartItems();
-        $productIdsInCart = $cartItems->pluck('model.id')->toArray();
+        $productIdsInCart = [];
 
         foreach ($cartItems as $cartItem) {
             $suggestedProductIds = $suggestedProductIds
                 ->merge($cartItem->model->crossSellProducts?->pluck('id') ?? [])
                 ->merge($cartItem->model->suggestedProducts?->pluck('id') ?? []);
+            $productIdsInCart[] = $cartItem->model->id;
         }
 
         if ($removeIfAlreadyPresentInShoppingCart) {
@@ -963,6 +964,30 @@ class ShoppingCart
         }
 
         return Product::whereIn('id', $suggestedProductIds->take($limit)->toArray())
+            ->publicShowable()
+            ->get();
+    }
+
+    public static function getCrossSellProducts(int $limit = 4, bool $removeIfAlreadyPresentInShoppingCart = true): Collection
+    {
+        $crossSellProductIds = collect();
+
+        $cartItems = self::cartItems();
+        $productIdsInCart = [];
+
+        foreach ($cartItems as $cartItem) {
+            $crossSellProductIds = $crossSellProductIds
+                ->merge($cartItem->model->getCrossSellProducts(true)->pluck('id') ?? []);
+            $productIdsInCart[] = $cartItem->model->id;
+        }
+
+        if ($removeIfAlreadyPresentInShoppingCart) {
+            $crossSellProductIds = $crossSellProductIds->diff($productIdsInCart);
+        }
+
+        $crossSellProductIds = $crossSellProductIds->unique();
+
+        return Product::whereIn('id', $crossSellProductIds->take($limit)->toArray())
             ->publicShowable()
             ->get();
     }
