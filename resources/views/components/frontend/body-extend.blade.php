@@ -122,6 +122,7 @@
                         'items': event[0].items,
                         'coupon': event[0].discountCode,
                         'tax': event[0].tax,
+                        'new_customer': event[0].newCustomer
                     }
                 });
                 @endif

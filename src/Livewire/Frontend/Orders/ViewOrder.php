@@ -122,6 +122,7 @@ class ViewOrder extends Component
                 'discountCode' => $this->order->discountCode ? $this->order->discountCode->code : '',
                 'tax' => number_format($this->order->btw, 2, '.', ''),
                 'items' => $items,
+                'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
             ]);
         }
     }
