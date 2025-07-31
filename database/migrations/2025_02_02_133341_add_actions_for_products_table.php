@@ -10,6 +10,9 @@ return new class () extends Migration {
      */
     public function up(): void
     {
+        if (Schema::hasTable('dashed__ecommerce_action_logs')) {
+            return;
+        }
 
         Schema::create('dashed__ecommerce_action_logs', function (Blueprint $table) {
             $table->id();
@@ -34,12 +37,12 @@ return new class () extends Migration {
             $table->string('action_type');
             $table->integer('quantity')
                 ->default(1);
-            
+
             $table->ipAddress('ip');
 
             $table->timestamps();
         });
-        
+
         Schema::table('dashed__products', function (Blueprint $table) {
             $table->integer('add_to_cart_count')
                 ->default(0);

@@ -50,7 +50,7 @@
                 @endif
                 @if($logo)
                     <img
-                        src="{{mediaHelper()->getSingleMedia($logo)->url ?? ''}}"
+                        src="{{mediaHelper()->getSingleMedia($logo, 'original')->url ?? ''}}"
                         class="logo"
                         alt=""
                     >

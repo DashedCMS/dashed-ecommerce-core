@@ -12,7 +12,10 @@ return new class () extends Migration {
      */
     public function up()
     {
-       
+        if (!Schema::hasColumn('dashed__products', 'type')) {
+            return;
+        }
+
         \Illuminate\Support\Facades\Artisan::call('dashed:migrate-to-v3');
 
         try {

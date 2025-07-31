@@ -10,6 +10,10 @@ return new class () extends Migration {
      */
     public function up(): void
     {
+        if (Schema::hasTable('dashed__product_faq_product_group')) {
+            return;
+        }
+
         Schema::create('dashed__product_faq_product_group', function (Blueprint $table) {
             $table->id();
 
