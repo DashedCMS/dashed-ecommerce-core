@@ -330,6 +330,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ])
             ->hasConfigFile([
                 'dashed-ecommerce-core',
+                'dompdf',
             ])
             ->hasViews()
             ->hasCommands([
