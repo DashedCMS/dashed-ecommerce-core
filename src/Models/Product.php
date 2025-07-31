@@ -927,7 +927,7 @@ class Product extends Model
         return $products->get();
     }
 
-    public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = true): Collection
+    public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = false): Collection
     {
         if ($includeFromProductGroup) {
             $crossSellProductsIds = array_merge($this->crossSellProducts->pluck('id')->toArray(), $this->productGroup->crossSellProducts->pluck('id')->toArray());
