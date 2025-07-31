@@ -75,6 +75,7 @@
                 "ShippingZones": "Dashed\\DashedEcommerceCore\\Classes\\ShippingZones",
                 "ProductCategories": "Dashed\\DashedEcommerceCore\\Classes\\ProductCategories",
                 "Products": "Dashed\\DashedEcommerceCore\\Classes\\Products",
+                "ProductGroups": "Dashed\\DashedEcommerceCore\\Classes\\ProductGroups",
                 "Product": "Dashed\\DashedEcommerceCore\\Models\\Product",
                 "Orders": "Dashed\\DashedEcommerceCore\\Classes\\Orders",
                 "SKUs": "Dashed\\DashedEcommerceCore\\Classes\\SKUs"
