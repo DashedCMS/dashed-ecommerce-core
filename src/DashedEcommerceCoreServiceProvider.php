@@ -136,7 +136,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('cart.cart', Cart::class);
         Livewire::component('cart.cart-count', CartCount::class);
         Livewire::component('cart.add-to-cart', AddToCart::class);
-        Livewire::component('cart.added-to-cart', AddedToCart::class);
+        Livewire::component('cart.added-to-cart-popup', AddedToCart::class);
         Livewire::component('cart.cart-popup', CartPopup::class);
         Livewire::component('checkout.checkout', Checkout::class);
         Livewire::component('categories.show-categories', ShowCategories::class);

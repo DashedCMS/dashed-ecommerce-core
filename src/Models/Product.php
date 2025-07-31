@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -926,12 +927,20 @@ class Product extends Model
         return $products->get();
     }
 
-    public function getCrossSellProducts($includeFromProductGroup = false): Collection
+    public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = true): Collection
     {
         if ($includeFromProductGroup) {
             $crossSellProductsIds = array_merge($this->crossSellProducts->pluck('id')->toArray(), $this->productGroup->crossSellProducts->pluck('id')->toArray());
         } else {
             $crossSellProductsIds = $this->crossSellProducts->pluck('id')->toArray();
+        }
+
+        if($removeIfAlreadyInCart){
+            foreach(ShoppingCart::cartItems() as $cartItem) {
+                if ($cartItem->model && in_array($cartItem->model->id, $crossSellProductsIds)) {
+                    $crossSellProductsIds = array_diff($crossSellProductsIds, [$cartItem->model->id]);
+                }
+            }
         }
 
         $products = Product::thisSite()->publicShowable()->whereIn('id', $crossSellProductsIds);
