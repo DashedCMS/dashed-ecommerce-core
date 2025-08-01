@@ -31,7 +31,7 @@
                     }
                 });
                 @endif
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 fbq('track', 'AddToCart');
                 @endif
             });
@@ -57,7 +57,7 @@
             });
 
             Livewire.on('checkoutInitiated', (event) => {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 fbq('track', 'InitiateCheckout');
                 @endif
                 @if(Customsetting::get('google_tagmanager_id'))
@@ -86,6 +86,9 @@
             });
 
             Livewire.on('viewProduct', (event) => {
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
+                fbq('track', 'ViewContent');
+                @endif
                 @if(Customsetting::get('google_tagmanager_id'))
                 dataLayer.push({
                     'event': 'view_item',
@@ -106,13 +109,13 @@
             });
 
             Livewire.on('checkoutSubmitted', (event) => {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 fbq('track', 'AddPaymentInfo');
                 @endif
             });
 
             Livewire.on('orderPaid', (event) => {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id'))
+                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 fbq('track', 'Purchase', {currency: "EUR", value: event.total});
                 @endif
                 @if(Customsetting::get('google_tagmanager_id'))
