@@ -86,26 +86,28 @@
             });
 
             Livewire.on('viewProduct', (event) => {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-                fbq('track', 'ViewContent');
-                @endif
-                @if(Customsetting::get('google_tagmanager_id'))
-                dataLayer.push({
-                    'event': 'view_item',
-                    'ecommerce': {
-                        'currency': 'EUR',
-                        'value': event[0].cartTotal,
-                        'items': {
-                            'products': [{
-                                'name': event[0].productName,
-                                'id': event[0].product.id,
-                                'price': event[0].price,
-                                'item_category': event[0].category,
-                            }]
+                setTimeout(function(){
+                    @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
+                    fbq('track', 'ViewContent');
+                    @endif
+                    @if(Customsetting::get('google_tagmanager_id'))
+                    dataLayer.push({
+                        'event': 'view_item',
+                        'ecommerce': {
+                            'currency': 'EUR',
+                            'value': event[0].cartTotal,
+                            'items': {
+                                'products': [{
+                                    'name': event[0].productName,
+                                    'id': event[0].product.id,
+                                    'price': event[0].price,
+                                    'item_category': event[0].category,
+                                }]
+                            }
                         }
-                    }
-                });
-                @endif
+                    });
+                    @endif
+                }, 1000);
             });
 
             Livewire.on('checkoutSubmitted', (event) => {
