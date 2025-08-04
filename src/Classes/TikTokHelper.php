@@ -51,7 +51,7 @@ class TikTokHelper
     {
         $user = auth()->user();
 
-        if (!$user || !$user->lastOrderFromAllOrders || !$user->lastOrderFromAllOrders->phone_number) {
+        if (!$user || !method_exists($user::class, 'lastOrderFromAllOrders') || !$user->lastOrderFromAllOrders || !$user->lastOrderFromAllOrders->phone_number) {
             return '';
         }
 
