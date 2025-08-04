@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Filament\Notifications\Notification;
@@ -53,13 +54,15 @@ trait CartActions
 
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $cartItem->model->id);
 
+                $cartTotal  =ShoppingCart::total(false);
                 $this->dispatch('productRemovedFromCart', [
                     'product' => $cartItem->model,
                     'productName' => $cartItem->model->name,
                     'quantity' => $quantity,
                     'price' => number_format($cartItem->model->price, 2, '.', ''),
-                    'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+                    'cartTotal' => number_format($cartTotal, 2, '.', ''),
                     'category' => $cartItem->model->productCategories->first()?->name ?? null,
+                    'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
                 ]);
             }
 
@@ -378,14 +381,17 @@ trait CartActions
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
+        $cartTotal = ShoppingCart::total(false);
+
         $this->dispatch('productAddedToCart', [
             'product' => $product,
             'productName' => $product->name,
             'quantity' => $quantity,
             'price' => number_format($productPrice, 2, '.', ''),
             'options' => $options,
-            'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+            'cartTotal' => number_format($cartTotal, 2, '.', ''),
             'category' => $product->productCategories->first()?->name ?? null,
+            'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
         ]);
 
         session(['lastAddedProductInCart' => $product]);

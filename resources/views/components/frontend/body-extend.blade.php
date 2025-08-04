@@ -9,6 +9,9 @@
                 :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
         @endforeach
     @endif
+    @if(Customsetting::get('trigger_tiktok_events'))
+        @php($shoppingCartTotal = \Dashed\DashedEcommerceCore\Classes\ShoppingCart::total(false))
+    @endif
 
     <script>
         document.addEventListener('livewire:init', () => {
@@ -30,6 +33,9 @@
                         }
                     }
                 });
+                @endif
+                @if(Customsetting::get('trigger_tiktok_events'))
+                ttq.track('AddToCart', event[0].tiktokItems);
                 @endif
                 @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 fbq('track', 'AddToCart');
@@ -57,21 +63,24 @@
             });
 
             Livewire.on('checkoutInitiated', (event) => {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 setTimeout(function () {
+                    @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                     fbq('track', 'InitiateCheckout');
+                    @endif
+                    @if(Customsetting::get('google_tagmanager_id'))
+                    dataLayer.push({
+                        'event': 'begin_checkout',
+                        'ecommerce': {
+                            'currency': 'EUR',
+                            'value': event[0].cartTotal,
+                            'items': event[0].items
+                        }
+                    });
+                    @endif
+                    @if(Customsetting::get('trigger_tiktok_events'))
+                    ttq.track('InitiateCheckout', event[0].tiktokItems);
+                    @endif
                 }, 1000);
-                @endif
-                @if(Customsetting::get('google_tagmanager_id'))
-                dataLayer.push({
-                    'event': 'begin_checkout',
-                    'ecommerce': {
-                        'currency': 'EUR',
-                        'value': event[0].cartTotal,
-                        'items': event[0].items
-                    }
-                });
-                @endif
             });
 
             Livewire.on('cartInitiated', (event) => {
@@ -109,6 +118,9 @@
                         }
                     });
                     @endif
+                    @if(Customsetting::get('trigger_tiktok_events'))
+                    ttq.track('ViewContent', event[0].tiktokItems);
+                    @endif
                 }, 1000);
             });
 
@@ -116,30 +128,36 @@
                 @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 fbq('track', 'AddPaymentInfo');
                 @endif
+                @if(Customsetting::get('trigger_tiktok_events'))
+                ttq.track('PlaceAnOrder', event[0].tiktokItems);
+                @endif
             });
 
             Livewire.on('orderPaid', (event) => {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                 setTimeout(function () {
+                    @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                     fbq('track', 'Purchase', {currency: "EUR", value: event.total});
+                    @endif
+                    @if(Customsetting::get('google_tagmanager_id'))
+                    dataLayer.push({
+                        'event': 'purchase',
+                        'ecommerce': {
+                            'currency': 'EUR',
+                            'value': event[0].total,
+                            'transaction_id': event[0].orderId,
+                            'items': event[0].items,
+                            'coupon': event[0].discountCode,
+                            'tax': event[0].tax,
+                            'new_customer': event[0].newCustomer,
+                            'email': event[0].email,
+                            'phone_number': event[0].phoneNumber
+                        }
+                    });
+                    @endif
+                    @if(Customsetting::get('trigger_tiktok_events'))
+                    ttq.track('Purchase', event[0].tiktokItems);
+                    @endif
                 }, 1000);
-                @endif
-                @if(Customsetting::get('google_tagmanager_id'))
-                dataLayer.push({
-                    'event': 'purchase',
-                    'ecommerce': {
-                        'currency': 'EUR',
-                        'value': event[0].total,
-                        'transaction_id': event[0].orderId,
-                        'items': event[0].items,
-                        'coupon': event[0].discountCode,
-                        'tax': event[0].tax,
-                        'new_customer': event[0].newCustomer,
-                        'email': event[0].email,
-                        'phone_number': event[0].phoneNumber
-                    }
-                });
-                @endif
             });
         });
     </script>

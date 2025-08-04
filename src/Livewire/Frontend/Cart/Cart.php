@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 use Illuminate\Support\Collection;
 use Livewire\Component;
@@ -50,9 +51,12 @@ class Cart extends Component
             $itemLoop++;
         }
 
+        $cartTotal =ShoppingCart::total(false);
+
         $this->dispatch('cartInitiated', [
-            'cartTotal' => number_format(ShoppingCart::total(false), 2, '.', ''),
+            'cartTotal' => number_format($cartTotal, 2, '.', ''),
             'items' => $items,
+            'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
         ]);
     }
 
