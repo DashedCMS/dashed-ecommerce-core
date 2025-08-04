@@ -116,7 +116,7 @@ class ShoppingCart
             }
         }
 
-        $total = self::total(false, false);
+        $total = self::total(false, false, $shippingMethodId, $paymentMethodId);
         if ($totalDiscount > $total) {
             $totalDiscount = $total - 0.01;
         }
