@@ -177,7 +177,7 @@ class ShoppingCart
         }
 
         if ($calculateDiscount) {
-            $cartTotal = $cartTotal - ($discount ?: self::totalDiscount());
+            $cartTotal = $cartTotal - ($discount ?: self::totalDiscount(shippingMethodId: $shippingMethodId, paymentMethodId: $paymentMethodId));
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
