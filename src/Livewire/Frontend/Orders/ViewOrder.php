@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Orders;
 
+use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Livewire\Component;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -125,6 +126,7 @@ class ViewOrder extends Component
                 'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
                 'email' => $this->order->email,
                 'phoneNumber' => $this->order->phone_number,
+                'tiktokItems' => TikTokHelper::getShoppingCartItems($this->order->total),
             ]);
         }
     }
