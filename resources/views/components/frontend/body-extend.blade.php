@@ -58,7 +58,9 @@
 
             Livewire.on('checkoutInitiated', (event) => {
                 @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-                fbq('track', 'InitiateCheckout');
+                setTimeout(function () {
+                    fbq('track', 'InitiateCheckout');
+                }, 1000);
                 @endif
                 @if(Customsetting::get('google_tagmanager_id'))
                 dataLayer.push({
@@ -86,7 +88,7 @@
             });
 
             Livewire.on('viewProduct', (event) => {
-                setTimeout(function(){
+                setTimeout(function () {
                     @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
                     fbq('track', 'ViewContent');
                     @endif
@@ -118,7 +120,9 @@
 
             Livewire.on('orderPaid', (event) => {
                 @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-                fbq('track', 'Purchase', {currency: "EUR", value: event.total});
+                setTimeout(function () {
+                    fbq('track', 'Purchase', {currency: "EUR", value: event.total});
+                }, 1000);
                 @endif
                 @if(Customsetting::get('google_tagmanager_id'))
                 dataLayer.push({
