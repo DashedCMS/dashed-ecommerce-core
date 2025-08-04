@@ -8,7 +8,7 @@ class TikTokHelper
 {
     public static function getShoppingCartItems($cartTotal = null): array
     {
-        if(!$cartTotal){
+        if (!$cartTotal) {
             $cartTotal = ShoppingCart::total(false);
         }
 
@@ -25,10 +25,47 @@ class TikTokHelper
 
         }
 
+
         return [
             'contents' => $items,
+            'email' => self::getHashedEmail(),
+            'phone_number' => self::getHashedPhone(),
+            'external_id' => self::getExternalId(),
             'currency' => 'EUR',
             'value' => number_format($cartTotal, 2, '.', ''),
         ];
+    }
+
+    public static function getHashedEmail(): string
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return '';
+        }
+
+        return hash('sha256', strtolower(trim($user->email)));
+    }
+
+    public static function getHashedPhone(): string
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->lastOrderFromAllOrders || !$user->lastOrderFromAllOrders->phone_number) {
+            return '';
+        }
+
+        return hash('sha256', strtolower(trim($user->lastOrderFromAllOrders->phone_number)));
+    }
+
+    public static function getExternalId(): string
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return session()->getId();
+        }
+
+        return hash('sha256', strtolower(trim($user->id)));
     }
 }
