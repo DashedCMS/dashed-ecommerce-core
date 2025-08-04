@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 class TikTokHelper
 {
-    public static function getShoppingCartItems($cartTotal = null): array
+    public static function getShoppingCartItems($cartTotal = null, ?string $email = null, ?string $phoneNumber = null): array
     {
         if (!$cartTotal) {
             $cartTotal = ShoppingCart::total(false);
@@ -28,16 +28,20 @@ class TikTokHelper
 
         return [
             'contents' => $items,
-            'email' => self::getHashedEmail(),
-            'phone_number' => self::getHashedPhone(),
+            'email' => self::getHashedEmail($email),
+            'phone_number' => self::getHashedPhone($phoneNumber),
             'external_id' => self::getExternalId(),
             'currency' => 'EUR',
             'value' => number_format($cartTotal, 2, '.', ''),
         ];
     }
 
-    public static function getHashedEmail(): string
+    public static function getHashedEmail(?string $email = null): string
     {
+        if($email){
+            return hash('sha256', strtolower(trim($email)));
+        }
+
         $user = auth()->user();
 
         if (!$user) {
@@ -47,8 +51,12 @@ class TikTokHelper
         return hash('sha256', strtolower(trim($user->email)));
     }
 
-    public static function getHashedPhone(): string
+    public static function getHashedPhone(?string $phoneNumber = null): string
     {
+        if($phoneNumber){
+            return hash('sha256', strtolower(trim($phoneNumber)));
+        }
+
         $user = auth()->user();
 
         if (!$user || !method_exists($user::class, 'lastOrderFromAllOrders') || !$user->lastOrderFromAllOrders || !$user->lastOrderFromAllOrders->phone_number) {

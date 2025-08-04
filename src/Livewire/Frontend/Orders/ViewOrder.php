@@ -126,7 +126,7 @@ class ViewOrder extends Component
                 'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
                 'email' => $this->order->email,
                 'phoneNumber' => $this->order->phone_number,
-                'tiktokItems' => TikTokHelper::getShoppingCartItems($this->order->total),
+                'tiktokItems' => TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number),
             ]);
         }
     }
