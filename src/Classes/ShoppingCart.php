@@ -310,7 +310,7 @@ class ShoppingCart
         }
     }
 
-    public static function btwPercentages($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null): array
+    public static function btwPercentages($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $discount = 0): array
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
         $baseVatInfo = self::getVatBaseInfoForCalculation($calculateDiscount);
@@ -319,11 +319,15 @@ class ShoppingCart
         $totalVatPerPercentage = $baseVatInfo['totalVatPerPercentage'];
 
         if ($discountCode && $discountCode->type == 'amount') {
+            if(!$discount){
+                $discount = $discountCode->discount_amount;
+            }
+
             if ($calculateInclusiveTax) {
                 foreach ($baseVatInfo['vatPercentageOfTotals'] as $percentage => $vatPercentageOfTotal) {
                     if ($vatPercentageOfTotal) {
                         foreach ($totalVatPerPercentage as $percentage => $value) {
-                            $totalVatPerPercentage[$percentage] -= (($discountCode->discount_amount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
+                            $totalVatPerPercentage[$percentage] -= (($discount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
                         }
                     }
                 }
@@ -331,7 +335,7 @@ class ShoppingCart
                 foreach ($baseVatInfo['vatPercentageOfTotals'] as $percentage => $vatPercentageOfTotal) {
                     if ($vatPercentageOfTotal) {
                         foreach ($totalVatPerPercentage as $percentage => $value) {
-                            $totalVatPerPercentage[$percentage] -= (($discountCode->discount_amount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
+                            $totalVatPerPercentage[$percentage] -= (($discount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
                         }
                     }
                 }

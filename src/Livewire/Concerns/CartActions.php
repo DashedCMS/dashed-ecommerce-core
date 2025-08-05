@@ -47,14 +47,14 @@ trait CartActions
     public function changeQuantity(string $rowId, int $quantity)
     {
         ShoppingCart::setInstance($this->cartType);
-        if (! $quantity) {
+        if (!$quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
 
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $cartItem->model->id);
 
-                $cartTotal  =ShoppingCart::total(false);
+                $cartTotal = ShoppingCart::total(false);
                 $this->dispatch('productRemovedFromCart', [
                     'product' => $cartItem->model,
                     'productName' => $cartItem->model->name,
@@ -88,7 +88,7 @@ trait CartActions
     {
         ShoppingCart::setInstance($this->cartType);
 
-        if (! $this->discountCode) {
+        if (!$this->discountCode) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->discount = 0;
@@ -99,7 +99,7 @@ trait CartActions
 
         $discountCode = DiscountCode::usable()->where('code', $this->discountCode)->first();
 
-        if (! $discountCode || ! $discountCode->isValidForCart()) {
+        if (!$discountCode || !$discountCode->isValidForCart()) {
             session(['discountCode' => '']);
             $this->discountCode = '';
             $this->fillPrices();
@@ -113,8 +113,18 @@ trait CartActions
         return $this->checkCart('success', Translation::get('discount-code-applied', $this->cartType, 'The discount code has been applied and discount has been calculated'));
     }
 
-    public function fillPrices()
+    public function retrievePaymentMethods(): void
     {
+    }
+
+    public function retrieveShippingMethods(): void
+    {
+    }
+
+    public function fillPrices(): void
+    {
+        $this->retrievePaymentMethods();
+        $this->retrieveShippingMethods();
         ShoppingCart::setInstance($this->cartType);
 
         $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod);
@@ -128,6 +138,7 @@ trait CartActions
         $this->depositPaymentMethods = $checkoutData['depositPaymentMethods'];
         $this->postpayPaymentMethod = $checkoutData['postpayPaymentMethod'];
         $this->getSuggestedProducts();
+        $this->dispatch('filledPrices');
     }
 
     public function getSuggestedProducts()
@@ -146,7 +157,7 @@ trait CartActions
 
         ShoppingCart::setInstance($this->cartType);
 
-        if (! $product) {
+        if (!$product) {
             return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
         }
 
@@ -163,7 +174,7 @@ trait CartActions
             }
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -193,7 +204,7 @@ trait CartActions
             } elseif ($productExtra->type == 'checkbox') {
                 //As long as this only can have 1 option, this will work
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -218,7 +229,7 @@ trait CartActions
                 }
             } elseif ($productExtra->type == 'multiple') {
                 $productValues = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && ! $productValues) {
+                if ($productExtra->required && !$productValues) {
                     return $this->checkCart('danger', Translation::get('select-multiple-for-product-extra', 'products', 'Select at least 1 option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -258,7 +269,7 @@ trait CartActions
                 }
             } elseif ($productExtra->type == 'input') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -276,11 +287,11 @@ trait CartActions
                 }
             } elseif ($productExtra->type == 'file') {
                 $productValue = $this->files[$productExtra->id] ?? null;
-                if (! $productValue) {
+                if (!$productValue) {
                     $productValue = $this->extras[$extraKey]['value'] ?? null;
                 }
 
-                if ($productExtra->required && ! ($productValue['value'] ?? null)) {
+                if ($productExtra->required && !($productValue['value'] ?? null)) {
                     return $this->checkCart('danger', Translation::get('file-upload-option-for-product-extra', 'products', 'Upload an file for option :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -308,7 +319,7 @@ trait CartActions
                 foreach ($productExtra->productExtraOptions as $option) {
                     $productOptionValue = $option['value'] ?? null;
                     //                    $productOptionValue = $request['product-extra-' . $productExtra->id . '-' . $option->id];
-                    if ($productExtra->required && ! $productOptionValue) {
+                    if ($productExtra->required && !$productOptionValue) {
                         return $this->checkCart('danger', Translation::get('select-multiple-options-for-product-extra', 'products', 'Select one or more options for :optionName:', 'text', [
                             'optionName' => $productExtra->name,
                         ]));
@@ -359,7 +370,7 @@ trait CartActions
             }
         }
 
-        if (! $cartUpdated) {
+        if (!$cartUpdated) {
             if ($product->limit_purchases_per_customer && $this->quantity > $product->limit_purchases_per_customer_limit) {
                 Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $attributes)
                     ->associate(Product::class);

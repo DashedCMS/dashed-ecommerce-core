@@ -195,8 +195,6 @@ class Checkout extends Component
                 $this->updateAddressByApi();
             }
 
-            $this->retrievePaymentMethods();
-            $this->retrieveShippingMethods();
             $this->fillPrices();
         }
     }
@@ -592,9 +590,9 @@ class Checkout extends Component
         }
 
         $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $discount = ShoppingCart::totalDiscount();
+        $discount = ShoppingCart::totalDiscount(shippingMethodId: $shippingMethod->id,paymentMethodId: $paymentMethod['id'] ?? '');
         $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
+        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '', $discount);
         $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
         $shippingCosts = 0;
         $paymentCosts = 0;
