@@ -90,7 +90,7 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
-            if (! $product->is_bundle) {
+            if (!$product->is_bundle) {
                 $product->bundleProducts()->detach();
             }
 
@@ -136,7 +136,7 @@ class Product extends Model
         $query->where(function ($query) use ($search) {
             $loop = 1;
             foreach (self::getTranslatableAttributes() as $attribute) {
-                if (! method_exists($this, $attribute)) {
+                if (!method_exists($this, $attribute)) {
                     if ($loop == 1) {
                         $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
                     } else {
@@ -327,16 +327,16 @@ class Product extends Model
 
     public function getUrl($locale = null, $forceOwnUrl = false)
     {
-        if (! $locale) {
+        if (!$locale) {
             $locale = app()->getLocale();
         }
 
         return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . ($forceOwnUrl ? 'yes' : 'no'), 60 * 5, function () use ($locale, $forceOwnUrl) {
-            if ($this->productGroup->only_show_parent_product && ! $forceOwnUrl) {
+            if ($this->productGroup->only_show_parent_product && !$forceOwnUrl) {
                 return $this->productGroup->getUrl($locale);
             } else {
                 $overviewPage = Product::getOverviewPage();
-                if (! $overviewPage) {
+                if (!$overviewPage) {
                     return 'link-product-overview-page';
                 }
                 $url = $overviewPage->getUrl($locale) . '/' . $this->getTranslation('slug', $locale);
@@ -352,7 +352,7 @@ class Product extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->public) {
+        if (!$this->public) {
             return false;
         } else {
             return true;
@@ -476,7 +476,7 @@ class Product extends Model
             $allBundleProductsDirectSellable = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (! $bundleProduct->hasDirectSellableStock()) {
+                if (!$bundleProduct->hasDirectSellableStock()) {
                     $allBundleProductsDirectSellable = false;
                 }
             }
@@ -519,7 +519,7 @@ class Product extends Model
             $allBundleProductsInStock = true;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if (! $bundleProduct->inStock()) {
+                if (!$bundleProduct->inStock()) {
                     $allBundleProductsInStock = false;
                 }
             }
@@ -548,11 +548,11 @@ class Product extends Model
             $deliveryDate = null;
 
             foreach ($this->bundleProducts as $bundleProduct) {
-                if ($bundleProduct->inStock() && ! $bundleProduct->hasDirectSellableStock()) {
+                if ($bundleProduct->inStock() && !$bundleProduct->hasDirectSellableStock()) {
                     if ($bundleProduct->expectedDeliveryInDays() > $deliveryDays) {
                         $deliveryDays = $bundleProduct->expectedDeliveryInDays();
                     }
-                    if ($bundleProduct->expectedInStockDate() && (! $deliveryDate || $bundleProduct->expectedInStockDate() > $deliveryDate)) {
+                    if ($bundleProduct->expectedInStockDate() && (!$deliveryDate || $bundleProduct->expectedInStockDate() > $deliveryDate)) {
                         $deliveryDate = $bundleProduct->expectedInStockDate();
                     }
                 }
@@ -580,17 +580,17 @@ class Product extends Model
 
     public function outOfStockSellable(): bool
     {
-        if (! $this->use_stock) {
+        if (!$this->use_stock) {
             if ($this->stock_status == 'out_of_stock') {
                 return false;
             }
         }
 
-        if (! $this->out_of_stock_sellable) {
+        if (!$this->out_of_stock_sellable) {
             return false;
         }
 
-        if ((Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && ! $this->expectedInStockDateValid()) && ! $this->expectedDeliveryInDays()) {
+        if ((Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', Sites::getActive(), 1) && !$this->expectedInStockDateValid()) && !$this->expectedDeliveryInDays()) {
             return false;
         }
 
@@ -599,7 +599,7 @@ class Product extends Model
 
     public function isPreorderable()
     {
-        return $this->inStock() && ! $this->hasDirectSellableStock() && $this->use_stock;
+        return $this->inStock() && !$this->hasDirectSellableStock() && $this->use_stock;
     }
 
     public function expectedInStockDate()
@@ -615,7 +615,7 @@ class Product extends Model
     public function expectedInStockDateInWeeks(): float
     {
         $expectedInStockDate = self::expectedInStockDate();
-        if (! $expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
+        if (!$expectedInStockDate || Carbon::parse($expectedInStockDate) < now()) {
             return 0;
         }
 
@@ -825,7 +825,7 @@ class Product extends Model
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
             foreach ($allProductCharacteristics as $productCharacteristic) {
                 $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! $productCharacteristic->hide_from_public && ! in_array($productCharacteristic->id, $withoutIds)) {
+                if ($thisProductCharacteristic && $thisProductCharacteristic->value && !$productCharacteristic->hide_from_public && !in_array($productCharacteristic->id, $withoutIds)) {
                     $characteristics[] = [
                         'name' => $productCharacteristic->name,
                         'value' => $thisProductCharacteristic->value,
@@ -862,7 +862,7 @@ class Product extends Model
         $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
         foreach ($allProductCharacteristics as $productCharacteristic) {
             $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
-            if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! in_array($productCharacteristic->id, $withoutIds)) {
+            if ($thisProductCharacteristic && $thisProductCharacteristic->value && !in_array($productCharacteristic->id, $withoutIds)) {
                 $characteristics[] = [
                     'name' => $productCharacteristic->name,
                     'value' => $thisProductCharacteristic->value,
@@ -935,8 +935,8 @@ class Product extends Model
             $crossSellProductsIds = $this->crossSellProducts->pluck('id')->toArray();
         }
 
-        if($removeIfAlreadyInCart){
-            foreach(ShoppingCart::cartItems() as $cartItem) {
+        if ($removeIfAlreadyInCart) {
+            foreach (ShoppingCart::cartItems() as $cartItem) {
                 if ($cartItem->model && in_array($cartItem->model->id, $crossSellProductsIds)) {
                     $crossSellProductsIds = array_diff($crossSellProductsIds, [$cartItem->model->id]);
                 }
@@ -959,10 +959,28 @@ class Product extends Model
 
         $price = 0;
 
-        $price += ((! $cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false)) ? $cartItem->options['singlePrice'] : $cartItem->model->currentPrice) * $quantity;
+        $price += ((!$cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false)) ? $cartItem->options['singlePrice'] : $cartItem->model->currentPrice) * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
-            if (! str($productExtraOptionId)->contains('product-extra-')) {
+            if (!str($productExtraOptionId)->contains('product-extra-')) {
+                $optionId = $productExtraOptionId;
+            } else {
+                $optionId = str($productExtraOptionId)->explode('-')->last();
+            }
+
+            if ($optionId) {
+                $quantity = $productExtraOption['quantity'] ?? 1;
+                if ($quantity < 1) {
+                    $quantity = 1;
+                }
+                if (!is_numeric($optionId)) {
+                    continue;
+                }
+                $productExtraOptionId = (int)$optionId;
+
+                if ($productExtraOptionId <= 0) {
+                    continue;
+                }
                 $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
                 if ($thisProductExtraOption) {
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
@@ -973,6 +991,10 @@ class Product extends Model
                         $price += ($thisProductExtraOption->productExtra->price * $quantity);
                     }
                 }
+            }
+
+            if($productExtraOption['value'] && $productExtraOption['price']){
+                $price += $productExtraOption['price'] * $quantity;
             }
         }
 
@@ -1022,25 +1044,25 @@ class Product extends Model
             Toggle::make('out_of_stock_sellable')
                 ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                 ->reactive()
-                ->hidden(fn (Get $get) => ! $get('use_stock')),
+                ->hidden(fn(Get $get) => !$get('use_stock')),
             Toggle::make('low_stock_notification')
                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                 ->reactive()
-                ->hidden(fn (Get $get) => ! $get('use_stock')),
+                ->hidden(fn(Get $get) => !$get('use_stock')),
             TextInput::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn ($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
+                ->helperText(fn($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()
-                ->hidden(fn (Get $get) => ! $get('use_stock')),
+                ->hidden(fn(Get $get) => !$get('use_stock')),
             DatePicker::make('expected_in_stock_date')
                 ->label('Wanneer komt dit product weer op voorraad')
                 ->reactive()
                 ->helperText('Gebruik 1 van deze 2 opties')
-                ->required(fn (Get $get) => ! $get('expected_delivery_in_days'))
-                ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
+                ->required(fn(Get $get) => !$get('expected_delivery_in_days'))
+                ->hidden(fn(Get $get) => !$get('use_stock') || !$get('out_of_stock_sellable')),
             TextInput::make('expected_delivery_in_days')
                 ->label('Levering in dagen')
                 ->helperText('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
@@ -1048,7 +1070,7 @@ class Product extends Model
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(1000)
-                ->required(fn (Get $get) => ! $get('expected_in_stock_date') && $get('out_of_stock_sellable')),
+                ->required(fn(Get $get) => !$get('expected_in_stock_date') && $get('out_of_stock_sellable')),
             TextInput::make('low_stock_notification_limit')
                 ->label('Lage voorraad melding')
                 ->helperText('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een melding')
@@ -1059,7 +1081,7 @@ class Product extends Model
                 ->maxValue(100000)
                 ->default(1)
                 ->numeric()
-                ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
+                ->hidden(fn(Get $get) => !$get('use_stock') || !$get('low_stock_notification')),
             Select::make('stock_status')
                 ->label('Is dit product op voorraad')
                 ->options([
@@ -1068,7 +1090,7 @@ class Product extends Model
                 ])
                 ->default('in_stock')
                 ->required()
-                ->hidden(fn (Get $get) => $get('use_stock')),
+                ->hidden(fn(Get $get) => $get('use_stock')),
             TextInput::make('limit_purchases_per_customer_limit')
                 ->type('number')
                 ->label('Hoeveel mag dit product gekocht worden per bestelling')
@@ -1077,7 +1099,7 @@ class Product extends Model
                 ->default(1)
                 ->required()
                 ->numeric()
-                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+                ->hidden(fn(Get $get) => !$get('limit_purchases_per_customer')),
             Select::make('fulfillment_provider')
                 ->label('Door wie wordt dit product verstuurd?')
                 ->helperText('Laat leeg voor eigen fulfillment')
@@ -1116,7 +1138,7 @@ class Product extends Model
 
     public function priceForUser(?User $user = null, bool $fillFromProduct = true)
     {
-        if (! $user && auth()->check()) {
+        if (!$user && auth()->check()) {
             $user = auth()->user();
         }
 
@@ -1132,7 +1154,7 @@ class Product extends Model
 
     public function discountPriceForUser(?User $user = null): ?float
     {
-        if (! $user && auth()->check()) {
+        if (!$user && auth()->check()) {
             $user = auth()->user();
         }
 
@@ -1162,7 +1184,7 @@ class Product extends Model
             $images = $this->getTranslation('images', $locale);
             if (is_array($images)) {
                 foreach ($images as $key => $image) {
-                    if (! mediaHelper()->getSingleMedia($image, 'original')) {
+                    if (!mediaHelper()->getSingleMedia($image, 'original')) {
                         unset($images[$key]);
                     }
                 }
@@ -1179,7 +1201,7 @@ class Product extends Model
 
         if (is_array($this->productGroup->images) && count($this->productGroup->images)) {
             foreach ($this->productGroup->images as $image) {
-                if (! in_array($image, $images)) {
+                if (!in_array($image, $images)) {
                     $images[] = $image;
                 }
             }
