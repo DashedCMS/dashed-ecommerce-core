@@ -1255,7 +1255,6 @@ class Order extends Model
 
     public function getCountryCodeAttribute(): ?string
     {
-
-        return $this->country ? $this->country->code : null;
+        return Countries::getCountryIsoCode($this->country) ?: 'NL';
     }
 }
