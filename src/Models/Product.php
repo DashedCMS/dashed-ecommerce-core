@@ -1220,4 +1220,32 @@ class Product extends Model
 
         return $images;
     }
+
+    public function replaceContentVariables(?string $content, array $filters = []): ?string
+    {
+        $variables = [
+            'name' => $this->name,
+        ];
+
+        foreach ($filters as $filterKey => $filter) {
+            $filterName = str($filter['name'])->lower()->toString();
+            if ($filter['active'] && collect($filter['options'])->where('id', $filter['active'])->count()) {
+                $variables[$filterName] = collect($filter['options'])->where('id', $filter['active'])->first()['name'];
+            } else {
+                $variables[$filterName] = implode(', ', collect($filter['options'])->pluck('name')->toArray());
+            }
+        }
+
+        foreach ($variables as $key => $value) {
+            if (is_array($content)) {
+                $content = array_map(function ($item) use ($key, $value) {
+                    return str_replace(':' . $key . ':', $value, $item);
+                }, $content);
+            } else {
+                $content = str_replace(':' . $key . ':', $value, $content);
+            }
+        }
+
+        return $content;
+    }
 }

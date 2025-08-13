@@ -171,8 +171,8 @@ trait ProductCartActions
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
         $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;
-        $this->description = self::replaceContentVariables(($this->product && $this->product->description) ? cms()->convertToHtml($this->product->description) : cms()->convertToHtml($this->productGroup->description));
-        $this->shortDescription = self::replaceContentVariables($this->product && $this->product->short_description ? $this->product->short_description : $this->productGroup->short_description);
+        $this->description = ($this->product && $this->product->description) ? $this->product->replaceContentVariables($this->product->description, $this->filters) : $this->productGroup->replaceContentVariables($this->productGroup->description, $this->filters);
+        $this->shortDescription = ($this->product && $this->product->short_description) ? $this->product->replaceContentVariables($this->product->short_description, $this->filters) : $this->productGroup->replaceContentVariables($this->productGroup->short_description, $this->filters);
         $this->sku = $this->product->sku ?? '';
         $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
@@ -667,33 +667,5 @@ trait ProductCartActions
 
         $this->extras[$extraKey]['value'] = $value;
         $this->fillInformation();
-    }
-
-    public function replaceContentVariables(?string $content): ?string
-    {
-        $variables = [
-            'name' => $this->product->name ?? $this->productGroup->name,
-        ];
-
-        foreach ($this->filters as $filterKey => $filter) {
-            $filterName = str($filter['name'])->lower()->toString();
-            if ($filter['active'] && collect($filter['options'])->where('id', $filter['active'])->count()) {
-                $variables[$filterName] = collect($filter['options'])->where('id', $filter['active'])->first()['name'];
-            } else {
-                $variables[$filterName] = implode(', ', collect($filter['options'])->pluck('name')->toArray());
-            }
-        }
-
-        foreach ($variables as $key => $value) {
-            if (is_array($content)) {
-                $content = array_map(function ($item) use ($key, $value) {
-                    return str_replace(':' . $key . ':', $value, $item);
-                }, $content);
-            } else {
-                $content = str_replace(':' . $key . ':', $value, $content);
-            }
-        }
-
-        return $content;
     }
 }
