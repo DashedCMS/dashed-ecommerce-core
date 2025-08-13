@@ -332,7 +332,7 @@ class Product extends Model
         }
 
         return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . ($forceOwnUrl ? 'yes' : 'no'), 60 * 5, function () use ($locale, $forceOwnUrl) {
-            if ($this->productGroup->only_show_parent_product && !$forceOwnUrl) {
+            if ($this->productGroup && $this->productGroup->only_show_parent_product && !$forceOwnUrl) {
                 return $this->productGroup->getUrl($locale);
             } else {
                 $overviewPage = Product::getOverviewPage();
@@ -1170,7 +1170,7 @@ class Product extends Model
 
     public function showProductGroup(): bool
     {
-        return $this->productGroup->only_show_parent_product;
+        return $this->productGroup->only_show_parent_product ?? false;
     }
 
     public function fulfillmentCompany(): BelongsTo

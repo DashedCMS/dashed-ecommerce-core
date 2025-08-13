@@ -55,7 +55,7 @@
                 </div>
                 <button type="button"
                         x-on:click="showCartPopup = !showCartPopup"
-                        class="absolute top-2 right-2 flex h-10 w-10 items-center justify-center">
+                        class="absolute top-2 right-2 flex h-10 w-10 items-center justify-center trans transform hover:rotate-90 hover:text-primary">
                     <span class="sr-only">Close menu</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-8">
