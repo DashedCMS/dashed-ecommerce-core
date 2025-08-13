@@ -16,7 +16,7 @@
     var ratingBadgeContainer = document.createElement("div");
     document.body.appendChild(ratingBadgeContainer);
     window.gapi.load('ratingbadge', function () {
-        window.gapi.ratingbadge.render(ratingBadgeContainer, {"merchant_id": 5620542422});
+        window.gapi.ratingbadge.render(ratingBadgeContainer, {"merchant_id": {{ Customsetting::get('google_merchant_center_id') }}});
     });
     @endif
 </script>

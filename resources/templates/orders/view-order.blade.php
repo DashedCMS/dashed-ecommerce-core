@@ -117,7 +117,7 @@
                     <div>
                         <dt class="font-medium text-gray-900">{{Translation::get('shipping-method', 'cart', 'Verzendmethode')}}</dt>
                         <dd class="mt-2">
-                            {{$order->shippingMethod->name}}
+                            {{$order->shippingMethod->name ?? Translation::get('no-shipping-method', 'cart', 'Geen verzendmethode')}}
                         </dd>
                     </div>
 
