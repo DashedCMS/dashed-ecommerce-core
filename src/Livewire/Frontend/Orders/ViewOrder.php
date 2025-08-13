@@ -128,7 +128,8 @@ class ViewOrder extends Component
                 'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
                 'email' => $this->order->email,
                 'phoneNumber' => $this->order->phone_number,
-                'country' => $this->order->countryCode,
+                'country' => $this->order->country,
+                'countryCode' => $this->order->countryCode,
                 'estimatedDeliveryDate' => $this->order->created_at->addDays(1)->format('Y-m-d'),
                 'tiktokItems' => Customsetting::get('trigger_tiktok_events') ? TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number) : [],
             ]);

@@ -166,7 +166,6 @@
                         "email": event[0].email,
                         "delivery_country": event[0].countryCode,
                         "estimated_delivery_date": event[0].estimatedDeliveryDate,
-
                         "products": event[0].items.map((item) => {
                             return {
                                 "gtin": item.ean,
