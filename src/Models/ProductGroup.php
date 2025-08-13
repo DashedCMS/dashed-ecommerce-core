@@ -617,10 +617,10 @@ class ProductGroup extends Model
         return $images;
     }
 
-    public function replaceContentVariables(?string $content, array $filters = []): ?string
+    public function replaceContentVariables(?string $content, array $filters = [], ?Product $product): ?string
     {
         $variables = [
-            'name' => $this->name,
+            'name' => $product ? $product->name : $this->name,
         ];
 
         foreach ($filters as $filterKey => $filter) {

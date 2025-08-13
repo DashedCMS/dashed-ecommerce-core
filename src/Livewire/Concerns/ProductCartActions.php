@@ -171,8 +171,8 @@ trait ProductCartActions
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
         $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;
-        $this->description = ($this->product && $this->product->description) ? $this->product->replaceContentVariables($this->product->description, $this->filters) : $this->productGroup->replaceContentVariables($this->productGroup->description, $this->filters);
-        $this->shortDescription = ($this->product && $this->product->short_description) ? $this->product->replaceContentVariables($this->product->short_description, $this->filters) : $this->productGroup->replaceContentVariables($this->productGroup->short_description, $this->filters);
+        $this->description = ($this->product && $this->product->description) ? $this->product->replaceContentVariables($this->product->description, $this->filters) : $this->productGroup->replaceContentVariables($this->productGroup->description, $this->filters, $this->product);
+        $this->shortDescription = ($this->product && $this->product->short_description) ? $this->product->replaceContentVariables($this->product->short_description, $this->filters) : $this->productGroup->replaceContentVariables($this->productGroup->short_description, $this->filters, $this->product);
         $this->sku = $this->product->sku ?? '';
         $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
