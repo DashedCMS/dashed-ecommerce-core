@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddedToCart;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
@@ -313,6 +314,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->registerRouteModel(ProductGroup::class, 'Product groep');
         cms()->registerRouteModel(ProductCategory::class, 'Product categorie');
 
+        cms()->registerSettingsPage(DefaultEcommerceSettingsPage::class, 'Algemene Ecommerce', 'banknotes', 'Algemene Ecommerce instellingen');
         cms()->registerSettingsPage(InvoiceSettingsPage::class, 'Facturatie instellingen', 'document-check', 'Instellingen voor de facturatie');
         cms()->registerSettingsPage(OrderSettingsPage::class, 'Bestellingen', 'banknotes', 'Instellingen voor de bestellingen');
         cms()->registerSettingsPage(PaymentMethodResource::class, 'Betaalmethodes', 'credit-card', 'Stel handmatige betaalmethodes in');

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -75,6 +76,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 POSCustomerPageRedirect::class,
                 ProductGroupStatisticsPage::class,
                 ActionsStatisticsPage::class,
+                DefaultEcommerceSettingsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,

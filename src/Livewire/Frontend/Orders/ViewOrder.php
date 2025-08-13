@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Orders;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Livewire\Component;
 use Illuminate\Support\Facades\Cache;
@@ -113,6 +114,7 @@ class ViewOrder extends Component
                     'item_category' => ($orderProduct->product && $orderProduct->product->productCategories->count()) ? $orderProduct->product->productCategories()->first()->name : '',
                     'price' => number_format($orderProduct->price / $orderProduct->quantity, 2, '.', ''),
                     'quantity' => $orderProduct->quantity,
+                    'ean' => $orderProduct->product ? $orderProduct->product->ean : '',
                 ];
                 $itemLoop++;
             }
@@ -126,7 +128,9 @@ class ViewOrder extends Component
                 'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
                 'email' => $this->order->email,
                 'phoneNumber' => $this->order->phone_number,
-                'tiktokItems' => TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number),
+                'country' => $this->order->countryCode,
+                'estimatedDeliveryDate' => $this->order->created_at->addDays(1)->format('Y-m-d'),
+                'tiktokItems' => Customsetting::get('trigger_tiktok_events') ? TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number) : [],
             ]);
         }
     }

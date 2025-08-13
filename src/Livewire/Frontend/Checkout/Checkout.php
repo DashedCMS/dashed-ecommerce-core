@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Exception;
 use Carbon\Carbon;
@@ -53,6 +54,7 @@ class Checkout extends Component
     public string $zipCode = '';
     public string $city = '';
     public string $country = '';
+    public array $countryList = [];
     public string $invoiceStreet = '';
     public string $invoiceHouseNr = '';
     public string $invoiceZipCode = '';
@@ -105,6 +107,7 @@ class Checkout extends Component
         $this->invoiceZipCode = optional(auth()->user())->lastOrderFromAllOrders()->invoice_zip_code ?? '';
         $this->invoiceCity = optional(auth()->user())->lastOrderFromAllOrders()->invoice_city ?? '';
         $this->invoiceCountry = optional(auth()->user())->lastOrderFromAllOrders()->invoice_country ?? '';
+        $this->countryList = Countries::getAllSelectedCountries();
 
         $this->accountRequired = Customsetting::get('checkout_account', default: 2);
         $this->firstAndLastnameRequired = Customsetting::get('checkout_form_name', default: 0);

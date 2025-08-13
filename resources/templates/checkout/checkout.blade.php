@@ -168,14 +168,17 @@
                                             placeholder="{{Translation::get('city', 'checkout', 'Stad')}}"
                                         />
 
-                                        <x-fields.input
+                                        <x-fields.select
                                             required
-                                            type="text"
                                             model="country"
                                             id="country"
                                             :label="Translation::get('enter-country', 'checkout', 'Vul je land in')"
                                             placeholder="{{Translation::get('country', 'checkout', 'Land')}}"
-                                        />
+                                        >
+                                            @foreach($countryList as $country)
+                                                <option value="{{ $country }}">{{ $country }}</option>
+                                            @endforeach
+                                        </x-fields.select>
 
                                         @if($companyRequired != 0)
                                             @if($companyRequired == 2)

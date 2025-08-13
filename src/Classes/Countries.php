@@ -57,4 +57,18 @@ class Countries
 
         return $countryCodes;
     }
+
+    public static function getAllSelectedCountries(): array
+    {
+        $countries = [];
+
+        $allCountries = collect(self::getCountries());
+
+        foreach (ShippingZones::getActiveRegions() as $region) {
+            $countries[] = $allCountries->where('name', $region['value'])
+                ->first()['nativeName'] ?? 'Onbekend';
+        }
+
+        return $countries;
+    }
 }

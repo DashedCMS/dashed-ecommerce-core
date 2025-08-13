@@ -48,7 +48,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
         $this->buttonClass = $buttonClass;
         $orderProducts = $this->order->orderProducts;
         foreach ($orderProducts as $key => $orderProduct) {
-            if (! $orderProduct->fulfillmentCompany) {
+            if (!$orderProduct->fulfillmentCompany) {
                 unset($orderProducts[$key]);
             }
         }
@@ -70,12 +70,12 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
 
     private function getInitialFormData(): array
     {
-        //        $fillForm = [
-        //            'sendProductsToCustomer' => true,
-        //        ];
+        $fillForm = [
+            'sendProductsToCustomer' => true,
+        ];
 
         foreach ($this->order->orderProducts()->orderBy('fulfillment_provider')->get() as $orderProduct) {
-            $fillForm["order_product_{$orderProduct->id}_send_to_fulfiller"] = ! $orderProduct->send_to_fulfiller;
+            $fillForm["order_product_{$orderProduct->id}_send_to_fulfiller"] = !$orderProduct->send_to_fulfiller;
         }
 
         return $fillForm;
@@ -119,7 +119,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
                         )
                     )
                     ->columns(['default' => 1, 'lg' => 2])
-                    ->hidden(! in_array($this->order->order_origin, ['own', 'pos']));
+                    ->hidden(!in_array($this->order->order_origin, ['own', 'pos']));
             }
         }
 
@@ -151,7 +151,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasForms, Has
             }
         }
 
-        if (! $hasOrderProductSelected) {
+        if (!$hasOrderProductSelected) {
             Notification::make()
                 ->title('Geen producten geselecteerd')
                 ->body('Selecteer minimaal één product om door te sturen naar de fulfilment partij.')
