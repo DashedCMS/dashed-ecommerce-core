@@ -993,7 +993,7 @@ class Product extends Model
                 }
             }
 
-            if($productExtraOption['value'] && $productExtraOption['price']){
+            if ($productExtraOption['value'] && ($productExtraOption['price'] ?? false)) {
                 $price += $productExtraOption['price'] * $quantity;
             }
         }
