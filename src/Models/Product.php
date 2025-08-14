@@ -962,10 +962,13 @@ class Product extends Model
         $price += ((!$cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false)) ? $cartItem->options['singlePrice'] : $cartItem->model->currentPrice) * $quantity;
 
         foreach ($options as $productExtraOptionId => $productExtraOption) {
+            $optionId = null;
+            $extraId = null;
+
             if (!str($productExtraOptionId)->contains('product-extra-')) {
                 $optionId = $productExtraOptionId;
             } else {
-                $optionId = str($productExtraOptionId)->explode('-')->last();
+                $extraId = str($productExtraOptionId)->explode('-')->last();
             }
 
             if ($optionId) {
@@ -990,6 +993,24 @@ class Product extends Model
                         $price += ($thisProductExtraOption->price * $quantity);
                         $price += ($thisProductExtraOption->productExtra->price * $quantity);
                     }
+                }
+            }
+            if ($extraId) {
+                $quantity = $productExtraOption['quantity'] ?? 1;
+                if ($quantity < 1) {
+                    $quantity = 1;
+                }
+                if (!is_numeric($extraId)) {
+                    continue;
+                }
+                $productExtraId = (int)$extraId;
+
+                if ($productExtraId <= 0) {
+                    continue;
+                }
+                $thisProductExtra = ProductExtra::find($productExtraId);
+                if ($thisProductExtra) {
+                    $price += ($thisProductExtra->price * $quantity);
                 }
             }
 
@@ -1118,25 +1139,29 @@ class Product extends Model
         ];
     }
 
-    public static function canHaveParent(): bool
+    public
+    static function canHaveParent(): bool
     {
         return false;
     }
 
-    public static function returnForRoute(): array
+    public
+    static function returnForRoute(): array
     {
         return [
             'livewireComponent' => ShowProduct::class,
         ];
     }
 
-    public function volumeDiscounts(): BelongsToMany
+    public
+    function volumeDiscounts(): BelongsToMany
     {
         return $this->belongsToMany(ProductGroupVolumeDiscount::class, 'dashed__product_group_volume_discount_product', 'product_id', 'product_group_volume_discount_id')
             ->orderBy('min_quantity');
     }
 
-    public function priceForUser(?User $user = null, bool $fillFromProduct = true)
+    public
+    function priceForUser(?User $user = null, bool $fillFromProduct = true)
     {
         if (!$user && auth()->check()) {
             $user = auth()->user();
@@ -1152,7 +1177,8 @@ class Product extends Model
         return ($fillFromProduct ? $this->getRawOriginal('current_price') : null);
     }
 
-    public function discountPriceForUser(?User $user = null): ?float
+    public
+    function discountPriceForUser(?User $user = null): ?float
     {
         if (!$user && auth()->check()) {
             $user = auth()->user();
@@ -1168,17 +1194,20 @@ class Product extends Model
         return $this->getRawOriginal('discount_price');
     }
 
-    public function showProductGroup(): bool
+    public
+    function showProductGroup(): bool
     {
         return $this->productGroup->only_show_parent_product ?? false;
     }
 
-    public function fulfillmentCompany(): BelongsTo
+    public
+    function fulfillmentCompany(): BelongsTo
     {
         return $this->belongsTo(FulfillmentCompany::class, 'fulfillment_provider');
     }
 
-    public function removeInvalidImages(): void
+    public
+    function removeInvalidImages(): void
     {
         foreach (Locales::getActivatedLocalesFromSites() as $locale) {
             $images = $this->getTranslation('images', $locale);
@@ -1195,7 +1224,8 @@ class Product extends Model
         $this->saveQuietly();
     }
 
-    public function getImagesToShowAttribute(): array
+    public
+    function getImagesToShowAttribute(): array
     {
         $images = is_array($this->images) ? $this->images : [];
 
@@ -1210,7 +1240,8 @@ class Product extends Model
         return $images;
     }
 
-    public function getOriginalImagesToShowAttribute(): array
+    public
+    function getOriginalImagesToShowAttribute(): array
     {
         $images = [];
 
@@ -1221,7 +1252,8 @@ class Product extends Model
         return $images;
     }
 
-    public function replaceContentVariables(?string $content, array $filters = []): ?string
+    public
+    function replaceContentVariables(?string $content, array $filters = []): ?string
     {
         $variables = [
             'name' => $this->name,
