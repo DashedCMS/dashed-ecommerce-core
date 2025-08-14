@@ -423,7 +423,7 @@ class ShoppingCart
         $vatRatesCount = 0;
 
         if ($calculateDiscount) {
-            $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
+            $discountCode = DiscountCode::usable()->isNotGlobalDiscount()->where('code', session('discountCode'))->first();
 
             if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);

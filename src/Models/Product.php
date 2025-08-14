@@ -972,7 +972,7 @@ class Product extends Model
             }
 
             if ($optionId) {
-                $quantity = $productExtraOption['quantity'] ?? 1;
+                $quantity = $productExtraOption['quantity'] ?? $cartItem->qty;
                 if ($quantity < 1) {
                     $quantity = 1;
                 }
@@ -996,7 +996,7 @@ class Product extends Model
                 }
             }
             if ($extraId) {
-                $quantity = $productExtraOption['quantity'] ?? 1;
+                $quantity = $cartItem->qty;
                 if ($quantity < 1) {
                     $quantity = 1;
                 }
@@ -1014,9 +1014,10 @@ class Product extends Model
                 }
             }
 
-            if ($productExtraOption['value'] && ($productExtraOption['price'] ?? false)) {
-                $price += $productExtraOption['price'] * $quantity;
-            }
+            //Should not be needed, otherwise it will count above items double
+//            if ($productExtraOption['value'] && ($productExtraOption['price'] ?? false)) {
+//                $price += $productExtraOption['price'] * $quantity;
+//            }
         }
 
         if ($cartItem->model && $cartItem->model->volumeDiscounts) {

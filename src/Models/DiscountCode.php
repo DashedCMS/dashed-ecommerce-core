@@ -126,6 +126,7 @@ class DiscountCode extends Model
     public function scopeUsable($query)
     {
         $query->thisSite()
+            ->isNotGlobalDiscount()
             ->where(function ($query) {
                 $query->where('use_stock', 0)
                     ->orWhere('use_stock', 1)
@@ -363,5 +364,10 @@ class DiscountCode extends Model
     public function scopeIsGlobalDiscount($query)
     {
         return $query->where('is_global_discount', true);
+    }
+
+    public function scopeIsNotGlobalDiscount($query)
+    {
+        return $query->where('is_global_discount', false);
     }
 }
