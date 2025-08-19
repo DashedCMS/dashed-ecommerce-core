@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Support\Str;
-
 class TikTokHelper
 {
     public static function getShoppingCartItems($cartTotal = null, ?string $email = null, ?string $phoneNumber = null): array
     {
-        if (!$cartTotal) {
+        if (! $cartTotal) {
             $cartTotal = ShoppingCart::total(false);
         }
 
@@ -38,13 +36,13 @@ class TikTokHelper
 
     public static function getHashedEmail(?string $email = null): string
     {
-        if($email){
+        if ($email) {
             return hash('sha256', strtolower(trim($email)));
         }
 
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return '';
         }
 
@@ -53,13 +51,13 @@ class TikTokHelper
 
     public static function getHashedPhone(?string $phoneNumber = null): string
     {
-        if($phoneNumber){
+        if ($phoneNumber) {
             return hash('sha256', strtolower(trim($phoneNumber)));
         }
 
         $user = auth()->user();
 
-        if (!$user || !method_exists($user::class, 'lastOrderFromAllOrders') || !$user->lastOrderFromAllOrders || !$user->lastOrderFromAllOrders->phone_number) {
+        if (! $user || ! method_exists($user::class, 'lastOrderFromAllOrders') || ! $user->lastOrderFromAllOrders || ! $user->lastOrderFromAllOrders->phone_number) {
             return '';
         }
 
@@ -70,7 +68,7 @@ class TikTokHelper
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return session()->getId();
         }
 

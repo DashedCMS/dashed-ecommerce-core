@@ -12,7 +12,7 @@ return new class () extends Migration {
      */
     public function up()
     {
-        if(Schema::hasTable('dashed__product_groups')) {
+        if (Schema::hasTable('dashed__product_groups')) {
             return;
         }
 

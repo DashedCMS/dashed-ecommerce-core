@@ -2,8 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddedToCart;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -33,6 +31,7 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartPopup;
 use Dashed\DashedEcommerceCore\Livewire\Orders\AddPaymentToOrder;
 use Dashed\DashedEcommerceCore\Commands\UpdateProductInformations;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPage;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddedToCart;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\LogsList;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
@@ -77,6 +76,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 
