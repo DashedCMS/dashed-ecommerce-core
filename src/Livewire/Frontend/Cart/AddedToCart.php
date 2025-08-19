@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
-use Dashed\DashedTranslations\Models\Translation;
-use Illuminate\Support\Collection;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 
 class AddedToCart extends Component
@@ -23,7 +21,7 @@ class AddedToCart extends Component
     public int $freeShippingPercentage = 0;
 
     protected $listeners = [
-        'productAddedToCart'
+        'productAddedToCart',
     ];
 
     public function mount(?string $view = '')

@@ -2,12 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Models\Customsetting;
-use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class ProductGroups
 {
