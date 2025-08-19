@@ -21,11 +21,11 @@
                 @if($order->invoice_street)
                     <p>{{ $order->invoice_street }} {{ $order->invoice_house_nr . ', ' . $order->invoice_zip_code }}</p>
 
-                    <p>{{ $order->invoice_zip_code . ', ' . $order->invoice_country }}</p>
+                    <p>{{ $order->invoice_city . ', ' . $order->invoice_country }}</p>
                 @else
                     <p>{{ $order->street }} {{ $order->house_nr . ', ' . $order->zip_code }}</p>
 
-                    <p>{{ $order->zip_code . ', ' . $order->country }}</p>
+                    <p>{{ $order->city . ', ' . $order->country }}</p>
                 @endif
 
                 @if($order->email)
