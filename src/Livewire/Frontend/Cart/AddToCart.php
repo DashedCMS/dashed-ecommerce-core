@@ -14,8 +14,9 @@ class AddToCart extends Component
 
     public function mount(Product $product, ?string $view = '')
     {
-        $this->parentProduct = $product->parent ? $product->parent : $product;
-        $this->originalProduct = $product;
+        $this->productGroup = $product->productGroup;
+        $this->originalProduct = $product ?? null;
+        $this->product = $product ?? null;
         $this->view = $view;
 
         $this->fillInformation(true);
