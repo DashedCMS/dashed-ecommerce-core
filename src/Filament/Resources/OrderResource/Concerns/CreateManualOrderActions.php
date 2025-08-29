@@ -354,20 +354,16 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod && $this->orderOrigin != 'pos') {
-            //            Notification::make()
-            //                ->title('Ga een stap terug, klik op "Gegevens bijwerken" en ga door')
-            //                ->danger()
-            //                ->send();
-            Notification::make()
-                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
-                ->danger()
-                ->send();
-
-            return [
-                'success' => false,
-            ];
-        }
+//        if (! $shippingMethod && $this->orderOrigin != 'pos') {
+//            Notification::make()
+//                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+//                ->danger()
+//                ->send();
+//
+//            return [
+//                'success' => false,
+//            ];
+//        }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
@@ -484,7 +480,7 @@ trait CreateManualOrderActions
             $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             $productExtras = [];
-            foreach ($cartItem->options as $optionId => $option) {
+            foreach (($cartItem->options['options'] ?? []) as $optionId => $option) {
                 if ($option['name'] ?? false) {
                     $productExtras[] = [
                         'id' => $optionId,

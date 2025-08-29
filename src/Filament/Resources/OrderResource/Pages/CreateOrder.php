@@ -265,7 +265,6 @@ class CreateOrder extends Page implements HasForms
                     ->reactive(),
                 Select::make('shipping_method_id')
                     ->label('Verzendmethode')
-                    ->required()
                     ->options(function () {
                         return collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray();
                     }),
