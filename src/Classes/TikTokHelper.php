@@ -6,21 +6,22 @@ class TikTokHelper
 {
     public static function getShoppingCartItems($cartTotal = null, ?string $email = null, ?string $phoneNumber = null): array
     {
-        if (! $cartTotal) {
+        if (!$cartTotal) {
             $cartTotal = ShoppingCart::total(false);
         }
 
         $items = [];
 
         foreach (ShoppingCart::cartItems() as $cartItem) {
-            $items[] = [
-                'content_id' => $cartItem->model->id,
-                'content_type' => 'product',
-                'content_name' => $cartItem->model->name,
-                'content_category' => $cartItem->model->productCategories->first()?->name ?? null,
-                'price' => number_format($cartItem->price, 2, '.', ''),
-            ];
-
+            if ($cartItem->model) {
+                $items[] = [
+                    'content_id' => $cartItem->model->id,
+                    'content_type' => 'product',
+                    'content_name' => $cartItem->model->name,
+                    'content_category' => $cartItem->model->productCategories->first()?->name ?? null,
+                    'price' => number_format($cartItem->price, 2, '.', ''),
+                ];
+            }
         }
 
 
@@ -42,7 +43,7 @@ class TikTokHelper
 
         $user = auth()->user();
 
-        if (! $user) {
+        if (!$user) {
             return '';
         }
 
@@ -57,7 +58,7 @@ class TikTokHelper
 
         $user = auth()->user();
 
-        if (! $user || ! method_exists($user::class, 'lastOrderFromAllOrders') || ! $user->lastOrderFromAllOrders || ! $user->lastOrderFromAllOrders->phone_number) {
+        if (!$user || !method_exists($user::class, 'lastOrderFromAllOrders') || !$user->lastOrderFromAllOrders || !$user->lastOrderFromAllOrders->phone_number) {
             return '';
         }
 
@@ -68,7 +69,7 @@ class TikTokHelper
     {
         $user = auth()->user();
 
-        if (! $user) {
+        if (!$user) {
             return session()->getId();
         }
 
