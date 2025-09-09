@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use App\Models\User;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -40,7 +41,7 @@ class PricePerUserResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $products = Product::all();
+//        $products = Product::all();
         $productCategories = ProductCategory::all();
 
         $schema = [
@@ -60,7 +61,7 @@ class PricePerUserResource extends Resource
                     TextInput::make($productCategory->id . '_category_discount_price')
                         ->label('Korting bedrag')
                         ->prefix('€')
-                        ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
+                        ->required(fn(Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
                         ->minValue(1)
                         ->reactive()
                         ->numeric(),
@@ -70,7 +71,7 @@ class PricePerUserResource extends Resource
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
-                        ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_price') === null)
+                        ->required(fn(Get $get) => $get($productCategory->id . '_category_discount_price') === null)
                         ->reactive()
                         ->numeric(),
                 ])
@@ -86,7 +87,7 @@ class PricePerUserResource extends Resource
                             $set('product_category_ids', $values);
                         }),
                 ])
-                ->visible(fn (Get $get) => collect($get('product_category_ids'))->contains($productCategory->id))
+                ->visible(fn(Get $get) => collect($get('product_category_ids'))->contains($productCategory->id))
                 ->columns(2);
         }
 
@@ -155,7 +156,10 @@ class PricePerUserResource extends Resource
         //            ], $productSchema));
 
         return $form
-            ->schema($schema);
+            ->schema(array_merge([
+                Toggle::make('has_custom_pricing')
+                    ->label('Custom pricing voor deze gebruiker activeren'),
+            ], $schema));
     }
 
     public static function table(Table $table): Table

@@ -443,7 +443,7 @@ class Product extends Model
 
         $this->saveQuietly();
 
-        foreach (User::all() as $user) {
+        foreach (User::where('has_custom_pricing', true)->get() as $user) {
             $productUser = DB::table('dashed__product_user')
                 ->where('product_id', $this->id)
                 ->where('user_id', $user->id)
@@ -1169,7 +1169,7 @@ class Product extends Model
             $user = auth()->user();
         }
 
-        if ($user) {
+        if ($user && $user->has_custom_pricing) {
             return DB::table('dashed__product_user')
                 ->where('user_id', $user->id)
                 ->where('product_id', $this->id)
