@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Locales;
@@ -40,7 +41,7 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     {
         $missingVariations = $this->productGroup->missingVariations();
 
-        if (! count($missingVariations) && ! $this->productGroup->products->count()) {
+        if (!count($missingVariations) && !$this->productGroup->products->count()) {
             $missingVariations = [
                 [],
             ];
@@ -51,8 +52,14 @@ class CreateMissingProductVariationsJob implements ShouldQueue
             $newProduct->site_ids = $this->productGroup->site_ids;
             foreach (Locales::getLocales() as $locale) {
                 $name = $this->productGroup->getTranslation('name', $locale['id']);
+                $optionCount = 0;
                 foreach ($missingVariation as $optionId) {
-                    $name .= ' | ' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
+                    if ($optionCount === 0) {
+                        $name .= Translation::get('missing-product-variation-name-divider', 'missing-product-variations', ' | ') . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
+                    } else {
+                        $name .= Translation::get('missing-product-variation-option-divider', 'missing-product-variations', ' | ') . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
+                    }
+                    $optionCount++;
                 }
                 $newProduct->setTranslation('name', $locale['id'], $name);
             }
