@@ -180,7 +180,8 @@ class CreateOrder extends Page implements HasForms
                     ->schema([
                         Select::make('id')
                             ->label('Kies product')
-                            ->options($this->allProducts->pluck('name', 'id'))
+                            ->options(Product::handOrderShowable()->pluck('name', 'id'))
+//                            ->options($this->allProducts->pluck('name', 'id'))
                             ->required()
                             ->searchable()
                             ->reactive(),
