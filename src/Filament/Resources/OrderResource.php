@@ -83,7 +83,7 @@ class OrderResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return [
+        return array_merge([
             'hash',
             'id',
             'ip',
@@ -112,7 +112,10 @@ class OrderResource extends Resource
             'discount',
             'status',
             'site_id',
-        ];
+        ], collect(ecommerce()->builder('customOrderFields'))
+            ->keys()
+            ->map(fn ($key) => Str::snake($key))
+            ->toArray());
     }
 
     public static function form(Form $form): Form
@@ -213,7 +216,7 @@ class OrderResource extends Resource
                     ]),
                 TextColumn::make('name')
                     ->label('Klant')
-                    ->searchable([
+                    ->searchable(array_merge([
                         'hash',
                         'id',
                         'ip',
@@ -242,7 +245,10 @@ class OrderResource extends Resource
                         'discount',
                         'status',
                         'site_id',
-                    ])
+                    ], collect(ecommerce()->builder('customOrderFields'))
+                        ->keys()
+                        ->map(fn ($key) => Str::snake($key))
+                        ->toArray()))
                     ->sortable(),
                 TextColumn::make('total')
                     ->label('Totaal')

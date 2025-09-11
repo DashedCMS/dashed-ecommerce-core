@@ -89,16 +89,16 @@
         </tr>
     </table>
 
-    @if(count($order->customOrderFields()))
+    @if(count($order->customOrderFields(true)))
         <table class="table-dates">
             <tr>
-                @foreach ($order->customOrderFields() as $label => $value)
+                @foreach ($order->customOrderFields(true) as $label => $value)
                     <th>{{ $label }}</th>
                 @endforeach
             </tr>
 
             <tr>
-                @foreach ($order->customOrderFields() as $label => $value)
+                @foreach ($order->customOrderFields(true) as $label => $value)
                     <td>{{ $value }}</td>
                 @endforeach
             </tr>

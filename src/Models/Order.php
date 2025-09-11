@@ -1178,14 +1178,14 @@ class Order extends Model
         }
     }
 
-    public function customOrderFields(): array
+    public function customOrderFields(bool $onlyOnInvoice = false): array
     {
         $customOrderFields = [];
 
         foreach (ecommerce()->builder('customOrderFields') as $key => $field) {
             $key = str($key)->snake()->toString();
 
-            if ($this->$key) {
+            if ($this->$key && (!$onlyOnInvoice || ($onlyOnInvoice && ($field['showOnInvoice'] ?? false)))) {
                 $customOrderFields[$field['label']] = $this->$key;
             }
         }
