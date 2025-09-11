@@ -41,7 +41,8 @@ class CancelOrder extends Component implements HasForms, HasActions
     {
         $fillForm = [
             'fulfillment_status' => $this->order->fulfillment_status,
-            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
+            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('is_cash_payment', 1)->first()->id ?? null,
+//            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
         ];
 
         foreach ($this->order->orderProducts as $orderProduct) {
@@ -72,8 +73,8 @@ class CancelOrder extends Component implements HasForms, HasActions
                         ->schema([
                             Placeholder::make('')
                                 ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
-                        ])
-                        ->hidden(in_array($this->order->order_origin, ['own', 'pos'])),
+                        ]),
+//                        ->hidden(in_array($this->order->order_origin, ['own', 'pos'])),
 //                    Section::make('Retour aanmaken')
 //                        ->schema([
 //                            Placeholder::make('')
@@ -95,8 +96,8 @@ class CancelOrder extends Component implements HasForms, HasActions
                         ->columns([
                             'default' => 1,
                             'lg' => 3,
-                        ])
-                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
+                        ]),
+//                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
                     Section::make('Overige opties')
                         ->schema([
                             Select::make('fulfillment_status')
@@ -105,7 +106,8 @@ class CancelOrder extends Component implements HasForms, HasActions
                                 ->options(Orders::getFulfillmentStatusses()),
                             Select::make('payment_method_id')
                                 ->label('Betaalmethode voor terugbetaling')
-                                ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray()),
+                                ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->pluck('name', 'id')->toArray()),
+//                                ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray()),
                             Toggle::make('send_customer_email')
                                 ->label('Moet de klant een mail krijgen van deze annulering/retournering?'),
                             Toggle::make('products_must_be_returned')
@@ -119,12 +121,13 @@ class CancelOrder extends Component implements HasForms, HasActions
                                     aparte teruggave van een bedrag. Wil je alleen deze regel, zet de retour producten
                                     dan op 0 hierboven)')
                                 ->reactive(),
-                        ])
-                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
+                        ]),
+//                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
                 ];
             })
             ->action(function ($data) {
-                if (in_array($this->order->order_origin, ['own', 'pos']) && $this->order->invoice_id != 'PROFORMA') {
+                if ($this->order->invoice_id != 'PROFORMA') {
+//                if (in_array($this->order->order_origin, ['own', 'pos']) && $this->order->invoice_id != 'PROFORMA') {
                     $sendCustomerEmail = $data['send_customer_email'];
                     $productsMustBeReturned = $data['products_must_be_returned'];
                     $restock = $data['restock'];
