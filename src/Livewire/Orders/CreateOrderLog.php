@@ -60,7 +60,7 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                 Textarea::make('note')
                     ->label('Notitie')
                     ->placeholder('Typ hier je notitie')
-                    ->helperText(fn(Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
+                    ->helperText(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
                     ->required()
                     ->minLength(3)
                     ->maxLength(1500)

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Locales;
@@ -11,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 
@@ -41,7 +41,7 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     {
         $missingVariations = $this->productGroup->missingVariations();
 
-        if (!count($missingVariations) && !$this->productGroup->products->count()) {
+        if (! count($missingVariations) && ! $this->productGroup->products->count()) {
             $missingVariations = [
                 [],
             ];
