@@ -127,7 +127,7 @@ class CancelOrder extends Component implements HasForms, HasActions
             })
             ->action(function ($data) {
                 if ($this->order->invoice_id != 'PROFORMA') {
-//                if (in_array($this->order->order_origin, ['own', 'pos']) && $this->order->invoice_id != 'PROFORMA') {
+                    //                if (in_array($this->order->order_origin, ['own', 'pos']) && $this->order->invoice_id != 'PROFORMA') {
                     $sendCustomerEmail = $data['send_customer_email'];
                     $productsMustBeReturned = $data['products_must_be_returned'];
                     $restock = $data['restock'];
