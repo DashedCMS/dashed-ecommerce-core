@@ -96,6 +96,8 @@
             <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPrice($discount, 'EUR', true) }}</p>
         @endif
 
+        <p class="total">{{ Translation::get('total-ex-vat', 'invoice', 'Totaal ex BTW') . ': ' . CurrencyHelper::formatPrice($total - $btw, 'EUR', true) }}</p>
+
         <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPrice($total, 'EUR', true) }}</p>
     </div>
 
