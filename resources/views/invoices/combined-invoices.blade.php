@@ -88,8 +88,6 @@
             </table>
         @endif
 
-        <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($vatPercentages ?? []) == 1 ? ' ' . array_key_first($vatPercentages) . '%' : '') .  ': ' . CurrencyHelper::formatPrice($btw, 'EUR', true) }}</p>
-
         <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPrice($subTotal, 'EUR', true) }}</p>
 
         @if($discount != 0.00)
@@ -97,6 +95,8 @@
         @endif
 
         <p class="total">{{ Translation::get('total-ex-vat', 'invoice', 'Totaal ex BTW') . ': ' . CurrencyHelper::formatPrice($total - $btw, 'EUR', true) }}</p>
+
+        <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($vatPercentages ?? []) == 1 ? ' ' . array_key_first($vatPercentages) . '%' : '') .  ': ' . CurrencyHelper::formatPrice($btw, 'EUR', true) }}</p>
 
         <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPrice($total, 'EUR', true) }}</p>
     </div>
