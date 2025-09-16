@@ -32,7 +32,7 @@ class OrderCancelledMail extends Mailable
      */
     public function build()
     {
-        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.cancelled-order') ? env('SITE_THEME', 'dashed') . '.emails.cancelled-order' : 'dashed-ecommerce-core::emails.cancelled-order';
+        $view = view()->exists(config('dashed-core.site_theme') . '.emails.cancelled-order') ? config('dashed-core.site_theme') . '.emails.cancelled-order' : 'dashed-ecommerce-core::emails.cancelled-order';
 
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))

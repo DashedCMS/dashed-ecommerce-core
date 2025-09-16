@@ -43,7 +43,7 @@ class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
     {
         $products = Product::where('use_stock', 1)->where('out_of_stock_sellable', 1)->where('expected_in_stock_date', '<', now())->where('stock', '<', 1)->get();
         if ($products->count()) {
-            if (env('APP_ENV') == 'local') {
+            if (app()->isLocal()) {
                 try {
                     Mail::to('robin@dashed.nl')->send(new ProductsWithPastDuePreOrderDateMail($products));
                 } catch (\Exception $e) {

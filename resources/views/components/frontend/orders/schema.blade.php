@@ -1,4 +1,4 @@
-@if(env('APP_ENV') != 'local' && isset($order) && $order && $order->isPaidFor() && ((Customsetting::get('google_analytics_id') || Customsetting::get('google_tagmanager_id'))))
+@if(app()->isProduction() && isset($order) && $order && $order->isPaidFor() && ((Customsetting::get('google_analytics_id') || Customsetting::get('google_tagmanager_id'))))
     @php($productsPurchasedLoopCount = 0)
     <script>
         window.dataLayer = window.dataLayer || [];

@@ -41,7 +41,7 @@ class OrderConfirmationForFulfillerMail extends Mailable
      */
     public function build()
     {
-        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.confirm-order-for-fulfiller') ? env('SITE_THEME', 'dashed') . '.emails.confirm-order-for-fulfiller' : 'dashed-ecommerce-core::emails.confirm-order-for-fulfiller';
+        $view = view()->exists(config('dashed-core.site_theme') . '.emails.confirm-order-for-fulfiller') ? config('dashed-core.site_theme') . '.emails.confirm-order-for-fulfiller' : 'dashed-ecommerce-core::emails.confirm-order-for-fulfiller';
 
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))

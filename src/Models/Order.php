@@ -953,7 +953,7 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && env('APP_ENV') != 'local' && Customsetting::get('google_analytics_id')) {
+        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && app()->isProduction() && Customsetting::get('google_analytics_id')) {
             if (! Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,

@@ -35,7 +35,7 @@ class OrderCancelledWithCreditMail extends Mailable
     {
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
-        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.cancelled-order') ? env('SITE_THEME', 'dashed') . '.emails.cancelled-order' : 'dashed-ecommerce-core::emails.cancelled-order';
+        $view = view()->exists(config('dashed-core.site_theme') . '.emails.cancelled-order') ? config('dashed-core.site_theme') . '.emails.cancelled-order' : 'dashed-ecommerce-core::emails.cancelled-order';
 
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))

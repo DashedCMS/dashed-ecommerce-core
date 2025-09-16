@@ -23,7 +23,7 @@ class TrackandTraceMail extends Mailable
 
     public function build()
     {
-        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.track-and-trace') ? env('SITE_THEME', 'dashed') . '.emails.track-and-trace' : 'dashed-ecommerce-core::emails.track-and-trace';
+        $view = view()->exists(config('dashed-core.site_theme') . '.emails.track-and-trace') ? config('dashed-core.site_theme') . '.emails.track-and-trace' : 'dashed-ecommerce-core::emails.track-and-trace';
 
         return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))

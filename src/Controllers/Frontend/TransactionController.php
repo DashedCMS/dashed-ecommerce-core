@@ -417,7 +417,7 @@ class TransactionController extends FrontendController
                 ],
             ]);
 
-            return view()->exists('dashed.orders.view') ? view(env('SITE_THEME', 'dashed') . '.orders.view') : view(env('SITE_THEME', 'dashed') . '.checkout.complete');
+            return view()->exists('dashed.orders.view') ? view(config('dashed-core.site_theme') . '.orders.view') : view(config('dashed-core.site_theme') . '.checkout.complete');
         } else {
             return $this->pageNotFound();
         }

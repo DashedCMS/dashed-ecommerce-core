@@ -33,7 +33,7 @@ class OrderConfirmationMail extends Mailable
      */
     public function build()
     {
-        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.confirm-order') ? env('SITE_THEME', 'dashed') . '.emails.confirm-order' : 'dashed-ecommerce-core::emails.confirm-order';
+        $view = view()->exists(config('dashed-core.site_theme') . '.emails.confirm-order') ? config('dashed-core.site_theme') . '.emails.confirm-order' : 'dashed-ecommerce-core::emails.confirm-order';
 
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 

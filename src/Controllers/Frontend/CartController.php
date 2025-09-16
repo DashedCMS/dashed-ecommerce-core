@@ -27,7 +27,7 @@ class CartController extends FrontendController
 
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists(env('SITE_THEME', 'dashed') . '.cart.cart')) {
+        if (View::exists(config('dashed-core.site_theme') . '.cart.cart')) {
             seo()->metaData('metaTitle', Translation::get('cart-page-meta-title', 'cart', 'Cart'));
             seo()->metaData('metaDescription', Translation::get('cart-page-meta-description', 'cart', 'View your shopping cart here'));
 
@@ -35,7 +35,7 @@ class CartController extends FrontendController
                 'livewireComponent' => \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart::class,
             ]);
 
-            return view(env('SITE_THEME', 'dashed') . '.cart.cart');
+            return view(config('dashed-core.site_theme') . '.cart.cart');
         } else {
             return $this->pageNotFound();
         }
@@ -45,7 +45,7 @@ class CartController extends FrontendController
     {
         ShoppingCart::removeInvalidItems();
 
-        if (View::exists(env('SITE_THEME', 'dashed') . '.checkout.checkout')) {
+        if (View::exists(config('dashed-core.site_theme') . '.checkout.checkout')) {
             seo()->metaData('metaTitle', Translation::get('checkout-page-meta-title', 'cart', 'Pay now'));
             seo()->metaData('metaDescription', Translation::get('checkout-page-meta-description', 'cart', 'Finish your order'));
 
@@ -53,7 +53,7 @@ class CartController extends FrontendController
                 'livewireComponent' => Checkout::class,
             ]);
 
-            return view(env('SITE_THEME', 'dashed') . '.checkout.checkout');
+            return view(config('dashed-core.site_theme') . '.checkout.checkout');
         } else {
             return $this->pageNotFound();
         }

@@ -803,7 +803,7 @@ class Checkout extends Component
             try {
                 $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
             } catch (\Exception $exception) {
-                if (env('APP_ENV') == 'local') {
+                if (app()->isLocal()) {
                     throw new \Exception('Cannot start payment: ' . $exception->getMessage());
                 } else {
 
@@ -830,6 +830,6 @@ class Checkout extends Component
 
     public function render()
     {
-        return view(env('SITE_THEME', 'dashed') . '.checkout.checkout');
+        return view(config('dashed-core.site_theme') . '.checkout.checkout');
     }
 }

@@ -52,6 +52,6 @@ class AddedToCart extends Component
 
     public function render()
     {
-        return view(env('SITE_THEME', 'dashed') . '.cart.' . ($this->view ?: 'added-to-cart-popup'));
+        return view(config('dashed-core.site_theme') . '.cart.' . ($this->view ?: 'added-to-cart-popup'));
     }
 }

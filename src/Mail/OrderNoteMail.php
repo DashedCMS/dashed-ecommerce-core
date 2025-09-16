@@ -24,7 +24,7 @@ class OrderNoteMail extends Mailable
 
     public function build()
     {
-        $view = view()->exists(env('SITE_THEME', 'dashed') . '.emails.order-note') ? env('SITE_THEME', 'dashed') . '.emails.order-note' : 'dashed-ecommerce-core::emails.order-note';
+        $view = view()->exists(config('dashed-core.site_theme') . '.emails.order-note') ? config('dashed-core.site_theme') . '.emails.order-note' : 'dashed-ecommerce-core::emails.order-note';
 
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
