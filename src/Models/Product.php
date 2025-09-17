@@ -1223,6 +1223,12 @@ class Product extends Model
     {
         $images = is_array($this->images) ? $this->images : [];
 
+        if($this->is_bundle && Customsetting::get('product_bundle_show_bundle_product_images', Sites::getActive(), 0)){
+            foreach($this->bundleProducts as $bundleProduct){
+                $images = array_merge($images, $bundleProduct->imagesToShow);
+            }
+        }
+
         if (is_array($this->productGroup->images) && count($this->productGroup->images)) {
             foreach ($this->productGroup->images as $image) {
                 if (! in_array($image, $images)) {

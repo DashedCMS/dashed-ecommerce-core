@@ -46,6 +46,7 @@ class ProductSettingsPage extends Page
             $formData["order_page_id_{$site['id']}"] = Customsetting::get('order_page_id', $site['id']);
             $formData["product_category_index_page_enabled_{$site['id']}"] = Customsetting::get('product_category_index_page_enabled', $site['id'], true);
             $formData["fill_with_first_product_if_product_group_loaded_{$site['id']}"] = Customsetting::get('fill_with_first_product_if_product_group_loaded', $site['id'], false);
+            $formData["product_bundle_show_bundle_product_images_{$site['id']}"] = Customsetting::get('product_bundle_show_bundle_product_images', $site['id'], false);
         }
 
         $this->form->fill($formData);
@@ -131,6 +132,8 @@ class ProductSettingsPage extends Page
                     ->label('Product categorie index pagina inschakelen'),
                 Toggle::make("fill_with_first_product_if_product_group_loaded_{$site['id']}")
                     ->label('Vul product groep met eerste product als deze geladen wordt'),
+                Toggle::make("product_bundle_show_bundle_product_images_{$site['id']}")
+                    ->label('Bundel producten vullen met afbeeldingen van de producten in de bundel'),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -173,6 +176,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('order_page_id', $this->form->getState()["order_page_id_{$site['id']}"], $site['id']);
             Customsetting::set('product_category_index_page_enabled', $this->form->getState()["product_category_index_page_enabled_{$site['id']}"], $site['id']);
             Customsetting::set('fill_with_first_product_if_product_group_loaded', $this->form->getState()["fill_with_first_product_if_product_group_loaded_{$site['id']}"], $site['id']);
+            Customsetting::set('product_bundle_show_bundle_product_images', $this->form->getState()["product_bundle_show_bundle_product_images_{$site['id']}"], $site['id']);
         }
 
         Notification::make()

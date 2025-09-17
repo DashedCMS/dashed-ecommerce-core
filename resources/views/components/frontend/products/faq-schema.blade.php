@@ -14,10 +14,12 @@
     }
 @endphp
 
-<script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": {!! json_encode($faqQuestions) !!}
-    }
-</script>
+@if(count($faqQuestions))
+    <script type="application/ld+json">
+        @json([
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => $faqQuestions
+        ])
+    </script>
+@endif
