@@ -192,6 +192,7 @@ class ProductResource extends Resource
                         'lg' => 4,
                     ]),
                 TextInput::make('purchase_price')
+                    ->label('Inkoop prijs')
                     ->helperText('Voorbeeld: 3.50')
                     ->prefix('€')
                     ->minValue(0)

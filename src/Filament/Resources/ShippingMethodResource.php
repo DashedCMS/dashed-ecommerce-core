@@ -120,18 +120,18 @@ class ShippingMethodResource extends Resource
                 ]),
         ];
 
-//        $shippingClasses = [];
-//        foreach (ShippingClass::get() as $shippingClass) {
-//            $shippingClasses[] = TextInput::make("shipping_class_costs_$shippingClass->id")
-//                ->label("Vul een meerprijs in voor producten in deze verzendklasse $shippingClass->name")
-//                ->numeric()
-//                ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
-//        }
-//
-//        if ($shippingClasses) {
-//            $schema[] = Section::make('Verzendklassen meerprijzen')
-//                ->schema($shippingClasses);
-//        }
+        //        $shippingClasses = [];
+        //        foreach (ShippingClass::get() as $shippingClass) {
+        //            $shippingClasses[] = TextInput::make("shipping_class_costs_$shippingClass->id")
+        //                ->label("Vul een meerprijs in voor producten in deze verzendklasse $shippingClass->name")
+        //                ->numeric()
+        //                ->hidden(fn ($livewire, $record) => ! ($livewire instanceof EditShippingMethod) || $record->shippingZone->site_id != $shippingClass->site_id);
+        //        }
+        //
+        //        if ($shippingClasses) {
+        //            $schema[] = Section::make('Verzendklassen meerprijzen')
+        //                ->schema($shippingClasses);
+        //        }
 
         return $form
             ->schema($schema);

@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Actions\EditAction;
@@ -55,11 +55,11 @@ class ShippingClassResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(!(Sites::getAmountOfSites() > 1))
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
-                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingClass),
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -82,7 +82,7 @@ class ShippingClassResource extends Resource
                             ->helperText('Als iemand dus 3x hetzelfde product besteld met deze verzendklas, wordt de meerprijs 3x geteld.'),
                         Toggle::make("count_once")
                             ->label("Tel de meerprijs maximaal 1x in de winkelwagen"),
-                    ])
+                    ]),
             ]);
     }
 
@@ -97,7 +97,7 @@ class ShippingClassResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1)),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //

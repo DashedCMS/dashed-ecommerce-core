@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Widgets\DateRangeFilterWidget;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -79,6 +80,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 DefaultEcommerceSettingsPage::class,
             ])
             ->widgets([
+                DateRangeFilterWidget::class,
                 MonthlyRevenueAndReturnLineChartStats::class,
                 DailyRevenueStats::class,
                 MonthlyRevenueStats::class,

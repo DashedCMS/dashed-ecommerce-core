@@ -146,7 +146,7 @@ class OrderLog extends Model
 
     public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false): void
     {
-        if ($isDebugLog && !config('dashed-ecommerce-core.debug_logs_enabled', false)) {
+        if ($isDebugLog && ! config('dashed-ecommerce-core.debug_logs_enabled', false)) {
             return;
         }
 

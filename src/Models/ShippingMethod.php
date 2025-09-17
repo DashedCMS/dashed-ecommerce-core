@@ -72,10 +72,10 @@ class ShippingMethod extends Model
         return $this->belongsTo(ShippingZone::class)->withTrashed();
     }
 
-//    public function shippingMethodClasses()
-//    {
-//        return $this->hasMany(ShippingMethodClass::class);
-//    }
+    //    public function shippingMethodClasses()
+    //    {
+    //        return $this->hasMany(ShippingMethodClass::class);
+    //    }
 
     public function getCostsForCartAttribute()
     {
@@ -109,14 +109,14 @@ class ShippingMethod extends Model
 
         foreach ($cartItems as $cartItem) {
             if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
-                foreach($cartItem->model->shippingClasses as $shippingClass) {
-                    if($shippingClass->price > 0){
-                        if($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)){
+                foreach ($cartItem->model->shippingClasses as $shippingClass) {
+                    if ($shippingClass->price > 0) {
+                        if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
                             $shippingCosts = $shippingCosts + $shippingClass->price;
                             $activatedShippingClassIds[] = $shippingClass->id;
-                        } elseif($shippingClass->count_per_product){
+                        } elseif ($shippingClass->count_per_product) {
                             $shippingCosts = $shippingCosts + ($shippingClass->price * $cartItem->qty);
-                        }elseif(!$shippingClass->count_once && !$shippingClass->count_per_product){
+                        } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
                             $shippingCosts = $shippingCosts + $shippingClass->price;
                         }
                     }
