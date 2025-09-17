@@ -1259,6 +1259,16 @@
 
                                         <span>Kassabon printen</span>
                                     </button>
+                                    <button @click="sendInvoice(selectedOrder)"
+                                            x-show="selectedOrder.email"
+                                            class="h-12 w-fit px-2 py-1 gap-2 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out rounded-full flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                                        </svg>
+
+
+                                        <span>Factuur versturen</span>
+                                    </button>
                                     <button @click="toggle('cancelOrderPopup')"
                                             class="h-12 w-fit px-2 py-1 gap-2 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -1703,10 +1713,52 @@
                         message: data.message,
                     })
                 }
+
+                return $wire.dispatch('notify', {
+                    type: 'success',
+                    message: 'Bon geprint'
+                })
             } catch (error) {
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De bon kon niet worden geprint'
+                })
+            }
+        },
+
+        async sendInvoice(order) {
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.send-invoice') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: order.id,
+                        isCopy: true,
+                    })
+                });
+
+                let data = await response.json();
+
+                this.focus();
+
+                if (!response.ok) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                return $wire.dispatch('notify', {
+                    type: 'success',
+                    message: 'Factuur verstuurd'
+                })
+            } catch (error) {
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De factuur kon niet worden verstuurd'
                 })
             }
         },

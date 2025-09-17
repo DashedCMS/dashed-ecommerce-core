@@ -596,14 +596,6 @@ class ShoppingCart
                     if ($shippingMethodValid) {
                         $shippingMethod->correctName = $shippingMethod->getTranslation('name', app()->getLocale());
                         $costs = $shippingMethod->costsForCart;
-                        $cartItems = self::cartItems();
-                        foreach ($shippingMethod->shippingMethodClasses as $shippingClass) {
-                            foreach ($cartItems as $cartItem) {
-                                if ($cartItem->model->shippingClasses->contains($shippingClass->id)) {
-                                    $costs = $costs + ($shippingClass->costs * $cartItem->qty);
-                                }
-                            }
-                        }
                         $shippingMethod->costs = $costs;
                         if ($shippingMethod->costs == 0) {
                             $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');

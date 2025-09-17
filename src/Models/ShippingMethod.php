@@ -72,18 +72,21 @@ class ShippingMethod extends Model
         return $this->belongsTo(ShippingZone::class)->withTrashed();
     }
 
-    public function shippingMethodClasses()
-    {
-        return $this->hasMany(ShippingMethodClass::class);
-    }
+//    public function shippingMethodClasses()
+//    {
+//        return $this->hasMany(ShippingMethodClass::class);
+//    }
 
     public function getCostsForCartAttribute()
     {
+        $cartItems = ShoppingCart::cartItems();
+        $cartItemsCount = count($cartItems);
+        $activatedShippingClassIds = [];
+
         if ($this->sort == 'free_delivery') {
-            return 0;
+            $shippingCosts = 0;
         } elseif ($this->sort == 'variable_amount') {
             $shippingCosts = 0;
-            $cartItemsCount = ShoppingCart::cartItemsCount();
 
             foreach (collect($this->variables)->sortByDesc('amount_of_items') as $variable) {
                 while ($cartItemsCount >= $variable['amount_of_items']) {
@@ -100,10 +103,27 @@ class ShippingMethod extends Model
                 $shippingCosts += eval('return ' . $variableStaticCosts . ';');
             }
 
-
-            return $shippingCosts;
         } else {
-            return $this->costs;
+            $shippingCosts = $this->costs;
         }
+
+        foreach ($cartItems as $cartItem) {
+            if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
+                foreach($cartItem->model->shippingClasses as $shippingClass) {
+                    if($shippingClass->price > 0){
+                        if($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)){
+                            $shippingCosts = $shippingCosts + $shippingClass->price;
+                            $activatedShippingClassIds[] = $shippingClass->id;
+                        } elseif($shippingClass->count_per_product){
+                            $shippingCosts = $shippingCosts + ($shippingClass->price * $cartItem->qty);
+                        }elseif(!$shippingClass->count_once && !$shippingClass->count_per_product){
+                            $shippingCosts = $shippingCosts + $shippingClass->price;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $shippingCosts;
     }
 }

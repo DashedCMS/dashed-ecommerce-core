@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -54,11 +55,11 @@ class ShippingClassResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(! (Sites::getAmountOfSites() > 1))
+                            ->hidden(!(Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingClass),
                 Section::make('Content')
                     ->schema([
                         TextInput::make('name')
@@ -70,7 +71,18 @@ class ShippingClassResource extends Resource
                             ->helperText('Alleen intern gebruik')
                             ->rows(2)
                             ->maxLength(1250),
-                    ]),
+                        TextInput::make("price")
+                            ->label("Meerprijs voor verzending indien")
+                            ->required()
+                            ->minValue(1)
+                            ->maxValue(10000)
+                            ->numeric(),
+                        Toggle::make("count_per_product")
+                            ->label("Tel de meerprijs per product in de winkelwagen")
+                            ->helperText('Als iemand dus 3x hetzelfde product besteld met deze verzendklas, wordt de meerprijs 3x geteld.'),
+                        Toggle::make("count_once")
+                            ->label("Tel de meerprijs maximaal 1x in de winkelwagen"),
+                    ])
             ]);
     }
 
@@ -85,7 +97,7 @@ class ShippingClassResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1)),
+                    ->hidden(!(Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //
