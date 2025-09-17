@@ -20,8 +20,9 @@ class ProductsToEditImport implements ToArray
             if ($product) {
                 $product->price = $row[2];
                 $product->new_price = $row[3];
-                $product->ean = $row[4];
-                $product->vat_rate = $row[5];
+                $product->stock = $row[4];
+                $product->ean = $row[5];
+                $product->vat_rate = $row[6];
                 $product->save();
 
                 $productGroupIds[] = $product->product_group_id;

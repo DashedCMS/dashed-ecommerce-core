@@ -15,6 +15,7 @@ class ProductsToEdit implements FromArray
                 'Product',
                 'Prijs',
                 'Kortings prijs',
+                'Voorraad',
                 'EAN',
                 'BTW percentage',
             ],
@@ -26,6 +27,7 @@ class ProductsToEdit implements FromArray
                 $product->name,
                 $product->getRawOriginal('price'),
                 $product->getRawOriginal('new_price'),
+                $product->getRawOriginal('stock'),
                 $product->getRawOriginal('ean'),
                 $product->getRawOriginal('vat_rate'),
             ];
