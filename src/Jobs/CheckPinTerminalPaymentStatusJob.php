@@ -46,7 +46,7 @@ class CheckPinTerminalPaymentStatusJob implements ShouldQueue
             $newPaymentStatus = $this->orderPayment->changeStatus($transactionStatus);
             $this->orderPayment->order->changeStatus($newPaymentStatus);
         } else {
-            self::dispatch($this->orderPayment)->delay(now()->addSeconds(1));
+            self::dispatch($this->orderPayment)->delay(now()->addSeconds(1))->onQueue('ecommerce');
         }
     }
 }

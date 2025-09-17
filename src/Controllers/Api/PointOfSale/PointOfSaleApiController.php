@@ -993,12 +993,34 @@ class PointOfSaleApiController extends Controller
         if ($order->isPaidFor()) {
             POSHelper::finishPaidOrder($order, $posCart);
 
+            $orderPayment = $order->orderPayments()->where('status', 'paid')->first();
+            $paymentMethod = $orderPayment->paymentMethod;
+            $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
+            $order->paidAmount = $order->paidAmount;
+            $order->paidAmountFormatted = CurrencyHelper::formatPrice($order->paidAmount);
+            $order->changeMoney = CurrencyHelper::formatPrice($orderPayment->amount - $order->total);
+            $order->shouldChangeMoney = $orderPayment->amount > $order->total;
+            $orderPayments = $order->orderPayments;
+            foreach ($orderPayments as $orderPayment) {
+                $orderPayment->amountFormatted = CurrencyHelper::formatPrice($orderPayment->amount);
+                $orderPayment->paymentMethodName = $orderPayment->paymentMethod->name;
+            }
+
             return response()
                 ->json([
                     'success' => true,
                     'pinTerminalStatus' => 'paid',
                     'pinTerminalError' => false,
                     'pinTerminalErrorMessage' => null,
+                    'order' => $order,
+                    'orderPayments' => $orderPayments,
+                    'startPinTerminalPayment' => false,
+                    'firstPaymentMethod' => [
+                        'id' => $paymentMethod->id,
+                        'is_cash_payment' => $paymentMethod->is_cash_payment,
+                        'name' => $paymentMethod->name,
+                        'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
+                    ],
                 ]);
         } elseif ($order->status == 'cancelled') {
             return response()

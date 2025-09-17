@@ -31,7 +31,8 @@ class PinTerminal
             $pinTerminalError = false;
             $pinTerminalErrorMessage = null;
             $pinTerminalStatus = 'pending';
-            CheckPinTerminalPaymentStatusJob::dispatch($orderPayment);
+            CheckPinTerminalPaymentStatusJob::dispatch($orderPayment)
+                ->onQueue('ecommerce');
 
             return [
                 'success' => true,
