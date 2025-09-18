@@ -34,6 +34,9 @@ class ShowProduct extends Component
         seo()->metaData('metaDescription', $metaModel->metadata->description ?? '');
         $metaImage = $metaModel->metadata->image ?? '';
         if (! $metaImage) {
+            $metaImage = $metaModel->productGroup ? ($metaModel->productGroup->metadata->image ?? '') : '';
+        }
+        if (! $metaImage) {
             $metaImage = $metaModel->firstImage;
         }
         if ($metaImage) {
