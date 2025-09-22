@@ -20,7 +20,7 @@ class ProductsToEditImport implements ToArray
             if ($product) {
                 $product->price = $row[2];
                 $product->new_price = $row[3];
-                $product->stock = $row[4];
+                $product->stock = $row[4] ?? 0;
                 $product->ean = $row[5];
                 $product->vat_rate = $row[6];
                 $product->save();
