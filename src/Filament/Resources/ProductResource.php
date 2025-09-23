@@ -122,6 +122,7 @@ class ProductResource extends Resource
                             }
                         }
 
+                        $record->bundleProducts()->detach($bundleProductIds);
                         $record->bundleProducts()->sync($bundleProductIds);
                     })
                     ->reorderable()
