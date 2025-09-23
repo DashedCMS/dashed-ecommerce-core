@@ -124,6 +124,7 @@ class ProductResource extends Resource
 
                         $record->bundleProducts()->sync($bundleProductIds);
                     })
+                    ->reorderable()
                     ->name('Bundel producten')
                     ->reactive()
                     ->schema([
