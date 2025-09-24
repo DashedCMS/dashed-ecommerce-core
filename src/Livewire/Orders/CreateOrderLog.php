@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Actions\Action;
@@ -35,9 +36,42 @@ class CreateOrderLog extends Component implements HasForms, HasActions
 
     public function action(): Action
     {
+        $actions = [];
+
+        foreach (OrderLogTemplate::all() as $template) {
+            $actions[] = Action::make('template-' . $template->id)
+                ->label('Verstuur ' . $template->name)
+                ->color('warning')
+                ->action(function ($data, $action) use ($template) {
+                    $orderLog = new OrderLog();
+                    $orderLog->order_id = $this->order->id;
+                    $orderLog->user_id = Auth::user()->id;
+                    $orderLog->tag = 'order.note.created';
+                    $orderLog->note = $template->body;
+                    $orderLog->public_for_customer = 1;
+                    $orderLog->send_email_to_customer = 1;
+                    $orderLog->email_subject = $template->subject;
+                    $orderLog->images = [];
+                    $orderLog->save();
+
+                    try {
+                        Mail::to($this->order->email)->send(new OrderNoteMail($this->order, $orderLog));
+                    } catch (\Exception $exception) {
+                    }
+
+                    Notification::make()
+                        ->success()
+                        ->title('De template ' . $template->name . ' is verstuurd')
+                        ->send();
+
+                    $this->dispatch('refreshData');
+                });
+        }
+
         return Action::make('action')
             ->label('Maak bestellings notitie')
             ->color('primary')
+            ->extraModalFooterActions($actions)
             ->fillForm(function ($record) {
                 return [
                     'emailSubject' => 'Je bestelling is bijgewerkt',
@@ -51,16 +85,16 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                 Toggle::make('sendEmailToCustomer')
                     ->label('Moet de klant een notificatie van deze notitie ontvangen?')
                     ->default(false)
-                    ->visible(fn (Get $get) => $get('publicForCustomer'))
+                    ->visible(fn(Get $get) => $get('publicForCustomer'))
                     ->reactive(),
                 TextInput::make('emailSubject')
                     ->label('Onderwerp van de mail')
-                    ->visible(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
+                    ->visible(fn(Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
                 mediaHelper()->field('images', 'Bestanden', multiple: true),
                 Textarea::make('note')
                     ->label('Notitie')
                     ->placeholder('Typ hier je notitie')
-                    ->helperText(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
+                    ->helperText(fn(Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
                     ->required()
                     ->minLength(3)
                     ->maxLength(1500)

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\DateRangeFilterWidget;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
@@ -92,6 +93,7 @@ class DashedEcommerceCorePlugin implements Plugin
             ])
             ->resources([
                 PaymentMethodResource::class,
+                OrderLogTemplateResource::class,
                 ShippingClassResource::class,
                 ShippingZoneResource::class,
                 ShippingMethodResource::class,
