@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
@@ -27,17 +26,14 @@ class OrderNoteMail extends Mailable
     {
         $view = view()->exists(config('dashed-core.site_theme') . '.emails.order-note') ? config('dashed-core.site_theme') . '.emails.order-note' : 'dashed-ecommerce-core::emails.order-note';
 
-        $orderLog = $this->orderLog;
-        $orderLog->note = OrderVariableReplacer::handle($this->order, $orderLog->note);
-
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
-            ->subject(OrderVariableReplacer::handle($this->order, $this->orderLog->email_subject ?: Translation::get('order-note-update-email-subject', 'orders', 'Your order #:orderId: has been updated', 'text', [
+            ->subject($this->orderLog->email_subject ?: Translation::get('order-note-update-email-subject', 'orders', 'Your order #:orderId: has been updated', 'text', [
                 'orderId' => $this->order->invoice_id,
-            ])))
+            ]))
             ->with([
                 'order' => $this->order,
-                'orderLog' => $orderLog,
+                'orderLog' => $this->orderLog,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
 use Filament\Forms\Get;
 use Livewire\Component;
@@ -47,10 +48,10 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                     $orderLog->order_id = $this->order->id;
                     $orderLog->user_id = Auth::user()->id;
                     $orderLog->tag = 'order.note.created';
-                    $orderLog->note = $template->body;
+                    $orderLog->note = OrderVariableReplacer::handle($this->order, $template->body);
                     $orderLog->public_for_customer = 1;
                     $orderLog->send_email_to_customer = 1;
-                    $orderLog->email_subject = $template->subject;
+                    $orderLog->email_subject = OrderVariableReplacer::handle($this->order, $template->subject);
                     $orderLog->images = [];
                     $orderLog->save();
 
@@ -65,6 +66,7 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                         ->send();
 
                     $this->dispatch('refreshData');
+//                    $this->closeActionModal();
                 });
         }
 
