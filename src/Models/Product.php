@@ -1150,7 +1150,7 @@ class Product extends Model
     public static function returnForRoute(): array
     {
         return [
-            'livewireComponent' => ShowProduct::class,
+            'livewireComponent' => cms()->class('showProduct') ?: ShowProduct::class,
         ];
     }
 
