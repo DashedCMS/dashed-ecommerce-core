@@ -7,13 +7,13 @@ use Dashed\DashedEcommerceCore\Models\POSCart;
 
 class POSHelper
 {
-    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled'): array
+    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled', ?string $extra = ''): array
     {
         $order->changeStatus($orderStatus);
         $order->changeFulfillmentStatus($fulfillmentStatus);
 
         try {
-//            $order->printReceipt();
+            $order->printReceipt();
         } catch (\Exception $exception) {
         }
 
@@ -23,6 +23,9 @@ class POSHelper
                 $hasCashPayment = true;
             }
         }
+
+        $order->note = $order->note . ' - ' . $extra . ' om ' . now()->format('d-m-Y H:i');
+        $order->save();
 
         $posCart->status = 'finished';
         $posCart->save();
