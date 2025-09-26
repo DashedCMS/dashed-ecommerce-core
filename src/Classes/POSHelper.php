@@ -13,7 +13,7 @@ class POSHelper
         $order->changeFulfillmentStatus($fulfillmentStatus);
 
         try {
-            $order->printReceipt();
+//            $order->printReceipt();
         } catch (\Exception $exception) {
         }
 
