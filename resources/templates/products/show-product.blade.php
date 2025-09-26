@@ -28,8 +28,12 @@
                                 </ul>
 
                                 @if(count($images) > 1)
-                                    <div class="swiper-button-prev rounded-full h-12 w-12 bg-primary text-white"></div>
-                                    <div class="swiper-button-next rounded-full h-12 w-12 bg-primary text-white"></div>
+                                    <div class="swiper-button-prev rounded-full h-12 w-12 bg-primary text-white">
+                                        <x-lucide-arrow-left class="size-6 text-primary-200"/>
+                                    </div>
+                                    <div class="swiper-button-next rounded-full h-12 w-12 bg-primary text-white">
+
+                                    </div>
                                 @endif
                             </div>
 

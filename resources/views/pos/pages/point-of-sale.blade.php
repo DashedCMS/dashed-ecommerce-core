@@ -1489,6 +1489,18 @@
             }
         },
 
+        disable(variable) {
+            if (variable in this) {
+                this[variable] = false;
+            }
+        },
+
+        enable(variable) {
+            if (variable in this) {
+                this[variable] = true;
+            }
+        },
+
         async openCashRegister() {
             try {
                 let response = await fetch('{{ route('api.point-of-sale.open-cash-register') }}', {
@@ -2328,14 +2340,14 @@
                 this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
 
                 if(this.pinTerminalStatus == 'paid') {
-                    this.toggle('paymentPopup')
+                    this.disable('paymentPopup')
                     this.products = [];
                     this.discountCode = '';
                     this.cashPaymentAmount = null;
                     this.order = data.order;
                     this.orderPayments = data.orderPayments;
                     this.firstPaymentMethod = data.firstPaymentMethod;
-                    this.toggle('orderConfirmationPopup')
+                    this.enable('orderConfirmationPopup')
                 }
 
             } catch (error) {

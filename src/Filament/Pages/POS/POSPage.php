@@ -431,7 +431,13 @@ class POSPage extends Component implements HasForms
 
     public function render()
     {
-        return view('dashed-ecommerce-core::pos.pages.point-of-sale');
+        $view = 'dashed-ecommerce-core::pos.pages.point-of-sale';
+
+        if(view()->exists('dashed.pos.point-of-sale')){
+            $view = 'dashed.pos.point-of-sale';
+        }
+
+        return view($view);
     }
 
     public function fullscreenValue($fullscreen)
