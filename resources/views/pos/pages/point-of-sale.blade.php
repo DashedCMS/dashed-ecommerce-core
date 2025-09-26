@@ -2316,6 +2316,7 @@
         },
 
         async pollPinTerminalPayment() {
+
             try {
                 console.log('Polling pin terminal payment status...');
                 let response = await fetch('{{ route('api.point-of-sale.check-pin-terminal-payment') }}', {
