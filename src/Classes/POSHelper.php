@@ -24,8 +24,10 @@ class POSHelper
             }
         }
 
+        $order->refresh();
         $order->note = $order->note . ' - ' . $extra . ' om ' . now()->format('d-m-Y H:i');
         $order->save();
+        $order->refresh();
 
         $posCart->status = 'finished';
         $posCart->save();
