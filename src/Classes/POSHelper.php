@@ -7,8 +7,16 @@ use Dashed\DashedEcommerceCore\Models\POSCart;
 
 class POSHelper
 {
-    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled', ?string $extra = ''): array
+    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled'): array
     {
+        $order->refresh();
+
+        if ($order->pos_order_handled) {
+            return [
+                'success' => true,
+            ];
+        }
+
         $order->changeStatus($orderStatus);
         $order->changeFulfillmentStatus($fulfillmentStatus);
 
@@ -24,17 +32,15 @@ class POSHelper
             }
         }
 
-        $order->refresh();
-        $order->note = $order->note . ' - ' . $extra . ' om ' . now()->format('d-m-Y H:i');
-        $order->save();
-        $order->refresh();
-
         $posCart->status = 'finished';
         $posCart->save();
 
         if ($hasCashPayment) {
             PinTerminal::openCashRegister();
         }
+
+        $order->pos_order_handled = 1;
+        $order->save();
 
         return [
             'success' => true,

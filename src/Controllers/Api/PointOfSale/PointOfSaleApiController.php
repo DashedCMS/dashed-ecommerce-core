@@ -977,7 +977,7 @@ class PointOfSaleApiController extends Controller
             //            return response()
             //                ->json($response, $response['success'] ? 200 : 400);
         } else {
-            POSHelper::finishPaidOrder($order, $posCart, extra: 'markAsPaid');
+            POSHelper::finishPaidOrder($order, $posCart);
 
             $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
             $order->paidAmount = $order->paidAmount;
@@ -1019,7 +1019,7 @@ class PointOfSaleApiController extends Controller
         $order->refresh();
 
         if ($order->isPaidFor()) {
-            POSHelper::finishPaidOrder($order, $posCart, extra: 'checkPinTerminalPayment');
+            POSHelper::finishPaidOrder($order, $posCart);
 
             $orderPayment = $order->orderPayments()->where('status', 'paid')->first();
             $paymentMethod = $orderPayment->paymentMethod;
