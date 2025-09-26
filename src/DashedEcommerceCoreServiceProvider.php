@@ -197,6 +197,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             'cart-block',
             'checkout-block',
             'view-order-block',
+            'all-products',
         ]);
 
         cms()->builder('plugins', [
