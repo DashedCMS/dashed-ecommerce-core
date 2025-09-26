@@ -17,6 +17,9 @@ class POSHelper
             ];
         }
 
+        $order->pos_order_handled = 1;
+        $order->save();
+
         $order->changeStatus($orderStatus);
         $order->changeFulfillmentStatus($fulfillmentStatus);
 
@@ -38,9 +41,6 @@ class POSHelper
         if ($hasCashPayment) {
             PinTerminal::openCashRegister();
         }
-
-        $order->pos_order_handled = 1;
-        $order->save();
 
         return [
             'success' => true,

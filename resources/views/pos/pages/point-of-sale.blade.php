@@ -1461,6 +1461,7 @@
         chooseShippingMethodPopup: false,
         changeProductPricePopup: false,
         isFullscreen: false,
+        pinTerminalStatusHandled: false,
 
         firstName: $wire.entangle('firstName'),
         lastName: $wire.entangle('lastName'),
@@ -2155,6 +2156,7 @@
 
         async startPinTerminalPayment(hasMultiplePayments = false) {
             this.isPinTerminalPayment = true;
+            this.pinTerminalStatusHandled = false;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.start-pin-terminal-payment') }}', {
                     method: 'POST',
@@ -2304,8 +2306,10 @@
         checkPinTerminalPayment() {
             this.pinTerminalIntervalId = setInterval(() => {
                 if (this.isPinTerminalPayment && this.pinTerminalStatus == 'pending') {
+                    console.log('Checking pin terminal payment status...');
                     this.pollPinTerminalPayment();
                 } else {
+                    console.log('Stopping pin terminal payment status check.');
                     clearInterval(this.pinTerminalIntervalId); // Stop polling if condition changes
                 }
             }, 1000);
@@ -2313,6 +2317,7 @@
 
         async pollPinTerminalPayment() {
             try {
+                console.log('Polling pin terminal payment status...');
                 let response = await fetch('{{ route('api.point-of-sale.check-pin-terminal-payment') }}', {
                     method: 'POST',
                     headers: {
@@ -2339,7 +2344,8 @@
                 this.pinTerminalError = data.pinTerminalError;
                 this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
 
-                if(this.pinTerminalStatus == 'paid') {
+                if(this.pinTerminalStatus == 'paid' && !this.pinTerminalStatusHandled) {
+                    console.log('Pin terminal payment completed successfully.');
                     this.disable('paymentPopup')
                     this.products = [];
                     this.discountCode = '';
@@ -2347,6 +2353,7 @@
                     this.order = data.order;
                     this.orderPayments = data.orderPayments;
                     this.firstPaymentMethod = data.firstPaymentMethod;
+                    this.enable('pinTerminalStatusHandled');
                     this.enable('orderConfirmationPopup')
                 }
 
