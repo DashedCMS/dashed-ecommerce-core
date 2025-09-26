@@ -49,6 +49,7 @@ class Product extends Model
         'short_description',
         'description',
         'search_terms',
+        'product_search_terms',
         'content',
         'images',
     ];

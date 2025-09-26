@@ -69,6 +69,7 @@ class ProductResource extends Resource
             'short_description',
             'description',
             'search_terms',
+            'product_search_terms',
             'sku',
             'ean',
             'content',
@@ -386,7 +387,7 @@ class ProductResource extends Resource
                     ->helperText('Mogelijke variablen: :name:, :categorie naam:')
                     ->rows(5)
                     ->maxLength(2500),
-                Textarea::make('search_terms')
+                Textarea::make('product_search_terms')
                     ->label('Zoekwoorden')
                     ->rows(2)
                     ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden')

@@ -247,7 +247,7 @@ class ProductGroupResource extends Resource
                 Textarea::make('search_terms')
                     ->label('Zoekwoorden')
                     ->rows(2)
-                    ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden')
+                    ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden. Deze termen gelden voor alle varianten.')
                     ->maxLength(2500),
                 TextInput::make('order')
                     ->label('Volgorde')

@@ -89,7 +89,7 @@
                     </div>
 
                     <div class="mt-4 flex space-x-2 text-sm text-gray-700">
-                        <x-product.stock-text :product="$item->model" :forceWhite="$forceWhite ?? false"/>
+                        <x-product.stock-text :product="$item->model" :cartQuantity="$item->qty" :forceWhite="$forceWhite ?? false"/>
                     </div>
                 </div>
             </div>
