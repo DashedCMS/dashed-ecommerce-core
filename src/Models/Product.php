@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedTranslations\Models\Translation;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -834,6 +835,56 @@ class Product extends Model
                         'value' => $thisProductCharacteristic->value,
                     ];
                 }
+            }
+
+            if($this->weight){
+                $characteristics[] = [
+                    'name' => Translation::get('weight', 'characteristics', 'Gewicht'),
+                    'value' => Translation::get('weight-in-kg', 'characteristics', ':weight: kg', 'text', [
+                        'weight' => $this->weight
+                    ]),
+                ];
+            }
+
+            if($this->width){
+                $characteristics[] = [
+                    'name' => Translation::get('width', 'characteristics', 'Breedte'),
+                    'value' => Translation::get('width-in-cm', 'characteristics', ':width: CM', 'text', [
+                        'width' => $this->width
+                    ]),
+                ];
+            }
+
+            if($this->length){
+                $characteristics[] = [
+                    'name' => Translation::get('length', 'characteristics', 'Lengte'),
+                    'value' => Translation::get('length-in-cm', 'characteristics', ':length: CM', 'text', [
+                        'length' => $this->length
+                    ]),
+                ];
+            }
+
+            if($this->height){
+                $characteristics[] = [
+                    'name' => Translation::get('height', 'characteristics', 'Hoogte'),
+                    'value' => Translation::get('height-in-cm', 'characteristics', ':height: CM', 'text', [
+                        'height' => $this->height
+                    ]),
+                ];
+            }
+
+            if($this->sku){
+                $characteristics[] = [
+                    'name' => Translation::get('sku', 'characteristics', 'SKU'),
+                    'value' => $this->sku,
+                ];
+            }
+
+            if($this->ean){
+                $characteristics[] = [
+                    'name' => Translation::get('ean', 'characteristics', 'EAN'),
+                    'value' => $this->ean,
+                ];
             }
 
             return $characteristics;

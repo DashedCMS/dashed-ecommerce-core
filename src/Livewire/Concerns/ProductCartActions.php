@@ -182,7 +182,7 @@ trait ProductCartActions
                 $this->content = $this->productGroup->content;
             }
             foreach ($this->productGroup->contentBlocks as $block => $contentBlock) {
-                if (! isset($this->contentBlocks[$block])) {
+                if (! isset($this->contentBlocks[$block]) || !$this->contentBlocks[$block]) {
                     $this->contentBlocks[$block] = $contentBlock;
                 }
             }
