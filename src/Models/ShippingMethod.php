@@ -110,14 +110,15 @@ class ShippingMethod extends Model
         foreach ($cartItems as $cartItem) {
             if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
                 foreach ($cartItem->model->shippingClasses as $shippingClass) {
-                    if ($shippingClass->price > 0) {
+                    $shippingClassPrice = $shippingClass->price_shipping_zones[$this->shipping_zone_id] ?? 0;
+                    if ($shippingClassPrice > 0) {
                         if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
-                            $shippingCosts = $shippingCosts + $shippingClass->price;
+                            $shippingCosts = $shippingCosts + $shippingClassPrice;
                             $activatedShippingClassIds[] = $shippingClass->id;
                         } elseif ($shippingClass->count_per_product) {
-                            $shippingCosts = $shippingCosts + ($shippingClass->price * $cartItem->qty);
+                            $shippingCosts = $shippingCosts + ($shippingClassPrice * $cartItem->qty);
                         } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
-                            $shippingCosts = $shippingCosts + $shippingClass->price;
+                            $shippingCosts = $shippingCosts + $shippingClassPrice;
                         }
                     }
                 }

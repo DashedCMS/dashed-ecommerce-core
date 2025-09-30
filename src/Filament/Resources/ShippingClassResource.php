@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -48,6 +49,18 @@ class ShippingClassResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $shippingZoneSchema = [];
+
+        foreach (ShippingZone::all() as $shippingZone) {
+            $shippingZoneSchema[] =
+                TextInput::make("price_shipping_zone_{$shippingZone->id}")
+                    ->label("Meerprijs voor verzending naar {$shippingZone->name}")
+                    ->prefix('€')
+                    ->minValue(1)
+                    ->maxValue(10000)
+                    ->numeric();
+        }
+
         return $form
             ->schema([
                 Section::make('Globale informatie')
@@ -55,13 +68,13 @@ class ShippingClassResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(! (Sites::getAmountOfSites() > 1))
+                            ->hidden(!(Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingClass),
                 Section::make('Content')
-                    ->schema([
+                    ->schema(array_merge(array_merge([
                         TextInput::make('name')
                             ->label('Name')
                             ->required()
@@ -70,19 +83,14 @@ class ShippingClassResource extends Resource
                             ->label('Beschrijving')
                             ->helperText('Alleen intern gebruik')
                             ->rows(2)
-                            ->maxLength(1250),
-                        TextInput::make("price")
-                            ->label("Meerprijs voor verzending indien")
-                            ->required()
-                            ->minValue(1)
-                            ->maxValue(10000)
-                            ->numeric(),
+                            ->maxLength(1250)
+                    ], $shippingZoneSchema), [
                         Toggle::make("count_per_product")
                             ->label("Tel de meerprijs per product in de winkelwagen")
                             ->helperText('Als iemand dus 3x hetzelfde product besteld met deze verzendklas, wordt de meerprijs 3x geteld.'),
                         Toggle::make("count_once")
                             ->label("Tel de meerprijs maximaal 1x in de winkelwagen"),
-                    ]),
+                    ])),
             ]);
     }
 
@@ -97,7 +105,7 @@ class ShippingClassResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1)),
+                    ->hidden(!(Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
@@ -24,6 +25,11 @@ class CreateShippingClass extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
+
+        foreach(ShippingZone::all() as $shippingZone) {
+            $data['price_shipping_zones'][$shippingZone->id] = $data["price_shipping_zone_{$shippingZone->id}"] ?? null;
+            unset($data["price_shipping_zone_{$shippingZone->id}"]);
+        }
 
         return $data;
     }

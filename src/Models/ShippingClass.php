@@ -28,6 +28,10 @@ class ShippingClass extends Model
         'description',
     ];
 
+    protected $casts = [
+        'price_shipping_zones' => 'array',
+    ];
+
     protected $table = 'dashed__shipping_classes';
 
     public function getActivitylogOptions(): LogOptions

@@ -1,6 +1,6 @@
 @if($product)
     @if($product->inStock())
-        @if(($cartQuantity ?? 0) > $product->directSellableStock())
+        @if(($product->directSellableStock() > 0) && ($cartQuantity ?? 0) > $product->directSellableStock())
             @if($product->expectedDeliveryInDays())
                 <p class="font-bold italic text-md flex items-center gap-1 @if($forceWhite ?? false) text-white @else text-primary-500 @endif">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
