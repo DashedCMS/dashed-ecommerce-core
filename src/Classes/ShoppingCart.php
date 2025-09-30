@@ -90,7 +90,7 @@ class ShoppingCart
         Cart::instance($cartType);
     }
 
-    public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null, $shippingMethodId = null, $paymentMethodId = null)
+    public static function totalDiscount($formatResult = false, ?string $discountCodeToUse = null, $shippingMethodId = null, $paymentMethodId = null, ?int $shippingZoneId = null)
     {
         $totalDiscount = 0;
 
@@ -116,7 +116,7 @@ class ShoppingCart
             }
         }
 
-        $total = self::total(false, false, $shippingMethodId, $paymentMethodId);
+        $total = self::total(false, false, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
         if ($totalDiscount > $total) {
             $totalDiscount = $total - 0.01;
         }
@@ -132,19 +132,19 @@ class ShoppingCart
         }
     }
 
-    public static function subtotal($formatResult = false, $shippingMethodId = null, $paymentMethodId = null, $total = null)
+    public static function subtotal($formatResult = false, $shippingMethodId = null, $paymentMethodId = null, $total = null, ?int $shippingZoneId = null)
     {
         $cartTotal = $total ?: self::total(false, false, $shippingMethodId, $paymentMethodId);
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
         if (! $calculateInclusiveTax) {
             //            dd($cartTotal, self::btw(false, false, $shippingMethodId, $paymentMethodId));
-            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId);
+            $cartTotal -= self::btw(false, false, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
 
             if ($shippingMethodId) {
                 $shippingMethod = ShippingMethod::find($shippingMethodId);
                 if ($shippingMethod) {
-                    $cartTotal -= $shippingMethod->costsForCart;
+                    $cartTotal -= $shippingMethod->costsForCart($shippingZoneId);
                 }
             }
 
@@ -168,7 +168,7 @@ class ShoppingCart
         }
     }
 
-    public static function total($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $tax = null, $discount = null)
+    public static function total($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $tax = null, $discount = null, ?int $shippingZoneId = null)
     {
         $cartTotal = 0;
         foreach (self::cartItems() as $cartItem) {
@@ -177,7 +177,7 @@ class ShoppingCart
         }
 
         if ($calculateDiscount) {
-            $cartTotal = $cartTotal - ($discount ?: self::totalDiscount(shippingMethodId: $shippingMethodId, paymentMethodId: $paymentMethodId));
+            $cartTotal = $cartTotal - ($discount ?: self::totalDiscount(shippingMethodId: $shippingMethodId, paymentMethodId: $paymentMethodId, shippingZoneId: $shippingZoneId));
         }
 
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
@@ -190,7 +190,7 @@ class ShoppingCart
             $shippingMethod = ShippingMethod::find($shippingMethodId);
             if ($shippingMethod) {
                 //                dump($cartTotal);
-                $cartTotal += $shippingMethod->costsForCart;
+                $cartTotal += $shippingMethod->costsForCart($shippingZoneId);
                 //                dd($cartTotal);
             }
         }
@@ -214,7 +214,7 @@ class ShoppingCart
         }
     }
 
-    public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $total = null)
+    public static function depositAmount($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $total = null, ?int $shippingZoneId = null)
     {
         $depositAmount = 0;
 
@@ -222,8 +222,8 @@ class ShoppingCart
             foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == $paymentMethodId) {
                     if ($paymentMethod['deposit_calculation']) {
-                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', $total ?: self::total(false, $calculateDiscount, $shippingMethodId, null), $paymentMethod['deposit_calculation']);
-                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL}', $total ?: self::total(false, $calculateDiscount, $shippingMethodId, $paymentMethodId), $paymentMethod['deposit_calculation']);
+                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', $total ?: self::total(false, $calculateDiscount, $shippingMethodId, null, shippingZoneId: $shippingZoneId), $paymentMethod['deposit_calculation']);
+                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL}', $total ?: self::total(false, $calculateDiscount, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId), $paymentMethod['deposit_calculation']);
                         $depositAmount = eval('return ' . $paymentMethod['deposit_calculation'] . ';');
                     }
                 }
@@ -237,12 +237,12 @@ class ShoppingCart
         }
     }
 
-    public static function amounts($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
+    public static function amounts($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, ?int $shippingZoneId = null)
     {
-        $discount = self::totalDiscount(false, null, $shippingMethodId, $paymentMethodId);
-        $tax = self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId);
-        $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount);
-        $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
+        $discount = self::totalDiscount(false, null, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
+        $tax = self::btw(false, $calculateDiscount, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
+        $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount, shippingZoneId: $shippingZoneId);
+        $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total, shippingZoneId: $shippingZoneId);
 
         if ($formatResult) {
             return [
@@ -267,7 +267,7 @@ class ShoppingCart
         }
     }
 
-    public static function btw($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null)
+    public static function btw($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, ?int $shippingZoneId = null)
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
         $baseVatInfo = self::getVatBaseInfoForCalculation($calculateDiscount);
@@ -292,7 +292,7 @@ class ShoppingCart
         }
 
         if ($shippingMethodId) {
-            $taxTotal += self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount);
+            $taxTotal += self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount, shippingZoneId: $shippingZoneId);
         }
 
         if ($paymentMethodId) {
@@ -310,7 +310,7 @@ class ShoppingCart
         }
     }
 
-    public static function btwPercentages($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $discount = 0): array
+    public static function btwPercentages($formatResult = false, $calculateDiscount = true, $shippingMethodId = null, $paymentMethodId = null, $discount = 0, ?int $shippingZoneId = null): array
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
         $baseVatInfo = self::getVatBaseInfoForCalculation($calculateDiscount);
@@ -344,7 +344,7 @@ class ShoppingCart
 
         if ($shippingMethodId) {
             foreach ($totalVatPerPercentage as $percentage => $value) {
-                $result = self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount, $percentage);
+                $result = self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount, $percentage, shippingZoneId: $shippingZoneId);
                 //                $result = self::vatForShippingMethod($shippingMethodId, false, $calculateDiscount, $percentage) / 100 * $baseVatInfo['vatPercentageOfTotals'][$percentage];
                 $totalVatPerPercentage[$percentage] += $result;
             }
@@ -362,7 +362,7 @@ class ShoppingCart
         return $totalVatPerPercentage;
     }
 
-    public static function vatForShippingMethod($shippingMethodId, $formatResult = false, $calculateDiscount = true, $vatRate = null)
+    public static function vatForShippingMethod($shippingMethodId, $formatResult = false, $calculateDiscount = true, $vatRate = null, ?int $shippingZoneId = null)
     {
         $calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes');
 
@@ -375,9 +375,9 @@ class ShoppingCart
         $shippingMethod = ShippingMethod::find($shippingMethodId);
         if ($shippingMethod) {
             if ($calculateInclusiveTax) {
-                $taxTotal += $shippingMethod->costsForCart / (100 + $vatRate) * $vatRate;
+                $taxTotal += $shippingMethod->costsForCart($shippingZoneId) / (100 + $vatRate) * $vatRate;
             } else {
-                $taxTotal += $shippingMethod->costsForCart / 100 * $vatRate;
+                $taxTotal += $shippingMethod->costsForCart($shippingZoneId) / 100 * $vatRate;
             }
         }
 
@@ -595,7 +595,7 @@ class ShoppingCart
 
                     if ($shippingMethodValid) {
                         $shippingMethod->correctName = $shippingMethod->getTranslation('name', app()->getLocale());
-                        $costs = $shippingMethod->costsForCart;
+                        $costs = $shippingMethod->costsForCart($shippingZone->id);
                         $shippingMethod->costs = $costs;
                         if ($shippingMethod->costs == 0) {
                             $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');
@@ -874,15 +874,15 @@ class ShoppingCart
         }
     }
 
-    public static function getCheckoutData($shippingMethodId, $paymentMethodId)
+    public static function getCheckoutData($shippingMethodId, $paymentMethodId, ?int $shippingZoneId = null)
     {
-        $discount = self::totalDiscount(false, null, $shippingMethodId, $paymentMethodId);
-        $tax = self::btw(false, true, $shippingMethodId, $paymentMethodId);
-        $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount);
-        $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total);
+        $discount = self::totalDiscount(false, null, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
+        $tax = self::btw(false, true, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
+        $total = self::total(false, true, $shippingMethodId, $paymentMethodId, $tax, $discount, shippingZoneId: $shippingZoneId);
+        $subTotal = self::subtotal(false, $shippingMethodId, $paymentMethodId, $total, shippingZoneId: $shippingZoneId);
 
-        $taxPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethodId, $paymentMethodId);
-        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethodId, $paymentMethodId, $total);
+        $taxPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethodId, $paymentMethodId, shippingZoneId: $shippingZoneId);
+        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethodId, $paymentMethodId, $total, shippingZoneId: $shippingZoneId);
         $depositPaymentMethods = [];
         if ($depositAmount > 0.00) {
             $depositPaymentMethods = ShoppingCart::getPaymentMethodsForDeposit($paymentMethodId);
@@ -893,7 +893,7 @@ class ShoppingCart
         if ($shippingMethodId) {
             $shippingMethod = ShippingMethod::find($shippingMethodId);
             if ($shippingMethod) {
-                $shippingCosts = $shippingMethod->costsForCart;
+                $shippingCosts = $shippingMethod->costsForCart($shippingZoneId);
             }
         }
 

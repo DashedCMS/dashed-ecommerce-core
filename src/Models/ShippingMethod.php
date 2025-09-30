@@ -77,7 +77,7 @@ class ShippingMethod extends Model
     //        return $this->hasMany(ShippingMethodClass::class);
     //    }
 
-    public function getCostsForCartAttribute()
+    public function costsForCart(?int $shippingZoneId = null)
     {
         $cartItems = ShoppingCart::cartItems();
         $cartItemsCount = count($cartItems);
@@ -110,15 +110,17 @@ class ShippingMethod extends Model
         foreach ($cartItems as $cartItem) {
             if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
                 foreach ($cartItem->model->shippingClasses as $shippingClass) {
-                    $shippingClassPrice = $shippingClass->price_shipping_zones[$this->shipping_zone_id] ?? 0;
-                    if ($shippingClassPrice > 0) {
-                        if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
-                            $shippingCosts = $shippingCosts + $shippingClassPrice;
-                            $activatedShippingClassIds[] = $shippingClass->id;
-                        } elseif ($shippingClass->count_per_product) {
-                            $shippingCosts = $shippingCosts + ($shippingClassPrice * $cartItem->qty);
-                        } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
-                            $shippingCosts = $shippingCosts + $shippingClassPrice;
+                    if ($shippingZoneId) {
+                        $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
+                        if ($shippingClassPrice > 0) {
+                            if ($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)) {
+                                $shippingCosts = $shippingCosts + $shippingClassPrice;
+                                $activatedShippingClassIds[] = $shippingClass->id;
+                            } elseif ($shippingClass->count_per_product) {
+                                $shippingCosts = $shippingCosts + ($shippingClassPrice * $cartItem->qty);
+                            } elseif (!$shippingClass->count_once && !$shippingClass->count_per_product) {
+                                $shippingCosts = $shippingCosts + $shippingClassPrice;
+                            }
                         }
                     }
                 }
