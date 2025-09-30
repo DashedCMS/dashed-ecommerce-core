@@ -497,6 +497,8 @@ class Checkout extends Component
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
+        dd($shippingMethod);
+
         $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
         if ($depositAmount > 0.00) {
             $validator = Validator::make([

@@ -595,6 +595,7 @@ class ShoppingCart
 
                     if ($shippingMethodValid) {
                         $shippingMethod->correctName = $shippingMethod->getTranslation('name', app()->getLocale());
+                        $shippingMethod->shippingZoneId = $shippingZone->id;
                         $costs = $shippingMethod->costsForCart($shippingZone->id);
                         $shippingMethod->costs = $costs;
                         if ($shippingMethod->costs == 0) {
