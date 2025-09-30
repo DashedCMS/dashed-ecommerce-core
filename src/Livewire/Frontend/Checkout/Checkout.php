@@ -497,9 +497,7 @@ class Checkout extends Component
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
-        dd($shippingMethod);
-
-        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
+        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null, shippingZoneId: $shippingMethod->shipping_zone_id);
         if ($depositAmount > 0.00) {
             $validator = Validator::make([
                 'depositPaymentMethod' => $this->depositPaymentMethod,
@@ -600,11 +598,11 @@ class Checkout extends Component
             }
         }
 
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $discount = ShoppingCart::totalDiscount(shippingMethodId: $shippingMethod->id, paymentMethodId: $paymentMethod['id'] ?? '');
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '', $discount);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
+        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? '', shippingZoneId: $shippingMethod->shipping_zone_id);
+        $discount = ShoppingCart::totalDiscount(shippingMethodId: $shippingMethod->id, paymentMethodId: $paymentMethod['id'] ?? '', shippingZoneId: $shippingMethod->shipping_zone_id);
+        $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '', shippingZoneId: $shippingMethod->shipping_zone_id);
+        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '', $discount, shippingZoneId: $shippingMethod->shipping_zone_id);
+        $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '', shippingZoneId: $shippingMethod->shipping_zone_id);
         $shippingCosts = 0;
         $paymentCosts = 0;
 
@@ -736,9 +734,9 @@ class Checkout extends Component
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $order->shippingMethod->name;
             $orderProduct->price = $shippingCosts;
-            $orderProduct->btw = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, true);
+            $orderProduct->btw = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, true, shippingZoneId: $shippingMethod->shipping_zone_id);
             $orderProduct->vat_rate = ShoppingCart::vatRateForShippingMethod($order->shippingMethod->id);
-            $orderProduct->discount = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, false) - $orderProduct->btw;
+            $orderProduct->discount = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, false, shippingZoneId: $shippingMethod->shipping_zone_id) - $orderProduct->btw;
             $orderProduct->product_extras = [];
             $orderProduct->sku = 'shipping_costs';
             $orderProduct->save();

@@ -597,9 +597,12 @@ class ShoppingCart
                         $shippingMethod->correctName = $shippingMethod->getTranslation('name', app()->getLocale());
                         $shippingMethod->shippingZoneId = $shippingZone->id;
                         $costs = $shippingMethod->costsForCart($shippingZone->id);
+
                         $shippingMethod->costs = $costs;
                         if ($shippingMethod->costs == 0) {
                             $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');
+                        } elseif ($shippingMethod->costs > 0 && $shippingMethod->sort == 'free_delivery') {
+                            unset($shippingMethods[$key]);
                         } else {
                             $shippingMethod->costsFormatted = CurrencyHelper::formatPrice($costs);
                         }

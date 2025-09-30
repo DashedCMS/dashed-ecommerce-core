@@ -54,7 +54,7 @@ trait CartActions
 
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $cartItem->model->id);
 
-                $cartTotal = ShoppingCart::total(false);
+                $cartTotal = ShoppingCart::total(false, shippingZoneId: $this->shippingMethod->shipping_zone_id ?? null);
                 $this->dispatch('productRemovedFromCart', [
                     'product' => $cartItem->model,
                     'productName' => $cartItem->model->name,
@@ -127,7 +127,7 @@ trait CartActions
         $this->retrieveShippingMethods();
         ShoppingCart::setInstance($this->cartType);
 
-        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod);
+        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: $this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null);
         $this->subtotal = $checkoutData['subTotal'];
         $this->discount = $checkoutData['discount'];
         $this->tax = $checkoutData['btw'];
@@ -364,8 +364,8 @@ trait CartActions
                     ]));
                 }
 
-                EcommerceActionLog::createLog('add_to_cart', $newQuantity - $cartItem->qty, productId: $product->id);
                 Cart::update($cartItem->rowId, $newQuantity);
+                EcommerceActionLog::createLog('add_to_cart', $newQuantity - $cartItem->qty, productId: $product->id);
                 $cartUpdated = true;
             }
         }
@@ -381,9 +381,9 @@ trait CartActions
                 ]));
             }
 
-            EcommerceActionLog::createLog('add_to_cart', $this->quantity, productId: $product->id);
             Cart::add($product->id, $product->name, $this->quantity, $productPrice, $attributes)
                 ->associate(Product::class);
+            EcommerceActionLog::createLog('add_to_cart', $this->quantity, productId: $product->id);
         }
 
         $quantity = $this->quantity;
@@ -392,7 +392,7 @@ trait CartActions
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
-        $cartTotal = ShoppingCart::total(false);
+        $cartTotal = ShoppingCart::total(false, shippingZoneId: $this->shippingMethod->shipping_zone_id ?? null);
 
         $this->dispatch('productAddedToCart', [
             'product' => $product,
