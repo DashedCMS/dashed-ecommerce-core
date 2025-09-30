@@ -76,6 +76,23 @@ class ProductsRelationManager extends RelationManager
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
+                    ->fillForm(function (Product $record) {
+                        return [
+                            'price' => $record->price,
+                            'new_price' => $record->new_price,
+                            'use_stock' => $record->use_stock,
+                            'limit_purchases_per_customer' => $record->limit_purchases_per_customer,
+                            'out_of_stock_sellable' => $record->out_of_stock_sellable,
+                            'low_stock_notification' => $record->low_stock_notification,
+                            'stock' => $record->stock,
+                            'expected_in_stock_date' => $record->expected_in_stock_date,
+                            'expected_delivery_in_days' => $record->expected_delivery_in_days,
+                            'low_stock_notification_limit' => $record->low_stock_notification_limit,
+                            'stock_status' => $record->stock_status,
+                            'limit_purchases_per_customer_limit' => $record->limit_purchases_per_customer_limit,
+                            'fulfillment_provider' => $record->fulfillment_provider,
+                        ];
+                    })
                     ->form([
                         Section::make('Beheer de prijzen')
                             ->schema([
@@ -102,70 +119,10 @@ class ProductsRelationManager extends RelationManager
                                 'lg' => 2,
                             ]),
                         Section::make('Voorraad beheren')
-                            ->schema([
-                                Toggle::make('use_stock')
-                                    ->default(fn ($record) => $record->use_stock)
-                                    ->label('Voorraad bijhouden')
-                                    ->reactive(),
-                                TextInput::make('stock')
-                                    ->default(fn ($record) => $record->stock)
-                                    ->type('number')
-                                    ->label('Hoeveel heb je van dit product op voorraad')
-                                    ->maxValue(100000)
-                                    ->required()
-                                    ->numeric()
-                                    ->hidden(fn (Get $get) => ! $get('use_stock')),
-                                Toggle::make('out_of_stock_sellable')
-                                    ->default(fn ($record) => $record->out_of_stock_sellable)
-                                    ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
-                                    ->reactive()
-                                    ->hidden(fn (Get $get) => ! $get('use_stock')),
-                                DatePicker::make('expected_in_stock_date')
-                                    ->default(fn ($record) => $record->expected_in_stock_date)
-                                    ->label('Wanneer komt dit product weer op voorraad')
-                                    ->reactive()
-                                    ->required()
-                                    ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
-                                Toggle::make('low_stock_notification')
-                                    ->default(fn ($record) => $record->low_stock_notification)
-                                    ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
-                                    ->reactive()
-                                    ->hidden(fn (Get $get) => ! $get('use_stock')),
-                                TextInput::make('low_stock_notification_limit')
-                                    ->default(fn ($record) => $record->low_stock_notification_limit)
-                                    ->label('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een notificatie')
-                                    ->type('number')
-                                    ->reactive()
-                                    ->required()
-                                    ->minValue(1)
-                                    ->maxValue(100000)
-                                    ->default(1)
-                                    ->numeric()
-                                    ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
-                                Select::make('stock_status')
-                                    ->default(fn ($record) => $record->stock_status ?: 'in_stock')
-                                    ->label('Is dit product op voorraad')
-                                    ->options([
-                                        'in_stock' => 'Op voorraad',
-                                        'out_of_stock' => 'Uitverkocht',
-                                    ])
-//                                ->default('in_stock')
-                                    ->required()
-                                    ->hidden(fn (Get $get) => $get('use_stock')),
-                                Toggle::make('limit_purchases_per_customer')
-                                    ->default(fn ($record) => $record->limit_purchases_per_customer)
-                                    ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
-                                    ->reactive(),
-                                TextInput::make('limit_purchases_per_customer_limit')
-                                    ->default(fn ($record) => $record->limit_purchases_per_customer_limit)
-                                    ->type('number')
-                                    ->label('Hoeveel mag dit product gekocht worden per bestelling')
-                                    ->minValue(1)
-                                    ->maxValue(100000)
-                                    ->default(1)
-                                    ->numeric()
-                                    ->required()
-                                    ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+                            ->schema(Product::stockFilamentSchema())
+                            ->columns([
+                                'default' => 1,
+                                'lg' => 2,
                             ]),
                     ])
                     ->action(function (Product $record, array $data): void {
