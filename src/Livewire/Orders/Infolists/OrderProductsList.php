@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
+use Filament\Actions\Action;
+use Filament\Infolists\Components\Section;
 use Livewire\Component;
 use Filament\Infolists\Infolist;
 use Illuminate\Support\HtmlString;
@@ -15,6 +17,7 @@ use Filament\Infolists\Contracts\HasInfolists;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Ramsey\Uuid\Guid\Fields;
 
 class OrderProductsList extends Component implements HasForms, HasInfolists
 {
@@ -43,7 +46,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                         ImageEntry::make('image')
                             ->hiddenLabel()
                             ->visible($orderProduct->product && $orderProduct->product->firstImage)
-                            ->getStateUsing(fn () => $orderProduct->custom_image ?: (mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? ''))
+                            ->getStateUsing(fn() => $orderProduct->custom_image ?: (mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? ''))
                             ->disk('dashed')
                             ->width('100%')
                             ->height('auto'),
@@ -64,7 +67,7 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
 
                                 if (is_array($orderProduct->hidden_options ?: [])) {
                                     foreach ($orderProduct->hidden_options ?: [] as $key => $value) {
-                                        if (! str($value)->contains('base64')) {
+                                        if (!str($value)->contains('base64')) {
                                             $productExtras .= $key . ': ' . $value . ' <br/>';
                                         }
                                     }
@@ -78,27 +81,34 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
                             ->badge()
                             ->color('primary')
                             ->weight('bold')
-                            ->getStateUsing(fn () => $orderProduct->quantity)
+                            ->getStateUsing(fn() => $orderProduct->quantity)
                             ->suffix('x'),
                         TextEntry::make('preOrder')
                             ->hiddenLabel()
                             ->badge()
                             ->color('warning')
                             ->weight('bold')
-                            ->getStateUsing(fn () => 'Is pre-order')
+                            ->getStateUsing(fn() => 'Is pre-order')
                             ->visible($orderProduct->is_pre_order),
                         TextEntry::make('price')
                             ->hiddenLabel()
-                            ->getStateUsing(fn () => $orderProduct->price)
-                            ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
+                            ->getStateUsing(fn() => $orderProduct->price)
+                            ->helperText(fn() => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
                             ->money('EUR'),
                         TextEntry::make('fulfiller')
                             ->hiddenLabel()
                             ->visible((bool)$orderProduct->fulfillment_provider)
-                            ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
+                            ->getStateUsing(fn() => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
                             ->badge()
                             ->columnSpanFull()
-                            ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
+                            ->color(fn() => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
+                        TextEntry::make('name')
+                            ->hiddenLabel()
+                            ->label(fn() => $orderProduct->name)
+                            ->getStateUsing(fn() => '<a class="hover:text-primary-500" target="_blank" href="' . ($orderProduct->product ? route('filament.dashed.resources.products.edit', $orderProduct->product) : '#') . '">' . 'Bekijk product' . '</a>')
+                            ->size('sm')
+                            ->columnSpanFull()
+                            ->html(),
                     ])
                     ->columns(5)
                     ->columnSpanFull();
