@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,7 @@ trait CartActions
 {
     public $suggestedProducts = [];
     public $crossSellProducts = [];
+    public \Illuminate\Database\Eloquent\Collection|Collection|array $shippingMethods = [];
     public ?array $extras = [];
     public ?array $hiddenOptions = [];
     public string|int $quantity = 1;
@@ -127,7 +129,7 @@ trait CartActions
         $this->retrieveShippingMethods();
         ShoppingCart::setInstance($this->cartType);
 
-        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: $this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null);
+        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: is_array($this->shippingMethods) ? null : ($this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null));
         $this->subtotal = $checkoutData['subTotal'];
         $this->discount = $checkoutData['discount'];
         $this->tax = $checkoutData['btw'];

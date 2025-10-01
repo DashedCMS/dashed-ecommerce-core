@@ -80,7 +80,6 @@ class Checkout extends Component
     public $shippingCosts;
     public $depositAmount;
     public bool $postpayPaymentMethod = false;
-    public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
     public string $cartType = 'default';
