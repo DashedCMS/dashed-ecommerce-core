@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
@@ -11,25 +12,29 @@ class Cart extends Component
 {
     use CartActions;
 
-    public string $discountCode = '';
+    public ?string $discountCode = '';
     public $discount;
     public $subtotal;
     public $tax;
     public $total;
-    public $paymentCosts;
-    public $shippingCosts;
-    public $depositAmount;
-    public bool $postpayPaymentMethod = false;
-    public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
-    public array $paymentMethods = [];
-    public array $depositPaymentMethods = [];
+//    public $paymentCosts;
+//    public $shippingCosts;
+//    public $depositAmount;
+//    public bool $postpayPaymentMethod = false;
+//    public array $paymentMethods = [];
+//    public array $depositPaymentMethods = [];
     public string $cartType = 'default';
+
+    protected $listeners = [
+        'refreshCart' => 'updated',
+    ];
 
     public function mount(string $cartType = 'default')
     {
-        $this->cartType = $cartType;
-        ShoppingCart::setInstance($this->cartType);
-        $this->discountCode = session('discountCode', '');
+        cartHelper()->initialize();
+        $this->discountCode = cartHelper()->getDiscountCodeString();
+//        $this->cartType = $cartType;
+//        ShoppingCart::setInstance($this->cartType);
         $this->checkCart();
         $this->fillPrices();
 
@@ -49,7 +54,7 @@ class Cart extends Component
             $itemLoop++;
         }
 
-        $cartTotal = ShoppingCart::total(false);
+        $cartTotal = cartHelper()->getTotal();
 
         $this->dispatch('cartInitiated', [
             'cartTotal' => number_format($cartTotal, 2, '.', ''),
@@ -60,21 +65,18 @@ class Cart extends Component
 
     public function fillPrices()
     {
-        $shoppingCartAmounts = ShoppingCart::amounts(true);
-        $this->subtotal = $shoppingCartAmounts['subTotal'];
-        $this->discount = $shoppingCartAmounts['discount'];
-        $this->tax = $shoppingCartAmounts['tax'];
-        $this->total = $shoppingCartAmounts['total'];
-        //        $this->subtotal = ShoppingCart::subtotal(true);
-        //        $this->discount = ShoppingCart::totalDiscount(true);
-        //        $this->tax = ShoppingCart::btw(true);
-        //        $this->total = ShoppingCart::total(true);
+        cartHelper()->initialize();
+        $this->subtotal = CurrencyHelper::formatPrice(cartHelper()->getSubtotal());
+        $discount = cartHelper()->getDiscount();
+        $this->discount = $discount ? CurrencyHelper::formatPrice(cartHelper()->getDiscount()) : null;
+        $this->tax = CurrencyHelper::formatPrice(cartHelper()->getTax());
+        $this->total = CurrencyHelper::formatPrice(cartHelper()->getTotal());
         $this->getSuggestedProducts();
     }
 
     public function getCartItemsProperty()
     {
-        return ShoppingCart::cartItems($this->cartType);
+        return cartHelper()->getCartItems();
     }
 
     public function updated()

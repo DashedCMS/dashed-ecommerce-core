@@ -77,9 +77,11 @@ class ShippingMethod extends Model
     //        return $this->hasMany(ShippingMethodClass::class);
     //    }
 
-    public function costsForCart(?int $shippingZoneId = null)
+    public function costsForCart(?int $shippingZoneId = null): ?float
     {
-        $cartItems = ShoppingCart::cartItems();
+        cartHelper()->initialize();
+
+        $cartItems = cartHelper()->getCartItems();
         $cartItemsCount = count($cartItems);
         $activatedShippingClassIds = [];
 
@@ -108,17 +110,17 @@ class ShippingMethod extends Model
         }
 
         foreach ($cartItems as $cartItem) {
-            if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
+            if ($this->sort != 'take_away' && $cartItem->model && $cartItem->model->shippingClasses->count()) {
                 foreach ($cartItem->model->shippingClasses as $shippingClass) {
                     if ($shippingZoneId) {
                         $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
                         if ($shippingClassPrice > 0) {
-                            if ($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)) {
+                            if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                                 $activatedShippingClassIds[] = $shippingClass->id;
                             } elseif ($shippingClass->count_per_product) {
                                 $shippingCosts = $shippingCosts + ($shippingClassPrice * $cartItem->qty);
-                            } elseif (!$shippingClass->count_once && !$shippingClass->count_per_product) {
+                            } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                             }
                         }
@@ -128,5 +130,29 @@ class ShippingMethod extends Model
         }
 
         return $shippingCosts;
+    }
+
+    public function getActivatedShippingClasses(?int $shippingZoneId = null): ?array
+    {
+        cartHelper()->initialize();
+
+        $cartItems = cartHelper()->getCartItems();
+        $activatedShippingClasses = [];
+
+        foreach ($cartItems as $cartItem) {
+            if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
+                foreach ($cartItem->model->shippingClasses as $shippingClass) {
+                    if ($shippingZoneId) {
+                        $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
+                        if ($shippingClassPrice > 0) {
+                            $shippingClass->price = $shippingClassPrice;
+                            $activatedShippingClasses[] = $shippingClass;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $activatedShippingClasses;
     }
 }

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -50,7 +51,9 @@ class POSPage extends Component implements HasForms
         'quantity' => 1,
         'vat_rate' => 21,
     ];
-    public ?array $createDiscountData = [];
+    public ?array $createDiscountData = [
+        'type' => 'percentage'
+    ];
     public ?array $cancelOrderData = [];
     public ?array $customerData = [];
     public $cashPaymentAmount = null;
@@ -307,7 +310,9 @@ class POSPage extends Component implements HasForms
         $posCart->discount_code = $discountCode->code;
         $posCart->save();
 
-        $this->createDiscountData = [];
+        $this->createDiscountData = [
+            'type' => 'percentage'
+        ];
 
         $this->dispatch('discountCodeCreated', [
             'discountCode' => $discountCode->code,
@@ -353,11 +358,19 @@ class POSPage extends Component implements HasForms
                     ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('country')
+                Select::make('country')
                     ->label('Land')
+                    ->options(function(){
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->required()
                     ->nullable()
-                    ->maxLength(255)
                     ->lazy()
                     ->columnSpanFull(),
                 TextInput::make('company')
@@ -386,17 +399,28 @@ class POSPage extends Component implements HasForms
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('invoiceCountry')
+                Select::make('invoiceCountry')
                     ->label('Factuur land')
                     ->required(fn (Get $get) => $get('invoice_street'))
+                    ->options(function(){
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->nullable()
-                    ->maxLength(255)
                     ->columnSpanFull(),
                 Textarea::make('note')
                     ->label('Notitie')
                     ->nullable()
                     ->maxLength(5000)
                     ->columnSpanFull(),
+            ])
+            ->fill([
+                'country' => Countries::getAllSelectedCountries()[0],
             ])
             ->columns(2);
     }
@@ -433,7 +457,7 @@ class POSPage extends Component implements HasForms
     {
         $view = 'dashed-ecommerce-core::pos.pages.point-of-sale';
 
-        if(view()->exists('dashed.pos.point-of-sale')){
+        if (view()->exists('dashed.pos.point-of-sale')) {
             $view = 'dashed.pos.point-of-sale';
         }
 

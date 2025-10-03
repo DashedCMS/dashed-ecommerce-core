@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -63,6 +62,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;

@@ -6,13 +6,15 @@ class TikTokHelper
 {
     public static function getShoppingCartItems($cartTotal = null, ?string $email = null, ?string $phoneNumber = null): array
     {
+        cartHelper()->initialize();
+
         if (! $cartTotal) {
-            $cartTotal = ShoppingCart::total(false);
+            $cartTotal = cartHelper()->getTotal();
         }
 
         $items = [];
 
-        foreach (ShoppingCart::cartItems() as $cartItem) {
+        foreach (cartHelper()->getCartItems() as $cartItem) {
             if ($cartItem->model) {
                 $items[] = [
                     'content_id' => $cartItem->model->id,

@@ -2,8 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
-use Dashed\DashedEcommerceCore\Filament\Widgets\DateRangeFilterWidget;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -12,6 +10,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\DateRangeFilterWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -32,6 +31,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;

@@ -2,12 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource\Pages;
 
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
-use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 
 class CreateOrderLogTemplate extends CreateRecord
 {

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedTranslations\Models\Translation;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
@@ -22,6 +21,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -837,50 +837,50 @@ class Product extends Model
                 }
             }
 
-            if($this->weight){
+            if ($this->weight) {
                 $characteristics[] = [
                     'name' => Translation::get('weight', 'characteristics', 'Gewicht'),
                     'value' => Translation::get('weight-in-kg', 'characteristics', ':weight: kg', 'text', [
-                        'weight' => $this->weight
+                        'weight' => $this->weight,
                     ]),
                 ];
             }
 
-            if($this->width){
+            if ($this->width) {
                 $characteristics[] = [
                     'name' => Translation::get('width', 'characteristics', 'Breedte'),
                     'value' => Translation::get('width-in-cm', 'characteristics', ':width: CM', 'text', [
-                        'width' => $this->width
+                        'width' => $this->width,
                     ]),
                 ];
             }
 
-            if($this->length){
+            if ($this->length) {
                 $characteristics[] = [
                     'name' => Translation::get('length', 'characteristics', 'Lengte'),
                     'value' => Translation::get('length-in-cm', 'characteristics', ':length: CM', 'text', [
-                        'length' => $this->length
+                        'length' => $this->length,
                     ]),
                 ];
             }
 
-            if($this->height){
+            if ($this->height) {
                 $characteristics[] = [
                     'name' => Translation::get('height', 'characteristics', 'Hoogte'),
                     'value' => Translation::get('height-in-cm', 'characteristics', ':height: CM', 'text', [
-                        'height' => $this->height
+                        'height' => $this->height,
                     ]),
                 ];
             }
 
-            if($this->sku){
+            if ($this->sku) {
                 $characteristics[] = [
                     'name' => Translation::get('sku', 'characteristics', 'SKU'),
                     'value' => $this->sku,
                 ];
             }
 
-            if($this->ean){
+            if ($this->ean) {
                 $characteristics[] = [
                     'name' => Translation::get('ean', 'characteristics', 'EAN'),
                     'value' => $this->ean,

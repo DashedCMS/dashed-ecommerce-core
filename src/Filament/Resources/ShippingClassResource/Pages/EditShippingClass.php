@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages;
 
-use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
 
@@ -28,7 +28,7 @@ class EditShippingClass extends EditRecord
     {
         $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
 
-        foreach(ShippingZone::all() as $shippingZone) {
+        foreach (ShippingZone::all() as $shippingZone) {
             $data['price_shipping_zones'][$shippingZone->id] = $data["price_shipping_zone_{$shippingZone->id}"] ?? null;
             unset($data["price_shipping_zone_{$shippingZone->id}"]);
         }

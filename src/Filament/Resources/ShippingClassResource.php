@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -18,6 +17,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Tables\Actions\DeleteBulkAction;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
@@ -68,11 +68,11 @@ class ShippingClassResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(!(Sites::getAmountOfSites() > 1))
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
-                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingClass),
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
                 Section::make('Content')
                     ->schema(array_merge(array_merge([
                         TextInput::make('name')
@@ -83,7 +83,7 @@ class ShippingClassResource extends Resource
                             ->label('Beschrijving')
                             ->helperText('Alleen intern gebruik')
                             ->rows(2)
-                            ->maxLength(1250)
+                            ->maxLength(1250),
                     ], $shippingZoneSchema), [
                         Toggle::make("count_per_product")
                             ->label("Tel de meerprijs per product in de winkelwagen")
@@ -105,7 +105,7 @@ class ShippingClassResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1)),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //

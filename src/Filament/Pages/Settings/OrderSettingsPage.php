@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
@@ -21,6 +20,7 @@ use Filament\Notifications\Notification;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderSettingsPage extends Page
 {

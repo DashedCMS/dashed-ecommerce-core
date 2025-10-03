@@ -195,7 +195,7 @@
                     </button>
                     <button @click="toggle('chooseShippingMethodPopup')"
                             :class="{'bg-orange-500/40 hover:bg-orange-500/70': chooseShippingMethodPopup}"
-                            x-cloak x-show="!shippingMethod"
+                            x-cloak x-show="!shippingMethodId"
                             class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -207,7 +207,7 @@
                         <p>Verzendmethode toepassen</p>
                     </button>
                     <button @click="removeShippingMethod"
-                            x-cloak x-show="shippingMethod"
+                            x-cloak x-show="shippingMethodId"
                             class="text-left rounded-lg bg-red-500/40 hover:bg-red-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -341,10 +341,10 @@
                                 </div>
                                 <hr>
                             </div>
-                            <div x-show="shippingMethod" x-cloak>
+                            <div x-show="shippingMethodId" x-cloak>
                                 <div class="text-sm font-bold flex justify-between items-center mb-2">
-                                    <span>Verzendmethode</span>
-                                    <span class="font-bold" x-html="shippingCosts"></span>
+                                    <span>Verzendkosten</span>
+                                    <span class="font-bold" x-html="shippingMethodCosts"></span>
                                 </div>
                                 <hr>
                             </div>
@@ -486,8 +486,16 @@
                     </svg>
                 </div>
                 <p class="text-3xl font-bold">Selecteer een verzendmethode</p>
-                <div class="grid gap-4 grid-cols-1 md:grid-cols-2">
-
+                <div class="grid gap-8 grid-cols-1 md:grid-cols-2" x-show="shippingMethods.length">
+                    <template x-for="shippingMethod in shippingMethods">
+                        <button @click="selectShippingMethod(shippingMethod.id)"
+                                class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
+                            <span x-html="shippingMethod.fullName"></span>
+                        </button>
+                    </template>
+                </div>
+                <div class="p-4" x-show="!shippingMethods.length">
+                    <p class="text-center text-black">Geen verzendmethodes gevonden</p>
                 </div>
             </div>
         </div>
@@ -1439,10 +1447,11 @@
         orderPayments: [],
         firstPaymentMethod: null,
         pinTerminalIntervalId: null,
-        shippingMethod: null,
         shippingMethods: [],
-        shippingCosts: null,
-        shippingCostsUnformatted: null,
+        shippingMethod: null,
+        shippingMethodId: null,
+        shippingMethodCosts: null,
+        shippingMethodCostsUnformatted: null,
         postPay: null,
         orderUrl: null,
         productToChange: $wire.entangle('productToChange'),
@@ -1561,7 +1570,8 @@
                 this.products = data.products;
                 this.lastOrder = data.lastOrder;
                 this.shippingMethods = data.shippingMethods;
-                this.shippingMethod = data.shippingMethod;
+                this.shippingMethodId = data.shippingMethodId;
+                this.shippingMethodCosts = data.shippingMethodCosts;
                 this.firstName = data.firstName;
                 this.lastName = data.lastName;
                 this.phoneNumber = data.phoneNumber;
@@ -1579,6 +1589,7 @@
                 this.invoiceCity = data.invoiceCity;
                 this.invoiceCountry = data.invoiceCountry;
                 this.note = data.note;
+                this.discountCode = data.discountCode;
                 this.customFields = data.customFields;
                 this.retrieveCart();
                 this.focus();
@@ -1655,8 +1666,10 @@
                     this.subTotal = data.subTotal;
                     this.total = data.total;
                     this.totalUnformatted = data.totalUnformatted;
-                    this.shippingCosts = data.shippingCosts;
-                    this.shippingCostsUnformatted = data.shippingCostsUnformatted;
+                    this.shippingMethods = data.shippingMethods;
+                    this.shippingMethodId = data.shippingMethodId;
+                    this.shippingMethodCosts = data.shippingCosts;
+                    this.shippingMethodCostsUnformatted = data.shippingCostsUnformatted;
                     this.paymentMethods = data.paymentMethods;
                 }
 
@@ -1668,6 +1681,7 @@
             }
 
             this.loading = false;
+            return true;
         },
 
         async printLastOrder() {
@@ -1975,6 +1989,7 @@
                 }
 
                 this.discountCode = null;
+                this.activeDiscountCode = null;
 
             } catch (error) {
                 return $wire.dispatch('notify', {
@@ -1989,7 +2004,7 @@
             this.toggle('changeProductPricePopup');
         },
 
-        async setShippingMethod(shippingMethodId) {
+        async selectShippingMethod(shippingMethodId) {
             try {
                 let response = await fetch('{{ route('api.point-of-sale.select-shipping-method') }}', {
                     method: 'POST',
@@ -2007,7 +2022,6 @@
                 });
 
                 let data = await response.json();
-                this.focus();
 
                 if (!response.ok) {
                     return $wire.dispatch('notify', {
@@ -2016,10 +2030,11 @@
                     })
                 }
 
-                this.shippingMethod = data.shippingMethod;
+                this.shippingMethodId = data.shippingMethodId;
+                this.shippingMethodCosts = data.shippingMethodCosts;
 
                 this.toggle('chooseShippingMethodPopup');
-                this.retrieveCart();
+                await this.retrieveCart();
                 this.focus();
 
             } catch (error) {
@@ -2056,7 +2071,7 @@
                     })
                 }
 
-                this.shippingMethod = null;
+                this.shippingMethodId = null;
                 this.retrieveCart();
                 this.focus();
 

@@ -21,6 +21,7 @@ class CartPopup extends Component
     public $freeShippingThreshold;
     public int $freeShippingPercentage = 0;
     public string $cartType = 'default';
+    private $cartItems = [];
 
     //Needed for the CartActions
     public $shippingMethod;
@@ -37,24 +38,31 @@ class CartPopup extends Component
         self::updated();
     }
 
+    public function fillPrices(): void
+    {
+        $this->updated();
+    }
+
     public function updated()
     {
-        $this->cartTotal = ShoppingCart::total();
-        $this->cartSubtotal = ShoppingCart::subtotal();
-        $this->cartTax = ShoppingCart::btw();
+        cartHelper()->initialize();
+        $this->cartItems = cartHelper()->getCartItems();
+        $this->cartTotal = cartHelper()->getTotal();
+        $this->cartSubtotal = cartHelper()->getSubtotal();
+        $this->cartTax = cartHelper()->getTax();
         $freeShippingMethod = ShippingMethod::where('sort', 'free_delivery')->first();
         $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
         $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;
         if ($isUnderThreshold) {
-            $this->freeShippingPercentage = ($this->cartTotal / $this->freeShippingThreshold) * 100;
+            $this->freeShippingPercentage = number_format(($this->cartTotal / $this->freeShippingThreshold) * 100, 0);
         } else {
             $this->freeShippingPercentage = 100;
         }
     }
 
-    public function getCartItemsProperty(): Collection
+    public function getCartItemsProperty(): array|Collection
     {
-        return ShoppingCart::cartItems();
+        return $this->cartItems;
     }
 
     public function render()

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\Widget;
 
 class DateRangeFilterWidget extends Widget

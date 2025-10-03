@@ -2,8 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
-use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
-use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Actions\Action;
@@ -21,6 +19,8 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
+use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 class CreateOrderLog extends Component implements HasForms, HasActions
 {
@@ -66,7 +66,7 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                         ->send();
 
                     $this->dispatch('refreshData');
-//                    $this->closeActionModal();
+                    //                    $this->closeActionModal();
                 });
         }
 
@@ -87,16 +87,16 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                 Toggle::make('sendEmailToCustomer')
                     ->label('Moet de klant een notificatie van deze notitie ontvangen?')
                     ->default(false)
-                    ->visible(fn(Get $get) => $get('publicForCustomer'))
+                    ->visible(fn (Get $get) => $get('publicForCustomer'))
                     ->reactive(),
                 TextInput::make('emailSubject')
                     ->label('Onderwerp van de mail')
-                    ->visible(fn(Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
+                    ->visible(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
                 mediaHelper()->field('images', 'Bestanden', multiple: true),
                 Textarea::make('note')
                     ->label('Notitie')
                     ->placeholder('Typ hier je notitie')
-                    ->helperText(fn(Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
+                    ->helperText(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
                     ->required()
                     ->minLength(3)
                     ->maxLength(1500)

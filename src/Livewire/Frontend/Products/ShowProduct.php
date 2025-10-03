@@ -31,7 +31,7 @@ class ShowProduct extends Component
         $metaModel = $this->product ?: $this->productGroup;
 
         $metaDescription = $metaModel->metadata->description ?? '';
-        if(!$metaDescription){
+        if (! $metaDescription) {
             $metaDescription = $metaModel->productGroup ? ($metaModel->productGroup->metadata->description ?? '') : '';
         }
 

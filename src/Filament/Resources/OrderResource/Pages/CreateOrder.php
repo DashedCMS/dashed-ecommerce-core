@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Actions\Action;
@@ -132,11 +133,19 @@ class CreateOrder extends Page implements HasForms
                     ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('country')
+                Select::make('country')
                     ->label('Land')
+                    ->options(function () {
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->required()
                     ->nullable()
-                    ->maxLength(255)
                     ->lazy(),
                 TextInput::make('company_name')
                     ->label('Bedrijfsnaam')
@@ -164,11 +173,19 @@ class CreateOrder extends Page implements HasForms
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('invoice_country')
+                Select::make('invoice_country')
                     ->label('Factuur land')
                     ->required(fn (Get $get) => $get('invoice_street'))
-                    ->nullable()
-                    ->maxLength(255),
+                    ->options(function(){
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
+                    ->nullable(),
             ])
             ->columns(2);
 
@@ -298,6 +315,9 @@ BLADE
         ];
 
         return $form
+            ->fill([
+                'country' => Countries::getAllSelectedCountries()[0],
+            ])
             ->schema($schema);
     }
 

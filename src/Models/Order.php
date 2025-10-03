@@ -718,7 +718,7 @@ class Order extends Model
         $this->deductDiscount();
         OrderMarkedAsPaidEvent::dispatch($this);
 
-        ShoppingCart::emptyMyCart();
+        cartHelper()->emptyCart();
 
         $this->sendGAEcommerceHit();
         $this->updateOrderProductsProductInformation();
