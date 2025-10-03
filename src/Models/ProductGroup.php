@@ -644,4 +644,9 @@ class ProductGroup extends Model
 
         return $content;
     }
+
+    public function disabledShippingMethods(): BelongsToMany
+    {
+        return $this->belongsToMany(ShippingMethod::class, 'dashed__shipping_method_disabled_product_groups', 'product_group_id', 'shipping_method_id');
+    }
 }

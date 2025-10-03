@@ -520,6 +520,17 @@ class ShoppingCart
 
     public static function getAvailableShippingMethods($countryName, string $shippingAddress = '')
     {
+        $cartItems = cartHelper()->getCartItems();
+        $productIds = [];
+        $productGroupIds = [];
+
+        foreach ($cartItems as $cartItem) {
+            if ($cartItem->model) {
+                $productIds[] = $cartItem->model->id;
+                $productGroupIds[] = $cartItem->model->product_group_id;
+            }
+        }
+
         $shippingZones = ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
@@ -589,6 +600,13 @@ class ShoppingCart
                 foreach ($shippingMethods as $key => $shippingMethod) {
                     $shippingMethodValid = true;
                     if ($shippingMethod->distance_range_enabled && $distanceRange > $shippingMethod->distance_range) {
+                        $shippingMethodValid = false;
+                    }
+
+                    if ($shippingMethodValid && $shippingMethod->disabledProducts()->whereIn('product_id', $productIds)->count()) {
+                        $shippingMethodValid = false;
+                    }
+                    if ($shippingMethodValid && $shippingMethod->disabledProductGroups()->whereIn('product_group_id', $productGroupIds)->count()) {
                         $shippingMethodValid = false;
                     }
 

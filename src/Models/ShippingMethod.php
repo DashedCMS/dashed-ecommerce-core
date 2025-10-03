@@ -77,6 +77,16 @@ class ShippingMethod extends Model
     //        return $this->hasMany(ShippingMethodClass::class);
     //    }
 
+    public function disabledProducts()
+    {
+        return $this->belongsToMany(Product::class, 'dashed__shipping_method_disabled_products', 'shipping_method_id', 'product_id');
+    }
+
+    public function disabledProductGroups()
+    {
+        return $this->belongsToMany(ProductGroup::class, 'dashed__shipping_method_disabled_product_groups', 'shipping_method_id', 'product_group_id');
+    }
+
     public function costsForCart(?int $shippingZoneId = null): ?float
     {
         cartHelper()->initialize();
@@ -115,12 +125,12 @@ class ShippingMethod extends Model
                     if ($shippingZoneId) {
                         $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
                         if ($shippingClassPrice > 0) {
-                            if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
+                            if ($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                                 $activatedShippingClassIds[] = $shippingClass->id;
                             } elseif ($shippingClass->count_per_product) {
                                 $shippingCosts = $shippingCosts + ($shippingClassPrice * $cartItem->qty);
-                            } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
+                            } elseif (!$shippingClass->count_once && !$shippingClass->count_per_product) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                             }
                         }
@@ -138,6 +148,7 @@ class ShippingMethod extends Model
 
         $cartItems = cartHelper()->getCartItems();
         $activatedShippingClasses = [];
+        $activatedShippingClassIds = [];
 
         foreach ($cartItems as $cartItem) {
             if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
@@ -145,12 +156,29 @@ class ShippingMethod extends Model
                     if ($shippingZoneId) {
                         $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
                         if ($shippingClassPrice > 0) {
-                            $shippingClass->price = $shippingClassPrice;
-                            $activatedShippingClasses[] = $shippingClass;
+                            if ($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)) {
+                                $shippingCosts = $shippingCosts + $shippingClassPrice;
+                                $activatedShippingClassIds[$shippingClass->id] = 1;
+                                $activatedShippingClasses[] = $shippingClass;
+                            } elseif ($shippingClass->count_per_product) {
+                                if (!in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
+                                    $activatedShippingClasses[] = $shippingClass;
+                                }
+                                $activatedShippingClassIds[$shippingClass->id] = ($activatedShippingClassIds[$shippingClass->id] ?? 0) + $cartItem->qty;
+                            } elseif (!$shippingClass->count_once && !$shippingClass->count_per_product) {
+                                if (!in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
+                                    $activatedShippingClasses[] = $shippingClass;
+                                }
+                                $activatedShippingClassIds[$shippingClass->id] = ($activatedShippingClassIds[$shippingClass->id] ?? 0) + 1;
+                            }
                         }
                     }
                 }
             }
+        }
+
+        foreach ($activatedShippingClasses as $shippingClass) {
+            $shippingClass->price = ($shippingClass->price_shipping_zones[$shippingZoneId] ?? 0) * $activatedShippingClassIds[$shippingClass->id];
         }
 
         return $activatedShippingClasses;

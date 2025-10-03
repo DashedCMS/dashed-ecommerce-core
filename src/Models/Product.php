@@ -1330,4 +1330,9 @@ class Product extends Model
 
         return $content;
     }
+
+    public function disabledShippingMethods(): BelongsToMany
+    {
+        return $this->belongsToMany(ShippingMethod::class, 'dashed__shipping_method_disabled_products', 'product_id', 'shipping_method_id');
+    }
 }
