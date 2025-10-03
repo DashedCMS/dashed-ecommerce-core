@@ -670,7 +670,7 @@ class Order extends Model
             //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch end', isDebugLog: true);
 
             //            OrderLog::createLog(orderId: $this->id, note: 'Emptying shopping cart', isDebugLog: true);
-            ShoppingCart::emptyMyCart();
+            cartHelper()->emptyCart();
             //            OrderLog::createLog(orderId: $this->id, note: 'Shopping cart emptied', isDebugLog: true);
 
             $this->sendGAEcommerceHit();
@@ -697,7 +697,7 @@ class Order extends Model
 
         OrderMarkedAsPaidEvent::dispatch($this);
 
-        ShoppingCart::emptyMyCart();
+        cartHelper()->emptyCart();
 
         $this->sendGAEcommerceHit();
 
