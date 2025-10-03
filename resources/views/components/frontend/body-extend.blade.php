@@ -9,7 +9,7 @@
     @endforeach
 @endif
 @if(Customsetting::get('trigger_tiktok_events'))
-    @php($shoppingCartTotal = \Dashed\DashedEcommerceCore\Classes\ShoppingCart::total(false))
+    @php($shoppingCartTotal = cartHelper()->getTotal())
 @endif
 
 <script>
