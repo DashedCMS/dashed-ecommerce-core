@@ -990,7 +990,7 @@ class Product extends Model
         }
 
         if ($removeIfAlreadyInCart) {
-            foreach (ShoppingCart::cartItems() as $cartItem) {
+            foreach (cartHelper()->getCartItems() as $cartItem) {
                 if ($cartItem->model && in_array($cartItem->model->id, $crossSellProductsIds)) {
                     $crossSellProductsIds = array_diff($crossSellProductsIds, [$cartItem->model->id]);
                 }
