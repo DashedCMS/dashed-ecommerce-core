@@ -566,6 +566,11 @@ class CartHelper
         return static::$depositPaymentMethod;
     }
 
+    public function getDiscountCode(): ?DiscountCode
+    {
+        return static::$discountCode;
+    }
+
     public function getDiscountCodeString(): ?string
     {
         return static::$discountCodeString;

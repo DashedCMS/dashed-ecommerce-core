@@ -626,7 +626,7 @@ class Checkout extends Component
         $order->ga_user_id = $gaUserId;
 
         if (cartHelper()->getDiscount()) {
-            $order->discount_code_id = cartHelper()->getDiscount()->id;
+            $order->discount_code_id = cartHelper()->getDiscountCode()->id;
         }
 
         $order->shipping_method_id = $shippingMethod['id'];
