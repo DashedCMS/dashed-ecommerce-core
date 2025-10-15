@@ -495,10 +495,11 @@ class Product extends Model
         return false;
     }
 
-    public function directSellableStock()
+    public function directSellableStock($skipReservedStock = false)
     {
+        return $this->stock;
         if ($this->use_stock) {
-            return $this->stock - $this->reservedStock();
+            return $this->stock - ($skipReservedStock ? 0 : $this->reservedStock());
 
             return $this->stock();
         } else {

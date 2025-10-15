@@ -1117,7 +1117,7 @@ class PointOfSaleApiController extends Controller
 
         $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
             $products = Product::handOrderShowable()
-                ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price'])
+                ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status'])
                 ->get()
                 ->map(function ($product) {
                     $name = $product->getTranslation('name', app()->getLocale());
@@ -1127,7 +1127,7 @@ class PointOfSaleApiController extends Controller
                     return [
                         'id' => $product->id,
                         'name' => $name,
-                        'stock' => $product->stock(),
+                        'stock' => $product->use_stock ? $product->stock : ($product->stock_status == 'in_stock' ? 100000 : 0),
 //                        'image' => $image ? "data:image/png;base64,".base64_encode(file_get_contents($image)) : '',
                         'currentPrice' => $currentPrice,
                         'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
