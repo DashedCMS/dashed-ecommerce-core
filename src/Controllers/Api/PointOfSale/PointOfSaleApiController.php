@@ -638,11 +638,7 @@ class PointOfSaleApiController extends Controller
     public function createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId): array
     {
         $this->updateCart($cartInstance, $posCart->identifier);
-        $cartItems = ShoppingCart::cartItems($cartInstance);
-
-        $cartItems = ShoppingCart::cartItems($cartInstance);
-        $checkoutData = ShoppingCart::getCheckoutData(null, $paymentMethodId);
-
+        $cartItems = cartHelper()->getCartItems();
 
         if (! count($cartItems)) {
             return [
@@ -733,11 +729,11 @@ class PointOfSaleApiController extends Controller
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $posCart->discount_code]);
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id ?? null, $paymentMethodId ?? null);
-        $discount = ShoppingCart::totalDiscount(false, $posCart->discount_code);
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id ?? null, $paymentMethodId ?? null);
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id ?? null, $paymentMethodId ?? null);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id ?? null, $paymentMethodId ?? null);
+        $subTotal = cartHelper()->getSubtotal();
+        $discount = cartHelper()->getDiscount();
+        $btw = cartHelper()->getTax();
+        $btwPercentages = cartHelper()->getTaxPercentages();
+        $total = cartHelper()->getTotal();
         $shippingCosts = 0;
         $paymentCosts = 0;
 
