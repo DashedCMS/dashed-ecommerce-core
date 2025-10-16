@@ -558,6 +558,14 @@ trait ProductCartActions
         $attributes['options'] = $options;
         $attributes['hiddenOptions'] = $this->hiddenOptions;
 
+        if (!$productPrice) {
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('product-price-zero', $this->cartType, 'De prijs mag niet op 0 staan, neem contact met ons op om de bestelling af te ronden'))
+                ->send();
+            return;
+        }
+
         $cartItems = cartHelper()->getCartItems();
         foreach ($cartItems as $cartItem) {
             if ($cartItem->model && $cartItem->model->id == $product->id && $attributes['options'] == $cartItem->options['options'] && $attributes['hiddenOptions'] == $cartItem->options['hiddenOptions']) {

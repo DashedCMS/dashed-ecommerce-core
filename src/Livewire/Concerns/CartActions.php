@@ -51,7 +51,7 @@ trait CartActions
     public function changeQuantity(string $rowId, int $quantity)
     {
         $response = cartHelper()->changeQuantity($rowId, $quantity);
-        if($response['dispatch']){
+        if ($response['dispatch']) {
             $this->dispatch($response['dispatch']['event'], $response['dispatch']['data']);
         }
         $this->checkCart($response['status'], $response['message']);
@@ -274,6 +274,14 @@ trait CartActions
         $attributes['originalPrice'] = $productPrice;
         $attributes['options'] = $options;
         $attributes['hiddenOptions'] = $this->hiddenOptions;
+
+        if (!$productPrice) {
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('product-price-zero', $this->cartType, 'De prijs mag niet op 0 staan, neem contact met ons op om de bestelling af te ronden'))
+                ->send();
+            return;
+        }
 
         $cartItems = ShoppingCart::cartItems($this->cartType);
         foreach ($cartItems as $cartItem) {
