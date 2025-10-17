@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedPages\Models\Page;
@@ -636,9 +637,9 @@ class ShoppingCart
         return [];
     }
 
-    public static function getAvailablePaymentMethods($countryName, $formatResult = false)
+    public static function getAvailablePaymentMethods($countryName, ?int $userId = null)
     {
-        $paymentMethods = self::getPaymentMethods();
+        $paymentMethods = self::getPaymentMethods(userId: $userId);
         $shippingZones = ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
@@ -759,15 +760,26 @@ class ShoppingCart
         return null;
     }
 
-    public static function getPaymentMethods($type = 'online', $total = null): array
+    public static function getPaymentMethods($type = 'online', $total = null, ?int $userId = null): array
     {
         $paymentMethods = PaymentMethod::where('available_from_amount', '<=', $total ?: cartHelper()->getTotal())->where('site_id', Sites::getActive())->where('active', 1)->where('type', $type)->orderBy('order', 'asc')->get()->toArray();
 
-        foreach ($paymentMethods as &$paymentMethod) {
-            $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';
-            $paymentMethod['name'] = $paymentMethod['name'][app()->getLocale()] ?? '';
-            $paymentMethod['additional_info'] = $paymentMethod['additional_info'][app()->getLocale()] ?? '';
-            $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][app()->getLocale()] ?? '';
+        foreach ($paymentMethods as $key => &$paymentMethod) {
+
+            $paymentMethodValid = true;
+
+            if (DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->where('user_id', $userId ?: (auth()->check() ? auth()->user()->id : 0))->count() == 0){
+                $paymentMethodValid = false;
+            }
+
+            if (!$paymentMethodValid) {
+                unset($paymentMethods[$key]);
+            } else {
+                $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';
+                $paymentMethod['name'] = $paymentMethod['name'][app()->getLocale()] ?? '';
+                $paymentMethod['additional_info'] = $paymentMethod['additional_info'][app()->getLocale()] ?? '';
+                $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][app()->getLocale()] ?? '';
+            }
         }
 
         return $paymentMethods;

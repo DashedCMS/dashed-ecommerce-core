@@ -120,6 +120,14 @@ class PaymentMethodResource extends Resource
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
                 ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
+            Select::make('users')
+                ->relationship('users')
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                ->multiple()
+                ->preload()
+                ->searchable()
+                ->label('Wie mag deze betaalmethode gebruiken?')
+            ->helperText('Leeg = iedereen mag deze betaalmethode gebruiken'),
         ];
 
         return $form
