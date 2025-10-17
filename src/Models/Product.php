@@ -123,6 +123,71 @@ class Product extends Model
 
     public function scopeSearch($query, ?string $search = null)
     {
+        $minPrice = request('min-price');
+        $maxPrice = request('max-price');
+        $search   = request('search', $search);
+
+        if ($minPrice !== null) {
+            $query->where('price', '>=', $minPrice);
+        }
+        if ($maxPrice !== null) {
+            $query->where('price', '<=', $maxPrice);
+        }
+
+        if (! filled($search)) {
+            return $query;
+        }
+
+        $needle = trim(mb_strtolower($search));
+
+        // Kolommen in de volgorde die jij belangrijk vindt
+        $columns = collect(self::getTranslatableAttributes())
+            ->reject(fn ($attr) => method_exists($this, $attr)) // sla relaties over
+            ->values()
+            ->all();
+
+        // 1) Waar-voorwaarden (zoals je al deed)
+        $query->where(function ($q) use ($columns, $needle, $search) {
+            foreach ($columns as $i => $col) {
+                $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
+                $q->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
+            }
+
+            $q->orWhere('sku', $search)
+                ->orWhere('ean', $search)
+                ->orWhere('article_code', $search);
+        });
+
+        // 2) Relevance score opbouwen in de exacte volgorde van $columns
+        //    Exacte matches op sku/ean/article_code krijgen de hoogste weging.
+        $cases    = [];
+        $bindings = [];
+
+        // Hoge weging voor exacte matches
+        $topWeight = count($columns) + 10;
+        foreach (['sku', 'ean', 'article_code'] as $exactField) {
+            $cases[]    = "CASE WHEN {$exactField} = ? THEN {$topWeight} ELSE 0 END";
+            $bindings[] = $search;
+        }
+
+        // Afnemende weging per kolom in jouw volgorde
+        foreach ($columns as $idx => $col) {
+            $weight      = count($columns) - $idx; // eerste kolom = hoogste weight
+            $cases[]     = "CASE WHEN LOWER(`{$col}`) LIKE ? THEN {$weight} ELSE 0 END";
+            $bindings[]  = "%{$needle}%";
+        }
+
+        // Relevance select + sortering
+        $query->select($query->getQuery()->columns ?? ['*'])
+            ->selectRaw('(' . implode(' + ', $cases) . ') as relevance', $bindings)
+            ->orderByDesc('relevance');
+
+        return $query;
+    }
+
+
+    public function scopeSearchOld($query, ?string $search = null)
+    {
         $minPrice = request()->get('min-price') ? request()->get('min-price') : null;
         $maxPrice = request()->get('max-price') ? request()->get('max-price') : null;
 
