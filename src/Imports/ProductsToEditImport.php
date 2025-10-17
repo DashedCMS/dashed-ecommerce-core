@@ -23,9 +23,11 @@ class ProductsToEditImport implements ToArray
                 $product->stock = $row[4] ?? 0;
                 $product->ean = $row[5];
                 $product->vat_rate = $row[6];
-                $product->save();
+                if ($product->isDirty()) {
+                    $product->save();
+                    $productGroupIds[] = $product->product_group_id;
+                }
 
-                $productGroupIds[] = $product->product_group_id;
             }
         }
 
