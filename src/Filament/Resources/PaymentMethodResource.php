@@ -84,8 +84,7 @@ class PaymentMethodResource extends Resource
                 ->searchable()
                 ->preload(),
             Toggle::make('postpay')
-                ->label('Achteraf betaalmethode')
-                ->hidden(fn ($record) => $record && $record->psp == 'own'),
+                ->label('Achteraf betaalmethode'),
             Textarea::make('additional_info')
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
