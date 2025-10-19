@@ -80,7 +80,6 @@ class Checkout extends Component
     public $shippingCosts;
     public $depositAmount;
     public bool $postpayPaymentMethod = false;
-    public \Illuminate\Database\Eloquent\Collection|array $shippingMethods = [];
     public array $paymentMethods = [];
     public array $depositPaymentMethods = [];
     public string $cartType = 'default';
@@ -161,7 +160,7 @@ class Checkout extends Component
             $itemLoop++;
         }
 
-        $cartTotal = ShoppingCart::total(false);
+        $cartTotal = cartHelper()->getTotal();
 
         $this->dispatch('checkoutInitiated', [
             'cartTotal' => number_format($cartTotal, 2, '.', ''),
@@ -172,7 +171,7 @@ class Checkout extends Component
 
     public function getCartItemsProperty()
     {
-        return ShoppingCart::cartItems();
+        return cartHelper()->getCartItems();
     }
 
     public function retrievePaymentMethods()
@@ -187,7 +186,7 @@ class Checkout extends Component
     {
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
-        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, true, $shippingAddress) : [];
+        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, $shippingAddress) : [];
         if (Customsetting::get('first_shipping_method_selected', null, true) && (! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
@@ -205,12 +204,14 @@ class Checkout extends Component
             }
 
             $this->fillPrices();
+        }else{
+            cartHelper()->initialize();
         }
     }
 
     public function updateAddressByApi(): void
     {
-        $response = $this->getAddresInfoByApi($this->zipCode, $this->houseNr);
+        $response = $this->getAddressInfoByApi($this->zipCode, $this->houseNr);
         if ($response) {
             $this->city = $response['city'];
             $this->street = $response['street'];
@@ -219,14 +220,14 @@ class Checkout extends Component
 
     public function updateInvoiceAddressByApi(): void
     {
-        $response = $this->getAddresInfoByApi($this->invoiceZipCode, $this->invoiceHouseNr);
+        $response = $this->getAddressInfoByApi($this->invoiceZipCode, $this->invoiceHouseNr);
         if ($response) {
             $this->invoiceCity = $response['city'];
             $this->invoiceStreet = $response['street'];
         }
     }
 
-    public function getAddresInfoByApi(?string $zipCode = null, ?string $houseNr = null): array
+    public function getAddressInfoByApi(?string $zipCode = null, ?string $houseNr = null): array
     {
         $postNLApikey = Customsetting::get('checkout_postnl_api_key');
         if ($postNLApikey && $zipCode && $houseNr) {
@@ -292,6 +293,35 @@ class Checkout extends Component
     public function updatedPostpayPaymentMethod()
     {
         $this->fillPrices();
+    }
+
+    public function fillPrices(): void
+    {
+        cartHelper()->initialize();
+
+        $this->retrievePaymentMethods();
+        $this->retrieveShippingMethods();
+
+        cartHelper()->setShippingMethod($this->shippingMethod);
+        cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
+        cartHelper()->setPaymentMethod($this->paymentMethod);
+        $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
+        cartHelper()->setDepositPaymentMethod($this->depositPaymentMethod);
+
+        cartHelper()->updateData();
+
+//        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: is_array($this->shippingMethods) ? null : ($this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null));
+        $this->subtotal = cartHelper()->getSubtotal();
+        $this->discount = cartHelper()->getDiscount();
+        $this->tax = cartHelper()->getTax();
+        $this->total = cartHelper()->getTotal();
+        $this->shippingCosts = cartHelper()->getShippingCosts();
+        $this->paymentCosts = cartHelper()->getPaymentCosts();
+        $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
+        $this->postpayPaymentMethod = cartHelper()->getIsPostpayPaymentMethod();
+        $this->depositAmount = cartHelper()->getDepositAmount();
+        $this->getSuggestedProducts();
+//        $this->dispatch('filledPrices');
     }
 
     public function rules()
@@ -389,6 +419,7 @@ class Checkout extends Component
     {
         $this->dispatch('checkoutSubmitted');
 
+        $this->fillPrices();
         $this->checkCart();
 
         $validator = Validator::make([
@@ -444,7 +475,7 @@ class Checkout extends Component
             }
         }
 
-        $cartItems = $this->cartItems;
+        $cartItems = cartHelper()->getCartItems();
 
         if (! $cartItems) {
             Notification::make()
@@ -497,7 +528,7 @@ class Checkout extends Component
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
-        $depositAmount = ShoppingCart::depositAmount(false, true, $shippingMethod->id, $paymentMethod['id'] ?? null);
+        $depositAmount = cartHelper()->getDepositAmount();
         if ($depositAmount > 0.00) {
             $validator = Validator::make([
                 'depositPaymentMethod' => $this->depositPaymentMethod,
@@ -529,22 +560,6 @@ class Checkout extends Component
 
                 return $this->dispatch('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
-        }
-
-        $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->where('is_global_discount', false)->first();
-
-        if (! $discountCode) {
-            session(['discountCode' => '']);
-            $discountCode = '';
-        } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
-            session(['discountCode' => '']);
-
-            Notification::make()
-                ->danger()
-                ->title(Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))
-                ->send();
-
-            return $this->dispatch('showAlert', 'error', Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'));
         }
 
         if (Customsetting::get('checkout_account') != 'disabled' && auth()->guest() && $this->password) {
@@ -598,39 +613,26 @@ class Checkout extends Component
             }
         }
 
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $discount = ShoppingCart::totalDiscount(shippingMethodId: $shippingMethod->id, paymentMethodId: $paymentMethod['id'] ?? '');
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '', $discount);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id, $paymentMethod['id'] ?? '');
-        $shippingCosts = 0;
-        $paymentCosts = 0;
+        $shippingCosts = cartHelper()->getShippingCosts();
+        $paymentCosts = cartHelper()->getPaymentCosts();
 
-        if ($shippingMethod->costs > 0) {
-            $shippingCosts = $shippingMethod->costs;
-        }
-
-        if ($paymentMethod && isset($paymentMethod['extra_costs']) && $paymentMethod['extra_costs'] > 0) {
-            $paymentCosts = $paymentMethod['extra_costs'];
-        }
-
-        $order->total = $total;
-        $order->subtotal = $subTotal;
-        $order->btw = $btw;
-        $order->vat_percentages = $btwPercentages;
-        $order->discount = $discount;
+        $order->total = cartHelper()->getTotal();
+        $order->subtotal = cartHelper()->getSubtotal();
+        $order->btw = cartHelper()->getTax();
+        $order->vat_percentages = cartHelper()->getTaxPercentages();
+        $order->discount = cartHelper()->getDiscount();
         $order->status = 'pending';
         $gaUserId = preg_replace("/^.+\.(.+?\..+?)$/", '\\1', @$_COOKIE['_ga']);
         $order->ga_user_id = $gaUserId;
 
-        if ($discountCode) {
-            $order->discount_code_id = $discountCode->id;
+        if (cartHelper()->getDiscount()) {
+            $order->discount_code_id = cartHelper()->getDiscountCode()->id;
         }
 
         $order->shipping_method_id = $shippingMethod['id'];
         $order->payment_method_id = $paymentMethod['id'];
 
-        if (Auth::check()) {
+        if (auth()->check()) {
             $order->user_id = auth()->user()->id;
         }
 
@@ -654,7 +656,7 @@ class Checkout extends Component
             //                $orderProduct->price = $discountedPrice;
             //                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             //            } else {
-            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
+            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, cartHelper()->getDiscount());
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             //            }
             $productExtras = [];
@@ -719,7 +721,7 @@ class Checkout extends Component
             $orderProduct->name = $paymentMethod['name'];
             $orderProduct->price = $paymentCosts;
             if ($order->paymentMethod) {
-                $orderProduct->btw = ShoppingCart::vatForPaymentMethod($paymentMethod['id']);
+                $orderProduct->btw = cartHelper()->getVatForPaymentMethod();
             }
             $orderProduct->discount = 0;
             $orderProduct->product_extras = [];
@@ -734,9 +736,9 @@ class Checkout extends Component
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $order->shippingMethod->name;
             $orderProduct->price = $shippingCosts;
-            $orderProduct->btw = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, true);
-            $orderProduct->vat_rate = ShoppingCart::vatRateForShippingMethod($order->shippingMethod->id);
-            $orderProduct->discount = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, false) - $orderProduct->btw;
+            $orderProduct->btw = cartHelper()->getVatForShippingMethod();
+            $orderProduct->vat_rate = cartHelper()->getVatRateForShippingMethod();
+            $orderProduct->discount = 0;
             $orderProduct->product_extras = [];
             $orderProduct->sku = 'shipping_costs';
             $orderProduct->save();
@@ -788,7 +790,7 @@ class Checkout extends Component
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
-        $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
+        $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
         $orderLog->tag = 'order.created';
         $orderLog->save();
 

@@ -73,7 +73,7 @@ trait ProductCartActions
                 ->send();
         }
 
-        ShoppingCart::removeInvalidItems($this->cartType);
+        cartHelper()->removeInvalidItems();
 
         $this->dispatch('refreshCart');
     }
@@ -182,7 +182,7 @@ trait ProductCartActions
                 $this->content = $this->productGroup->content;
             }
             foreach ($this->productGroup->contentBlocks as $block => $contentBlock) {
-                if (! isset($this->contentBlocks[$block])) {
+                if (! isset($this->contentBlocks[$block]) || ! $this->contentBlocks[$block]) {
                     $this->contentBlocks[$block] = $contentBlock;
                 }
             }
@@ -227,7 +227,7 @@ trait ProductCartActions
         }
 
         if ($this->product) {
-            $cartTotal = ShoppingCart::total(false);
+            $cartTotal = cartHelper()->getTotal();
 
             $this->dispatch('viewProduct', [
                 'product' => $this->product,
@@ -363,7 +363,7 @@ trait ProductCartActions
             $product = $this->product;
         }
 
-        ShoppingCart::setInstance($this->cartType);
+        cartHelper()->setCartType($this->cartType);
 
         if (! $product) {
             return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
@@ -558,7 +558,15 @@ trait ProductCartActions
         $attributes['options'] = $options;
         $attributes['hiddenOptions'] = $this->hiddenOptions;
 
-        $cartItems = ShoppingCart::cartItems($this->cartType);
+        if (!$productPrice) {
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('product-price-zero', $this->cartType, 'De prijs mag niet op 0 staan, neem contact met ons op om de bestelling af te ronden'))
+                ->send();
+            return;
+        }
+
+        $cartItems = cartHelper()->getCartItems();
         foreach ($cartItems as $cartItem) {
             if ($cartItem->model && $cartItem->model->id == $product->id && $attributes['options'] == $cartItem->options['options'] && $attributes['hiddenOptions'] == $cartItem->options['hiddenOptions']) {
                 $newQuantity = $cartItem->qty + $this->quantity;
@@ -600,7 +608,7 @@ trait ProductCartActions
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
-        $cartTotal = ShoppingCart::total(false);
+        $cartTotal = cartHelper()->getTotal();
 
         $this->dispatch('productAddedToCart', [
             'product' => $product,

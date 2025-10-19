@@ -154,7 +154,7 @@ class EditProductGroup extends EditRecord
 
         $buttons[] = self::viewAction();
 
-        $buttons[] = Action::make('Dupliceer product groep')
+        $buttons[] = Action::make('Dupliceer')
             ->action('duplicateProductGroup')
             ->color('warning');
 
@@ -233,6 +233,18 @@ class EditProductGroup extends EditRecord
                     'price' => $productExtraOption->price,
                 ]);
             }
+        }
+
+        if ($this->record->customBlocks) {
+            $newCustomBlock = $this->record->customBlocks->replicate();
+            $newCustomBlock->blockable_id = $newProductGroup->id;
+            $newCustomBlock->save();
+        }
+
+        if ($this->record->metaData) {
+            $newMetaData = $this->record->metaData->replicate();
+            $newMetaData->metadatable_id = $newProductGroup->id;
+            $newMetaData->save();
         }
 
         UpdateProductInformationJob::dispatch($newProductGroup)->onQueue('ecommerce');

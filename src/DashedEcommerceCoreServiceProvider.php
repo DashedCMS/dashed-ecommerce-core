@@ -62,6 +62,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
@@ -196,6 +197,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             'cart-block',
             'checkout-block',
             'view-order-block',
+            'all-products',
         ]);
 
         cms()->builder('plugins', [
@@ -317,6 +319,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->registerSettingsPage(DefaultEcommerceSettingsPage::class, 'Algemene Ecommerce', 'banknotes', 'Algemene Ecommerce instellingen');
         cms()->registerSettingsPage(InvoiceSettingsPage::class, 'Facturatie instellingen', 'document-check', 'Instellingen voor de facturatie');
         cms()->registerSettingsPage(OrderSettingsPage::class, 'Bestellingen', 'banknotes', 'Instellingen voor de bestellingen');
+        cms()->registerSettingsPage(OrderLogTemplateResource::class, 'Bestel log templates', 'newspaper', 'Stel templates in voor bestel logs');
         cms()->registerSettingsPage(PaymentMethodResource::class, 'Betaalmethodes', 'credit-card', 'Stel handmatige betaalmethodes in');
         cms()->registerSettingsPage(VATSettingsPage::class, 'BTW instellingen', 'receipt-percent', 'Beheren hoe je winkel belastingen in rekening brengt');
         cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');

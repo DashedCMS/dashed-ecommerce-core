@@ -1,8 +1,14 @@
 <div>
     @if(count($this->cartItems))
         <div class="relative overflow-hidden">
+<<<<<<< HEAD
             <div class="absolute right-0 top-0 hidden h-full w-1/2 bg-linear-to-tr from-primary-700 to-primary-300 lg:block"
                  aria-hidden="true"></div>
+=======
+            <div
+                class="absolute right-0 top-0 hidden h-full w-1/2 bg-gradient-to-tr from-primary-700 to-primary-300 lg:block"
+                aria-hidden="true"></div>
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
             <section class="relative py-12 overflow-hidden lg:py-24">
                 <x-container>
                     <div class="relative">
@@ -120,9 +126,10 @@
                                         @endforeach
 
                                         <div class="grid lg:grid-cols-2 gap-2 my-6 lg:col-span-2">
-                                            <input placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
-                                                   class="form-input"
-                                                   wire:model="discountCode">
+                                            <input
+                                                placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
+                                                class="form-input"
+                                                wire:model="discountCode">
                                             <button type="button" wire:click="applyDiscountCode"
                                                     class="w-full button button--primary"
                                                     aria-label="Apply button">{{Translation::get('add-discount', 'cart', 'Add discount code')}}</button>
@@ -252,14 +259,18 @@
                                                 :label="Translation::get('enter-city', 'checkout', 'Vul je stad in')"
                                                 placeholder="{{Translation::get('city', 'checkout', 'Stad')}}"
                                             />
-                                            <x-fields.input
+
+                                            <x-fields.select
                                                 required
-                                                type="text"
                                                 model="invoiceCountry"
                                                 id="invoiceCountry"
                                                 :label="Translation::get('enter-country', 'checkout', 'Vul je land in')"
                                                 placeholder="{{Translation::get('country', 'checkout', 'Land')}}"
-                                            />
+                                            >
+                                                @foreach($countryList as $country)
+                                                    <option value="{{ $country }}">{{ $country }}</option>
+                                                @endforeach
+                                            </x-fields.select>
                                         @endif
 
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary-500 border-black/5">
@@ -270,7 +281,8 @@
                                             @if(count($paymentMethods))
                                                 @foreach($paymentMethods as $thisPaymentMethod)
                                                     <div class="grid gap-2">
-                                                        <label class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
+                                                        <label
+                                                            class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
                                                             <input required
                                                                    id="payment_method{{$thisPaymentMethod['id']}}"
                                                                    class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
@@ -297,15 +309,17 @@
                                                             @endif
                                                         </label>
                                                         @if($paymentMethod == $thisPaymentMethod['id'] && ($thisPaymentMethod['additional_info'] || count($depositPaymentMethods)))
-                                                            <div class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
-                                                                @if($thisPaymentMethod['additional_info'])
+                                                            @if($thisPaymentMethod['additional_info'])
+                                                                <div
+                                                                    class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
                                                                     <p class="payment-method-content">
                                                                         {!! nl2br($thisPaymentMethod['additional_info']) !!}
                                                                     </p>
-                                                                @endif
-                                                            </div>
+                                                                </div>
+                                                            @endif
                                                             @if(count($depositPaymentMethods) && $depositAmount > 0)
-                                                                <div class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
+                                                                <div
+                                                                    class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
                                                                     <div>
                                                                         <fieldset role="group">
                                                                             <label
@@ -318,7 +332,8 @@
                                                                             </label>
                                                                             <div class="mt-4 space-y-4">
                                                                                 @foreach($depositPaymentMethods as $thisDepositPaymentMethod)
-                                                                                    <label class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
+                                                                                    <label
+                                                                                        class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
                                                                                         <input required
                                                                                                id="depositPaymentMethod{{$thisDepositPaymentMethod['id']}}"
                                                                                                class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
@@ -367,24 +382,32 @@
                                         @if($country && count($shippingMethods))
                                             <div class="grid gap-4 lg:grid-cols-2 lg:col-span-2">
                                                 @foreach($shippingMethods as $thisShippingMethod)
-                                                    <label class="relative flex items-center p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg">
-                                                        <input id="shipping_method{{$thisShippingMethod['id']}}"
-                                                               name="shipping_method" required
-                                                               class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
-                                                               type="radio"
-                                                               value="{{ $thisShippingMethod['id'] }}"
-                                                               wire:model.live="shippingMethod">
+                                                    <label class="relative p-4 cursor-pointer hover:bg-primary/50 rounded-lg">
+                                                        <div class="flex items-center">
+                                                            <input id="shipping_method{{$thisShippingMethod['id']}}"
+                                                                   name="shipping_method" required
+                                                                   class="transition shadow-inner focus:ring-primary text-primary border-black/20 shadow-black/5 peer"
+                                                                   type="radio"
+                                                                   value="{{ $thisShippingMethod['id'] }}"
+                                                                   wire:model.live="shippingMethod">
 
-                                                        <div
-                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                            <div
+                                                                class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
-                                                        <span class="ml-3 mr-auto">
+                                                            <span class="ml-3 mr-auto">
                                                         {{ $thisShippingMethod['name'] }}
-                                                            @if($thisShippingMethod['costs'] > 0)
-                                                                ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }}
-                                                                )
-                                                            @endif
-                                            </span>
+                                                                @if($thisShippingMethod['costs'] > 0)
+                                                                    ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }}
+                                                                    )
+                                                                @endif
+                                                        </span>
+                                                        </div>
+                                                        @foreach($thisShippingMethod['activatedShippingClasses'] as $activatedShippingClass)
+                                                            <span
+                                                                class="inline-block pt-1 text-xs font-medium bg-primary-light text-primary rounded-lg">
+                                                                {{ $activatedShippingClass['name'] }} (+{{CurrencyHelper::formatPrice($activatedShippingClass['price'])}})
+                                                            </span>
+                                                        @endforeach
                                                     </label>
                                                 @endforeach
                                             </div>
@@ -453,7 +476,8 @@
                                 class="order-1 text-white lg:order-3 lg:col-span-2 rounded-xl">
                                 <h2 class="text-lg font-bold text-primary-500 lg:text-white">{{Translation::get('your-order', 'cart', 'Jouw bestelling')}}</h2>
 
-                                <div class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary-500 lg:bg-transparent">
+                                <div
+                                    class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary-500 lg:bg-transparent">
                                     <h3 class="sr-only">{{Translation::get('items-in-your-cart', 'cart', 'Producten in je winkelwagen')}}</h3>
                                     <div class="px-4">
                                         <x-cart.cart-items :items="$this->cartItems" forceWhite="true"/>
@@ -495,7 +519,8 @@
                                             <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($total) }}</dd>
                                         </div>
                                         @if($depositAmount > 0)
-                                            <div class="flex items-center justify-between border-t border-gray-200 pt-6">
+                                            <div
+                                                class="flex items-center justify-between border-t border-gray-200 pt-6">
                                                 <dt class="text-base font-bold">{{Translation::get('pre-payment', 'cart', 'Aanbetaling')}}</dt>
                                                 <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($depositAmount) }}</dd>
                                             </div>

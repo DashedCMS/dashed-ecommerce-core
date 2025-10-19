@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\RelationManagers;
 
+<<<<<<< HEAD
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
@@ -9,13 +10,19 @@ use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Actions\DeleteBulkAction;
+=======
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\BulkAction;
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
@@ -76,8 +83,30 @@ class ProductsRelationManager extends RelationManager
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
+<<<<<<< HEAD
                     ->schema([
                         Section::make('Beheer de prijzen')->columnSpanFull()
+=======
+                    ->fillForm(function (Product $record) {
+                        return [
+                            'price' => $record->price,
+                            'new_price' => $record->new_price,
+                            'use_stock' => $record->use_stock,
+                            'limit_purchases_per_customer' => $record->limit_purchases_per_customer,
+                            'out_of_stock_sellable' => $record->out_of_stock_sellable,
+                            'low_stock_notification' => $record->low_stock_notification,
+                            'stock' => $record->stock,
+                            'expected_in_stock_date' => $record->expected_in_stock_date,
+                            'expected_delivery_in_days' => $record->expected_delivery_in_days,
+                            'low_stock_notification_limit' => $record->low_stock_notification_limit,
+                            'stock_status' => $record->stock_status,
+                            'limit_purchases_per_customer_limit' => $record->limit_purchases_per_customer_limit,
+                            'fulfillment_provider' => $record->fulfillment_provider,
+                        ];
+                    })
+                    ->form([
+                        Section::make('Beheer de prijzen')
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                             ->schema([
                                 TextInput::make('price')
                                     ->label('Prijs van het product')
@@ -101,6 +130,7 @@ class ProductsRelationManager extends RelationManager
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
+<<<<<<< HEAD
                         Section::make('Voorraad beheren')->columnSpanFull()
                             ->schema([
                                 Toggle::make('use_stock')
@@ -166,6 +196,13 @@ class ProductsRelationManager extends RelationManager
                                     ->numeric()
                                     ->required()
                                     ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+=======
+                        Section::make('Voorraad beheren')
+                            ->schema(Product::stockFilamentSchema())
+                            ->columns([
+                                'default' => 1,
+                                'lg' => 2,
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                             ]),
                     ])
                     ->action(function (Product $record, array $data): void {

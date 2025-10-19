@@ -2,8 +2,18 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+<<<<<<< HEAD
 use UnitEnum;
 use BackedEnum;
+=======
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Filament\Actions\Action;
+use Filament\Forms\Get;
+use Filament\Forms\Form;
+use Illuminate\Support\Facades\DB;
+use Filament\Forms\Set;
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
@@ -57,11 +67,16 @@ class ShippingMethodResource extends Resource
                     Select::make('shipping_zone_id')
                         ->relationship('shippingZone', 'name')
                         ->label('Hangt onder verzendzone')
-                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                        ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
                         ->required(),
                 ])
+<<<<<<< HEAD
                 ->collapsed(fn ($livewire) => $livewire instanceof EditShippingMethod),
             Section::make('Content')->columnSpanFull()
+=======
+                ->collapsed(fn($livewire) => $livewire instanceof EditShippingMethod),
+            Section::make('Content')
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                 ->schema([
                     TextInput::make('name')
                         ->label('Name')
@@ -90,7 +105,7 @@ class ShippingMethodResource extends Resource
                         ->label('Kosten van deze verzendmethode')
                         ->required()
                         ->numeric()
-                        ->hidden(fn ($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') == 'free_delivery' || $get('sort') == 'variable_amount'),
                     Repeater::make('variables')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Met variable berekening kan je per x aantal items rekenen, we rekenen van boven naar beneden')
@@ -104,12 +119,12 @@ class ShippingMethodResource extends Resource
                                 ->numeric(),
                         ])
                         ->nullable()
-                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
                     TextInput::make('variable_static_costs')
                         ->label('Extra vaste kosten van deze verzendmethode')
                         ->helperText('Deze berekening wordt bovenop de kosten hierboven gedaan, variablen om te gebruiken: {SHIPPING_COSTS}')
                         ->maxLength(255)
-                        ->hidden(fn ($get) => $get('sort') != 'variable_amount'),
+                        ->hidden(fn($get) => $get('sort') != 'variable_amount'),
                     Toggle::make('distance_range_enabled')
                         ->label('Alleen beschikbaar voor aantal KMs vanaf vestiging')
                         ->helperText('Google API key moet gekoppeld zijn voor dit om te werken')
@@ -118,7 +133,37 @@ class ShippingMethodResource extends Resource
                         ->label('Aantal KMs vanaf vestiging mogelijk')
                         ->numeric()
                         ->required()
-                        ->visible(fn (Get $get) => $get('distance_range_enabled')),
+                        ->visible(fn(Get $get) => $get('distance_range_enabled')),
+                    Select::make('disabled_product_ids')
+                        ->relationship('disabledProducts', 'name')
+                        ->label('Deactiveer deze verzendmethode voor deze producten')
+                        ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->searchable()
+                        ->multiple()
+                        ->preload()
+                        ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                        ->hintAction(
+                            \Filament\Forms\Components\Actions\Action::make('addAllProducts')
+                                ->label('Voeg alle producten toe')
+                                ->action(function (Set $set) {
+                                    $set('disabled_product_ids', Product::all()->pluck('id')->toArray());
+                                }),
+                        ),
+                    Select::make('disabled_product_group_ids')
+                        ->relationship('disabledProductGroups', 'name')
+                        ->label('Deactiveer deze verzendmethode voor deze producten groepen')
+                        ->getSearchResultsUsing(fn(string $search) => ProductGroup::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->searchable()
+                        ->multiple()
+                        ->preload()
+                        ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                        ->hintAction(
+                            \Filament\Forms\Components\Actions\Action::make('addAllProductGroups')
+                                ->label('Voeg alle producten groepen toe')
+                                ->action(function (Set $set) {
+                                    $set('disabled_product_group_ids', ProductGroup::all()->pluck('id')->toArray());
+                                }),
+                        ),
                 ]),
         ];
 

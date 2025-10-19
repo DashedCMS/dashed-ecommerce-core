@@ -2,6 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
@@ -48,9 +51,14 @@ class PaymentMethod extends Model
         return $query->where('active', true);
     }
 
-    public function orderPayments()
+    public function orderPayments(): HasMany
     {
-        $this->hasMany(OrderPayment::class);
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'dashed__payment_method_users', 'payment_method_id', 'user_id');
     }
 
     public function pinTerminal(): BelongsTo

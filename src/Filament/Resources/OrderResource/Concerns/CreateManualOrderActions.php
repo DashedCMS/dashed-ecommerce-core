@@ -115,7 +115,11 @@ trait CreateManualOrderActions
     {
         $this->cartInstance = $cartInstance;
         $this->orderOrigin = $orderOrigin;
+<<<<<<< HEAD
         ShoppingCart::setInstance($this->cartInstance);
+=======
+        cartHelper()->setCartType($this->cartInstance);
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 
         if ($cartInstance != 'handorder') {
             $this->loadVariables();
@@ -210,8 +214,8 @@ trait CreateManualOrderActions
 
     public function updateInfo($showNotification = true, bool $refreshFromDatabase = false)
     {
-        ShoppingCart::setInstance($this->cartInstance);
-        ShoppingCart::emptyMyCart();
+        cartHelper()->setCartType($this->cartInstance);
+        cartHelper()->emptyCart();
 
         $this->loading = true;
 
@@ -251,12 +255,12 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $this->discount_code) {
+        if (!$this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
         } else {
             $discountCode = DiscountCode::usable()->where('code', $this->discount_code)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
+            if (!$discountCode || !$discountCode->isValidForCart()) {
                 session(['discountCode' => '']);
                 $this->activeDiscountCode = null;
             } else {
@@ -276,7 +280,8 @@ trait CreateManualOrderActions
             }
         }
 
-        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        $shippingMethods = ShoppingCart::getAllShippingMethods($this->country);
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
             if ($thisShippingMethod['id'] == $this->shipping_method_id) {
@@ -284,19 +289,26 @@ trait CreateManualOrderActions
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             $this->shipping_method_id = null;
         }
 
-        $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
+        cartHelper()->initialize();
 
-        $this->totalUnformatted = $checkoutData['total'];
+        if ($this->shipping_method_id) {
+            cartHelper()->setShippingMethod($this->shipping_method_id);
+            cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
+        }
 
-        $this->discount = $checkoutData['discountFormatted'];
-        $this->vat = $checkoutData['btwFormatted'];
-        $this->vatPercentages = $checkoutData['btwPercentages'];
-        $this->subTotal = $checkoutData['subTotalFormatted'];
-        $this->total = $checkoutData['totalFormatted'];
+        cartHelper()->updateData();
+
+        $this->totalUnformatted = cartHelper()->getTotal();
+
+        $this->discount = CurrencyHelper::formatPrice(cartHelper()->getDiscount());
+        $this->vat = CurrencyHelper::formatPrice(cartHelper()->getTax());
+        $this->vatPercentages = cartHelper()->getTaxPercentages();
+        $this->subTotal = CurrencyHelper::formatPrice(cartHelper()->getSubtotal());
+        $this->total = CurrencyHelper::formatPrice(cartHelper()->getTotal());
 
         if ($showNotification) {
             Notification::make()
@@ -312,14 +324,22 @@ trait CreateManualOrderActions
     {
         $this->updateInfo(false);
         $this->loading = true;
-        ShoppingCart::setInstance($this->cartInstance);
+        cartHelper()->setCartType($this->cartInstance);
         \Cart::instance($this->cartInstance)->content();
-        ShoppingCart::removeInvalidItems(checkStock: false);
+        cartHelper()->removeInvalidItems(false);
 
-        $cartItems = ShoppingCart::cartItems($this->cartInstance);
-        $checkoutData = ShoppingCart::getCheckoutData($this->shipping_method_id, $this->payment_method_id);
+        cartHelper()->initialize();
 
-        if (! $cartItems->count()) {
+        $cartItems = cartHelper()->getCartItems();
+
+        if ($this->shipping_method_id) {
+            cartHelper()->setShippingMethod($this->shipping_method_id);
+            cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
+        }
+
+        cartHelper()->updateData();
+
+        if (!$cartItems->count()) {
             Notification::make()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->danger()
@@ -330,7 +350,29 @@ trait CreateManualOrderActions
             ];
         }
 
+<<<<<<< HEAD
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+=======
+        //        $paymentMethods = ShoppingCart::getPaymentMethods();
+        //        $paymentMethod = '';
+        //        foreach ($paymentMethods as $thisPaymentMethod) {
+        //            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
+        //                $paymentMethod = $thisPaymentMethod;
+        //            }
+        //        }
+
+        //        if (!$paymentMethod) {
+        //            Notification::make()
+        //                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
+        //                ->danger()
+        //                ->send();
+        //
+        //            return;
+        //        }
+
+//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        $shippingMethods = ShoppingCart::getAllShippingMethods($this->country);
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
             if ($thisShippingMethod['id'] == $this->shipping_method_id) {
@@ -338,6 +380,7 @@ trait CreateManualOrderActions
             }
         }
 
+<<<<<<< HEAD
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
         if (! $discountCode) {
@@ -355,6 +398,36 @@ trait CreateManualOrderActions
                 'success' => false,
             ];
         }
+=======
+        //        if (! $shippingMethod && $this->orderOrigin != 'pos') {
+        //            Notification::make()
+        //                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
+        //                ->danger()
+        //                ->send();
+        //
+        //            return [
+        //                'success' => false,
+        //            ];
+        //        }
+
+//        $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
+//
+//        if (!$discountCode) {
+//            session(['discountCode' => '']);
+//            $discountCode = '';
+//        } elseif ($discountCode && !$discountCode->isValidForCart($this->email)) {
+//            session(['discountCode' => '']);
+//
+//            Notification::make()
+//                ->title(Translation::get('discount-code-invalid', 'cart', 'The discount code you choose is invalid'))
+//                ->danger()
+//                ->send();
+//
+//            return [
+//                'success' => false,
+//            ];
+//        }
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 
         if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
@@ -401,21 +474,13 @@ trait CreateManualOrderActions
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $this->discount_code]);
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
-        $discount = ShoppingCart::totalDiscount(false, $this->discount_code);
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id ?? null, $paymentMethod['id'] ?? null);
-        $shippingCosts = 0;
-        $paymentCosts = 0;
-
-        if (($shippingMethod->costs ?? 0) > 0) {
-            $shippingCosts = $shippingMethod->costs;
-        }
-
-        if (isset($paymentMethod['extra_costs']) && $paymentMethod['extra_costs'] > 0) {
-            $paymentCosts = $paymentMethod['extra_costs'];
-        }
+        $subTotal = cartHelper()->getSubTotal();
+        $discount = cartHelper()->getDiscount();
+        $btw = cartHelper()->getTax();
+        $btwPercentages = cartHelper()->getTaxPercentages();
+        $total = cartHelper()->getTotal();
+        $shippingCosts = cartHelper()->getShippingCosts();
+        $paymentCosts = cartHelper()->getPaymentCosts();
 
         $order->total = $total;
         $order->subtotal = $subTotal;
@@ -425,11 +490,11 @@ trait CreateManualOrderActions
         $order->status = 'pending';
         $order->ga_user_id = null;
 
-        if ($discountCode) {
-            $order->discount_code_id = $discountCode->id;
-        }
+//        if ($discountCode) {
+//            $order->discount_code_id = $discountCode->id;
+//        }
 
-        $order->shipping_method_id = $shippingMethod['id'] ?? null;
+        $order->shipping_method_id = $this->shipping_method_id;
 
         if (isset($user)) {
             $order->user_id = $user->id;
@@ -482,7 +547,7 @@ trait CreateManualOrderActions
             $orderProduct->name = $paymentMethod['name'];
             $orderProduct->price = $paymentCosts;
             if ($order->paymentMethod) {
-                $orderProduct->btw = ShoppingCart::vatForPaymentMethod($paymentMethod['id']);
+                $orderProduct->btw = cartHelper()->getVatForPaymentMethod();
             }
             $orderProduct->discount = 0;
             $orderProduct->product_extras = [];
@@ -497,9 +562,8 @@ trait CreateManualOrderActions
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $order->shippingMethod->name;
             $orderProduct->price = $shippingCosts;
-            $orderProduct->btw = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, true);
-            $orderProduct->vat_rate = ShoppingCart::vatRateForShippingMethod($order->shippingMethod->id);
-            $orderProduct->discount = ShoppingCart::vatForShippingMethod($order->shippingMethod->id, false, false) - $orderProduct->btw;
+            $orderProduct->btw = cartHelper()->getVatForShippingMethod();
+            $orderProduct->vat_rate = cartHelper()->getVatRateForShippingMethod();
             $orderProduct->product_extras = [];
             $orderProduct->sku = 'shipping_costs';
             $orderProduct->save();
@@ -551,7 +615,7 @@ trait CreateManualOrderActions
                 }
             }
 
-            if (! $productAlreadyInCart) {
+            if (!$productAlreadyInCart) {
                 $this->products[] = [
                     'id' => $selectedProduct['id'],
                     'product' => $selectedProduct,
@@ -636,7 +700,7 @@ trait CreateManualOrderActions
 
     public function toggleCustomProductPopup()
     {
-        $this->customProductPopup = ! $this->customProductPopup;
+        $this->customProductPopup = !$this->customProductPopup;
     }
 
     //    public function getSchemas(): array
@@ -720,7 +784,7 @@ trait CreateManualOrderActions
         $order = Order::where('id', $orderId)
             ->orWhere('invoice_id', $orderId)
             ->first();
-        if (! $order) {
+        if (!$order) {
             Notification::make()
                 ->title('Order niet gevonden')
                 ->danger()
@@ -778,7 +842,7 @@ trait CreateManualOrderActions
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -789,7 +853,7 @@ trait CreateManualOrderActions
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'amount')
+                    ->visible(fn(Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -801,7 +865,7 @@ trait CreateManualOrderActions
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'percentage')
+                    ->visible(fn(Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -817,14 +881,19 @@ trait CreateManualOrderActions
                         return $options;
                     })
                     ->required()
+<<<<<<< HEAD
                     ->visible(fn (Get $get) => $get('type') == 'discountCode'),
+=======
+                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
             ])
             ->statePath('createDiscountData');
     }
 
     public function submitCreateDiscountForm()
     {
-        if (! $this->products) {
+        if (!$this->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -856,7 +925,7 @@ trait CreateManualOrderActions
             $this->discount_code = $discountCode->code;
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -870,10 +939,15 @@ trait CreateManualOrderActions
 
     public function toggleVariable($variable)
     {
-        $this->{$variable} = ! $this->{$variable};
+        $this->{$variable} = !$this->{$variable};
 
+<<<<<<< HEAD
         if ($variable == 'searchOrderPopup' && ! $this->{$variable}) {
             // $this->dispatch('focusSearchOrder');
+=======
+        if ($variable == 'searchOrderPopup' && !$this->{$variable}) {
+            //            $this->dispatch('focusSearchOrder');
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
         }
     }
 
@@ -911,7 +985,7 @@ trait CreateManualOrderActions
             self::cancelPinTerminalPayment($this->order);
         }
 
-        if (! $this->order) {
+        if (!$this->order) {
             return;
         }
 
@@ -942,7 +1016,7 @@ trait CreateManualOrderActions
 
     public function initiateCheckout()
     {
-        if (! $this->products) {
+        if (!$this->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -1043,7 +1117,7 @@ trait CreateManualOrderActions
 
     public function checkPinTerminalPayment(): void
     {
-        if (! $this->order || $this->pinTerminalStatus != 'pending') {
+        if (!$this->order || $this->pinTerminalStatus != 'pending') {
             return;
         }
 
@@ -1111,7 +1185,7 @@ trait CreateManualOrderActions
         } catch (\Exception $exception) {
             $success = false;
         }
-        if (! $success) {
+        if (!$success) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('failed-to-stop-terminal-payment-try-again', 'cart', 'De pin betaling kon niet worden gestopt'))
@@ -1131,7 +1205,7 @@ trait CreateManualOrderActions
         } catch (\Exception $exception) {
             $success = false;
         }
-        if (! $success) {
+        if (!$success) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('failed-to-stop-terminal-payment-try-again', 'cart', 'De pin betaling kon niet worden gestopt'))
@@ -1142,14 +1216,14 @@ trait CreateManualOrderActions
     public function markAsPaid(bool $hasMultiplePayments = false): void
     {
         if ($this->paymentMethod->is_cash_payment) {
-            if (! $this->cashPaymentAmount) {
+            if (!$this->cashPaymentAmount) {
                 Notification::make()
                     ->title('Geen bedrag ingevoerd')
                     ->danger()
                     ->send();
 
                 return;
-            } elseif (! $hasMultiplePayments && $this->cashPaymentAmount < $this->totalUnformatted) {
+            } elseif (!$hasMultiplePayments && $this->cashPaymentAmount < $this->totalUnformatted) {
                 Notification::make()
                     ->title('Bedrag is te laag')
                     ->danger()
@@ -1187,7 +1261,7 @@ trait CreateManualOrderActions
         $order->refresh();
         if ($this->paymentMethod->is_cash_payment && $this->cashPaymentAmount < $this->totalUnformatted && $hasMultiplePayments) {
             $paymentMethod = collect($this->posPaymentMethods)->whereNotNull('pin_terminal_id')->first();
-            if (! $paymentMethod) {
+            if (!$paymentMethod) {
                 Notification::make()
                     ->title('Geen pin terminal gevonden, bestelling incorrect afgehandeld')
                     ->danger()

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Paynl\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -79,15 +80,19 @@ class PointOfSaleApiController extends Controller
                 $shippingMethod->fullName .= ' (' . $shippingMethod->shippingZone->name . ')';
             }
 
-            $shippingMethod->fullName .= ' ' . CurrencyHelper::formatPrice($shippingMethod->costs);
+            $costs = $shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null);
+            $shippingMethod->fullName .= ' ' . ($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
         }
+
+        $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
 
         return response()
             ->json([
                 'posIdentifier' => $posIdentifier ?? null,
                 'products' => $products ?? [],
                 'shippingMethods' => $shippingMethods,
-                'shippingMethod' => $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null,
+                'shippingMethodId' => $chosenShippingMethod->id ?? null,
+                'shippingCosts' => $chosenShippingMethod ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)) : null,
                 'firstName' => $posCart->first_name,
                 'lastName' => $posCart->last_name,
                 'phoneNumber' => $posCart->phone_number,
@@ -105,6 +110,7 @@ class PointOfSaleApiController extends Controller
                 'invoiceCity' => $posCart->invoice_city,
                 'invoiceCountry' => $posCart->invoice_country,
                 'note' => $posCart->note,
+                'discountCode' => $posCart->discount_code,
                 'customFields' => $posCart->custom_fields,
                 'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
                 'success' => true,
@@ -129,8 +135,9 @@ class PointOfSaleApiController extends Controller
 
     public function updateCart(string $cartInstance, string $posIdentifier, ?string $discountCode = null): array
     {
-        ShoppingCart::setInstance($cartInstance);
-        ShoppingCart::emptyMyCart();
+//        cartHelper()->initialize($cartInstance);
+        cartHelper()->setCartType($cartInstance);
+        cartHelper()->emptyCart();
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
@@ -180,44 +187,53 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (! $discountCode) {
-            session(['discountCode' => '']);
-            $activeDiscountCode = null;
-        } else {
-            $discountCode = DiscountCode::usable()->where('code', $discountCode)->first();
-            if (! $discountCode || ! $discountCode->isValidForCart()) {
-                session(['discountCode' => '']);
-                $activeDiscountCode = null;
-            } else {
-                session(['discountCode' => $discountCode->code]);
-
-                if (! isset($activeDiscountCode) || $activeDiscountCode != $discountCode->code) {
-                    $activeDiscountCode = $discountCode->code;
-                }
-
-            }
-        }
+        cartHelper()->initialize($cartInstance);
+        cartHelper()->applyDiscountCode($discountCode);
+        $activeDiscountCode = cartHelper()->getDiscountCodeString();
 
         $posCart->discount_code = $activeDiscountCode ?? null;
         $posCart->save();
 
-        $checkoutData = ShoppingCart::getCheckoutData($posCart->shipping_method_id, $paymentMethodId ?? null);
+//        cartHelper()->initialize();
 
-        $discount = $checkoutData['discountFormatted'];
-        $vat = $checkoutData['btwFormatted'];
-        $vatPercentages = $checkoutData['btwPercentages'];
+        if ($posCart->shipping_method_id) {
+            cartHelper()->setShippingMethod($posCart->shipping_method_id);
+            cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0])->id ?? null);
+        }
+
+        cartHelper()->updateData();
+
+        $discount = CurrencyHelper::formatPrice(cartHelper()->getDiscount());
+        $vat = CurrencyHelper::formatPrice(cartHelper()->getTax());
+        $vatPercentages = cartHelper()->getTaxPercentages();
         foreach ($vatPercentages as $key => $value) {
             $vatPercentages[$key] = CurrencyHelper::formatPrice($value);
         }
-        $subTotal = $checkoutData['subTotalFormatted'];
-        $total = $checkoutData['totalFormatted'];
-        $totalUnformatted = $checkoutData['total'];
+        $subTotal = CurrencyHelper::formatPrice(cartHelper()->getSubtotal());
+        $total = CurrencyHelper::formatPrice(cartHelper()->getTotal());
+        $totalUnformatted = cartHelper()->getTotal();
 
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
 
         foreach ($paymentMethods as &$paymentMethod) {
             $paymentMethod['image'] = $paymentMethod['image'] ? (mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '') : '';
         }
+
+        $shippingMethods = ShippingMethod::all();
+        foreach ($shippingMethods as $shippingMethod) {
+            $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
+            if (count($shippingMethod->shippingZone->zones) > 1) {
+                $shippingMethod->fullName .= ' (' . implode(', ', $shippingMethod->shippingZone->zones) . ')';
+            } else {
+                $shippingMethod->fullName .= ' (' . $shippingMethod->shippingZone->name . ')';
+            }
+
+            $costs = $shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null);
+            $shippingMethod->fullName .= ' ' . ($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
+        }
+
+        $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
+        $shippingCosts = $chosenShippingMethod ? $chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null) : null;
 
         return [
             'products' => $products ?? [],
@@ -230,8 +246,10 @@ class PointOfSaleApiController extends Controller
             'total' => $total ?? null,
             'totalUnformatted' => $totalUnformatted ?? null,
             'paymentMethods' => $paymentMethods ?? [],
-            'shippingCosts' => $checkoutData['shippingCostsFormatted'] ?? null,
-            'shippingCostsUnformatted' => $checkoutData['shippingCosts'] ?? null,
+            'shippingMethods' => $shippingMethods ?? null,
+            'shippingMethodId' => $chosenShippingMethod->id ?? null,
+            'shippingCosts' => CurrencyHelper::formatPrice($shippingCosts),
+            'shippingCostsUnformatted' => $shippingCosts,
             'success' => true,
         ];
     }
@@ -574,7 +592,8 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'success' => true,
-                'shippingMethod' => $shippingMethod,
+                'shippingMethodId' => $shippingMethod->id,
+                'shippingCosts' => CurrencyHelper::formatPrice($shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)),
             ]);
     }
 
@@ -619,14 +638,7 @@ class PointOfSaleApiController extends Controller
     public function createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId): array
     {
         $this->updateCart($cartInstance, $posCart->identifier);
-        //        ShoppingCart::setInstance($cartInstance);
-        //        \Cart::instance($cartInstance)->content();
-        $cartItems = ShoppingCart::cartItems($cartInstance);
-        //        ShoppingCart::removeInvalidItems(checkStock: false); //Dont have to check
-
-        $cartItems = ShoppingCart::cartItems($cartInstance);
-        $checkoutData = ShoppingCart::getCheckoutData(null, $paymentMethodId);
-
+        $cartItems = cartHelper()->getCartItems();
 
         if (! count($cartItems)) {
             return [
@@ -660,7 +672,7 @@ class PointOfSaleApiController extends Controller
             if (! $discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email)) {
+            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email, $cartInstance)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -717,11 +729,11 @@ class PointOfSaleApiController extends Controller
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $posCart->discount_code]);
-        $subTotal = ShoppingCart::subtotal(false, $shippingMethod->id ?? null, $paymentMethodId ?? null);
-        $discount = ShoppingCart::totalDiscount(false, $posCart->discount_code);
-        $btw = ShoppingCart::btw(false, true, $shippingMethod->id ?? null, $paymentMethodId ?? null);
-        $btwPercentages = ShoppingCart::btwPercentages(false, true, $shippingMethod->id ?? null, $paymentMethodId ?? null);
-        $total = ShoppingCart::total(false, true, $shippingMethod->id ?? null, $paymentMethodId ?? null);
+        $subTotal = cartHelper()->getSubtotal();
+        $discount = cartHelper()->getDiscount();
+        $btw = cartHelper()->getTax();
+        $btwPercentages = cartHelper()->getTaxPercentages();
+        $total = cartHelper()->getTotal();
         $shippingCosts = 0;
         $paymentCosts = 0;
 
@@ -1019,7 +1031,9 @@ class PointOfSaleApiController extends Controller
         $order->refresh();
 
         if ($order->isPaidFor()) {
-            POSHelper::finishPaidOrder($order, $posCart);
+            if (! $order->pos_order_handled) {
+                POSHelper::finishPaidOrder($order, $posCart);
+            }
 
             $orderPayment = $order->orderPayments()->where('status', 'paid')->first();
             $paymentMethod = $orderPayment->paymentMethod;
@@ -1101,9 +1115,9 @@ class PointOfSaleApiController extends Controller
             Cache::forget('pos_products');
         }
 
-        $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
+//        $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
             $products = Product::handOrderShowable()
-                ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price'])
+                ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status'])
                 ->get()
                 ->map(function ($product) {
                     $name = $product->getTranslation('name', app()->getLocale());
@@ -1113,7 +1127,7 @@ class PointOfSaleApiController extends Controller
                     return [
                         'id' => $product->id,
                         'name' => $name,
-                        'stock' => $product->stock(),
+                        'stock' => $product->directSellableStock(),
 //                        'image' => $image ? "data:image/png;base64,".base64_encode(file_get_contents($image)) : '',
                         'currentPrice' => $currentPrice,
                         'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
@@ -1122,8 +1136,8 @@ class PointOfSaleApiController extends Controller
                 })
                 ->toArray();
 
-            return $products;
-        });
+//            return $products;
+//        });
 
 
         return response()
@@ -1141,7 +1155,7 @@ class PointOfSaleApiController extends Controller
 
         foreach ($products as &$product) {
             $thisProduct = Product::find($product['id']);
-            $product['stock'] = $thisProduct->stock();
+            $product['stock'] = $thisProduct->directSellableStock();
             $product['image'] = $thisProduct->firstImage ? (mediaHelper()->getSingleMedia($thisProduct->firstImage, ['widen' => 300])->url ?? '') : '';
         }
 

@@ -71,6 +71,7 @@ class ProductResource extends Resource
             'short_description',
             'description',
             'search_terms',
+            'product_search_terms',
             'sku',
             'ean',
             'content',
@@ -125,8 +126,10 @@ class ProductResource extends Resource
                             }
                         }
 
+                        $record->bundleProducts()->detach($bundleProductIds);
                         $record->bundleProducts()->sync($bundleProductIds);
                     })
+                    ->reorderable()
                     ->name('Bundel producten')
                     ->reactive()
                     ->schema([
@@ -387,7 +390,7 @@ class ProductResource extends Resource
                     ->helperText('Mogelijke variablen: :name:, :categorie naam:')
                     ->rows(5)
                     ->maxLength(2500),
-                Textarea::make('search_terms')
+                Textarea::make('product_search_terms')
                     ->label('Zoekwoorden')
                     ->rows(2)
                     ->helperText('Vul hier termen in waar het product nog meer op gevonden moet kunnen worden')
@@ -526,8 +529,30 @@ class ProductResource extends Resource
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
+<<<<<<< HEAD
                     ->schema([
                         Section::make('Beheer de prijzen')->columnSpanFull()
+=======
+                    ->fillForm(function (Product $record) {
+                        return [
+                            'price' => $record->price,
+                            'new_price' => $record->new_price,
+                            'use_stock' => $record->use_stock,
+                            'limit_purchases_per_customer' => $record->limit_purchases_per_customer,
+                            'out_of_stock_sellable' => $record->out_of_stock_sellable,
+                            'low_stock_notification' => $record->low_stock_notification,
+                            'stock' => $record->stock,
+                            'expected_in_stock_date' => $record->expected_in_stock_date,
+                            'expected_delivery_in_days' => $record->expected_delivery_in_days,
+                            'low_stock_notification_limit' => $record->low_stock_notification_limit,
+                            'stock_status' => $record->stock_status,
+                            'limit_purchases_per_customer_limit' => $record->limit_purchases_per_customer_limit,
+                            'fulfillment_provider' => $record->fulfillment_provider,
+                        ];
+                    })
+                    ->form([
+                        Section::make('Beheer de prijzen')
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                             ->schema([
                                 TextInput::make('price')
                                     ->label('Prijs van het product')
@@ -549,8 +574,17 @@ class ProductResource extends Resource
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
+<<<<<<< HEAD
                         Section::make('Voorraad beheren')->columnSpanFull()
                             ->schema(Product::stockFilamentSchema()),
+=======
+                        Section::make('Voorraad beheren')
+                            ->schema(Product::stockFilamentSchema())
+                            ->columns([
+                                'default' => 1,
+                                'lg' => 2,
+                            ]),
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                     ])
                     ->action(function (Product $record, array $data): void {
                         foreach ($data as $key => $value) {

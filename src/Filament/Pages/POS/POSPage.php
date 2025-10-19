@@ -3,6 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
+<<<<<<< HEAD
+=======
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Filament\Forms\Get;
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Schemas\Schema;
@@ -49,7 +54,9 @@ class POSPage extends Component implements HasSchemas
         'quantity' => 1,
         'vat_rate' => 21,
     ];
-    public ?array $createDiscountData = [];
+    public ?array $createDiscountData = [
+        'type' => 'percentage'
+    ];
     public ?array $cancelOrderData = [];
     public ?array $customerData = [];
     public $cashPaymentAmount = null;
@@ -306,7 +313,9 @@ class POSPage extends Component implements HasSchemas
         $posCart->discount_code = $discountCode->code;
         $posCart->save();
 
-        $this->createDiscountData = [];
+        $this->createDiscountData = [
+            'type' => 'percentage'
+        ];
 
         $this->dispatch('discountCodeCreated', [
             'discountCode' => $discountCode->code,
@@ -352,11 +361,19 @@ class POSPage extends Component implements HasSchemas
                     ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('country')
+                Select::make('country')
                     ->label('Land')
+                    ->options(function(){
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->required()
                     ->nullable()
-                    ->maxLength(255)
                     ->lazy()
                     ->columnSpanFull(),
                 TextInput::make('company')
@@ -385,17 +402,28 @@ class POSPage extends Component implements HasSchemas
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('invoiceCountry')
+                Select::make('invoiceCountry')
                     ->label('Factuur land')
                     ->required(fn (Get $get) => $get('invoice_street'))
+                    ->options(function(){
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->nullable()
-                    ->maxLength(255)
                     ->columnSpanFull(),
                 Textarea::make('note')
                     ->label('Notitie')
                     ->nullable()
                     ->maxLength(5000)
                     ->columnSpanFull(),
+            ])
+            ->fill([
+                'country' => $this->country ?: Countries::getAllSelectedCountries()[0],
             ])
             ->columns(2);
     }
@@ -430,7 +458,13 @@ class POSPage extends Component implements HasSchemas
 
     public function render()
     {
-        return view('dashed-ecommerce-core::pos.pages.point-of-sale');
+        $view = 'dashed-ecommerce-core::pos.pages.point-of-sale';
+
+        if (view()->exists('dashed.pos.point-of-sale')) {
+            $view = 'dashed.pos.point-of-sale';
+        }
+
+        return view($view);
     }
 
     public function fullscreenValue($fullscreen)

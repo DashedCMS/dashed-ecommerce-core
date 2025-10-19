@@ -18,7 +18,12 @@ use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Filament\Actions\Concerns\InteractsWithActions;
+<<<<<<< HEAD
 use Filament\Schemas\Concerns\InteractsWithSchemas;
+=======
+use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
+use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 
 class CreateOrderLog extends Component implements HasSchemas, HasActions
 {
@@ -35,9 +40,43 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
 
     public function action(): Action
     {
+        $actions = [];
+
+        foreach (OrderLogTemplate::all() as $template) {
+            $actions[] = Action::make('template-' . $template->id)
+                ->label('Verstuur ' . $template->name)
+                ->color('warning')
+                ->action(function ($data, $action) use ($template) {
+                    $orderLog = new OrderLog();
+                    $orderLog->order_id = $this->order->id;
+                    $orderLog->user_id = Auth::user()->id;
+                    $orderLog->tag = 'order.note.created';
+                    $orderLog->note = OrderVariableReplacer::handle($this->order, $template->body);
+                    $orderLog->public_for_customer = 1;
+                    $orderLog->send_email_to_customer = 1;
+                    $orderLog->email_subject = OrderVariableReplacer::handle($this->order, $template->subject);
+                    $orderLog->images = [];
+                    $orderLog->save();
+
+                    try {
+                        Mail::to($this->order->email)->send(new OrderNoteMail($this->order, $orderLog));
+                    } catch (\Exception $exception) {
+                    }
+
+                    Notification::make()
+                        ->success()
+                        ->title('De template ' . $template->name . ' is verstuurd')
+                        ->send();
+
+                    $this->dispatch('refreshData');
+                    //                    $this->closeActionModal();
+                });
+        }
+
         return Action::make('action')
             ->label('Maak bestellings notitie')
             ->color('primary')
+            ->extraModalFooterActions($actions)
             ->fillForm(function ($record) {
                 return [
                     'emailSubject' => 'Je bestelling is bijgewerkt',

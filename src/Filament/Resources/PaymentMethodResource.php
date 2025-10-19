@@ -86,8 +86,7 @@ class PaymentMethodResource extends Resource
                 ->searchable()
                 ->preload(),
             Toggle::make('postpay')
-                ->label('Achteraf betaalmethode')
-                ->hidden(fn ($record) => $record && $record->psp == 'own'),
+                ->label('Achteraf betaalmethode'),
             Textarea::make('additional_info')
                 ->label('Aanvullende gegevens')
                 ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
@@ -122,6 +121,14 @@ class PaymentMethodResource extends Resource
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
                 ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
+            Select::make('users')
+                ->relationship('users')
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                ->multiple()
+                ->preload()
+                ->searchable()
+                ->label('Wie mag deze betaalmethode gebruiken?')
+            ->helperText('Leeg = iedereen mag deze betaalmethode gebruiken'),
         ];
 
         return $schema

@@ -75,6 +75,7 @@ class OrderProductsList extends Component implements HasSchemas
                                 }
                             }
 
+<<<<<<< HEAD
                             return new HtmlString($html);
                         })
                         ->size('xs'),
@@ -114,6 +115,48 @@ class OrderProductsList extends Component implements HasSchemas
                 ])
                 ->columns(5)
                 ->columnSpanFull();
+=======
+                                return new HtmlString($productExtras);
+                            })
+                            ->size('xs'),
+                        TextEntry::make('quantity')
+                            ->hiddenLabel()
+                            ->badge()
+                            ->color('primary')
+                            ->weight('bold')
+                            ->getStateUsing(fn () => $orderProduct->quantity)
+                            ->suffix('x'),
+                        TextEntry::make('preOrder')
+                            ->hiddenLabel()
+                            ->badge()
+                            ->color('warning')
+                            ->weight('bold')
+                            ->getStateUsing(fn () => 'Is pre-order')
+                            ->visible($orderProduct->is_pre_order),
+                        TextEntry::make('price')
+                            ->hiddenLabel()
+                            ->getStateUsing(fn () => $orderProduct->price)
+                            ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
+                            ->money('EUR'),
+                        TextEntry::make('fulfiller')
+                            ->hiddenLabel()
+                            ->visible((bool)$orderProduct->fulfillment_provider)
+                            ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
+                            ->badge()
+                            ->columnSpanFull()
+                            ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
+                        TextEntry::make('name')
+                            ->hiddenLabel()
+                            ->label(fn () => $orderProduct->name)
+                            ->visible(fn() => $orderProduct->product)
+                            ->getStateUsing(fn () => '<a class="hover:text-primary-500" target="_blank" href="' . ($orderProduct->product ? route('filament.dashed.resources.products.edit', $orderProduct->product) : '#') . '">' . 'Bekijk product' . '</a>')
+                            ->size('sm')
+                            ->columnSpanFull()
+                            ->html(),
+                    ])
+                    ->columns(5)
+                    ->columnSpanFull();
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
         }
 
         return $schema

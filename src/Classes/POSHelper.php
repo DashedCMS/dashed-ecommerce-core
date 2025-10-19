@@ -9,6 +9,17 @@ class POSHelper
 {
     public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled'): array
     {
+        $order->refresh();
+
+        if ($order->pos_order_handled) {
+            return [
+                'success' => true,
+            ];
+        }
+
+        $order->pos_order_handled = 1;
+        $order->save();
+
         $order->changeStatus($orderStatus);
         $order->changeFulfillmentStatus($fulfillmentStatus);
 

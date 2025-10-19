@@ -17,7 +17,15 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+<<<<<<< HEAD
 use Filament\Schemas\Components\Section;
+=======
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Dashed\DashedEcommerceCore\Models\ShippingZone;
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
@@ -50,7 +58,23 @@ class ShippingClassResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+<<<<<<< HEAD
         return $schema
+=======
+        $shippingZoneSchema = [];
+
+        foreach (ShippingZone::all() as $shippingZone) {
+            $shippingZoneSchema[] =
+                TextInput::make("price_shipping_zone_{$shippingZone->id}")
+                    ->label("Meerprijs voor verzending naar {$shippingZone->name}")
+                    ->prefix('€')
+                    ->minValue(1)
+                    ->maxValue(10000)
+                    ->numeric();
+        }
+
+        return $form
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
             ->schema([
                 Section::make('Globale informatie')->columnSpanFull()
                     ->schema([
@@ -62,8 +86,13 @@ class ShippingClassResource extends Resource
                     ])
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
+<<<<<<< HEAD
                 Section::make('Content')->columnSpanFull()
                     ->schema([
+=======
+                Section::make('Content')
+                    ->schema(array_merge(array_merge([
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                         TextInput::make('name')
                             ->label('Name')
                             ->required()
@@ -73,18 +102,13 @@ class ShippingClassResource extends Resource
                             ->helperText('Alleen intern gebruik')
                             ->rows(2)
                             ->maxLength(1250),
-                        TextInput::make("price")
-                            ->label("Meerprijs voor verzending indien")
-                            ->required()
-                            ->minValue(1)
-                            ->maxValue(10000)
-                            ->numeric(),
+                    ], $shippingZoneSchema), [
                         Toggle::make("count_per_product")
                             ->label("Tel de meerprijs per product in de winkelwagen")
                             ->helperText('Als iemand dus 3x hetzelfde product besteld met deze verzendklas, wordt de meerprijs 3x geteld.'),
                         Toggle::make("count_once")
                             ->label("Tel de meerprijs maximaal 1x in de winkelwagen"),
-                    ]),
+                    ])),
             ]);
     }
 

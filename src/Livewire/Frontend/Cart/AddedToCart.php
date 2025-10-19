@@ -31,6 +31,7 @@ class AddedToCart extends Component
 
     public function productAddedToCart(Product $product)
     {
+        cartHelper()->initialize();
         $this->showCartPopup = true;
 
         if ($this->product && $this->crossSellProducts && in_array($product->id, $this->crossSellProducts->pluck('id')->toArray())) {
@@ -39,7 +40,7 @@ class AddedToCart extends Component
             $this->product = $product;
             $this->crossSellProducts = $product->getCrossSellProducts(true, true);
         }
-        $this->cartTotal = ShoppingCart::total();
+        $this->cartTotal = cartHelper()->getTotal();
         $freeShippingMethod = ShippingMethod::where('sort', 'free_delivery')->first();
         $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
         $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;

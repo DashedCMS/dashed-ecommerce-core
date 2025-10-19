@@ -242,9 +242,10 @@ class DiscountCode extends Model
         }
     }
 
-    public function isValidForCart($email = null): bool
+    public function isValidForCart($email = null, ?string $cartType = 'default'): bool
     {
-        $itemsInCart = ShoppingCart::cartItems();
+        cartHelper()->initialize($cartType);
+        $itemsInCart = cartHelper()->getCartItems();
 
         if ($this->use_stock && $this->stock() < 1) {
             return false;

@@ -77,6 +77,9 @@ class UpdateProductInformationJob implements ShouldQueue
                 $product->indexable = 0;
             }
             $product->site_ids = $this->productGroup->site_ids;
+            foreach (Locales::getLocalesArray() as $locale => $localeName) {
+                $product->setTranslation('search_terms', $locale, $this->productGroup->getTranslation('search_terms', $locale) . ' ' . $product->getTranslation('search_terms', $locale));
+            }
             $product->saveQuietly();
 
             if ($product->is_bundle) {

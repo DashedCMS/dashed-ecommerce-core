@@ -2,6 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+<<<<<<< HEAD
+=======
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Filament\Forms\Get;
+use Filament\Forms\Form;
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Resources\Pages\Page;
@@ -132,11 +138,19 @@ class CreateOrder extends Page implements HasSchemas
                     ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('country')
+                Select::make('country')
                     ->label('Land')
+                    ->options(function () {
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->required()
                     ->nullable()
-                    ->maxLength(255)
                     ->lazy(),
                 TextInput::make('company_name')
                     ->label('Bedrijfsnaam')
@@ -164,11 +178,19 @@ class CreateOrder extends Page implements HasSchemas
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
-                TextInput::make('invoice_country')
+                Select::make('invoice_country')
                     ->label('Factuur land')
                     ->required(fn (Get $get) => $get('invoice_street'))
-                    ->nullable()
-                    ->maxLength(255),
+                    ->options(function(){
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
+                    ->nullable(),
             ])
             ->columns(2);
 
@@ -267,7 +289,7 @@ class CreateOrder extends Page implements HasSchemas
                 Select::make('shipping_method_id')
                     ->label('Verzendmethode')
                     ->options(function () {
-                        return collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray();
+                        return collect(ShoppingCart::getAllShippingMethods($this->country, true))->pluck('correctName', 'id')->toArray();
                     }),
             ]);
 
@@ -297,7 +319,15 @@ BLADE
                 ))),
         ];
 
+<<<<<<< HEAD
         return $schema->schema($newSchema);
+=======
+        return $form
+            ->fill([
+                'country' => Countries::getAllSelectedCountries()[0],
+            ])
+            ->schema($schema);
+>>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
     }
 
     public function submit()

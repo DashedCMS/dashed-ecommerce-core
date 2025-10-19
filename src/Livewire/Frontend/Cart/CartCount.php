@@ -23,7 +23,7 @@ class CartCount extends Component
 
     public function refreshCart()
     {
-        ShoppingCart::setInstance($this->cartType);
+        cartHelper()->setCartType($this->cartType);
         $this->cartCount = Cart::count();
     }
 

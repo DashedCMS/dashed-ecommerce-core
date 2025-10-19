@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -49,6 +50,7 @@ class Product extends Model
         'short_description',
         'description',
         'search_terms',
+        'product_search_terms',
         'content',
         'images',
     ];
@@ -120,6 +122,71 @@ class Product extends Model
     }
 
     public function scopeSearch($query, ?string $search = null)
+    {
+        $minPrice = request('min-price');
+        $maxPrice = request('max-price');
+        $search   = request('search', $search);
+
+        if ($minPrice !== null) {
+            $query->where('price', '>=', $minPrice);
+        }
+        if ($maxPrice !== null) {
+            $query->where('price', '<=', $maxPrice);
+        }
+
+        if (! filled($search)) {
+            return $query;
+        }
+
+        $needle = trim(mb_strtolower($search));
+
+        // Kolommen in de volgorde die jij belangrijk vindt
+        $columns = collect(self::getTranslatableAttributes())
+            ->reject(fn ($attr) => method_exists($this, $attr)) // sla relaties over
+            ->values()
+            ->all();
+
+        // 1) Waar-voorwaarden (zoals je al deed)
+        $query->where(function ($q) use ($columns, $needle, $search) {
+            foreach ($columns as $i => $col) {
+                $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
+                $q->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
+            }
+
+            $q->orWhere('sku', $search)
+                ->orWhere('ean', $search)
+                ->orWhere('article_code', $search);
+        });
+
+        // 2) Relevance score opbouwen in de exacte volgorde van $columns
+        //    Exacte matches op sku/ean/article_code krijgen de hoogste weging.
+        $cases    = [];
+        $bindings = [];
+
+        // Hoge weging voor exacte matches
+        $topWeight = count($columns) + 10;
+        foreach (['sku', 'ean', 'article_code'] as $exactField) {
+            $cases[]    = "CASE WHEN {$exactField} = ? THEN {$topWeight} ELSE 0 END";
+            $bindings[] = $search;
+        }
+
+        // Afnemende weging per kolom in jouw volgorde
+        foreach ($columns as $idx => $col) {
+            $weight      = count($columns) - $idx; // eerste kolom = hoogste weight
+            $cases[]     = "CASE WHEN LOWER(`{$col}`) LIKE ? THEN {$weight} ELSE 0 END";
+            $bindings[]  = "%{$needle}%";
+        }
+
+        // Relevance select + sortering
+        $query->select($query->getQuery()->columns ?? ['*'])
+            ->selectRaw('(' . implode(' + ', $cases) . ') as relevance', $bindings)
+            ->orderByDesc('relevance');
+
+        return $query;
+    }
+
+
+    public function scopeSearchOld($query, ?string $search = null)
     {
         $minPrice = request()->get('min-price') ? request()->get('min-price') : null;
         $maxPrice = request()->get('max-price') ? request()->get('max-price') : null;
@@ -493,10 +560,11 @@ class Product extends Model
         return false;
     }
 
-    public function directSellableStock()
+    public function directSellableStock($skipReservedStock = false)
     {
+        return $this->stock;
         if ($this->use_stock) {
-            return $this->stock - $this->reservedStock();
+            return $this->stock - ($skipReservedStock ? 0 : $this->reservedStock());
 
             return $this->stock();
         } else {
@@ -835,6 +903,56 @@ class Product extends Model
                 }
             }
 
+            if ($this->weight) {
+                $characteristics[] = [
+                    'name' => Translation::get('weight', 'characteristics', 'Gewicht'),
+                    'value' => Translation::get('weight-in-kg', 'characteristics', ':weight: kg', 'text', [
+                        'weight' => $this->weight,
+                    ]),
+                ];
+            }
+
+            if ($this->width) {
+                $characteristics[] = [
+                    'name' => Translation::get('width', 'characteristics', 'Breedte'),
+                    'value' => Translation::get('width-in-cm', 'characteristics', ':width: CM', 'text', [
+                        'width' => $this->width,
+                    ]),
+                ];
+            }
+
+            if ($this->length) {
+                $characteristics[] = [
+                    'name' => Translation::get('length', 'characteristics', 'Lengte'),
+                    'value' => Translation::get('length-in-cm', 'characteristics', ':length: CM', 'text', [
+                        'length' => $this->length,
+                    ]),
+                ];
+            }
+
+            if ($this->height) {
+                $characteristics[] = [
+                    'name' => Translation::get('height', 'characteristics', 'Hoogte'),
+                    'value' => Translation::get('height-in-cm', 'characteristics', ':height: CM', 'text', [
+                        'height' => $this->height,
+                    ]),
+                ];
+            }
+
+            if ($this->sku) {
+                $characteristics[] = [
+                    'name' => Translation::get('sku', 'characteristics', 'SKU'),
+                    'value' => $this->sku,
+                ];
+            }
+
+            if ($this->ean) {
+                $characteristics[] = [
+                    'name' => Translation::get('ean', 'characteristics', 'EAN'),
+                    'value' => $this->ean,
+                ];
+            }
+
             return $characteristics;
         });
     }
@@ -938,7 +1056,7 @@ class Product extends Model
         }
 
         if ($removeIfAlreadyInCart) {
-            foreach (ShoppingCart::cartItems() as $cartItem) {
+            foreach (cartHelper()->getCartItems() as $cartItem) {
                 if ($cartItem->model && in_array($cartItem->model->id, $crossSellProductsIds)) {
                     $crossSellProductsIds = array_diff($crossSellProductsIds, [$cartItem->model->id]);
                 }
@@ -1150,7 +1268,7 @@ class Product extends Model
     public static function returnForRoute(): array
     {
         return [
-            'livewireComponent' => ShowProduct::class,
+            'livewireComponent' => cms()->class('showProduct') ?: ShowProduct::class,
         ];
     }
 
@@ -1277,5 +1395,10 @@ class Product extends Model
         }
 
         return $content;
+    }
+
+    public function disabledShippingMethods(): BelongsToMany
+    {
+        return $this->belongsToMany(ShippingMethod::class, 'dashed__shipping_method_disabled_products', 'product_id', 'shipping_method_id');
     }
 }

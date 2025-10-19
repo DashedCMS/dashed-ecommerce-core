@@ -18,7 +18,7 @@ class OrderFulfillmentStatusChangedMail extends Mailable
     public function __construct(Order $order, string $subject, string $notification)
     {
         $this->notification = OrderVariableReplacer::handle($order, $notification);
-        $this->subject = $subject;
+        $this->subject = OrderVariableReplacer::handle($order, $subject);
         $this->order = $order;
     }
 
