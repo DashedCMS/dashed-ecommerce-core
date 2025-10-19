@@ -637,6 +637,80 @@ class ShoppingCart
         return [];
     }
 
+    public static function getAllShippingMethods($countryName)
+    {
+
+        $shippingZones = ShippingZone::get();
+        foreach ($shippingZones as $shippingZone) {
+            $shippingZoneIsActive = false;
+            foreach ($shippingZone->zones as $zone) {
+                foreach (Countries::getCountries() as $country) {
+                    if ($country['name'] == $zone) {
+                        if (strtolower($country['name']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+                            $shippingZoneIsActive = true;
+                        }
+                        foreach ($country['altSpellings'] as $altSpelling) {
+                            if (strlen($countryName) > 5) {
+                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+                                    $shippingZoneIsActive = true;
+                                }
+                            } else {
+                                if (strtolower($altSpelling) == strtolower($countryName)) {
+                                    $shippingZoneIsActive = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+                $searchFields = explode(',', $shippingZone->search_fields);
+                foreach ($searchFields as $searchField) {
+                    $searchField = trim($searchField);
+                    if (strtolower($searchField) == strtolower($countryName)) {
+                        $shippingZoneIsActive = true;
+                    }
+                }
+            }
+
+            if ($shippingZoneIsActive) {
+                $shippingMethods = $shippingZone->shippingMethods()
+                    ->orderBy('order', 'ASC')
+                    ->get();
+
+                foreach ($shippingMethods as $key => $shippingMethod) {
+                    $shippingMethod->correctName = $shippingMethod->getTranslation('name', app()->getLocale()) . ' (' . $shippingZone->name . ')';
+                    $shippingMethod->shippingZoneId = $shippingZone->id;
+                    $costs = $shippingMethod->costsForCart($shippingZone->id);
+                    $shippingMethod->activatedShippingClasses = $shippingMethod->getActivatedShippingClasses($shippingZone->id);
+
+                    $shippingMethod->costs = $costs;
+                    if ($shippingMethod->costs == 0) {
+                        $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');
+                    } elseif ($shippingMethod->costs > 0 && $shippingMethod->sort == 'free_delivery') {
+                        unset($shippingMethods[$key]);
+                    } else {
+                        $shippingMethod->costsFormatted = CurrencyHelper::formatPrice($costs);
+                    }
+                }
+
+                return $shippingMethods;
+            }
+        }
+
+        return [];
+    }
+
     public static function getAvailablePaymentMethods($countryName, ?int $userId = null)
     {
         $paymentMethods = self::getPaymentMethods(userId: $userId);
@@ -768,7 +842,7 @@ class ShoppingCart
 
             $paymentMethodValid = true;
 
-            if (DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->where('user_id', $userId ?: (auth()->check() ? auth()->user()->id : 0))->count() == 0){
+            if (DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->where('user_id', $userId ?: (auth()->check() ? auth()->user()->id : 0))->count() == 0) {
                 $paymentMethodValid = false;
             }
 

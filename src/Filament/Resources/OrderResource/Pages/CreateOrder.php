@@ -284,7 +284,7 @@ class CreateOrder extends Page implements HasForms
                 Select::make('shipping_method_id')
                     ->label('Verzendmethode')
                     ->options(function () {
-                        return collect(ShoppingCart::getAvailableShippingMethods($this->country, true))->pluck('name', 'id')->toArray();
+                        return collect(ShoppingCart::getAllShippingMethods($this->country, true))->pluck('correctName', 'id')->toArray();
                     }),
             ]);
 

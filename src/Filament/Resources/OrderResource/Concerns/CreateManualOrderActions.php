@@ -275,7 +275,8 @@ trait CreateManualOrderActions
             }
         }
 
-        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        $shippingMethods = ShoppingCart::getAllShippingMethods($this->country);
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
             if ($thisShippingMethod['id'] == $this->shipping_method_id) {
@@ -361,7 +362,8 @@ trait CreateManualOrderActions
         //            return;
         //        }
 
-        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+//        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        $shippingMethods = ShoppingCart::getAllShippingMethods($this->country);
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
             if ($thisShippingMethod['id'] == $this->shipping_method_id) {
