@@ -2,14 +2,29 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Widgets\Concerns\InteractsWithfilters;
+use Dashed\DashedEcommerceCore\Filament\Pages\Dashboard\Dashboard;
 
 class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 {
-    protected int | string | array $columnSpan = 'full';
-    protected static ?string $maxHeight = '300px';
+    //    use InteractsWithfilters;
+
+    protected int|string|array $columnSpan = 'full';
+    protected ?string $maxHeight = '300px';
+    public ?array $filters = [];
+
+    protected $listeners = [
+        'setPageFiltersData',
+    ];
+
+    public function mount(): void
+    {
+        $this->filters = Dashboard::getStartData();
+    }
 
     public function getHeading(): string
     {
@@ -18,23 +33,39 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 
     protected function getData(): array
     {
-        $statistics = Cache::remember('monthly-revenue-and-return-line-chart-stats', 60 * 60, function () {
-            $statistics = [];
+        //        $statistics = Cache::remember('monthly-revenue-and-return-line-chart-stats', 60 * 60, function () {
+        $statistics = [];
 
-            $monthDate = now()->subMonth();
-            while ($monthDate < now()) {
-                $data = number_format(Order::where('created_at', '>=', $monthDate->copy()->startOfDay())->where('created_at', '<=', $monthDate->copy()->endOfDay())->isPaid()->sum('total'), 2, '.', '');
-                $returnData = number_format(Order::where('created_at', '>=', $monthDate->copy()->startOfDay())->where('created_at', '<=', $monthDate->copy()->endOfDay())->isReturn()->sum('total'), 2, '.', '');
-                $combinedData = number_format($data + $returnData, 2, '.', '');
-                $statistics['data'][] = $data;
-                $statistics['returnData'][] = $returnData;
-                $statistics['combinedData'][] = $combinedData;
-                $statistics['labels'][] = $monthDate->format('d-m-Y');
-                $monthDate->addDay();
-            }
+        $startDate = $this->filters['startDate'] ? Carbon::parse($this->filters['startDate']) : now()->subMonth();
+        $endDate = $this->filters['endDate'] ? Carbon::parse($this->filters['endDate']) : now();
 
-            return $statistics;
-        });
+        if ($this->filters['steps'] == 'per_day') {
+            $startFormat = 'startOfDay';
+            $endFormat = 'endOfDay';
+            $addFormat = 'addDay';
+        } elseif ($this->filters['steps'] == 'per_week') {
+            $startFormat = 'startOfWeek';
+            $endFormat = 'endOfWeek';
+            $addFormat = 'addWeek';
+        } elseif ($this->filters['steps'] == 'per_month') {
+            $startFormat = 'startOfMonth';
+            $endFormat = 'endOfMonth';
+            $addFormat = 'addMonth';
+        }
+
+        while ($startDate < $endDate) {
+            $data = number_format(Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->sum('total'), 2, '.', '');
+            $returnData = number_format(Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isReturn()->sum('total'), 2, '.', '');
+            $combinedData = number_format($data + $returnData, 2, '.', '');
+            $statistics['data'][] = $data;
+            $statistics['returnData'][] = $returnData;
+            $statistics['combinedData'][] = $combinedData;
+            $statistics['labels'][] = $startDate->format('d-m-Y');
+            $startDate->$addFormat();
+        }
+
+        //            return $statistics;
+        //        });
 
         return [
             'datasets' => [
@@ -64,5 +95,10 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
     protected function getType(): string
     {
         return 'line';
+    }
+
+    public function setPageFiltersData($data)
+    {
+        $this->filters = $data;
     }
 }

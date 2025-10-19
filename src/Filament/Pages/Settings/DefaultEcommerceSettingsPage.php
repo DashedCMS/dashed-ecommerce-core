@@ -2,24 +2,27 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Tabs;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Tabs\Tab;
+use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
 
 class DefaultEcommerceSettingsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-report';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-report';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Facturatie instellingen';
-    protected static ?string $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Overige';
     protected static ?string $title = 'Facturatie instellingen';
 
-    protected static string $view = 'dashed-core::settings.pages.default-settings';
+    protected string $view = 'dashed-core::settings.pages.default-settings';
 
     public array $data = [];
 
@@ -36,14 +39,14 @@ class DefaultEcommerceSettingsPage extends Page
         $this->form->fill($formData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $sites = Sites::getSites();
         $tabGroups = [];
 
         $tabs = [];
         foreach ($sites as $site) {
-            $schema = [
+            $newSchema = [
                 TextInput::make("google_merchant_center_id_{$site['id']}")
                     ->label('Google Merchant Center ID')
                     ->columnSpanFull(),
@@ -57,7 +60,7 @@ class DefaultEcommerceSettingsPage extends Page
 
             $tabs[] = Tab::make($site['id'])
                 ->label(ucfirst($site['name']))
-                ->schema($schema)
+                ->schema($newSchema)
                 ->columns([
                     'default' => 1,
                     'lg' => 2,
@@ -66,12 +69,8 @@ class DefaultEcommerceSettingsPage extends Page
         $tabGroups[] = Tabs::make('Sites')
             ->tabs($tabs);
 
-        return $tabGroups;
-    }
-
-    public function getFormStatePath(): ?string
-    {
-        return 'data';
+        return $schema->schema($tabGroups)
+            ->statePath('data');
     }
 
     public function submit()

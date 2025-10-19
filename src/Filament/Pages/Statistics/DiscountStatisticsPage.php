@@ -2,10 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
+use UnitEnum;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -19,13 +22,13 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
 
 class DiscountStatisticsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Korting statistieken';
-    protected static ?string $navigationGroup = 'Statistics';
+    protected static string | UnitEnum | null $navigationGroup = 'Statistics';
     protected static ?string $title = 'Korting statistieken';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'dashed-ecommerce-core::statistics.pages.discount-statistics';
+    protected string $view = 'dashed-ecommerce-core::statistics.pages.discount-statistics';
 
     public $discountCode;
     public $status;
@@ -131,7 +134,7 @@ class DiscountStatisticsPage extends Page
         $this->dispatch('updateGraphData', $graphData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $paymentMethods = [];
         foreach (PaymentMethod::get() as $paymentMethod) {
@@ -147,8 +150,8 @@ class DiscountStatisticsPage extends Page
             $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
         }
 
-        return [
-            Section::make()
+        return $schema->schema([
+            Section::make()->columnSpanFull()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
@@ -181,7 +184,7 @@ class DiscountStatisticsPage extends Page
                     'default' => 1,
                     'lg' => 4,
                 ]),
-        ];
+        ]);
     }
 
     protected function getFooterWidgets(): array

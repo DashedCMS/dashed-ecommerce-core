@@ -6,19 +6,19 @@ use Livewire\Component;
 use Filament\Actions\Action;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class CreateTrackAndTrace extends Component implements HasForms, HasActions
+class CreateTrackAndTrace extends Component implements HasSchemas, HasActions
 {
     use WithFileUploads;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithActions;
 
     public Order $order;
@@ -33,7 +33,7 @@ class CreateTrackAndTrace extends Component implements HasForms, HasActions
         return Action::make('action')
             ->label('Voeg track and trace toe')
             ->color('primary')
-            ->form([
+            ->schema([
                 TextInput::make('delivery_company')
                     ->label('Vervoersbedrijf')
                     ->required(),

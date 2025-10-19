@@ -3,21 +3,18 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Infolists\Infolist;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\Fieldset;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Infolists\Components\KeyValueEntry;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class PaymentInformationList extends Component implements HasForms, HasInfolists
+class PaymentInformationList extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-    use InteractsWithInfolists;
+    use InteractsWithSchemas;
 
     public Order $order;
 
@@ -30,78 +27,97 @@ class PaymentInformationList extends Component implements HasForms, HasInfolists
         $this->order = $order;
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
         $customOrderFields = [];
 
         foreach ($this->order->customOrderFields() as $label => $value) {
-            $customOrderFields[] = TextEntry::make(str($label)->slug())
-                ->label($label)
-                ->getStateUsing(fn ($record) => $value);
+            // Unieke key per veld
+            $key = 'custom_' . md5($label);
+            $customOrderFields[] = TextEntry::make($key)
+                ->state($label)
+                ->state(fn () => $value);
         }
 
-        return $infolist
+        return $schema
             ->record($this->order)
-            ->schema([
-                Fieldset::make('Betaal informatie')
+            ->components([
+                Fieldset::make('payment_info')->columnSpanFull()
+                    ->label('Betaal informatie')
                     ->schema([
                         TextEntry::make('order_origin')
-                            ->label('Bestellingsherkomst'),
+                            ->state('Bestellingsherkomst'),
+
                         TextEntry::make('ip')
-                            ->label('IP'),
+                            ->state('IP'),
+
                         TextEntry::make('note')
-                            ->label('Notitie')
-                            ->getStateUsing(fn ($record) => $record->note ?: 'Geen notitie'),
+                            ->state('Notitie')
+                            ->state(fn (Order $record) => $record->note ?: 'Geen notitie'),
+
                         IconEntry::make('marketing')
-                            ->label('Marketing geaccepteerd')
+                            ->state('Marketing geaccepteerd')
                             ->trueIcon('heroicon-o-check-circle')
                             ->falseIcon('heroicon-o-x-circle'),
+
                         TextEntry::make('invoice_id')
-                            ->label('Factuur ID'),
-                        TextEntry::make('paymentMethod')
-                            ->label('Betalingsmethode')
-                            ->getStateUsing(fn ($record) => $record->paymentMethod ?? 'Niet gevonden'),
+                            ->state('Factuur ID'),
+
+                        TextEntry::make('payment_method_name')
+                            ->state('Betalingsmethode')
+                            ->state(fn (Order $record) => $record->paymentMethod?->name ?? 'Niet gevonden'),
+
                         TextEntry::make('psp')
-                            ->label('PSP')
-                            ->visible(fn ($record) => $record->psp),
+                            ->state('PSP')
+                            ->visible(fn (Order $record) => (bool) $record->psp),
+
                         TextEntry::make('psp_id')
-                            ->label('PSP ID')
-                            ->visible(fn ($record) => $record->psp),
-                        TextEntry::make('order_origin')
-                            ->label('Verzendmethode')
-                            ->getStateUsing(fn ($record) => $record->shippingMethod->name ?? 'Niet gevonden'),
+                            ->state('PSP ID')
+                            ->visible(fn (Order $record) => (bool) $record->psp),
+
+                        TextEntry::make('shipping_method_name')
+                            ->state('Verzendmethode')
+                            ->state(fn (Order $record) => $record->shippingMethod->name ?? 'Niet gevonden'),
+
                         TextEntry::make('subtotal')
-                            ->label('Subtotaal')
+                            ->state('Subtotaal')
                             ->money('EUR'),
+
                         TextEntry::make('discount')
-                            ->label('Korting')
+                            ->state('Korting')
                             ->money('EUR'),
+
                         TextEntry::make('discountCode.code')
-                            ->label('Kortingscode')
-                            ->visible(fn ($record) => $record->discountCode),
+                            ->state('Kortingscode')
+                            ->visible(fn (Order $record) => (bool) $record->discountCode),
+
                         TextEntry::make('btw')
-                            ->label('BTW')
+                            ->state('BTW')
                             ->money('EUR'),
+
                         KeyValueEntry::make('vat_percentages')
-                            ->label('BTW percentages')
+                            ->state('BTW percentages')
                             ->keyLabel('Percentage')
                             ->valueLabel('Bedrag')
-                            ->getStateUsing(function ($record) {
+                            ->state(function (Order $record) {
                                 $vatPercentages = [];
-                                foreach ($record->vat_percentages ?: [] as $key => $vatPercentage) {
-                                    $vatPercentages[number_format($key, 0) . '%'] = '€' . number_format($vatPercentage, 2, ',', '.');
+                                foreach ($record->vat_percentages ?: [] as $key => $amount) {
+                                    $vatPercentages[number_format((float) $key, 0) . '%'] = '€' . number_format((float) $amount, 2, ',', '.');
                                 }
 
                                 return $vatPercentages;
                             }),
+
                         TextEntry::make('total')
-                            ->label('Totaal')
+                            ->state('Totaal')
                             ->money('EUR'),
                     ])
                     ->columns(4),
-                Fieldset::make('Extra informatie')
+
+                Fieldset::make('extra_info')->columnSpanFull()
+                    ->label('Extra informatie')
                     ->schema($customOrderFields)
-                    ->visible(count($customOrderFields))
+                    ->visible(count($customOrderFields) > 0)
                     ->columns(4),
             ]);
     }

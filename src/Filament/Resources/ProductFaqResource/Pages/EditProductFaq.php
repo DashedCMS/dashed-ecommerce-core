@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages;
 
 use Filament\Actions\DeleteAction;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\EditRecord\Concerns\Translatable;
 
 class EditProductFaq extends EditRecord
 {

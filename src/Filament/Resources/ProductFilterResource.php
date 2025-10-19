@@ -2,23 +2,25 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;
@@ -33,8 +35,8 @@ class ProductFilterResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'Producten';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string | UnitEnum | null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product filters';
     protected static ?string $label = 'Product filter';
     protected static ?string $pluralLabel = 'Product filters';
@@ -47,11 +49,11 @@ class ProductFilterResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema(array_merge([
-                Section::make('Content')
+                Section::make('Content')->columnSpanFull()
                     ->schema(array_merge([
                         Toggle::make('hide_filter_on_overview_page')
                             ->label('Moet deze filter verborgen worden op de overzichts pagina van de producten?'),
@@ -95,12 +97,12 @@ class ProductFilterResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

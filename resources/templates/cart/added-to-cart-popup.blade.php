@@ -1,4 +1,4 @@
-<div class="relative z-[100]" role="dialog" aria-modal="true" x-data="{ showCartPopup: @entangle('showCartPopup') }"
+<div class="relative z-100" role="dialog" aria-modal="true" x-data="{ showCartPopup: @entangle('showCartPopup') }"
      x-show="showCartPopup" x-cloak
      @keydown.window.escape="showCartPopup = false">
     <div class="fixed inset-0 bg-black bg-opacity-25 pointer-events-none" aria-hidden="true" x-show="showCartPopup"

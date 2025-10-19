@@ -2,11 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
+use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 
 class ListProductGroups extends ListRecords
 {
@@ -14,7 +15,7 @@ class ListProductGroups extends ListRecords
 
     protected static string $resource = ProductGroupResource::class;
 
-    protected ?string $maxContentWidth = 'full';
+    protected Width | string | null $maxContentWidth = 'full';
 
     protected function getHeaderActions(): array
     {

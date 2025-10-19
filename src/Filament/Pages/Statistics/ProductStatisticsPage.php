@@ -2,12 +2,15 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
+use UnitEnum;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use Dashed\DashedCore\Classes\Locales;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -21,13 +24,13 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
 
 class ProductStatisticsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Product statistieken';
-    protected static ?string $navigationGroup = 'Statistics';
+    protected static string | UnitEnum | null $navigationGroup = 'Statistics';
     protected static ?string $title = 'Product statistieken';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'dashed-ecommerce-core::statistics.pages.product-statistics';
+    protected string $view = 'dashed-ecommerce-core::statistics.pages.product-statistics';
 
     public $search;
     public $startDate;
@@ -133,7 +136,7 @@ class ProductStatisticsPage extends Page
         $this->graphData = $graphData;
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $paymentMethods = [];
         foreach (PaymentMethod::get() as $paymentMethod) {
@@ -149,8 +152,9 @@ class ProductStatisticsPage extends Page
             $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
         }
 
-        return [
+        return $schema->schema([
             Section::make()
+                ->columnSpanFull()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
@@ -180,7 +184,7 @@ class ProductStatisticsPage extends Page
                     'default' => 1,
                     'lg' => 4,
                 ]),
-        ];
+        ]);
     }
 
     protected function getFooterWidgets(): array

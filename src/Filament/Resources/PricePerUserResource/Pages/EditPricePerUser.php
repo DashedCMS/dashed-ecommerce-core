@@ -44,7 +44,7 @@ class EditPricePerUser extends EditRecord
             Action::make('importProducts')
                 ->label('Producten')
                 ->icon('heroicon-s-arrow-up-tray')
-                ->form([
+                ->schema([
                     FileUpload::make('file')
                         ->label('Bestand')
                         ->disk('local')
@@ -80,7 +80,7 @@ class EditPricePerUser extends EditRecord
             Action::make('import')
                 ->label('Categorieen')
                 ->icon('heroicon-s-arrow-up-tray')
-                ->form([
+                ->schema([
                     FileUpload::make('file')
                         ->label('Bestand')
                         ->disk('local')

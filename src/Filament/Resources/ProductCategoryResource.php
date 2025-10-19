@@ -2,21 +2,23 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\EditProductCategory;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\ListProductCategory;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages\CreateProductCategory;
@@ -31,8 +33,8 @@ class ProductCategoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'Producten';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string | UnitEnum | null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product categorieën';
     protected static ?string $label = 'Product categorie';
     protected static ?string $pluralLabel = 'Product categorieën';
@@ -45,11 +47,11 @@ class ProductCategoryResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Section::make('Content')
+                Section::make('Content')->columnSpanFull()
                     ->schema(array_merge([
                         TextInput::make('name')
                             ->label('Naam')
@@ -65,8 +67,10 @@ class ProductCategoryResource extends Resource
                     ], static::customBlocksTab('productCategoryBlocks')))
                     ->columns(2),
                 Section::make('Algemene informatie')
+                    ->columnSpanFull()
                     ->schema(static::publishTab()),
                 Section::make('Meta data')
+                    ->columnSpanFull()
                     ->schema(static::metadataTab()),
             ]);
     }
@@ -79,12 +83,12 @@ class ProductCategoryResource extends Resource
                     ->label('Naam')
                     ->searchable(query: SearchQuery::make()),
             ], static::visitableTableColumns()))
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

@@ -170,7 +170,7 @@
                                                 class="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
                                                 id="menu-button" aria-expanded="false" aria-haspopup="true">
                                             {{Translation::get('filter-by', 'products', 'Sorteren')}}
-                                            <svg class="-mr-1 ml-1 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
+                                            <svg class="-mr-1 ml-1 h-5 w-5 shrink-0 text-gray-400 group-hover:text-gray-500"
                                                  viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
                                                  data-slot="icon">
                                                 <path fill-rule="evenodd"

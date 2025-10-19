@@ -4,18 +4,18 @@ namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
 use Filament\Actions\Action;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class SendOrderConfirmationToEmail extends Component implements HasForms, HasActions
+class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasActions
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithActions;
 
     public Order $order;
@@ -35,7 +35,7 @@ class SendOrderConfirmationToEmail extends Component implements HasForms, HasAct
                     'email' => $this->order->email,
                 ];
             })
-            ->form([
+            ->schema([
                 TextInput::make('email')
                     ->label('Bestel bevestiging versturen naar')
                     ->required()

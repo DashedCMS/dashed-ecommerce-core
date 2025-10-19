@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\CreateRecord\Concerns\Translatable;
 
 class CreateShippingClass extends CreateRecord
 {

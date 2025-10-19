@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource\Pages;
 
 use Filament\Actions\CreateAction;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 
 class ListProductCategory extends ListRecords
 {

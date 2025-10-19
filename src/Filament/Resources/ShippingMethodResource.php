@@ -2,25 +2,27 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Radio;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;
@@ -34,8 +36,8 @@ class ShippingMethodResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $navigationIcon = 'heroicon-o-truck';
-    protected static ?string $navigationGroup = 'Content';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-truck';
+    protected static string | UnitEnum | null $navigationGroup = 'Content';
     protected static ?string $navigationLabel = 'Verzendmethodes';
     protected static ?string $label = 'Verzendmethode';
     protected static ?string $pluralLabel = 'Verzendmethodes';
@@ -47,10 +49,10 @@ class ShippingMethodResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        $schema = [
-            Section::make('Globale informatie')
+        $newSchema = [
+            Section::make('Globale informatie')->columnSpanFull()
                 ->schema([
                     Select::make('shipping_zone_id')
                         ->relationship('shippingZone', 'name')
@@ -59,7 +61,7 @@ class ShippingMethodResource extends Resource
                         ->required(),
                 ])
                 ->collapsed(fn ($livewire) => $livewire instanceof EditShippingMethod),
-            Section::make('Content')
+            Section::make('Content')->columnSpanFull()
                 ->schema([
                     TextInput::make('name')
                         ->label('Name')
@@ -129,12 +131,12 @@ class ShippingMethodResource extends Resource
         //        }
         //
         //        if ($shippingClasses) {
-        //            $schema[] = Section::make('Verzendklassen meerprijzen')
+        //            $schema[] = Section::make('Verzendklassen meerprijzen')->columnSpanFull()
         //                ->schema($shippingClasses);
         //        }
 
-        return $form
-            ->schema($schema);
+        return $schema
+            ->schema($newSchema);
     }
 
     public static function table(Table $table): Table
@@ -152,13 +154,13 @@ class ShippingMethodResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
             ->reorderable('order')
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

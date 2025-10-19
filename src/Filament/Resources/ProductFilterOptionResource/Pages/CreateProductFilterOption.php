@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages;
 
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\CreateRecord\Concerns\Translatable;
 
 class CreateProductFilterOption extends CreateRecord
 {

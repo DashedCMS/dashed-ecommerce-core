@@ -11,7 +11,7 @@ class ViewOrder extends ViewRecord
 {
     protected static string $resource = OrderResource::class;
 
-    protected static string $view = 'dashed-ecommerce-core::orders.view-order';
+    protected string $view = 'dashed-ecommerce-core::orders.view-order';
 
     protected $listeners = [
         'refreshPage' => 'renderPage',

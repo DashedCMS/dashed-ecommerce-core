@@ -1,4 +1,4 @@
-<div class="@if($data['top_margin']) pt-16 sm:pt-24 @endif @if($data['bottom_margin']) pb-16 sm:pb-24 @endif bg-gradient-to-tr from-primary-400 to-primary-600">
+<div class="@if($data['top_margin']) pt-16 sm:pt-24 @endif @if($data['bottom_margin']) pb-16 sm:pb-24 @endif bg-linear-to-tr from-primary-400 to-primary-600">
     <x-container :show="$data['in_container'] ?? true">
         <div class="px-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8 xl:px-0">
             <h2>
@@ -32,7 +32,7 @@
                                   />
                               </span>
                                 <span aria-hidden="true"
-                                      class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-primary-800"></span>
+                                      class="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-primary-800"></span>
                                 <span class="relative mt-auto text-center text-xl font-bold text-white">{{ $category->name }}</span>
                             </a>
                         @endforeach

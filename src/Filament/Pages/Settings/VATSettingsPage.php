@@ -2,24 +2,27 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Tabs;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Tabs\Tab;
+use Filament\Schemas\Components\Tabs;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
+use Filament\Infolists\Components\TextEntry;
 
 class VATSettingsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-receipt-percent';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'BTW instellingen';
-    protected static ?string $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Overige';
     protected static ?string $title = 'BTW instellingen';
 
-    protected static string $view = 'dashed-core::settings.pages.default-settings';
+    protected string $view = 'dashed-core::settings.pages.default-settings';
 
     public array $data = [];
 
@@ -34,16 +37,16 @@ class VATSettingsPage extends Page
         $this->form->fill($formData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $sites = Sites::getSites();
         $tabGroups = [];
 
         $tabs = [];
         foreach ($sites as $site) {
-            $schema = [
-                Placeholder::make('label')
-                    ->label("BTW instellingen voor {$site['name']}"),
+            $newSchema = [
+                TextEntry::make('label')
+                    ->state("BTW instellingen voor {$site['name']}"),
                 Toggle::make("taxes_prices_include_taxes_{$site['id']}")
                     ->label('Alle prijzen zijn inclusief belasting')
                     ->helperText('Indien dit aangevinkt staat wordt de opgegeven prijs bij een product gerekend als inclusief BTW. Indien dit staat uitgeschakeld wordt de BTW over de producten pas bij de checkout berekend.')
@@ -52,7 +55,7 @@ class VATSettingsPage extends Page
 
             $tabs[] = Tab::make($site['id'])
                 ->label(ucfirst($site['name']))
-                ->schema($schema)
+                ->schema($newSchema)
                 ->columns([
                     'default' => 1,
                     'lg' => 2,
@@ -61,12 +64,8 @@ class VATSettingsPage extends Page
         $tabGroups[] = Tabs::make('Sites')
             ->tabs($tabs);
 
-        return $tabGroups;
-    }
-
-    public function getFormStatePath(): ?string
-    {
-        return 'data';
+        return $schema->schema($tabGroups)
+            ->statePath('data');
     }
 
     public function submit()

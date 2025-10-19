@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Livewire\Component;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns\CreateManualOrderActions;
 
-class POSPage2 extends Component implements HasForms
+class POSPage2 extends Component implements HasSchemas
 {
     use CreateManualOrderActions;
 

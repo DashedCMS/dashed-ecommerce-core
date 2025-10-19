@@ -6,18 +6,18 @@ use Livewire\Component;
 use Filament\Actions\Action;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class ChangeOrderFulfillmentStatus extends Component implements HasForms, HasActions
+class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasActions
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithActions;
 
     public Order $order;
@@ -37,7 +37,7 @@ class ChangeOrderFulfillmentStatus extends Component implements HasForms, HasAct
                     'fulfillmentStatus' => $this->order->fulfillment_status,
                 ];
             })
-            ->form([
+            ->schema([
                 Select::make('fulfillmentStatus')
                     ->label('Verander fulfilment status')
                     ->options(Orders::getFulfillmentStatusses())

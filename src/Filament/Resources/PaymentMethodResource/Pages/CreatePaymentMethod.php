@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\CreateRecord\Concerns\Translatable;
 
 class CreatePaymentMethod extends CreateRecord
 {

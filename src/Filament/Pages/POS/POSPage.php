@@ -3,26 +3,25 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Filament\Forms\Get;
 use Livewire\Component;
-use Filament\Forms\Form;
 use Illuminate\Support\Str;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\POSCart;
-use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
-class POSPage extends Component implements HasForms
+class POSPage extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-
+    use InteractsWithSchemas;
     public $searchQueryInputmode = false;
     public $cartInstance = 'handorder';
     public $orderOrigin = 'pos';
@@ -73,19 +72,19 @@ class POSPage extends Component implements HasForms
             ->send();
     }
 
-    public function getForms(): array
-    {
-        return [
-            'customProductForm',
-            'createDiscountForm',
-            'customerDataForm',
-            'changeProductForm',
-        ];
-    }
+    //    public function getForms(): array
+    //    {
+    //        return [
+    //            'customProductForm',
+    //            'createDiscountForm',
+    //            'customerDataForm',
+    //            'changeProductForm',
+    //        ];
+    //    }
 
-    public function customProductForm(Form $form): Form
+    public function customProductForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('name')
                     ->label('Productnaam')
@@ -124,9 +123,9 @@ class POSPage extends Component implements HasForms
             ->statePath('customProductData');
     }
 
-    public function changeProductForm(Form $form): Form
+    public function changeProductForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('productToChange.name')
                     ->label('Productnaam')
@@ -203,9 +202,9 @@ class POSPage extends Component implements HasForms
         $this->dispatch('addCustomProduct', $product);
     }
 
-    public function createDiscountForm(Form $form): Form
+    public function createDiscountForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Select::make('type')
                     ->label('Type')
@@ -314,9 +313,9 @@ class POSPage extends Component implements HasForms
         ]);
     }
 
-    public function customerDataForm(Form $form): Form
+    public function customerDataForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('firstName')
                     ->label('Voornaam')

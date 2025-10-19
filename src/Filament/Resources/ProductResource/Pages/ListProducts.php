@@ -3,21 +3,22 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Filament\Actions\Action;
+use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
-use Filament\Actions\LocaleSwitcher;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
 use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
-use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 
 class ListProducts extends ListRecords
 {
@@ -25,7 +26,7 @@ class ListProducts extends ListRecords
 
     protected static string $resource = ProductResource::class;
 
-    protected ?string $maxContentWidth = 'full';
+    protected Width | string | null $maxContentWidth = 'full';
 
     protected function getTableQuery(): ?Builder
     {
@@ -54,7 +55,7 @@ class ListProducts extends ListRecords
                 ->label('Importeer')
                 ->icon('heroicon-s-arrow-up-tray')
                 ->hiddenLabel()
-                ->form([
+                ->schema([
                     FileUpload::make('file')
                         ->label('Bestand')
                         ->disk('local')
@@ -79,10 +80,10 @@ class ListProducts extends ListRecords
                 ->label('Importeer EAN codes')
                 ->icon('heroicon-s-qr-code')
                 ->hiddenLabel()
-                ->form([
-                    Placeholder::make('placeholder')
+                ->schema([
+                    TextEntry::make('placeholder')
                         ->label('Importeer EAN codes voor producten')
-                        ->content('Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . Product::whereNull('ean')->count() . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
+                        ->label('Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . Product::whereNull('ean')->count() . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
                         ->columnSpanFull(),
                     FileUpload::make('file')
                         ->label('Bestand')

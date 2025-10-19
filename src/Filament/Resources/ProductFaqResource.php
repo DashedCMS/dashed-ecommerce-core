@@ -2,26 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Set;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedEcommerceCore\Models\ProductFaq;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages\EditProductFaq;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages\ListProductFaq;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages\CreateProductFaq;
@@ -35,8 +37,8 @@ class ProductFaqResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
-    protected static ?string $navigationGroup = 'Producten';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-question-mark-circle';
+    protected static string | UnitEnum | null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product faqs';
     protected static ?string $label = 'Product faq';
     protected static ?string $pluralLabel = 'Product faqs';
@@ -49,11 +51,12 @@ class ProductFaqResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema(array_merge([
                 Section::make('Content')
+                    ->columnSpanFull()
                     ->schema(array_merge([
                         TextInput::make('name')
                             ->label('Naam')
@@ -123,12 +126,12 @@ class ProductFaqResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

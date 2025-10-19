@@ -3,23 +3,20 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
-use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
-use Filament\Infolists\Components\Fieldset;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
 
-class OrderProductsList extends Component implements HasForms, HasInfolists
+class OrderProductsList extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-    use InteractsWithInfolists;
+    use InteractsWithSchemas;
 
     public Order $order;
 
@@ -32,83 +29,100 @@ class OrderProductsList extends Component implements HasForms, HasInfolists
         $this->order = $order;
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        $orderProductsSchema = [];
+        $productComponents = [];
 
         foreach ($this->order->orderProducts as $orderProduct) {
-            $orderProductsSchema[] =
-                Fieldset::make($orderProduct->name)
-                    ->schema([
-                        ImageEntry::make('image')
-                            ->hiddenLabel()
-                            ->visible($orderProduct->product && $orderProduct->product->firstImage)
-                            ->getStateUsing(fn () => $orderProduct->custom_image ?: (mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? ''))
-                            ->disk('dashed')
-                            ->width('100%')
-                            ->height('auto'),
-                        TextEntry::make('productExtras')
-                            ->label('Product extras')
-                            ->visible((is_array($orderProduct->product_extras) ? count($orderProduct->product_extras ?: []) : false) || count($orderProduct->hidden_options ?: []))
-                            ->getStateUsing(function () use ($orderProduct) {
-                                $productExtras = '';
-                                if (is_array($orderProduct->product_extras ?: [])) {
-                                    foreach ($orderProduct->product_extras ?: [] as $productExtra) {
-                                        if ($productExtra['path'] ?? false) {
-                                            $productExtras .= $productExtra['name'] . ': <a class="hover:text-primary-500" target="_blank" href="' . Storage::disk('dashed')->url($productExtra['path']) . '">' . $productExtra['value'] . '</a> <br/>';
-                                        } else {
-                                            $productExtras .= $productExtra['name'] . ': ' . $productExtra['value'] . ' <br/>';
-                                        }
+            $pid = $orderProduct->id ?? spl_object_id($orderProduct);
+
+            $productComponents[] = Fieldset::make('product_' . $pid)
+                ->label($orderProduct->name)
+                ->schema([
+                    ImageEntry::make('image_' . $pid)
+                        ->hiddenLabel()
+                        ->visible((bool) ($orderProduct->product && $orderProduct->product->firstImage))
+                        ->state(fn () => $orderProduct->custom_image ?: (mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? ''))
+                        ->disk('dashed')
+                        ->width('100%')
+                        ->height('auto'),
+
+                    TextEntry::make('product_extras_' . $pid)
+                        ->hiddenLabel()
+                        ->visible(
+                            (is_array($orderProduct->product_extras) ? count($orderProduct->product_extras ?: []) > 0 : false)
+                            || count($orderProduct->hidden_options ?: []) > 0
+                        )
+                        ->state(function () use ($orderProduct) {
+                            $html = '';
+
+                            if (is_array($orderProduct->product_extras ?: [])) {
+                                foreach ($orderProduct->product_extras as $productExtra) {
+                                    if ($productExtra['path'] ?? false) {
+                                        $html .= $productExtra['name'] . ': <a class="hover:text-primary-500" target="_blank" href="' .
+                                            Storage::disk('dashed')->url($productExtra['path']) . '">' . $productExtra['value'] . '</a> <br/>';
+                                    } else {
+                                        $html .= $productExtra['name'] . ': ' . $productExtra['value'] . ' <br/>';
                                     }
                                 }
+                            }
 
-                                if (is_array($orderProduct->hidden_options ?: [])) {
-                                    foreach ($orderProduct->hidden_options ?: [] as $key => $value) {
-                                        if (! str($value)->contains('base64')) {
-                                            $productExtras .= $key . ': ' . $value . ' <br/>';
-                                        }
+                            if (is_array($orderProduct->hidden_options ?: [])) {
+                                foreach ($orderProduct->hidden_options as $key => $value) {
+                                    if (! str($value)->contains('base64')) {
+                                        $html .= $key . ': ' . $value . ' <br/>';
                                     }
                                 }
+                            }
 
-                                return new HtmlString($productExtras);
-                            })
-                            ->size('xs'),
-                        TextEntry::make('quantity')
-                            ->hiddenLabel()
-                            ->badge()
-                            ->color('primary')
-                            ->weight('bold')
-                            ->getStateUsing(fn () => $orderProduct->quantity)
-                            ->suffix('x'),
-                        TextEntry::make('preOrder')
-                            ->hiddenLabel()
-                            ->badge()
-                            ->color('warning')
-                            ->weight('bold')
-                            ->getStateUsing(fn () => 'Is pre-order')
-                            ->visible($orderProduct->is_pre_order),
-                        TextEntry::make('price')
-                            ->hiddenLabel()
-                            ->getStateUsing(fn () => $orderProduct->price)
-                            ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
-                            ->money('EUR'),
-                        TextEntry::make('fulfiller')
-                            ->hiddenLabel()
-                            ->visible((bool)$orderProduct->fulfillment_provider)
-                            ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
-                            ->badge()
-                            ->columnSpanFull()
-                            ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
-                    ])
-                    ->columns(5)
-                    ->columnSpanFull();
+                            return new HtmlString($html);
+                        })
+                        ->size('xs'),
+
+                    TextEntry::make('quantity_' . $pid)
+                        ->hiddenLabel()
+                        ->badge()
+                        ->color('primary')
+                        ->weight('bold')
+                        ->state(fn () => $orderProduct->quantity)
+                        ->suffix('x'),
+
+                    TextEntry::make('pre_order_' . $pid)
+                        ->hiddenLabel()
+                        ->badge()
+                        ->color('warning')
+                        ->weight('bold')
+                        ->state('Is pre-order')
+                        ->visible((bool) $orderProduct->is_pre_order),
+
+                    TextEntry::make('price_' . $pid)
+                        ->hiddenLabel()
+                        ->state(fn () => $orderProduct->price)
+                        ->helperText(fn () => $orderProduct->discount > 0
+                            ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount)
+                            : null)
+                        ->money('EUR'),
+
+                    TextEntry::make('fulfiller_' . $pid)
+                        ->hiddenLabel()
+                        ->visible((bool) $orderProduct->fulfillment_provider)
+                        ->state(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ')
+                            . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
+                        ->badge()
+                        ->columnSpanFull()
+                        ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
+                ])
+                ->columns(5)
+                ->columnSpanFull();
         }
 
-        return $infolist
+        return $schema
             ->record($this->order)
-            ->schema([
-                Fieldset::make('Bestelde producten')
-                    ->schema($orderProductsSchema),
+            ->components([
+                Fieldset::make('ordered_products')
+                    ->label('Bestelde producten')
+                    ->schema($productComponents)
+                    ->columnSpanFull(),
             ]);
     }
 

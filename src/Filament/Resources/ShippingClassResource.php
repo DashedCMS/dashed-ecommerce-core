@@ -2,23 +2,25 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;
@@ -32,8 +34,8 @@ class ShippingClassResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $navigationIcon = 'heroicon-o-truck';
-    protected static ?string $navigationGroup = 'Content';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-truck';
+    protected static string | UnitEnum | null $navigationGroup = 'Content';
     protected static ?string $navigationLabel = 'Verzendklasses';
     protected static ?string $label = 'Verzendklas';
     protected static ?string $pluralLabel = 'Verzendklasses';
@@ -46,11 +48,11 @@ class ShippingClassResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Section::make('Globale informatie')
+                Section::make('Globale informatie')->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
                             ->label('Actief op site')
@@ -60,7 +62,7 @@ class ShippingClassResource extends Resource
                     ])
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
-                Section::make('Content')
+                Section::make('Content')->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
                             ->label('Name')
@@ -102,12 +104,12 @@ class ShippingClassResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

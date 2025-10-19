@@ -2,28 +2,31 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Filament\Forms\Get;
+use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\Customsetting;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Utilities\Get;
 
 class POSSettingsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'POS instellingen';
-    protected static ?string $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Overige';
     protected static ?string $title = 'POS instellingen';
 
-    protected static string $view = 'dashed-core::settings.pages.default-settings';
+    protected string $view = 'dashed-core::settings.pages.default-settings';
     public array $data = [];
 
     public function mount(): void
@@ -38,11 +41,10 @@ class POSSettingsPage extends Page
         $this->form->fill($formData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
-        $schema = [
-            Placeholder::make('label')
-                ->label("POS instellingen voor")
+        $newSchema = [
+            TextEntry::make("POS instellingen voor")
                 ->columnSpanFull(),
             Select::make("receipt_printer_connector_type")
                 ->options([
@@ -72,15 +74,10 @@ class POSSettingsPage extends Page
                 ->visible(fn (Get $get) => $get("cash_register_track_cash_book")),
         ];
 
-        return [
-            Section::make($schema)
+        return $schema->schema([
+            Section::make($newSchema)->columnSpanFull()
                 ->columns(2),
-        ];
-    }
-
-    public function getFormStatePath(): ?string
-    {
-        return 'data';
+        ])->statePath('data');
     }
 
     protected function getActions(): array

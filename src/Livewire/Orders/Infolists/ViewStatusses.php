@@ -3,19 +3,17 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Infolists\Infolist;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\Fieldset;
+use Illuminate\Support\Str;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class ViewStatusses extends Component implements HasForms, HasInfolists
+class ViewStatusses extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-    use InteractsWithInfolists;
+    use InteractsWithSchemas;
 
     public Order $order;
 
@@ -28,60 +26,77 @@ class ViewStatusses extends Component implements HasForms, HasInfolists
         $this->order = $order;
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    /**
+     * Blade verwacht waarschijnlijk $this->infolist,
+     * dus we noemen de methode exact zo.
+     */
+    public function infolist(Schema $schema): Schema
     {
+        // Verzamel labels
         $labels = $this->order->statusLabels;
-        $labels = array_merge($labels, [$this->order->orderStatus()]);
-        $labels = array_merge($labels, [$this->order->fulfillmentStatus()]);
+        $labels[] = $this->order->orderStatus();
+        $labels[] = $this->order->fulfillmentStatus();
 
         foreach ($this->order->fulfillmentCompanies() as $key => $fulfillmentCompany) {
-            $labels = array_merge($labels, [
-                [
-                    'color' => $this->order->orderProducts()->where('fulfillment_provider', $key)->where('send_to_fulfiller', false)->count() ? 'warning' : 'success',
-                    'status' => 'Fulfillment voor ' . $fulfillmentCompany,
-                ],
-            ]);
+            $labels[] = [
+                'color' => $this->order->orderProducts()
+                    ->where('fulfillment_provider', $key)
+                    ->where('send_to_fulfiller', false)
+                    ->count() ? 'warning' : 'success',
+                'status' => 'Fulfillment voor ' . $fulfillmentCompany,
+            ];
         }
 
-        $statusses = [];
+        // Bouw TextEntry's met unieke namen
+        $statusEntries = [];
+        $i = 0;
 
         foreach ($labels as $label) {
-            $statusses[] = TextEntry::make($label['status'])
+            $status = is_array($label) ? ($label['status'] ?? '') : (string) $label;
+            $color = is_array($label) ? ($label['color'] ?? 'gray') : 'gray';
+
+            $name = 'status_' . $i . '_' . Str::slug($status) ?: 'status_' . $i;
+
+            $statusEntries[] = TextEntry::make($name)
                 ->hiddenLabel()
-                ->getStateUsing($label['status'])
+                ->state($status)
                 ->badge()
-                ->color($label['color']);
+                ->color($color);
+
+            $i++;
         }
 
+        // Credit facturen (ook unieke namen)
         foreach ($this->order->creditOrders as $creditOrder) {
-            $statusses[] = TextEntry::make('Credit factuur')
+            $statusEntries[] = TextEntry::make('credit_invoice_' . $creditOrder->id)
                 ->hiddenLabel()
-                ->getStateUsing('Credit ' . $creditOrder->invoice_id)
+                ->state('Credit ' . $creditOrder->invoice_id)
                 ->url(route('filament.dashed.resources.orders.view', [$creditOrder]))
                 ->badge()
                 ->color('danger');
         }
 
         if ($this->order->credit_for_order_id) {
-            $statusses[] = TextEntry::make('Credit factuur')
+            $statusEntries[] = TextEntry::make('credit_for_invoice_' . $this->order->id)
                 ->hiddenLabel()
-                ->getStateUsing('Credit voor ' . $this->order->parentCreditOrder->invoice_id)
+                ->state('Credit voor ' . $this->order->parentCreditOrder->invoice_id)
                 ->url(route('filament.dashed.resources.orders.view', [$this->order->parentCreditOrder]))
                 ->badge()
                 ->color('danger');
         }
 
-        return $infolist
+        // Render als Schema (v4)
+        return $schema
             ->record($this->order)
-            ->schema([
-                Fieldset::make('Statussen')
-                    ->schema($statusses)
+            ->components([
+                Fieldset::make('Statussen')->columnSpanFull()
+                    ->schema($statusEntries)
                     ->columns([
                         'default' => 2,
-                        'sm' => count($statusses),
-                        'md' => count($statusses),
-                        'lg' => count($statusses),
-                        'xl' => count($statusses),
+                        'sm' => count($statusEntries),
+                        'md' => count($statusEntries),
+                        'lg' => count($statusEntries),
+                        'xl' => count($statusEntries),
                     ]),
             ]);
     }

@@ -9,7 +9,7 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class DailyRevenueStats extends StatsOverviewWidget
 {
-    //    protected static string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
+    //    protected string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
     protected ?string $heading = 'Dagelijkse omzetstatistieken';
 
     protected function getCards(): array

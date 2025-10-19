@@ -2,9 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
+use UnitEnum;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
@@ -14,13 +17,13 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 
 class ActionsStatisticsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Actie statistieken';
-    protected static ?string $navigationGroup = 'Statistics';
+    protected static string | UnitEnum | null $navigationGroup = 'Statistics';
     protected static ?string $title = 'Actie statistieken';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'dashed-ecommerce-core::statistics.pages.action-statistics';
+    protected string $view = 'dashed-ecommerce-core::statistics.pages.action-statistics';
 
     public $startDate;
     public $endDate;
@@ -122,10 +125,10 @@ class ActionsStatisticsPage extends Page
         $this->dispatch('updateGraphData', $graphData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
-        return [
-            Section::make()
+        return $schema->schema([
+            Section::make()->columnSpanFull()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
@@ -140,7 +143,7 @@ class ActionsStatisticsPage extends Page
                     'default' => 1,
                     'sm' => 2,
                 ]),
-        ];
+        ]);
     }
 
     protected function getFooterWidgets(): array

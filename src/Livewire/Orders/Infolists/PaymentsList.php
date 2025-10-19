@@ -3,19 +3,16 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Infolists\Infolist;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\Fieldset;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class PaymentsList extends Component implements HasForms, HasInfolists
+class PaymentsList extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-    use InteractsWithInfolists;
+    use InteractsWithSchemas;
 
     public Order $order;
 
@@ -28,40 +25,55 @@ class PaymentsList extends Component implements HasForms, HasInfolists
         $this->order = $order;
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
         $paymentsSchema = [];
 
         foreach ($this->order->orderPayments as $orderPayment) {
-            $paymentsSchema[] =
-                Fieldset::make('Betaling van ' . $orderPayment->created_at->format('d-m-Y H:i'))
-                    ->schema([
-                        TextEntry::make('psp')
-                            ->label('PSP')
-                            ->getStateUsing($orderPayment->psp),
-                        TextEntry::make('psp_id')
-                            ->getStateUsing($orderPayment->psp_id ?: '-')
-                            ->label('PSP ID'),
-                        TextEntry::make('payment_method')
-                            ->getStateUsing($orderPayment->payment_method)
-                            ->label('Betaalmethode'),
-                        TextEntry::make('amount')
-                            ->label('Bedrag')
-                            ->getStateUsing($orderPayment->amount)
-                            ->money('EUR'),
-                        TextEntry::make('status')
-                            ->getStateUsing($orderPayment->status)
-                            ->label('Status'),
-                    ])
-                    ->columns(3)
-                    ->columnSpanFull();
+            $pid = $orderPayment->id ?? spl_object_id($orderPayment);
+
+            $paymentsSchema[] = Fieldset::make('payment_' . $pid)
+                ->label('Betaling van ' . $orderPayment->created_at->format('d-m-Y H:i'))
+                ->schema([
+                    TextEntry::make('psp_' . $pid)
+                        ->state('PSP')
+                        ->state(fn () => $orderPayment->psp ?: '-'),
+
+                    TextEntry::make('psp_id_' . $pid)
+                        ->state('PSP ID')
+                        ->state(fn () => $orderPayment->psp_id ?: '-'),
+
+                    TextEntry::make('payment_method_' . $pid)
+                        ->state('Betaalmethode')
+                        ->state(fn () => $orderPayment->payment_method ?: ($orderPayment->paymentMethod->name ?? '-')),
+
+                    TextEntry::make('amount_' . $pid)
+                        ->state('Bedrag')
+                        ->state(fn () => $orderPayment->amount)
+                        ->money('EUR'),
+
+                    TextEntry::make('status_' . $pid)
+                        ->state('Status')
+                        ->state(fn () => $orderPayment->status)
+                        ->badge()
+                        ->color(fn () => match ($orderPayment->status) {
+                            'paid' => 'success',
+                            'pending' => 'warning',
+                            'failed', 'cancelled' => 'danger',
+                            default => 'gray',
+                        }),
+                ])
+                ->columns(3)
+                ->columnSpanFull();
         }
 
-        return $infolist
+        return $schema
             ->record($this->order)
-            ->schema([
-                Fieldset::make('Betalingen')
-                    ->schema($paymentsSchema),
+            ->components([
+                Fieldset::make('payments_root')
+                    ->label('Betalingen')
+                    ->schema($paymentsSchema)
+                    ->columnSpanFull(),
             ]);
     }
 

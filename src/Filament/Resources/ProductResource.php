@@ -3,34 +3,35 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
-use Filament\Forms\Get;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\BulkAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Tables\Filters\Filter;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
 use Illuminate\Database\Eloquent\Collection;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
@@ -38,6 +39,7 @@ use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
@@ -53,8 +55,8 @@ class ProductResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'Producten';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string | UnitEnum | null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Producten';
     protected static ?string $label = 'Product';
     protected static ?string $pluralLabel = 'Producten';
@@ -75,13 +77,14 @@ class ProductResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
         config(['filament-tiptap-editor.directory' => 'dashed/products/images']);
 
-        $schema = [];
+        $newSchema = [];
 
-        $schema[] = Section::make('Algemene instellingen')
+        $newSchema[] = Section::make('Algemene instellingen')
+            ->columnSpanFull()
             ->schema([
                 Select::make('site_ids')
                     ->multiple()
@@ -156,7 +159,7 @@ class ProductResource extends Resource
             ->collapsible()
             ->persistCollapsed();
 
-        $schema[] = Section::make('Voorraad beheren')
+        $newSchema[] = Section::make('Voorraad beheren')->columnSpanFull()
             ->schema(Product::stockFilamentSchema())
             ->columns([
                 'default' => 1,
@@ -166,7 +169,7 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        $schema[] = Section::make('Praktische informatie beheren')
+        $newSchema[] = Section::make('Praktische informatie beheren')->columnSpanFull()
             ->schema([
                 TextInput::make('price')
                     ->label('Prijs van het product')
@@ -289,8 +292,7 @@ class ProductResource extends Resource
         //                    return [];
         //                }
 
-
-        $schema[] = Section::make('Filters beheren')
+        $newSchema[] = Section::make('Filters beheren')->columnSpanFull()
 //            ->schema(fn($record) => getFilters($record))
             ->schema(function ($record) {
                 $productFilterSchema = [];
@@ -350,7 +352,7 @@ class ProductResource extends Resource
         }
 
         //Not possible in another way because it is filled in pivot table
-        $schema[] = Section::make('Kenmerken beheren')
+        $newSchema[] = Section::make('Kenmerken beheren')->columnSpanFull()
             ->schema($productCharacteristicSchema)
             ->columns([
                 'default' => 1,
@@ -360,7 +362,8 @@ class ProductResource extends Resource
             ->collapsed()
             ->hidden(fn ($livewire, Get $get, $record) => $livewire instanceof CreateProduct);
 
-        $schema[] = Section::make('Content beheren')
+        $newSchema[] = Section::make('Content beheren')
+            ->columnSpanFull()
             ->schema(array_merge([
                 TextInput::make('name')
                     ->label('Naam')
@@ -415,7 +418,7 @@ class ProductResource extends Resource
                 'lg' => 2,
             ]);
 
-        $schema[] = Section::make('Linkjes beheren')
+        $newSchema[] = Section::make('Linkjes beheren')->columnSpanFull()
             ->schema([
                 Select::make('shippingClasses')
                     ->multiple()
@@ -451,7 +454,7 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        $schema[] = Section::make('Product extras')
+        $newSchema[] = Section::make('Product extras')->columnSpanFull()
             ->schema([
                 Repeater::make('productExtras')
                     ->relationship('productExtras')
@@ -463,7 +466,7 @@ class ProductResource extends Resource
             ->collapsible()
             ->persistCollapsed();
 
-        $schema[] = Section::make('Product tabs')
+        $newSchema[] = Section::make('Product tabs')->columnSpanFull()
             ->schema([
                 Repeater::make('tabs')
                     ->label('Tabs')
@@ -482,12 +485,12 @@ class ProductResource extends Resource
             ->collapsible()
             ->persistCollapsed();
 
-        $schema[] = Section::make('Meta data')
+        $newSchema[] = Section::make('Meta data')->columnSpanFull()
             ->schema(static::metadataTab())
             ->collapsible()
             ->persistCollapsed();
 
-        return $form->schema($schema);
+        return $schema->schema($newSchema);
     }
 
     public static function table(Table $table): Table
@@ -514,7 +517,7 @@ class ProductResource extends Resource
                     ->sortable(),
             ], static::visitableTableColumns()))
             ->reorderable('order')
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 Action::make('quickActions')
@@ -523,8 +526,8 @@ class ProductResource extends Resource
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
-                    ->form([
-                        Section::make('Beheer de prijzen')
+                    ->schema([
+                        Section::make('Beheer de prijzen')->columnSpanFull()
                             ->schema([
                                 TextInput::make('price')
                                     ->label('Prijs van het product')
@@ -546,7 +549,7 @@ class ProductResource extends Resource
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
-                        Section::make('Voorraad beheren')
+                        Section::make('Voorraad beheren')->columnSpanFull()
                             ->schema(Product::stockFilamentSchema()),
                     ])
                     ->action(function (Product $record, array $data): void {
@@ -562,13 +565,13 @@ class ProductResource extends Resource
                     }),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     BulkAction::make('changePrice')
                         ->color('primary')
                         ->label('Verander prijzen')
-                        ->form([
+                        ->schema([
                             TextInput::make('price')
                                 ->label('Prijs van het product')
                                 ->helperText('Voorbeeld: 10.25')
@@ -601,7 +604,7 @@ class ProductResource extends Resource
                     BulkAction::make('changePublicStatus')
                         ->color('primary')
                         ->label('Verander publieke status')
-                        ->form([
+                        ->schema([
                             Toggle::make('public')
                                 ->label('Openbaar')
                                 ->default(1),
@@ -622,7 +625,7 @@ class ProductResource extends Resource
             ])
             ->filters([
                 Filter::make('specificProductGroup')
-                    ->form([
+                    ->schema([
                         Select::make('product_group_id')
                             ->label('Product groep')
                             ->multiple()
@@ -644,7 +647,7 @@ class ProductResource extends Resource
                             );
                     }),
                 Filter::make('categories')
-                    ->form([
+                    ->schema([
                         Select::make('categories')
                             ->multiple()
                             ->label('Categorieen')
@@ -658,7 +661,7 @@ class ProductResource extends Resource
                         return $query->whereHas('productCategories', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
                     }),
                 Filter::make('indexable')
-                    ->form([
+                    ->schema([
                         Select::make('indexable')
                             ->options([
                                 1 => 'Ja',

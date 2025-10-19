@@ -104,7 +104,7 @@
                                     <li class="p-4 sm:p-6">
                                         <div class="flex items-center sm:items-start">
                                             <div
-                                                class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 sm:h-40 sm:w-40">
+                                                class="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-200 sm:h-40 sm:w-40">
                                                 @if($orderProduct->product && $orderProduct->product->firstImage)
                                                     <x-dashed-files::image
                                                         class="h-full w-full object-cover object-center"

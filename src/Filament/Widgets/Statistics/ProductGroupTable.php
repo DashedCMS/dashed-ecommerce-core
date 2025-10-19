@@ -12,7 +12,7 @@ use Dashed\DashedEcommerceCore\Models\ProductGroup;
 class ProductGroupTable extends TableWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $pollingInterval = '1s';
+    protected ?string $pollingInterval = '1s';
 
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',

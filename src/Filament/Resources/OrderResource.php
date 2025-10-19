@@ -2,28 +2,29 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\BulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\SelectFilter;
@@ -32,6 +33,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -49,8 +51,8 @@ class OrderResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
+    protected static string | UnitEnum | null $navigationGroup = 'E-commerce';
 
     public static function getNavigationLabel(): string
     {
@@ -118,11 +120,11 @@ class OrderResource extends Resource
             ->toArray());
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        $schema = [];
+        $newSchema = [];
 
-        $schema[] = Section::make('Persoonlijke informatie')
+        $newSchema[] = Section::make('Persoonlijke informatie')->columnSpanFull()
             ->schema([
                 TextInput::make('first_name')
                     ->nullable()
@@ -177,7 +179,7 @@ class OrderResource extends Resource
                 'lg' => 1,
             ]);
 
-        return $form->schema($schema);
+        return $schema->schema($newSchema);
     }
 
     public static function table(Table $table): Table
@@ -315,7 +317,7 @@ class OrderResource extends Resource
                             );
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('quickActions')
@@ -335,7 +337,7 @@ class OrderResource extends Resource
                                     'fulfillmentStatus' => $record->fulfillment_status,
                                 ];
                             })
-                            ->form([
+                            ->schema([
                                 Select::make('fulfillmentStatus')
                                     ->label('Verander fulfilment status')
                                     ->options(Orders::getFulfillmentStatusses())
@@ -373,7 +375,7 @@ class OrderResource extends Resource
                                     'retourStatus' => $record->retour_status,
                                 ];
                             })
-                            ->form([
+                            ->schema([
                                 Select::make('retourStatus')
                                     ->label('Verander retour status')
                                     ->options(Orders::getReturnStatusses())
@@ -412,7 +414,7 @@ class OrderResource extends Resource
                                     'email' => $record->email,
                                 ];
                             })
-                            ->form([
+                            ->schema([
                                 TextInput::make('email')
                                     ->label('Stuur de email naar')
                                     ->email()
@@ -434,7 +436,7 @@ class OrderResource extends Resource
                                     'emailSubject' => 'Je bestelling is bijgewerkt',
                                 ];
                             })
-                            ->form([
+                            ->schema([
                                 Toggle::make('publicForCustomer')
                                     ->label('Zichtbaar voor klant')
                                     ->default(false)
@@ -503,7 +505,7 @@ class OrderResource extends Resource
                         $record->save();
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkAction::make('downloadInvoices')
                     ->label('Download facturen')
                     ->color('primary')
@@ -587,7 +589,7 @@ class OrderResource extends Resource
                 BulkAction::make('changeFulfillmentStatus')
                     ->color('primary')
                     ->label('Fulfillment status')
-                    ->form([
+                    ->schema([
                         Select::make('fulfillment_status')
                             ->label('Veranderd fulfillment status naar')
                             ->options(Orders::getFulfillmentStatusses())

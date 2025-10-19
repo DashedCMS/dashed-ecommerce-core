@@ -2,34 +2,34 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Wizard;
 use Illuminate\Support\Facades\Blade;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Wizard;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CreateOrder extends Page implements HasForms
+class CreateOrder extends Page implements HasSchemas
 {
     use OrderResource\Concerns\CreateManualOrderActions;
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';
-    protected static string $view = 'dashed-ecommerce-core::orders.create-order';
+    protected string $view = 'dashed-ecommerce-core::orders.create-order';
 
     public ?array $data = [];
 
@@ -47,11 +47,11 @@ class CreateOrder extends Page implements HasForms
         ];
     }
 
-    public function createOrderForm(Form $form): Form
+    public function createOrderForm(Schema $schema): Schema
     {
-        $schema = [];
+        $newSchema = [];
 
-        $schema[] = Wizard\Step::make('Persoonlijke informatie')
+        $newSchema[] = Wizard\Step::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
                     ->label('Hang de bestelling aan een gebruiker')
@@ -109,7 +109,7 @@ class CreateOrder extends Page implements HasForms
             ])
             ->columns(2);
 
-        $schema[] = Wizard\Step::make('Adres')
+        $newSchema[] = Wizard\Step::make('Adres')
             ->schema([
                 TextInput::make('street')
                     ->label('Straat')
@@ -172,7 +172,7 @@ class CreateOrder extends Page implements HasForms
             ])
             ->columns(2);
 
-        $schema[] = Wizard\Step::make('Producten')
+        $newSchema[] = Wizard\Step::make('Producten')
             ->schema([
                 Repeater::make('products')
                     ->label('Kies producten')
@@ -192,13 +192,13 @@ class CreateOrder extends Page implements HasForms
                             ->minValue(0)
                             ->maxValue(1000)
                             ->default(0),
-                        Placeholder::make('Voorraad')
-                            ->content(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
-                        Placeholder::make('Prijs')
-                            ->content(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
-                        Placeholder::make('Afbeelding')
-                            ->content(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
-                        Section::make('Extra\'s')
+                        TextEntry::make('Voorraad')
+                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
+                        TextEntry::make('Prijs')
+                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
+                        TextEntry::make('Afbeelding')
+                            ->label(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
+                        Section::make('Extra\'s')->columnSpanFull()
                             ->schema(fn (Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
                     ]),
             ])
@@ -230,7 +230,7 @@ class CreateOrder extends Page implements HasForms
         //                    ->required($extra['required']);
         //            }
 
-        //            $productSchemas[] = Section::make('Product ' . $product->name)
+        //            $productSchemas[] = Section::make('Product ' . $product->name)->columnSpanFull()
         //                ->schema(array_merge([
         //                    TextInput::make('products.' . $product->id . '.quantity')
         //                        ->label('Aantal')
@@ -239,12 +239,12 @@ class CreateOrder extends Page implements HasForms
         //                        ->minValue(0)
         //                        ->maxValue(1000)
         //                        ->default(0),
-        //                    Placeholder::make('Voorraad')
-        //                        ->content($product->stock()),
-        //                    Placeholder::make('Prijs')
-        //                        ->content($product->currentPrice),
-        //                    Placeholder::make('Afbeelding')
-        //                        ->content(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImage, []) . '">')),
+        //                    TextEntry::make('Voorraad')
+        //                        ->state($product->stock()),
+        //                    TextEntry::make('Prijs')
+        //                        ->state($product->currentPrice),
+        //                    TextEntry::make('Afbeelding')
+        //                        ->state(new HtmlString('<img width="300" src="' . app(\Dashed\Drift\UrlBuilder::class)->url('dashed', $product->firstImage, []) . '">')),
         //                ], $productExtras))
         //                ->visible(fn(Get $get) => in_array($product->id, $get('activatedProducts')));
         //        }
@@ -253,7 +253,7 @@ class CreateOrder extends Page implements HasForms
         //            ->schema($productSchemas)
         //            ->columnSpan(2);
 
-        $schema[] = Wizard\Step::make('Overige informatie')
+        $newSchema[] = Wizard\Step::make('Overige informatie')
             ->schema([
                 Textarea::make('note')
                     ->label('Notitie')
@@ -271,20 +271,20 @@ class CreateOrder extends Page implements HasForms
                     }),
             ]);
 
-        $schema[] = Wizard\Step::make('Bestelling')
+        $newSchema[] = Wizard\Step::make('Bestelling')
             ->schema([
-                Placeholder::make('')
-                    ->content('Subtotaal: ' . $this->subTotal),
-                Placeholder::make('')
-                    ->content('Korting: ' . $this->discount),
-                Placeholder::make('')
-                    ->content('BTW: ' . $this->vat),
-                Placeholder::make('')
-                    ->content('Totaal: ' . $this->total),
+                TextEntry::make('subtotaal')
+                    ->state('Subtotaal: ' . $this->subTotal),
+                TextEntry::make('korting')
+                    ->state('Korting: ' . $this->discount),
+                TextEntry::make('btw')
+                    ->state('BTW: ' . $this->vat),
+                TextEntry::make('totaal')
+                    ->state('Totaal: ' . $this->total),
             ]);
 
-        $schema = [
-            Wizard::make($schema)
+        $newSchema = [
+            Wizard::make($newSchema)
                 ->submitAction(new HtmlString(Blade::render(
                     <<<BLADE
     <x-filament::button
@@ -297,8 +297,7 @@ BLADE
                 ))),
         ];
 
-        return $form
-            ->schema($schema);
+        return $schema->schema($newSchema);
     }
 
     public function submit()

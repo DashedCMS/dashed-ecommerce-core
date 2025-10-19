@@ -9,10 +9,10 @@
         @endif
 
         <div>
-            <div class="w-full aspect-[4/3] overflow-hidden">
+            <div class="w-full aspect-4/3 overflow-hidden">
                 @if($product->firstImage)
                     <x-dashed-files::image
-                        class="w-full aspect-[4/3] object-cover object-center group-hover:scale-110 transform trans"
+                        class="w-full aspect-4/3 object-cover object-center group-hover:scale-110 transform trans"
                         config="dashed"
                         :mediaId="$product->firstImage"
                         :alt="$product->name"

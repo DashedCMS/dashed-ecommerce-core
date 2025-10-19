@@ -2,7 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Widgets\DateRangeFilterWidget;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -28,7 +29,6 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\DailyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
@@ -80,15 +80,15 @@ class DashedEcommerceCorePlugin implements Plugin
                 DefaultEcommerceSettingsPage::class,
             ])
             ->widgets([
-                DateRangeFilterWidget::class,
                 MonthlyRevenueAndReturnLineChartStats::class,
-                DailyRevenueStats::class,
-                MonthlyRevenueStats::class,
-                YearlyRevenueStats::class,
-                AlltimeRevenueStats::class,
+                RevenueStats::class,
+//                MonthlyRevenueStats::class,
+//                YearlyRevenueStats::class,
+//                AlltimeRevenueStats::class,
+                CartActionsPieChartWidget::class,
                 PaymentMethodPieChartWidget::class,
                 DashboardFunLineChartStats::class,
-                CartActionsPieChartWidget::class,
+                SoldoutCount::class
             ])
             ->resources([
                 PaymentMethodResource::class,

@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages;
 
 use Filament\Resources\Pages\ListRecords;
-use Filament\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 
 class ListProductFilterOption extends ListRecords
 {

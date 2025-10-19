@@ -2,34 +2,36 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Filament\Forms\Get;
+use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Models\User;
-use Filament\Forms\Components\Card;
-use Filament\Forms\Components\Tabs;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Tabs;
 use Dashed\DashedCore\Classes\Locales;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Utilities\Get;
 
 class OrderSettingsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-bell';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bell';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Bestelling instellingen';
-    protected static ?string $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Overige';
     protected static ?string $title = 'Bestelling instellingen';
 
-    protected static string $view = 'dashed-core::settings.pages.default-settings';
+    protected string $view = 'dashed-core::settings.pages.default-settings';
 
     public array $data = [];
 
@@ -73,20 +75,20 @@ class OrderSettingsPage extends Page
         $this->form->fill($formData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $sites = Sites::getSites();
         $locales = Locales::getLocales();
         $tabGroups = [];
 
-        $schema = [
-            Placeholder::make('label')
-                ->label("Algemene instelling voor bestellingen"),
+        $newSchema = [
+            TextEntry::make('label')
+                ->state("Algemene instelling voor bestellingen"),
             Toggle::make("order_index_show_other_statuses")
                 ->label('Toon de extra statussen op het bestellingsoverzicht'),
             Toggle::make("order_index_show_order_products")
                 ->label('Toon de bestelde producten op het bestellingsoverzicht'),
-            Section::make('Facturen printer')
+            Section::make('Facturen printer')->columnSpanFull()
                 ->schema([
                     Select::make("invoice_printer_connector_type")
                         ->options([
@@ -103,7 +105,7 @@ class OrderSettingsPage extends Page
                         ->helperText('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
                 ])
                 ->columns(2),
-            Section::make('Pakbon printer')
+            Section::make('Pakbon printer')->columnSpanFull()
                 ->schema([
                     Select::make("packing_slip_printer_connector_type")
                         ->options([
@@ -122,8 +124,8 @@ class OrderSettingsPage extends Page
                 ->columns(2),
         ];
 
-        $tabGroups[] = Card::make()
-            ->schema($schema)
+        $tabGroups[] = Section::make()->columnSpanFull()
+            ->schema($newSchema)
             ->columns([
                 'default' => 1,
                 'lg' => 2,
@@ -131,10 +133,9 @@ class OrderSettingsPage extends Page
 
         $tabs = [];
         foreach ($sites as $site) {
-            $schema = [
-                Placeholder::make('label')
-                    ->label("Notificaties voor bestellingen op {$site['name']}")
-                    ->content('Stel extra opties in voor de notificaties.')
+            $newSchema = [
+                TextEntry::make("Notificaties voor bestellingen op {$site['name']}")
+                    ->state('Stel extra opties in voor de notificaties.')
                     ->columnSpan(2),
                 TagsInput::make("notification_invoice_emails_{$site['id']}")
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
@@ -150,7 +151,7 @@ class OrderSettingsPage extends Page
 
             $tabs[] = Tab::make($site['id'])
                 ->label(ucfirst($site['name']))
-                ->schema($schema)
+                ->schema($newSchema)
                 ->columns([
                     'default' => 1,
                     'lg' => 2,
@@ -161,9 +162,9 @@ class OrderSettingsPage extends Page
 
         $tabs = [];
         foreach ($locales as $locale) {
-            $schema = [
-                Placeholder::make('label')
-                    ->label("Fulfillment notificaties voor {$locale['name']}")
+            $newSchema = [
+                TextEntry::make('label')
+                    ->state("Fulfillment notificaties voor {$locale['name']}")
                     ->helperText('Je kan de volgende variablen gebruiken in de mails: :firstName:, :lastName:, :email:, :phoneNumber:, :street:, :houseNr:, :zipCode:, :city:, :country:, :companyName:, :total:'),
                 Toggle::make("fulfillment_status_unhandled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" actie')
@@ -234,7 +235,7 @@ class OrderSettingsPage extends Page
 
             $tabs[] = Tab::make($locale['id'])
                 ->label(ucfirst($locale['name']))
-                ->schema($schema)
+                ->schema($newSchema)
                 ->columns([
                     'default' => 1,
                     'lg' => 2,
@@ -243,12 +244,8 @@ class OrderSettingsPage extends Page
         $tabGroups[] = Tabs::make('Sites')
             ->tabs($tabs);
 
-        return $tabGroups;
-    }
-
-    public function getFormStatePath(): ?string
-    {
-        return 'data';
+        return $schema->schema($tabGroups)
+            ->statePath('data');
     }
 
     public function submit()

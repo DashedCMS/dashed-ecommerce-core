@@ -3,37 +3,34 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Helper;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\Grid;
-use Filament\Infolists\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class CustomerInformationBlockList extends Component implements HasForms, HasInfolists
+class CustomerInformationBlockList extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-    use InteractsWithInfolists;
+    use InteractsWithSchemas;
+
+    public Order $order;
 
     protected $listeners = [
         'refreshData' => '$refresh',
     ];
 
-    public Order $order;
-
-    public function mount($order)
+    public function mount($order): void
     {
         $this->order = $order;
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->record($this->order)
             ->schema([
                 Fieldset::make('Klant')
@@ -46,10 +43,10 @@ class CustomerInformationBlockList extends Component implements HasForms, HasInf
                         Grid::make()
                             ->schema([
                                 TextEntry::make('name')
-                                    ->label('Naam')
+                                    ->state('Naam')
                                     ->hiddenLabel(),
                                 TextEntry::make('phone_number')
-                                    ->label('Telefoonnummer')
+                                    ->state('Telefoonnummer')
                                     ->url(fn ($record) => 'tel:' . $record->phone_number)
                                     ->badge()
                                     ->icon('heroicon-o-phone')
@@ -58,7 +55,7 @@ class CustomerInformationBlockList extends Component implements HasForms, HasInf
                             ->columnSpan(1)
                             ->columns(1),
                         TextEntry::make('email')
-                            ->label('Email')
+                            ->state('Email')
                             ->url(fn ($record) => 'mailto:' . $record->email)
                             ->badge()
                             ->columnSpanFull()

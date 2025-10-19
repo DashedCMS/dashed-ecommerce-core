@@ -7,9 +7,9 @@ use Filament\Widgets\ChartWidget;
 class ActionStatisticsChart extends ChartWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $maxHeight = '300px';
+    protected ?string $maxHeight = '300px';
 
-    protected static ?string $pollingInterval = '1s';
+    protected ?string $pollingInterval = '1s';
 
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',

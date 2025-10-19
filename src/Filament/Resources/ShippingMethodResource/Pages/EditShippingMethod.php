@@ -3,11 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages;
 
 use Filament\Actions\DeleteAction;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
+use LaraZeus\SpatieTranslatable\Resources\Pages\EditRecord\Concerns\Translatable;
 
 class EditShippingMethod extends EditRecord
 {

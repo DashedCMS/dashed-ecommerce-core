@@ -2,28 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
-use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class CreateOrderLog extends Component implements HasForms, HasActions
+class CreateOrderLog extends Component implements HasSchemas, HasActions
 {
     use WithFileUploads;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithActions;
 
     public Order $order;
@@ -43,7 +43,7 @@ class CreateOrderLog extends Component implements HasForms, HasActions
                     'emailSubject' => 'Je bestelling is bijgewerkt',
                 ];
             })
-            ->form([
+            ->schema([
                 Toggle::make('publicForCustomer')
                     ->label('Zichtbaar voor klant')
                     ->default(false)

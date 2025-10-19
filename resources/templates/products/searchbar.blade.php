@@ -43,7 +43,7 @@
                                     @if($product->firstImage)
                                         <a href="{{ $product->getUrl() }}">
                                             <x-dashed-files::image
-                                                class="object-cover aspect-[3/2] rounded-lg"
+                                                class="object-cover aspect-3/2 rounded-lg"
                                                 config="dashed"
                                                 :mediaId="$product->firstImage"
                                                 :alt="$product->name"

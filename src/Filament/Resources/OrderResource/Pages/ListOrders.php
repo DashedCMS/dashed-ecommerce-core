@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -9,7 +10,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 class ListOrders extends ListRecords
 {
     protected static string $resource = OrderResource::class;
-    protected ?string $maxContentWidth = 'full';
+
+    protected Width | string | null $maxContentWidth = 'full';
 
     protected function getHeaderActions(): array
     {

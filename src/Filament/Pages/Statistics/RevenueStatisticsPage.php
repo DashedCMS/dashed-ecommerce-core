@@ -2,10 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
+use UnitEnum;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
@@ -17,13 +20,13 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
 
 class RevenueStatisticsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Omzet statistieken';
-    protected static ?string $navigationGroup = 'Statistics';
+    protected static string | UnitEnum | null $navigationGroup = 'Statistics';
     protected static ?string $title = 'Omzet statistieken';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'dashed-ecommerce-core::statistics.pages.revenue-statistics';
+    protected string $view = 'dashed-ecommerce-core::statistics.pages.revenue-statistics';
 
     public $status;
     public $paymentMethod;
@@ -151,7 +154,7 @@ class RevenueStatisticsPage extends Page
         $this->dispatch('updateGraphData', $graphData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $paymentMethods = [];
         foreach (PaymentMethod::get() as $paymentMethod) {
@@ -167,8 +170,8 @@ class RevenueStatisticsPage extends Page
             $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
         }
 
-        return [
-            Section::make()
+        return $schema->schema([
+            Section::make()->columnSpanFull()
                 ->schema([
                     DatePicker::make('startDate')
                         ->label('Start datum')
@@ -228,7 +231,7 @@ class RevenueStatisticsPage extends Page
                     'md' => 3,
                     'lg' => 4,
                 ]),
-        ];
+        ]);
     }
 
     protected function getFooterWidgets(): array

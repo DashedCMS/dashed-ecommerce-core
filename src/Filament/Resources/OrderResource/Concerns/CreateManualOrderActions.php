@@ -3,8 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
-use Filament\Forms\Get;
-use Filament\Forms\Form;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
@@ -20,13 +19,14 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -36,7 +36,7 @@ use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
 
 trait CreateManualOrderActions
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
     public $loading = false;
 
@@ -106,9 +106,9 @@ trait CreateManualOrderActions
     public ?string $pinTerminalStatus = 'pending';
 
     public array $cachableVariables = [
-//        'products' => [],
+        // 'products' => [],
         'searchQueryInputmode' => 'none',
-//        'discount_code' => '',
+        // 'discount_code' => '',
     ];
 
     public function initialize($cartInstance, $orderOrigin)
@@ -116,12 +116,12 @@ trait CreateManualOrderActions
         $this->cartInstance = $cartInstance;
         $this->orderOrigin = $orderOrigin;
         ShoppingCart::setInstance($this->cartInstance);
-        //        $this->allProducts = Product::handOrderShowable()->get();
 
         if ($cartInstance != 'handorder') {
             $this->loadVariables();
             $this->fillPOSCart(true);
         }
+
         $this->customProductForm->fill([
             'quantity' => 1,
             'vat_rate' => 21,
@@ -330,23 +330,6 @@ trait CreateManualOrderActions
             ];
         }
 
-        //        $paymentMethods = ShoppingCart::getPaymentMethods();
-        //        $paymentMethod = '';
-        //        foreach ($paymentMethods as $thisPaymentMethod) {
-        //            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
-        //                $paymentMethod = $thisPaymentMethod;
-        //            }
-        //        }
-
-        //        if (!$paymentMethod) {
-        //            Notification::make()
-        //                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
-        //                ->danger()
-        //                ->send();
-        //
-        //            return;
-        //        }
-
         $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
@@ -354,17 +337,6 @@ trait CreateManualOrderActions
                 $shippingMethod = $thisShippingMethod;
             }
         }
-
-        //        if (! $shippingMethod && $this->orderOrigin != 'pos') {
-        //            Notification::make()
-        //                ->title(Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'))
-        //                ->danger()
-        //                ->send();
-        //
-        //            return [
-        //                'success' => false,
-        //            ];
-        //        }
 
         $discountCode = DiscountCode::usable()->where('code', session('discountCode'))->first();
 
@@ -538,46 +510,6 @@ trait CreateManualOrderActions
             $order->save();
         }
 
-        //        $orderPayment = new OrderPayment();
-        //        $orderPayment->amount = $order->total;
-        //        $orderPayment->order_id = $order->id;
-        //        if ($paymentMethod) {
-        //            $psp = $paymentMethod['psp'];
-        //        } else {
-        //            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
-        //                if ($ecommercePSP['class']::isConnected()) {
-        //                    $psp = $pspId;
-        //                }
-        //            }
-        //        }
-
-        //        $orderPayment->psp = $psp;
-        //        $depositAmount = 0;
-
-        //        if (!$paymentMethod) {
-        //            $orderPayment->payment_method = $psp;
-        //        } elseif ($orderPayment->psp == 'own') {
-        //            $orderPayment->payment_method_id = $paymentMethod['id'];
-        //
-        //            if ($depositAmount > 0.00) {
-        //                $orderPayment->amount = $depositAmount;
-        //                //                $orderPayment->psp = $depositPaymentMethod['psp'];
-        //                //                $orderPayment->payment_method_id = $depositPaymentMethod['id'];
-        //
-        //                $order->has_deposit = true;
-        //                $order->save();
-        //            } else {
-        //                $orderPayment->amount = 0;
-        //                $orderPayment->status = 'paid';
-        //            }
-        //        } else {
-        //            $orderPayment->payment_method = $paymentMethod['name'];
-        //            $orderPayment->payment_method_id = $paymentMethod['id'];
-        //        }
-        //
-        //        $orderPayment->save();
-        //        $orderPayment->refresh();
-
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
         $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
@@ -674,16 +606,7 @@ trait CreateManualOrderActions
             ->limit(25)
             ->get();
         $this->dispatch('focus');
-        //        Notification::make()
-        //            ->title('boem')
-        //            ->success()
-        //            ->send();
     }
-
-    //    public function updated()
-    //    {
-    //        $this->cacheVariables();
-    //    }
 
     public function toggleSearchQueryInputmode()
     {
@@ -716,25 +639,25 @@ trait CreateManualOrderActions
         $this->customProductPopup = ! $this->customProductPopup;
     }
 
-    public function getForms(): array
+    //    public function getSchemas(): array
+    //    {
+    //        return [
+    //            'customProductForm'  => $this->customProductForm($this->makeSchema()),
+    //            'createOrderForm'    => $this->createOrderForm($this->makeSchema()),
+    //            'createDiscountForm' => $this->createDiscountForm($this->makeSchema()),
+    //            'cashPaymentForm'    => $this->cashPaymentForm($this->makeSchema()),
+    //            'searchOrderForm'    => $this->searchOrderForm($this->makeSchema()),
+    //        ];
+    //    }
+
+    public function createOrderForm(Schema $schema): Schema
     {
-        return [
-            'customProductForm',
-            'createOrderForm',
-            'createDiscountForm',
-            'cashPaymentForm',
-            'searchOrderForm',
-        ];
+        return $schema;
     }
 
-    public function createOrderForm(Form $form): Form
+    public function customProductForm(Schema $schema): Schema
     {
-        return $form;
-    }
-
-    public function customProductForm(Form $form): Form
-    {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('name')
                     ->label('Productnaam')
@@ -773,9 +696,9 @@ trait CreateManualOrderActions
             ->statePath('customProductData');
     }
 
-    public function searchOrderForm(Form $form): Form
+    public function searchOrderForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('order_id')
                     ->label('Zoek order op ID')
@@ -839,9 +762,9 @@ trait CreateManualOrderActions
         $this->updateInfo(false);
     }
 
-    public function createDiscountForm(Form $form): Form
+    public function createDiscountForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Select::make('type')
                     ->label('Type')
@@ -895,7 +818,6 @@ trait CreateManualOrderActions
                     })
                     ->required()
                     ->visible(fn (Get $get) => $get('type') == 'discountCode'),
-
             ])
             ->statePath('createDiscountData');
     }
@@ -951,7 +873,7 @@ trait CreateManualOrderActions
         $this->{$variable} = ! $this->{$variable};
 
         if ($variable == 'searchOrderPopup' && ! $this->{$variable}) {
-            //            $this->dispatch('focusSearchOrder');
+            // $this->dispatch('focusSearchOrder');
         }
     }
 
@@ -1062,9 +984,9 @@ trait CreateManualOrderActions
         return array_slice($options, 0, 5);
     }
 
-    public function cashPaymentForm(Form $form): Form
+    public function cashPaymentForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('cashPaymentAmount')
                     ->label('Prijs')
@@ -1101,7 +1023,6 @@ trait CreateManualOrderActions
             $this->order = $response['order'];
 
             $this->suggestedCashPaymentAmounts = $this->getPaymentOptions($this->totalUnformatted);
-            //            $this->updateInfo(false);
             $this->checkoutPopup = false;
             $this->paymentPopup = true;
 
@@ -1143,7 +1064,6 @@ trait CreateManualOrderActions
         $this->isPinTerminalPayment = true;
 
         $orderPayment = new OrderPayment();
-        //        $orderPayment->amount = $this->totalUnformatted;
         $orderPayment->amount = $this->order->total - $this->order->orderPayments->where('status', 'paid')->sum('amount');
         $orderPayment->order_id = $this->order->id;
         $orderPayment->payment_method_id = $this->payment_method_id;

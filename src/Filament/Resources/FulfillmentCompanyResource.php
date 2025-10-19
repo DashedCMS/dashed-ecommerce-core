@@ -2,19 +2,21 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Toggle;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\FulfillmentCompany;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource\Pages\EditFulfillmentCompany;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource\Pages\ListFulfillmentCompany;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource\Pages\CreateFulfillmentCompany;
@@ -27,8 +29,8 @@ class FulfillmentCompanyResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-truck';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-truck';
+    protected static string | UnitEnum | null $navigationGroup = 'E-commerce';
     protected static ?string $navigationLabel = 'Fulfillment bedrijven';
     protected static ?string $label = 'Fulfillment bedrijf';
     protected static ?string $pluralLabel = 'Fulfillment bedrijven';
@@ -41,9 +43,9 @@ class FulfillmentCompanyResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 TextInput::make('name')
                     ->label('Naam')
@@ -87,12 +89,12 @@ class FulfillmentCompanyResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

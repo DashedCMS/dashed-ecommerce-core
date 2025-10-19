@@ -4,17 +4,17 @@ namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
 use Livewire\Component;
 use Filament\Actions\Action;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class AddPaymentToOrder extends Component implements HasForms, HasActions
+class AddPaymentToOrder extends Component implements HasSchemas, HasActions
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithActions;
 
     public Order $order;
@@ -40,7 +40,7 @@ class AddPaymentToOrder extends Component implements HasForms, HasActions
                     'paymentAmount' => $paymentAmount,
                 ];
             })
-            ->form([
+            ->schema([
                 TextInput::make('paymentAmount')
                     ->label('Het bedrag dat betaald is')
                     ->helperText(fn () => "Het bedrag dat is betaald (al voldaan: {$this->order->paidAmount})")

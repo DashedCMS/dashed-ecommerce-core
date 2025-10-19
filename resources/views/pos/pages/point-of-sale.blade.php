@@ -48,7 +48,7 @@
                 </div>
                 <form @submit.prevent="selectProduct">
                     <div class="w-full relative">
-                    <span class="text-black absolute left-2.5 top-2.5">
+                    <span class="text-black absolute left-2.5 top-1">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                           <path stroke-linecap="round" stroke-linejoin="round"
@@ -59,8 +59,8 @@
                                id="search-product-query"
                                :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                placeholder="Zoek een product op naam, SKU of barcode..."
-                               class="text-black w-full rounded-lg pl-10 pr-10 text-xl">
-                        <p class="absolute right-2.5 top-2.5 text-black cursor-pointer"
+                               class="text-black w-full bg-white border-2 border-primary-500 rounded-lg pl-10 pr-10 text-xl">
+                        <p class="absolute right-2.5 top-1 text-black cursor-pointer"
                            @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -100,7 +100,7 @@
                                 <div class="mx-auto"
                                      x-show="product.image">
                                     <img :src="product.image"
-                                         class="object-cover aspect-[3/2] rounded-lg max-h-[100px]">
+                                         class="object-cover aspect-3/2 rounded-lg max-h-[100px]">
                                 </div>
 
                                 <div class="text-wrap">

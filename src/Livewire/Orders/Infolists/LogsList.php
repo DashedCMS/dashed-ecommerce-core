@@ -3,19 +3,16 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Infolists\Infolist;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\Fieldset;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Infolists\Components\ViewEntry;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 
-class LogsList extends Component implements HasForms, HasInfolists
+class LogsList extends Component implements HasSchemas
 {
-    use InteractsWithForms;
-    use InteractsWithInfolists;
+    use InteractsWithSchemas;
 
     public Order $order;
 
@@ -28,20 +25,22 @@ class LogsList extends Component implements HasForms, HasInfolists
         $this->order = $order;
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->record($this->order)
-            ->schema([
-                Fieldset::make('Logs & notities')
+            ->components([
+                Fieldset::make('logs_root')
+                    ->label('Logs & notities')
                     ->schema([
-                        TextEntry::make('logs')
+                        ViewEntry::make('logs_view')
                             ->view('dashed-ecommerce-core::orders.components.infolists.logs-list-items')
                             ->viewData([
                                 'order' => $this->order,
                             ]),
                     ])
-                    ->columns(1),
+                    ->columns(1)
+                    ->columnSpanFull(),
             ]);
     }
 

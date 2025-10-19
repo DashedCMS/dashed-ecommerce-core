@@ -2,32 +2,33 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Filament\Tables\Filters\Filter;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Forms\Components\Placeholder;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
@@ -36,6 +37,7 @@ use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Jobs\CreateMissingProductVariationsJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages\EditProductGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages\ListProductGroups;
@@ -52,8 +54,8 @@ class ProductGroupResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?string $navigationGroup = 'Producten';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string | UnitEnum | null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product groepen';
     protected static ?string $label = 'Product groep';
     protected static ?string $pluralLabel = 'Product groepen';
@@ -72,13 +74,13 @@ class ProductGroupResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
         config(['filament-tiptap-editor.directory' => 'dashed/products/images']);
 
-        $schema = [];
+        $newSchema = [];
 
-        $schema[] = Section::make('Algemene instellingen')
+        $newSchema[] = Section::make('Algemene instellingen')->columnSpanFull()
             ->schema([
                 Select::make('site_ids')
                     ->multiple()
@@ -166,7 +168,7 @@ class ProductGroupResource extends Resource
                 ->columnSpanFull()
                 ->searchable();
 
-            $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
+            $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")->columnSpanFull()
                 ->schema($productFiltersSchema)
                 ->collapsible()
                 ->persistCollapsed()
@@ -174,9 +176,9 @@ class ProductGroupResource extends Resource
                 ->visible(fn (Get $get) => in_array($productFilter->id, $get('productFilters')));
         }
         //
-        $schema[] = Section::make('Filters beheren')
+        $newSchema[] = Section::make('Filters beheren')->columnSpanFull()
             ->headerActions([
-                \Filament\Forms\Components\Actions\Action::make('createMissingVariations')
+                \Filament\Actions\Action::make('createMissingVariations')
                     ->label(fn ($record) => "Ontbrekende variaties aanmaken (" . count($record->missing_variations ?? []) . ")")
                     ->visible(fn ($livewire, $record, $get) => count($record->missing_variations ?? []) && $livewire instanceof EditProductGroup)
                     ->requiresConfirmation()
@@ -196,8 +198,8 @@ class ProductGroupResource extends Resource
 
         $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
         $productCharacteristicSchema = [
-            Placeholder::make('product_characteristics')
-                ->label('Kenmerken die ingevuld worden bij een variant overschrijven het kenmerk dat je hier invult.')
+            TextEntry::make('product_characteristics')
+                ->state('Kenmerken die ingevuld worden bij een variant overschrijven het kenmerk dat je hier invult.')
                 ->columnSpanFull(),
         ];
 
@@ -210,7 +212,7 @@ class ProductGroupResource extends Resource
         }
 
         //Not possible in another way because it is filled in pivot table
-        $schema[] = Section::make('Kenmerken beheren')
+        $newSchema[] = Section::make('Kenmerken beheren')->columnSpanFull()
             ->schema($productCharacteristicSchema)
             ->columns([
                 'default' => 1,
@@ -220,7 +222,8 @@ class ProductGroupResource extends Resource
             ->collapsed(fn ($livewire) => $livewire instanceof EditProductGroup)
             ->hidden(fn ($livewire, Get $get, $record) => $livewire instanceof CreateProductGroup || ($get('type') == 'variable' && (! $record && ! $get('parent_id') || $record && ! $record->parent_id)));
 
-        $schema[] = Section::make('Content beheren')
+        $newSchema[] = Section::make('Content beheren')
+            ->columnSpanFull()
             ->schema(array_merge([
                 TextInput::make('name')
                     ->label('Naam')
@@ -276,7 +279,7 @@ class ProductGroupResource extends Resource
                 'lg' => 2,
             ]);
 
-        $schema[] = Section::make('Linkjes beheren')
+        $newSchema[] = Section::make('Linkjes beheren')->columnSpanFull()
             ->schema([
                 Select::make('productCategories')
                     ->multiple()
@@ -318,7 +321,7 @@ class ProductGroupResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        $schema[] = Section::make('Product extras')
+        $newSchema[] = Section::make('Product extras')->columnSpanFull()
             ->schema([
                 Repeater::make('productExtras')
                     ->relationship('productExtras')
@@ -330,7 +333,7 @@ class ProductGroupResource extends Resource
             ->collapsible()
             ->persistCollapsed();
 
-        $schema[] = Section::make('Product tabs')
+        $newSchema[] = Section::make('Product tabs')->columnSpanFull()
             ->schema([
                 Repeater::make('tabs')
                     ->label('Tabs')
@@ -349,7 +352,8 @@ class ProductGroupResource extends Resource
             ->collapsible()
             ->persistCollapsed();
 
-        $schema[] = Section::make('Volume korting')
+        $newSchema[] = Section::make('Volume korting')
+            ->columnSpanFull()
             ->schema([
                 Repeater::make('volumeDiscounts')
                     ->relationship('volumeDiscounts')
@@ -413,12 +417,12 @@ class ProductGroupResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        $schema[] = Section::make('Meta data')
+        $newSchema[] = Section::make('Meta data')->columnSpanFull()
             ->schema(static::metadataTab())
             ->collapsible()
             ->persistCollapsed();
 
-        return $form->schema($schema);
+        return $schema->schema($newSchema);
     }
 
     public static function table(Table $table): Table
@@ -442,19 +446,19 @@ class ProductGroupResource extends Resource
                     ->sortable(),
             ], static::visitableTableColumns()))
 //            ->reorderable('order')
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
             ])
             ->filters([
                 Filter::make('categories')
-                    ->form([
+                    ->schema([
                         Select::make('categories')
                             ->multiple()
                             ->label('Categorieen')

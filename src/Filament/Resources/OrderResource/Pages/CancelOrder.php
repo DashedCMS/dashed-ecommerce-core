@@ -6,24 +6,23 @@ use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
-use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CancelOrder extends Page implements HasForms
+class CancelOrder extends Page implements HasSchemas
 {
-    use InteractsWithForms;
-
+    use InteractsWithSchemas;
     protected static string $resource = OrderResource::class;
 
-    protected static string $view = 'dashed-ecommerce-core::orders.cancel-order';
+    protected string $view = 'dashed-ecommerce-core::orders.cancel-order';
 
     public Order $order;
 
@@ -72,19 +71,19 @@ class CancelOrder extends Page implements HasForms
         }
 
         return [
-            Section::make('Annuleren')
+            Section::make('Annuleren')->columnSpanFull()
                 ->schema([
-                    Placeholder::make('')
-                        ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
+                    TextEntry::make('')
+                        ->state('Klik op onderstaande knop om deze bestelling te annuleren.'),
                 ])
                 ->hidden($this->order->order_origin == 'own'),
-            Section::make('Retour aanmaken')
+            Section::make('Retour aanmaken')->columnSpanFull()
                 ->schema([
-                    Placeholder::make('')
-                        ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
+                    TextEntry::make('')
+                        ->state('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
                 ])
                 ->hidden($this->order->order_origin != 'own'),
-            Section::make('Bestelde producten')
+            Section::make('Bestelde producten')->columnSpanFull()
                 ->schema(array_merge($orderProductSchema, [
                     TextInput::make('extra_order_line_name')
                         ->required()
@@ -101,7 +100,7 @@ class CancelOrder extends Page implements HasForms
                     'lg' => 3,
                 ])
                 ->hidden($this->order->order_origin != 'own'),
-            Section::make('Overige opties')
+            Section::make('Overige opties')->columnSpanFull()
                 ->schema([
                     Select::make('fulfillment_status')
                         ->label('Verander fulfillment status naar')

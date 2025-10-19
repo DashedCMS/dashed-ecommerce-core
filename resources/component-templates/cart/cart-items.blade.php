@@ -3,7 +3,7 @@
     @foreach($items as $item)
         <li class="py-6 sm:py-10">
             <div class="flex">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                     @if($item->model->firstImage)
                         <x-dashed-files::image
                             class="h-24 w-24 rounded-md object-cover object-center sm:h-48 sm:w-48"
@@ -100,7 +100,7 @@
                     <div class="grid gap-4 mt-4">
                         @foreach($item->model->bundleProducts as $bundleProduct)
                             <div class="flex">
-                                <div class="flex-shrink-0">
+                                <div class="shrink-0">
                                     @if($bundleProduct->firstImage)
                                         <x-dashed-files::image
                                             class="h-12 w-12 rounded-md object-cover object-center"

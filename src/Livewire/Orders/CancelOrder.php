@@ -6,22 +6,22 @@ use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
-class CancelOrder extends Component implements HasForms, HasActions
+class CancelOrder extends Component implements HasSchemas, HasActions
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithActions;
 
     public Order $order;
@@ -56,7 +56,7 @@ class CancelOrder extends Component implements HasForms, HasActions
             ])
             ->color('primary')
             ->fillForm($fillForm)
-            ->form(function () {
+            ->schema(function () {
                 $orderProductSchema = [];
                 foreach ($this->order->orderProducts as $orderProduct) {
                     $orderProductSchema[] = \LaraZeus\Quantity\Components\Quantity::make("order_product_$orderProduct->id")
@@ -69,19 +69,19 @@ class CancelOrder extends Component implements HasForms, HasActions
                 }
 
                 return [
-                    Section::make('Annuleren')
+                    Section::make('Annuleren')->columnSpanFull()
                         ->schema([
-                            Placeholder::make('')
-                                ->content('Klik op onderstaande knop om deze bestelling te annuleren.'),
+                            TextEntry::make('cancel')
+                                ->state('Klik op onderstaande knop om deze bestelling te annuleren.'),
                         ]),
 //                        ->hidden(in_array($this->order->order_origin, ['own', 'pos'])),
-//                    Section::make('Retour aanmaken')
+//                    Section::make('Retour aanmaken')->columnSpanFull()
 //                        ->schema([
-//                            Placeholder::make('')
-//                                ->content('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
+//                            TextEntry::make('')
+//                                ->state('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
 //                        ])
 //                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
-                    Section::make('Bestelde producten')
+                    Section::make('Bestelde producten')->columnSpanFull()
                         ->schema(array_merge($orderProductSchema, [
                             TextInput::make('extra_order_line_name')
                                 ->required()
@@ -98,7 +98,7 @@ class CancelOrder extends Component implements HasForms, HasActions
                             'lg' => 3,
                         ]),
 //                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
-                    Section::make('Overige opties')
+                    Section::make('Overige opties')->columnSpanFull()
                         ->schema([
                             Select::make('fulfillment_status')
                                 ->label('Verander fulfillment status naar')

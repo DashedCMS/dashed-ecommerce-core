@@ -2,21 +2,23 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use UnitEnum;
+use BackedEnum;
 use App\Models\User;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Actions\Action;
+use Filament\Schemas\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
@@ -32,31 +34,31 @@ class PricePerUserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-    protected static ?string $navigationGroup = 'Gebruikers';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
+    protected static string | UnitEnum | null $navigationGroup = 'Gebruikers';
     protected static ?string $navigationLabel = 'Prijs per gebruiker';
     protected static ?string $label = 'Prijs per gebruiker';
     protected static ?string $pluralLabel = 'Prijs per gebruiker';
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
         //        $products = Product::all();
         $productCategories = ProductCategory::all();
 
-        $schema = [
-            Section::make()
+        $newSchema = [
+            Section::make()->columnSpanFull()
                 ->schema([
-                    Placeholder::make('pricePerUser')
-                        ->label('Prijs per gebruiker')
-                        ->content('Vul hier een korting per product in voor de gebruiker, of doe het in bulk met de export/import functie. De categorieen overschrijven ALTIJD de producten, en met het verwijderen van een categorie uit de lijst worden de producten van die categorie ook verwijderd. Na het opslaan moet je even wachten tot het verwerkt is, refresh na 30 seconden om verdere aanpassingen door te voeren. Producten zijn alleen maar via de import aan te passen.'),
+                    TextEntry::make('pricePerUser')
+                        ->state('Prijs per gebruiker')
+                        ->state('Vul hier een korting per product in voor de gebruiker, of doe het in bulk met de export/import functie. De categorieen overschrijven ALTIJD de producten, en met het verwijderen van een categorie uit de lijst worden de producten van die categorie ook verwijderd. Na het opslaan moet je even wachten tot het verwerkt is, refresh na 30 seconden om verdere aanpassingen door te voeren. Producten zijn alleen maar via de import aan te passen.'),
                 ]),
         ];
 
         $productCategorySchema = [];
 
         foreach ($productCategories as $productCategory) {
-            $productCategorySchema[] = Section::make($productCategory->name)
+            $productCategorySchema[] = Section::make($productCategory->name)->columnSpanFull()
                 ->schema([
                     TextInput::make($productCategory->id . '_category_discount_price')
                         ->label('Korting bedrag')
@@ -91,7 +93,7 @@ class PricePerUserResource extends Resource
                 ->columns(2);
         }
 
-        $schema[] = Section::make()
+        $newSchema[] = Section::make()->columnSpanFull()
             ->schema(array_merge([
                 Select::make('product_category_ids')
                     ->label('Product categorieen')
@@ -104,7 +106,7 @@ class PricePerUserResource extends Resource
         $productSchema = [];
 
         //        foreach ($products as $product) {
-        //            $productSchema[] = Section::make($product->name)
+        //            $productSchema[] = Section::make($product->name)->columnSpanFull()
         //                ->schema([
         //                    TextInput::make($product->id . '_price')
         //                        ->label('Prijs')
@@ -145,7 +147,7 @@ class PricePerUserResource extends Resource
         //                ->columns(3);
         //        }
         //
-        //        $schema[] = Section::make()
+        //        $schema[] = Section::make()->columnSpanFull()
         //            ->schema(array_merge([
         //                Select::make('product_ids')
         //                    ->label('Product')
@@ -155,11 +157,11 @@ class PricePerUserResource extends Resource
         //                    ->reactive(),
         //            ], $productSchema));
 
-        return $form
+        return $schema
             ->schema(array_merge([
                 Toggle::make('has_custom_pricing')
                     ->label('Custom pricing voor deze gebruiker activeren'),
-            ], $schema));
+            ], $newSchema));
     }
 
     public static function table(Table $table): Table
@@ -175,7 +177,7 @@ class PricePerUserResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
             ]);

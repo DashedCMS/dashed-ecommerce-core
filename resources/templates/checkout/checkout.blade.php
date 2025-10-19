@@ -1,7 +1,7 @@
 <div>
     @if(count($this->cartItems))
         <div class="relative overflow-hidden">
-            <div class="absolute right-0 top-0 hidden h-full w-1/2 bg-gradient-to-tr from-primary-700 to-primary-300 lg:block"
+            <div class="absolute right-0 top-0 hidden h-full w-1/2 bg-linear-to-tr from-primary-700 to-primary-300 lg:block"
                  aria-hidden="true"></div>
             <section class="relative py-12 overflow-hidden lg:py-24">
                 <x-container>

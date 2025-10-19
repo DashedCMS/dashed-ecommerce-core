@@ -2,34 +2,34 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\RelationManagers;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Actions\BulkAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Collection;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Resources\RelationManagers\RelationManager;
 
 class ChildProductsRelationManager extends RelationManager
 {
     protected static string $relationship = 'childProducts';
-    protected static string $view = 'dashed-ecommerce-core::products.child-products.table';
+    protected string $view = 'dashed-ecommerce-core::products.child-products.table';
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 //
             ]);
@@ -66,15 +66,15 @@ class ChildProductsRelationManager extends RelationManager
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('quickActions')
                     ->button()
                     ->label('Quick')
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalButton('Opslaan')
-                    ->form([
-                        Section::make('Beheer de prijzen')
+                    ->schema([
+                        Section::make('Beheer de prijzen')->columnSpanFull()
                             ->schema([
                                 TextInput::make('price')
                                     ->label('Prijs van het product')
@@ -98,7 +98,7 @@ class ChildProductsRelationManager extends RelationManager
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
-                        Section::make('Voorraad beheren')
+                        Section::make('Voorraad beheren')->columnSpanFull()
                             ->schema([
                                 Toggle::make('use_stock')
                                     ->default(fn ($record) => $record->use_stock)
@@ -183,11 +183,11 @@ class ChildProductsRelationManager extends RelationManager
             ->filters([
                 //
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkAction::make('changePrice')
                     ->color('primary')
                     ->label('Verander prijzen')
-                    ->form([
+                    ->schema([
                         TextInput::make('price')
                             ->label('Prijs van het product')
                             ->helperText('Voorbeeld: 10.25')
@@ -220,7 +220,7 @@ class ChildProductsRelationManager extends RelationManager
                 BulkAction::make('changePublicStatus')
                     ->color('primary')
                     ->label('Verander publieke status')
-                    ->form([
+                    ->schema([
                         Toggle::make('public')
                             ->label('Openbaar')
                             ->default(1),
@@ -240,7 +240,7 @@ class ChildProductsRelationManager extends RelationManager
                 DeleteBulkAction::make(),
             ])
             ->headerActions([
-                \Filament\Tables\Actions\Action::make('Aanmaken')
+                \Filament\Actions\Action::make('Aanmaken')
                     ->button()
                     ->url(fn ($record) => route('filament.dashed.resources.products.create')),
             ]);

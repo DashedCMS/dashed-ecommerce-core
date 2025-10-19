@@ -2,25 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Tabs;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
+use Filament\Infolists\Components\TextEntry;
 
 class InvoiceSettingsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-document-report';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-report';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Facturatie instellingen';
-    protected static ?string $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Overige';
     protected static ?string $title = 'Facturatie instellingen';
 
-    protected static string $view = 'dashed-core::settings.pages.default-settings';
+    protected string $view = 'dashed-core::settings.pages.default-settings';
 
     public array $data = [];
 
@@ -39,17 +42,16 @@ class InvoiceSettingsPage extends Page
         $this->form->fill($formData);
     }
 
-    protected function getFormSchema(): array
+    public function form(Schema $schema): Schema
     {
         $sites = Sites::getSites();
         $tabGroups = [];
 
         $tabs = [];
         foreach ($sites as $site) {
-            $schema = [
-                Placeholder::make('label')
-                    ->label("Facturerings instellingen voor {$site['name']}")
-                    ->content('Let op: je kan per site een andere pre / suffix gebruiken om met de factuur ID te herkenning in de administratie via welke site de bestelling is binnen gekomen. Dit is alleen ?wettelijk (niet zeker)? toegestaan als het wel in 1 administratie terecht komt.')
+            $newSchema = [
+                TextEntry::make("Facturerings instellingen voor {$site['name']}")
+                    ->state('Let op: je kan per site een andere pre / suffix gebruiken om met de factuur ID te herkenning in de administratie via welke site de bestelling is binnen gekomen. Dit is alleen ?wettelijk (niet zeker)? toegestaan als het wel in 1 administratie terecht komt.')
                     ->columnSpan([
                         'default' => 1,
                         'lg' => 2,
@@ -89,9 +91,8 @@ class InvoiceSettingsPage extends Page
                     ->label('Achtervoegsel')
                     ->reactive()
                     ->maxLength(5),
-                Placeholder::make("invoice_id_example_{$site['id']}")
-                    ->label("Voorbeeld van factuur ID")
-                    ->content('QC#*****QC of QC#1001QC')
+                TextEntry::make("Voorbeeld van factuur ID")
+                    ->state('QC#*****QC of QC#1001QC')
                     ->columnSpan([
                         'default' => 1,
                         'lg' => 2,
@@ -100,7 +101,7 @@ class InvoiceSettingsPage extends Page
 
             $tabs[] = Tab::make($site['id'])
                 ->label(ucfirst($site['name']))
-                ->schema($schema)
+                ->schema($newSchema)
                 ->columns([
                     'default' => 1,
                     'lg' => 2,
@@ -109,12 +110,8 @@ class InvoiceSettingsPage extends Page
         $tabGroups[] = Tabs::make('Sites')
             ->tabs($tabs);
 
-        return $tabGroups;
-    }
-
-    public function getFormStatePath(): ?string
-    {
-        return 'data';
+        return $schema->schema($tabGroups)
+            ->statePath('data');
     }
 
     public function submit()

@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
 
-use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 
@@ -17,9 +17,9 @@ class ProductFilterOptionRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 //
             ]);
@@ -41,7 +41,7 @@ class ProductFilterOptionRelationManager extends RelationManager
                 //
             ])
             ->reorderable('order')
-            ->actions([
+            ->recordActions([
                 Action::make('edit')
                     ->label('Bewerken')
                     ->icon('heroicon-o-pencil-square')

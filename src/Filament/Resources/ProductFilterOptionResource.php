@@ -2,19 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Select;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Resources\Concerns\Translatable;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\ListProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;
@@ -39,9 +39,9 @@ class ProductFilterOptionResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Select::make('product_filter_id')
                     ->relationship('productFilter', 'name')
@@ -81,7 +81,7 @@ class ProductFilterOptionResource extends Resource
                     ->sortable()
                     ->searchable(),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),

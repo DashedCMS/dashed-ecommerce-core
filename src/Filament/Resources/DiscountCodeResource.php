@@ -2,26 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
@@ -34,8 +36,8 @@ class DiscountCodeResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-receipt-percent';
+    protected static string | UnitEnum | null $navigationGroup = 'E-commerce';
     protected static ?string $navigationLabel = 'Kortingscodes';
     protected static ?string $label = 'Kortingscode';
     protected static ?string $pluralLabel = 'Kortingscodes';
@@ -53,11 +55,12 @@ class DiscountCodeResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Content')
+                    ->columnSpanFull()
                     ->schema(
                         array_merge([
                             Toggle::make('is_global_discount')
@@ -106,6 +109,7 @@ class DiscountCodeResource extends Resource
                     )
                     ->columns(2),
                 Section::make('Globale informatie')
+                    ->columnSpanFull()
                     ->schema([
                         DateTimePicker::make('start_date')
                             ->label('Vul een startdatum in voor de kortingscode')
@@ -118,6 +122,7 @@ class DiscountCodeResource extends Resource
                             ->after(fn ($get) => $get('start_date') ? 'start_date' : null),
                     ]),
                 Section::make('Informatie')
+                    ->columnSpanFull()
                     ->schema(array_merge([
                         Radio::make('type')
                             ->required()
@@ -244,12 +249,12 @@ class DiscountCodeResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

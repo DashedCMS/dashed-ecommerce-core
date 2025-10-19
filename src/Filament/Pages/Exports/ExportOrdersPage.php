@@ -2,23 +2,25 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Exports;
 
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Section;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Jobs\ExportOrdersJob;
 
 class ExportOrdersPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cloud-arrow-down';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cloud-arrow-down';
     protected static ?string $navigationLabel = 'Exporteer bestellingen';
-    protected static ?string $navigationGroup = 'Export';
+    protected static string | UnitEnum | null $navigationGroup = 'Export';
     protected static ?string $title = 'Exporteer bestellingen';
     protected static ?int $navigationSort = 100000;
 
-    protected static string $view = 'dashed-ecommerce-core::exports.pages.export';
+    protected string $view = 'dashed-ecommerce-core::exports.pages.export';
 
     public array $data = [];
 
@@ -29,11 +31,11 @@ class ExportOrdersPage extends Page
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Section::make('Exporteer')
+                Section::make('Exporteer')->columnSpanFull()
                     ->schema([
                         DatePicker::make('startDate')
                             ->label('Start datum')

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Filament\Forms\Get;
 use Spatie\Activitylog\LogOptions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -12,6 +11,7 @@ use Filament\Forms\Components\TextInput;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

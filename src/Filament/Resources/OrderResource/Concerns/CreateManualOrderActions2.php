@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Concerns;
 
 use Carbon\Carbon;
-use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -21,13 +20,14 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -37,8 +37,7 @@ use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
 
 trait CreateManualOrderActions2
 {
-    use InteractsWithForms;
-
+    use InteractsWithSchemas;
     public $loading = false;
 
     public $subTotal = 0;

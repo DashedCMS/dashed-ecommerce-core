@@ -2,28 +2,30 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Get;
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\PinTerminal;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
@@ -37,8 +39,8 @@ class PaymentMethodResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $navigationIcon = 'heroicon-o-credit-card';
-    protected static ?string $navigationGroup = 'Content';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-credit-card';
+    protected static string | UnitEnum | null $navigationGroup = 'Content';
     protected static ?string $navigationLabel = 'Betaalmethodes';
     protected static ?string $label = 'Betaalmethode';
     protected static ?string $pluralLabel = 'Betaalmethodes';
@@ -50,7 +52,7 @@ class PaymentMethodResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
         $contentSchema = [
             TextInput::make('name')
@@ -122,9 +124,9 @@ class PaymentMethodResource extends Resource
                 ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
         ];
 
-        return $form
+        return $schema
             ->schema([
-                Section::make('Globale informatie')
+                Section::make('Globale informatie')->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
                             ->label('Actief op site')
@@ -138,7 +140,7 @@ class PaymentMethodResource extends Resource
                         return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
-                Section::make('Betaalmethode')
+                Section::make('Betaalmethode')->columnSpanFull()
                     ->schema($contentSchema),
             ]);
     }
@@ -173,12 +175,12 @@ class PaymentMethodResource extends Resource
                 //
             ])
             ->reorderable('order')
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
