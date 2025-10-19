@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -125,56 +126,145 @@ class OrderResource extends Resource
         $schema[] = Section::make('Persoonlijke informatie')
             ->schema([
                 TextInput::make('first_name')
+                    ->label('Voornaam')
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('last_name')
+                    ->label('Achternaam')
                     ->required()
                     ->maxLength(255),
                 TextInput::make('email')
+                    ->label('Email')
                     ->required()
                     ->maxLength(255)
                     ->email(),
                 TextInput::make('phone_number')
+                    ->label('Telefoonnummer')
                     ->maxLength(255),
                 TextInput::make('street')
+                    ->label('Straat')
                     ->maxLength(255)
                     ->reactive(),
                 TextInput::make('house_nr')
+                    ->label('Huisnummer')
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
+                    ->label('Postcode')
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('city')
+                    ->label('Stad')
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
-                TextInput::make('country')
+                Select::make('country')
+                    ->label('Land')
+                    ->options(function () {
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->required()
-                    ->maxLength(255),
-                TextInput::make('company_name')
-                    ->maxLength(255),
-                TextInput::make('btw_id')
-                    ->maxLength(255),
+                    ->nullable()
+                    ->lazy(),
                 TextInput::make('invoice_street')
+                    ->label('Factuur straat')
                     ->maxLength(255)
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
+                    ->label('Factuur huisnummer')
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
+                    ->label('Factuur postcode')
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->maxLength(255),
                 TextInput::make('invoice_city')
+                    ->label('Factuur stad')
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->maxLength(255),
-                TextInput::make('invoice_country')
+                Select::make('invoice_country')
+                    ->label('Factuur land')
+                    ->options(function () {
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
                     ->required(fn (Get $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->lazy(),
+                Textarea::make('note')
+                    ->label('Notitie')
+                    ->nullable()
+                    ->maxLength(5000)
+                    ->columnSpanFull(),
+            ])
+            ->hiddenOn(ViewOrder::class)
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
+            ]);
+
+        $schema[] = Section::make('Bedrijfsinformatie')
+            ->schema([
+                TextInput::make('company_name')
+                ->label('Bedrijfsnaam')
+                ->maxLength(255),
+                TextInput::make('btw_id')
+                    ->label('Btw ID')
                     ->maxLength(255),
             ])
             ->hiddenOn(ViewOrder::class)
             ->columns([
                 'default' => 1,
-                'lg' => 1,
+                'lg' => 2,
+            ]);
+
+        $schema[] = Section::make('Factuur informatie')
+            ->schema([
+                TextInput::make('invoice_street')
+                    ->label('Straat')
+                    ->maxLength(255)
+                    ->reactive(),
+                TextInput::make('invoice_house_nr')
+                    ->label('Huisnummer')
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
+                TextInput::make('invoice_zip_code')
+                    ->label('Postcode')
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
+                TextInput::make('invoice_city')
+                    ->label('Stad')
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->maxLength(255),
+                Select::make('invoice_country')
+                    ->label('Land')
+                    ->options(function () {
+                        $countries = Countries::getAllSelectedCountries();
+                        $options = [];
+                        foreach ($countries as $country) {
+                            $options[$country] = $country;
+                        }
+
+                        return $options;
+                    })
+                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->nullable()
+                    ->lazy(),
+            ])
+            ->hiddenOn(ViewOrder::class)
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
             ]);
 
         return $form->schema($schema);

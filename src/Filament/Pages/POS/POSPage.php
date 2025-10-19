@@ -420,7 +420,7 @@ class POSPage extends Component implements HasForms
                     ->columnSpanFull(),
             ])
             ->fill([
-                'country' => Countries::getAllSelectedCountries()[0],
+                'country' => $this->country ?: Countries::getAllSelectedCountries()[0],
             ])
             ->columns(2);
     }
