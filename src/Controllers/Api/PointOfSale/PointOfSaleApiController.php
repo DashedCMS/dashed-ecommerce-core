@@ -672,7 +672,7 @@ class PointOfSaleApiController extends Controller
             if (! $discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email, $cartInstance)) {
+            } elseif ($discountCode && ! $discountCode->isValidForCart($posCart->email, $cartInstance)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';

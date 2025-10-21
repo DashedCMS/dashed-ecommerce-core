@@ -156,6 +156,13 @@ class Product extends Model
             $q->orWhere('sku', $search)
                 ->orWhere('ean', $search)
                 ->orWhere('article_code', $search);
+        })->orWhereHas('productGroup', function ($q) use ($columns, $needle) {
+            $q->where(function ($qq) use ($columns, $needle) {
+                foreach ($columns as $i => $col) {
+                    $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
+                    $qq->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
+                }
+            });
         });
 
         // 2) Relevance score opbouwen in de exacte volgorde van $columns
