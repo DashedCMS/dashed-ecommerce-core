@@ -26,7 +26,7 @@
         <div class="grid grid-cols-1 divide-x divide-primary-500 h-full">
             <div class="flex flex-col gap-8 overflow-y-auto">
                 <div class="flex flex-col gap-8 grow p-4 rounded-lg border border-primary-500 overflow-y-auto gap-4">
-                    @foreach($products as $product)
+                    @foreach(array_reverse($products) as $product)
                         <div class="flex flex-wrap items-center gap-4">
                             <div class="relative">
                                 @if($product['image'] ?? false)
@@ -39,7 +39,7 @@
                                 @endif
                                 <span
                                     class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white">
-                                {{ $product['quantity'] }}x
+                                {{ $product['quantity'] }}
                                 </span>
                             </div>
                             <div class="flex flex-col flex-wrap gap-1 flex-1">
