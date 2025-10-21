@@ -562,7 +562,6 @@ class Product extends Model
 
     public function directSellableStock($skipReservedStock = false)
     {
-        return $this->stock;
         if ($this->use_stock) {
             return $this->stock - ($skipReservedStock ? 0 : $this->reservedStock());
 
