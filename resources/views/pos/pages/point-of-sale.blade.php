@@ -1472,6 +1472,7 @@
         isFullscreen: false,
         pinTerminalStatusHandled: false,
 
+        customerUserId: $wire.entangle('customerUserId'),
         firstName: $wire.entangle('firstName'),
         lastName: $wire.entangle('lastName'),
         phoneNumber: $wire.entangle('phoneNumber'),
@@ -1572,6 +1573,7 @@
                 this.shippingMethods = data.shippingMethods;
                 this.shippingMethodId = data.shippingMethodId;
                 this.shippingMethodCosts = data.shippingMethodCosts;
+                this.customerUserId = data.customerUserId;
                 this.firstName = data.firstName;
                 this.lastName = data.lastName;
                 this.phoneNumber = data.phoneNumber;
@@ -2422,6 +2424,7 @@
             this.orderUrl = null;
             this.postPay = false;
             this.orderConfirmationPopup = false;
+            this.customerUserId = null;
             this.firstName = null;
             this.lastName = null;
             this.email = null;

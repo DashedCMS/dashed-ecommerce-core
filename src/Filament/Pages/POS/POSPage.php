@@ -2,8 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
+use App\Models\User;
 use Carbon\Carbon;
 use Dashed\DashedEcommerceCore\Classes\Countries;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Get;
 use Livewire\Component;
 use Filament\Forms\Form;
@@ -27,6 +29,7 @@ class POSPage extends Component implements HasForms
     public $searchQueryInputmode = false;
     public $cartInstance = 'handorder';
     public $orderOrigin = 'pos';
+    public $customerUserId = '';
     public $firstName = '';
     public $lastName = '';
     public $phoneNumber = '';
@@ -222,7 +225,7 @@ class POSPage extends Component implements HasForms
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -233,7 +236,7 @@ class POSPage extends Component implements HasForms
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'amount')
+                    ->visible(fn(Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -245,7 +248,7 @@ class POSPage extends Component implements HasForms
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn (Get $get) => $get('type') == 'percentage')
+                    ->visible(fn(Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortings code')
@@ -261,7 +264,7 @@ class POSPage extends Component implements HasForms
                         return $options;
                     })
                     ->required()
-                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -271,7 +274,7 @@ class POSPage extends Component implements HasForms
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (! $posCart->products) {
+        if (!$posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -301,7 +304,7 @@ class POSPage extends Component implements HasForms
             $discountCode->save();
         }
 
-        if (! $discountCode) {
+        if (!$discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -323,6 +326,76 @@ class POSPage extends Component implements HasForms
     {
         return $form
             ->schema([
+                Select::make('customerUserId')
+                    ->label('Account')
+                    ->columnSpanFull()
+                    ->options(function () {
+                        $users = User::all();
+                        $options = [];
+
+                        foreach ($users as $user) {
+                            $options[$user->id] = $user->name . ($user->name != $user->email ? ' ( ' . $user->email . ' )' : '');
+                        }
+
+                        return $options;
+                    })
+                    ->suffixAction(
+                        Action::make('copyCostToPrice')
+                            ->label('Gegevens invoeren')
+                            ->icon('heroicon-m-clipboard')
+                            ->action(function (Get $get) {
+
+                                $state = $get('customerUserId');
+
+                                if(!$state){
+                                    Notification::make()
+                                        ->title('Selecteer eerst een gebruiker')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $user = User::find($state);
+
+                                if ($user) {
+                                    $lastOrder = $user->lastOrderFromAllOrders();
+                                    if($lastOrder){
+                                        $this->firstName = $lastOrder->first_name;
+                                        $this->lastName = $lastOrder->last_name;
+                                        $this->email = $user->email;
+                                        $this->phoneNumber = $lastOrder->phone_number;
+                                        $this->street = $lastOrder->street;
+                                        $this->houseNr = $lastOrder->house_nr;
+                                        $this->zipCode = $lastOrder->zip_code;
+                                        $this->city = $lastOrder->city;
+                                        $this->country = $lastOrder->country;
+                                        $this->company = $lastOrder->company;
+                                        $this->btwId = $lastOrder->btw_id;
+                                        $this->invoiceStreet = $lastOrder->invoice_street;
+                                        $this->invoiceHouseNr = $lastOrder->invoice_house_nr;
+                                        $this->invoiceZipCode = $lastOrder->invoice_zip_code;
+                                        $this->invoiceCity = $lastOrder->invoice_city;
+                                        $this->invoiceCountry = $lastOrder->invoice_country;
+
+                                        Notification::make()
+                                            ->title('Gegevens van laatste bestelling geladen')
+                                            ->success()
+                                            ->send();
+                                    }else{
+                                        Notification::make()
+                                            ->title('Geen eerdere bestelling gevonden voor deze gebruiker')
+                                            ->warning()
+                                            ->send();
+                                    }
+                                }else{
+                                    Notification::make()
+                                        ->title('Gebruiker niet gevonden')
+                                        ->danger()
+                                        ->send();
+                                }
+                            })
+                    )
+                    ->helperText('Selecteer een account om de bestelling aan te koppelen'),
                 TextInput::make('firstName')
                     ->label('Voornaam')
                     ->maxLength(255),
@@ -346,21 +419,21 @@ class POSPage extends Component implements HasForms
                 TextInput::make('houseNr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn (Get $get) => $get('street'))
+                    ->required(fn(Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zipCode')
                     ->label('Postcode')
-                    ->required(fn (Get $get) => $get('street'))
+                    ->required(fn(Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn (Get $get) => $get('street'))
+                    ->required(fn(Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('country')
                     ->label('Land')
-                    ->options(function(){
+                    ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
                         foreach ($countries as $country) {
@@ -386,23 +459,23 @@ class POSPage extends Component implements HasForms
                     ->reactive(),
                 TextInput::make('invoiceHouseNr')
                     ->label('Factuur huisnummer')
-                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->required(fn(Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceZipCode')
                     ->label('Factuur postcode')
-                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->required(fn(Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceCity')
                     ->label('Factuur stad')
-                    ->required(fn (Get $get) => $get('invoice_street'))
+                    ->required(fn(Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('invoiceCountry')
                     ->label('Factuur land')
-                    ->required(fn (Get $get) => $get('invoice_street'))
-                    ->options(function(){
+                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
                         foreach ($countries as $country) {
@@ -431,6 +504,7 @@ class POSPage extends Component implements HasForms
 
         $this->customerDataForm->validate();
 
+        $posCart->customer_user_id = $this->customerUserId;
         $posCart->first_name = $this->firstName;
         $posCart->last_name = $this->lastName;
         $posCart->phone_number = $this->phoneNumber;
