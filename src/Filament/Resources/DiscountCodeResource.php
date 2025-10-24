@@ -75,7 +75,7 @@ class DiscountCodeResource extends Resource
                                 })
                                 ->required(),
                             TextInput::make('name')
-                                ->label('Name')
+                                ->label('Naam')
                                 ->required()
                                 ->maxLength(100),
                             TextInput::make('code')
@@ -213,6 +213,7 @@ class DiscountCodeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(DiscountCode::isNotGiftcard())
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')

@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
@@ -67,6 +69,20 @@ class DiscountCode extends Model
                 $code .= $codeCharacter;
             }
             $discountCode->code = $code;
+            $discountCode->user_id = auth()->check() ? auth()->user()->id : null;
+            if($discountCode->is_giftcard){
+                $discountCode->limit_use_per_customer = false;
+                $discountCode->use_stock = false;
+                $discountCode->type = 'amount';
+                $discountCode->is_global_discount = false;
+                $discountCode->initial_amount = $discountCode->discount_amount;
+            }
+        });
+
+        static::created(function ($discountCode) {
+            if($discountCode->is_giftcard){
+                $discountCode->createLog(tag: 'giftcard.created', userId: auth()->user()->id, oldAmount: 0, newAmount: $discountCode->discount_amount);
+            }
         });
 
         static::saved(function ($discountCode) {
@@ -140,6 +156,16 @@ class DiscountCode extends Model
             });
     }
 
+    public function scopeIsGiftcard($query)
+    {
+        $query->where('is_giftcard', 1);
+    }
+
+    public function scopeIsNotGiftcard($query)
+    {
+        $query->where('is_giftcard', 0);
+    }
+
     public function getDiscountedPriceForProduct(Product $product, int $quantity = 0)
     {
         $discountedPrice = $product->currentPrice * $quantity;
@@ -191,7 +217,7 @@ class DiscountCode extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->start_date && ! $this->end_date) {
+        if (!$this->start_date && !$this->end_date) {
             return 'active';
         } else {
             if ($this->start_date && $this->end_date) {
@@ -258,7 +284,7 @@ class DiscountCode extends Model
                     $emailIsValid = true;
                 }
             }
-            if (! $emailIsValid) {
+            if (!$emailIsValid) {
                 return false;
             }
         }
@@ -335,7 +361,7 @@ class DiscountCode extends Model
     //Only used for global discounts
     public function isValidForProduct(Product $product): bool
     {
-        if (! $this->is_global_discount) {
+        if (!$this->is_global_discount) {
             return false;
         }
 
@@ -370,5 +396,27 @@ class DiscountCode extends Model
     public function scopeIsNotGlobalDiscount($query)
     {
         return $query->where('is_global_discount', false);
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(DiscountCodeLog::class, 'discount_code_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function createLog(string $tag = 'system.note.created', ?int $userId = null, ?int $orderId = null, ?float $oldAmount = null, ?float $newAmount = null): void
+    {
+        $log = new DiscountCodeLog();
+        $log->discount_code_id = $this->id;
+        $log->order_id = $orderId;
+        $log->user_id = $userId ?: (auth()->check() ? auth()->user()->id : null);
+        $log->tag = $tag;
+        $log->old_amount = $oldAmount;
+        $log->new_amount = $newAmount;
+        $log->save();
     }
 }

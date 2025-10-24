@@ -1102,6 +1102,9 @@ class PointOfSaleApiController extends Controller
                     'message' => 'Bestelling is al betaald',
                 ]);
         } else {
+
+            $order->changeStatus('cancelled');
+
             return response()
                 ->json([
                     'success' => true,

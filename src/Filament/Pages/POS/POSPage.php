@@ -55,7 +55,11 @@ class POSPage extends Component implements HasForms
         'vat_rate' => 21,
     ];
     public ?array $createDiscountData = [
-        'type' => 'percentage'
+        'type' => 'percentage',
+        'note' => '',
+        'amount' => '',
+        'percentage' => '',
+        'discountCode' => '',
     ];
     public ?array $cancelOrderData = [];
     public ?array $customerData = [];
@@ -251,7 +255,7 @@ class POSPage extends Component implements HasForms
                     ->visible(fn(Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
-                    ->label('Kortings code')
+                    ->label('Kortingscode')
                     ->preload()
                     ->searchable()
                     ->options(function () {
@@ -314,7 +318,11 @@ class POSPage extends Component implements HasForms
         $posCart->save();
 
         $this->createDiscountData = [
-            'type' => 'percentage'
+            'type' => 'percentage',
+            'note' => '',
+            'amount' => '',
+            'percentage' => '',
+            'discountCode' => '',
         ];
 
         $this->dispatch('discountCodeCreated', [

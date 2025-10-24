@@ -57,7 +57,11 @@
                                     <a href="{{ $product->getUrl() }}" class="lg:col-span-2">
                                         <p class="font-bold">
                                             {{ $product->name }}
-                                            ({{ CurrencyHelper::formatPrice($product->currentPrice) }})
+                                            (@if($product->productGroup->showSingleProduct())
+                                                {{ $product->productGroup->fromPrice() }}
+                                            @else
+                                                {{ CurrencyHelper::formatPrice($product->currentPrice) }}
+                                            @endif)
                                         </p>
                                     </a>
                                 </li>

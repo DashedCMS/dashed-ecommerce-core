@@ -70,9 +70,21 @@ class Order extends Model
         static::creating(function ($order) {
             $order->ip = request()->ip();
             $order->hash = Str::random(32);
-            $order->locale = App::getLocale();
+            $order->locale = app()->getLocale();
             $order->initials = $order->first_name ? strtoupper($order->first_name[0]) . '.' : '';
             $order->site_id = Sites::getActive();
+        });
+
+        static::created(function ($order) {
+            if ($order->discountCode && $order->discount > 0) {
+                if ($order->discountCode->is_giftcard) {
+                    $order->discountCode->reserved_amount = $order->discountCode->reserved_amount + $order->discount;
+                    $order->discountCode->discount_amount = $order->discountCode->discount_amount - $order->discount;
+                    $order->discountCode->save();
+
+                    $order->discountCode->createLog(tag: 'giftcard.order.transaction.started', newAmount: $order->discountCode->discount_amount, oldAmount: $order->discountCode->discount_amount + $order->discount, orderId: $order->id);
+                }
+            }
         });
     }
 
@@ -535,6 +547,13 @@ class Order extends Model
             }
             $this->discountCode->stock_used = $this->discountCode->stock_used + 1;
             $this->discountCode->save();
+
+            if ($this->discountCode->is_giftcard) {
+                $this->discountCode->used_amount = $this->discountCode->used_amount + $this->discount;
+                $this->discountCode->reserved_amount = $this->discountCode->reserved_amount - $this->discount;
+                $this->discountCode->save();
+                $this->discountCode->createLog(tag: 'giftcard.order.transaction.completed', orderId: $this->id, oldAmount: $this->discountCode->discount_amount, newAmount: $this->discountCode->discount_amount);
+            }
         }
     }
 
@@ -579,6 +598,27 @@ class Order extends Model
             }
             $this->discountCode->stock_used = $this->discountCode->stock_used - 1;
             $this->discountCode->save();
+
+            $this->refillGiftcard();
+        }
+    }
+
+    public function refillGiftcard()
+    {
+        if ($this->discountCode && $this->discountCode->is_giftcard) {
+            $this->discountCode->discount_amount = $this->discountCode->discount_amount + $this->discount;
+            $this->discountCode->reserved_amount = $this->discountCode->reserved_amount - $this->discount;
+            $this->discountCode->save();
+            $this->discountCode->createLog(tag: 'giftcard.order.transaction.cancelled', orderId: $this->id, oldAmount: $this->discountCode->discount_amount - $this->discount, newAmount: $this->discountCode->discount_amount);
+        }
+    }
+
+    public function refillGiftcardFromPaidOrder()
+    {
+        if ($this->discountCode && $this->discountCode->is_giftcard) {
+            $this->discountCode->discount_amount = $this->discountCode->discount_amount + $this->discount;
+            $this->discountCode->save();
+            $this->discountCode->createLog(tag: 'giftcard.order.transaction.cancelled', orderId: $this->id, oldAmount: $this->discountCode->discount_amount - $this->discount, newAmount: $this->discountCode->discount_amount);
         }
     }
 
@@ -729,6 +769,8 @@ class Order extends Model
         if ($this->status == 'paid') {
             $this->refillStock();
             $this->refillDiscount();
+        } else {
+            $this->refillGiftcard();
         }
 
         foreach ($this->orderPayments()->where('status', 'pending')->get() as $orderPayment) {
@@ -898,6 +940,7 @@ class Order extends Model
 
         $newOrder->save();
         $newOrder->refresh();
+        $this->refillGiftcardFromPaidOrder();
 
         if ($paymentMethodId) {
             $newOrderPayment = $newOrder->orderPayments()->create([
