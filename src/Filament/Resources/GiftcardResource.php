@@ -108,7 +108,7 @@ class GiftcardResource extends Resource
                             ->label('Waarde van de cadeaukaart')
                             ->helperText('Hoeveel euro moet er op deze cadeaukaart staan')
                             ->prefix('€')
-                            ->minValue(1)
+                            ->minValue(0)
                             ->maxValue(100000)
                             ->numeric()
                             ->required(),
