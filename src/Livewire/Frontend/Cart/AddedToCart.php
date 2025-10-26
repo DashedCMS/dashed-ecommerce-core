@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 

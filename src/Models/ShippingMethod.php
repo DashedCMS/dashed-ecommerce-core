@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedCore\Models\Concerns\HasSearchScope;
 
 class ShippingMethod extends Model
@@ -125,12 +124,12 @@ class ShippingMethod extends Model
                     if ($shippingZoneId) {
                         $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
                         if ($shippingClassPrice > 0) {
-                            if ($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)) {
+                            if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                                 $activatedShippingClassIds[] = $shippingClass->id;
                             } elseif ($shippingClass->count_per_product) {
                                 $shippingCosts = $shippingCosts + ($shippingClassPrice * $cartItem->qty);
-                            } elseif (!$shippingClass->count_once && !$shippingClass->count_per_product) {
+                            } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                             }
                         }
@@ -156,17 +155,17 @@ class ShippingMethod extends Model
                     if ($shippingZoneId) {
                         $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
                         if ($shippingClassPrice > 0) {
-                            if ($shippingClass->count_once && !in_array($shippingClass->id, $activatedShippingClassIds)) {
+                            if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
                                 $shippingCosts = $shippingCosts + $shippingClassPrice;
                                 $activatedShippingClassIds[$shippingClass->id] = 1;
                                 $activatedShippingClasses[] = $shippingClass;
                             } elseif ($shippingClass->count_per_product) {
-                                if (!in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
+                                if (! in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
                                     $activatedShippingClasses[] = $shippingClass;
                                 }
                                 $activatedShippingClassIds[$shippingClass->id] = ($activatedShippingClassIds[$shippingClass->id] ?? 0) + $cartItem->qty;
-                            } elseif (!$shippingClass->count_once && !$shippingClass->count_per_product) {
-                                if (!in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
+                            } elseif (! $shippingClass->count_once && ! $shippingClass->count_per_product) {
+                                if (! in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
                                     $activatedShippingClasses[] = $shippingClass;
                                 }
                                 $activatedShippingClassIds[$shippingClass->id] = ($activatedShippingClassIds[$shippingClass->id] ?? 0) + 1;

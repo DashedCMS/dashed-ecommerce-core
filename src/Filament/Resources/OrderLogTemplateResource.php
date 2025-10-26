@@ -2,25 +2,27 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Form;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Forms\Components\Placeholder;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Resources\Concerns\Translatable;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource\Pages\EditOrderLogTemplate;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource\Pages\ListOrderLogTemplates;
@@ -35,8 +37,8 @@ class OrderLogTemplateResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $navigationIcon = 'heroicon-o-newspaper';
-    protected static ?string $navigationGroup = 'Content';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-newspaper';
+    protected static UnitEnum|string|null $navigationGroup = 'Content';
     protected static ?string $navigationLabel = 'Bestel log templates';
     protected static ?string $label = 'Bestel log template';
     protected static ?string $pluralLabel = 'Bestel log templates';
@@ -48,11 +50,11 @@ class OrderLogTemplateResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
         $contentSchema = [
-            Placeholder::make('name')
-                ->label('Variabelen')
+            TextEntry::make('name')
+                ->state('Variabelen')
                 ->helperText('Je kan de volgende variablen gebruiken in de mails: ' . implode(', ', OrderVariableReplacer::getAvailableVariables())),
             TextInput::make('name')
                 ->label('Naam')
@@ -66,9 +68,9 @@ class OrderLogTemplateResource extends Resource
                 ->required(),
         ];
 
-        return $form
+        return $schema
             ->schema([
-                Section::make('Globale informatie')
+                Section::make('Globale informatie')->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
                             ->label('Actief op site')
@@ -117,12 +119,12 @@ class OrderLogTemplateResource extends Resource
                 //
             ])
             ->reorderable('order')
-            ->actions([
+            ->recordActions([
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

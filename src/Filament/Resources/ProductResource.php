@@ -55,8 +55,8 @@ class ProductResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static string | UnitEnum | null $navigationGroup = 'Producten';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string|UnitEnum|null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Producten';
     protected static ?string $label = 'Product';
     protected static ?string $pluralLabel = 'Producten';
@@ -529,10 +529,6 @@ class ProductResource extends Resource
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
-<<<<<<< HEAD
-                    ->schema([
-                        Section::make('Beheer de prijzen')->columnSpanFull()
-=======
                     ->fillForm(function (Product $record) {
                         return [
                             'price' => $record->price,
@@ -550,9 +546,9 @@ class ProductResource extends Resource
                             'fulfillment_provider' => $record->fulfillment_provider,
                         ];
                     })
-                    ->form([
+                    ->schema([
                         Section::make('Beheer de prijzen')
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
+                            ->columnSpanFull()
                             ->schema([
                                 TextInput::make('price')
                                     ->label('Prijs van het product')
@@ -574,17 +570,12 @@ class ProductResource extends Resource
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
-<<<<<<< HEAD
-                        Section::make('Voorraad beheren')->columnSpanFull()
-                            ->schema(Product::stockFilamentSchema()),
-=======
                         Section::make('Voorraad beheren')
                             ->schema(Product::stockFilamentSchema())
                             ->columns([
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                     ])
                     ->action(function (Product $record, array $data): void {
                         foreach ($data as $key => $value) {

@@ -2,14 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-<<<<<<< HEAD
 use UnitEnum;
 use BackedEnum;
-=======
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Filament\Forms\Get;
-use Filament\Forms\Form;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
@@ -41,6 +35,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
@@ -220,7 +215,7 @@ class OrderResource extends Resource
                 'lg' => 2,
             ]);
 
-        $schema[] = Section::make('Bedrijfsinformatie')
+        $newSchema[] = Section::make('Bedrijfsinformatie')->columnSpanFull()
             ->schema([
                 TextInput::make('company_name')
                 ->label('Bedrijfsnaam')
@@ -235,7 +230,7 @@ class OrderResource extends Resource
                 'lg' => 2,
             ]);
 
-        $schema[] = Section::make('Factuur informatie')
+        $newSchema[] = Section::make('Factuur informatie')->columnSpanFull()
             ->schema([
                 TextInput::make('invoice_street')
                     ->label('Straat')

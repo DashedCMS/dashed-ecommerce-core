@@ -2,12 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-<<<<<<< HEAD
-=======
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Filament\Forms\Get;
-use Filament\Forms\Form;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Resources\Pages\Page;
@@ -25,6 +19,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
@@ -181,7 +176,7 @@ class CreateOrder extends Page implements HasSchemas
                 Select::make('invoice_country')
                     ->label('Factuur land')
                     ->required(fn (Get $get) => $get('invoice_street'))
-                    ->options(function(){
+                    ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
                         foreach ($countries as $country) {
@@ -215,12 +210,14 @@ class CreateOrder extends Page implements HasSchemas
                             ->maxValue(1000)
                             ->default(0),
                         TextEntry::make('Voorraad')
-                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
+                            ->state(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
                         TextEntry::make('Prijs')
-                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
+                            ->state(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
                         TextEntry::make('Afbeelding')
-                            ->label(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'medium')->url ?? '') . '">') : 'Kies een product'),
-                        Section::make('Extra\'s')->columnSpanFull()
+                            ->visible(fn (Get $get) => $get('id') && Product::find($get('id'))->firstImage)
+                            ->state(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'original')->url ?? '') . '">') : 'Kies een product'),
+                        Section::make('Extra\'s')
+                            ->columnSpanFull()
                             ->schema(fn (Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
                     ]),
             ])
@@ -300,6 +297,7 @@ class CreateOrder extends Page implements HasSchemas
                 TextEntry::make('korting')
                     ->state('Korting: ' . $this->discount),
                 TextEntry::make('btw')
+                    ->label('BTW')
                     ->state('BTW: ' . $this->vat),
                 TextEntry::make('totaal')
                     ->state('Totaal: ' . $this->total),
@@ -319,15 +317,11 @@ BLADE
                 ))),
         ];
 
-<<<<<<< HEAD
-        return $schema->schema($newSchema);
-=======
-        return $form
+        return $schema
             ->fill([
                 'country' => Countries::getAllSelectedCountries()[0],
             ])
-            ->schema($schema);
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
+            ->schema($newSchema);
     }
 
     public function submit()

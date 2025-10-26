@@ -5,12 +5,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pa
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
-<<<<<<< HEAD
-use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
-=======
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
 use LaraZeus\SpatieTranslatable\Resources\Pages\EditRecord\Concerns\Translatable;
 

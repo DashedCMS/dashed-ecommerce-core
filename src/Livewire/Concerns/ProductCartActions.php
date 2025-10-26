@@ -558,11 +558,12 @@ trait ProductCartActions
         $attributes['options'] = $options;
         $attributes['hiddenOptions'] = $this->hiddenOptions;
 
-        if (!$productPrice) {
+        if (! $productPrice) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('product-price-zero', $this->cartType, 'De prijs mag niet op 0 staan, neem contact met ons op om de bestelling af te ronden'))
                 ->send();
+
             return;
         }
 

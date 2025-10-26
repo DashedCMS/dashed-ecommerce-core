@@ -35,7 +35,7 @@ class PaymentInformationList extends Component implements HasSchemas
             // Unieke key per veld
             $key = 'custom_' . md5($label);
             $customOrderFields[] = TextEntry::make($key)
-                ->state($label)
+                ->label($label)
                 ->state(fn () => $value);
         }
 
@@ -46,57 +46,57 @@ class PaymentInformationList extends Component implements HasSchemas
                     ->label('Betaal informatie')
                     ->schema([
                         TextEntry::make('order_origin')
-                            ->state('Bestellingsherkomst'),
+                            ->label('Bestellingsherkomst'),
 
                         TextEntry::make('ip')
-                            ->state('IP'),
+                            ->label('IP'),
 
                         TextEntry::make('note')
-                            ->state('Notitie')
+                            ->label('Notitie')
                             ->state(fn (Order $record) => $record->note ?: 'Geen notitie'),
 
                         IconEntry::make('marketing')
-                            ->state('Marketing geaccepteerd')
+                            ->label('Marketing geaccepteerd')
                             ->trueIcon('heroicon-o-check-circle')
                             ->falseIcon('heroicon-o-x-circle'),
 
                         TextEntry::make('invoice_id')
-                            ->state('Factuur ID'),
+                            ->label('Factuur ID'),
 
                         TextEntry::make('payment_method_name')
-                            ->state('Betalingsmethode')
+                            ->label('Betalingsmethode')
                             ->state(fn (Order $record) => $record->paymentMethod?->name ?? 'Niet gevonden'),
 
                         TextEntry::make('psp')
-                            ->state('PSP')
+                            ->label('PSP')
                             ->visible(fn (Order $record) => (bool) $record->psp),
 
                         TextEntry::make('psp_id')
-                            ->state('PSP ID')
+                            ->label('PSP ID')
                             ->visible(fn (Order $record) => (bool) $record->psp),
 
                         TextEntry::make('shipping_method_name')
-                            ->state('Verzendmethode')
+                            ->label('Verzendmethode')
                             ->state(fn (Order $record) => $record->shippingMethod->name ?? 'Niet gevonden'),
 
                         TextEntry::make('subtotal')
-                            ->state('Subtotaal')
+                            ->label('Subtotaal')
                             ->money('EUR'),
 
                         TextEntry::make('discount')
-                            ->state('Korting')
+                            ->label('Korting')
                             ->money('EUR'),
 
                         TextEntry::make('discountCode.code')
-                            ->state('Kortingscode')
+                            ->label('Kortingscode')
                             ->visible(fn (Order $record) => (bool) $record->discountCode),
 
                         TextEntry::make('btw')
-                            ->state('BTW')
+                            ->label('BTW')
                             ->money('EUR'),
 
                         KeyValueEntry::make('vat_percentages')
-                            ->state('BTW percentages')
+                            ->label('BTW percentages')
                             ->keyLabel('Percentage')
                             ->valueLabel('Bedrag')
                             ->state(function (Order $record) {
@@ -109,7 +109,7 @@ class PaymentInformationList extends Component implements HasSchemas
                             }),
 
                         TextEntry::make('total')
-                            ->state('Totaal')
+                            ->label('Totaal')
                             ->money('EUR'),
                     ])
                     ->columns(4),

@@ -20,12 +20,9 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-<<<<<<< HEAD
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
-=======
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 
 class OrderSettingsPage extends Page
 {
@@ -166,17 +163,10 @@ class OrderSettingsPage extends Page
 
         $tabs = [];
         foreach ($locales as $locale) {
-<<<<<<< HEAD
             $newSchema = [
                 TextEntry::make('label')
                     ->state("Fulfillment notificaties voor {$locale['name']}")
-                    ->helperText('Je kan de volgende variablen gebruiken in de mails: :firstName:, :lastName:, :email:, :phoneNumber:, :street:, :houseNr:, :zipCode:, :city:, :country:, :companyName:, :total:'),
-=======
-            $schema = [
-                Placeholder::make('label')
-                    ->label("Fulfillment notificaties voor {$locale['name']}")
                     ->helperText('Je kan de volgende variablen gebruiken in de mails: ' . implode(', ', OrderVariableReplacer::getAvailableVariables())),
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
                 Toggle::make("fulfillment_status_unhandled_enabled_{$locale['id']}")
                     ->label('Fulfillment status "Niet afgehandeld" actie')
                     ->reactive()

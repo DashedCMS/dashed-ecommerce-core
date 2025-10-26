@@ -19,7 +19,6 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -204,7 +203,7 @@ class Checkout extends Component
             }
 
             $this->fillPrices();
-        }else{
+        } else {
             cartHelper()->initialize();
         }
     }
@@ -310,7 +309,7 @@ class Checkout extends Component
 
         cartHelper()->updateData();
 
-//        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: is_array($this->shippingMethods) ? null : ($this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null));
+        //        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: is_array($this->shippingMethods) ? null : ($this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null));
         $this->subtotal = cartHelper()->getSubtotal();
         $this->discount = cartHelper()->getDiscount();
         $this->tax = cartHelper()->getTax();
@@ -321,7 +320,7 @@ class Checkout extends Component
         $this->postpayPaymentMethod = cartHelper()->getIsPostpayPaymentMethod();
         $this->depositAmount = cartHelper()->getDepositAmount();
         $this->getSuggestedProducts();
-//        $this->dispatch('filledPrices');
+        //        $this->dispatch('filledPrices');
     }
 
     public function rules()

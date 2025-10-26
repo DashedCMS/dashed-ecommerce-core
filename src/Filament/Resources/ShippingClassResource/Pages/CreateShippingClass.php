@@ -4,12 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pa
 
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
-<<<<<<< HEAD
-use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
-=======
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
-use Filament\Resources\Pages\CreateRecord\Concerns\Translatable;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
 use LaraZeus\SpatieTranslatable\Resources\Pages\CreateRecord\Concerns\Translatable;
 

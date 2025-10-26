@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class Cart extends Component
@@ -17,12 +17,12 @@ class Cart extends Component
     public $subtotal;
     public $tax;
     public $total;
-//    public $paymentCosts;
-//    public $shippingCosts;
-//    public $depositAmount;
-//    public bool $postpayPaymentMethod = false;
-//    public array $paymentMethods = [];
-//    public array $depositPaymentMethods = [];
+    //    public $paymentCosts;
+    //    public $shippingCosts;
+    //    public $depositAmount;
+    //    public bool $postpayPaymentMethod = false;
+    //    public array $paymentMethods = [];
+    //    public array $depositPaymentMethods = [];
     public string $cartType = 'default';
 
     protected $listeners = [
@@ -33,8 +33,8 @@ class Cart extends Component
     {
         cartHelper()->initialize();
         $this->discountCode = cartHelper()->getDiscountCodeString();
-//        $this->cartType = $cartType;
-//        ShoppingCart::setInstance($this->cartType);
+        //        $this->cartType = $cartType;
+        //        ShoppingCart::setInstance($this->cartType);
         $this->checkCart();
         $this->fillPrices();
 

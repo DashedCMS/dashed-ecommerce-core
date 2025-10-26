@@ -41,7 +41,7 @@ class OrderProductsList extends Component implements HasSchemas
                 ->schema([
                     ImageEntry::make('image_' . $pid)
                         ->hiddenLabel()
-                        ->visible((bool) ($orderProduct->product && $orderProduct->product->firstImage))
+                        ->visible((bool)($orderProduct->product && $orderProduct->product->firstImage))
                         ->state(fn () => $orderProduct->custom_image ?: (mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? ''))
                         ->disk('dashed')
                         ->width('100%')
@@ -75,88 +75,46 @@ class OrderProductsList extends Component implements HasSchemas
                                 }
                             }
 
-<<<<<<< HEAD
-                            return new HtmlString($html);
+                            return new HtmlString($productExtras);
                         })
                         ->size('xs'),
-
-                    TextEntry::make('quantity_' . $pid)
+                    TextEntry::make('quantity')
                         ->hiddenLabel()
                         ->badge()
                         ->color('primary')
                         ->weight('bold')
-                        ->state(fn () => $orderProduct->quantity)
+                        ->getStateUsing(fn () => $orderProduct->quantity)
                         ->suffix('x'),
-
-                    TextEntry::make('pre_order_' . $pid)
+                    TextEntry::make('preOrder')
                         ->hiddenLabel()
                         ->badge()
                         ->color('warning')
                         ->weight('bold')
-                        ->state('Is pre-order')
-                        ->visible((bool) $orderProduct->is_pre_order),
-
-                    TextEntry::make('price_' . $pid)
+                        ->getStateUsing(fn () => 'Is pre-order')
+                        ->visible($orderProduct->is_pre_order),
+                    TextEntry::make('price')
                         ->hiddenLabel()
-                        ->state(fn () => $orderProduct->price)
-                        ->helperText(fn () => $orderProduct->discount > 0
-                            ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount)
-                            : null)
+                        ->getStateUsing(fn () => $orderProduct->price)
+                        ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
                         ->money('EUR'),
-
-                    TextEntry::make('fulfiller_' . $pid)
+                    TextEntry::make('fulfiller')
                         ->hiddenLabel()
-                        ->visible((bool) $orderProduct->fulfillment_provider)
-                        ->state(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ')
-                            . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
+                        ->visible((bool)$orderProduct->fulfillment_provider)
+                        ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
                         ->badge()
                         ->columnSpanFull()
                         ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
+                    TextEntry::make('name')
+                        ->hiddenLabel()
+                        ->state(fn () => $orderProduct->name)
+                        ->visible(fn () => $orderProduct->product)
+                        ->getStateUsing(fn () => '<a class="hover:text-primary-500" target="_blank" href="' . ($orderProduct->product ? route('filament.dashed.resources.products.edit', $orderProduct->product) : '#') . '">' . 'Bekijk product' . '</a>')
+                        ->size('sm')
+                        ->columnSpanFull()
+                        ->html(),
                 ])
                 ->columns(5)
                 ->columnSpanFull();
-=======
-                                return new HtmlString($productExtras);
-                            })
-                            ->size('xs'),
-                        TextEntry::make('quantity')
-                            ->hiddenLabel()
-                            ->badge()
-                            ->color('primary')
-                            ->weight('bold')
-                            ->getStateUsing(fn () => $orderProduct->quantity)
-                            ->suffix('x'),
-                        TextEntry::make('preOrder')
-                            ->hiddenLabel()
-                            ->badge()
-                            ->color('warning')
-                            ->weight('bold')
-                            ->getStateUsing(fn () => 'Is pre-order')
-                            ->visible($orderProduct->is_pre_order),
-                        TextEntry::make('price')
-                            ->hiddenLabel()
-                            ->getStateUsing(fn () => $orderProduct->price)
-                            ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
-                            ->money('EUR'),
-                        TextEntry::make('fulfiller')
-                            ->hiddenLabel()
-                            ->visible((bool)$orderProduct->fulfillment_provider)
-                            ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
-                            ->badge()
-                            ->columnSpanFull()
-                            ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
-                        TextEntry::make('name')
-                            ->hiddenLabel()
-                            ->label(fn () => $orderProduct->name)
-                            ->visible(fn() => $orderProduct->product)
-                            ->getStateUsing(fn () => '<a class="hover:text-primary-500" target="_blank" href="' . ($orderProduct->product ? route('filament.dashed.resources.products.edit', $orderProduct->product) : '#') . '">' . 'Bekijk product' . '</a>')
-                            ->size('sm')
-                            ->columnSpanFull()
-                            ->html(),
-                    ])
-                    ->columns(5)
-                    ->columnSpanFull();
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
         }
 
         return $schema

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Dashboard;
 
-<<<<<<< HEAD
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
@@ -10,13 +9,6 @@ use Filament\Forms\Components\DatePicker;
 use Illuminate\Contracts\Support\Htmlable;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Pages\Dashboard as BaseDashboard;
-=======
-use Filament\Forms\Form;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
-use Filament\Notifications\Notification;
-use Dashed\DashedEcommerceCore\Jobs\ExportProductsJob;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 
 class Dashboard extends BaseDashboard
 {

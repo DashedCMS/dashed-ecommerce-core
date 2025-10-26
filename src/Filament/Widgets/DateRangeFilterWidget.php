@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets;
 
+use Filament\Schemas\Schema;
 use Filament\Widgets\Widget;
 
 class DateRangeFilterWidget extends Widget
@@ -13,9 +14,9 @@ class DateRangeFilterWidget extends Widget
         return true;
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 DatePicker::make('start_date')
                     ->default(now()->subYear()->startOfDay())

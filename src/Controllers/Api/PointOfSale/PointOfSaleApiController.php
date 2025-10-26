@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Classes\Countries;
 use Paynl\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -18,6 +17,7 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\PinTerminal;
@@ -135,7 +135,7 @@ class PointOfSaleApiController extends Controller
 
     public function updateCart(string $cartInstance, string $posIdentifier, ?string $discountCode = null): array
     {
-//        cartHelper()->initialize($cartInstance);
+        //        cartHelper()->initialize($cartInstance);
         cartHelper()->setCartType($cartInstance);
         cartHelper()->emptyCart();
 
@@ -194,7 +194,7 @@ class PointOfSaleApiController extends Controller
         $posCart->discount_code = $activeDiscountCode ?? null;
         $posCart->save();
 
-//        cartHelper()->initialize();
+        //        cartHelper()->initialize();
 
         if ($posCart->shipping_method_id) {
             cartHelper()->setShippingMethod($posCart->shipping_method_id);
@@ -672,7 +672,7 @@ class PointOfSaleApiController extends Controller
             if (! $discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($this->email, $cartInstance)) {
+            } elseif ($discountCode && ! $discountCode->isValidForCart($posCart->email, $cartInstance)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -1115,29 +1115,29 @@ class PointOfSaleApiController extends Controller
             Cache::forget('pos_products');
         }
 
-//        $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
-            $products = Product::handOrderShowable()
-                ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status'])
-                ->get()
-                ->map(function ($product) {
-                    $name = $product->getTranslation('name', app()->getLocale());
-                    $currentPrice = $product->currentPrice;
-                    //                    $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
+        //        $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
+        $products = Product::handOrderShowable()
+            ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status'])
+            ->get()
+            ->map(function ($product) {
+                $name = $product->getTranslation('name', app()->getLocale());
+                $currentPrice = $product->currentPrice;
+                //                    $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
 
-                    return [
-                        'id' => $product->id,
-                        'name' => $name,
-                        'stock' => $product->directSellableStock(),
+                return [
+                    'id' => $product->id,
+                    'name' => $name,
+                    'stock' => $product->directSellableStock(),
 //                        'image' => $image ? "data:image/png;base64,".base64_encode(file_get_contents($image)) : '',
-                        'currentPrice' => $currentPrice,
-                        'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
-                        'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
-                    ];
-                })
-                ->toArray();
+                    'currentPrice' => $currentPrice,
+                    'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
+                    'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
+                ];
+            })
+            ->toArray();
 
-//            return $products;
-//        });
+        //            return $products;
+        //        });
 
 
         return response()

@@ -7,9 +7,9 @@ use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
+use RalphJSmit\Filament\MediaLibrary\Filament\Tables\Columns\MediaColumn;
 
 class ProductFilterOptionRelationManager extends RelationManager
 {
@@ -33,9 +33,8 @@ class ProductFilterOptionRelationManager extends RelationManager
                     ->label('Naam')
                     ->searchable()
                     ->sortable(),
-                ImageColumn::make('image')
-                    ->label('Afbeelding')
-                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
+                MediaColumn::make('image')
+                    ->label('Afbeelding'),
             ])
             ->filters([
                 //

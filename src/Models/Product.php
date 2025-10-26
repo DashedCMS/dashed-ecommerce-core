@@ -24,7 +24,6 @@ use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -125,7 +124,7 @@ class Product extends Model
     {
         $minPrice = request('min-price');
         $maxPrice = request('max-price');
-        $search   = request('search', $search);
+        $search = request('search', $search);
 
         if ($minPrice !== null) {
             $query->where('price', '>=', $minPrice);
@@ -160,21 +159,21 @@ class Product extends Model
 
         // 2) Relevance score opbouwen in de exacte volgorde van $columns
         //    Exacte matches op sku/ean/article_code krijgen de hoogste weging.
-        $cases    = [];
+        $cases = [];
         $bindings = [];
 
         // Hoge weging voor exacte matches
         $topWeight = count($columns) + 10;
         foreach (['sku', 'ean', 'article_code'] as $exactField) {
-            $cases[]    = "CASE WHEN {$exactField} = ? THEN {$topWeight} ELSE 0 END";
+            $cases[] = "CASE WHEN {$exactField} = ? THEN {$topWeight} ELSE 0 END";
             $bindings[] = $search;
         }
 
         // Afnemende weging per kolom in jouw volgorde
         foreach ($columns as $idx => $col) {
-            $weight      = count($columns) - $idx; // eerste kolom = hoogste weight
-            $cases[]     = "CASE WHEN LOWER(`{$col}`) LIKE ? THEN {$weight} ELSE 0 END";
-            $bindings[]  = "%{$needle}%";
+            $weight = count($columns) - $idx; // eerste kolom = hoogste weight
+            $cases[] = "CASE WHEN LOWER(`{$col}`) LIKE ? THEN {$weight} ELSE 0 END";
+            $bindings[] = "%{$needle}%";
         }
 
         // Relevance select + sortering
@@ -184,7 +183,6 @@ class Product extends Model
 
         return $query;
     }
-
 
     public function scopeSearchOld($query, ?string $search = null)
     {
@@ -562,7 +560,6 @@ class Product extends Model
 
     public function directSellableStock($skipReservedStock = false)
     {
-        return $this->stock;
         if ($this->use_stock) {
             return $this->stock - ($skipReservedStock ? 0 : $this->reservedStock());
 

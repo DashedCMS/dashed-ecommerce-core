@@ -18,12 +18,9 @@ use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Filament\Actions\Concerns\InteractsWithActions;
-<<<<<<< HEAD
 use Filament\Schemas\Concerns\InteractsWithSchemas;
-=======
 use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 
 class CreateOrderLog extends Component implements HasSchemas, HasActions
 {

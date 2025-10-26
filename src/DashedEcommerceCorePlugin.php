@@ -2,10 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-<<<<<<< HEAD
-use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount;
-=======
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -14,11 +10,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
-<<<<<<< HEAD
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats;
-=======
-use Dashed\DashedEcommerceCore\Filament\Widgets\DateRangeFilterWidget;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
@@ -27,6 +19,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
@@ -96,7 +89,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 CartActionsPieChartWidget::class,
                 PaymentMethodPieChartWidget::class,
                 DashboardFunLineChartStats::class,
-                SoldoutCount::class
+                SoldoutCount::class,
             ])
             ->resources([
                 PaymentMethodResource::class,

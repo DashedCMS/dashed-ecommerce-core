@@ -2,19 +2,17 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
-use Dashed\DashedTranslations\Models\Translation;
-use Faker\Provider\ar_EG\Payment;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
-use Illuminate\Support\Facades\Storage;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 class CartHelper
 {
@@ -56,9 +54,9 @@ class CartHelper
             return;
         }
         static::$initialized = true;
-//        ray()->measure();
+        //        ray()->measure();
         $this->updateData();
-//        ray()->measure();
+        //        ray()->measure();
     }
 
     public function updateData(): void
@@ -91,7 +89,7 @@ class CartHelper
     private function setDiscountCode(bool $forceString = false): void
     {
         $code = $forceString ? static::$discountCodeString : (session('discountCode') ?: static::$discountCodeString);
-        if (!$code) {
+        if (! $code) {
             static::$discountCode = null;
 
             return;
@@ -99,7 +97,7 @@ class CartHelper
 
         $discountCode = DiscountCode::usable()->isNotGlobalDiscount()->where('code', $code)->first();
 
-        if (!$discountCode || !$discountCode->isValidForCart(cartType: static::$cartType)) {
+        if (! $discountCode || ! $discountCode->isValidForCart(cartType: static::$cartType)) {
             session(['discountCode' => '']);
             static::$discountCode = null;
             static::$discountCodeString = null;
@@ -148,19 +146,19 @@ class CartHelper
                     $tax += $price;
                     $taxWithoutDiscount += $priceWithoutDiscount;
                     if (($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate) > 0) {
-                        if (!isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
+                        if (! isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
                             $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] = 0;
                         }
                         if (static::$discountCode && static::$discountCode->type == 'percentage') {
                             $totalCartItemAmount = Product::getShoppingCartItemPrice($cartItem, static::$discountCode);
-                            if (!static::$calculateInclusiveTax) {
+                            if (! static::$calculateInclusiveTax) {
                                 $totalCartItemAmount = $totalCartItemAmount / 100 * (100 + ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate));
                             }
 
                             $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] += $totalCartItemAmount;
                         } else {
                             $totalCartItemAmount = Product::getShoppingCartItemPrice($cartItem);
-                            if (!static::$calculateInclusiveTax) {
+                            if (! static::$calculateInclusiveTax) {
                                 $totalCartItemAmount = $totalCartItemAmount / 100 * (100 + ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate));
                             }
 
@@ -178,10 +176,10 @@ class CartHelper
         $totalVatPerPercentage = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-            if (!isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
+            if (! isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
                 $vatPercentageOfTotals[number_format($percentage, 0)] = 0;
             }
-            if (!isset($totalVatPerPercentage[number_format($percentage, 0)])) {
+            if (! isset($totalVatPerPercentage[number_format($percentage, 0)])) {
                 $totalVatPerPercentage[number_format($percentage, 0)] = 0;
             }
             $vatPercentageOfTotals[number_format($percentage, 0)] += $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
@@ -208,11 +206,11 @@ class CartHelper
 
     public function getVatForShippingMethod(?int $vatRate = null): float
     {
-        if (!static::$shippingMethod) {
+        if (! static::$shippingMethod) {
             return 0;
         }
 
-        if (!$vatRate) {
+        if (! $vatRate) {
             $vatRate = self::getVatRateForShippingMethod();
         }
 
@@ -289,7 +287,7 @@ class CartHelper
     {
         $total = static::$totalWithoutDiscount;
 
-        if (!self::$calculateInclusiveTax) {
+        if (! self::$calculateInclusiveTax) {
             $total -= static::$taxWithoutDiscount;
 
             if (static::$shippingMethod) {
@@ -359,7 +357,7 @@ class CartHelper
             $total += $cartItem->model ? Product::getShoppingCartItemPrice($cartItem) : ($cartItem->price * $cartItem->qty);
         }
 
-        if (!static::$calculateInclusiveTax) {
+        if (! static::$calculateInclusiveTax) {
             $total += static::$tax;
         }
 
@@ -591,7 +589,7 @@ class CartHelper
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
-            if (!$cartItem->model) {
+            if (! $cartItem->model) {
                 if ($cartItem->associatedModel) {
                     Cart::remove($cartItem->rowId);
                     $cartChanged = true;
@@ -603,7 +601,7 @@ class CartHelper
             $model = $cartItem->model;
 
             // Handle removed or unavailable products
-            if ($model->trashed() || !$model->publicShowable()) {
+            if ($model->trashed() || ! $model->publicShowable()) {
                 Cart::remove($cartItem->rowId);
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $model->id);
                 $cartItemDeleted = true;
@@ -618,7 +616,7 @@ class CartHelper
             }
 
             // Handle stock checks
-            if ($checkStock && !$cartItemDeleted && $model->stock() < $cartItem->qty) {
+            if ($checkStock && ! $cartItemDeleted && $model->stock() < $cartItem->qty) {
                 $newStock = $model->stock();
                 if ($newStock > 0) {
                     Cart::update($cartItem->rowId, $newStock);
@@ -647,16 +645,16 @@ class CartHelper
             }
 
             // Handle purchase limits
-            if (!$cartItemDeleted && $model->limit_purchases_per_customer && $cartItem->qty > $model->limit_purchases_per_customer_limit) {
+            if (! $cartItemDeleted && $model->limit_purchases_per_customer && $cartItem->qty > $model->limit_purchases_per_customer_limit) {
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty - $model->limit_purchases_per_customer_limit, productId: $model->id);
                 Cart::update($cartItem->rowId, $model->limit_purchases_per_customer_limit);
                 $cartChanged = true;
             }
 
             // Merge cart items with the same product and options
-            if (!$cartItemDeleted) {
+            if (! $cartItemDeleted) {
                 foreach ($cartItems as $otherCartItem) {
-                    if ($cartItem->rowId === $otherCartItem->rowId || !$otherCartItem->model) {
+                    if ($cartItem->rowId === $otherCartItem->rowId || ! $otherCartItem->model) {
                         continue;
                     }
 
@@ -675,17 +673,17 @@ class CartHelper
             }
 
             // Collect parent product groups for stock checks
-            if (!$cartItemDeleted && $model->productGroup && $model->productGroup->use_parent_stock ?? false) {
+            if (! $cartItemDeleted && $model->productGroup && $model->productGroup->use_parent_stock ?? false) {
                 $parentItemsToCheck->push($model->productGroup->id);
             }
 
-            if (!$cartItemDeleted) {
+            if (! $cartItemDeleted) {
                 $price = $cartItem->options['originalPrice'];
 
                 if ($model->volumeDiscounts) {
                     $volumeDiscount = $model->volumeDiscounts()->where('min_quantity', '<=', $cartItem->qty)->orderBy('min_quantity', 'desc')->first();
                     if ($volumeDiscount) {
-                        if (!$cartItem->options['originalPrice']) {
+                        if (! $cartItem->options['originalPrice']) {
                             Cart::update($cartItem->rowId, [
                                 'options' => array_merge($cartItem->options, ['originalPrice' => $cartItem->price]),
                             ]);
@@ -707,7 +705,7 @@ class CartHelper
         // Check parent product group stock
         $parentItemsToCheck->unique()->each(function ($parentId) {
             $parentProduct = Product::find($parentId);
-            if (!$parentProduct) {
+            if (! $parentProduct) {
                 return;
             }
 
@@ -749,7 +747,7 @@ class CartHelper
 
     public function applyDiscountCode(?string $code = null): array
     {
-        if (!$code) {
+        if (! $code) {
             session(['discountCode' => '']);
             $this->updateData();
 
@@ -762,10 +760,10 @@ class CartHelper
 
         static::$discountCodeString = $code;
         $this->setDiscountCode(true, static::$cartType);
-//        ray(cartHelper()->getCartType());
+        //        ray(cartHelper()->getCartType());
         $this->updateData();
 
-        if (!static::$discountCode) {
+        if (! static::$discountCode) {
             return [
                 'status' => 'danger',
                 'message' => Translation::get('discount-code-not-valid', static::$cartType, 'The discount code is not valid'),
@@ -781,7 +779,7 @@ class CartHelper
     public function changeQuantity(string $rowId, int $quantity): array
     {
         $dispatch = [];
-        if (!$quantity) {
+        if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
                 $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
                 \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
@@ -802,7 +800,7 @@ class CartHelper
                         'cartTotal' => number_format($cartTotal, 2, '.', ''),
                         'category' => $cartItem->model->productCategories->first()?->name ?? null,
                         'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
-                    ]
+                    ],
                 ];
             }
 
@@ -834,7 +832,7 @@ class CartHelper
     {
         if ($cartType) {
             static::$cartType = $cartType;
-        } elseif (!static::$cartType) {
+        } elseif (! static::$cartType) {
             static::$cartType = 'default';
         }
 
