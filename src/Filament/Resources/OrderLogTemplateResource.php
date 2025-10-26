@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Actions\DeleteBulkAction;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -18,7 +19,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
@@ -70,22 +70,24 @@ class OrderLogTemplateResource extends Resource
 
         return $schema
             ->schema([
-                Section::make('Globale informatie')->columnSpanFull()
+                Section::make('Globale informatie')
+                    ->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return ! (Sites::getAmountOfSites() > 1);
+                                return !(Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
                     ->hidden(function () {
-                        return ! (Sites::getAmountOfSites() > 1);
+                        return !(Sites::getAmountOfSites() > 1);
                     })
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
-                Section::make('Betaalmethode')
-                    ->schema($contentSchema),
+                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
+                Section::make('Template inhoud')
+                    ->schema($contentSchema)
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -100,7 +102,7 @@ class OrderLogTemplateResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
                     ->label('PSP')
@@ -108,7 +110,7 @@ class OrderLogTemplateResource extends Resource
                     ->searchable(),
                 ImageColumn::make('image')
                     ->label('Afbeelding')
-                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
+                    ->getStateUsing(fn($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
                     ->label('Actief')
                     ->trueIcon('heroicon-o-check-circle')

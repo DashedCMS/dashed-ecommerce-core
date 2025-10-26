@@ -179,7 +179,6 @@ class OrderSettingsPage extends Page
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 cms()->editorField("fulfillment_status_unhandled_email_content_{$locale['id']}", 'Fulfillment status "Niet afgehandeld" mail inhoud')
-                    ->directory('/dashed/orders/images')
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
@@ -194,7 +193,6 @@ class OrderSettingsPage extends Page
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 cms()->editorField("fulfillment_status_in_treatment_email_content_{$locale['id']}", 'Fulfillment status "In behandeling" mail inhoud')
-                    ->directory('/dashed/orders/images')
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
@@ -209,7 +207,6 @@ class OrderSettingsPage extends Page
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 cms()->editorField("fulfillment_status_packed_email_content_{$locale['id']}", 'Fulfillment status "Ingepakt" mail inhoud')
-                    ->directory('/dashed/orders/images')
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
@@ -224,7 +221,6 @@ class OrderSettingsPage extends Page
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 cms()->editorField("fulfillment_status_shipped_email_content_{$locale['id']}", 'Fulfillment status "Verzonden" mail inhoud')
-                    ->directory('/dashed/orders/images')
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
                 Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
@@ -239,7 +235,6 @@ class OrderSettingsPage extends Page
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
                 cms()->editorField("fulfillment_status_handled_email_content_{$locale['id']}", 'Fulfillment status "Afgehandeld" mail inhoud')
-                    ->directory('/dashed/orders/images')
                     ->columnSpanFull()
                     ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];

@@ -26,7 +26,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
@@ -104,6 +104,7 @@ class GiftcardResource extends Resource
                                 ->columnSpanFull(),
                         ])
                     )
+                    ->columnSpanFull()
                     ->columns(2),
                 Section::make('Informatie')
                     ->schema(array_merge([
@@ -163,7 +164,8 @@ class GiftcardResource extends Resource
                             ->required()
                             ->numeric()
                             ->hidden(fn(Get $get) => $get('minimal_requirements') != 'amount'),
-                    ])),
+                    ]))
+                    ->columnSpanFull(),
             ]);
     }
 

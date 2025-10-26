@@ -4,16 +4,9 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use App\Models\User;
 use Carbon\Carbon;
-<<<<<<< HEAD
-=======
 use Dashed\DashedEcommerceCore\Classes\Countries;
-<<<<<<< HEAD
 use Filament\Schemas\Components\Utilities\Get;
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
-=======
 use Filament\Actions\Action;
-use Filament\Schemas\Components\Utilities\Get;
->>>>>>> 0e41c1e64088f869ad042e2d1cde9ebbef4f95f7
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Schemas\Schema;
@@ -25,7 +18,6 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\POSCart;
-use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
