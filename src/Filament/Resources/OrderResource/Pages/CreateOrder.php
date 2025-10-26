@@ -210,12 +210,12 @@ class CreateOrder extends Page implements HasSchemas
                             ->maxValue(1000)
                             ->default(0),
                         TextEntry::make('Voorraad')
-                            ->state(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
+                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
                         TextEntry::make('Prijs')
-                            ->state(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
+                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
                         TextEntry::make('Afbeelding')
                             ->visible(fn (Get $get) => $get('id') && Product::find($get('id'))->firstImage)
-                            ->state(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'original')->url ?? '') . '">') : 'Kies een product'),
+                            ->label(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'original')->url ?? '') . '">') : 'Kies een product'),
                         Section::make('Extra\'s')
                             ->columnSpanFull()
                             ->schema(fn (Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
@@ -297,7 +297,7 @@ class CreateOrder extends Page implements HasSchemas
                 TextEntry::make('korting')
                     ->state('Korting: ' . $this->discount),
                 TextEntry::make('btw')
-                    ->label('BTW')
+                    ->state('BTW')
                     ->state('BTW: ' . $this->vat),
                 TextEntry::make('totaal')
                     ->state('Totaal: ' . $this->total),

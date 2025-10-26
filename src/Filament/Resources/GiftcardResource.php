@@ -6,12 +6,12 @@ use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\CreateG
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\EditGiftcard;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ListGiftcards;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ViewGiftcard;
-use Filament\Forms\Get;
-use Filament\Forms\Form;
-use Filament\Infolists\Components\Fieldset;
+use Filament\Schemas\Components\Utilities\Get;
+
+use Filament\Schemas\Components\Fieldset;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
@@ -19,17 +19,21 @@ use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Textarea;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use UnitEnum;
+use BackedEnum;
+
+use Filament\Schemas\Schema;
 
 class GiftcardResource extends Resource
 {
@@ -37,8 +41,8 @@ class GiftcardResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'heroicon-o-gift-top';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-gift-top';
+    protected static string | UnitEnum | null $navigationGroup = 'E-commerce';
     protected static ?string $navigationLabel = 'Cadeaukaarten';
     protected static ?string $label = 'Cadeaukaart';
     protected static ?string $pluralLabel = 'Cadeaukaarten';
@@ -56,9 +60,8 @@ class GiftcardResource extends Resource
         ];
     }
 
-    public static function form(Form $form): Form
-    {
-        return $form
+    public static function form(Schema $schema): Schema{
+        return $schema
             ->schema([
                 Section::make('Content')
                     ->schema(
@@ -222,45 +225,45 @@ class GiftcardResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make()
                     ->button(),
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
         $logsSchema = [];
 
-        return $infolist
+        return $schema
             ->schema([
                 Fieldset::make('Cadeaukaart informatie')
                     ->schema([
                         TextEntry::make('name')
-                            ->label('Naam'),
+                            ->state('Naam'),
                         TextEntry::make('code')
-                            ->label('Code'),
+                            ->state('Code'),
                         TextEntry::make('created_at')
-                            ->label('Aangemaakt op')
+                            ->state('Aangemaakt op')
                             ->dateTime(),
                         TextEntry::make('updated_at')
-                            ->label('Laatst aangepast op')
+                            ->state('Laatst aangepast op')
                             ->dateTime(),
                         TextEntry::make('user_id')
-                            ->label('Aangemaakt door')
+                            ->state('Aangemaakt door')
                             ->getStateUsing(function ($record) {
                                 return $record->user ? $record->user->name : 'Systeem';
                             }),
                         TextEntry::make('site_ids')
-                            ->label('Actief op site(s)')
+                            ->state('Actief op site(s)')
                             ->hidden(!(Sites::getAmountOfSites() > 1))
                             ->getStateUsing(function ($record) {
                                 $siteNames = [];
@@ -276,17 +279,17 @@ class GiftcardResource extends Resource
                 Fieldset::make('Waarde')
                     ->schema([
                         TextEntry::make('discount_amount')
-                            ->label('Huidige waarde')
+                            ->state('Huidige waarde')
                             ->money('EUR'),
                         TextEntry::make('initial_amount')
-                            ->label('Initiele waarde')
+                            ->state('Initiele waarde')
                             ->money('EUR'),
                         TextEntry::make('reserved_amount')
-                            ->label('Gereserveerde waarde')
+                            ->state('Gereserveerde waarde')
                             ->helperText('Dit is de waarde die momenteel in gebruik is in openstaande bestellingen.')
                             ->money('EUR'),
                         TextEntry::make('used_amount')
-                            ->label('Gebruikte waarde')
+                            ->state('Gebruikte waarde')
                             ->helperText('Dit is de waarde die al gebruikt is in afgeronde bestellingen.')
                             ->money('EUR'),
                     ]),
@@ -298,22 +301,22 @@ class GiftcardResource extends Resource
                             $schema[] = Fieldset::make('Log van ' . $log->created_at->format('d-m-Y H:i'))
                                 ->schema([
                                     TextEntry::make('tag_' . $log->id)
-                                        ->label('Log')
+                                        ->state('Log')
                                         ->default($log->tag()),
                                     TextEntry::make('created_at_' . $log->id)
-                                        ->label('Log aangemaakt op')
+                                        ->state('Log aangemaakt op')
                                         ->dateTime()
                                         ->default($log->created_at),
                                     TextEntry::make('user_id_' . $log->id)
-                                        ->label('Door')
+                                        ->state('Door')
                                         ->columnSpanFull()
                                         ->default($log->user ? $log->user->name : 'Systeem'),
                                     TextEntry::make('old_amount_' . $log->id)
-                                        ->label('Oude waarde')
+                                        ->state('Oude waarde')
                                         ->money('EUR')
                                         ->default($log->old_amount),
                                     TextEntry::make('new_amount_' . $log->id)
-                                        ->label('Nieuwe waarde')
+                                        ->state('Nieuwe waarde')
                                         ->money('EUR')
                                         ->default($log->new_amount),
                                 ])

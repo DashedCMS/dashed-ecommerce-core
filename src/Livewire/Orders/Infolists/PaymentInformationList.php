@@ -35,7 +35,7 @@ class PaymentInformationList extends Component implements HasSchemas
             // Unieke key per veld
             $key = 'custom_' . md5($label);
             $customOrderFields[] = TextEntry::make($key)
-                ->label($label)
+                ->state($label)
                 ->state(fn () => $value);
         }
 
@@ -46,13 +46,13 @@ class PaymentInformationList extends Component implements HasSchemas
                     ->label('Betaal informatie')
                     ->schema([
                         TextEntry::make('order_origin')
-                            ->label('Bestellingsherkomst'),
+                            ->state('Bestellingsherkomst'),
 
                         TextEntry::make('ip')
-                            ->label('IP'),
+                            ->state('IP'),
 
                         TextEntry::make('note')
-                            ->label('Notitie')
+                            ->state('Notitie')
                             ->state(fn (Order $record) => $record->note ?: 'Geen notitie'),
 
                         IconEntry::make('marketing')
@@ -61,38 +61,38 @@ class PaymentInformationList extends Component implements HasSchemas
                             ->falseIcon('heroicon-o-x-circle'),
 
                         TextEntry::make('invoice_id')
-                            ->label('Factuur ID'),
+                            ->state('Factuur ID'),
 
                         TextEntry::make('payment_method_name')
-                            ->label('Betalingsmethode')
+                            ->state('Betalingsmethode')
                             ->state(fn (Order $record) => $record->paymentMethod?->name ?? 'Niet gevonden'),
 
                         TextEntry::make('psp')
-                            ->label('PSP')
+                            ->state('PSP')
                             ->visible(fn (Order $record) => (bool) $record->psp),
 
                         TextEntry::make('psp_id')
-                            ->label('PSP ID')
+                            ->state('PSP ID')
                             ->visible(fn (Order $record) => (bool) $record->psp),
 
                         TextEntry::make('shipping_method_name')
-                            ->label('Verzendmethode')
+                            ->state('Verzendmethode')
                             ->state(fn (Order $record) => $record->shippingMethod->name ?? 'Niet gevonden'),
 
                         TextEntry::make('subtotal')
-                            ->label('Subtotaal')
+                            ->state('Subtotaal')
                             ->money('EUR'),
 
                         TextEntry::make('discount')
-                            ->label('Korting')
+                            ->state('Korting')
                             ->money('EUR'),
 
                         TextEntry::make('discountCode.code')
-                            ->label('Kortingscode')
+                            ->state('Kortingscode')
                             ->visible(fn (Order $record) => (bool) $record->discountCode),
 
                         TextEntry::make('btw')
-                            ->label('BTW')
+                            ->state('BTW')
                             ->money('EUR'),
 
                         KeyValueEntry::make('vat_percentages')
@@ -109,7 +109,7 @@ class PaymentInformationList extends Component implements HasSchemas
                             }),
 
                         TextEntry::make('total')
-                            ->label('Totaal')
+                            ->state('Totaal')
                             ->money('EUR'),
                     ])
                     ->columns(4),

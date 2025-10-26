@@ -7,11 +7,14 @@ use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 
+use Filament\Support\Enums\Width;
+
+
 class ListGiftcards extends ListRecords
 {
     protected static string $resource = GiftcardResource::class;
 
-    protected ?string $maxContentWidth = 'full';
+    protected Width|string|null $maxContentWidth = 'full';
 
     protected function getHeaderActions(): array
     {
