@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
-use Filament\Actions\ViewAction;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\EditRecord;
-use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 
 class EditGiftcard extends EditRecord
 {

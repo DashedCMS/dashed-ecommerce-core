@@ -2,13 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
-use App\Models\User;
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Actions\Action;
+use App\Models\User;
 use Livewire\Component;
 use Illuminate\Support\Str;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
@@ -18,6 +16,8 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\POSCart;
+use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -228,7 +228,7 @@ class POSPage extends Component implements HasSchemas
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
                     ->label('Prijs')
@@ -239,7 +239,7 @@ class POSPage extends Component implements HasSchemas
                     ->required()
                     ->prefix('€')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -251,7 +251,7 @@ class POSPage extends Component implements HasSchemas
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortingscode')
@@ -267,7 +267,7 @@ class POSPage extends Component implements HasSchemas
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -277,7 +277,7 @@ class POSPage extends Component implements HasSchemas
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (!$posCart->products) {
+        if (! $posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -307,7 +307,7 @@ class POSPage extends Component implements HasSchemas
             $discountCode->save();
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -354,11 +354,12 @@ class POSPage extends Component implements HasSchemas
 
                                 $state = $get('customerUserId');
 
-                                if(!$state){
+                                if (! $state) {
                                     Notification::make()
                                         ->title('Selecteer eerst een gebruiker')
                                         ->danger()
                                         ->send();
+
                                     return;
                                 }
 
@@ -366,7 +367,7 @@ class POSPage extends Component implements HasSchemas
 
                                 if ($user) {
                                     $lastOrder = $user->lastOrderFromAllOrders();
-                                    if($lastOrder){
+                                    if ($lastOrder) {
                                         $this->firstName = $lastOrder->first_name;
                                         $this->lastName = $lastOrder->last_name;
                                         $this->email = $user->email;
@@ -388,13 +389,13 @@ class POSPage extends Component implements HasSchemas
                                             ->title('Gegevens van laatste bestelling geladen')
                                             ->success()
                                             ->send();
-                                    }else{
+                                    } else {
                                         Notification::make()
                                             ->title('Geen eerdere bestelling gevonden voor deze gebruiker')
                                             ->warning()
                                             ->send();
                                     }
-                                }else{
+                                } else {
                                     Notification::make()
                                         ->title('Gebruiker niet gevonden')
                                         ->danger()
@@ -426,16 +427,16 @@ class POSPage extends Component implements HasSchemas
                 TextInput::make('houseNr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zipCode')
                     ->label('Postcode')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('country')
@@ -466,22 +467,22 @@ class POSPage extends Component implements HasSchemas
                     ->reactive(),
                 TextInput::make('invoiceHouseNr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceZipCode')
                     ->label('Factuur postcode')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceCity')
                     ->label('Factuur stad')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('invoiceCountry')
                     ->label('Factuur land')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];

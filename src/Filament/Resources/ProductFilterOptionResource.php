@@ -54,8 +54,7 @@ class ProductFilterOptionResource extends Resource
                     ->label('Naam')
                     ->required()
                     ->maxLength(100),
-                mediaHelper()->field('image')
-                    ->label('Afbeelding')
+                mediaHelper()->field('image', 'Afbeelding')
                     ->required()
                     ->visible(fn (Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
                 TextInput::make('order')

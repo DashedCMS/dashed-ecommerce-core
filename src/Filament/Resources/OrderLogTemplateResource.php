@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Actions\DeleteBulkAction;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -13,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -77,14 +77,14 @@ class OrderLogTemplateResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
                     ->hidden(function () {
-                        return !(Sites::getAmountOfSites() > 1);
+                        return ! (Sites::getAmountOfSites() > 1);
                     })
-                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Template inhoud')
                     ->schema($contentSchema)
                     ->columnSpanFull(),
@@ -102,7 +102,7 @@ class OrderLogTemplateResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
                     ->label('PSP')
@@ -110,7 +110,7 @@ class OrderLogTemplateResource extends Resource
                     ->searchable(),
                 ImageColumn::make('image')
                     ->label('Afbeelding')
-                    ->getStateUsing(fn($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
+                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
                     ->label('Actief')
                     ->trueIcon('heroicon-o-check-circle')

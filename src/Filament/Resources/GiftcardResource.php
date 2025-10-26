@@ -2,38 +2,35 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\CreateGiftcard;
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\EditGiftcard;
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ListGiftcards;
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ViewGiftcard;
-use Filament\Schemas\Components\Utilities\Get;
-
-use Filament\Schemas\Components\Fieldset;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
-use Filament\Actions\ViewAction;
+use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use UnitEnum;
-use BackedEnum;
-
-use Filament\Schemas\Schema;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\EditGiftcard;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ViewGiftcard;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ListGiftcards;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\CreateGiftcard;
 
 class GiftcardResource extends Resource
 {
@@ -60,7 +57,8 @@ class GiftcardResource extends Resource
         ];
     }
 
-    public static function form(Schema $schema): Schema{
+    public static function form(Schema $schema): Schema
+    {
         return $schema
             ->schema([
                 Section::make('Content')
@@ -71,7 +69,7 @@ class GiftcardResource extends Resource
                                 ->label('Actief op sites')
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
-                                    return !(Sites::getAmountOfSites() > 1);
+                                    return ! (Sites::getAmountOfSites() > 1);
                                 })
                                 ->required(),
                             TextInput::make('name')
@@ -82,21 +80,21 @@ class GiftcardResource extends Resource
                                 ->label('Code')
                                 ->helperText('Deze code vullen mensen in om af te rekenen.')
                                 ->required()
-                                ->unique('dashed__discount_codes', 'code', fn($record) => $record)
-                                ->hidden(fn(Get $get) => $get('is_global_discount'))
+                                ->unique('dashed__discount_codes', 'code', fn ($record) => $record)
+                                ->hidden(fn (Get $get) => $get('is_global_discount'))
                                 ->minLength(3)
                                 ->maxLength(100),
                             Toggle::make('create_multiple_codes')
                                 ->label('Meerdere codes aanmaken')
                                 ->reactive()
-                                ->visible(fn($livewire, Get $get) => $livewire instanceof CreateGiftcard),
+                                ->visible(fn ($livewire, Get $get) => $livewire instanceof CreateGiftcard),
                             TextInput::make('amount_of_codes')
                                 ->label('Hoeveel cadeaukaarten moeten er aangemaakt worden')
                                 ->helperText('Gebruik een * in de cadeaukaart om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
                                 ->type('number')
                                 ->required()
                                 ->maxValue(500)
-                                ->visible(fn($livewire, Get $get) => $get('create_multiple_codes') && $livewire instanceof CreateGiftcard),
+                                ->visible(fn ($livewire, Get $get) => $get('create_multiple_codes') && $livewire instanceof CreateGiftcard),
                             Textarea::make('note')
                                 ->label('Notitie')
                                 ->helperText('Notitie voor intern gebruik')
@@ -127,19 +125,19 @@ class GiftcardResource extends Resource
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn(string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label('Selecteer producten waar deze cadeaukaart voor geldt')
                             ->required()
-                            ->hidden(fn(Get $get) => $get('valid_for') != 'products'),
+                            ->hidden(fn (Get $get) => $get('valid_for') != 'products'),
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn(string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn($record) => $record->nameWithParents)
+                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label('Selecteer categorieën waar deze cadeaukaart voor geldt')
-                            ->required(fn(Get $get) => $get('valid_for') == 'categories')
-                            ->hidden(fn(Get $get) => $get('valid_for') != 'categories'),
+                            ->required(fn (Get $get) => $get('valid_for') == 'categories')
+                            ->hidden(fn (Get $get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
                             ->label('Minimale eisen')
                             ->reactive()
@@ -155,7 +153,7 @@ class GiftcardResource extends Resource
                             ->maxValue(100000)
                             ->numeric()
                             ->required()
-                            ->hidden(fn($get) => $get('minimal_requirements') != 'products'),
+                            ->hidden(fn ($get) => $get('minimal_requirements') != 'products'),
                         TextInput::make('minimum_amount')
                             ->label('Minimum aankoopbedrag')
                             ->prefix('€')
@@ -163,7 +161,7 @@ class GiftcardResource extends Resource
                             ->maxValue(100000)
                             ->required()
                             ->numeric()
-                            ->hidden(fn(Get $get) => $get('minimal_requirements') != 'amount'),
+                            ->hidden(fn (Get $get) => $get('minimal_requirements') != 'amount'),
                     ]))
                     ->columnSpanFull(),
             ]);
@@ -211,7 +209,7 @@ class GiftcardResource extends Resource
                     ->label('Actief op site(s)')
                     ->sortable()
                     ->badge()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('amountOfUses')
                     ->label('Aantal gebruiken')
@@ -266,7 +264,7 @@ class GiftcardResource extends Resource
                             }),
                         TextEntry::make('site_ids')
                             ->state('Actief op site(s)')
-                            ->hidden(!(Sites::getAmountOfSites() > 1))
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->getStateUsing(function ($record) {
                                 $siteNames = [];
                                 foreach (Sites::getSites() as $site) {

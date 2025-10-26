@@ -2,13 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
+use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
-
-use Filament\Support\Enums\Width;
-
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 
 class ListGiftcards extends ListRecords
 {

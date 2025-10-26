@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 
 class CreateGiftcard extends CreateRecord
 {
