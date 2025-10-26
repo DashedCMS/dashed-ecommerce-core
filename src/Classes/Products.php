@@ -88,7 +88,7 @@ class Products
             $products = $category->products()
                 ->search($search)
                 ->thisSite()
-                ->publicShowable()
+                ->publicShowableWithIndex()
                 ->orderBy($orderBy, $order)
                 ->limit($pagination)
                 ->with(['productFilters', 'productGroup'])
@@ -96,7 +96,7 @@ class Products
         } else {
             $products = Product::search($search)
                 ->thisSite()
-                ->publicShowable()
+                ->publicShowableWithIndex()
                 ->orderBy($orderBy, $order)
                 ->limit($pagination)
                 ->with(['productFilters', 'productGroup'])

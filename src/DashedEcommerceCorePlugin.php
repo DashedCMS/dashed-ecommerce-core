@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -110,6 +111,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductGroupResource::class,
                 PricePerUserResource::class,
                 FulfillmentCompanyResource::class,
+                GiftcardResource::class,
             ]);
     }
 

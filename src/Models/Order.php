@@ -70,9 +70,21 @@ class Order extends Model
         static::creating(function ($order) {
             $order->ip = request()->ip();
             $order->hash = Str::random(32);
-            $order->locale = App::getLocale();
+            $order->locale = app()->getLocale();
             $order->initials = $order->first_name ? strtoupper($order->first_name[0]) . '.' : '';
             $order->site_id = Sites::getActive();
+        });
+
+        static::created(function ($order) {
+            if ($order->discountCode && $order->discount > 0) {
+                if ($order->discountCode->is_giftcard) {
+                    $order->discountCode->reserved_amount = $order->discountCode->reserved_amount + $order->discount;
+                    $order->discountCode->discount_amount = $order->discountCode->discount_amount - $order->discount;
+                    $order->discountCode->save();
+
+                    $order->discountCode->createLog(tag: 'giftcard.order.transaction.started', newAmount: $order->discountCode->discount_amount, oldAmount: $order->discountCode->discount_amount + $order->discount, orderId: $order->id);
+                }
+            }
         });
     }
 
@@ -420,7 +432,7 @@ class Order extends Model
         $order = Order::find($this->id);
         //            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again done', isDebugLog: true);
         $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
-        if (! Storage::disk('dashed')->exists($invoicePath)) {
+        if (!Storage::disk('dashed')->exists($invoicePath)) {
             //                OrderLog::createLog(orderId: $this->id, note: 'Invoice does not exists yet, creating view', isDebugLog: true);
             $view = View::make('dashed-ecommerce-core::invoices.invoice', [
                 'order' => $order,
@@ -451,7 +463,7 @@ class Order extends Model
             //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent done', isDebugLog: true);
         }
 
-        if (! $this->invoice_send_to_customer) {
+        if (!$this->invoice_send_to_customer) {
             //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob', isDebugLog: true);
             SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
             //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch SendInvoiceJob done', isDebugLog: true);
@@ -463,7 +475,7 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (!Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -482,7 +494,7 @@ class Order extends Model
             //        if (in_array($this->order_origin, ['own', 'pos']) && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (!Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
@@ -535,6 +547,13 @@ class Order extends Model
             }
             $this->discountCode->stock_used = $this->discountCode->stock_used + 1;
             $this->discountCode->save();
+
+            if ($this->discountCode->is_giftcard) {
+                $this->discountCode->used_amount = $this->discountCode->used_amount + $this->discount;
+                $this->discountCode->reserved_amount = $this->discountCode->reserved_amount - $this->discount;
+                $this->discountCode->save();
+                $this->discountCode->createLog(tag: 'giftcard.order.transaction.completed', orderId: $this->id, oldAmount: $this->discountCode->discount_amount, newAmount: $this->discountCode->discount_amount);
+            }
         }
     }
 
@@ -579,6 +598,27 @@ class Order extends Model
             }
             $this->discountCode->stock_used = $this->discountCode->stock_used - 1;
             $this->discountCode->save();
+
+            $this->refillGiftcard();
+        }
+    }
+
+    public function refillGiftcard()
+    {
+        if ($this->discountCode && $this->discountCode->is_giftcard) {
+            $this->discountCode->discount_amount = $this->discountCode->discount_amount + $this->discount;
+            $this->discountCode->reserved_amount = $this->discountCode->reserved_amount - $this->discount;
+            $this->discountCode->save();
+            $this->discountCode->createLog(tag: 'giftcard.order.transaction.cancelled', orderId: $this->id, oldAmount: $this->discountCode->discount_amount - $this->discount, newAmount: $this->discountCode->discount_amount);
+        }
+    }
+
+    public function refillGiftcardFromPaidOrder()
+    {
+        if ($this->discountCode && $this->discountCode->is_giftcard) {
+            $this->discountCode->discount_amount = $this->discountCode->discount_amount + $this->discount;
+            $this->discountCode->save();
+            $this->discountCode->createLog(tag: 'giftcard.order.transaction.cancelled', orderId: $this->id, oldAmount: $this->discountCode->discount_amount - $this->discount, newAmount: $this->discountCode->discount_amount);
         }
     }
 
@@ -729,6 +769,8 @@ class Order extends Model
         if ($this->status == 'paid') {
             $this->refillStock();
             $this->refillDiscount();
+        } else {
+            $this->refillGiftcard();
         }
 
         foreach ($this->orderPayments()->where('status', 'pending')->get() as $orderPayment) {
@@ -828,11 +870,11 @@ class Order extends Model
                 $newOrder->btw += $taxPrice;
 
                 $vatRate = number_format($orderProduct->vat_rate, 0);
-                if (! isset($vatPercentagesForOrder[$vatRate])) {
+                if (!isset($vatPercentagesForOrder[$vatRate])) {
                     $vatPercentagesForOrder[$vatRate] = 0;
                 }
                 $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
-                if (! isset($vatPercentagesCount[$vatRate])) {
+                if (!isset($vatPercentagesCount[$vatRate])) {
                     $vatPercentagesCount[$vatRate] = 0;
                 }
                 $vatPercentagesCount[$vatRate] += $chosenOrderProduct['refundQuantity'];
@@ -864,11 +906,11 @@ class Order extends Model
             $newOrder->btw += $taxPrice;
 
             $vatRate = 21; //Hardcoded BTW percentage
-            if (! isset($vatPercentagesForOrder[$vatRate])) {
+            if (!isset($vatPercentagesForOrder[$vatRate])) {
                 $vatPercentagesForOrder[$vatRate] = 0;
             }
             $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
-            if (! isset($vatPercentagesCount[$vatRate])) {
+            if (!isset($vatPercentagesCount[$vatRate])) {
                 $vatPercentagesCount[$vatRate] = 0;
             }
             $vatPercentagesCount[$vatRate] += 1;
@@ -898,6 +940,7 @@ class Order extends Model
 
         $newOrder->save();
         $newOrder->refresh();
+        $this->refillGiftcardFromPaidOrder();
 
         if ($paymentMethodId) {
             $newOrderPayment = $newOrder->orderPayments()->create([
@@ -953,8 +996,8 @@ class Order extends Model
 
     public function sendGAEcommerceHit()
     {
-        if ($this->ga_user_id && ! $this->ga_commerce_hit_send && app()->isProduction() && Customsetting::get('google_analytics_id')) {
-            if (! Customsetting::get('google_tagmanager_id')) {
+        if ($this->ga_user_id && !$this->ga_commerce_hit_send && app()->isProduction() && Customsetting::get('google_analytics_id')) {
+            if (!Customsetting::get('google_tagmanager_id')) {
                 $data = [
                     'v' => 1,
                     'tid' => Customsetting::get('google_analytics_id'),
@@ -1038,7 +1081,7 @@ class Order extends Model
 
     public function fulfillmentStatus()
     {
-        if (! $this->credit_for_order_id) {
+        if (!$this->credit_for_order_id) {
             if ($this->fulfillment_status == 'unhandled') {
                 return [
                     'status' => Orders::getFulfillmentStatusses()[$this->fulfillment_status] ?? '',
@@ -1167,7 +1210,7 @@ class Order extends Model
 
     public function addTrackAndTrace(?string $supplier = null, ?string $deliveryCompany = null, ?string $code = null, ?string $url = null, ?string $expectedDeliveryDate = null): void
     {
-        if (! $this->trackAndTraces()->where('supplier', $supplier)->where('delivery_company', $deliveryCompany)->where('code', $code)->exists()) {
+        if (!$this->trackAndTraces()->where('supplier', $supplier)->where('delivery_company', $deliveryCompany)->where('code', $code)->exists()) {
             $this->trackAndTraces()->create([
                 'supplier' => $supplier,
                 'delivery_company' => $deliveryCompany,
@@ -1185,7 +1228,7 @@ class Order extends Model
         foreach (ecommerce()->builder('customOrderFields') as $key => $field) {
             $key = str($key)->snake()->toString();
 
-            if ($this->$key && (! $onlyOnInvoice || ($onlyOnInvoice && ($field['showOnInvoice'] ?? false)))) {
+            if ($this->$key && (!$onlyOnInvoice || ($onlyOnInvoice && ($field['showOnInvoice'] ?? false)))) {
                 $customOrderFields[$field['label']] = $this->$key;
             }
         }

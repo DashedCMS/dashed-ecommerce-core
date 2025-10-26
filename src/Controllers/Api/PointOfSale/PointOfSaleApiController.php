@@ -93,6 +93,7 @@ class PointOfSaleApiController extends Controller
                 'shippingMethods' => $shippingMethods,
                 'shippingMethodId' => $chosenShippingMethod->id ?? null,
                 'shippingCosts' => $chosenShippingMethod ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)) : null,
+                'customerUserId' => $posCart->customer_user_id,
                 'firstName' => $posCart->first_name,
                 'lastName' => $posCart->last_name,
                 'phoneNumber' => $posCart->phone_number,
@@ -710,6 +711,7 @@ class PointOfSaleApiController extends Controller
         $order->first_name = $posCart->first_name;
         $order->last_name = $posCart->last_name;
         $order->email = $posCart->email;
+        $order->user_id = $posCart->customer_user_id;
         //        $order->gender = $posCart->gender;
         //        $order->date_of_birth = $posCart->date_of_birth ? Carbon::parse($this->date_of_birth) : null;
         $order->phone_number = $posCart->phone_number;
@@ -1100,6 +1102,9 @@ class PointOfSaleApiController extends Controller
                     'message' => 'Bestelling is al betaald',
                 ]);
         } else {
+
+            $order->changeStatus('cancelled');
+
             return response()
                 ->json([
                     'success' => true,
