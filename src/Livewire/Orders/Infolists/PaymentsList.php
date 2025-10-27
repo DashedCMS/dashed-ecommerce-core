@@ -36,24 +36,24 @@ class PaymentsList extends Component implements HasSchemas
                 ->label('Betaling van ' . $orderPayment->created_at->format('d-m-Y H:i'))
                 ->schema([
                     TextEntry::make('psp_' . $pid)
-                        ->state('PSP')
+                        ->label('PSP')
                         ->state(fn () => $orderPayment->psp ?: '-'),
 
                     TextEntry::make('psp_id_' . $pid)
-                        ->state('PSP ID')
+                        ->label('PSP ID')
                         ->state(fn () => $orderPayment->psp_id ?: '-'),
 
                     TextEntry::make('payment_method_' . $pid)
-                        ->state('Betaalmethode')
+                        ->label('Betaalmethode')
                         ->state(fn () => $orderPayment->payment_method ?: ($orderPayment->paymentMethod->name ?? '-')),
 
                     TextEntry::make('amount_' . $pid)
-                        ->state('Bedrag')
+                        ->label('Bedrag')
                         ->state(fn () => $orderPayment->amount)
                         ->money('EUR'),
 
                     TextEntry::make('status_' . $pid)
-                        ->state('Status')
+                        ->label('Status')
                         ->state(fn () => $orderPayment->status)
                         ->badge()
                         ->color(fn () => match ($orderPayment->status) {
