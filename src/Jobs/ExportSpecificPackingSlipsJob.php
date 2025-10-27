@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use App\Models\User;
+use Filament\Actions\Action;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
@@ -63,7 +64,7 @@ class ExportSpecificPackingSlipsJob implements ShouldQueue
             ->body('Pakbonnen zijn aangemaakt (' . count($this->orders) . ' bestellingen)')
             ->persistent()
             ->actions([
-                \Filament\Notifications\Actions\Action::make('download')
+                Action::make('download')
                     ->label('Download pakbonnen')
                     ->button()
                     ->url(Storage::disk('public')->url($filePath))
