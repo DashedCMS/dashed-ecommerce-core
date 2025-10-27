@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Filament\Pages\Dashboard\Dashboard;
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class DashboardFunLineChartStats extends ChartWidget
 {

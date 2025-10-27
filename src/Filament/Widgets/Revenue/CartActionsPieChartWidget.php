@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
-use Dashed\DashedEcommerceCore\Filament\Pages\Dashboard\Dashboard;
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class CartActionsPieChartWidget extends ChartWidget
 {

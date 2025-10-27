@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Widgets\Concerns\InteractsWithfilters;
-use Dashed\DashedEcommerceCore\Filament\Pages\Dashboard\Dashboard;
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 {
