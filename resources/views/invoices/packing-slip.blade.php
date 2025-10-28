@@ -18,6 +18,12 @@
                     <p>{{ Translation::get('tax-id', 'invoice', 'BTW') }} {{ $order->btw_id }}</p>
                 @endif
 
+                @if ($order->name)
+                    <p>
+                        <b>{{ $order->name }}</b>
+                    </p>
+                @endif
+
                 @if($order->invoice_street)
                     <p>{{ $order->invoice_street }} {{ $order->invoice_house_nr . ', ' . $order->invoice_zip_code }}</p>
 
