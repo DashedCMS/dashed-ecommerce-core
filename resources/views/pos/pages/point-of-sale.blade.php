@@ -48,7 +48,7 @@
                 </div>
                 <form @submit.prevent="selectProduct">
                     <div class="w-full relative">
-                    <span class="text-black absolute left-2.5 top-1">
+                    <span class="text-black absolute left-2.5 top-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                           <path stroke-linecap="round" stroke-linejoin="round"
@@ -59,8 +59,8 @@
                                id="search-product-query"
                                :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                placeholder="Zoek een product op naam, SKU of barcode..."
-                               class="text-black w-full bg-white border-2 border-primary-500 rounded-lg pl-10 pr-10 text-xl">
-                        <p class="absolute right-2.5 top-1 text-black cursor-pointer"
+                               class="text-black w-full bg-white border-2 border-primary-500 rounded-lg px-10 py-1 text-xl">
+                        <p class="absolute right-2.5 top-2 text-black cursor-pointer"
                            @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -571,7 +571,9 @@
                         <div class="grid md:grid-cols-2 gap-4">
                             <template x-for="suggestedCashPaymentAmount in suggestedCashPaymentAmounts">
                                 <button @click="setCashPaymentAmount(suggestedCashPaymentAmount.amount)"
-                                        class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full"
+                                        x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                                        x-bind:disabled="loading"
+                                        class="p-4 text-2xl uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full"
                                         x-html="suggestedCashPaymentAmount.formattedAmount">
 
                                 </button>
@@ -658,16 +660,22 @@
                         </button>
                     </template>
                     <button @click="resetPOS()" x-show="postPay"
-                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                            x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         Terug naar POS
                     </button>
                     <a x-bind:href="orderUrl" x-show="postPay"
                        target="_blank"
-                       class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                       x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                       x-bind:disabled="loading"
+                       class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         Bestelling bekijken
                     </a>
                     <button @click="closePayment" x-show="!isPinTerminalPayment && !postPay"
-                            class="px-4 py-4 text-lg uppercase rounded-lg bg-red-500 hover:bg-red-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            x-bind:class="loading ? 'bg-red-800' : 'bg-red-500 hover:bg-red-700'"
+                            x-bind:disabled="loading"
+                            class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Annuleren
                     </button>
                     <button disabled x-show="!cashPaymentAmount && !isPinTerminalPayment && !postPay"
@@ -675,13 +683,17 @@
                         Vul een bedrag in
                     </button>
                     <button @click="createPaymentWithExtraPayment"
+                            x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
                             x-show="!isPinTerminalPayment && cashPaymentAmount && Math.floor(cashPaymentAmount) < Math.floor(totalUnformatted) && !postPay"
-                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Restbedrag bijpinnen
                     </button>
                     <button @click="markAsPaid"
+                            x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
                             x-show="!isPinTerminalPayment && Math.floor(cashPaymentAmount) >= Math.floor(totalUnformatted) && !postPay"
-                            class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Markeer als betaald
                     </button>
                 </div>
@@ -1992,6 +2004,7 @@
 
                 this.discountCode = null;
                 this.activeDiscountCode = null;
+                this.retrieveCart();
 
             } catch (error) {
                 return $wire.dispatch('notify', {
@@ -2268,10 +2281,12 @@
 
         async setCashPaymentAmount(amount) {
             this.cashPaymentAmount = amount;
+            this.loading = true;
             this.markAsPaid();
         },
 
         async markAsPaid(hasMultiplePayments = false) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.mark-as-paid') }}', {
                     method: 'POST',
@@ -2293,6 +2308,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2312,7 +2328,9 @@
                     this.toggle('orderConfirmationPopup')
                 }
 
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De bestelling kon niet worden gemarkeerd als betaald'
