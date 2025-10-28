@@ -56,7 +56,7 @@ class RevenueStats extends StatsOverviewWidget
 
         $statistics = [];
 
-        $normalOrders = Order::where('created_at', '>=', $startDate->$startFormat())->where('created_at', $endDate->$endFormat())->isPaid()->get();
+        $normalOrders = Order::where('created_at', '>=', $startDate->$startFormat())->where('created_at', '<=', $endDate->$endFormat())->isPaid()->get();
         $statistics['normal'] = [
             'orders' => $normalOrders->count(),
             'products' => OrderProduct::whereIn('order_id', $normalOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
@@ -65,7 +65,7 @@ class RevenueStats extends StatsOverviewWidget
         $statistics['normal']['averageOrderAmount'] = $normalOrders->count() ? CurrencyHelper::formatPrice($statistics['normal']['orderAmount'] / $statistics['normal']['orders']) : CurrencyHelper::formatPrice(0);
         $statistics['normal']['orderAmount'] = CurrencyHelper::formatPrice($statistics['normal']['orderAmount']);
 
-        $normalReturnOrders = Order::where('created_at', '>=', $startDate->$startFormat())->where('created_at', $endDate->$endFormat())->isReturn()->get();
+        $normalReturnOrders = Order::where('created_at', '>=', $startDate->$startFormat())->where('created_at', '<=', $endDate->$endFormat())->isReturn()->get();
         $statistics['normalReturn'] = [
             'orders' => $normalReturnOrders->count(),
             'products' => OrderProduct::whereIn('order_id', $normalReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
