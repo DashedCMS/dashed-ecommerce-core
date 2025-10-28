@@ -18,6 +18,10 @@ class ProductsToEdit implements FromArray
                 'Voorraad',
                 'EAN',
                 'BTW percentage',
+                'Gewicht (in KG)',
+                'Lengte (in CM)',
+                'Breedte (in CM)',
+                'Hoogte (in CM)',
             ],
         ];
 
@@ -30,6 +34,10 @@ class ProductsToEdit implements FromArray
                 $product->getRawOriginal('stock'),
                 $product->getRawOriginal('ean'),
                 $product->getRawOriginal('vat_rate'),
+                $product->getRawOriginal('weight'),
+                $product->getRawOriginal('length'),
+                $product->getRawOriginal('width'),
+                $product->getRawOriginal('height'),
             ];
         }
 
