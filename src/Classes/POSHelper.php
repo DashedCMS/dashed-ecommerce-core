@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 
@@ -23,9 +24,11 @@ class POSHelper
         $order->changeStatus($orderStatus);
         $order->changeFulfillmentStatus($fulfillmentStatus);
 
-        try {
-            $order->printReceipt();
-        } catch (\Exception $exception) {
+        if (Customsetting::get('pos_auto_print_receipt', null, true)) {
+            try {
+                $order->printReceipt();
+            } catch (\Exception $exception) {
+            }
         }
 
         $hasCashPayment = false;

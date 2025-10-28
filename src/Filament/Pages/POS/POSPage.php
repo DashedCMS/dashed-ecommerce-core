@@ -224,7 +224,6 @@ class POSPage extends Component implements HasSchemas
                         'discountCode' => 'Kortingscode',
                     ])
                     ->reactive()
-                    ->autofocus()
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
@@ -247,6 +246,7 @@ class POSPage extends Component implements HasSchemas
                     ->minValue(0)
                     ->maxValue(100)
                     ->inputMode('numeric')
+                    ->autofocus()
                     ->required()
                     ->default(21)
                     ->prefix('%')

@@ -7,8 +7,10 @@
                     <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
                     <div class="flex flex-wrap gap-4">
                         <button x-cloak x-show="lastOrder"
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                 @click="printLastOrder"
-                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5"
                                  stroke="currentColor" class="size-6">
@@ -17,9 +19,11 @@
                             </svg>
                         </button>
                         <button id="exitFullscreenBtn" @click="toggleFullscreen"
+                                x-bind:disabled="loading"
                                 x-show="isFullscreen"
                                 x-cloak
-                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -27,8 +31,10 @@
                             </svg>
                         </button>
                         <button id="fullscreenBtn" @click="toggleFullscreen"
+                                x-bind:disabled="loading"
                                 x-show="!isFullscreen"
-                                class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -36,7 +42,9 @@
                             </svg>
                         </button>
                         <button x-cloak x-show="products.length" @click="clearProducts"
-                                class="h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
+                                class="h-12 w-12  text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5"
                                  stroke="currentColor" class="size-6">
@@ -57,9 +65,10 @@
                     </span>
                         <input autofocus x-model="searchProductQuery"
                                id="search-product-query"
+                               x-bind:class="loading ? 'bg-gray-200' : 'bg-white'"
                                :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                placeholder="Zoek een product op naam, SKU of barcode..."
-                               class="text-black w-full bg-white border-2 border-primary-500 rounded-lg px-10 py-1 text-xl">
+                               class="text-black w-full border-2 border-primary-500 rounded-lg px-10 py-1 text-xl">
                         <p class="absolute right-2.5 top-2 text-black cursor-pointer"
                            @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
@@ -138,8 +147,9 @@
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2" x-cloak x-show="!searchProductQuery">
                     <button @click="toggle('customProductPopup')"
-                            :class="{'bg-orange-500/40 hover:bg-orange-500/70': customProductPopup}"
-                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -151,8 +161,10 @@
                         <p>Aangepaste verkoop toevoegen</p>
                     </button>
                     <button @click="removeDiscount"
+                            x-bind:disabled="loading"
                             x-cloak x-show="activeDiscountCode"
-                            class="text-left rounded-lg bg-red-500/40 hover:bg-red-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
+                            class="text-left rounded-lg  transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor"
@@ -165,9 +177,10 @@
                         <p>Korting verwijderen</p>
                     </button>
                     <button @click="toggle('createDiscountPopup')"
-                            :class="{'bg-orange-500/40 hover:bg-orange-500/70': createDiscountPopup}"
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-cloak x-show="!activeDiscountCode"
-                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor"
@@ -181,8 +194,9 @@
                     </button>
                     <button
                         @click="toggle('customerDataPopup')"
-                        :class="{'bg-orange-500/40 hover:bg-orange-500/70': customerDataPopup}"
-                        class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                        x-bind:disabled="loading"
+                        x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                        class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor"
@@ -194,9 +208,10 @@
                         <p>Klantgegevens toevoegen</p>
                     </button>
                     <button @click="toggle('chooseShippingMethodPopup')"
-                            :class="{'bg-orange-500/40 hover:bg-orange-500/70': chooseShippingMethodPopup}"
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-cloak x-show="!shippingMethodId"
-                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="size-6">
@@ -207,8 +222,10 @@
                         <p>Verzendmethode toepassen</p>
                     </button>
                     <button @click="removeShippingMethod"
+                            x-bind:disabled="loading"
                             x-cloak x-show="shippingMethodId"
-                            class="text-left rounded-lg bg-red-500/40 hover:bg-red-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
+                            class="text-left rounded-lg  transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="size-6">
@@ -220,8 +237,10 @@
                         <p>Verzendmethode verwijderen</p>
                     </button>
                     <button @click="openCashRegister"
+                            x-bind:disabled="loading"
                             x-cloak x-show="hasCashRegister"
-                            class="text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor"
@@ -234,7 +253,9 @@
                         <p>Kassa lade openen</p>
                     </button>
                     <button @click="showOrdersPopup()"
-                            class="focus-search-order text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            class="focus-search-order text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -244,7 +265,9 @@
                         <p>Zoek bestelling</p>
                     </button>
                     <button @click="refreshProducts()"
-                            class="focus-search-order text-left rounded-lg bg-primary-500/40 hover:bg-primary-500/70 transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            class="focus-search-order text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -257,7 +280,7 @@
             </div>
             <div class="sm:col-span-3 sm:pl-8 flex flex-col gap-8 overflow-y-auto">
                 <div x-show="products.length > 0"
-                     class="flex flex-col gap-8 grow p-4 rounded-lg border border-primary-500 overflow-y-auto gap-4">
+                     class="flex flex-col grow p-4 rounded-lg border border-primary-500 overflow-y-auto gap-4">
                     <template x-for="product in products">
                         <div class="flex flex-wrap items-center gap-4">
                             <div class="relative">
@@ -272,12 +295,14 @@
                                         </span>
                             </div>
                             <div class="flex flex-col flex-wrap gap-1 flex-1">
-                                <span class="text-lg word-wrap text-sm" x-html="product.name"></span>
+                                <span class="word-wrap text-sm" x-html="product.name"></span>
                                 <span class="font-bold text-md word-wrap" x-html="product.priceFormatted"></span>
                                 <div class="flex flex-wrap gap-2">
                                     <button
                                         @click="changeQuantity(product.identifier, product.quantity + 1)"
-                                        class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        x-bind:disabled="loading"
+                                        x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                        class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -286,7 +311,9 @@
                                     </button>
                                     <button
                                         @click="changeQuantity(product.identifier, product.quantity - 1)"
-                                        class="h-12 w-12 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        x-bind:disabled="loading"
+                                        x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                        class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
@@ -294,7 +321,9 @@
                                     </button>
                                     <button
                                         @click="openChangeProductPricePopup(product)"
-                                        class="ml-auto h-12 w-12 bg-orange-500 text-white hover:bg-orange-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        x-bind:disabled="loading"
+                                        x-bind:class="loading ? 'bg-orange-900' : 'bg-orange-500 hover:bg-orange-700'"
+                                        class="ml-auto h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -303,7 +332,9 @@
                                     </button>
                                     <button
                                         @click="changeQuantity(product.identifier, 0)"
-                                        class="h-12 w-12 bg-red-500 text-white hover:bg-red-700 transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        x-bind:disabled="loading"
+                                        x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
+                                        class="h-12 w-12  text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -373,7 +404,9 @@
                         </div>
                     </div>
                     <button @click="toggle('checkoutPopup')"
-                            class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            x-bind:disabled="loading || products.length === 0"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            class="px-4 py-2 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Betaal <span x-html="total">€0,-</span>
                     </button>
                 </div>
@@ -384,8 +417,8 @@
         x-show="customProductPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-        <div class="absolute h-full w-full" @click="toggle('customProductPopup')"></div>
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="toggle('customProductPopup');"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative">
             <div class="absolute top-2 right-2 text-black cursor-pointer"
                  @click="toggle('customProductPopup')">
@@ -413,7 +446,7 @@
         x-show="changeProductPricePopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="toggle('changeProductPricePopup')"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative">
             <div class="absolute top-2 right-2 text-black cursor-pointer"
@@ -442,7 +475,7 @@
         x-show="createDiscountPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="toggle('createDiscountPopup')"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative">
             <div class="bg-white rounded-lg p-8 grid gap-4">
@@ -473,7 +506,7 @@
         x-show="chooseShippingMethodPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="toggle('chooseShippingMethodPopup')"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative">
             <div class="bg-white rounded-lg p-8 grid gap-4">
@@ -489,7 +522,9 @@
                 <div class="grid gap-8 grid-cols-1 md:grid-cols-2" x-show="shippingMethods.length">
                     <template x-for="shippingMethod in shippingMethods">
                         <button @click="selectShippingMethod(shippingMethod.id)"
-                                class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="p-4 text-2xl uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
                             <span x-html="shippingMethod.fullName"></span>
                         </button>
                     </template>
@@ -504,7 +539,7 @@
         x-show="checkoutPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="toggle('checkoutPopup')"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="bg-white rounded-lg p-8 grid gap-4">
@@ -523,7 +558,9 @@
                 <div class="grid gap-8" x-show="paymentMethods.length">
                     <template x-for="paymentMethod in paymentMethods">
                         <button @click="selectPaymentMethod(paymentMethod.id)"
-                                class="p-4 text-2xl uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                x-bind:disabled="loading"
+                                class="p-4 text-2xl uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
                             <img
                                 x-show="paymentMethod.image"
                                 :src="paymentMethod.image"
@@ -546,7 +583,7 @@
         x-show="paymentPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="closePayment"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="bg-white rounded-lg p-8 grid gap-4">
@@ -571,7 +608,7 @@
                         <div class="grid md:grid-cols-2 gap-4">
                             <template x-for="suggestedCashPaymentAmount in suggestedCashPaymentAmounts">
                                 <button @click="setCashPaymentAmount(suggestedCashPaymentAmount.amount)"
-                                        x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                                        x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                         x-bind:disabled="loading"
                                         class="p-4 text-2xl uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full"
                                         x-html="suggestedCashPaymentAmount.formattedAmount">
@@ -594,6 +631,8 @@
                                            max="100000"
                                            required
                                            placeholder="Anders..."
+                                           x-bind:class="loading ? 'bg-gray-300' : 'bg-white'"
+                                           x-bind:disabled="loading"
                                            class="block min-w-0 grow py-3 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-lg">
                                     <div id="price-currency"
                                          class="shrink-0 select-none text-base text-gray-500 sm:text-lg pl-3">EUR
@@ -615,24 +654,33 @@
                         </p>
                     </div>
                 </template>
-                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'waiting_for_clearance'" class="grid gap-2 flex items-center justify-between">
+                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'waiting_for_clearance'"
+                     class="grid gap-2 flex items-center justify-between">
                     <p class="text-3xl">{{ Translation::get('pin-terminal-in-use', 'point-of-sale', 'De pin terminal is in gebruik, wacht tot deze vrijgegeven is.') }}</p>
                     <button @click="startPinTerminalPayment"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
-                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'timed_out'" class="grid gap-2 flex items-center justify-between">
+                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'timed_out'"
+                     class="grid gap-2 flex items-center justify-between">
                     <p class="text-3xl">{{ Translation::get('pin-terminal-payment-timed-out', 'point-of-sale', 'De betaling is niet optijd voltooid, probeer het opnieuw.') }}</p>
                     <button @click="startPinTerminalPayment"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
-                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'cancelled_by_customer'" class="flex-col gap-2 flex items-between">
+                <div x-show="isPinTerminalPayment && pinTerminalStatus == 'cancelled_by_customer'"
+                     class="flex-col gap-2 flex items-between">
                     <p class="text-3xl">{{ Translation::get('pin-terminal-payment-cancelled-by-customer', 'point-of-sale', 'De betaling is geannuleerd door de klant.') }}</p>
                     <button @click="startPinTerminalPayment"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
@@ -641,14 +689,16 @@
                     class="grid gap-2">
                     <p class="text-3xl" x-html="pinTerminalError"></p>
                     <button @click="startPinTerminalPayment"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="w-full px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Probeer betaling opnieuw</span>
                     </button>
                 </div>
                 <div class="grid md:grid-cols-2 gap-4">
                     <template x-if="isPinTerminalPayment && pinTerminalStatus == 'pending'">
                         <button disabled
-                                class="md:col-span-2 px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                                class="md:col-span-2 px-4 py-4 text-lg uppercase rounded-lg bg-primary-900 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
                             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
@@ -659,38 +709,48 @@
                             <span>Wachten op betaling...</span>
                         </button>
                     </template>
+                    @if(!Customsetting::get('pos_auto_print_receipt', null, true))
+                        <button @click="printReceipt()" x-show="postPay"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                x-bind:disabled="loading"
+                                class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                            Bon printen
+                        </button>
+                    @endif
                     <button @click="resetPOS()" x-show="postPay"
-                            x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
                             class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         Terug naar POS
                     </button>
                     <a x-bind:href="orderUrl" x-show="postPay"
                        target="_blank"
-                       x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                       x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                        x-bind:disabled="loading"
                        class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         Bestelling bekijken
                     </a>
                     <button @click="closePayment" x-show="!isPinTerminalPayment && !postPay"
-                            x-bind:class="loading ? 'bg-red-800' : 'bg-red-500 hover:bg-red-700'"
+                            x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
                             x-bind:disabled="loading"
                             class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Annuleren
                     </button>
                     <button disabled x-show="!cashPaymentAmount && !isPinTerminalPayment && !postPay"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-700'"
+                            x-bind:disabled="loading"
                             class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Vul een bedrag in
                     </button>
                     <button @click="createPaymentWithExtraPayment"
-                            x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
                             x-show="!isPinTerminalPayment && cashPaymentAmount && Math.floor(cashPaymentAmount) < Math.floor(totalUnformatted) && !postPay"
                             class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                         Restbedrag bijpinnen
                     </button>
                     <button @click="markAsPaid"
-                            x-bind:class="loading ? 'bg-primary-800' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
                             x-show="!isPinTerminalPayment && Math.floor(cashPaymentAmount) >= Math.floor(totalUnformatted) && !postPay"
                             class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
@@ -704,7 +764,7 @@
         x-show="orderConfirmationPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="resetPOS()"></div>
         <template x-if="order && firstPaymentMethod">
             <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
@@ -746,8 +806,18 @@
                         </template>
                     </div>
                     <div class="grid gap-4 mt-16">
+                        @if(!Customsetting::get('pos_auto_print_receipt', null, true))
+                            <button @click="printReceipt()"
+                                    x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                    x-bind:disabled="loading"
+                                    class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                Bon printen
+                            </button>
+                        @endif
                         <button @click="resetPOS()"
-                                class="px-4 py-4 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                x-bind:disabled="loading"
+                                class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                             Terug naar POS
                         </button>
                     </div>
@@ -759,7 +829,7 @@
         x-show="customerDataPopup"
         x-cloak
         x-transition.opacity.scale.origin
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
         <div class="absolute h-full w-full" @click="toggle('customerDataPopup')"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px] h-[95%] overflow-y-auto">
             <div class="bg-white rounded-lg p-8 grid gap-4">
@@ -807,7 +877,7 @@
                 <div class="grid gap-4 overflow-y-auto">
                     <form @submit.prevent="retrieveOrders">
                         <div class="w-full relative">
-                    <span class="text-black absolute left-2.5 top-2.5">
+                    <span class="text-black absolute left-2.5 top-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                           <path stroke-linecap="round" stroke-linejoin="round"
@@ -818,8 +888,8 @@
                                    id="search-order-query"
                                    :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                    placeholder="Zoek bestelling..."
-                                   class="text-black w-full rounded-lg pl-10 pr-10 text-xl">
-                            <p class="absolute right-2.5 top-2.5 text-black cursor-pointer"
+                                   class="text-black w-full rounded-lg pl-10 pr-10 text-xl py-1 border-2 border-primary-600">
+                            <p class="absolute right-2.5 top-2 text-black cursor-pointer"
                                @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -910,7 +980,7 @@
                         x-show="cancelOrderPopup"
                         x-cloak
                         x-transition.opacity.scale.origin
-                        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black p-8 overflow-y-auto">
+                        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black p-8 overflow-y-auto">
                         <div class="absolute h-full w-full" @click="toggle('cancelOrderPopup')"></div>
                         <div class="bg-gray-100 rounded-lg p-8 grid gap-4 relative overflow-y-auto max-h-full">
                             <div class="absolute top-2 right-2 text-black cursor-pointer"
@@ -1282,8 +1352,10 @@
                                     <button @click="sendInvoice(selectedOrder)"
                                             x-show="selectedOrder.email"
                                             class="h-12 w-fit px-2 py-1 gap-2 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out rounded-full flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
                                         </svg>
 
 
@@ -1483,6 +1555,7 @@
         changeProductPricePopup: false,
         isFullscreen: false,
         pinTerminalStatusHandled: false,
+        loading: false,
 
         customerUserId: $wire.entangle('customerUserId'),
         firstName: $wire.entangle('firstName'),
@@ -1507,15 +1580,21 @@
         hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
 
         toggle(variable) {
+            this.loading = true;
             if (variable in this) {
+                if (this[variable]) {
+                    this.focus();
+                }
                 this[variable] = !this[variable];
             }
+            this.loading = false;
         },
 
         disable(variable) {
             if (variable in this) {
                 this[variable] = false;
             }
+            this.focus();
         },
 
         enable(variable) {
@@ -1525,6 +1604,8 @@
         },
 
         async openCashRegister() {
+            this.loading = true;
+
             try {
                 let response = await fetch('{{ route('api.point-of-sale.open-cash-register') }}', {
                     method: 'POST',
@@ -1534,11 +1615,12 @@
                     }
                 });
 
+
                 let data = await response.json();
 
-                this.focus();
-
                 if (!response.ok) {
+                    this.loading = false;
+                    this.focus();
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -1549,7 +1631,14 @@
                     type: 'success',
                     message: 'De kassa is geopend'
                 })
+
+
+                this.focus();
+                this.loading = false;
             } catch (error) {
+
+                this.loading = false;
+                this.focus();
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De kassa kon niet worden geopend'
@@ -1730,7 +1819,58 @@
             }
         },
 
+        async printReceipt() {
+            this.loading = true;
+
+            if(!this.order){
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'Er is geen bestelling om te printen',
+                })
+            }
+
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.print-receipt') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: this.order.id,
+                        isCopy: false,
+                    })
+                });
+
+                let data = await response.json();
+
+                this.focus();
+
+                if (!response.ok) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'success',
+                    message: 'Bon geprint'
+                })
+            } catch (error) {
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De bon kon niet worden geprint'
+                })
+            }
+        },
+
         async printOrder(order) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.print-receipt') }}', {
                     method: 'POST',
@@ -1749,17 +1889,20 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
                     })
                 }
 
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'success',
                     message: 'Bon geprint'
                 })
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De bon kon niet worden geprint'
@@ -1768,6 +1911,7 @@
         },
 
         async sendInvoice(order) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.send-invoice') }}', {
                     method: 'POST',
@@ -1786,17 +1930,20 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
                     })
                 }
 
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'success',
                     message: 'Factuur verstuurd'
                 })
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De factuur kon niet worden verstuurd'
@@ -1805,6 +1952,7 @@
         },
 
         async updateSearchedProducts() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.search-products') }}', {
                     method: 'POST',
@@ -1822,12 +1970,15 @@
                 this.searchedProducts = data.products;
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
                     })
                 }
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De gezochte producten konden niet worden opgehaald'
@@ -1836,6 +1987,7 @@
         },
 
         async addProduct(productId) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.add-product') }}', {
                     method: 'POST',
@@ -1858,6 +2010,7 @@
                 this.loadingSearchedProducts = false;
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -1866,7 +2019,9 @@
 
                 this.products = data.products;
                 this.retrieveCart();
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De gezochte producten konden niet worden opgehaald'
@@ -1875,6 +2030,7 @@
         },
 
         async selectProduct() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.select-product') }}', {
                     method: 'POST',
@@ -1895,6 +2051,7 @@
                 this.searchProductQuery = '';
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -1903,7 +2060,9 @@
 
                 this.products = data.products;
                 this.retrieveCart();
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'Het gezochte product konden niet worden opgehaald'
@@ -1912,6 +2071,7 @@
         },
 
         async changeQuantity(productIdentifier, quantity) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.change-quantity') }}', {
                     method: 'POST',
@@ -1930,6 +2090,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -1938,7 +2099,9 @@
 
                 this.products = data.products;
                 this.retrieveCart();
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De gezochte producten konden niet worden opgehaald'
@@ -1947,6 +2110,7 @@
         },
 
         async clearProducts() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.clear-products') }}', {
                     method: 'POST',
@@ -1963,6 +2127,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -1971,7 +2136,9 @@
 
                 this.products = data.products;
                 this.retrieveCart();
+                this.loading = false;
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De winkelmand kon niet worden geleegd'
@@ -1980,6 +2147,7 @@
         },
 
         async removeDiscount() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.remove-discount') }}', {
                     method: 'POST',
@@ -1996,6 +2164,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2005,8 +2174,10 @@
                 this.discountCode = null;
                 this.activeDiscountCode = null;
                 this.retrieveCart();
+                this.loading = false;
 
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De korting kon niet worden verwijderd'
@@ -2015,11 +2186,14 @@
         },
 
         async openChangeProductPricePopup(product) {
+            this.loading = true;
             this.productToChange = product;
             this.toggle('changeProductPricePopup');
+            this.loading = false;
         },
 
         async selectShippingMethod(shippingMethodId) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.select-shipping-method') }}', {
                     method: 'POST',
@@ -2039,6 +2213,7 @@
                 let data = await response.json();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2051,8 +2226,10 @@
                 this.toggle('chooseShippingMethodPopup');
                 await this.retrieveCart();
                 this.focus();
+                this.loading = false;
 
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De verzendmethode kon niet worden geselecteerd'
@@ -2061,6 +2238,7 @@
         },
 
         async removeShippingMethod() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.remove-shipping-method') }}', {
                     method: 'POST',
@@ -2080,6 +2258,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2089,8 +2268,10 @@
                 this.shippingMethodId = null;
                 this.retrieveCart();
                 this.focus();
+                this.loading = false;
 
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De verzendmethode kon niet worden verwijderd'
@@ -2099,6 +2280,7 @@
         },
 
         async selectPaymentMethod(paymentMethodId) {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.select-payment-method') }}', {
                     method: 'POST',
@@ -2119,6 +2301,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2132,14 +2315,16 @@
                 this.postPay = data.postPay;
                 this.orderUrl = data.orderUrl;
 
-                this.toggle('checkoutPopup');
-                this.toggle('paymentPopup');
+                this.disable('checkoutPopup');
+                this.enable('paymentPopup');
 
                 if (this.isPinTerminalPayment) {
                     this.startPinTerminalPayment();
                 }
+                this.loading = false;
 
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De betaalmethode kon niet worden geselecteerd'
@@ -2148,6 +2333,7 @@
         },
 
         async saveCustomerData() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-customer-data') }}', {
                     method: 'POST',
@@ -2167,6 +2353,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2175,8 +2362,10 @@
 
                 this.toggle('customerDataPopup');
                 this.retrieveCart();
+                this.loading = false;
 
             } catch (error) {
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De klant gegevens kon niet worden opgeslagen'
@@ -2238,6 +2427,7 @@
         },
 
         async closePayment() {
+            this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.close-payment') }}', {
                     method: 'POST',
@@ -2255,6 +2445,7 @@
                 this.focus();
 
                 if (!response.ok) {
+                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -2269,9 +2460,10 @@
                 this.isPinTerminalPayment = false;
                 this.order = null;
                 this.toggle('paymentPopup');
+                this.loading = false;
 
             } catch (error) {
-                console.log(error);
+                this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De betaling kon niet worden gesloten'
@@ -2280,9 +2472,10 @@
         },
 
         async setCashPaymentAmount(amount) {
-            this.cashPaymentAmount = amount;
             this.loading = true;
+            this.cashPaymentAmount = amount;
             this.markAsPaid();
+            this.loading = false;
         },
 
         async markAsPaid(hasMultiplePayments = false) {
@@ -2380,7 +2573,7 @@
                 this.pinTerminalError = data.pinTerminalError;
                 this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
 
-                if(this.pinTerminalStatus == 'paid' && !this.pinTerminalStatusHandled) {
+                if (this.pinTerminalStatus == 'paid' && !this.pinTerminalStatusHandled) {
                     console.log('Pin terminal payment completed successfully.');
                     this.disable('paymentPopup')
                     this.products = [];
@@ -2587,7 +2780,9 @@
         },
 
         async refreshProducts() {
+            this.loading = true;
             this.getAllProducts(true);
+            this.loading = false;
 
             return $wire.dispatch('notify', {
                 type: 'success',
@@ -2622,6 +2817,7 @@
         },
 
         showOrdersPopup() {
+            this.loading = true;
             if (this.ordersPopup) {
                 this.ordersPopup = false;
                 this.focus();
@@ -2631,6 +2827,7 @@
                 this.retrieveOrders();
                 this.focusSearchOrder();
             }
+            this.loading = false;
         },
 
         selectOrder(order) {
