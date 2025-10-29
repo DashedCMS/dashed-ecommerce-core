@@ -39,7 +39,11 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
         $startDate = $this->filters['startDate'] ? Carbon::parse($this->filters['startDate']) : now()->subMonth();
         $endDate = $this->filters['endDate'] ? Carbon::parse($this->filters['endDate']) : now();
 
-        if ($this->filters['steps'] == 'per_day') {
+        if ($this->filters['steps'] == 'per_hour') {
+            $startFormat = 'startOfDay';
+            $endFormat = 'endOfDay';
+            $addFormat = 'addHour';
+        } elseif ($this->filters['steps'] == 'per_day') {
             $startFormat = 'startOfDay';
             $endFormat = 'endOfDay';
             $addFormat = 'addDay';

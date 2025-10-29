@@ -4,15 +4,21 @@
         <div class="grid grid-cols-10 divide-x divide-primary-500 h-full">
             <div class="sm:col-span-7 sm:pr-8 flex flex-col gap-8 overflow-y-auto">
                 <div class="flex flex-wrap justify-between items-center">
-                    <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
+                    <div class="flex items-center justify-center gap-4">
+                        <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
+                        <p class="font-bold text-xl">|</p>
+                        <p class="font-bold text-5xl" x-html="time"></p>
+                    </div>
                     <div class="flex flex-wrap gap-4">
                         <button x-cloak x-show="lastOrder"
                                 x-bind:disabled="loading"
                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                 @click="printLastOrder"
                                 class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9.75h4.875a2.625 2.625 0 0 1 0 5.25H12M8.25 9.75 10.5 7.5M8.25 9.75 10.5 12m9-7.243V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0c1.1.128 1.907 1.077 1.907 2.185Z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M8.25 9.75h4.875a2.625 2.625 0 0 1 0 5.25H12M8.25 9.75 10.5 7.5M8.25 9.75 10.5 12m9-7.243V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0c1.1.128 1.907 1.077 1.907 2.185Z"/>
                             </svg>
                         </button>
                         <button id="exitFullscreenBtn" @click="toggleFullscreen"
@@ -48,6 +54,16 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
                             </svg>
+                        </button>
+                        <button
+                            data-emojis="🔥 💥 🎉 🥳 💸 ✨ 🚀 😎 🌈 🪩 🧨 👑 💃 🕺 🍾 🎊"
+                            x-data
+                            x-on:click="() => launchEmojis($el)"
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center"
+                        >
+                            <span>🥳</span>
                         </button>
                     </div>
                 </div>
@@ -116,13 +132,17 @@
                                     <p>
                                         <span class="font-bold" x-html="product.currentPrice"></span>
                                     </p>
-                                    <p x-show="product.stock >= 3" class="text-green-500">
-                                        <span class="font-bold" x-html="product.stock + ' op voorraad'"></span>
+                                    <p x-show="product.actual_stock >= 3" class="text-green-500">
+                                        <span class="font-bold" x-html="product.actual_stock + ' op voorraad'"></span>
                                     </p>
-                                    <p x-show="product.stock < 3 && product.stock > 0" class="text-orange-500">
-                                        <span class="font-bold" x-html="product.stock + ' op voorraad'"></span>
+                                    <p x-show="product.actual_stock < 3 && product.actual_stock > 0"
+                                       class="text-orange-500">
+                                        <span class="font-bold" x-html="product.actual_stock + ' op voorraad'"></span>
                                     </p>
-                                    <p x-show="product.stock < 1" class="text-red-500">
+                                    <p x-show="product.actual_stock < 1 && product.stock > 0" class="text-orange-500">
+                                        <span class="font-bold" x-html="'op nabestelling'"></span>
+                                    </p>
+                                    <p x-show="product.actual_stock < 1 && product.stock < 1" class="text-red-500">
                                         <span class="font-bold" x-html="'uitverkocht'"></span>
                                     </p>
                                 </div>
@@ -133,8 +153,10 @@
                 <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
                      x-show="!loadingSearchedProducts && searchProductQuery && !searchedProducts.length">
                     <div class="p-4">
-                        <p x-show="searchProductQuery.length >= 3" class="text-center text-black">Geen producten gevonden</p>
-                        <p x-show="searchProductQuery.length < 3" class="text-center text-black">Vul een zoekterm in...</p>
+                        <p x-show="searchProductQuery.length >= 3" class="text-center text-black">Geen producten
+                            gevonden</p>
+                        <p x-show="searchProductQuery.length < 3" class="text-center text-black">Vul een zoekterm
+                            in...</p>
                     </div>
                 </div>
                 <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
@@ -147,7 +169,7 @@
                     <button @click="toggle('customProductPopup')"
                             x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
-                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 text-white font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -273,6 +295,18 @@
                         </svg>
 
                         <p>Producten opnieuw ophalen</p>
+                    </button>
+                    <button @click="showStockPopup()"
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            class="focus-search-order text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                        </svg>
+
+                        <p>Voorraad beheer</p>
                     </button>
                 </div>
             </div>
@@ -1494,6 +1528,163 @@
             </template>
         </div>
     </div>
+    <div class="fixed inset-0 flex items-center justify-center z-50 text-black" x-cloak x-show="stockPopup"
+         x-transition.opacity.scale.origin>
+        <div class="absolute h-full w-full" @click="showStockPopup"></div>
+        <div class="bg-primary-500 h-[95%] w-[95%] rounded-lg grid gap-0.5 relative grid-cols-8">
+            <div class="absolute top-5 right-5 text-black cursor-pointer"
+                 @click="showStockPopup">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                     stroke="currentColor" class="size-10">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+            </div>
+            <div class="col-span-2 bg-gray-100 rounded-tl-lg flex flex-col p-4 overflow-y-auto">
+                <div class="grid gap-4 overflow-y-auto">
+                    <form @submit.prevent="selectStockProduct">
+                        <div class="w-full relative">
+                    <span class="text-black absolute left-2.5 top-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="size-6">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                        </svg>
+                    </span>
+                            <input autofocus x-model.debounce.500ms="searchStockProductQuery"
+                                   id="search-stock-product-query"
+                                   :inputmode="!searchQueryInputmode ? 'text' : 'none'"
+                                   placeholder="Zoek een product op naam, SKU of barcode..."
+                                   class="text-black w-full rounded-lg pl-10 pr-10 text-xl py-1 border-2 border-primary-600">
+                            <p class="absolute right-2.5 top-2 text-black cursor-pointer"
+                               @click="updateSearchQueryInputmode">
+                                                        <span x-show="searchQueryInputmode" x-cloak>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                             class="lucide lucide-keyboard-off"><path
+                                d="M 20 4 A2 2 0 0 1 22 6"/><path d="M 22 6 L 22 16.41"/><path d="M 7 16 L 16 16"/><path
+                                d="M 9.69 4 L 20 4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path
+                                d="m2 2 20 20"/><path
+                                d="M20 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/><path d="M6 8h.01"/><path
+                                d="M8 12h.01"/></svg>
+                                                </span>
+                                <span x-show="!searchQueryInputmode" x-cloak>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                         viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2"
+                                                         stroke-linecap="round"
+                                                         stroke-linejoin="round" class="lucide lucide-keyboard"><path
+                                                            d="M10 8h.01"/><path
+                                                            d="M12 12h.01"/><path d="M14 8h.01"/><path
+                                                            d="M16 12h.01"/><path d="M18 8h.01"/><path
+                                                            d="M6 8h.01"/><path d="M7 16h10"/><path d="M8 12h.01"/><rect
+                                                            width="20"
+                                                            height="16" x="2"
+                                                            y="4"
+                                                            rx="2"/></svg>
+                                                </span>
+                            </p>
+                        </div>
+                    </form>
+                    <div>
+                        <p class="text-2xl font-bold">Producten</p>
+                    </div>
+                    <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
+                         x-show="!loadingSearchedStockProducts && searchStockProductQuery && !searchedStockProducts.length">
+                        <div class="p-4">
+                            <p x-show="searchStockProductQuery.length >= 3" class="text-center text-black">Geen
+                                producten
+                                gevonden</p>
+                            <p x-show="searchStockProductQuery.length < 3" class="text-center text-black">Vul een
+                                zoekterm
+                                in...</p>
+                        </div>
+                    </div>
+                    <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
+                         x-show="loadingSearchedStockProducts">
+                        <div class="p-4">
+                            <p class="text-center text-black">Producten aan het laden</p>
+                        </div>
+                    </div>
+                    <div class="grid gap-4 overflow-y-auto"
+                         x-show="searchedStockProducts.length && !loadingSearchedStockProducts">
+                        <template x-for="product in searchedStockProducts">
+                            <div class="grid relative items-center gap-6 p-4 text-black bg-white cursor-pointer"
+                                 @click="selectStockProduct(product)">
+                                <div class="mx-auto"
+                                     x-show="product.image">
+                                    <img :src="product.image"
+                                         class="object-cover aspect-3/2 rounded-lg max-h-[100px]">
+                                </div>
+
+                                <div class="text-wrap">
+                                    <p>
+                                        <span x-html="product.name"></span>
+                                    </p>
+                                    <p>
+                                        <span class="font-bold" x-html="product.currentPrice"></span>
+                                    </p>
+                                    <p x-show="product.actual_stock >= 3" class="text-green-500">
+                                        <span class="font-bold" x-html="product.actual_stock + ' op voorraad'"></span>
+                                    </p>
+                                    <p x-show="product.actual_stock < 3 && product.actual_stock > 0"
+                                       class="text-orange-500">
+                                        <span class="font-bold" x-html="product.actual_stock + ' op voorraad'"></span>
+                                    </p>
+                                    <p x-show="product.actual_stock < 1 && product.stock > 0" class="text-orange-500">
+                                        <span class="font-bold" x-html="'op nabestelling'"></span>
+                                    </p>
+                                    <p x-show="product.actual_stock < 1 && product.stock < 1" class="text-red-500">
+                                        <span class="font-bold" x-html="'uitverkocht'"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <template x-if="selectedStockProduct">
+                <div class="col-span-6 p-4 overflow-y-auto">
+                    <div class="grid gap-4">
+                        <div class="grid gap-4">
+                            <div class="grid gap-4 bg-white rounded-lg p-4">
+                                <p class="text-2xl font-bold">
+                                    <span x-html="selectedStockProduct.name"></span>
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <p class="text-white uppercase text-sm">Voorraad</p>
+                                <div class="grid gap-2 bg-white rounded-lg p-4">
+                                    <div class="flex gap-4">
+                                        <form @submit.prevent="updateSelectedStockProduct()"
+                                              class="ml-auto grow text-right flex items-center justify-start gap-2">
+                                            <input x-model="selectedStockProduct.actual_stock"
+                                                   :id="'product-stock-' + selectedStockProduct.id"
+                                                   x-bind:class="loading ? 'bg-gray-200' : 'bg-white'"
+                                                   placeholder="Vul de voorraad in..."
+                                                   type="number"
+                                                   class="text-black border-2 border-primary-500 rounded-lg px-1 py-1 text-xl max-w-[100px]">
+                                            <button
+                                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                                x-bind:disabled="loading"
+                                                class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                     stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          d="m4.5 12.75 6 6 9-13.5"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
 </div>
 @script
 <script>
@@ -1504,12 +1695,16 @@
         userId: {{ auth()->user()->id }},
         searchQueryInputmode: $wire.entangle('searchQueryInputmode'),
         searchProductQuery: '',
+        searchStockProductQuery: '',
         lastOrder: null,
         orders: [],
         selectedOrder: null,
+        selectedStockProduct: null,
         searchOrderQuery: '',
         products: [],
         allProducts: [],
+        searchedStockProducts: [],
+        loadingSearchedStockProducts: false,
         loadingSearchedProducts: false,
         discountCode: null,
         discount: null,
@@ -1550,6 +1745,7 @@
         checkoutPopup: false,
         paymentPopup: false,
         ordersPopup: false,
+        stockPopup: false,
         cancelOrderPopup: false,
         orderConfirmationPopup: false,
         chooseShippingMethodPopup: false,
@@ -1579,6 +1775,17 @@
         customFields: $wire.entangle('customFields'),
 
         hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
+
+
+        time: '',
+
+        updateTime() {
+            const now = new Date()
+            const h = String(now.getHours()).padStart(2, '0')
+            const m = String(now.getMinutes()).padStart(2, '0')
+            const s = String(now.getSeconds()).padStart(2, '0')
+            this.time = `${h}:${m}:${s}`
+        },
 
         toggle(variable) {
             this.loading = true;
@@ -1823,7 +2030,7 @@
         async printReceipt() {
             this.loading = true;
 
-            if(!this.order){
+            if (!this.order) {
                 this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
@@ -2698,6 +2905,46 @@
             }
         },
 
+        async getSearchedStockProducts() {
+            if (this.searchStockProductQuery.length < 3) {
+                this.searchedStockProducts = [];
+            }
+            this.searchedStockProducts = this.allProducts
+                .filter(product => product.search.toLowerCase().includes(this.searchStockProductQuery.toLowerCase()))
+                .slice(0, 100);
+
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        products: this.searchedStockProducts,
+                        userId: this.userId,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok) {
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.searchedStockProducts = data.products;
+
+            } catch (error) {
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'Kan de voorraad niet bijwerken'
+                })
+            }
+        },
+
         async retrieveOrders() {
             try {
                 let response = await fetch('{{ route('api.point-of-sale.retrieve-orders') }}', {
@@ -2780,6 +3027,46 @@
             }
         },
 
+        async updateSelectedStockProduct() {
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.update-product') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: this.userId,
+                        product: this.selectedStockProduct,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'success',
+                    message: 'De voorraad van ' + this.selectedStockProduct.name + ' is bijgewerkt.',
+                })
+
+            } catch (error) {
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'Kan de bestellingen niet ophalen'
+                })
+            }
+        },
+
         async refreshProducts() {
             this.loading = true;
             this.getAllProducts(true);
@@ -2831,8 +3118,25 @@
             this.loading = false;
         },
 
+        showStockPopup() {
+            this.loading = true;
+            if (this.stockPopup) {
+                this.stockPopup = false;
+                this.focus();
+            } else {
+                this.stockPopup = true;
+                this.focusSearchProduct();
+            }
+            this.loading = false;
+        },
+
         selectOrder(order) {
             this.selectedOrder = order;
+        },
+
+        selectStockProduct(product) {
+            this.selectedStockProduct = product;
+            this.focusSearchedStockProductStock(product.id);
         },
 
         changeRefundQuantity(quantityModel, quantity, maxQuantity) {
@@ -2851,6 +3155,61 @@
 
         focusSearchOrder() {
             document.getElementById("search-order-query").focus();
+        },
+
+        focusSearchProduct() {
+            document.getElementById("search-stock-product-query").focus();
+        },
+
+        focusSearchedStockProductStock(productId) {
+            document.getElementById("product-stock-" + productId).focus();
+        },
+
+        launchEmojis(el) {
+            const emojis = el.dataset.emojis.split(/[\s,]+/).filter(Boolean)
+            const centerX = window.innerWidth / 2
+            const centerY = window.innerHeight / 2
+
+            for (let i = 0; i < 40; i++) {
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)]
+                const element = document.createElement('div')
+                element.textContent = emoji
+                element.style.position = 'fixed'
+                element.style.left = `${centerX}px`
+                element.style.top = `${centerY}px`
+                element.style.fontSize = `${Math.random() * 1.5 + 1.2}rem`
+                element.style.pointerEvents = 'none'
+                element.style.zIndex = 9999
+                element.style.userSelect = 'none'
+
+                document.body.appendChild(element)
+
+                // random richting en afstand
+                const angle = Math.random() * Math.PI * 2
+                const distance = Math.random() * 600 + 150
+                const targetX = Math.cos(angle) * distance
+                const targetY = Math.sin(angle) * distance
+
+                // random rotatie
+                const rotation = (Math.random() - 0.5) * 720
+
+                const animation = element.animate(
+                    [
+                        {transform: 'translate(0, 0) scale(0.8) rotate(0deg)', opacity: 1},
+                        {
+                            transform: `translate(${targetX}px, ${targetY}px) scale(1.4) rotate(${rotation}deg)`,
+                            opacity: 0
+                        }
+                    ],
+                    {
+                        duration: 1500 + Math.random() * 1000,
+                        easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)',
+                        fill: 'forwards',
+                    }
+                )
+
+                animation.onfinish = () => element.remove()
+            }
         },
 
         init() {
@@ -2903,11 +3262,32 @@
                 }, 300);
             });
 
+            let stockSearchTimeout = null;
+            $watch('searchStockProductQuery', (value) => {
+                clearTimeout(stockSearchTimeout);
+                this.loadingSearchedStockProducts = true;
+
+                stockSearchTimeout = setTimeout(() => {
+                    if (value.length > 2) {
+                        this.getSearchedStockProducts();
+                    } else {
+                        this.searchedStockProducts = [];
+                    }
+
+                    this.loadingSearchedStockProducts = false;
+                }, 300);
+            });
+
             $watch('searchOrderQuery', (value, oldValue) => {
                 this.retrieveOrders();
             });
+
+            this.updateTime();
+
+            setInterval(() => this.updateTime(), 1000)
         }
-    }));
+    }))
+    ;
 </script>
 @endscript
 </div>

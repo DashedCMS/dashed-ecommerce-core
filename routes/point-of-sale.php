@@ -23,6 +23,8 @@ Route::group(
             ->name('api.point-of-sale.search-products');
         Route::post('/add-product', [PointOfSaleApiController::class, 'addProduct'])
             ->name('api.point-of-sale.add-product');
+        Route::post('/update-product', [PointOfSaleApiController::class, 'updateProduct'])
+            ->name('api.point-of-sale.update-product');
         Route::post('/select-product', [PointOfSaleApiController::class, 'selectProduct'])
             ->name('api.point-of-sale.select-product');
         Route::post('/change-quantity', [PointOfSaleApiController::class, 'changeQuantity'])
