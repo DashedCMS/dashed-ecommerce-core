@@ -464,6 +464,7 @@ class PointOfSaleApiController extends Controller
                     } else {
                         $product['price'] = $product['singlePrice'] * $quantity;
                     }
+                    $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
                 }
             }
         }

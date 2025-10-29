@@ -136,7 +136,8 @@
                 <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
                      x-show="!loadingSearchedProducts && searchProductQuery && !searchedProducts.length">
                     <div class="p-4">
-                        <p class="text-center text-black">Geen producten gevonden</p>
+                        <p x-show="searchProductQuery.length >= 3" class="text-center text-black">Geen producten gevonden</p>
+                        <p x-show="searchProductQuery.length < 3" class="text-center text-black">Vul een zoekterm in...</p>
                     </div>
                 </div>
                 <div class="z-50 bg-white rounded-lg mt-2 shadow-xl" x-cloak
@@ -289,6 +290,9 @@
                                 <img x-cloak x-show="!product.image && product.customProduct === true"
                                      src="https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=Aangepaste%20verkoop"
                                      class="object-cover rounded-lg w-20 h-20">
+                                <img x-cloak x-show="!product.image && product.customProduct !== true"
+                                     :src="'https://placehold.co/400x400/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}/fff?text=' + product.name"
+                                     class="object-cover rounded-lg w-20 h-20">
                                 <span
                                     class="bg-primary-500 text-white font-bold rounded-full w-6 h-6 absolute -right-2 -top-2 flex items-center justify-center border-2 border-white"
                                     x-html="product.quantity">
@@ -302,7 +306,7 @@
                                         @click="changeQuantity(product.identifier, product.quantity + 1)"
                                         x-bind:disabled="loading"
                                         x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                                        class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        class="h-10 w-10 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -313,7 +317,7 @@
                                         @click="changeQuantity(product.identifier, product.quantity - 1)"
                                         x-bind:disabled="loading"
                                         x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                                        class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        class="h-10 w-10 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
@@ -323,7 +327,7 @@
                                         @click="openChangeProductPricePopup(product)"
                                         x-bind:disabled="loading"
                                         x-bind:class="loading ? 'bg-orange-900' : 'bg-orange-500 hover:bg-orange-700'"
-                                        class="ml-auto h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        class="ml-auto h-10 w-10 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -334,7 +338,7 @@
                                         @click="changeQuantity(product.identifier, 0)"
                                         x-bind:disabled="loading"
                                         x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
-                                        class="h-12 w-12  text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                        class="h-10 w-10  text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -2885,14 +2889,21 @@
             this.initialize();
             this.getAllProducts();
 
-            $watch('searchProductQuery', (value, oldValue) => {
+            let searchTimeout = null;
+
+            $watch('searchProductQuery', (value) => {
+                clearTimeout(searchTimeout);
                 this.loadingSearchedProducts = true;
-                if (value.length > 2) {
-                    this.getSearchedProducts();
-                } else {
-                    this.searchedProducts = [];
-                }
-                this.loadingSearchedProducts = false;
+
+                searchTimeout = setTimeout(() => {
+                    if (value.length > 2) {
+                        this.getSearchedProducts();
+                    } else {
+                        this.searchedProducts = [];
+                    }
+
+                    this.loadingSearchedProducts = false;
+                }, 300);
             });
 
             $watch('searchOrderQuery', (value, oldValue) => {
