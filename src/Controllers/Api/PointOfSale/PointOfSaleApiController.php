@@ -453,7 +453,9 @@ class PointOfSaleApiController extends Controller
         if ($quantity < 1) {
             $products = collect($products)->reject(function ($product) use ($productIdentifier) {
                 return $product['identifier'] === $productIdentifier;
-            })->values();
+            })
+                ->values()
+                ->toArray();
         } else {
             foreach ($products as $productKey => &$product) {
                 if ($product['identifier'] == $productIdentifier) {

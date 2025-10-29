@@ -295,7 +295,8 @@ class ProductResource extends Resource
         //                    return [];
         //                }
 
-        $newSchema[] = Section::make('Filters beheren')->columnSpanFull()
+        $newSchema[] = Section::make('Filters beheren')
+            ->columnSpanFull()
 //            ->schema(fn($record) => getFilters($record))
             ->schema(function ($record) {
                 $productFilterSchema = [];
@@ -676,7 +677,8 @@ class ProductResource extends Resource
                         Select::make('categories')
                             ->multiple()
                             ->label('Categorieen')
-                            ->options(ProductCategory::all()->pluck('name', 'id')),
+                            ->options(ProductCategory::all()->pluck('name', 'id'))
+                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
                         if (! $data['categories']) {
@@ -701,7 +703,8 @@ class ProductResource extends Resource
 
                         return $query->where('indexable', $data['indexable']);
                     }),
-            ]);
+            ])
+            ->deferFilters(false);
     }
 
     public static function getRelations(): array
