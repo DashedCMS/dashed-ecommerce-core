@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Doctrine\DBAL\Query;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\LogOptions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -159,5 +161,10 @@ class ProductExtra extends Model
                 ])
                 ->columnSpan(2),
         ];
+    }
+
+    public function scopeIsGlobal($query): Builder
+    {
+        return $query->where('global', 1);
     }
 }

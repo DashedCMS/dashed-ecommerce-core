@@ -2936,6 +2936,7 @@
                 }
 
                 this.searchedStockProducts = data.products;
+                this.selectedStockProduct = this.searchedStockProducts?.length ? this.searchedStockProducts[0] : null
 
             } catch (error) {
                 return $wire.dispatch('notify', {
@@ -3269,6 +3270,7 @@
 
                 stockSearchTimeout = setTimeout(() => {
                     if (value.length > 2) {
+                        this.selectedStockProduct = null;
                         this.getSearchedStockProducts();
                     } else {
                         this.searchedStockProducts = [];

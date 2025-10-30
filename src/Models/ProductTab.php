@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Doctrine\DBAL\Query;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
@@ -49,5 +51,10 @@ class ProductTab extends Model
     public function productCategories(): BelongsToMany
     {
         return $this->belongsToMany(ProductCategory::class, 'dashed__product_tab_product_category', 'product_tab_id', 'product_category_id');
+    }
+
+    public function scopeIsGlobal($query): Builder
+    {
+        return $query->where('global', 1);
     }
 }

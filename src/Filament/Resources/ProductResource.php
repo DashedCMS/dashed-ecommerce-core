@@ -3,6 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
+use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
+use Dashed\DashedEcommerceCore\Models\ProductTab;
+use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -422,33 +425,39 @@ class ProductResource extends Resource
                 'lg' => 2,
             ]);
 
-        $newSchema[] = Section::make('Linkjes beheren')->columnSpanFull()
+        $newSchema[] = Section::make('Linkjes beheren')
+            ->columnSpanFull()
             ->schema([
                 Select::make('shippingClasses')
                     ->multiple()
                     ->relationship('shippingClasses', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(ShippingClass::class, $search))
                     ->label('Link verzendklasses'),
                 Select::make('suggestedProducts')
                     ->multiple()
                     ->relationship('suggestedProducts', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(Product::class, $search))
                     ->label('Link voorgestelde producten'),
                 Select::make('crossSellProducts')
                     ->multiple()
                     ->relationship('crossSellProducts', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(Product::class, $search))
                     ->label('Link cross sell producten')
                     ->helperText('Dit mogen alleen maar producten zijn die zonder verplichte opties zijn'),
                 Select::make('globalProductExtras')
                     ->multiple()
                     ->relationship('globalProductExtras', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getSearchResultsUsing(fn ($search, $query) => RelationshipSearchQuery::make(ProductExtra::class, $search, applyScopes: 'isGlobal'))
                     ->label('Link globale product extras'),
                 Select::make('globalProductTabs')
                     ->multiple()
                     ->relationship('globalTabs', 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
+                    ->getSearchResultsUsing(fn ($search, $query) => RelationshipSearchQuery::make(ProductTab::class, $search, applyScopes: 'isGlobal'))
                     ->label('Link globale product tabs'),
             ])
             ->columns([
