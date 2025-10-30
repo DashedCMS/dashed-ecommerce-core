@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductTab;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use UnitEnum;
@@ -517,6 +518,11 @@ class ProductResource extends Resource
                     ->label('Naam')
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
+                TextColumn::make('price')
+                    ->label('Prijs')
+                    ->searchable()
+                    ->sortable()
+                    ->formatStateUsing(fn($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('total_stock')
                     ->label('Voorraad')
                     ->sortable(),

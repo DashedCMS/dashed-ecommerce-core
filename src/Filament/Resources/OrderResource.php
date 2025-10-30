@@ -343,8 +343,9 @@ class OrderResource extends Resource
                         ->toArray()))
                     ->sortable(),
                 TextColumn::make('total')
+                    ->sortable()
                     ->label('Totaal')
-                    ->getStateUsing(fn ($record) => CurrencyHelper::formatPrice($record->total)),
+                    ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('orderProducts.name')
                     ->label('Bestelde producten')
                     ->searchable()
