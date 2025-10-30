@@ -169,7 +169,7 @@
                     <button @click="toggle('customProductPopup')"
                             x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
-                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 text-white font-medium text-xl">
+                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 text-white font-medium text-xl">
                         <span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

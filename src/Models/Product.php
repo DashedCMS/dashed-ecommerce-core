@@ -33,6 +33,7 @@ use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use LaraZeus\Quantity\Components\Quantity;
 
 class Product extends Model
 {
@@ -1195,7 +1196,7 @@ class Product extends Model
                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
                 ->reactive()
                 ->hidden(fn (Get $get) => ! $get('use_stock')),
-            TextInput::make('stock')
+            Quantity::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
                 ->helperText(fn ($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
@@ -1209,7 +1210,7 @@ class Product extends Model
                 ->helperText('Gebruik 1 van deze 2 opties')
                 ->required(fn (Get $get) => ! $get('expected_delivery_in_days'))
                 ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
-            TextInput::make('expected_delivery_in_days')
+            Quantity::make('expected_delivery_in_days')
                 ->label('Levering in dagen')
                 ->helperText('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
                 ->reactive()
@@ -1217,7 +1218,7 @@ class Product extends Model
                 ->minValue(1)
                 ->maxValue(1000)
                 ->required(fn (Get $get) => ! $get('expected_in_stock_date') && $get('out_of_stock_sellable')),
-            TextInput::make('low_stock_notification_limit')
+            Quantity::make('low_stock_notification_limit')
                 ->label('Lage voorraad melding')
                 ->helperText('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een melding')
                 ->type('number')
@@ -1237,7 +1238,7 @@ class Product extends Model
                 ->default('in_stock')
                 ->required()
                 ->hidden(fn (Get $get) => $get('use_stock')),
-            TextInput::make('limit_purchases_per_customer_limit')
+            Quantity::make('limit_purchases_per_customer_limit')
                 ->type('number')
                 ->label('Hoeveel mag dit product gekocht worden per bestelling')
                 ->minValue(1)
