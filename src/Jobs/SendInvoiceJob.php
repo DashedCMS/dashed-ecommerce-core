@@ -64,7 +64,7 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
                 $this->order->save();
             }
 
-            if ($this->sendToAdmin) {
+            if ($this->sendToAdmin && $this->order->order_origin != 'pos') {
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                         if ($this->order->contains_pre_orders) {
