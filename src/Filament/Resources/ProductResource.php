@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
+use Dashed\DashedCore\Filament\Fields\Numpad;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductTab;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;

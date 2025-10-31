@@ -3054,16 +3054,21 @@
                 }
 
                 this.loading = false;
+                name = this.selectedStockProduct.name;
+                this.searchStockProductQuery = '';
+                this.selectedStockProduct = null;
+
                 return $wire.dispatch('notify', {
                     type: 'success',
-                    message: 'De voorraad van ' + this.selectedStockProduct.name + ' is bijgewerkt.',
+                    message: 'De voorraad van ' + name + ' is bijgewerkt.',
                 })
 
             } catch (error) {
+                console.log(error);
                 this.loading = false;
                 return $wire.dispatch('notify', {
                     type: 'danger',
-                    message: 'Kan de bestellingen niet ophalen'
+                    message: 'Kan het product niet bijwerken'
                 })
             }
         },
