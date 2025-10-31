@@ -1374,8 +1374,12 @@ class Product extends Model
         return $images;
     }
 
-    public function replaceContentVariables(?string $content, array $filters = []): ?string
+    public function replaceContentVariables(null|array|string $content, array $filters = []): ?string
     {
+        if(is_array($content)){
+            $content = cms()->convertToHtml($content);
+        }
+
         $variables = [
             'name' => $this->name,
         ];

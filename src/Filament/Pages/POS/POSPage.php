@@ -4,7 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
 use App\Models\User;
-use Dashed\DashedCore\Filament\Fields\Numpad;
+use DashedDEV\FilamentNumpadField\NumpadField;
 use LaraZeus\Quantity\Components\Quantity;
 use Livewire\Component;
 use Illuminate\Support\Str;
@@ -105,7 +105,7 @@ class POSPage extends Component implements HasSchemas
                     ->required()
                     ->autofocus()
                     ->columnSpanFull(),
-                Numpad::make('price')
+                NumpadField::make('price')
                     ->label('Prijs')
 //                    ->numeric()
                     ->minCents(0)
@@ -144,7 +144,7 @@ class POSPage extends Component implements HasSchemas
                     ->required()
                     ->disabled()
                     ->columnSpanFull(),
-                Numpad::make('productToChange.singlePrice')
+                NumpadField::make('productToChange.singlePrice')
                     ->label('Prijs')
                     ->minCents(0)
                     ->maxCents(999999)
