@@ -1542,7 +1542,7 @@
             </div>
             <div class="col-span-2 bg-gray-100 rounded-tl-lg flex flex-col p-4 overflow-y-auto">
                 <div class="grid gap-4 overflow-y-auto">
-                    <form @submit.prevent="selectStockProduct">
+                    <form @submit.prevent="getSearchedStockProducts">
                         <div class="w-full relative">
                     <span class="text-black absolute left-2.5 top-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -1659,12 +1659,34 @@
                                     <div class="flex gap-4">
                                         <form @submit.prevent="updateSelectedStockProduct()"
                                               class="ml-auto grow text-right flex items-center justify-start gap-2">
+                                            <button
+                                                type="button"
+                                                @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock - 1)"
+                                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                                x-bind:disabled="loading"
+                                                class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                                                </svg>
+
+                                            </button>
                                             <input x-model="selectedStockProduct.actual_stock"
                                                    :id="'product-stock-' + selectedStockProduct.id"
                                                    x-bind:class="loading ? 'bg-gray-200' : 'bg-white'"
                                                    placeholder="Vul de voorraad in..."
                                                    type="number"
-                                                   class="text-black border-2 border-primary-500 rounded-lg px-1 py-1 text-xl max-w-[100px]">
+                                                   class="text-black border-2 border-primary-500 rounded-lg px-1 py-1 text-xl max-w-[50px]">
+                                            <button
+                                                type="button"
+                                                @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock + 1)"
+                                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                                x-bind:disabled="loading"
+                                                class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                </svg>
+
+                                            </button>
                                             <button
                                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                                 x-bind:disabled="loading"
@@ -2910,7 +2932,7 @@
                 this.searchedStockProducts = [];
             }
             this.searchedStockProducts = this.allProducts
-                .filter(product => product.search.toLowerCase().includes(this.searchStockProductQuery.toLowerCase()))
+                .filter(product => product.search.toLowerCase().includes(this.searchStockProductQuery.toLowerCase().trim()))
                 .slice(0, 100);
 
             try {
@@ -3057,6 +3079,7 @@
                 name = this.selectedStockProduct.name;
                 this.searchStockProductQuery = '';
                 this.selectedStockProduct = null;
+                this.focusSearchProduct();
 
                 return $wire.dispatch('notify', {
                     type: 'success',
@@ -3071,6 +3094,10 @@
                     message: 'Kan het product niet bijwerken'
                 })
             }
+        },
+
+        async updateSelectedStockQuantity(quantity) {
+            this.selectedStockProduct.actual_stock = quantity;
         },
 
         async refreshProducts() {
@@ -3131,6 +3158,8 @@
                 this.focus();
             } else {
                 this.stockPopup = true;
+                this.searchStockProductQuery = '';
+                this.selectedStockProduct = null;
                 this.focusSearchProduct();
             }
             this.loading = false;
@@ -3142,7 +3171,6 @@
 
         selectStockProduct(product) {
             this.selectedStockProduct = product;
-            this.focusSearchedStockProductStock(product.id);
         },
 
         changeRefundQuantity(quantityModel, quantity, maxQuantity) {
@@ -3165,10 +3193,6 @@
 
         focusSearchProduct() {
             document.getElementById("search-stock-product-query").focus();
-        },
-
-        focusSearchedStockProductStock(productId) {
-            document.getElementById("product-stock-" + productId).focus();
         },
 
         launchEmojis(el) {

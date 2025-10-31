@@ -314,7 +314,7 @@ class PointOfSaleApiController extends Controller
     {
         $data = $request->all();
 
-        $search = $data['search'] ?? null;
+        $search = str($data['search'] ?? null)->trim()->toString();
 
         $products = Product::handOrderShowable()
             ->search($search)
