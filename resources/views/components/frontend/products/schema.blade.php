@@ -2,7 +2,7 @@
     {{--        <meta itemprop="brand" content="facebook">--}}
     <meta itemprop="name" content="{{$product->name}}">
     <meta itemprop="description"
-          content="{{strip_tags((($product->short_description ?: ($product->productGroup->short_description ?? '')) ?: $product->description) ?: ($product->productGroup->description ?? ''))}}">
+          content="{{strip_tags((($product->short_description ?: ($product->productGroup->short_description ?? '')) ?: cms()->convertToHtml($product->description)) ?: (cms()->convertToHtml($product->productGroup->description ?? '')))}}">
     <meta itemprop="productID" content="{{$product->id}}">
     <meta itemprop="url" content="{{$product->getUrl()}}">
     <meta itemprop="sku" content="{{$product->sku}}">
