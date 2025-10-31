@@ -4,8 +4,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
 use App\Models\User;
-use DashedDEV\FilamentNumpadField\NumpadField;
-use LaraZeus\Quantity\Components\Quantity;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
@@ -16,6 +14,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Contracts\HasSchemas;
+use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Filament\Schemas\Components\Utilities\Get;
@@ -23,6 +22,7 @@ use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use DashedDEV\FilamentNumpadField\NumpadField;
 
 class POSPage extends Component implements HasSchemas
 {
@@ -55,7 +55,7 @@ class POSPage extends Component implements HasSchemas
     public ?array $customProductData = [
         'quantity' => 1,
         'vat_rate' => 21,
-        'price' => 0
+        'price' => 0,
     ];
     public ?array $createDiscountData = [
         'type' => 'percentage',
@@ -232,15 +232,15 @@ class POSPage extends Component implements HasSchemas
                     ->required(),
                 TextInput::make('note')
                     ->label('Reden voor korting')
-                    ->visible(fn(Get $get) => $get('type') != 'discountCode')
+                    ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
-                Numpad::make('amount')
+                NumpadField::make('amount')
                     ->label('Prijs')
                     ->minCents(0)
                     ->maxCents(999999)
                     ->required()
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'amount')
+                    ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 TextInput::make('percentage')
                     ->label('Percentage')
@@ -253,7 +253,7 @@ class POSPage extends Component implements HasSchemas
                     ->default(21)
                     ->prefix('%')
                     ->reactive()
-                    ->visible(fn(Get $get) => $get('type') == 'percentage')
+                    ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
                 Select::make('discountCode')
                     ->label('Kortingscode')
@@ -269,7 +269,7 @@ class POSPage extends Component implements HasSchemas
                         return $options;
                     })
                     ->required()
-                    ->visible(fn(Get $get) => $get('type') == 'discountCode'),
+                    ->visible(fn (Get $get) => $get('type') == 'discountCode'),
 
             ])
             ->statePath('createDiscountData');
@@ -279,7 +279,7 @@ class POSPage extends Component implements HasSchemas
     {
         $posCart = POSCart::where('user_id', auth()->user()->id)->where('status', 'active')->first();
 
-        if (!$posCart->products) {
+        if (! $posCart->products) {
             Notification::make()
                 ->title('Geen producten in winkelmand')
                 ->danger()
@@ -309,7 +309,7 @@ class POSPage extends Component implements HasSchemas
             $discountCode->save();
         }
 
-        if (!$discountCode) {
+        if (! $discountCode) {
             Notification::make()
                 ->title('Kortingscode niet gevonden')
                 ->danger()
@@ -357,7 +357,7 @@ class POSPage extends Component implements HasSchemas
 
                                 $state = $get('customerUserId');
 
-                                if (!$state) {
+                                if (! $state) {
                                     Notification::make()
                                         ->title('Selecteer eerst een gebruiker')
                                         ->danger()
@@ -430,16 +430,16 @@ class POSPage extends Component implements HasSchemas
                 TextInput::make('houseNr')
                     ->label('Huisnummer')
                     ->nullable()
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zipCode')
                     ->label('Postcode')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
                     ->label('Stad')
-                    ->required(fn(Get $get) => $get('street'))
+                    ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('country')
@@ -470,22 +470,22 @@ class POSPage extends Component implements HasSchemas
                     ->reactive(),
                 TextInput::make('invoiceHouseNr')
                     ->label('Factuur huisnummer')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceZipCode')
                     ->label('Factuur postcode')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoiceCity')
                     ->label('Factuur stad')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('invoiceCountry')
                     ->label('Factuur land')
-                    ->required(fn(Get $get) => $get('invoice_street'))
+                    ->required(fn (Get $get) => $get('invoice_street'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];

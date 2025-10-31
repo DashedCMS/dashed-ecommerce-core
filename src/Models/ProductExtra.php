@@ -2,8 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Doctrine\DBAL\Query;
-use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\LogOptions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -11,6 +9,7 @@ use Filament\Forms\Components\Repeater;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Spatie\Translatable\HasTranslations;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Schemas\Components\Utilities\Get;

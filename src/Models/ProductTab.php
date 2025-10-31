@@ -2,11 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Doctrine\DBAL\Query;
-use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 

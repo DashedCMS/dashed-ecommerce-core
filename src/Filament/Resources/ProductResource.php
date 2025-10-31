@@ -3,11 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
-use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
-use Dashed\DashedCore\Filament\Fields\Numpad;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\ProductTab;
-use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -37,14 +32,18 @@ use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedEcommerceCore\Models\ProductTab;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ShippingClass;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
@@ -523,7 +522,7 @@ class ProductResource extends Resource
                     ->label('Prijs')
                     ->searchable()
                     ->sortable()
-                    ->formatStateUsing(fn($state) => CurrencyHelper::formatPrice($state)),
+                    ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('total_stock')
                     ->label('Voorraad')
                     ->sortable(),

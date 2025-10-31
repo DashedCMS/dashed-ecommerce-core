@@ -14,8 +14,8 @@ use Gloudemans\Shoppingcart\CartItem;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,7 +33,6 @@ use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use LaraZeus\Quantity\Components\Quantity;
 
 class Product extends Model
 {
@@ -1376,7 +1375,7 @@ class Product extends Model
 
     public function replaceContentVariables(null|array|string $content, array $filters = []): ?string
     {
-        if(is_array($content)){
+        if (is_array($content)) {
             $content = cms()->convertToHtml($content);
         }
 
