@@ -2261,6 +2261,12 @@
 
         async selectProduct() {
             this.loading = true;
+
+            if(!this.searchProductQuery){
+                this.loading = false;
+                return;
+            }
+
             try {
                 let response = await fetch('{{ route('api.point-of-sale.select-product') }}', {
                     method: 'POST',
@@ -2930,7 +2936,10 @@
         async getSearchedStockProducts() {
             if (this.searchStockProductQuery.length < 3) {
                 this.searchedStockProducts = [];
+                this.selectedStockProduct = null;
+                return;
             }
+
             this.searchedStockProducts = this.allProducts
                 .filter(product => product.search.toLowerCase().includes(this.searchStockProductQuery.toLowerCase().trim()))
                 .slice(0, 100);
@@ -3160,7 +3169,9 @@
                 this.stockPopup = true;
                 this.searchStockProductQuery = '';
                 this.selectedStockProduct = null;
-                this.focusSearchProduct();
+                setTimeout(() => {
+                    this.focusSearchProduct();
+                }, 100);
             }
             this.loading = false;
         },
@@ -3303,6 +3314,7 @@
                         this.getSearchedStockProducts();
                     } else {
                         this.searchedStockProducts = [];
+                        this.selectedStockProduct = null;
                     }
 
                     this.loadingSearchedStockProducts = false;
