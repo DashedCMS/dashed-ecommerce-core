@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Illuminate\Validation\Rule;
 use Dashed\DashedCore\Models\User;
@@ -79,8 +80,8 @@ class Checkout extends Component
     public $shippingCosts;
     public $depositAmount;
     public bool $postpayPaymentMethod = false;
-    public array $paymentMethods = [];
-    public array $depositPaymentMethods = [];
+    public Collection|array $paymentMethods = [];
+    public Collection|array $depositPaymentMethods = [];
     public string $cartType = 'default';
 
     public function mount(Product $product)

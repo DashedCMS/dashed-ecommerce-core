@@ -53,7 +53,7 @@
     <div>
         <div class="relative z-40 lg:hidden" role="dialog" aria-modal="true" x-show="filters" x-cloak
              @keydown.window.escape="filters = false">
-            <div class="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true" x-show="filters"
+            <div class="fixed inset-0 bg-black/25" aria-hidden="true" x-show="filters"
                  x-transition:enter="transition-opacity ease-linear duration-300"
                  x-transition:enter-start="opacity-0"
                  x-transition:enter-end="opacity-100"

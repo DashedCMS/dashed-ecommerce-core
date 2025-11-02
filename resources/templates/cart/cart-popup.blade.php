@@ -5,7 +5,7 @@
     });
 " x-show="showCartPopup" x-cloak
      @keydown.window.escape="showCartPopup = false">
-    <div class="fixed inset-0 bg-black bg-opacity-25 pointer-events-none" aria-hidden="true" x-show="showCartPopup"
+    <div class="fixed inset-0 bg-black/25 pointer-events-none" aria-hidden="true" x-show="showCartPopup"
          @click="showCartPopup = false"
          x-transition:enter="transition-opacity ease-linear duration-500"
          x-transition:enter-start="opacity-0"
