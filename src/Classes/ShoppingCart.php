@@ -832,7 +832,7 @@ class ShoppingCart
         return null;
     }
 
-    public static function getPaymentMethods(?string $type = 'online', float $total = null, ?int $userId = null, bool $skipTotalCheck = false, ): array
+    public static function getPaymentMethods(?string $type = 'online', float $total = null, ?int $userId = null, bool $skipTotalCheck = false, ): Collection
     {
         $total = $total ?: cartHelper()->getTotal();
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
@@ -841,23 +841,23 @@ class ShoppingCart
         if (!$skipTotalCheck) {
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
-        $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get()->toArray();
+        $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();
 
         foreach ($paymentMethods as $key => &$paymentMethod) {
 
             $paymentMethodValid = true;
 
-            if ($userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod['id'])->where('user_id', $userId)->count() == 0) {
+            if ($userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->where('user_id', $userId)->count() == 0) {
                 $paymentMethodValid = false;
             }
 
             if (!$paymentMethodValid) {
                 unset($paymentMethods[$key]);
             } else {
-                $paymentMethod['full_image_path'] = $paymentMethod['image'] ? Storage::disk('dashed')->url($paymentMethod['image']) : '';
-                $paymentMethod['name'] = $paymentMethod['name'][app()->getLocale()] ?? '';
-                $paymentMethod['additional_info'] = $paymentMethod['additional_info'][app()->getLocale()] ?? '';
-                $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][app()->getLocale()] ?? '';
+                $paymentMethod['full_image_path'] = $paymentMethod->image ? Storage::disk('dashed')->url($paymentMethod->image) : '';
+//                $paymentMethod['name'] = $paymentMethod['name'][app()->getLocale()] ?? '';
+//                $paymentMethod['additional_info'] = $paymentMethod['additional_info'][app()->getLocale()] ?? '';
+//                $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][app()->getLocale()] ?? '';
             }
         }
 
