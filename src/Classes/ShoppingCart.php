@@ -563,7 +563,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -671,7 +671,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -746,7 +746,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -777,7 +777,7 @@ class ShoppingCart
 
     public static function getShippingZoneByCountry(?string $countryName): ?ShippingZone
     {
-        if (!$countryName) {
+        if (! $countryName) {
             return null;
         }
 
@@ -814,7 +814,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -832,13 +832,13 @@ class ShoppingCart
         return null;
     }
 
-    public static function getPaymentMethods(?string $type = 'online', float $total = null, ?int $userId = null, bool $skipTotalCheck = false, ): Collection
+    public static function getPaymentMethods(?string $type = 'online', float $total = null, ?int $userId = null, bool $skipTotalCheck = false): Collection
     {
         $total = $total ?: cartHelper()->getTotal();
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
 
         $paymentMethods = PaymentMethod::where('site_id', Sites::getActive())->where('active', 1)->where('type', $type);
-        if (!$skipTotalCheck) {
+        if (! $skipTotalCheck) {
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
         $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();
@@ -851,13 +851,13 @@ class ShoppingCart
                 $paymentMethodValid = false;
             }
 
-            if (!$paymentMethodValid) {
+            if (! $paymentMethodValid) {
                 unset($paymentMethods[$key]);
             } else {
                 $paymentMethod['full_image_path'] = $paymentMethod->image ? Storage::disk('dashed')->url($paymentMethod->image) : '';
-//                $paymentMethod['name'] = $paymentMethod['name'][app()->getLocale()] ?? '';
-//                $paymentMethod['additional_info'] = $paymentMethod['additional_info'][app()->getLocale()] ?? '';
-//                $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][app()->getLocale()] ?? '';
+                //                $paymentMethod['name'] = $paymentMethod['name'][app()->getLocale()] ?? '';
+                //                $paymentMethod['additional_info'] = $paymentMethod['additional_info'][app()->getLocale()] ?? '';
+                //                $paymentMethod['payment_instructions'] = $paymentMethod['payment_instructions'][app()->getLocale()] ?? '';
             }
         }
 

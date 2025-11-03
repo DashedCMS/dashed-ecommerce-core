@@ -17,12 +17,12 @@ use Filament\Schemas\Contracts\HasSchemas;
 use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\POSCart;
+use DashedDEV\FilamentNumpadField\NumpadField;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use DashedDEV\FilamentNumpadField\NumpadField;
 
 class POSPage extends Component implements HasSchemas
 {

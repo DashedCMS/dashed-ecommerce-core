@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
 use Exception;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Illuminate\Validation\Rule;
 use Dashed\DashedCore\Models\User;
@@ -16,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Classes\AccountHelper;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;

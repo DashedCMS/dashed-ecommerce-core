@@ -68,7 +68,7 @@ class OrderProductsList extends Component implements HasSchemas
                             }
 
                             if (is_array($orderProduct->hidden_options ?: [])) {
-                                foreach ($orderProduct->hidden_options as $key => $value) {
+                                foreach ($orderProduct->hidden_options ?: [] as $key => $value) {
                                     if (! str($value)->contains('base64')) {
                                         $html .= $key . ': ' . $value . ' <br/>';
                                     }
