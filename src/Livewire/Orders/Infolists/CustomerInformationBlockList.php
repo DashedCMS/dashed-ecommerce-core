@@ -39,14 +39,14 @@ class CustomerInformationBlockList extends Component implements HasSchemas
                             ->getStateUsing(fn ($record) => Helper::getProfilePicture($record->email))
                             ->circular()
                             ->hiddenLabel()
-                            ->size('md'),
+                            ->imageSize('md'),
                         Grid::make()
                             ->schema([
                                 TextEntry::make('name')
-                                    ->state('Naam')
+                                    ->label('Naam')
                                     ->hiddenLabel(),
                                 TextEntry::make('phone_number')
-                                    ->state('Telefoonnummer')
+                                    ->label('Telefoonnummer')
                                     ->url(fn ($record) => 'tel:' . $record->phone_number)
                                     ->badge()
                                     ->icon('heroicon-o-phone')
@@ -55,7 +55,7 @@ class CustomerInformationBlockList extends Component implements HasSchemas
                             ->columnSpan(1)
                             ->columns(1),
                         TextEntry::make('email')
-                            ->state('Email')
+                            ->label('Email')
                             ->url(fn ($record) => 'mailto:' . $record->email)
                             ->badge()
                             ->columnSpanFull()
