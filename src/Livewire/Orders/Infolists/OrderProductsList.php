@@ -75,7 +75,7 @@ class OrderProductsList extends Component implements HasSchemas
                                 }
                             }
 
-                            return new HtmlString($productExtras);
+                            return new HtmlString($html);
                         })
                         ->size('xs'),
                     TextEntry::make('quantity')
