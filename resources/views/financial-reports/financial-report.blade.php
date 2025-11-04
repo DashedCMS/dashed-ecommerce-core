@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>{{Translation::get('financial-report', 'financial-report', 'Financial report :startDate: - :endDate:', 'text', [
+    <title>{{Translation::get('financial-report', 'financial-report', 'Financieel rapport van :startDate: tot :endDate:', 'text', [
     'startDate' => $startDate->format('d-m-Y'),
     'endDate' => $endDate->format('d-m-Y'),
 ])}} {{Customsetting::get('site_name')}}</title>
@@ -66,7 +66,7 @@
     <div>
         <div>
             <p style="font-size: 25px; font-weight: 600;">
-                {{Translation::get('financial-report', 'financial-report', 'Financial report from :siteName:', 'text', [
+                {{Translation::get('financial-report', 'financial-report', 'Financieel rapport van :siteName:', 'text', [
     'siteName'=>Customsetting::get('site_name')
     ])}}
             </p>
@@ -190,4 +190,3 @@
 </div>
 </body>
 </html>
-d
