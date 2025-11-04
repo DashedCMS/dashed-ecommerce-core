@@ -602,9 +602,9 @@
                                 class="h-20 mr-2">
                             <img
                                 x-show="!paymentMethod.image"
-                                :src="'https://placehold.co/400x400/000/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}?text=' + paymentMethod.name"
+                                :src="'https://placehold.co/400x400/000/{{ str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') }}?text=' + paymentMethod.fullName"
                                 class="object-cover rounded-lg h-20">
-                            <span x-html="paymentMethod.name"></span>
+                            <span x-html="paymentMethod.fullName"></span>
                         </button>
                     </template>
                 </div>

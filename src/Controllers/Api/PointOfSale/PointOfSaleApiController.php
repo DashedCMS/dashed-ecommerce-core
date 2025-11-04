@@ -217,6 +217,7 @@ class PointOfSaleApiController extends Controller
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
 
         foreach ($paymentMethods as &$paymentMethod) {
+            $paymentMethod['fullName'] = $paymentMethod->getTranslation('name', app()->getLocale());
             $paymentMethod['image'] = $paymentMethod['image'] ? (mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '') : '';
         }
 
@@ -246,7 +247,7 @@ class PointOfSaleApiController extends Controller
             'subTotal' => $subTotal ?? null,
             'total' => $total ?? null,
             'totalUnformatted' => $totalUnformatted ?? null,
-            'paymentMethods' => $paymentMethods ?? [],
+            'paymentMethods' => $paymentMethods,
             'shippingMethods' => $shippingMethods ?? null,
             'shippingMethodId' => $chosenShippingMethod->id ?? null,
             'shippingCosts' => CurrencyHelper::formatPrice($shippingCosts),
@@ -552,7 +553,7 @@ class PointOfSaleApiController extends Controller
                     'suggestedCashPaymentAmounts' => $suggestedCashPaymentAmounts,
                     'paymentMethod' => [
                         'id' => $paymentMethod->id,
-                        'name' => $paymentMethod->name,
+                        'name' => $paymentMethod->getTranslation('name', app()->getLocale()),
                         'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
                         'isCashPayment' => $paymentMethod->is_cash_payment,
                     ],
