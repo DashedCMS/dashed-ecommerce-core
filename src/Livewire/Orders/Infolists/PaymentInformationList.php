@@ -64,8 +64,8 @@ class PaymentInformationList extends Component implements HasSchemas
                             ->label('Factuur ID'),
 
                         TextEntry::make('payment_method_name')
-                            ->label('Betalingsmethode')
-                            ->state(fn (Order $record) => $record->paymentMethod?->name ?? 'Niet gevonden'),
+                            ->label('Betaalmethode')
+                            ->state(fn (Order $record) => $record->mainPaymentMethod?->name ?? 'Niet gevonden'),
 
                         TextEntry::make('psp')
                             ->label('PSP')
