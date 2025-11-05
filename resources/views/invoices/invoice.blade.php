@@ -65,6 +65,8 @@
         </tr>
     </table>
 
+    <hr class="divider">
+
     <table class="table-dates">
         <tr>
             <th>{{ Translation::get('invoice-number', 'invoice', 'Factuur nummer') }}</th>
@@ -182,19 +184,17 @@
         <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPrice($order->total, 'EUR', true) }}</p>
     </div>
 
-        @if ($order->note)
-            <table class="table-note">
-                <tr>
-                    <th>{{ Translation::get('note', 'invoice', 'Opmerking') }}</th>
-                </tr>
+    @if ($order->note)
+        <table class="table-note">
+            <tr>
+                <th>{{ Translation::get('note', 'invoice', 'Opmerking') }}</th>
+            </tr>
 
-                <tr>
-                    <td>{{ $order->note }}</td>
-                </tr>
-            </table>
-        @endif
-
-        <hr class="divider">
+            <tr>
+                <td>{{ $order->note }}</td>
+            </tr>
+        </table>
+    @endif
 
     <table class="table-details">
         <tr>
