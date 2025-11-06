@@ -870,7 +870,8 @@ class Product extends Model
 
     public function productGroup(): BelongsTo
     {
-        return $this->belongsTo(ProductGroup::class);
+        return $this->belongsTo(ProductGroup::class)
+            ->withTrashed();
     }
 
     public function showableCharacteristics($withoutIds = [])
