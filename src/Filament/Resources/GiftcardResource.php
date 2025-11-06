@@ -248,22 +248,22 @@ class GiftcardResource extends Resource
                 Fieldset::make('Cadeaukaart informatie')
                     ->schema([
                         TextEntry::make('name')
-                            ->state('Naam'),
+                            ->label('Naam'),
                         TextEntry::make('code')
-                            ->state('Code'),
+                            ->label('Code'),
                         TextEntry::make('created_at')
-                            ->state('Aangemaakt op')
+                            ->label('Aangemaakt op')
                             ->dateTime(),
                         TextEntry::make('updated_at')
-                            ->state('Laatst aangepast op')
+                            ->label('Laatst aangepast op')
                             ->dateTime(),
                         TextEntry::make('user_id')
-                            ->state('Aangemaakt door')
+                            ->label('Aangemaakt door')
                             ->getStateUsing(function ($record) {
                                 return $record->user ? $record->user->name : 'Systeem';
                             }),
                         TextEntry::make('site_ids')
-                            ->state('Actief op site(s)')
+                            ->label('Actief op site(s)')
                             ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->getStateUsing(function ($record) {
                                 $siteNames = [];
@@ -279,17 +279,17 @@ class GiftcardResource extends Resource
                 Fieldset::make('Waarde')
                     ->schema([
                         TextEntry::make('discount_amount')
-                            ->state('Huidige waarde')
+                            ->label('Huidige waarde')
                             ->money('EUR'),
                         TextEntry::make('initial_amount')
-                            ->state('Initiele waarde')
+                            ->label('Initiele waarde')
                             ->money('EUR'),
                         TextEntry::make('reserved_amount')
-                            ->state('Gereserveerde waarde')
+                            ->label('Gereserveerde waarde')
                             ->helperText('Dit is de waarde die momenteel in gebruik is in openstaande bestellingen.')
                             ->money('EUR'),
                         TextEntry::make('used_amount')
-                            ->state('Gebruikte waarde')
+                            ->label('Gebruikte waarde')
                             ->helperText('Dit is de waarde die al gebruikt is in afgeronde bestellingen.')
                             ->money('EUR'),
                     ]),
@@ -301,22 +301,22 @@ class GiftcardResource extends Resource
                             $schema[] = Fieldset::make('Log van ' . $log->created_at->format('d-m-Y H:i'))
                                 ->schema([
                                     TextEntry::make('tag_' . $log->id)
-                                        ->state('Log')
+                                        ->label('Log')
                                         ->default($log->tag()),
                                     TextEntry::make('created_at_' . $log->id)
-                                        ->state('Log aangemaakt op')
+                                        ->label('Log aangemaakt op')
                                         ->dateTime()
                                         ->default($log->created_at),
                                     TextEntry::make('user_id_' . $log->id)
-                                        ->state('Door')
+                                        ->label('Door')
                                         ->columnSpanFull()
                                         ->default($log->user ? $log->user->name : 'Systeem'),
                                     TextEntry::make('old_amount_' . $log->id)
-                                        ->state('Oude waarde')
+                                        ->label('Oude waarde')
                                         ->money('EUR')
                                         ->default($log->old_amount),
                                     TextEntry::make('new_amount_' . $log->id)
-                                        ->state('Nieuwe waarde')
+                                        ->label('Nieuwe waarde')
                                         ->money('EUR')
                                         ->default($log->new_amount),
                                 ])
