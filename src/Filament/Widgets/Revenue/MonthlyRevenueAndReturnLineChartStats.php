@@ -64,7 +64,11 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
             $statistics['data'][] = $data;
             $statistics['returnData'][] = $returnData;
             $statistics['combinedData'][] = $combinedData;
-            $statistics['labels'][] = $startDate->format('d-m-Y');
+            if ($this->filters['steps'] == 'per_hour') {
+                $statistics['labels'][] = $startDate->format('H:i');
+            } else {
+                $statistics['labels'][] = $startDate->format('d-m-Y');
+            }
             $startDate->$addFormat();
         }
 
