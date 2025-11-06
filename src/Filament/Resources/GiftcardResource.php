@@ -246,6 +246,7 @@ class GiftcardResource extends Resource
         return $schema
             ->schema([
                 Fieldset::make('Cadeaukaart informatie')
+                    ->columnSpanFull()
                     ->schema([
                         TextEntry::make('name')
                             ->label('Naam'),
@@ -277,6 +278,7 @@ class GiftcardResource extends Resource
                             }),
                     ]),
                 Fieldset::make('Waarde')
+                    ->columnSpanFull()
                     ->schema([
                         TextEntry::make('discount_amount')
                             ->label('Huidige waarde')
@@ -294,6 +296,7 @@ class GiftcardResource extends Resource
                             ->money('EUR'),
                     ]),
                 Fieldset::make('Logboek')
+                    ->columnSpanFull()
                     ->schema(function ($record) {
                         $schema = [];
 
@@ -320,6 +323,7 @@ class GiftcardResource extends Resource
                                         ->money('EUR')
                                         ->default($log->new_amount),
                                 ])
+                                ->columnSpanFull()
                                 ->columns(2);
                         }
 
