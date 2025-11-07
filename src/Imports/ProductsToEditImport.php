@@ -22,11 +22,12 @@ class ProductsToEditImport implements ToArray
                 $product->new_price = $row[3];
                 $product->stock = $row[4] ?? 0;
                 $product->ean = $row[5];
-                $product->vat_rate = $row[6];
-                $product->weight = $row[7];
-                $product->length = $row[8];
-                $product->width = $row[9];
-                $product->height = $row[10];
+                $product->sku = $row[6];
+                $product->vat_rate = $row[7];
+                $product->weight = $row[8];
+                $product->length = $row[9];
+                $product->width = $row[10];
+                $product->height = $row[11];
                 if ($product->isDirty()) {
                     $product->save();
                     $productGroupIds[] = $product->product_group_id;
