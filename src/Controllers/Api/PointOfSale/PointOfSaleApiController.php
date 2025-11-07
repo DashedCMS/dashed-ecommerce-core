@@ -421,6 +421,22 @@ class PointOfSaleApiController extends Controller
             ->first();
 
         if (! $selectedProduct) {
+
+            $discountCode = DiscountCode::usable()->where('code', $productSearchQuery)->first();
+
+            if($discountCode){
+                $posCart->discount_code = $discountCode->code;
+                $posCart->save();
+
+                return response()
+                    ->json([
+                        'products' => array_reverse($products ?? []),
+                        'message' => 'Korting toegepast',
+                        'discountCode' => $discountCode->code,
+                        'success' => true,
+                    ]);
+            }
+
             return response()
                 ->json([
                     'products' => array_reverse($products ?? []),

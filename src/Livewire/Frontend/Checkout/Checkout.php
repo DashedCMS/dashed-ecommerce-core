@@ -417,6 +417,7 @@ class Checkout extends Component
 
     public function submit()
     {
+        cartHelper()->initialize();
         $this->dispatch('checkoutSubmitted');
 
         $this->fillPrices();
@@ -656,7 +657,7 @@ class Checkout extends Component
             //                $orderProduct->price = $discountedPrice;
             //                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
             //            } else {
-            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, cartHelper()->getDiscount());
+            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, cartHelper()->getDiscountCode());
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             //            }
             $productExtras = [];
