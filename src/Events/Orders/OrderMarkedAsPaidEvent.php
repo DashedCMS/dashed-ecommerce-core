@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -25,11 +26,17 @@ class OrderMarkedAsPaidEvent
     public function __construct(Order $order)
     {
         $this->order = $order;
+
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
         $orderLog->user_id = null;
         $orderLog->tag = 'order.marked_as_paid_event.dispatched';
         $orderLog->save();
+
+        $printReceiptFromOrder = Customsetting::get('pos_auto_print_other_orders', null, false);
+        if ($printReceiptFromOrder) {
+            $this->order->printReceipt();
+        }
     }
 
     //    /**

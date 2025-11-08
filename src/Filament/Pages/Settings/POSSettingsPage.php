@@ -38,6 +38,7 @@ class POSSettingsPage extends Page
         $formData["cash_register_track_cash_book"] = Customsetting::get('cash_register_track_cash_book', null, '');
         $formData["cash_register_amount"] = Customsetting::get('cash_register_amount', null, 0);
         $formData["pos_auto_print_receipt"] = Customsetting::get('pos_auto_print_receipt', null, true);
+        $formData["pos_auto_print_other_orders"] = Customsetting::get('pos_auto_print_other_orders', null, false);
 
         $this->form->fill($formData);
     }
@@ -75,6 +76,9 @@ class POSSettingsPage extends Page
                 ->visible(fn (Get $get) => $get("cash_register_track_cash_book")),
             Toggle::make("pos_auto_print_receipt")
                 ->label('Automatisch een bon printen na een bestelling')
+                ->reactive(),
+            Toggle::make("pos_auto_print_other_orders")
+                ->label('Automatisch een bon printen bestellingen buiten de kassa om')
                 ->reactive(),
         ];
 
@@ -143,6 +147,7 @@ class POSSettingsPage extends Page
             Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type"], $site['id']);
             Customsetting::set('receipt_printer_connector_descriptor', $this->form->getState()["receipt_printer_connector_descriptor"], $site['id']);
             Customsetting::set('pos_auto_print_receipt', $this->form->getState()["pos_auto_print_receipt"], $site['id']);
+            Customsetting::set('pos_auto_print_other_orders', $this->form->getState()["pos_auto_print_other_orders"], $site['id']);
         }
 
         Notification::make()

@@ -40,23 +40,10 @@ class PaymentMethodPieChartWidget extends ChartWidget
         $endDate = $this->filters['endDate'] ? Carbon::parse($this->filters['endDate']) : now();
         $steps = $this->filters['steps'] ?? 'per_day';
 
-        if ($this->filters['steps'] == 'per_hour') {
-            $startFormat = 'startOfDay';
-            $endFormat = 'endOfDay';
-            $addFormat = 'addHour';
-        } elseif ($this->filters['steps'] == 'per_day') {
-            $startFormat = 'startOfDay';
-            $endFormat = 'endOfDay';
-            $addFormat = 'addDay';
-        } elseif ($this->filters['steps'] == 'per_week') {
-            $startFormat = 'startOfWeek';
-            $endFormat = 'endOfWeek';
-            $addFormat = 'addWeek';
-        } elseif ($this->filters['steps'] == 'per_month') {
-            $startFormat = 'startOfMonth';
-            $endFormat = 'endOfMonth';
-            $addFormat = 'addMonth';
-        }
+        $formats = Dashboard::getFormatsByStep($steps);
+        $startFormat = $formats['startFormat'];
+        $endFormat = $formats['endFormat'];
+        $addFormat = $formats['addFormat'];
 
         $data = Cache::remember("payment-pie-chart-data-{$startDate}-{$endDate}-{$steps}", 60 * 60, function () use ($startDate, $endDate, $startFormat, $endFormat) {
             $paymentMethods = OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method');

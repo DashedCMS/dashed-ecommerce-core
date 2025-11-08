@@ -39,23 +39,11 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
         $startDate = $this->filters['startDate'] ? Carbon::parse($this->filters['startDate']) : now()->subMonth();
         $endDate = $this->filters['endDate'] ? Carbon::parse($this->filters['endDate']) : now();
 
-        if ($this->filters['steps'] == 'per_hour') {
-            $startFormat = 'startOfDay';
-            $endFormat = 'endOfDay';
-            $addFormat = 'addHour';
-        } elseif ($this->filters['steps'] == 'per_day') {
-            $startFormat = 'startOfDay';
-            $endFormat = 'endOfDay';
-            $addFormat = 'addDay';
-        } elseif ($this->filters['steps'] == 'per_week') {
-            $startFormat = 'startOfWeek';
-            $endFormat = 'endOfWeek';
-            $addFormat = 'addWeek';
-        } elseif ($this->filters['steps'] == 'per_month') {
-            $startFormat = 'startOfMonth';
-            $endFormat = 'endOfMonth';
-            $addFormat = 'addMonth';
-        }
+        $steps = $this->filters['steps'] ?? 'per_day';
+        $formats = Dashboard::getFormatsByStep($steps);
+        $startFormat = $formats['startFormat'];
+        $endFormat = $formats['endFormat'];
+        $addFormat = $formats['addFormat'];
 
         while ($startDate < $endDate) {
             $data = number_format(Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->sum('total'), 2, '.', '');
@@ -65,7 +53,7 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
             $statistics['returnData'][] = $returnData;
             $statistics['combinedData'][] = $combinedData;
             if ($this->filters['steps'] == 'per_hour') {
-                $statistics['labels'][] = $startDate->format('H:i');
+                $statistics['labels'][] = $startDate->format('d-m-Y H:i');
             } else {
                 $statistics['labels'][] = $startDate->format('d-m-Y');
             }
