@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Broadcasting\PrivateChannel;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;

@@ -424,7 +424,7 @@ class PointOfSaleApiController extends Controller
 
             $discountCode = DiscountCode::usable()->where('code', $productSearchQuery)->first();
 
-            if($discountCode){
+            if ($discountCode) {
                 $posCart->discount_code = $discountCode->code;
                 $posCart->save();
 
