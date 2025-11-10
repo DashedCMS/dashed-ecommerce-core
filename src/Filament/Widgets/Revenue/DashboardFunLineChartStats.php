@@ -48,35 +48,35 @@ class DashboardFunLineChartStats extends ChartWidget
         $endFormat = $formats['endFormat'];
         $addFormat = $formats['addFormat'];
 
-        $statistics = Cache::remember("monthly-fun-data-line-chart-stats-{$startDate}-{$endDate}-{$steps}", 60 * 60, function () use ($startDate, $endDate, $startFormat, $endFormat) {
+//        $statistics = Cache::remember("monthly-fun-data-line-chart-stats-{$startDate}-{$endDate}-{$steps}-{$addFormat}", 60 * 60, function () use ($startDate, $endDate, $startFormat, $endFormat, $addFormat) {
             $statistics = [];
 
             while ($startDate < $endDate) {
                 $statistics['newUsers'][] = User::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->count();
                 $statistics['newOrders'][] = Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->count();
                 $statistics['labels'][] = $startDate->format('d-m-Y');
-                $startDate->addDay();
+                $startDate->$addFormat();
             }
 
-            return $statistics;
-        });
+//            return $statistics;
+//        });
 
         return [
             'datasets' => [
                 [
                     'label' => 'Nieuwe gebruikers',
-                    'data' => $statistics['newUsers'],
+                    'data' => $statistics['newUsers'] ?? [0],
                     'backgroundColor' => 'rgba(0, 210, 205, 1)',
                     'borderColor' => 'rgba(0, 210, 205, 1)',
                 ],
                 [
                     'name' => 'Nieuwe bestellingen',
-                    'data' => $statistics['newOrders'],
+                    'data' => $statistics['newOrders'] ?? [0],
                     'backgroundColor' => 'rgba(216, 255, 51, 1)',
                     'borderColor' => 'rgba(216, 255, 51, 1)',
                 ],
             ],
-            'labels' => $statistics['labels'],
+            'labels' => $statistics['labels'] ?? [],
         ];
     }
 
