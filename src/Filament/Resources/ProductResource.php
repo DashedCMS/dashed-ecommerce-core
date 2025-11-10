@@ -429,6 +429,14 @@ class ProductResource extends Resource
         $newSchema[] = Section::make('Linkjes beheren')
             ->columnSpanFull()
             ->schema([
+                Select::make('productCategories')
+                    ->multiple()
+                    ->relationship('productCategories', 'name')
+                    ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(ProductCategory::class, $search))
+                    ->searchable()
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->label('Link aan categorieeën')
+                    ->helperText('Bovenliggende categorieën worden automatisch geactiveerd. Let op dat bij de product groep synchroniseren uit staat als je deze aanpast.'),
                 Select::make('shippingClasses')
                     ->multiple()
                     ->relationship('shippingClasses', 'name')

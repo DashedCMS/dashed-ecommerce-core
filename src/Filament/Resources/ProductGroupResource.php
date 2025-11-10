@@ -97,6 +97,10 @@ class ProductGroupResource extends Resource
                     ->helperText('Als je deze op NIET openbaar zet, worden alle variaties verborgen'),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina'),
+                Toggle::make('sync_categories_to_products')
+                    ->label('Synchroniseer categorieën naar producten')
+                    ->default(1)
+                    ->reactive(),
                 Toggle::make('use_parent_stock')
                     ->label('Gebruik voorraad informatie van deze product groep')
                     ->helperText('Let op: dit is slechts een extra check, de voorraad van het variaties gelden ook')

@@ -50,7 +50,9 @@ class UpdateProductInformationJob implements ShouldQueue
 
         foreach ($this->productGroup->products as $product) {
             $categories = $this->productGroup->productCategories;
-            $product->productCategories()->sync($categories);
+            if ($this->productGroup->sync_categories_to_products) {
+                $product->productCategories()->sync($categories);
+            }
 
             foreach ($categories as $category) {
                 foreach (DB::table('dashed__product_category_user')->where('product_category_id', $category->id)->get() as $productCategoryUser) {
