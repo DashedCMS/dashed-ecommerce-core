@@ -436,6 +436,9 @@ class ProductResource extends Resource
                     ->searchable()
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link aan categorieeën')
+                    ->formatStateUsing(function($state){
+                        return array_unique($state ?? []);
+                    })
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd. Let op dat bij de product groep synchroniseren uit staat als je deze aanpast.'),
                 Select::make('shippingClasses')
                     ->multiple()
