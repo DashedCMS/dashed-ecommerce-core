@@ -34,7 +34,7 @@ class OrderMarkedAsPaidEvent
         $orderLog->save();
 
         $printReceiptFromOrder = Customsetting::get('pos_auto_print_other_orders', null, false);
-        if ($printReceiptFromOrder) {
+        if ($printReceiptFromOrder && $order->order_origin != 'pos') {
             $this->order->printReceipt();
         }
 
