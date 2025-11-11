@@ -1303,4 +1303,20 @@ class Order extends Model
     {
         return Countries::getCountryIsoCode($this->country) ?: 'NL';
     }
+
+    public static function getMarketingFields(): array
+    {
+        return [
+            'first_name' => 'Voornaam',
+            'last_name' => 'Achternaam',
+            'email' => 'E-mail',
+            'phone' => 'Telefoonnummer',
+            'city' => 'Plaats',
+            'country' => 'Land',
+            'postal_code' => 'Postcode',
+            'street' => 'Straat',
+            'street_number' => 'Huisnummer',
+            'company_name' => 'Bedrijfsnaam',
+        ];
+    }
 }

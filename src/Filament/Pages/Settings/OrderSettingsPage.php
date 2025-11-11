@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Filament\Forms\Components\Repeater;
 use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -38,6 +39,8 @@ class OrderSettingsPage extends Page
 
     public function mount(): void
     {
+        $order = Order::latest()->first();
+
         $formData = [];
         $sites = Sites::getSites();
         $locales = Locales::getLocales();
@@ -46,6 +49,7 @@ class OrderSettingsPage extends Page
             $formData["notification_low_stock_emails_{$site['id']}"] = Customsetting::get('notification_low_stock_emails', $site['id']);
         }
 
+        $formData["apis"] = Customsetting::get('apis', null, []);
         $formData["order_index_show_other_statuses"] = Customsetting::get('order_index_show_other_statuses', null, true) ? true : false;
         $formData["order_index_show_order_products"] = Customsetting::get('order_index_show_order_products', null, false) ? true : false;
         $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
@@ -81,6 +85,46 @@ class OrderSettingsPage extends Page
         $sites = Sites::getSites();
         $locales = Locales::getLocales();
         $tabGroups = [];
+
+        $apiFields = [];
+
+        foreach (forms()->builder('orderApiClasses') as $api) {
+            foreach ($api['class']::formFields() as $field) {
+                $apiFields[] = $field
+                    ->visible(fn (Get $get) => $get('class') == $api['class']);
+            }
+        }
+
+        $newSchema = [
+            Repeater::make('apis')
+                ->label('APIs')
+                ->helperText('Stel hier in welke APIs er bij een nieuwe bestelling aangeroepen moeten worden.')
+                ->visible(count(forms()->builder('orderApiClasses')))
+                ->reactive()
+                ->schema(fn (Get $get) => array_merge([
+                    Select::make('class')
+                        ->label('API class')
+                        ->options(collect(forms()->builder('orderApiClasses'))->pluck('name', 'class')->toArray())
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->reactive(),
+                ], $apiFields))
+                ->columnSpanFull()
+                ->addActionLabel('API toevoegen')
+                ->columns([
+                    'default' => 1,
+                    'lg' => 2,
+                ]),
+        ];
+
+        $tabGroups[] = Section::make()->columnSpanFull()
+            ->schema($newSchema)
+            ->visible(count(forms()->builder('orderApiClasses')))
+            ->columns([
+                'default' => 1,
+                'lg' => 2,
+            ]);
 
         $newSchema = [
             TextEntry::make('label')
@@ -280,6 +324,7 @@ class OrderSettingsPage extends Page
             $formState["notification_low_stock_emails_{$site['id']}"] = $emails;
         }
 
+        Customsetting::set('apis', $this->form->getState()["apis"]);
         Customsetting::set('order_index_show_other_statuses', $this->form->getState()["order_index_show_other_statuses"]);
         Customsetting::set('order_index_show_order_products', $this->form->getState()["order_index_show_order_products"]);
 

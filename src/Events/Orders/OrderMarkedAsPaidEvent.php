@@ -37,6 +37,13 @@ class OrderMarkedAsPaidEvent
         if ($printReceiptFromOrder) {
             $this->order->printReceipt();
         }
+
+        if ($order->marketing) {
+            $apis = Customsetting::get('apis', null, []);
+            foreach ($apis as $api) {
+                $api['class']::dispatch($order, $api);
+            }
+        }
     }
 
     //    /**
