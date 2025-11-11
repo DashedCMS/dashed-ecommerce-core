@@ -39,8 +39,6 @@ class OrderSettingsPage extends Page
 
     public function mount(): void
     {
-        $order = Order::latest()->first();
-
         $formData = [];
         $sites = Sites::getSites();
         $locales = Locales::getLocales();
