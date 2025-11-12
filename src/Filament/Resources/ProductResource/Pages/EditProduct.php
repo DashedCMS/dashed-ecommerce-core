@@ -62,33 +62,35 @@ class EditProduct extends EditRecord
             }
         }
 
-        $productCharacteristics = ProductCharacteristics::get();
-        foreach ($productCharacteristics as $productCharacteristic) {
-            if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
-                $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
-                    $thisProductCharacteristic = new ProductCharacteristic();
-                    $thisProductCharacteristic->product_id = $this->record->id;
-                    $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
-                }
-                $thisProductCharacteristic->setTranslation('value', $this->activeLocale, $data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"]);
-                $thisProductCharacteristic->save();
-                unset($data["product_characteristic_$productCharacteristic->id"]);
-            } else {
-                $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic) {
-                    $thisProductCharacteristic->setTranslation('value', $this->activeLocale, null);
-                    $thisProductCharacteristic->save();
-                }
-            }
-        }
+        //        $productCharacteristics = ProductCharacteristics::get();
+        //        foreach ($productCharacteristics as $productCharacteristic) {
+        //            if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
+        //                $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+        //                if (! $thisProductCharacteristic) {
+        //                    $thisProductCharacteristic = new ProductCharacteristic();
+        //                    $thisProductCharacteristic->product_id = $this->record->id;
+        //                    $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
+        //                }
+        //                $thisProductCharacteristic->setTranslation('value', $this->activeLocale, $data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"]);
+        //                $thisProductCharacteristic->save();
+        //                dump($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"]);
+        //                unset($data["product_characteristic_$productCharacteristic->id"]);
+        //            } else {
+        //                $thisProductCharacteristic = ProductCharacteristic::where('product_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+        //                if ($thisProductCharacteristic) {
+        //                    dump('empty');
+        //                    $thisProductCharacteristic->setTranslation('value', $this->activeLocale, null);
+        //                    $thisProductCharacteristic->save();
+        //                }
+        //            }
+        //        }
 
-        foreach ($data as $key => $dataItem) {
-            if (str($key)->contains('product_characteristic_')) {
-                unset($data[$key]);
-            }
-        }
-        unset($data['productCharacteristics']);
+        //        foreach ($data as $key => $dataItem) {
+        //            if (str($key)->contains('product_characteristic_')) {
+        //                unset($data[$key]);
+        //            }
+        //        }
+        //        unset($data['productCharacteristics']);
         unset($data['productExtras']);
 
         foreach ($data['new_images'] ?? [] as $key => $image) {

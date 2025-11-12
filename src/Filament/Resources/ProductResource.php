@@ -12,6 +12,7 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
+use Illuminate\Support\Facades\DB;
 use Filament\Tables\Filters\Filter;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Actions\BulkActionGroup;
@@ -35,6 +36,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\ProductTab;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Filament\Forms\Components\Repeater\TableColumn;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
@@ -349,19 +351,59 @@ class ProductResource extends Resource
             ->hidden(fn ($livewire) => $livewire instanceof CreateProduct);
 
         $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
-        $productCharacteristicSchema = [];
 
+        $productCharacteristicsTableColumns = [
+            TableColumn::make('Kenmerk'),
+        ];
+        $productCharacteristicsSchema = [
+            Select::make('product_characteristic_id')
+                ->label('Kenmerk')
+                ->options($productCharacteristics->pluck('name', 'id')->toArray())
+                ->searchable()
+                ->required(),
+        ];
         foreach (Locales::getLocales() as $locale) {
-            foreach ($productCharacteristics as $productCharacteristic) {
-                $productCharacteristicSchema[] = TextInput::make("product_characteristic_{$productCharacteristic->id}_{$locale['id']}")
-                    ->label($productCharacteristic->getTranslation('name', $locale['id']) . ' (' . $locale['id'] . ')')
-                    ->helperText($productCharacteristic->notes);
-            }
+            $productCharacteristicsTableColumns[] = TableColumn::make("Waarde ({$locale['id']})");
+            $productCharacteristicsSchema[] = TextInput::make('value_' . $locale['id']);
         }
 
-        //Not possible in another way because it is filled in pivot table
         $newSchema[] = Section::make('Kenmerken beheren')->columnSpanFull()
-            ->schema($productCharacteristicSchema)
+            ->schema([
+                Repeater::make('productCharacteristics')
+                    ->label('Kenmerken')
+                    ->relationship('productCharacteristics')
+                    ->table($productCharacteristicsTableColumns)
+                    ->mutateRelationshipDataBeforeFillUsing(function (array $data, $livewire): array {
+                        foreach (Locales::getLocales() as $locale) {
+                            $data['value_' . $locale['id']] = json_decode(DB::table('dashed__product_characteristic')->where('id', $data['id'])->first()->value, true)[$locale['id']] ?? '';
+                        }
+
+                        return $data;
+                    })
+                    ->saveRelationshipsUsing(function (array $state, $livewire, $record) {
+                        $entryIds = [];
+                        foreach ($state as $entry) {
+                            if ($entry['id'] ?? false) {
+                                $characteristic = $record->productCharacteristics()->where('id', $entry['id'])->first();
+                            } else {
+                                $characteristic = $record->productCharacteristics()->create([
+                                    'product_characteristic_id' => $entry['product_characteristic_id'],
+                                    'product_id' => $record->id,
+                                    'value' => '',
+                                ]);
+                            }
+
+                            foreach (Locales::getLocales() as $locale) {
+                                $characteristic->setTranslation('value', $locale['id'], $entry['value_' . $locale['id']]);
+                            }
+                            $characteristic->save();
+                            $entryIds[] = $characteristic->id;
+                        }
+                        $record->productCharacteristics()->whereNotIn('id', $entryIds)->delete();
+                    })
+                    ->columnSpanFull()
+                    ->schema($productCharacteristicsSchema),
+            ])
             ->columns([
                 'default' => 1,
                 'lg' => 3,
@@ -436,7 +478,7 @@ class ProductResource extends Resource
                     ->searchable()
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link aan categorieeën')
-                    ->formatStateUsing(function($state){
+                    ->formatStateUsing(function ($state) {
                         return array_unique($state ?? []);
                     })
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd. Let op dat bij de product groep synchroniseren uit staat als je deze aanpast.'),
@@ -536,7 +578,7 @@ class ProductResource extends Resource
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('stock')
                     ->label('Voorraad')
-                    ->formatStateUsing(fn($record) => $record->stock . ((!$record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
+                    ->formatStateUsing(fn ($record) => $record->stock . ((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
                     ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')

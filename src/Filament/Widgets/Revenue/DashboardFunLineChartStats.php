@@ -48,18 +48,18 @@ class DashboardFunLineChartStats extends ChartWidget
         $endFormat = $formats['endFormat'];
         $addFormat = $formats['addFormat'];
 
-//        $statistics = Cache::remember("monthly-fun-data-line-chart-stats-{$startDate}-{$endDate}-{$steps}-{$addFormat}", 60 * 60, function () use ($startDate, $endDate, $startFormat, $endFormat, $addFormat) {
-            $statistics = [];
+        //        $statistics = Cache::remember("monthly-fun-data-line-chart-stats-{$startDate}-{$endDate}-{$steps}-{$addFormat}", 60 * 60, function () use ($startDate, $endDate, $startFormat, $endFormat, $addFormat) {
+        $statistics = [];
 
-            while ($startDate < $endDate) {
-                $statistics['newUsers'][] = User::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->count();
-                $statistics['newOrders'][] = Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->count();
-                $statistics['labels'][] = $startDate->format('d-m-Y');
-                $startDate->$addFormat();
-            }
+        while ($startDate < $endDate) {
+            $statistics['newUsers'][] = User::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->count();
+            $statistics['newOrders'][] = Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->count();
+            $statistics['labels'][] = $startDate->format('d-m-Y');
+            $startDate->$addFormat();
+        }
 
-//            return $statistics;
-//        });
+        //            return $statistics;
+        //        });
 
         return [
             'datasets' => [

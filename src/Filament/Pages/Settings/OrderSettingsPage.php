@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Filament\Forms\Components\Repeater;
 use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -14,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Tabs;
 use Dashed\DashedCore\Classes\Locales;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;

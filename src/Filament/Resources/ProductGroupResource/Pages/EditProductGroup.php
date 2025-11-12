@@ -80,34 +80,34 @@ class EditProductGroup extends EditRecord
             unset($data["product_filter_{$productFilter->id}_use_for_variations"]);
         }
 
-        $productCharacteristics = ProductCharacteristics::get();
-        foreach ($productCharacteristics as $productCharacteristic) {
-            if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
-                $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if (! $thisProductCharacteristic) {
-                    $thisProductCharacteristic = new ProductCharacteristic();
-                    $thisProductCharacteristic->product_group_id = $this->record->id;
-                    $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
-                }
-                $thisProductCharacteristic->setTranslation('value', $this->activeLocale, $data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"]);
-                $thisProductCharacteristic->save();
-                unset($data["product_characteristic_$productCharacteristic->id"]);
-            } else {
-                $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
-                if ($thisProductCharacteristic) {
-                    $thisProductCharacteristic->setTranslation('value', $this->activeLocale, null);
-                    $thisProductCharacteristic->save();
-                }
-            }
-        }
+        //        $productCharacteristics = ProductCharacteristics::get();
+        //        foreach ($productCharacteristics as $productCharacteristic) {
+        //            if (isset($data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"])) {
+        //                $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+        //                if (! $thisProductCharacteristic) {
+        //                    $thisProductCharacteristic = new ProductCharacteristic();
+        //                    $thisProductCharacteristic->product_group_id = $this->record->id;
+        //                    $thisProductCharacteristic->product_characteristic_id = $productCharacteristic->id;
+        //                }
+        //                $thisProductCharacteristic->setTranslation('value', $this->activeLocale, $data["product_characteristic_{$productCharacteristic->id}_{$this->activeLocale}"]);
+        //                $thisProductCharacteristic->save();
+        //                unset($data["product_characteristic_$productCharacteristic->id"]);
+        //            } else {
+        //                $thisProductCharacteristic = ProductCharacteristic::where('product_group_id', $this->record->id)->where('product_characteristic_id', $productCharacteristic->id)->first();
+        //                if ($thisProductCharacteristic) {
+        //                    $thisProductCharacteristic->setTranslation('value', $this->activeLocale, null);
+        //                    $thisProductCharacteristic->save();
+        //                }
+        //            }
+        //        }
 
-        foreach ($data as $key => $dataItem) {
-            if (str($key)->contains('product_characteristic_')) {
-                unset($data[$key]);
-            }
-        }
-
-        unset($data['productCharacteristics']);
+        //        foreach ($data as $key => $dataItem) {
+        //            if (str($key)->contains('product_characteristic_')) {
+        //                unset($data[$key]);
+        //            }
+        //        }
+        //
+        //        unset($data['productCharacteristics']);
         unset($data['productExtras']);
 
         foreach ($data['new_images'] ?? [] as $key => $image) {
@@ -137,13 +137,13 @@ class EditProductGroup extends EditRecord
             $data['product_filter_options_' . $productFilter->id] = $this->record->enabledProductFilterOptions()->where('product_filter_id', $productFilter->id)->pluck('product_filter_option_id')->toArray();
         }
 
-        $productCharacteristics = ProductCharacteristics::get();
-
-        foreach (Locales::getLocales() as $locale) {
-            foreach ($productCharacteristics as $productCharacteristic) {
-                $data["product_characteristic_{$productCharacteristic->id}_{$locale['id']}"] = $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->exists() ? $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first()->getTranslation('value', $locale['id']) : null;
-            }
-        }
+        //        $productCharacteristics = ProductCharacteristics::get();
+        //
+        //        foreach (Locales::getLocales() as $locale) {
+        //            foreach ($productCharacteristics as $productCharacteristic) {
+        //                $data["product_characteristic_{$productCharacteristic->id}_{$locale['id']}"] = $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->exists() ? $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first()->getTranslation('value', $locale['id']) : null;
+        //            }
+        //        }
 
         return $data;
     }

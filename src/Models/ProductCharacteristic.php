@@ -34,7 +34,7 @@ class ProductCharacteristic extends Model
     protected static function booted()
     {
         static::deleting(function ($productCharacteristic) {
-            $productCharacteristic->productCharacteristic()->detach();
+            //            $productCharacteristic->productCharacteristic()->detach();
             ProductCharacteristic::where('product_characteristic_id', $productCharacteristic->id)->delete();
         });
     }

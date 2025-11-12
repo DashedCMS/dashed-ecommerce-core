@@ -15,7 +15,7 @@ return new class () extends Migration {
                 ->default(1);
         });
 
-        foreach(\Dashed\DashedEcommerceCore\Models\ProductGroup::all() as $productGroup) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ProductGroup::all() as $productGroup) {
             $productGroup->sync_categories_to_products = true;
             $productGroup->saveQuietly();
         }
