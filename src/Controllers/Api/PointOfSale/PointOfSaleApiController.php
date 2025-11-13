@@ -1480,4 +1480,31 @@ class PointOfSaleApiController extends Controller
                 'firstOrder' => $firstOrder,
             ]);
     }
+
+    public function retrieveCartForCustomer(Request $request): JsonResponse
+    {
+        $data = $request->all();
+
+        $userId = $data['userId'] ?? null;
+
+        $posCart = POSCart::where('user_id', $userId)->where('status', 'active')->first();
+        if ($posCart) {
+            $cartInstance = 'customer-pos';
+            $posIdentifier = $posCart['identifier'];
+            $discountCode = $posCart['discount_code'];
+
+            return response()
+                ->json($this->updateCart(
+                    $cartInstance,
+                    $posIdentifier,
+                    $discountCode
+                ));
+        }else{
+            return response()
+                ->json([
+                    'success' => false,
+                    'message' => 'Geen actieve winkelwagen gevonden voor deze klant',
+                ], 404);
+        }
+    }
 }
