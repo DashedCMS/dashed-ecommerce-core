@@ -121,6 +121,7 @@ class ProductResource extends Resource
                     ->visible(fn ($get) => $get('is_bundle'))
                     ->reactive(),
                 Repeater::make('bundleProducts')
+                    ->label('Bundel producten')
                     ->relationship('bundleProducts')
                     ->saveRelationshipsWhenHidden(false)
                     ->saveRelationshipsUsing(function ($record, $state) {
@@ -142,7 +143,7 @@ class ProductResource extends Resource
                         Select::make('bundle_product_id')
                             ->label('Bundel product')
                             ->searchable()
-                            ->getSearchResultsUsing(fn (string $query) => Product::isNotBundle()->where('name', 'like', "%{$query}%")->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $query) => Product::search($query)->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelUsing(fn ($value): ?string => Product::find($value)?->name)
                             ->required(),
                     ])
