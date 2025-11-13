@@ -144,17 +144,19 @@ class ShowProducts extends Component
                 'pf.name as filter_name',
                 'pf.hide_filter_on_overview_page',
                 'pf.created_at',
+                'pfo.order as order',
                 'pfo.id as option_id',
                 'pfo.name as option_name',
                 DB::raw('COUNT(dpf.product_id) as option_count')
             )
             ->where('pf.hide_filter_on_overview_page', 0)
             ->groupBy('pf.id', 'pfo.id')
-            ->orderBy('pf.created_at')
+            ->orderBy('pfo.order')
             ->get()
             ->groupBy('filter_id');
 
         $activeFilters = $this->activeFilters;
+
         $productFilters = $filtersWithCounts->map(function ($filterOptions, $filterId) use ($activeFilters) {
             $filterName = json_decode($filterOptions->first()->filter_name, true)[app()->getLocale()] ?? 'Onbekend';
 
