@@ -517,11 +517,21 @@ class ShoppingCart
     //        ];
     //    }
 
-    public static function getAvailableShippingMethods($countryName, string $shippingAddress = '')
+    public static function getAvailableShippingMethods($countryName, string $shippingAddress = '', $paymentMethod = null)
     {
         $cartItems = cartHelper()->getCartItems();
         $productIds = [];
         $productGroupIds = [];
+        $forbiddenShippingMethodIds = [];
+
+        if ($paymentMethod) {
+            $paymentMethod = PaymentMethod::find($paymentMethod);
+            if ($paymentMethod && $paymentMethod->shippingMethods->count()) {
+                foreach ($paymentMethod->shippingMethods as $shippingMethod) {
+                    $forbiddenShippingMethodIds[] = $shippingMethod->id;
+                }
+            }
+        }
 
         foreach ($cartItems as $cartItem) {
             if ($cartItem->model) {
@@ -563,7 +573,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -587,14 +597,16 @@ class ShoppingCart
                 $total = cartHelper()->getTotal();
                 $shippingMethods = $shippingZone->shippingMethods()
                     ->where('minimum_order_value', '<=', $total)
-                    ->where('maximum_order_value', '>=', $total)
+                    ->where('maximum_order_value', '>=', $total);
 //                    ->where(function ($query) use ($distanceRange) {
 //                        $query->where('distance_range_enabled', 1)
 //                            ->where('distance_range', '>=', $distanceRange);
 //                    })
 //                    ->orWhere('distance_range_enabled', 0)
-                    ->orderBy('order', 'ASC')
-                    ->get();
+                if (count($forbiddenShippingMethodIds)) {
+                    $shippingMethods = $shippingMethods->whereNotIn('id', $forbiddenShippingMethodIds);
+                }
+                $shippingMethods = $shippingMethods->orderBy('order', 'ASC')->get();
 
                 foreach ($shippingMethods as $key => $shippingMethod) {
                     $shippingMethodValid = true;
@@ -671,7 +683,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -746,7 +758,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -777,7 +789,7 @@ class ShoppingCart
 
     public static function getShippingZoneByCountry(?string $countryName): ?ShippingZone
     {
-        if (! $countryName) {
+        if (!$countryName) {
             return null;
         }
 
@@ -814,7 +826,7 @@ class ShoppingCart
                 }
             }
 
-            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
+            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -838,7 +850,7 @@ class ShoppingCart
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
 
         $paymentMethods = PaymentMethod::where('site_id', Sites::getActive())->where('active', 1)->where('type', $type);
-        if (! $skipTotalCheck) {
+        if (!$skipTotalCheck) {
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
         $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();
@@ -851,7 +863,7 @@ class ShoppingCart
                 $paymentMethodValid = false;
             }
 
-            if (! $paymentMethodValid) {
+            if (!$paymentMethodValid) {
                 unset($paymentMethods[$key]);
             } else {
                 $paymentMethod['full_image_path'] = $paymentMethod->image ? Storage::disk('dashed')->url($paymentMethod->image) : '';

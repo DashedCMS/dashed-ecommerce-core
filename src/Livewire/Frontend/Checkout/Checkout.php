@@ -186,7 +186,7 @@ class Checkout extends Component
     {
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
-        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, $shippingAddress) : [];
+        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, $shippingAddress, $this->paymentMethod) : [];
         if (Customsetting::get('first_shipping_method_selected', null, true) && (! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }

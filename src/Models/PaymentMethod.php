@@ -61,6 +61,11 @@ class PaymentMethod extends Model
         return $this->belongsToMany(User::class, 'dashed__payment_method_users', 'payment_method_id', 'user_id');
     }
 
+    public function shippingMethods(): BelongsToMany
+    {
+        return $this->belongsToMany(ShippingMethod::class, 'dashed__payment_method_shipping_method', 'payment_method_id', 'shipping_method_id');
+    }
+
     public function pinTerminal(): BelongsTo
     {
         return $this->belongsTo(PinTerminal::class);
