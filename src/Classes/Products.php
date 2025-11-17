@@ -161,6 +161,9 @@ class Products
         } elseif ($orderBy == 'order') {
             $orderBy = 'order';
             $order = 'ASC';
+        } elseif ($orderBy == 'purchases') {
+            $orderBy = 'total_purchases';
+            $order = 'DESC';
         } else {
             $orderBy = '';
             $order = '';

@@ -55,7 +55,7 @@ class ShowProducts extends Component
         $this->productCategory = $productCategory;
 
         $this->pagination = request()->get('pagination', Customsetting::get('product_default_amount_of_products', null, 12));
-        $this->sortBy = request()->get('sort-by', Customsetting::get('product_default_order_type', null, 'price'));
+        $this->sortBy = request()->get('sort-by', request()->get('sortBy', Customsetting::get('product_default_order_type', null, 'price')));
         $this->order = request()->get('order', Customsetting::get('product_default_order_sort', null, 'DESC'));
         $this->search = request()->get('search');
         $this->enableFilters = $enableFilters;
