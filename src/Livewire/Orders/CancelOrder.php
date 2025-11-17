@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Filament\Schemas\Components\Utilities\Set;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -81,7 +82,17 @@ class CancelOrder extends Component implements HasSchemas, HasActions
 //                                ->state('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
 //                        ])
 //                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
-                    Section::make('Bestelde producten')->columnSpanFull()
+                    Section::make('Bestelde producten')
+                        ->columnSpanFull()
+                        ->headerActions([
+                            Action::make('returnAll')
+                                ->label('Alles retourneren')
+                                ->action(function(Set $set){
+                                    foreach($this->order->orderProducts as $orderProduct){
+                                        $set("order_product_$orderProduct->id", $orderProduct->quantity);
+                                    }
+                                })
+                        ])
                         ->schema(array_merge($orderProductSchema, [
                             TextInput::make('extra_order_line_name')
                                 ->required()

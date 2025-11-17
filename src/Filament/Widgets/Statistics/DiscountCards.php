@@ -6,7 +6,10 @@ use Filament\Widgets\StatsOverviewWidget;
 
 class DiscountCards extends StatsOverviewWidget
 {
-    protected ?string $pollingInterval = '1s';
+    protected function getPollingInterval(): ?string
+    {
+        return '1s';
+    }
 
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',

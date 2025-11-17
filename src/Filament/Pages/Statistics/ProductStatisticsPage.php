@@ -2,81 +2,149 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
-use UnitEnum;
-use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
-use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
-use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
 
-class ProductStatisticsPage extends Page
+class ProductStatisticsPage extends Page implements HasSchemas
 {
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
+    use InteractsWithSchemas;
+
+    protected static \BackedEnum | null | string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Product statistieken';
-    protected static string | UnitEnum | null $navigationGroup = 'Statistics';
+    protected static \UnitEnum | string | null $navigationGroup = 'Statistics';
     protected static ?string $title = 'Product statistieken';
     protected static ?int $navigationSort = 100000;
 
     protected string $view = 'dashed-ecommerce-core::statistics.pages.product-statistics';
 
-    public $search;
-    public $startDate;
-    public $endDate;
-    public $locale;
+    /**
+     * Form state (filters).
+     */
+    public ?array $data = [];
+
+    /**
+     * Graph + stats data voor widgets / JS.
+     */
     public $graphData;
 
     public function mount(): void
     {
-        $this->form->fill([
-            'startDate' => now()->subMonth(),
-            'endDate' => now(),
-        ]);
+        // Defaults uit het schema laten vullen
+        $this->form->fill();
 
         $this->getStatisticsProperty();
     }
 
-    public function updated()
+    public function updated(string $propertyName): void
+    {
+        // Alleen opnieuw rekenen als filters veranderen
+        if (str_starts_with($propertyName, 'data.')) {
+            $this->getStatisticsProperty();
+        }
+    }
+
+    public function submit(): void
     {
         $this->getStatisticsProperty();
     }
 
-    public function submit()
+    /**
+     * Filament v4 form schema via Schemas.
+     */
+    public function form(Schema $schema): Schema
     {
-        $this->getStatisticsProperty();
+        return $schema
+            ->components([
+                Section::make()
+                    ->schema([
+                        DatePicker::make('startDate')
+                            ->label('Start datum')
+                            ->default(now()->subMonth())
+                            ->reactive(),
+
+                        DatePicker::make('endDate')
+                            ->label('Eind datum')
+                            ->nullable()
+                            ->after('startDate')
+                            ->default(now())
+                            ->reactive(),
+
+                        Select::make('locale')
+                            ->label('Locale')
+                            ->nullable()
+                            ->options(function () {
+                                $locales = [];
+
+                                foreach (Locales::getActivatedLocalesFromSites() as $locale) {
+                                    $locales[$locale] = $locale;
+                                }
+
+                                return $locales;
+                            })
+                            ->reactive(),
+
+                        TextInput::make('search')
+                            ->label('Zoekterm')
+                            ->reactive(),
+                    ])
+                    ->columns([
+                        'default' => 1,
+                        'lg' => 4,
+                    ]),
+            ])
+            ->statePath('data');
     }
 
-    public function getStatisticsProperty()
+    public function getStatisticsProperty(): void
     {
-        $beginDate = $this->startDate ? Carbon::parse($this->startDate) : now()->subMonth();
-        $endDate = $this->endDate ? Carbon::parse($this->endDate) : now()->addDay();
+        $state = $this->form->getState();
 
-        $search = $this->search;
-        $products = Product::whereRaw('LOWER(name) like ?', '%' . strtolower($search) . '%')
+        $beginDate = ! empty($state['startDate'])
+            ? Carbon::parse($state['startDate'])
+            : now()->subMonth();
+
+        $endDate = ! empty($state['endDate'])
+            ? Carbon::parse($state['endDate'])
+            : now()->addDay();
+
+        $search = $state['search'] ?? null;
+        $locale = $state['locale'] ?? null;
+//        dd($locale);
+
+        $productsQuery = Product::query();
+
+        if (! empty($search)) {
+            $productsQuery->whereRaw('LOWER(name) like ?', '%' . strtolower($search) . '%');
+        }
+
+        $products = $productsQuery
             ->latest()
             ->get();
 
-        $orderIds = Order::isPaid()
+        $orderIdsQuery = Order::isPaid()
             ->where('created_at', '>=', $beginDate)
             ->where('created_at', '<=', $endDate);
 
-        if ($this->locale) {
-            $orderIds = $orderIds->where('locale', $this->locale);
+        if (! empty($locale)) {
+            $orderIdsQuery->where('locale', $locale);
         }
 
-        $orderIds = $orderIds->pluck('id');
+        $orderIds = $orderIdsQuery->pluck('id');
 
         $orderProducts = OrderProduct::whereIn('order_id', $orderIds)->get();
 
@@ -85,8 +153,14 @@ class ProductStatisticsPage extends Page
         $averageCostPerProduct = 0;
 
         foreach ($products as $product) {
-            $product->quantitySold = $orderProducts->where('product_id', $product->id)->sum('quantity');
-            $product->amountSold = $orderProducts->where('product_id', $product->id)->sum('price');
+            $product->quantitySold = $orderProducts
+                ->where('product_id', $product->id)
+                ->sum('quantity');
+
+            $product->amountSold = $orderProducts
+                ->where('product_id', $product->id)
+                ->sum('price');
+
             $totalQuantitySold += $product->quantitySold;
             $totalAmountSold += $product->amountSold;
         }
@@ -101,11 +175,20 @@ class ProductStatisticsPage extends Page
             'averageCostPerProduct' => CurrencyHelper::formatPrice($averageCostPerProduct),
         ];
 
-        $graph = [];
+        $graph = [
+            'data' => [],
+            'labels' => [],
+        ];
 
         $graphBeginDate = $beginDate->copy();
+
         while ($graphBeginDate < $endDate) {
-            $graph['data'][] = OrderProduct::whereIn('id', $orderProducts->pluck('id'))->whereIn('product_id', $products->pluck('id'))->where('created_at', '>=', $graphBeginDate->copy()->startOfDay())->where('created_at', '<=', $graphBeginDate->copy()->endOfDay())->sum('quantity');
+            $graph['data'][] = OrderProduct::whereIn('id', $orderProducts->pluck('id'))
+                ->whereIn('product_id', $products->pluck('id'))
+                ->where('created_at', '>=', $graphBeginDate->copy()->startOfDay())
+                ->where('created_at', '<=', $graphBeginDate->copy()->endOfDay())
+                ->sum('quantity');
+
             $graph['labels'][] = $graphBeginDate->format('d-m-Y');
             $graphBeginDate->addDay();
         }
@@ -117,7 +200,7 @@ class ProductStatisticsPage extends Page
                         'label' => 'Stats',
                         'data' => $graph['data'] ?? [],
                         'backgroundColor' => 'orange',
-                        'borderColor' => "orange",
+                        'borderColor' => 'orange',
                         'fill' => 'start',
                     ],
                 ],
@@ -127,72 +210,23 @@ class ProductStatisticsPage extends Page
                 'search' => $search,
                 'beginDate' => $beginDate,
                 'endDate' => $endDate,
+                'locale' => $locale,
             ],
             'data' => $statistics,
             'products' => $products,
         ];
 
-        $this->dispatch('updateGraphData', $graphData);
         $this->graphData = $graphData;
-    }
 
-    public function form(Schema $schema): Schema
-    {
-        $paymentMethods = [];
-        foreach (PaymentMethod::get() as $paymentMethod) {
-            $paymentMethods[$paymentMethod->id] = $paymentMethod->name;
-        }
-
-        foreach (OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method')->unique() as $paymentMethod) {
-            $paymentMethods[$paymentMethod] = $paymentMethod;
-        }
-
-        $orderOrigins = [];
-        foreach (Order::whereNotNull('order_origin')->distinct('order_origin')->pluck('order_origin')->unique() as $orderOrigin) {
-            $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
-        }
-
-        return $schema->schema([
-            Section::make()
-                ->columnSpanFull()
-                ->schema([
-                    DatePicker::make('startDate')
-                        ->label('Start datum')
-                        ->reactive(),
-                    DatePicker::make('endDate')
-                        ->label('Eind datum')
-                        ->nullable()
-                        ->after('startDate')
-                        ->reactive(),
-                    Select::make('locale')
-                        ->label('Locale')
-                        ->nullable()
-                        ->options(function () {
-                            $locales = [];
-                            foreach (Locales::getActivatedLocalesFromSites() as $locale) {
-                                $locales[$locale] = $locale;
-                            }
-
-                            return $locales;
-                        })
-                        ->reactive(),
-                    TextInput::make('search')
-                        ->label('Zoekterm')
-                        ->reactive(),
-                ])
-                ->columns([
-                    'default' => 1,
-                    'lg' => 4,
-                ]),
-        ]);
+        $this->dispatch('updateGraphData', $graphData);
     }
 
     protected function getFooterWidgets(): array
     {
         return [
-            ProductChart::make(),
-            ProductCards::make(),
-            ProductTable::make(),
+            ProductChart::class,
+            ProductCards::class,
+            ProductTable::class,
         ];
     }
 
