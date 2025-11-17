@@ -134,7 +134,7 @@ class EditProductGroup extends EditRecord
 
         foreach ($productFilters as $productFilter) {
             $data["product_filter_{$productFilter->id}_use_for_variations"] = $activeProductFilters->contains($productFilter->id) ? ($this->record->activeProductFilters()->wherePivot('product_filter_id', $productFilter->id)->first()->pivot->use_for_variations ?? 0) : 0;
-            $data['product_filter_options_' . $productFilter->id] = $this->record->enabledProductFilterOptions()->where('product_filter_id', $productFilter->id)->pluck('product_filter_option_id')->toArray();
+            $data['product_filter_options_' . $productFilter->id] = $this->record->enabledProductFilterOptions()->where('product_filter_id', $productFilter->id)->pluck('product_filter_option_id')->unique()->toArray();
         }
 
         //        $productCharacteristics = ProductCharacteristics::get();

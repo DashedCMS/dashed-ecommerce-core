@@ -333,6 +333,9 @@ class ProductGroupResource extends Resource
                     ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(ProductCategory::class, $search))
                     ->searchable()
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                    ->formatStateUsing(function ($state) {
+                        return array_unique($state ?? []);
+                    })
                     ->label('Link aan categorieeën')
                     ->helperText('Bovenliggende categorieën worden automatisch geactiveerd. Deze categorieen gelden voor alle varianten.'),
                 Select::make('suggestedProducts')
