@@ -522,13 +522,13 @@ class ShoppingCart
         $cartItems = cartHelper()->getCartItems();
         $productIds = [];
         $productGroupIds = [];
-        $forbiddenShippingMethodIds = [];
+        $activatedShippingMethodIds = [];
 
         if ($paymentMethod) {
             $paymentMethod = PaymentMethod::find($paymentMethod);
             if ($paymentMethod && $paymentMethod->shippingMethods->count()) {
                 foreach ($paymentMethod->shippingMethods as $shippingMethod) {
-                    $forbiddenShippingMethodIds[] = $shippingMethod->id;
+                    $activatedShippingMethodIds[] = $shippingMethod->id;
                 }
             }
         }
@@ -603,8 +603,8 @@ class ShoppingCart
 //                            ->where('distance_range', '>=', $distanceRange);
 //                    })
 //                    ->orWhere('distance_range_enabled', 0)
-                if (count($forbiddenShippingMethodIds)) {
-                    $shippingMethods = $shippingMethods->whereNotIn('id', $forbiddenShippingMethodIds);
+                if (count($activatedShippingMethodIds)) {
+                    $shippingMethods = $shippingMethods->whereIn('id', $activatedShippingMethodIds);
                 }
                 $shippingMethods = $shippingMethods->orderBy('order', 'ASC')->get();
 

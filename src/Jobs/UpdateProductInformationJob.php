@@ -72,7 +72,10 @@ class UpdateProductInformationJob implements ShouldQueue
             $product->calculateStock();
             $product->calculateTotalPurchases();
             $product->calculatePrices();
-            if ((($this->productGroup->only_show_parent_product && ! $hasIndexableProduct) || ! $this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
+            if ($this->productGroup->only_show_parent_product && $this->productGroup->firstSelectedProduct && $this->productGroup->firstSelectedProduct->public && $this->productGroup->firstSelectedProduct->id === $product->id && $product->public && $this->productGroup->public) {
+                $product->indexable = 1;
+                $hasIndexableProduct = true;
+            } elseif ((($this->productGroup->only_show_parent_product && ! $hasIndexableProduct && (! $this->productGroup->firstSelectedProduct || ($this->productGroup->firstSelectedProduct && ! $this->productGroup->firstSelectedProduct->public))) || ! $this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
             } else {
