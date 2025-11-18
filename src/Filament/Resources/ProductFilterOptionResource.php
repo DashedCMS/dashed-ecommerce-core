@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
@@ -80,6 +81,7 @@ class ProductFilterOptionResource extends Resource
                     ->sortable()
                     ->searchable(),
             ])
+            ->toolbarActions(ToolbarActions::getActions())
             ->recordActions([
                 EditAction::make()
                     ->button(),

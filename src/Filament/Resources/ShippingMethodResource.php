@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -194,11 +195,7 @@ class ShippingMethodResource extends Resource
                 DeleteAction::make(),
             ])
             ->reorderable('order')
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->toolbarActions(ToolbarActions::getActions());
     }
 
     public static function getRelations(): array
