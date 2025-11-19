@@ -51,7 +51,7 @@ class ShowProduct extends Component
         $this->fillInformation(true);
     }
 
-    public function updated()
+    public function updated($name, $value)
     {
         $this->fillInformation();
     }

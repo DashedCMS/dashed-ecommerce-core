@@ -145,6 +145,8 @@ class CartHelper
 
         static::$cartItems = Cart::content()->reverse();
         static::$cartItemsInitialized = true;
+        static::$cartProductsById = [];
+        $this->preloadCartProducts();
     }
 
     public static function preloadProductsForCartItems($cartItems, array $relations = []): \Illuminate\Support\Collection
