@@ -208,7 +208,7 @@ class ShowProducts extends Component
             . '-site-' . $siteId
             . '-locale-' . $locale;
 
-        $products = Cache::rememberForever($cacheKey, function () use ($productCategory) {
+//        $products = Cache::rememberForever($cacheKey, function () use ($productCategory) {
             $query = Product::query()
                 ->publicShowableWithIndex()
                 ->with([
@@ -226,8 +226,9 @@ class ShowProducts extends Component
                     ]);
             }
 
-            return $query->get();
-        });
+            $products = $query->get();
+//            return $query->get();
+//        });
 
         $this->allProducts = $products;
     }
