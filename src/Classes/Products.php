@@ -257,7 +257,6 @@ class Products
 
     public static function getRecentlyViewed(int $limit = 12, ProductGroup $productGroup = null)
     {
-        ray()->measure();
         // 1. Basis: recently viewed product-groups uit de sessie
         $recentlyViewedGroupIds = session('recentlyViewedProducts', []);
 
@@ -402,7 +401,6 @@ class Products
         $result = $applyParentNames($result);
 
         // Zorg dat we exact $limit items teruggeven, netjes ge-reindexed
-        ray()->measure();
         return $result->take($limit)->values();
     }
 

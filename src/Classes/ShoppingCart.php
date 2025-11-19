@@ -846,11 +846,11 @@ class ShoppingCart
 
     public static function getPaymentMethods(?string $type = 'online', ?float $total = null, ?int $userId = null, bool $skipTotalCheck = false): Collection
     {
-        $total = $total ?: cartHelper()->getTotal();
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
 
         $paymentMethods = PaymentMethod::where('site_id', Sites::getActive())->where('active', 1)->where('type', $type);
         if (! $skipTotalCheck) {
+            $total = $total ?: cartHelper()->getTotal();
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
         $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();

@@ -44,18 +44,20 @@ class CartPopup extends Component
 
     public function updated()
     {
-        cartHelper()->initialize();
-        $this->cartItems = cartHelper()->getCartItems();
-        $this->cartTotal = cartHelper()->getTotal();
-        $this->cartSubtotal = cartHelper()->getSubtotal();
-        $this->cartTax = cartHelper()->getTax();
-        $freeShippingMethod = ShippingMethod::where('sort', 'free_delivery')->first();
-        $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
-        $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;
-        if ($isUnderThreshold) {
-            $this->freeShippingPercentage = number_format(($this->cartTotal / $this->freeShippingThreshold) * 100, 0);
-        } else {
-            $this->freeShippingPercentage = 100;
+        if ($this->showCartPopup) {
+            cartHelper()->initialize();
+            $this->cartItems = cartHelper()->getCartItems();
+            $this->cartTotal = cartHelper()->getTotal();
+            $this->cartSubtotal = cartHelper()->getSubtotal();
+            $this->cartTax = cartHelper()->getTax();
+            $freeShippingMethod = ShippingMethod::where('sort', 'free_delivery')->first();
+            $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
+            $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;
+            if ($isUnderThreshold) {
+                $this->freeShippingPercentage = number_format(($this->cartTotal / $this->freeShippingThreshold) * 100, 0);
+            } else {
+                $this->freeShippingPercentage = 100;
+            }
         }
     }
 

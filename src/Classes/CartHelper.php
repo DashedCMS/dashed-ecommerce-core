@@ -16,27 +16,30 @@ use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 class CartHelper
 {
-    public static float $total = 0;
-    public static float $totalWithoutDiscount = 0;
-    public static float $subtotal = 0;
-    public static float $discount = 0;
-    public static float $tax = 0;
-    public static float $taxWithoutDiscount = 0;
-    public static float $shippingCosts = 0;
-    public static float $paymentCosts = 0;
-    public static float $depositAmount = 0;
+    public static float $total = 0.0;
+    public static float $totalWithoutDiscount = 0.0;
+    public static float $subtotal = 0.0;
+    public static float $discount = 0.0;
+    public static float $tax = 0.0;
+    public static float $taxWithoutDiscount = 0.0;
+    public static float $shippingCosts = 0.0;
+    public static float $paymentCosts = 0.0;
+    public static float $depositAmount = 0.0;
     public static bool $isPostPayMethod = false;
+
     public static ?array $totalAmountForVats = [];
     public static ?array $totalVatPerPercentage = [];
     public static ?array $vatPercentageOfTotals = [];
     public static int $vatRates = 0;
     public static array $taxPercentages = [];
     public static int $vatRatesCount = 0;
+
     public static ?DiscountCode $discountCode = null;
     public static ?string $discountCodeString = null;
     public static bool $calculateInclusiveTax = false;
 
     public static ?int $shippingMethod = null;
+    public static null|array|Collection $allPaymentMethods = [];
     public static ?int $paymentMethod = null;
     public static ?int $shippingZone = null;
     public static null|array|\Illuminate\Database\Eloquent\Collection $depositPaymentMethods = null;
@@ -46,70 +49,156 @@ class CartHelper
     public static null|array|Collection $cartItems = [];
     public static bool $initialized = false;
 
-    public function initialize(?string $cartType = null)
+    // Flags om te weten wat al berekend is
+    public static bool $cartItemsInitialized = false;
+    public static bool $discountCodeInitialized = false;
+    public static bool $vatBaseInitialized = false;
+    public static bool $taxInitialized = false;
+    public static bool $subtotalInitialized = false;
+    public static bool $totalInitialized = false;
+    public static bool $totalWithoutDiscountInitialized = false;
+    public static bool $discountInitialized = false;
+    public static bool $shippingCostsInitialized = false;
+    public static bool $paymentCostsInitialized = false;
+    public static bool $depositPaymentMethodsInitialized = false;
+    public static bool $depositAmountInitialized = false;
+    public static bool $taxPercentagesInitialized = false;
+    public static bool $allPaymentMethodsInitialized = false;
+
+    /**
+     * Reset alle computed flags zodat we weer vers kunnen rekenen.
+     */
+    protected function resetComputedFlags(): void
+    {
+        static::$cartItemsInitialized = false;
+        static::$discountCodeInitialized = false;
+        static::$vatBaseInitialized = false;
+        static::$taxInitialized = false;
+        static::$subtotalInitialized = false;
+        static::$totalInitialized = false;
+        static::$totalWithoutDiscountInitialized = false;
+        static::$discountInitialized = false;
+        static::$shippingCostsInitialized = false;
+        static::$paymentCostsInitialized = false;
+        static::$depositPaymentMethodsInitialized = false;
+        static::$depositAmountInitialized = false;
+        static::$taxPercentagesInitialized = false;
+    }
+
+    public function __construct()
+    {
+        static::$calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes') ? true : false;
+    }
+
+    /**
+     * Initialiseert de cart helper voor de huidige request.
+     * updateData() wordt ALTIJD uitgevoerd.
+     */
+    public function initialize(?string $cartType = null): void
     {
         $this->setCartType($cartType);
 
-        if (static::$initialized) {
-            return;
-        }
         static::$initialized = true;
-                ray()->measure();
+
         $this->updateData();
-                ray()->measure();
     }
 
+    /**
+     * Volledige herberekening van alle bedragen.
+     * Deze functie OVERRIDET ALLES (force = true).
+     */
     public function updateData(): void
     {
         $this->setCartType();
-        static::$calculateInclusiveTax = Customsetting::get('taxes_prices_include_taxes') ? true : false;
 
-        $this->setCartItems();
-        $this->setDiscountCode();
-        $this->setTotal();
-        $this->setTotalWithoutDiscount();
-        $this->setDiscount();
-        $this->setVatBaseInfoForCalculation();
-        $this->setTax();
-        $this->setTaxPercentages();
-        $this->setSubtotal();
-        $this->setShippingCosts();
-        $this->setPaymentMethodCosts();
+        // Eerst alle flags resetten
+        $this->resetComputedFlags();
+
+        // Alles opnieuw berekenen, geforceerd
+        $this->setCartItems(true);
+        $this->setDiscountCode(false, true);
+        $this->setVatBaseInfoForCalculation(true);
+        $this->setTax(true);
+        $this->setShippingCosts(true);
+        $this->setPaymentMethodCosts(true);
+        $this->setTotal(true);
+        $this->setTotalWithoutDiscount(true);
+        $this->setDiscount(true);
+        $this->setSubtotal(true);
+        $this->setTaxPercentages(true);
     }
 
-    private function setCartItems(): void
+    private function setCartItems(bool $force = false): void
     {
+        if (static::$cartItemsInitialized && ! $force) {
+            return;
+        }
+
         if (static::$cartType) {
             Cart::instance(static::$cartType);
         }
 
         static::$cartItems = Cart::content();
+        static::$cartItemsInitialized = true;
     }
 
-    private function setDiscountCode(bool $forceString = false): void
+    private function setAllPaymentMethods(bool $force = false): void
     {
-        $code = $forceString ? static::$discountCodeString : (session('discountCode') ?: static::$discountCodeString);
+        if (static::$allPaymentMethodsInitialized && ! $force) {
+            return;
+        }
+
+        static::$allPaymentMethods = ShoppingCart::getPaymentMethods(skipTotalCheck: true);
+    }
+
+    private function setDiscountCode(bool $forceString = false, bool $force = false): void
+    {
+        if (static::$discountCodeInitialized && ! $force) {
+            return;
+        }
+
+        $code = $forceString
+            ? static::$discountCodeString
+            : (session('discountCode') ?: static::$discountCodeString);
+
         if (! $code) {
             static::$discountCode = null;
+            static::$discountCodeString = null;
+            session(['discountCode' => null]);
+            static::$discountCodeInitialized = true;
 
             return;
         }
 
-        $discountCode = DiscountCode::usable()->isNotGlobalDiscount()->where('code', $code)->first();
+        $discountCode = DiscountCode::usable()
+            ->isNotGlobalDiscount()
+            ->where('code', $code)
+            ->first();
 
         if (! $discountCode || ! $discountCode->isValidForCart(cartType: static::$cartType)) {
             session(['discountCode' => '']);
             static::$discountCode = null;
             static::$discountCodeString = null;
+        } else {
+            static::$discountCode = $discountCode;
+            static::$discountCodeString = $discountCode->code ?? null;
+            session(['discountCode' => static::$discountCodeString]);
         }
 
-        static::$discountCode = $discountCode;
-        static::$discountCodeString = $discountCode->code ?? null;
-        session(['discountCode' => static::$discountCodeString]);
+        static::$discountCodeInitialized = true;
     }
 
-    private function setVatBaseInfoForCalculation(): void
+    /**
+     * Basale VAT-informatie berekenen voor alle producten in de cart.
+     */
+    private function setVatBaseInfoForCalculation(bool $force = false): void
     {
+        if (static::$vatBaseInitialized && ! $force) {
+            return;
+        }
+
+        $this->setCartItems(); // zeker zijn dat cartItems gezet is
+
         $tax = 0;
         $taxWithoutDiscount = 0;
         $vatRates = 0;
@@ -120,6 +209,7 @@ class CartHelper
         foreach (static::$cartItems as $cartItem) {
             if ($cartItem->model || ($cartItem->options['customProduct'] ?? false)) {
                 $cartProducts = [$cartItem->model ?? $cartItem];
+
                 if ($cartItem->model && $cartItem->model->is_bundle && $cartItem->model->use_bundle_product_price) {
                     $cartProducts = $cartItem->model->bundleProducts;
                 }
@@ -135,40 +225,46 @@ class CartHelper
 
                     $totalPriceForProducts += $price;
 
+                    $vatRate = $cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate;
+
                     if (static::$calculateInclusiveTax) {
-                        $price = $price / (100 + ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate)) * ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate);
-                        $priceWithoutDiscount = $priceWithoutDiscount / (100 + ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate)) * ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate);
+                        $price = $price / (100 + $vatRate) * $vatRate;
+                        $priceWithoutDiscount = $priceWithoutDiscount / (100 + $vatRate) * $vatRate;
                     } else {
-                        $price = $price / 100 * ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate);
-                        $priceWithoutDiscount = $priceWithoutDiscount / 100 * ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate);
+                        $price = $price / 100 * $vatRate;
+                        $priceWithoutDiscount = $priceWithoutDiscount / 100 * $vatRate;
                     }
 
                     $tax += $price;
                     $taxWithoutDiscount += $priceWithoutDiscount;
-                    if (($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate) > 0) {
-                        if (! isset($totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)])) {
-                            $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] = 0;
+
+                    if ($vatRate > 0) {
+                        $index = number_format($vatRate, 0);
+
+                        if (! isset($totalAmountForVats[$index])) {
+                            $totalAmountForVats[$index] = 0;
                         }
+
                         if (static::$discountCode && static::$discountCode->type == 'percentage') {
                             $totalCartItemAmount = Product::getShoppingCartItemPrice($cartItem, static::$discountCode);
                             if (! static::$calculateInclusiveTax) {
-                                $totalCartItemAmount = $totalCartItemAmount / 100 * (100 + ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate));
+                                $totalCartItemAmount = $totalCartItemAmount / 100 * (100 + $vatRate);
                             }
 
-                            $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] += $totalCartItemAmount;
+                            $totalAmountForVats[$index] += $totalCartItemAmount;
                         } else {
                             $totalCartItemAmount = Product::getShoppingCartItemPrice($cartItem);
                             if (! static::$calculateInclusiveTax) {
-                                $totalCartItemAmount = $totalCartItemAmount / 100 * (100 + ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate));
+                                $totalCartItemAmount = $totalCartItemAmount / 100 * (100 + $vatRate);
                             }
 
-                            $totalAmountForVats[number_format(($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate), 0)] += $totalCartItemAmount;
+                            $totalAmountForVats[$index] += $totalCartItemAmount;
                         }
-                        $vatRates += ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate) * $cartItem->qty;
+
+                        $vatRates += $vatRate * $cartItem->qty;
                         $vatRatesCount += $cartItem->qty;
                     }
                 }
-            } else {
             }
         }
 
@@ -176,14 +272,22 @@ class CartHelper
         $totalVatPerPercentage = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-            if (! isset($vatPercentageOfTotals[number_format($percentage, 0)])) {
-                $vatPercentageOfTotals[number_format($percentage, 0)] = 0;
+            $percentageKey = number_format($percentage, 0);
+
+            if (! isset($vatPercentageOfTotals[$percentageKey])) {
+                $vatPercentageOfTotals[$percentageKey] = 0;
             }
-            if (! isset($totalVatPerPercentage[number_format($percentage, 0)])) {
-                $totalVatPerPercentage[number_format($percentage, 0)] = 0;
+            if (! isset($totalVatPerPercentage[$percentageKey])) {
+                $totalVatPerPercentage[$percentageKey] = 0;
             }
-            $vatPercentageOfTotals[number_format($percentage, 0)] += $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00 ? ($totalAmountForVat / $totalPriceForProducts) * 100 : 0;
-            $totalVatPerPercentage[number_format($percentage, 0)] += $totalAmountForVat > 0.00 ? ($totalAmountForVat / (100 + $percentage) * $percentage) : 0;
+
+            $vatPercentageOfTotals[$percentageKey] += $totalAmountForVat > 0.00 && $totalPriceForProducts > 0.00
+                ? ($totalAmountForVat / $totalPriceForProducts) * 100
+                : 0;
+
+            $totalVatPerPercentage[$percentageKey] += $totalAmountForVat > 0.00
+                ? ($totalAmountForVat / (100 + $percentage) * $percentage)
+                : 0;
         }
 
         static::$totalAmountForVats = $totalAmountForVats;
@@ -193,6 +297,8 @@ class CartHelper
         static::$vatRatesCount = $vatRatesCount;
         static::$tax = $tax;
         static::$taxWithoutDiscount = $taxWithoutDiscount;
+
+        static::$vatBaseInitialized = true;
     }
 
     public function getVatRateForShippingMethod(): int
@@ -207,21 +313,25 @@ class CartHelper
     public function getVatForShippingMethod(?int $vatRate = null): float
     {
         if (! static::$shippingMethod) {
-            return 0;
+            return 0.0;
         }
 
         if (! $vatRate) {
-            $vatRate = self::getVatRateForShippingMethod();
+            $vatRate = $this->getVatRateForShippingMethod();
         }
 
+        $shippingMethod = ShippingMethod::find(static::$shippingMethod);
+        if (! $shippingMethod) {
+            return 0.0;
+        }
+
+        $baseCosts = $shippingMethod->costsForCart(static::$shippingZone);
         $tax = 0;
 
-        if (static::$shippingMethod) {
-            if (static::$calculateInclusiveTax) {
-                $tax += ShippingMethod::find(static::$shippingMethod)->costsForCart(static::$shippingZone) / (100 + $vatRate) * $vatRate;
-            } else {
-                $tax += ShippingMethod::find(static::$shippingMethod)->costsForCart(static::$shippingZone) / 100 * $vatRate;
-            }
+        if (static::$calculateInclusiveTax) {
+            $tax = $baseCosts / (100 + $vatRate) * $vatRate;
+        } else {
+            $tax = $baseCosts / 100 * $vatRate;
         }
 
         return round($tax, 2);
@@ -232,12 +342,12 @@ class CartHelper
         $tax = 0;
 
         if (static::$paymentMethod) {
-            foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
+            foreach (self::getAllPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == static::$paymentMethod && $paymentMethod['extra_costs'] > 0) {
                     if (static::$calculateInclusiveTax) {
-                        $tax = $tax + ($paymentMethod['extra_costs'] / 121 * 21);
+                        $tax += ($paymentMethod['extra_costs'] / 121 * 21);
                     } else {
-                        $tax = $tax + ($paymentMethod['extra_costs'] / 100 * 21);
+                        $tax += ($paymentMethod['extra_costs'] / 100 * 21);
                     }
                 }
             }
@@ -246,31 +356,40 @@ class CartHelper
         return round($tax, 2);
     }
 
-    private function setTax(): void
+    private function setTax(bool $force = false): void
     {
+        if (static::$taxInitialized && ! $force) {
+            return;
+        }
+
+        $this->setVatBaseInfoForCalculation(); // zeker dat vat-base is gezet
+
         $tax = static::$tax;
         $taxWithoutDiscount = static::$taxWithoutDiscount;
 
         if (static::$discountCode && static::$discountCode->type == 'amount') {
+            $discountAmount = static::$discountCode->discount_amount;
+
             if (static::$calculateInclusiveTax) {
                 foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
                     if ($vatPercentageOfTotal) {
-                        $tax -= ((static::$discountCode->discount_amount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
+                        $tax -= (($discountAmount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
                     }
                 }
             } else {
                 foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
                     if ($vatPercentageOfTotal) {
-                        $tax -= ((static::$discountCode->discount_amount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
+                        $tax -= (($discountAmount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
                     }
                 }
             }
         }
 
-        $tax += static::getVatForShippingMethod();
-        $taxWithoutDiscount += static::getVatForShippingMethod();
-        $tax += static::getVatForPaymentMethod();
-        $taxWithoutDiscount += static::getVatForPaymentMethod();
+        $shippingVat = $this->getVatForShippingMethod();
+        $paymentVat = $this->getVatForPaymentMethod();
+
+        $tax += $shippingVat + $paymentVat;
+        $taxWithoutDiscount += $shippingVat + $paymentVat;
 
         if ($tax < 0) {
             $tax = 0;
@@ -279,24 +398,31 @@ class CartHelper
             $taxWithoutDiscount = 0;
         }
 
-        static::$tax = number_format($tax, 2, '.', '');
-        static::$taxWithoutDiscount = number_format($taxWithoutDiscount, 2, '.', '');
+        static::$tax = (float) number_format($tax, 2, '.', '');
+        static::$taxWithoutDiscount = (float) number_format($taxWithoutDiscount, 2, '.', '');
+
+        static::$taxInitialized = true;
     }
 
-    private function setSubtotal(): void
+    private function setSubtotal(bool $force = false): void
     {
+        if (static::$subtotalInitialized && ! $force) {
+            return;
+        }
+
         $total = static::$totalWithoutDiscount;
 
-        if (! self::$calculateInclusiveTax) {
+        if (! static::$calculateInclusiveTax) {
             $total -= static::$taxWithoutDiscount;
 
             if (static::$shippingMethod) {
-                $total -= static::$shippingMethod->costsForCart(static::$shippingZone);
+                $shippingMethod = ShippingMethod::find(static::$shippingMethod);
+                $total -= $shippingMethod ? $shippingMethod->costsForCart(static::$shippingZone) : 0;
             }
 
             if (static::$paymentMethod) {
-                foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
-                    if ($paymentMethod['id'] == static::$paymentMethod->id) {
+                foreach (self::getAllPaymentMethods() as $paymentMethod) {
+                    if ($paymentMethod['id'] == static::$paymentMethod) {
                         $total -= $paymentMethod['extra_costs'];
                     }
                 }
@@ -307,32 +433,48 @@ class CartHelper
             $total = 0.01;
         }
 
-        static::$subtotal = number_format($total, 2, '.', '');
+        static::$subtotal = (float) number_format($total, 2, '.', '');
+        static::$subtotalInitialized = true;
     }
 
-    private function setTotalWithoutDiscount(): void
+    private function setTotalWithoutDiscount(bool $force = false): void
     {
+        if (static::$totalWithoutDiscountInitialized && ! $force) {
+            return;
+        }
+
         static::$totalWithoutDiscount = static::$total;
+        static::$totalWithoutDiscountInitialized = true;
     }
 
-    private function setShippingCosts(): void
+    private function setShippingCosts(bool $force = false): void
     {
-        $shippingCosts = 0;
+        if (static::$shippingCostsInitialized && ! $force) {
+            return;
+        }
+
+        $shippingCosts = 0.0;
 
         if (static::$shippingMethod) {
-            $shippingCosts = ShippingMethod::find(static::$shippingMethod)->costsForCart(static::$shippingZone);
+            $shippingMethod = ShippingMethod::find(static::$shippingMethod);
+            $shippingCosts = $shippingMethod ? $shippingMethod->costsForCart(static::$shippingZone) : 0.0;
         }
 
         static::$shippingCosts = $shippingCosts;
+        static::$shippingCostsInitialized = true;
     }
 
-    private function setPaymentMethodCosts(): void
+    private function setPaymentMethodCosts(bool $force = false): void
     {
-        $paymentCosts = 0;
+        if (static::$paymentCostsInitialized && ! $force) {
+            return;
+        }
 
+        $paymentCosts = 0.0;
         $isPostPayMethod = false;
+
         if (static::$paymentMethod) {
-            foreach (ShoppingCart::getPaymentMethods(total: static::$total) as $paymentMethod) {
+            foreach (self::getAllPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == static::$paymentMethod) {
                     $paymentCosts = $paymentMethod['extra_costs'];
                     $isPostPayMethod = $paymentMethod['postpay'];
@@ -342,6 +484,7 @@ class CartHelper
 
         static::$paymentCosts = $paymentCosts;
         static::$isPostPayMethod = $isPostPayMethod;
+        static::$paymentCostsInitialized = true;
     }
 
     public function getIsPostpayPaymentMethod(): bool
@@ -349,24 +492,34 @@ class CartHelper
         return static::$isPostPayMethod;
     }
 
-    private function setTotal(): void
+    public function setTotal(bool $force = false): void
     {
-        $total = 0;
+        if (static::$totalInitialized && ! $force) {
+            return;
+        }
+
+        $this->setCartItems();
+
+        $total = 0.0;
 
         foreach (static::$cartItems as $cartItem) {
-            $total += $cartItem->model ? Product::getShoppingCartItemPrice($cartItem) : ($cartItem->price * $cartItem->qty);
+            $total += $cartItem->model
+                ? Product::getShoppingCartItemPrice($cartItem)
+                : ($cartItem->price * $cartItem->qty);
         }
 
         if (! static::$calculateInclusiveTax) {
+            $this->setTax(); // zeker dat tax gezet is
             $total += static::$tax;
         }
 
         if (static::$shippingMethod) {
-            $total += ShippingMethod::find(static::$shippingMethod)->costsForCart(static::$shippingZone);
+            $shippingMethod = ShippingMethod::find(static::$shippingMethod);
+            $total += $shippingMethod ? $shippingMethod->costsForCart(static::$shippingZone) : 0;
         }
 
         if (static::$paymentMethod) {
-            foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
+            foreach (self::getAllPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == static::$paymentMethod) {
                     $total += $paymentMethod['extra_costs'];
                 }
@@ -378,23 +531,29 @@ class CartHelper
         }
 
         static::$total = $total;
+        static::$totalInitialized = true;
     }
 
-    private function setDiscount(): void
+    private function setDiscount(bool $force = false): void
     {
-        $totalDiscount = 0;
+        if (static::$discountInitialized && ! $force) {
+            return;
+        }
+
+        $totalDiscount = 0.0;
 
         if (static::$discountCode) {
             if (static::$discountCode->type == 'percentage') {
+                $this->setCartItems();
                 $itemsInCart = static::$cartItems;
 
                 foreach ($itemsInCart as $item) {
-                    $totalDiscount += Product::getShoppingCartItemPrice($item) - Product::getShoppingCartItemPrice($item, static::$discountCode);
+                    $totalDiscount += Product::getShoppingCartItemPrice($item)
+                        - Product::getShoppingCartItemPrice($item, static::$discountCode);
                 }
             } elseif (static::$discountCode->type == 'amount') {
                 $totalDiscount = static::$discountCode->discount_amount;
             }
-
         }
 
         $total = static::$total;
@@ -403,87 +562,138 @@ class CartHelper
             $totalDiscount = $total - 0.01;
         }
 
-        static::$discount = number_format($totalDiscount, 2, '.', '');
-        static::$total = number_format(static::$totalWithoutDiscount - $totalDiscount, 2, '.', '');
+        static::$discount = (float) number_format($totalDiscount, 2, '.', '');
+        static::$total = (float) number_format(static::$totalWithoutDiscount - $totalDiscount, 2, '.', '');
+
+        static::$discountInitialized = true;
     }
 
     public function setShippingMethod(?int $shippingMethod = null): void
     {
         static::$shippingMethod = $shippingMethod;
+
+        // Invalidate gerelateerde computed waarden
+        static::$shippingCostsInitialized = false;
+        static::$taxInitialized = false;
+        static::$taxPercentagesInitialized = false;
+        static::$totalInitialized = false;
+        static::$subtotalInitialized = false;
+        static::$totalWithoutDiscountInitialized = false;
     }
 
     public function setShippingZone(?int $shippingZone = null): void
     {
         static::$shippingZone = $shippingZone;
+
+        static::$shippingCostsInitialized = false;
+        static::$taxInitialized = false;
+        static::$taxPercentagesInitialized = false;
+        static::$totalInitialized = false;
+        static::$subtotalInitialized = false;
+        static::$totalWithoutDiscountInitialized = false;
     }
 
     public function setPaymentMethod(?int $paymentMethod = null): void
     {
         static::$paymentMethod = $paymentMethod;
-        $this->setDepositPaymentMethods();
+
+        static::$paymentCostsInitialized = false;
+        static::$isPostPayMethod = false;
+        static::$depositPaymentMethodsInitialized = false;
+        static::$depositAmountInitialized = false;
+        static::$taxInitialized = false;
+        static::$taxPercentagesInitialized = false;
+        static::$totalInitialized = false;
+        static::$subtotalInitialized = false;
+        static::$totalWithoutDiscountInitialized = false;
+
+        $this->setDepositPaymentMethods(true);
     }
 
     public function setDepositPaymentMethod(?int $depositPaymentMethod = null): void
     {
         static::$depositPaymentMethod = $depositPaymentMethod;
+
+        static::$depositAmountInitialized = false;
     }
 
-    public function setDepositPaymentMethods(): void
+    public function setDepositPaymentMethods(bool $force = false): void
     {
+        if (static::$depositPaymentMethodsInitialized && ! $force) {
+            return;
+        }
+
         $paymentMethod = PaymentMethod::find(static::$paymentMethod);
+        $depositPaymentMethods = [];
 
         if ($paymentMethod && $paymentMethod->deposit_calculation_payment_method_ids) {
             $depositPaymentMethods = PaymentMethod::find($paymentMethod->deposit_calculation_payment_method_ids)->toArray();
+
             foreach ($depositPaymentMethods as &$depositPaymentMethod) {
-                $depositPaymentMethod['full_image_path'] = $depositPaymentMethod['image'] ? Storage::disk('dashed')->url($depositPaymentMethod['image']) : '';
+                $depositPaymentMethod['full_image_path'] = $depositPaymentMethod['image']
+                    ? Storage::disk('dashed')->url($depositPaymentMethod['image'])
+                    : '';
                 $depositPaymentMethod['name'] = $depositPaymentMethod['name'][app()->getLocale()] ?? '';
                 $depositPaymentMethod['additional_info'] = $depositPaymentMethod['additional_info'][app()->getLocale()] ?? '';
                 $depositPaymentMethod['payment_instructions'] = $depositPaymentMethod['payment_instructions'][app()->getLocale()] ?? '';
             }
         }
 
-        static::$depositPaymentMethods = $depositPaymentMethods ?? [];
-        $this->setDepositAmount();
+        static::$depositPaymentMethods = $depositPaymentMethods;
+        static::$depositPaymentMethodsInitialized = true;
+
+        $this->setDepositAmount(true);
     }
 
-    public function setDepositAmount(): void
+    public function setDepositAmount(bool $force = false): void
     {
-        $depositAmount = 0;
+        if (static::$depositAmountInitialized && ! $force) {
+            return;
+        }
+
+        $depositAmount = 0.0;
 
         if (static::$paymentMethod) {
-            foreach (ShoppingCart::getPaymentMethods() as $paymentMethod) {
+            foreach (self::getAllPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == static::$paymentMethod) {
                     if ($paymentMethod['deposit_calculation']) {
-                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', static::$total, $paymentMethod['deposit_calculation']);
-                        $paymentMethod['deposit_calculation'] = str_replace('{ORDER_TOTAL}', static::$total, $paymentMethod['deposit_calculation']);
-                        $depositAmount = eval('return ' . $paymentMethod['deposit_calculation'] . ';');
+                        $formula = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', static::$total, $paymentMethod['deposit_calculation']);
+                        $formula = str_replace('{ORDER_TOTAL}', static::$total, $formula);
+                        // Ja, dit was al zo: eval
+                        $depositAmount = eval('return ' . $formula . ';');
                     }
                 }
             }
         }
 
-        static::$depositAmount = number_format($depositAmount, 2);
+        static::$depositAmount = (float) number_format($depositAmount, 2);
+        static::$depositAmountInitialized = true;
     }
 
-    private function setTaxPercentages(): void
+    private function setTaxPercentages(bool $force = false): void
     {
+        if (static::$taxPercentagesInitialized && ! $force) {
+            return;
+        }
+
         $totalVatPerPercentage = static::$totalVatPerPercentage;
+
         if (static::$discountCode && static::$discountCode->type == 'amount') {
             $discount = static::$discountCode->discount_amount;
 
             if (static::$calculateInclusiveTax) {
                 foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
                     if ($vatPercentageOfTotal) {
-                        foreach ($totalVatPerPercentage as $percentage => $value) {
-                            $totalVatPerPercentage[$percentage] -= (($discount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
+                        foreach ($totalVatPerPercentage as $p => $value) {
+                            $totalVatPerPercentage[$p] -= (($discount * ($vatPercentageOfTotal / 100)) / (100 + $p) * $p);
                         }
                     }
                 }
             } else {
                 foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
                     if ($vatPercentageOfTotal) {
-                        foreach ($totalVatPerPercentage as $percentage => $value) {
-                            $totalVatPerPercentage[$percentage] -= (($discount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
+                        foreach ($totalVatPerPercentage as $p => $value) {
+                            $totalVatPerPercentage[$p] -= (($discount * ($vatPercentageOfTotal / 100)) / 100 * $p);
                         }
                     }
                 }
@@ -492,14 +702,14 @@ class CartHelper
 
         if (static::$shippingMethod) {
             foreach ($totalVatPerPercentage as $percentage => $value) {
-                $result = $this->getVatForShippingMethod($percentage);
+                $result = $this->getVatForShippingMethod((int) $percentage);
                 $totalVatPerPercentage[$percentage] += $result;
             }
         }
 
         if (static::$paymentMethod) {
             $paymentVat = $this->getVatForPaymentMethod();
-            isset($totalVatPerPercentage[21]) ? $totalVatPerPercentage[21] += $paymentVat : $totalVatPerPercentage[21] = $paymentVat;
+            $totalVatPerPercentage[21] = ($totalVatPerPercentage[21] ?? 0) + $paymentVat;
         }
 
         foreach ($totalVatPerPercentage as $percentage => $value) {
@@ -507,85 +717,155 @@ class CartHelper
         }
 
         static::$taxPercentages = $totalVatPerPercentage;
+        static::$taxPercentagesInitialized = true;
+    }
+
+    // ---------- Getters ----------
+
+    public function getAllPaymentMethods(): null|array|Collection
+    {
+        if (! static::$allPaymentMethodsInitialized) {
+            $this->setAllPaymentMethods();
+        }
+
+        return static::$allPaymentMethods;
     }
 
     public function getTotal(): float
     {
+        if (! static::$totalInitialized) {
+            $this->setTotal();
+        }
+
         return static::$total;
     }
 
     public function getTaxPercentages(): array
     {
+        if (! static::$taxPercentagesInitialized) {
+            $this->setTaxPercentages();
+        }
+
         return static::$taxPercentages;
     }
 
     public function getDiscount(): float
     {
+        if (! static::$discountInitialized) {
+            $this->setDiscount();
+        }
+
         return static::$discount;
     }
 
     public function getTax(): float
     {
+        if (! static::$taxInitialized) {
+            $this->setTax();
+        }
+
         return static::$tax;
     }
 
     public function getTotalWithoutDiscount(): float
     {
+        if (! static::$totalWithoutDiscountInitialized) {
+            $this->setTotalWithoutDiscount();
+        }
+
         return static::$totalWithoutDiscount;
     }
 
     public function getSubtotal(): float
     {
+        if (! static::$subtotalInitialized) {
+            $this->setSubtotal();
+        }
+
         return static::$subtotal;
     }
 
     public function getShippingCosts(): float
     {
+        if (! static::$shippingCostsInitialized) {
+            $this->setShippingCosts();
+        }
+
         return static::$shippingCosts;
     }
 
     public function getPaymentCosts(): float
     {
+        if (! static::$paymentCostsInitialized) {
+            $this->setPaymentMethodCosts();
+        }
+
         return static::$paymentCosts;
     }
 
     public function getDepositAmount(): float
     {
+        if (! static::$depositAmountInitialized) {
+            $this->setDepositAmount();
+        }
+
         return static::$depositAmount;
     }
 
     public function getDepositPaymentMethods(): null|array|\Illuminate\Database\Eloquent\Collection
     {
+        if (! static::$depositPaymentMethodsInitialized) {
+            $this->setDepositPaymentMethods();
+        }
+
         return static::$depositPaymentMethods;
     }
 
     public function getDepositPaymentMethod(): ?PaymentMethod
     {
-        return static::$depositPaymentMethod;
+        if (! static::$depositPaymentMethod) {
+            return null;
+        }
+
+        return PaymentMethod::find(static::$depositPaymentMethod);
     }
 
     public function getDiscountCode(): ?DiscountCode
     {
+        if (! static::$discountCodeInitialized) {
+            $this->setDiscountCode();
+        }
+
         return static::$discountCode;
     }
 
     public function getDiscountCodeString(): ?string
     {
+        if (! static::$discountCodeInitialized) {
+            $this->setDiscountCode();
+        }
+
         return static::$discountCodeString;
     }
 
     public function getCartItems(): Collection|null|array
     {
+        if (! static::$cartItemsInitialized) {
+            $this->setCartItems();
+        }
+
         return static::$cartItems;
     }
+
+    // ---------- Cart mutators ----------
 
     public function removeInvalidItems($checkStock = true): bool
     {
         $cartChanged = false;
+        $this->setCartItems(true);
         $cartItems = static::$cartItems;
         $parentItemsToCheck = collect();
 
-        // Loop through cart items
         foreach ($cartItems as $cartItem) {
             $cartItemDeleted = false;
 
@@ -600,7 +880,7 @@ class CartHelper
 
             $model = $cartItem->model;
 
-            // Handle removed or unavailable products
+            // Product verwijderd of niet meer toonbaar
             if ($model->trashed() || ! $model->publicShowable()) {
                 Cart::remove($cartItem->rowId);
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $model->id);
@@ -615,12 +895,13 @@ class CartHelper
                     ->send();
             }
 
-            // Handle stock checks
+            // Stock checks
             if ($checkStock && ! $cartItemDeleted && $model->stock() < $cartItem->qty) {
                 $newStock = $model->stock();
                 if ($newStock > 0) {
                     Cart::update($cartItem->rowId, $newStock);
                     EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty - $newStock, productId: $model->id);
+
                     Notification::make()
                         ->body(Translation::get('product-less-stock', 'cart', ':product: is verlaagd in je winkelwagen omdat er maar :stock: voorraad is.', 'text', [
                             'product' => $model->name,
@@ -628,6 +909,7 @@ class CartHelper
                         ]))
                         ->danger()
                         ->send();
+
                     $cartChanged = true;
                 } else {
                     EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $model->id);
@@ -640,18 +922,19 @@ class CartHelper
                         ]))
                         ->danger()
                         ->send();
+
                     $cartChanged = true;
                 }
             }
 
-            // Handle purchase limits
+            // Aankooplimieten per klant
             if (! $cartItemDeleted && $model->limit_purchases_per_customer && $cartItem->qty > $model->limit_purchases_per_customer_limit) {
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty - $model->limit_purchases_per_customer_limit, productId: $model->id);
                 Cart::update($cartItem->rowId, $model->limit_purchases_per_customer_limit);
                 $cartChanged = true;
             }
 
-            // Merge cart items with the same product and options
+            // Merge items met zelfde product & opties
             if (! $cartItemDeleted) {
                 foreach ($cartItems as $otherCartItem) {
                     if ($cartItem->rowId === $otherCartItem->rowId || ! $otherCartItem->model) {
@@ -672,16 +955,21 @@ class CartHelper
                 }
             }
 
-            // Collect parent product groups for stock checks
-            if (! $cartItemDeleted && $model->productGroup && $model->productGroup->use_parent_stock ?? false) {
+            // Parent product group stock
+            if (! $cartItemDeleted && $model->productGroup && ($model->productGroup->use_parent_stock ?? false)) {
                 $parentItemsToCheck->push($model->productGroup->id);
             }
 
+            // Volume korting & prijs sync
             if (! $cartItemDeleted) {
                 $price = $cartItem->options['originalPrice'];
 
                 if ($model->volumeDiscounts) {
-                    $volumeDiscount = $model->volumeDiscounts()->where('min_quantity', '<=', $cartItem->qty)->orderBy('min_quantity', 'desc')->first();
+                    $volumeDiscount = $model->volumeDiscounts()
+                        ->where('min_quantity', '<=', $cartItem->qty)
+                        ->orderBy('min_quantity', 'desc')
+                        ->first();
+
                     if ($volumeDiscount) {
                         if (! $cartItem->options['originalPrice']) {
                             Cart::update($cartItem->rowId, [
@@ -702,8 +990,8 @@ class CartHelper
             }
         }
 
-        // Check parent product group stock
-        $parentItemsToCheck->unique()->each(function ($parentId) {
+        // Parent product (groep) stock check
+        $parentItemsToCheck->unique()->each(function ($parentId) use (&$cartChanged) {
             $parentProduct = Product::find($parentId);
             if (! $parentProduct) {
                 return;
@@ -725,7 +1013,7 @@ class CartHelper
 
                 EcommerceActionLog::createLog('remove_from_cart', $currentAmount, productId: $parentProduct->id);
 
-                $cartItems->each(function ($cartItem) use ($maxStock) {
+                $cartItems->each(function ($cartItem) {
                     Cart::remove($cartItem->rowId);
                 });
                 $cartChanged = true;
@@ -743,12 +1031,27 @@ class CartHelper
     {
         session(['discountCode' => '']);
         Cart::destroy();
+
+        $this->resetComputedFlags();
+        static::$cartItems = [];
+        static::$total = 0.0;
+        static::$totalWithoutDiscount = 0.0;
+        static::$subtotal = 0.0;
+        static::$discount = 0.0;
+        static::$tax = 0.0;
+        static::$taxWithoutDiscount = 0.0;
+        static::$shippingCosts = 0.0;
+        static::$paymentCosts = 0.0;
+        static::$depositAmount = 0.0;
     }
 
     public function applyDiscountCode(?string $code = null): array
     {
         if (! $code) {
             session(['discountCode' => '']);
+            static::$discountCodeString = null;
+            static::$discountCode = null;
+
             $this->updateData();
 
             return [
@@ -757,10 +1060,8 @@ class CartHelper
             ];
         }
 
-
         static::$discountCodeString = $code;
-        $this->setDiscountCode(true, static::$cartType);
-        //        ray(cartHelper()->getCartType());
+        $this->setDiscountCode(true, true);
         $this->updateData();
 
         if (! static::$discountCode) {
@@ -779,10 +1080,11 @@ class CartHelper
     public function changeQuantity(string $rowId, int $quantity): array
     {
         $dispatch = [];
+
         if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
-                \Gloudemans\Shoppingcart\Facades\Cart::remove($rowId);
+                $cartItem = Cart::get($rowId);
+                Cart::remove($rowId);
 
                 EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $cartItem->model->id);
 
@@ -799,7 +1101,7 @@ class CartHelper
                         'price' => number_format($cartItem->model->price, 2, '.', ''),
                         'cartTotal' => number_format($cartTotal, 2, '.', ''),
                         'category' => $cartItem->model->productCategories->first()?->name ?? null,
-                        'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
+                        'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal) ?? [],
                     ],
                 ];
             }
@@ -809,23 +1111,27 @@ class CartHelper
                 'message' => Translation::get('product-removed-from-cart', static::$cartType, 'The product has been removed from your cart'),
                 'dispatch' => $dispatch,
             ];
-        } else {
-            if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                $cartItem = \Gloudemans\Shoppingcart\Facades\Cart::get($rowId);
-                if ($cartItem->qty > $quantity) {
-                    EcommerceActionLog::createLog('remove_from_cart', ($cartItem->qty - $quantity), productId: $cartItem->model->id);
-                } else {
-                    EcommerceActionLog::createLog('add_to_cart', ($quantity - $cartItem->qty), productId: $cartItem->model->id);
-                }
-                \Gloudemans\Shoppingcart\Facades\Cart::update($rowId, ($quantity));
+        }
+
+        if (ShoppingCart::hasCartitemByRowId($rowId)) {
+            $cartItem = Cart::get($rowId);
+
+            if ($cartItem->qty > $quantity) {
+                EcommerceActionLog::createLog('remove_from_cart', ($cartItem->qty - $quantity), productId: $cartItem->model->id);
+            } else {
+                EcommerceActionLog::createLog('add_to_cart', ($quantity - $cartItem->qty), productId: $cartItem->model->id);
             }
 
-            return [
-                'status' => 'success',
-                'message' => Translation::get('product-updated-to-cart', static::$cartType, 'The product has been updated to your cart'),
-                'dispatch' => $dispatch,
-            ];
+            Cart::update($rowId, $quantity);
         }
+
+        $this->updateData();
+
+        return [
+            'status' => 'success',
+            'message' => Translation::get('product-updated-to-cart', static::$cartType, 'The product has been updated to your cart'),
+            'dispatch' => $dispatch,
+        ];
     }
 
     public function setCartType(?string $cartType = null): void
@@ -841,6 +1147,11 @@ class CartHelper
 
     public function getCartType(): string
     {
-        return static::$cartType;
+        return static::$cartType ?? 'default';
+    }
+
+    public function isInitialized(): bool
+    {
+        return static::$initialized;
     }
 }

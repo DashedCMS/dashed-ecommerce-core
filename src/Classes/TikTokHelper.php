@@ -6,7 +6,9 @@ class TikTokHelper
 {
     public static function getShoppingCartItems($cartTotal = null, ?string $email = null, ?string $phoneNumber = null): array
     {
-        cartHelper()->initialize();
+        if(! cartHelper()->isInitialized()){
+            cartHelper()->setTotal();
+        }
 
         if (! $cartTotal) {
             $cartTotal = cartHelper()->getTotal();
