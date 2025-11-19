@@ -257,26 +257,153 @@ class Products
 
     public static function getRecentlyViewed(int $limit = 12, ProductGroup $productGroup = null)
     {
-        $recentlyViewedProductGroups = session('recentlyViewedProducts', []);
-        if ($productGroup && in_array($productGroup->id, $recentlyViewedProductGroups)) {
-            $key = array_search($productGroup->id, $recentlyViewedProductGroups);
-            unset($recentlyViewedProductGroups[$key]);
+        ray()->measure();
+        // 1. Basis: recently viewed product-groups uit de sessie
+        $recentlyViewedGroupIds = session('recentlyViewedProducts', []);
+
+        // Uniek en opnieuw indexeren
+        $recentlyViewedGroupIds = array_values(array_unique($recentlyViewedGroupIds));
+
+        // Huidige productgroep nooit tonen in de lijst
+        if ($productGroup) {
+            $recentlyViewedGroupIds = array_values(array_diff($recentlyViewedGroupIds, [$productGroup->id]));
         }
 
-        $products = Product::whereIn('product_group_id', $recentlyViewedProductGroups)
-            ->publicShowable()
-//            ->orderBy($orderBy, $order)
-            ->orderBy('id')
-            ->with(['productFilters', 'productCategories', 'productGroup'])
-            ->limit($limit)
-            ->get();
+        $recentlyViewedGroupIds = array_reverse($recentlyViewedGroupIds);
 
-        foreach ($products as $product) {
-            if ($product->productGroup->only_show_parent_product) {
-                $product->name = $product->productGroup->name;
+        $result = collect();
+        $usedGroupIds = [];
+        $usedProductIds = [];
+
+        // Helper om achteraf de namen te fixen voor parent-only producten
+        $applyParentNames = function (\Illuminate\Support\Collection $products) {
+            foreach ($products as $product) {
+                if ($product->productGroup && $product->productGroup->only_show_parent_product) {
+                    $product->name = $product->productGroup->name;
+                }
+            }
+
+            return $products;
+        };
+
+        /*
+         * STAP 1: Recently viewed producten ophalen (maximaal 1 per productgroep)
+         */
+        if (! empty($recentlyViewedGroupIds)) {
+            $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
+                ->publicShowable()
+                ->with(['productFilters', 'productCategories', 'productGroup'])
+                ->get();
+
+            // Sorteer op volgorde van recently viewed (eerste in array = meest recent)
+            $recentProducts = $recentProducts->sortBy(function ($product) use ($recentlyViewedGroupIds) {
+                return array_search($product->product_group_id, $recentlyViewedGroupIds, true);
+            });
+
+            foreach ($recentProducts as $product) {
+                if ($result->count() >= $limit) {
+                    break;
+                }
+
+                // Skip als we al een product uit deze productgroep hebben
+                if (in_array($product->product_group_id, $usedGroupIds, true)) {
+                    continue;
+                }
+
+                $result->push($product);
+                $usedGroupIds[] = $product->product_group_id;
+                $usedProductIds[] = $product->id;
             }
         }
 
-        return $products;
+        /*
+         * STAP 2: Aanvullen met producten uit dezelfde categorieën
+         *
+         * - Als een $productGroup is meegegeven: categorieën van die groep gebruiken
+         * - Anders: categorieën van de al gevonden producten gebruiken
+         */
+        if ($result->count() < $limit) {
+            $categoryIds = collect();
+
+            if ($productGroup) {
+                // Pak alle producten in deze productgroep en verzamel hun categorieën
+                $groupProducts = Product::where('product_group_id', $productGroup->id)
+                    ->with('productCategories:id')
+                    ->get();
+
+                $categoryIds = $groupProducts->flatMap(function ($product) {
+                    return $product->productCategories->pluck('id');
+                });
+            } else {
+                // Categorieën op basis van de al gekozen recently viewed producten
+                $categoryIds = $result->flatMap(function ($product) {
+                    return $product->productCategories->pluck('id');
+                });
+            }
+
+            $categoryIds = $categoryIds->unique()->values();
+
+            if ($categoryIds->isNotEmpty()) {
+                $table = (new ProductCategory())->getTable();
+
+                $sameCategoryProducts = Product::publicShowable()
+                    ->whereNotIn('product_group_id', $usedGroupIds)
+                    ->whereHas('productCategories', function ($q) use ($categoryIds, $table) {
+                        $q->whereIn("$table.id", $categoryIds);
+                    })
+                    ->with(['productFilters', 'productCategories', 'productGroup'])
+                    ->inRandomOrder()
+                    ->limit($limit * 3)
+                    ->get();
+
+                foreach ($sameCategoryProducts as $product) {
+                    if ($result->count() >= $limit) {
+                        break;
+                    }
+
+                    if (in_array($product->product_group_id, $usedGroupIds, true)) {
+                        continue;
+                    }
+
+                    $result->push($product);
+                    $usedGroupIds[] = $product->product_group_id;
+                    $usedProductIds[] = $product->id;
+                }
+            }
+        }
+
+        /*
+         * STAP 3: Fallback – random producten (als er nog niet genoeg zijn)
+         */
+        if ($result->count() < $limit) {
+            $fallbackProducts = Product::publicShowable()
+                ->whereNotIn('product_group_id', $usedGroupIds)
+                ->with(['productFilters', 'productCategories', 'productGroup'])
+                ->inRandomOrder()
+                ->limit($limit * 3)
+                ->get();
+
+            foreach ($fallbackProducts as $product) {
+                if ($result->count() >= $limit) {
+                    break;
+                }
+
+                if (in_array($product->product_group_id, $usedGroupIds, true)) {
+                    continue;
+                }
+
+                $result->push($product);
+                $usedGroupIds[] = $product->product_group_id;
+                $usedProductIds[] = $product->id;
+            }
+        }
+
+        // Namen overschrijven als de productgroep alleen de parent wil tonen
+        $result = $applyParentNames($result);
+
+        // Zorg dat we exact $limit items teruggeven, netjes ge-reindexed
+        ray()->measure();
+        return $result->take($limit)->values();
     }
+
 }

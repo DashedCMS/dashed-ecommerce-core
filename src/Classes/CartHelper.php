@@ -54,9 +54,9 @@ class CartHelper
             return;
         }
         static::$initialized = true;
-        //        ray()->measure();
+                ray()->measure();
         $this->updateData();
-        //        ray()->measure();
+                ray()->measure();
     }
 
     public function updateData(): void

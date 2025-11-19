@@ -1026,31 +1026,82 @@ class Product extends Model
 
     public function getSuggestedProducts(int $limit = 4, bool $random = true, $includeFromProductGroup = false): Collection
     {
+        // 1. Start met de expliciet ingestelde suggested products
         if ($includeFromProductGroup) {
-            $suggestedProductIds = array_merge($this->suggestedProducts->pluck('id')->toArray(), $this->productGroup->suggestedProducts->pluck('id')->toArray());
+            $suggestedProductIds = array_merge(
+                $this->suggestedProducts->pluck('id')->toArray(),
+                $this->productGroup?->suggestedProducts->pluck('id')->toArray() ?? []
+            );
         } else {
             $suggestedProductIds = $this->suggestedProducts->pluck('id')->toArray();
         }
 
-        if (count($suggestedProductIds) < $limit) {
+        // Huidige product nooit als suggestion
+        $suggestedProductIds = array_filter($suggestedProductIds, fn ($id) => $id !== $this->id);
+        $suggestedProductIds = array_values(array_unique($suggestedProductIds));
+
+        $remaining = $limit - count($suggestedProductIds);
+
+        /*
+         * 2. Aanvullen met producten uit dezelfde categorieën
+         */
+        if ($remaining > 0) {
+            $categoryModel = new ProductCategory();
+            $categoryTable = $categoryModel->getTable();
+
+            // Haal categorie-ids van dit product op
+            $categoryIds = $this->productCategories()
+                ->pluck($categoryTable . '.id')
+                ->toArray();
+
+            if (! empty($categoryIds)) {
+                $sameCategoryIds = Product::thisSite()
+                    ->publicShowableWithIndex()
+                    ->where('id', '!=', $this->id)
+                    ->whereNotIn('id', $suggestedProductIds)
+                    ->whereHas('productCategories', function ($q) use ($categoryIds, $categoryTable) {
+                        $q->whereIn($categoryTable . '.id', $categoryIds);
+                    })
+                    ->inRandomOrder()
+                    ->limit($remaining)
+                    ->pluck('id')
+                    ->toArray();
+
+                $suggestedProductIds = array_values(array_unique(array_merge($suggestedProductIds, $sameCategoryIds)));
+                $remaining = $limit - count($suggestedProductIds);
+            }
+        }
+
+        /*
+         * 3. Nog niet vol? Aanvullen met random producten
+         */
+        if ($remaining > 0) {
             $randomProductIds = Product::thisSite()
                 ->publicShowableWithIndex()
                 ->where('id', '!=', $this->id)
-                ->whereNotIn('id', array_merge($suggestedProductIds, [$this->id]))
-                ->limit($limit - count($suggestedProductIds))
+                ->whereNotIn('id', $suggestedProductIds)
                 ->inRandomOrder()
+                ->limit($remaining)
                 ->pluck('id')
                 ->toArray();
-            $suggestedProductIds = array_merge($randomProductIds, $suggestedProductIds);
+
+            $suggestedProductIds = array_values(array_unique(array_merge($suggestedProductIds, $randomProductIds)));
         }
 
-        $products = Product::thisSite()->publicShowable()->whereIn('id', $suggestedProductIds)->limit($limit);
+        /*
+         * 4. Uiteindelijk de producten ophalen
+         */
+        $productsQuery = Product::thisSite()
+            ->publicShowable()
+            ->whereIn('id', $suggestedProductIds);
+
         if ($random) {
-            $products->inRandomOrder();
+            $productsQuery->inRandomOrder();
         }
 
-        return $products->get();
+        return $productsQuery->limit($limit)->get();
     }
+
 
     public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = false): Collection
     {

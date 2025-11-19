@@ -617,7 +617,7 @@ class ProductGroup extends Model
         return $images;
     }
 
-    public function replaceContentVariables(null|array|string $content, array $filters = [], ?Product $product): ?string
+    public function replaceContentVariables(null|array|string $content, ?array $filters = [], ?Product $product = null): ?string
     {
         if (is_array($content)) {
             $content = cms()->convertToHtml($content);
