@@ -287,7 +287,7 @@ trait ProductCartActions
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
         $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;
-        $this->description = ($this->product && $this->product->description)
+        $this->description = ($this->product && $this->product->description && strip_tags(cms()->convertToHtml($this->product->description)))
             ? $this->product->replaceContentVariables($this->product->description, $this->filters)
             : $this->productGroup->replaceContentVariables($this->productGroup->description, $this->filters, $this->product);
         $this->shortDescription = ($this->product && $this->product->short_description)
