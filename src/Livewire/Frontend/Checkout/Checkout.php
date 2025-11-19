@@ -176,7 +176,7 @@ class Checkout extends Component
 
     public function retrievePaymentMethods()
     {
-        $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, true) : [];
+        $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country) : [];
         if (Customsetting::get('first_payment_method_selected', null, true) && (! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }

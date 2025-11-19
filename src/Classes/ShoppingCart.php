@@ -844,7 +844,7 @@ class ShoppingCart
         return null;
     }
 
-    public static function getPaymentMethods(?string $type = 'online', float $total = null, ?int $userId = null, bool $skipTotalCheck = false): Collection
+    public static function getPaymentMethods(?string $type = 'online', ?float $total = null, ?int $userId = null, bool $skipTotalCheck = false): Collection
     {
         $total = $total ?: cartHelper()->getTotal();
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
