@@ -94,7 +94,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             $schedule->command(CancelOldOrders::class)
                 ->everyFifteenMinutes();
             $schedule->command(UpdateProductInformations::class)
-                ->twiceDaily()
+                ->daily()
                 ->withoutOverlapping();
             $schedule->command(UpdateExpiredGlobalDiscountCodes::class)
                 ->everyFiveMinutes()
