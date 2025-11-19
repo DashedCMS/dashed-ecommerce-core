@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Gloudemans\Shoppingcart\Facades\Cart;
@@ -19,7 +20,6 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 trait ProductCartActions
 {
@@ -72,7 +72,7 @@ trait ProductCartActions
                 ->products()
                 ->publicShowable()
                 ->with([
-                    'productFilters',              // voor variatie matching
+                    'productFilters',
                     'productFilters.productFilterOptions',
                     'volumeDiscounts',
                     'productCategories',
@@ -81,6 +81,67 @@ trait ProductCartActions
         }
 
         return $this->publicProducts;
+    }
+
+    /**
+     * Bouwt de filter-structuur op basis van de in-memory varianten.
+     * Dit wordt alleen bij mount aangeroepen.
+     */
+    protected function buildFiltersFromPublicProducts(): array
+    {
+        $filters = [];
+        $publicProducts = $this->getPublicProducts();
+
+        if ($publicProducts->isEmpty()) {
+            return [];
+        }
+
+        $productIds = $publicProducts->pluck('id')->toArray();
+        $activeFilters = $this->productGroup->activeProductFilters;
+
+        foreach ($activeFilters as $filter) {
+            if (! $filter->pivot->use_for_variations) {
+                continue;
+            }
+
+            // Welke filter-opties komen daadwerkelijk voor in deze productgroep?
+            $productFilterOptionIds = DB::table('dashed__product_filter')
+                ->where('product_filter_id', $filter->id)
+                ->whereIn('product_id', $productIds)
+                ->pluck('product_filter_option_id')
+                ->toArray();
+
+            if (! count($productFilterOptionIds)) {
+                continue;
+            }
+
+            $filterOptions = $filter->productFilterOptions()
+                ->whereIn('id', $productFilterOptionIds)
+                ->get()
+                ->map(function ($option) {
+                    $name = $option->name;
+                    $arr = $option->toArray();
+                    $arr['name'] = $name;
+
+                    return $arr;
+                })
+                ->toArray();
+
+            if (! count($filterOptions)) {
+                continue;
+            }
+
+            $filters[] = [
+                'id' => $filter->id,
+                'name' => $filter->name,
+                'options' => $filterOptions,
+                'type' => $filter->type,
+                'active' => null,
+                'contentBlocks' => $filter->contentBlocks,
+            ];
+        }
+
+        return $filters;
     }
 
     public function checkCart(?string $status = null, ?string $message = null)
@@ -96,11 +157,9 @@ trait ProductCartActions
                 ->send();
         }
 
-        $cartChanged = cartHelper()->removeInvalidItems();
+        cartHelper()->removeInvalidItems();
 
-        if ($cartChanged) {
-            $this->dispatch('refreshCart');
-        }
+        $this->dispatch('refreshCart');
     }
 
     public function setQuantity(int $quantity)
@@ -149,13 +208,12 @@ trait ProductCartActions
         $previousProduct = $this->product;
 
         if ($isMount) {
-            // Altijd alvast alle varianten + relaties binnenhalen
+            // 1x alle varianten + relaties binnenhalen
             $this->getPublicProducts();
 
             $this->productCategories = $this->productGroup->productCategories;
-            $this->filters = $this->productGroup->simpleFilters();
+            $this->filters = $this->buildFiltersFromPublicProducts();
 
-            // Static cache van online payment methods binnen deze request
             static $onlinePaymentMethods = null;
             if ($onlinePaymentMethods === null) {
                 $onlinePaymentMethods = PaymentMethod::active()
@@ -189,6 +247,7 @@ trait ProductCartActions
             $this->variationExists = true;
         }
 
+        // Product- en productgroep-specific characteristics combineren
         $characteristics = $this->product ? $this->product->showableCharacteristics() : [];
         foreach ($this->product ? $this->productGroup->showableCharacteristicsWithoutFilters() : $this->productGroup->showableCharacteristics() as $characteristic) {
             if (collect($characteristics)->where('name', $characteristic['name'])->count() > 0) {
@@ -250,7 +309,7 @@ trait ProductCartActions
             }
         }
 
-        // Static cache van global discounts binnen de request
+        // Global discounts cachen binnen de request
         static $allGlobalDiscounts = null;
         if ($allGlobalDiscounts === null) {
             $allGlobalDiscounts = DiscountCode::isGlobalDiscount()->get();
@@ -321,7 +380,6 @@ trait ProductCartActions
                     break;
                 }
 
-                // In-memory check op geladen productFilters relatie
                 $hasOption = $product->productFilters
                     ->contains(function ($pf) use ($filter) {
                         return $pf->pivot->product_filter_option_id == $filter['active'];
@@ -365,7 +423,6 @@ trait ProductCartActions
 
         foreach ($filters as &$filter) {
             if ($isMount && $this->product) {
-                // Gebruik in-memory productFilters i.p.v. query
                 $productFilterResult = $this->product->productFilters
                     ->first(function ($pf) use ($filter) {
                         return $pf->pivot->product_filter_id == $filter['id'];

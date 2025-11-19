@@ -255,9 +255,16 @@ class ProductGroup extends Model
 
         foreach ($this->activeProductFilters as $filter) {
             if ($filter->pivot->use_for_variations) {
-                $productFilterOptionIds = DB::table('dashed__product_filter')->where('product_filter_id', $filter['id'])->whereIn('product_id', $productIds)->pluck('product_filter_option_id')->toArray();
-                $filterOptions = $filter->productFilterOptions()->whereIn('id', $productFilterOptionIds)->get()->toArray();
-                //                $filterOptions = $filter->productFilterOptions()->whereIn('id', $this->enabledProductFilterOptions()->pluck('product_filter_option_id'))->get()->toArray();
+                $productFilterOptionIds = DB::table('dashed__product_filter')
+                    ->where('product_filter_id', $filter['id'])
+                    ->whereIn('product_id', $productIds)
+                    ->pluck('product_filter_option_id')
+                    ->toArray();
+
+                $filterOptions = $filter->productFilterOptions()
+                    ->whereIn('id', $productFilterOptionIds)
+                    ->get()
+                    ->toArray();
 
                 if (count($filterOptions)) {
                     foreach ($filterOptions as &$filterOption) {
@@ -274,7 +281,6 @@ class ProductGroup extends Model
                     ];
                 }
             }
-            //            dd($filters);
         }
 
         return $filters;
