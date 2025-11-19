@@ -623,6 +623,7 @@
         <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="bg-white rounded-lg p-8 grid gap-4">
                 <div class="absolute top-2 right-2 text-black cursor-pointer"
+                     x-bind:disabled="loading"
                      @click="closePayment">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">

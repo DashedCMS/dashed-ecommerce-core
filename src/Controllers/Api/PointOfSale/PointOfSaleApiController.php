@@ -1111,6 +1111,14 @@ class PointOfSaleApiController extends Controller
 
         $posIdentifier = $data['posIdentifier'] ?? null;
         $order = $data['order'] ?? null;
+        if(!$order || !isset($order['id'])) {
+            return response()
+                ->json([
+                    'success' => false,
+                    'message' => 'Geen bestelling gevonden',
+                ], 400);
+        }
+
         $order = Order::find($order['id']);
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
