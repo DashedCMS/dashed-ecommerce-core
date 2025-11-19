@@ -138,7 +138,7 @@ class CartHelper
             Cart::instance(static::$cartType);
         }
 
-        static::$cartItems = Cart::content();
+        static::$cartItems = Cart::content()->reverse();
         static::$cartItemsInitialized = true;
     }
 
