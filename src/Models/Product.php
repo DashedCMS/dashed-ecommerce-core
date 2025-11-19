@@ -1126,100 +1126,142 @@ class Product extends Model
 
     public static function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
     {
-        if ($discountCode && is_string($discountCode)) {
+        // We ondersteunen hier alleen een DiscountCode object, strings worden genegeerd (zoals je nu al deed)
+        if (is_string($discountCode)) {
             $discountCode = null;
         }
 
-        $quantity = $cartItem->qty;
-        $options = $cartItem->options['options'];
+        // Cache voor deze request om DB-calls te beperken
+        static $productExtraOptionCache = [];
+        static $productExtraCache = [];
 
-        $price = 0;
+        $itemQty = max(1, (int) $cartItem->qty);
+        $options = (array) ($cartItem->options['options'] ?? []);
 
-        $price += ((! $cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false)) ? $cartItem->options['singlePrice'] : $cartItem->model->currentPrice) * $quantity;
+        $isCustom = (! $cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false));
 
+        // Basistotaal (productprijs * aantal)
+        $baseUnitPrice = $isCustom
+            ? (float) ($cartItem->options['singlePrice'] ?? 0)
+            : (float) ($cartItem->model->currentPrice ?? 0);
+
+        $price = $baseUnitPrice * $itemQty;
+
+        // Extra opties
         foreach ($options as $productExtraOptionId => $productExtraOption) {
             $optionId = null;
             $extraId = null;
 
+            // product-extra-X vs gewone option id
             if (! str($productExtraOptionId)->contains('product-extra-')) {
                 $optionId = $productExtraOptionId;
             } else {
                 $extraId = str($productExtraOptionId)->explode('-')->last();
             }
 
+            // Variant / optie met ProductExtraOption
             if ($optionId) {
-                $quantity = $productExtraOption['quantity'] ?? $cartItem->qty;
-                if ($quantity < 1) {
-                    $quantity = 1;
-                }
                 if (! is_numeric($optionId)) {
                     continue;
                 }
-                $productExtraOptionId = (int)$optionId;
 
-                if ($productExtraOptionId <= 0) {
+                $optionId = (int) $optionId;
+                if ($optionId <= 0) {
                     continue;
                 }
-                $thisProductExtraOption = ProductExtraOption::find($productExtraOptionId);
+
+                $optionQty = max(1, (int) ($productExtraOption['quantity'] ?? $itemQty));
+
+                if (! isset($productExtraOptionCache[$optionId])) {
+                    $productExtraOptionCache[$optionId] = ProductExtraOption::find($optionId);
+                }
+
+                $thisProductExtraOption = $productExtraOptionCache[$optionId];
+
                 if ($thisProductExtraOption) {
+                    $extraPrice = (float) $thisProductExtraOption->price;
+                    $productExtraPrice = (float) ($thisProductExtraOption->productExtra->price ?? 0);
+
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
-                        $price += $thisProductExtraOption->price;
-                        $price += $thisProductExtraOption->productExtra->price;
+                        $price += $extraPrice;
+                        $price += $productExtraPrice;
                     } else {
-                        $price += ($thisProductExtraOption->price * $quantity);
-                        $price += ($thisProductExtraOption->productExtra->price * $quantity);
+                        $price += $extraPrice * $optionQty;
+                        $price += $productExtraPrice * $optionQty;
                     }
                 }
             }
+
+            // Losse ProductExtra (product-extra-X)
             if ($extraId) {
-                $quantity = $cartItem->qty;
-                if ($quantity < 1) {
-                    $quantity = 1;
-                }
                 if (! is_numeric($extraId)) {
                     continue;
                 }
-                $productExtraId = (int)$extraId;
 
+                $productExtraId = (int) $extraId;
                 if ($productExtraId <= 0) {
                     continue;
                 }
-                $thisProductExtra = ProductExtra::find($productExtraId);
+
+                if (! isset($productExtraCache[$productExtraId])) {
+                    $productExtraCache[$productExtraId] = ProductExtra::find($productExtraId);
+                }
+
+                $thisProductExtra = $productExtraCache[$productExtraId];
+
                 if ($thisProductExtra) {
-                    $price += ($thisProductExtra->price * $quantity);
+                    $extraQty = $itemQty; // extras zijn per cart item
+                    $price += (float) $thisProductExtra->price * $extraQty;
                 }
             }
-
-            //Should not be needed, otherwise it will count above items double
-            //            if ($productExtraOption['value'] && ($productExtraOption['price'] ?? false)) {
-            //                $price += $productExtraOption['price'] * $quantity;
-            //            }
         }
 
+        // Volume discount op totaal (inclusief extras)
         if ($cartItem->model && $cartItem->model->volumeDiscounts) {
-            $volumeDiscount = $cartItem->model->volumeDiscounts()->where('min_quantity', '<=', $cartItem->qty)->orderBy('min_quantity', 'desc')->first();
+            $volumeDiscount = $cartItem->model->volumeDiscounts()
+                ->where('min_quantity', '<=', $itemQty)
+                ->orderBy('min_quantity', 'desc')
+                ->first();
+
             if ($volumeDiscount) {
                 $price = $volumeDiscount->getPrice($price);
             }
         }
 
-        if ($discountCode && $discountCode->type == 'percentage') {
+        // Percentage kortingscode
+        if ($discountCode instanceof DiscountCode && $discountCode->type === 'percentage') {
             $discountValidForProduct = false;
 
-            if ($discountCode->valid_for == 'categories') {
-                if ($cartItem->model && $discountCode->productCategories()->whereIn('product_category_id', $cartItem->model->productCategories()->pluck('product_category_id'))->exists()) {
-                    $discountValidForProduct = true;
-                }
-            } elseif ($discountCode->valid_for == 'products') {
-                if ($cartItem->model && $discountCode->products()->where('product_id', $cartItem->model->id)->exists()) {
+            if ($cartItem->model) {
+                if ($discountCode->valid_for === 'categories') {
+                    $productCategoryIds = $cartItem->model
+                        ->productCategories()
+                        ->pluck('product_category_id');
+
+                    $discountValidForProduct = $discountCode
+                        ->productCategories()
+                        ->whereIn('product_category_id', $productCategoryIds)
+                        ->exists();
+                } elseif ($discountCode->valid_for === 'products') {
+                    $discountValidForProduct = $discountCode
+                        ->products()
+                        ->where('product_id', $cartItem->model->id)
+                        ->exists();
+                } else {
+                    // 'all' of iets anders → gewoon geldig
                     $discountValidForProduct = true;
                 }
             } else {
-                $discountValidForProduct = true;
+                // Custom product zonder model → alleen korting als 'all'
+                $discountValidForProduct = $discountCode->valid_for !== 'categories'
+                    && $discountCode->valid_for !== 'products';
             }
 
-            if ($discountValidForProduct) {
-                $price = round(($price / $quantity / 100) * (100 - $discountCode->discount_percentage), 2) * $quantity;
+            if ($discountValidForProduct && $itemQty > 0) {
+                // Hou rounding per stuk aan zoals jij deed, maar dan expliciet op itemQty gebaseerd
+                $unitPrice = $price / $itemQty;
+                $unitPrice = round($unitPrice * (100 - $discountCode->discount_percentage) / 100, 2);
+                $price = $unitPrice * $itemQty;
             }
 
             if ($price < 0) {
@@ -1227,8 +1269,28 @@ class Product extends Model
             }
         }
 
-        return $price;
+        return (float) $price;
     }
+
+    public static function getShoppingCartItemPrices(CartItem $cartItem, ?DiscountCode $discountCode = null): array
+    {
+        $basePrice = self::getShoppingCartItemPrice($cartItem, null);
+
+        if (! $discountCode || $discountCode->type !== 'percentage') {
+            return [
+                'with_discount' => $basePrice,
+                'without_discount' => $basePrice,
+            ];
+        }
+
+        $discounted = self::getShoppingCartItemPrice($cartItem, $discountCode);
+
+        return [
+            'with_discount' => $discounted,
+            'without_discount' => $basePrice,
+        ];
+    }
+
 
     public static function stockFilamentSchema(): array
     {
