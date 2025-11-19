@@ -84,28 +84,50 @@ class Checkout extends Component
     public Collection|array $depositPaymentMethods = [];
     public string $cartType = 'default';
 
+    protected ?string $lastZipLookedUp = null;
+    protected ?string $lastHouseNrLookedUp = null;
+
     public function mount(Product $product)
     {
-        $this->invoiceAddress = auth()->check() && auth()->user()->lastOrderFromAllOrders() && auth()->user()->lastOrderFromAllOrders()->invoice_street ? true : (Customsetting::get('checkout_delivery_address_standard_invoice_address') ? false : true);
-        $this->isCompany = auth()->check() && auth()->user()->lastOrderFromAllOrders() && auth()->user()->lastOrderFromAllOrders()->company_name ? true : (Customsetting::get('checkout_form_company_name') == 'required' ? true : false);
-        $this->country = auth()->check() && auth()->user()->lastOrderFromAllOrders() && auth()->user()->lastOrderFromAllOrders()->country ? auth()->user()->lastOrderFromAllOrders()->country : 'Nederland';
-        $this->dateOfBirth = optional(auth()->user())->lastOrderFromAllOrders()->date_of_birth ?? '';
-        $this->gender = optional(auth()->user())->lastOrderFromAllOrders()->gender ?? '';
-        $this->email = optional(auth()->user())->lastOrderFromAllOrders()->email ?? '';
-        $this->firstName = optional(auth()->user())->lastOrderFromAllOrders()->first_name ?? '';
-        $this->lastName = optional(auth()->user())->lastOrderFromAllOrders()->last_name ?? '';
-        $this->street = optional(auth()->user())->lastOrderFromAllOrders()->street ?? '';
-        $this->houseNr = optional(auth()->user())->lastOrderFromAllOrders()->house_nr ?? '';
-        $this->zipCode = optional(auth()->user())->lastOrderFromAllOrders()->zip_code ?? '';
-        $this->city = optional(auth()->user())->lastOrderFromAllOrders()->city ?? '';
-        $this->company = optional(auth()->user())->lastOrderFromAllOrders()->company_name ?? '';
-        $this->taxId = optional(auth()->user())->lastOrderFromAllOrders()->btw_id ?? '';
-        $this->phoneNumber = optional(auth()->user())->lastOrderFromAllOrders()->phone_number ?? '';
-        $this->invoiceStreet = optional(auth()->user())->lastOrderFromAllOrders()->invoice_street ?? '';
-        $this->invoiceHouseNr = optional(auth()->user())->lastOrderFromAllOrders()->invoice_house_nr ?? '';
-        $this->invoiceZipCode = optional(auth()->user())->lastOrderFromAllOrders()->invoice_zip_code ?? '';
-        $this->invoiceCity = optional(auth()->user())->lastOrderFromAllOrders()->invoice_city ?? '';
-        $this->invoiceCountry = optional(auth()->user())->lastOrderFromAllOrders()->invoice_country ?? '';
+        cartHelper()->initialize();
+        $user = auth()->user();
+        $lastOrder = $user?->lastOrderFromAllOrders();
+
+        // Invoice address
+        if ($user && $lastOrder && $lastOrder->invoice_street) {
+            $this->invoiceAddress = true;
+        } else {
+            $this->invoiceAddress = Customsetting::get('checkout_delivery_address_standard_invoice_address')
+                ? false
+                : true;
+        }
+
+        // Company
+        if ($user && $lastOrder && $lastOrder->company_name) {
+            $this->isCompany = true;
+        } else {
+            $this->isCompany = Customsetting::get('checkout_form_company_name') == 'required';
+        }
+
+        $this->country = $lastOrder?->country ?? 'Nederland';
+        $this->dateOfBirth = $lastOrder?->date_of_birth ?? '';
+        $this->gender = $lastOrder?->gender ?? '';
+        $this->email = $lastOrder?->email ?? '';
+        $this->firstName = $lastOrder?->first_name ?? '';
+        $this->lastName = $lastOrder?->last_name ?? '';
+        $this->street = $lastOrder?->street ?? '';
+        $this->houseNr = $lastOrder?->house_nr ?? '';
+        $this->zipCode = $lastOrder?->zip_code ?? '';
+        $this->city = $lastOrder?->city ?? '';
+        $this->company = $lastOrder?->company_name ?? '';
+        $this->taxId = $lastOrder?->btw_id ?? '';
+        $this->phoneNumber = $lastOrder?->phone_number ?? '';
+        $this->invoiceStreet = $lastOrder?->invoice_street ?? '';
+        $this->invoiceHouseNr = $lastOrder?->invoice_house_nr ?? '';
+        $this->invoiceZipCode = $lastOrder?->invoice_zip_code ?? '';
+        $this->invoiceCity = $lastOrder?->invoice_city ?? '';
+        $this->invoiceCountry = $lastOrder?->invoice_country ?? '';
+
         $this->countryList = Countries::getAllSelectedCountries();
 
         $this->accountRequired = Customsetting::get('checkout_account', default: 2);
@@ -113,12 +135,14 @@ class Checkout extends Component
         $this->companyRequired = Customsetting::get('checkout_form_company_name', default: 2);
         $this->phoneNumberRequired = Customsetting::get('checkout_form_phone_number_delivery_address', default: 0);
         $this->useDeliveryAddressAsInvoiceAddress = Customsetting::get('checkout_delivery_address_standard_invoice_address', default: 1) ?: 0;
+
         $customFields = ecommerce()->builder('customOrderFields');
         foreach ($customFields as $key => $customField) {
             if (isset($customField['hideFromCheckout']) && $customField['hideFromCheckout'] === true) {
                 unset($customFields[$key]);
             }
         }
+
         $this->customFields = $customFields;
         $this->customFieldRules = collect($this->customFields)->mapWithKeys(function ($customField, $key) {
             return [
@@ -140,8 +164,6 @@ class Checkout extends Component
         }
 
         $this->checkCart();
-        $this->retrievePaymentMethods();
-        $this->retrieveShippingMethods();
         $this->fillPrices();
 
         $itemLoop = 0;
@@ -152,7 +174,9 @@ class Checkout extends Component
                 'item_id' => $cartItem->model->id,
                 'item_name' => $cartItem->model->name,
                 'index' => $itemLoop,
-                'discount' => $cartItem->model->discount_price > 0 ? number_format(($cartItem->model->discount_price - $cartItem->model->current_price), 2, '.', '') : 0,
+                'discount' => $cartItem->model->discount_price > 0
+                    ? number_format(($cartItem->model->discount_price - $cartItem->model->current_price), 2, '.', '')
+                    : 0,
                 'item_category' => $cartItem->model->productCategories->first()?->name ?? null,
                 'price' => number_format($cartItem->price, 2, '.', ''),
                 'quantity' => $cartItem->qty,
@@ -169,15 +193,17 @@ class Checkout extends Component
         ]);
     }
 
+
     public function getCartItemsProperty()
     {
+        cartHelper()->initialize();
         return cartHelper()->getCartItems();
     }
 
     public function retrievePaymentMethods()
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country) : [];
-        if (Customsetting::get('first_payment_method_selected', null, true) && (! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
+        if (Customsetting::get('first_payment_method_selected', null, true) && (!$this->paymentMethod || !in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
@@ -187,50 +213,96 @@ class Checkout extends Component
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, $shippingAddress, $this->paymentMethod) : [];
-        if (Customsetting::get('first_shipping_method_selected', null, true) && (! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
+        if (Customsetting::get('first_shipping_method_selected', null, true) && (!$this->shippingMethod || !in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
 
     public function updated($name, $value)
     {
-        if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'])) {
+        // Adres voor facturatie
+        if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'], true)) {
             $this->updateInvoiceAddressByApi();
+            return;
         }
 
-        if (in_array($name, ['country', 'street', 'houseNr', 'zipCode', 'city'])) {
-            if (in_array($name, ['houseNr', 'zipCode'])) {
-                $this->updateAddressByApi();
-            }
+        // Adres voor levering (heeft impact op verzendkosten)
+        if (in_array($name, ['houseNr', 'zipCode'], true)) {
+            $this->updateAddressByApi();
+        }
 
+        // Alleen deze velden mogen de cart herberekenen
+        $fieldsAffectingCart = [
+            'country',
+            'shippingMethod',
+            'paymentMethod',
+            'depositPaymentMethod',
+        ];
+
+        if (in_array($name, $fieldsAffectingCart, true)) {
             $this->fillPrices();
-        } else {
-            cartHelper()->initialize();
         }
+
+        // BELANGRIJK:
+        // Alle andere velden (email, telefoon, naam, wachtwoord, company, custom fields)
+        // DOEN HIER BEWUST HELEMAAL NIKS.
     }
+
 
     public function updateAddressByApi(): void
     {
-        $response = $this->getAddressInfoByApi($this->zipCode, $this->houseNr);
-        if ($response) {
-            $this->city = $response['city'];
-            $this->street = $response['street'];
+        $zip = preg_replace('/\s+/', '', (string)$this->zipCode);
+        $houseNr = (string)$this->houseNr;
+
+        // Minimale NL-check: pas zoeken als we een "echte" postcode + huisnr hebben
+        if (strlen($zip) < 6 || $houseNr === '') {
+            return;
+        }
+
+        $response = $this->getAddressInfoByApi($zip, $houseNr);
+
+        if (!empty($response)) {
+            $this->city = $response['city'] ?? $this->city;
+            $this->street = $response['street'] ?? $this->street;
         }
     }
 
     public function updateInvoiceAddressByApi(): void
     {
-        $response = $this->getAddressInfoByApi($this->invoiceZipCode, $this->invoiceHouseNr);
-        if ($response) {
-            $this->invoiceCity = $response['city'];
-            $this->invoiceStreet = $response['street'];
+        $zip = preg_replace('/\s+/', '', (string)$this->invoiceZipCode);
+        $houseNr = (string)$this->invoiceHouseNr;
+
+        if (strlen($zip) < 6 || $houseNr === '') {
+            return;
+        }
+
+        $response = $this->getAddressInfoByApi($zip, $houseNr);
+
+        if (!empty($response)) {
+            $this->invoiceCity = $response['city'] ?? $this->invoiceCity;
+            $this->invoiceStreet = $response['street'] ?? $this->invoiceStreet;
         }
     }
 
     public function getAddressInfoByApi(?string $zipCode = null, ?string $houseNr = null): array
     {
+        $zipCode = trim((string) $zipCode);
+        $houseNr = trim((string) $houseNr);
+
+        if ($zipCode === '' || $houseNr === '') {
+            return [];
+        }
+
+        // Voorkom dubbele calls voor dezelfde combinatie
+        if ($zipCode === $this->lastZipLookedUp && $houseNr === $this->lastHouseNrLookedUp) {
+            return [];
+        }
+
+        $this->lastZipLookedUp = $zipCode;
+        $this->lastHouseNrLookedUp = $houseNr;
+
         $postNLApikey = Customsetting::get('checkout_postnl_api_key');
-        if ($postNLApikey && $zipCode && $houseNr) {
+        if ($postNLApikey) {
             try {
                 $response = Http::withHeaders([
                     'Content-Type' => 'Application/json',
@@ -242,21 +314,20 @@ class Checkout extends Component
                         'HouseNumber' => $houseNr,
                     ])
                     ->json()[0] ?? [];
+
                 if ($response) {
-                    $response = [
-                        'city' => $response['City'],
-                        'street' => $response['Street'],
+                    return [
+                        'city' => $response['City'] ?? null,
+                        'street' => $response['Street'] ?? null,
                     ];
                 }
             } catch (Exception $exception) {
-                $response = [];
+                // negeren, we vallen terug op postcode.tech
             }
-
-            return $response;
         }
 
         $postcodeApi = Customsetting::get('checkout_postcode_api_key');
-        if ($postcodeApi && $zipCode && $houseNr) {
+        if ($postcodeApi) {
             try {
                 $response = Http::withHeaders([
                     'Content-Type' => 'Application/json',
@@ -267,18 +338,23 @@ class Checkout extends Component
                         'postcode' => $zipCode,
                         'number' => preg_replace('/\D/', '', $houseNr),
                     ]);
+
                 if ($response->successful()) {
-                    $response = $response->json();
+                    $json = $response->json();
+
+                    return [
+                        'city' => $json['city'] ?? null,
+                        'street' => $json['street'] ?? null,
+                    ];
                 }
             } catch (Exception $exception) {
-                $response = [];
+                // niks, we geven gewoon lege array terug
             }
-
-            return $response;
         }
 
         return [];
     }
+
 
     public function updatedShippingMethod()
     {
@@ -344,7 +420,7 @@ class Checkout extends Component
                 'max:255',
             ],
             'password' => [
-                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && ! auth()->check()),
+                Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && !auth()->check()),
                 'nullable',
                 'min:6',
                 'max:255',
@@ -465,7 +541,7 @@ class Checkout extends Component
         foreach (ecommerce()->builder('fulfillmentProviders') as $fulfillmentProvider) {
             if ($fulfillmentProvider['class']::isConnected() && method_exists($fulfillmentProvider['class'], 'validateAddress')) {
                 $addressValid = $fulfillmentProvider['class']::validateAddress($this->street, $this->houseNr, $this->zipCode, $this->city, $this->country);
-                if (! $addressValid['success']) {
+                if (!$addressValid['success']) {
                     Notification::make()
                         ->danger()
                         ->title(Translation::get('address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(), 'checkout', $addressValid['message']))
@@ -478,7 +554,7 @@ class Checkout extends Component
 
         $cartItems = cartHelper()->getCartItems();
 
-        if (! $cartItems) {
+        if (!$cartItems) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
@@ -486,6 +562,23 @@ class Checkout extends Component
 
             return $this->dispatch('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
         }
+
+        $extraOptionIds = [];
+
+        foreach ($cartItems as $cartItem) {
+            foreach ($cartItem->options['options'] ?? [] as $optionId => $option) {
+                if (! str($optionId)->contains('product-extra-')) {
+                    $extraOptionIds[] = $optionId;
+                }
+            }
+        }
+
+        $extraOptionIds = array_values(array_unique($extraOptionIds));
+
+        $productExtraOptions = $extraOptionIds
+            ? ProductExtraOption::whereIn('id', $extraOptionIds)->get()->keyBy('id')
+            : collect();
+
 
         $paymentMethods = ShoppingCart::getPaymentMethods();
         $paymentMethod = '';
@@ -496,13 +589,13 @@ class Checkout extends Component
         }
 
         $paymentMethodPresent = (bool)$paymentMethod;
-        if (! $paymentMethodPresent) {
+        if (!$paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $paymentMethodPresent = true;
                 }
             }
-            if (! $paymentMethodPresent) {
+            if (!$paymentMethodPresent) {
                 Notification::make()
                     ->danger()
                     ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
@@ -520,7 +613,7 @@ class Checkout extends Component
             }
         }
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid shipping method'))
@@ -553,7 +646,7 @@ class Checkout extends Component
                 }
             }
 
-            if (! $depositPaymentMethod) {
+            if (!$depositPaymentMethod) {
                 Notification::make()
                     ->danger()
                     ->title(Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))
@@ -661,15 +754,22 @@ class Checkout extends Component
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
             //            }
             $productExtras = [];
-            foreach ($cartItem->options['options'] as $optionId => $option) {
+            foreach ($cartItem->options['options'] ?? [] as $optionId => $option) {
+                $price = 0;
+
+                if (! str($optionId)->contains('product-extra-')) {
+                    $price = optional($productExtraOptions->get($optionId))->price ?? 0;
+                }
+
                 $productExtras[] = [
                     'id' => $optionId,
                     'name' => $option['name'],
                     'value' => $option['value'],
                     'path' => $option['path'] ?? '',
-                    'price' => str($optionId)->contains('product-extra-') ? 0 : ProductExtraOption::find($optionId)->price,
+                    'price' => $price,
                 ];
             }
+
             $orderProduct->product_extras = $productExtras;
             $orderProduct->hidden_options = $cartItem->options['hiddenOptions'] ?? [];
 
@@ -765,7 +865,7 @@ class Checkout extends Component
 
         $orderPayment->psp = $psp;
 
-        if (! $paymentMethod) {
+        if (!$paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];

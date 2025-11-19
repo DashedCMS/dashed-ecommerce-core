@@ -1,14 +1,9 @@
 <div>
     @if(count($this->cartItems))
         <div class="relative overflow-hidden">
-<<<<<<< HEAD
-            <div class="absolute right-0 top-0 hidden h-full w-1/2 bg-linear-to-tr from-primary-700 to-primary-300 lg:block"
-                 aria-hidden="true"></div>
-=======
             <div
                 class="absolute right-0 top-0 hidden h-full w-1/2 bg-gradient-to-tr from-primary-700 to-primary-300 lg:block"
                 aria-hidden="true"></div>
->>>>>>> fb4555ce42557585ae0976d428f4262d50f93752
             <section class="relative py-12 overflow-hidden lg:py-24">
                 <x-container>
                     <div class="relative">
@@ -382,7 +377,8 @@
                                         @if($country && count($shippingMethods))
                                             <div class="grid gap-4 lg:grid-cols-2 lg:col-span-2">
                                                 @foreach($shippingMethods as $thisShippingMethod)
-                                                    <label class="relative p-4 cursor-pointer hover:bg-primary/50 rounded-lg">
+                                                    <label
+                                                        class="relative p-4 cursor-pointer hover:bg-primary/50 rounded-lg">
                                                         <div class="flex items-center">
                                                             <input id="shipping_method{{$thisShippingMethod['id']}}"
                                                                    name="shipping_method" required
