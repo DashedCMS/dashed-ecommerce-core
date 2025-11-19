@@ -280,7 +280,7 @@ class Products
 
                     $value = ($product->getTranslation($col, app()->getLocale()) ?? '');
                     if(is_array($value)) {
-                        $value = implode(',', $value);
+                        $value = json_encode($value);
                     }
                     $valueLower = mb_strtolower($value);
 
