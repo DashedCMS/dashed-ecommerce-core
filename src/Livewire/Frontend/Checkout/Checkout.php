@@ -89,7 +89,6 @@ class Checkout extends Component
 
     public function mount(Product $product)
     {
-        cartHelper()->initialize();
         $user = auth()->user();
         $lastOrder = $user?->lastOrderFromAllOrders();
 
@@ -164,6 +163,7 @@ class Checkout extends Component
         }
 
         $this->checkCart();
+//        cartHelper()->initialize();
         $this->fillPrices();
 
         $itemLoop = 0;
@@ -196,7 +196,6 @@ class Checkout extends Component
 
     public function getCartItemsProperty()
     {
-        cartHelper()->initialize();
         return cartHelper()->getCartItems();
     }
 
@@ -373,7 +372,7 @@ class Checkout extends Component
 
     public function fillPrices(): void
     {
-        cartHelper()->initialize();
+        cartHelper()->setTotal();
 
         $this->retrievePaymentMethods();
         $this->retrieveShippingMethods();
@@ -386,7 +385,6 @@ class Checkout extends Component
 
         cartHelper()->updateData();
 
-        //        $checkoutData = ShoppingCart::getCheckoutData($this->shippingMethod, $this->paymentMethod, shippingZoneId: is_array($this->shippingMethods) ? null : ($this->shippingMethods->find($this->shippingMethod)->shipping_zone_id ?? null));
         $this->subtotal = cartHelper()->getSubtotal();
         $this->discount = cartHelper()->getDiscount();
         $this->tax = cartHelper()->getTax();
@@ -397,7 +395,6 @@ class Checkout extends Component
         $this->postpayPaymentMethod = cartHelper()->getIsPostpayPaymentMethod();
         $this->depositAmount = cartHelper()->getDepositAmount();
         $this->getSuggestedProducts();
-        //        $this->dispatch('filledPrices');
     }
 
     public function rules()

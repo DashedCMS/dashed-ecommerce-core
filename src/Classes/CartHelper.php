@@ -98,6 +98,10 @@ class CartHelper
     {
         $this->setCartType($cartType);
 
+        if (static::isInitialized()) {
+            return;
+        }
+
         static::$initialized = true;
 
         $this->updateData();
