@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
@@ -37,11 +38,11 @@ class Products
             }
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -134,9 +135,20 @@ class Products
         ];
     }
 
-    public static function getAll(int $pagination = 12, ?int $page = 1, ?string $orderBy = 'order', ?string $order = 'DESC', ?int $categoryId = null, ?string $search = null, null|array|\Illuminate\Support\Collection $filters = [], ?bool $enableFilters = true, null|array|Collection $products = null, ?array $priceRange = [])
+    public static function getAll(
+        int                                       $pagination = 12,
+        ?int                                      $page = 1,
+        ?string                                   $orderBy = 'order',
+        ?string                                   $order = 'DESC',
+        ?int                                      $categoryId = null,
+        ?string                                   $search = null,
+        null|array|\Illuminate\Support\Collection $filters = [],
+        ?bool                                     $enableFilters = true,
+        null|array|Collection                     $products = null,
+        ?array                                    $priceRange = []
+    )
     {
-        if (! in_array($orderBy, self::canFilterOnShortOrColumn())) {
+        if (!in_array($orderBy, self::canFilterOnShortOrColumn())) {
             $orderBy = '';
         }
         if (str($order)->lower() != 'asc' && str($order)->lower() != 'desc') {
@@ -169,15 +181,15 @@ class Products
             $order = '';
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        if (! $products) {
+        if (!$products) {
             if ($categoryId) {
                 $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
                 $products = $productCategory->products()
@@ -198,58 +210,131 @@ class Products
         $correctProductIds = [];
 
         $productFilters = DB::table('dashed__product_filter')
-            ->whereIn('product_id', $products->pluck('id' ?? []))
+            ->whereIn('product_id', $products->pluck('id'))
             ->get()
             ->groupBy('product_filter_id');
 
-        $validProductIds = collect($products->pluck('id') ?? []);
+        $validProductIds = collect($products->pluck('id'));
 
         foreach ($filters as $filter) {
-            $checkedOptionIds = collect($filter->productFilterOptions)->where('checked', true)->pluck('id');
-            $filterIsActive = $checkedOptionIds->isNotEmpty();
+            $checkedOptionIds = collect($filter->productFilterOptions)
+                ->where('checked', true)
+                ->pluck('id');
 
-            if ($filterIsActive) {
-                $productsValidForFilter = $productFilters->get($filter->id, collect())
-                    ->whereIn('product_filter_option_id', $checkedOptionIds)
-                    ->pluck('product_id');
+            if ($checkedOptionIds->isEmpty()) {
+                continue;
+            }
 
-                $validProductIds = $validProductIds->intersect($productsValidForFilter);
+            $productsValidForFilter = $productFilters->get($filter->id, collect())
+                ->whereIn('product_filter_option_id', $checkedOptionIds)
+                ->pluck('product_id');
 
-                if ($validProductIds->isEmpty()) {
-                    break;
-                }
+            $validProductIds = $validProductIds->intersect($productsValidForFilter);
+
+            if ($validProductIds->isEmpty()) {
+                break;
             }
         }
 
-        $correctProductIds = $validProductIds->values()->all();
+        $products = $products->whereIn('id', $validProductIds->values())->values();
 
-        $products = Product::whereIn('id', $correctProductIds)
-            ->search($search)
-            ->orderBy($orderBy, $order)
-            ->orderBy('id');
-
+        // 4) Prijsfilter lokaal toepassen
         if (! empty($priceRange['min'])) {
-            $products = $products->where('price', '>=', $priceRange['min']);
+            $products = $products->filter(fn ($p) => $p->price >= $priceRange['min']);
         }
         if (! empty($priceRange['max'])) {
-            $products = $products->where('price', '<=', $priceRange['max']);
+            $products = $products->filter(fn ($p) => $p->price <= $priceRange['max']);
         }
 
-        $products = $products->with(['productFilters', 'productCategories', 'productGroup'])
-            ->paginate($pagination, ['*'], 'page', $page)
-            ->withQueryString();
-
-        foreach ($products as $product) {
-            if ($product->productGroup->only_show_parent_product) {
-                $product->name = $product->productGroup->name;
-            }
+        // 5) Sorteren op collection ipv query
+        if ($orderBy) {
+            $products = $products->sortBy($orderBy, SORT_REGULAR, strtolower($order) === 'desc')->values();
         }
 
+        if ($search) {
+            $needle = trim(mb_strtolower($search));
+
+            // Translatable columns ophalen zoals in scopeSearch, maar correct non-static
+            $columns = collect((new Product())->getTranslatableAttributes())
+                ->reject(fn (string $attr) => method_exists(Product::class, $attr)) // relaties skippen
+                ->values()
+                ->all();
+
+            $columnCount = count($columns);
+            $topWeight = $columnCount + 10; // dezelfde logica als in scopeSearch
+
+            $products = $products->sortByDesc(function (Product $product) use ($search, $needle, $columns, $topWeight, $columnCount) {
+                $score = 0.0;
+
+                // 1) Exacte match op sku/ean/article_code → dikke bonus
+                foreach (['sku', 'ean', 'article_code'] as $exactField) {
+                    $value = (string) ($product->{$exactField} ?? '');
+                    if ($value !== '' && strcasecmp($value, $search) === 0) {
+                        $score += $topWeight;
+                    }
+                }
+
+                // 2) Translatable kolommen op het product
+                foreach ($columns as $idx => $col) {
+                    $weight = $columnCount - $idx; // eerste kolom = hoogste weight
+
+                    $value = ($product->getTranslation($col, app()->getLocale()) ?? '');
+                    if(is_array($value)) {
+                        $value = implode(',', $value);
+                    }
+                    $valueLower = mb_strtolower($value);
+
+                    if ($valueLower !== '' && str_contains($valueLower, $needle)) {
+                        $localScore = $weight;
+
+                        similar_text($valueLower, $needle, $percent);
+                        $localScore += ($percent / 100) * $weight;
+
+                        $score += $localScore;
+                    }
+
+                    // 3) Zelfde veld op productGroup (iets lagere weight)
+                    if ($product->relationLoaded('productGroup') && $product->productGroup) {
+                        $groupValue = (string) ($product->productGroup->{$col} ?? '');
+                        $groupValueLower = mb_strtolower($groupValue);
+
+                        if ($groupValueLower !== '' && str_contains($groupValueLower, $needle)) {
+                            $localScore = $weight * 0.8;
+
+                            similar_text($groupValueLower, $needle, $percentGroup);
+                            $localScore += ($percentGroup / 100) * $weight * 0.8;
+
+                            $score += $localScore;
+                        }
+                    }
+                }
+
+                return $score;
+            })->values();
+        }
+
+        // 6) Min/max prijs over volledige (gefilterde) set
         $minPrice = $products->min('price');
         $maxPrice = $products->max('price');
 
+        // 7) Pagineren op collection (geen extra query)
+        $page = $page ?: 1;
+        $total = $products->count();
+        $items = $products->forPage($page, $pagination)->values();
+
+        $paginator = new LengthAwarePaginator(
+            $items,
+            $total,
+            $pagination,
+            $page,
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
+
         return [
-            'products' => $products,
+            'products' => $paginator,
             'minPrice' => $minPrice,
             'maxPrice' => $maxPrice,
         ];
@@ -288,7 +373,7 @@ class Products
         /*
          * STAP 1: Recently viewed producten ophalen (maximaal 1 per productgroep)
          */
-        if (! empty($recentlyViewedGroupIds)) {
+        if (!empty($recentlyViewedGroupIds)) {
             $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
                 ->publicShowable()
                 ->with(['productFilters', 'productCategories', 'productGroup'])

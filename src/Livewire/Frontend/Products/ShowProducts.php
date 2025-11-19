@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
+use Dashed\DashedCore\Classes\Sites;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -199,23 +200,35 @@ class ShowProducts extends Component
     public function getProducts(): void
     {
         $productCategory = $this->productCategory;
-        $products = Cache::rememberForever('products-for-show-products-' . ($productCategory->id ?? ''), function () use ($productCategory) {
-            $products = $productCategory ? $productCategory->products()
-                ->publicShowableWithIndex()
-                ->with([
-                    'productFilters',
-                    'productFilters.productFilterOptions',
-                ])
-                ->get() : Product::query()
-                ->publicShowableWithIndex()
-                ->with([
-                    'productFilters',
-                    'productFilters.productFilterOptions',
-                ])
-                ->get();
+        $locale = app()->getLocale();
+        $siteId = Sites::getActive() ?? 'default';
 
-            return $products;
+        $cacheKey = 'products-for-show-products-'
+            . ($productCategory->id ?? 'all')
+            . '-site-' . $siteId
+            . '-locale-' . $locale;
+
+        $products = Cache::rememberForever($cacheKey, function () use ($productCategory) {
+            $query = Product::query()
+                ->publicShowableWithIndex()
+                ->with([
+                    'productFilters',
+                    'productFilters.productFilterOptions',
+                ]);
+
+            if ($productCategory) {
+                $query = $productCategory
+                    ->products()
+                    ->publicShowableWithIndex()
+                    ->with([
+                        'productFilters',
+                        'productFilters.productFilterOptions',
+                    ]);
+            }
+
+            return $query->get();
         });
+
         $this->allProducts = $products;
     }
 
