@@ -573,7 +573,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -598,11 +598,11 @@ class ShoppingCart
                 $shippingMethods = $shippingZone->shippingMethods()
                     ->where('minimum_order_value', '<=', $total)
                     ->where('maximum_order_value', '>=', $total);
-//                    ->where(function ($query) use ($distanceRange) {
-//                        $query->where('distance_range_enabled', 1)
-//                            ->where('distance_range', '>=', $distanceRange);
-//                    })
-//                    ->orWhere('distance_range_enabled', 0)
+                //                    ->where(function ($query) use ($distanceRange) {
+                //                        $query->where('distance_range_enabled', 1)
+                //                            ->where('distance_range', '>=', $distanceRange);
+                //                    })
+                //                    ->orWhere('distance_range_enabled', 0)
                 if (count($activatedShippingMethodIds)) {
                     $shippingMethods = $shippingMethods->whereIn('id', $activatedShippingMethodIds);
                 }
@@ -683,7 +683,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -758,7 +758,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -789,7 +789,7 @@ class ShoppingCart
 
     public static function getShippingZoneByCountry(?string $countryName): ?ShippingZone
     {
-        if (!$countryName) {
+        if (! $countryName) {
             return null;
         }
 
@@ -826,7 +826,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -850,7 +850,7 @@ class ShoppingCart
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
 
         $paymentMethods = PaymentMethod::where('site_id', Sites::getActive())->where('active', 1)->where('type', $type);
-        if (!$skipTotalCheck) {
+        if (! $skipTotalCheck) {
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
         $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();
@@ -861,9 +861,11 @@ class ShoppingCart
 
             if ($userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->where('user_id', $userId)->count() == 0) {
                 $paymentMethodValid = false;
+            }elseif(!$userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0){
+                $paymentMethodValid = false;
             }
 
-            if (!$paymentMethodValid) {
+            if (! $paymentMethodValid) {
                 unset($paymentMethods[$key]);
             } else {
                 $paymentMethod['full_image_path'] = $paymentMethod->image ? Storage::disk('dashed')->url($paymentMethod->image) : '';

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -11,10 +10,8 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -23,6 +20,7 @@ use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\EditShippingClass;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\CreateShippingClass;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource\Pages\ListShippingClasses;

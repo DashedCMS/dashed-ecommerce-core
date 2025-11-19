@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -12,9 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -25,6 +22,7 @@ use Dashed\DashedEcommerceCore\Models\ProductFaq;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages\EditProductFaq;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages\ListProductFaq;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource\Pages\CreateProductFaq;

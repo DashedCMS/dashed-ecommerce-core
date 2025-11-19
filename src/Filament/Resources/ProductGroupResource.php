@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -14,11 +13,9 @@ use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Filters\Filter;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
@@ -41,6 +38,7 @@ use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Jobs\CreateMissingProductVariationsJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages\EditProductGroup;
@@ -203,6 +201,7 @@ class ProductGroupResource extends Resource
             ->columns(2)
             ->collapsible()
             ->persistCollapsed();
+
         $productCharacteristicsTableColumns = [
             TableColumn::make('Kenmerk'),
         ];

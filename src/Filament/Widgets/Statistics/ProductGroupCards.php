@@ -6,7 +6,6 @@ use Filament\Widgets\StatsOverviewWidget;
 
 class ProductGroupCards extends StatsOverviewWidget
 {
-
     protected function getPollingInterval(): ?string
     {
         return '1s';

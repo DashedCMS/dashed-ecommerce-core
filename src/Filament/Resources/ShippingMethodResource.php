@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -12,10 +11,8 @@ use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Radio;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -28,6 +25,7 @@ use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\EditShippingMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\ListShippingMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\CreateShippingMethod;

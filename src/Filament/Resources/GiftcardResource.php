@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -14,10 +13,8 @@ use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -28,6 +25,7 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\EditGiftcard;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ViewGiftcard;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ListGiftcards;

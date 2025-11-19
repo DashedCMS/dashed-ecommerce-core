@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
@@ -16,6 +15,7 @@ use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\EditProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\ListProductFilterOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pages\CreateProductFilterOption;

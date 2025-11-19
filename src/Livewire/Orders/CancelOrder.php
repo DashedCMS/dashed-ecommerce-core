@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
-use Filament\Schemas\Components\Utilities\Set;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -15,6 +14,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
@@ -87,11 +87,11 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                         ->headerActions([
                             Action::make('returnAll')
                                 ->label('Alles retourneren')
-                                ->action(function(Set $set){
-                                    foreach($this->order->orderProducts as $orderProduct){
+                                ->action(function (Set $set) {
+                                    foreach ($this->order->orderProducts as $orderProduct) {
                                         $set("order_product_$orderProduct->id", $orderProduct->quantity);
                                     }
-                                })
+                                }),
                         ])
                         ->schema(array_merge($orderProductSchema, [
                             TextInput::make('extra_order_line_name')

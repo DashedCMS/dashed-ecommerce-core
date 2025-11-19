@@ -1499,7 +1499,7 @@ class PointOfSaleApiController extends Controller
                     $posIdentifier,
                     $discountCode
                 ));
-        }else{
+        } else {
             return response()
                 ->json([
                     'success' => false,

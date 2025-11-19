@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -10,10 +9,8 @@ use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -22,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\EditProductFilter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\ListProductFilter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Pages\CreateProductFilter;

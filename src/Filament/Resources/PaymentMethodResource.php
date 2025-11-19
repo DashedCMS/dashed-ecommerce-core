@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -11,10 +10,8 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -27,6 +24,7 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\EditPaymentMethod;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\ListPaymentMethods;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\CreatePaymentMethod;
@@ -82,8 +80,8 @@ class PaymentMethodResource extends Resource
             Select::make('pin_terminal_id')
                 ->label('PIN terminal')
                 ->helperText('Pin terminal')
-                ->visible(fn(Get $get) => $get('type') == 'pos')
-                ->options(fn() => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
+                ->visible(fn (Get $get) => $get('type') == 'pos')
+                ->options(fn () => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
                 ->searchable()
                 ->preload(),
             Toggle::make('postpay')
@@ -116,15 +114,15 @@ class PaymentMethodResource extends Resource
                 ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
                 ->maxLength(255)
                 ->reactive()
-                ->hidden(fn($record) => !$record || ($record && $record->psp != 'own')),
+                ->hidden(fn ($record) => ! $record || ($record && $record->psp != 'own')),
             Select::make('deposit_calculation_payment_method_ids')
                 ->multiple()
                 ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
-                ->hidden(fn($record, Get $get) => (!$record || ($record && $record->psp != 'own')) || !$get('deposit_calculation')),
+                ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
             Select::make('users')
                 ->relationship('users')
-                ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                 ->multiple()
                 ->preload()
                 ->searchable()
@@ -132,7 +130,7 @@ class PaymentMethodResource extends Resource
                 ->helperText('Leeg = iedereen mag deze betaalmethode gebruiken'),
             Select::make('shippingMethods')
                 ->relationship('shippingMethods')
-                ->getOptionLabelFromRecordUsing(fn($record) => $record->name)
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                 ->multiple()
                 ->preload()
                 ->searchable()
@@ -148,14 +146,14 @@ class PaymentMethodResource extends Resource
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
-                                return !(Sites::getAmountOfSites() > 1);
+                                return ! (Sites::getAmountOfSites() > 1);
                             })
                             ->required(),
                     ])
                     ->hidden(function () {
-                        return !(Sites::getAmountOfSites() > 1);
+                        return ! (Sites::getAmountOfSites() > 1);
                     })
-                    ->collapsed(fn($livewire) => $livewire instanceof EditPaymentMethod),
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
                 Section::make('Betaalmethode')
                     ->columnSpanFull()
                     ->schema($contentSchema),
@@ -173,7 +171,7 @@ class PaymentMethodResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
                     ->label('PSP')
@@ -181,7 +179,7 @@ class PaymentMethodResource extends Resource
                     ->searchable(),
                 ImageColumn::make('image')
                     ->label('Afbeelding')
-                    ->getStateUsing(fn($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
+                    ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
                     ->label('Actief')
                     ->trueIcon('heroicon-o-check-circle')

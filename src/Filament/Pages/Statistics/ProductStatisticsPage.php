@@ -4,17 +4,17 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Contracts\HasSchemas;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Forms\Components\Select;
 use Dashed\DashedCore\Classes\Locales;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
@@ -124,7 +124,7 @@ class ProductStatisticsPage extends Page implements HasSchemas
 
         $search = $state['search'] ?? null;
         $locale = $state['locale'] ?? null;
-//        dd($locale);
+        //        dd($locale);
 
         $productsQuery = Product::query();
 

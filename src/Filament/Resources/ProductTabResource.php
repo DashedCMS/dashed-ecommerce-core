@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -12,9 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
-use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -24,6 +21,7 @@ use Dashed\DashedEcommerceCore\Models\ProductTab;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\EditProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\ListProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
