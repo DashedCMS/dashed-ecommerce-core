@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;

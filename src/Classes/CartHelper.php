@@ -285,8 +285,10 @@ class CartHelper
                 }
 
                 foreach ($cartProducts as $cartProduct) {
+                    $originalModel = $cartItem->model;
                     $cartItem->model = $cartProduct;
                     $prices = Product::getShoppingCartItemPrices($cartItem, static::$discountCode);
+                    $cartItem->model = $originalModel;
                     $price = $prices['with_discount'];
                     $priceWithoutDiscount = $prices['without_discount'];
 //                    if (static::$discountCode && static::$discountCode->type == 'percentage') {
