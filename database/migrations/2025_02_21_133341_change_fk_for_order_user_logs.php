@@ -10,7 +10,7 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        try{
+        try {
             Schema::table('dashed__order_logs', function (Blueprint $table) {
                 // Huidige FK eerst droppen
                 $table->dropForeign('qcommerce__order_logs_user_id_foreign');
@@ -23,10 +23,11 @@ return new class () extends Migration {
                     ->on('users')
                     ->nullOnDelete();
             });
-        }catch (Exception $e){
+        } catch (Exception $e) {
 
         }
-        try{
+
+        try {
             Schema::table('dashed__order_logs', function (Blueprint $table) {
                 // Huidige FK eerst droppen
                 $table->dropForeign('dashed__order_logs_user_id_foreign');
@@ -39,10 +40,11 @@ return new class () extends Migration {
                     ->on('users')
                     ->nullOnDelete();
             });
-        }catch (Exception $e){
+        } catch (Exception $e) {
 
         }
-        try{
+
+        try {
             Schema::table('dashed__orders', function (Blueprint $table) {
                 // Huidige FK eerst droppen
                 $table->dropForeign('qcommerce__orders_user_id_foreign');
@@ -55,10 +57,11 @@ return new class () extends Migration {
                     ->on('users')
                     ->nullOnDelete();
             });
-        }catch (Exception $e){
+        } catch (Exception $e) {
 
         }
-        try{
+
+        try {
             Schema::table('dashed__orders', function (Blueprint $table) {
                 // Huidige FK eerst droppen
                 $table->dropForeign('dashed__orders_user_id_foreign');
@@ -71,7 +74,7 @@ return new class () extends Migration {
                     ->on('users')
                     ->nullOnDelete();
             });
-        }catch (Exception $e){
+        } catch (Exception $e) {
 
         }
 

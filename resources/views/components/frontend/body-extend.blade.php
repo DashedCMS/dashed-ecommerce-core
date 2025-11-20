@@ -1,179 +1,226 @@
 @if(isset($product))
-    <x-dashed-ecommerce-core::frontend.products.schema
-        :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
+    <x-dashed-ecommerce-core::frontend.products.schema :product="$product" />
 @endif
+
 @if(isset($products))
     @foreach($products as $product)
-        <x-dashed-ecommerce-core::frontend.products.schema
-            :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
+        <x-dashed-ecommerce-core::frontend.products.schema :product="$product" />
     @endforeach
 @endif
-@if(Customsetting::get('trigger_tiktok_events'))
-    @php($shoppingCartTotal = cartHelper()->getTotal())
-@endif
+
+@php
+    // Tracking settings uit middleware-cache
+    $tracking = $trackingSettings ?? [];
+
+    $triggerTikTok = $tracking['trigger_tiktok_events'] ?? false;
+    $googleTagmanagerId = $tracking['google_tagmanager_id'] ?? null;
+
+    $facebookEnabled = !empty($tracking['facebook_pixel_conversion_id'] ?? null)
+        || !empty($tracking['facebook_pixel_site_id'] ?? null)
+        || !empty($tracking['trigger_facebook_events'] ?? false);
+
+    $googleTagmanagerEnabled = !empty($googleTagmanagerId);
+
+    $googleMerchantCenterId = $tracking['google_merchant_center_id'] ?? null;
+    $enableGmcReviewSurvey = $tracking['enable_google_merchant_center_review_survey'] ?? false;
+    $googleReviewSurveyEnabled = !empty($googleMerchantCenterId) && $enableGmcReviewSurvey;
+
+    if ($triggerTikTok) {
+        $shoppingCartTotal = cartHelper()->getTotal();
+    }
+@endphp
 
 <script>
     document.addEventListener('livewire:init', () => {
+        const tracking = {
+            gtm: @json($googleTagmanagerEnabled),
+            tiktok: @json($triggerTikTok),
+            facebook: @json($facebookEnabled),
+            gmcReviewSurvey: @json($googleReviewSurveyEnabled),
+            gmcMerchantId: @json($googleMerchantCenterId),
+        };
+
         Livewire.on('productAddedToCart', (event) => {
-            @if(Customsetting::get('google_tagmanager_id'))
-            dataLayer.push({
-                'event': 'add_to_cart',
-                'ecommerce': {
-                    'currency': 'EUR',
-                    'cartTotal': event[0].cartTotal,
-                    'items': {
-                        'products': [{
-                            'name': event[0].productName,
-                            'id': event[0].product.id,
-                            'price': event[0].price,
-                            'quantity': event[0].quantity,
-                            'item_category': event[0].category,
-                        }]
-                    }
-                }
-            });
-            @endif
-            @if(Customsetting::get('trigger_tiktok_events'))
-            ttq.track('AddToCart', event[0].tiktokItems);
-            @endif
-            @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-            fbq('track', 'AddToCart');
-            @endif
+            const payload = event[0];
+
+            if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                dataLayer.push({
+                    event: 'add_to_cart',
+                    ecommerce: {
+                        currency: 'EUR',
+                        cartTotal: payload.cartTotal,
+                        items: {
+                            products: [{
+                                name: payload.productName,
+                                id: payload.product.id,
+                                price: payload.price,
+                                quantity: payload.quantity,
+                                item_category: payload.category,
+                            }],
+                        },
+                    },
+                });
+            }
+
+            if (tracking.tiktok && typeof ttq !== 'undefined') {
+                ttq.track('AddToCart', payload.tiktokItems);
+            }
+
+            if (tracking.facebook && typeof fbq !== 'undefined') {
+                fbq('track', 'AddToCart');
+            }
         });
 
         Livewire.on('productRemovedFromCart', (event) => {
-            @if(Customsetting::get('google_tagmanager_id'))
-            dataLayer.push({
-                'event': 'remove_from_cart',
-                'ecommerce': {
-                    'currency': 'EUR',
-                    'cartTotal': event[0].cartTotal,
-                    'items': {
-                        'products': [{
-                            'name': event[0].productName,
-                            'id': event[0].product.id,
-                            'price': event[0].price,
-                            'item_category': event[0].category,
-                        }]
-                    }
-                }
-            });
-            @endif
+            const payload = event[0];
+
+            if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                dataLayer.push({
+                    event: 'remove_from_cart',
+                    ecommerce: {
+                        currency: 'EUR',
+                        cartTotal: payload.cartTotal,
+                        items: {
+                            products: [{
+                                name: payload.productName,
+                                id: payload.product.id,
+                                price: payload.price,
+                                item_category: payload.category,
+                            }],
+                        },
+                    },
+                });
+            }
         });
 
         Livewire.on('checkoutInitiated', (event) => {
-            setTimeout(function () {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-                fbq('track', 'InitiateCheckout');
-                @endif
-                @if(Customsetting::get('google_tagmanager_id'))
-                dataLayer.push({
-                    'event': 'begin_checkout',
-                    'ecommerce': {
-                        'currency': 'EUR',
-                        'value': event[0].cartTotal,
-                        'items': event[0].items
-                    }
-                });
-                @endif
-                @if(Customsetting::get('trigger_tiktok_events'))
-                ttq.track('InitiateCheckout', event[0].tiktokItems);
-                @endif
+            const payload = event[0];
+
+            setTimeout(() => {
+                if (tracking.facebook && typeof fbq !== 'undefined') {
+                    fbq('track', 'InitiateCheckout');
+                }
+
+                if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                    dataLayer.push({
+                        event: 'begin_checkout',
+                        ecommerce: {
+                            currency: 'EUR',
+                            value: payload.cartTotal,
+                            items: payload.items,
+                        },
+                    });
+                }
+
+                if (tracking.tiktok && typeof ttq !== 'undefined') {
+                    ttq.track('InitiateCheckout', payload.tiktokItems);
+                }
             }, 1000);
         });
 
         Livewire.on('cartInitiated', (event) => {
-            @if(Customsetting::get('google_tagmanager_id'))
-            dataLayer.push({
-                'event': 'view_cart',
-                'ecommerce': {
-                    'currency': 'EUR',
-                    'value': event[0].cartTotal,
-                    'items': event[0].items
-                }
-            });
-            @endif
+            const payload = event[0];
+
+            if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                dataLayer.push({
+                    event: 'view_cart',
+                    ecommerce: {
+                        currency: 'EUR',
+                        value: payload.cartTotal,
+                        items: payload.items,
+                    },
+                });
+            }
         });
 
         Livewire.on('viewProduct', (event) => {
-            setTimeout(function () {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-                fbq('track', 'ViewContent');
-                @endif
-                @if(Customsetting::get('google_tagmanager_id'))
-                dataLayer.push({
-                    'event': 'view_item',
-                    'ecommerce': {
-                        'currency': 'EUR',
-                        'value': event[0].cartTotal,
-                        'items': {
-                            'products': [{
-                                'name': event[0].productName,
-                                'id': event[0].product.id,
-                                'price': event[0].price,
-                                'item_category': event[0].category,
-                            }]
-                        }
-                    }
-                });
-                @endif
-                @if(Customsetting::get('trigger_tiktok_events'))
-                ttq.track('ViewContent', event[0].tiktokItems);
-                @endif
+            const payload = event[0];
+
+            setTimeout(() => {
+                if (tracking.facebook && typeof fbq !== 'undefined') {
+                    fbq('track', 'ViewContent');
+                }
+
+                if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                    dataLayer.push({
+                        event: 'view_item',
+                        ecommerce: {
+                            currency: 'EUR',
+                            value: payload.cartTotal,
+                            items: {
+                                products: [{
+                                    name: payload.productName,
+                                    id: payload.product.id,
+                                    price: payload.price,
+                                    item_category: payload.category,
+                                }],
+                            },
+                        },
+                    });
+                }
+
+                if (tracking.tiktok && typeof ttq !== 'undefined') {
+                    ttq.track('ViewContent', payload.tiktokItems);
+                }
             }, 1000);
         });
 
         Livewire.on('checkoutSubmitted', (event) => {
-            @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-            fbq('track', 'AddPaymentInfo');
-            @endif
-            @if(Customsetting::get('trigger_tiktok_events'))
-            ttq.track('PlaceAnOrder', event[0].tiktokItems);
-            @endif
+            const payload = event[0];
+
+            if (tracking.facebook && typeof fbq !== 'undefined') {
+                fbq('track', 'AddPaymentInfo');
+            }
+
+            if (tracking.tiktok && typeof ttq !== 'undefined') {
+                ttq.track('PlaceAnOrder', payload.tiktokItems);
+            }
         });
 
         Livewire.on('orderPaid', (event) => {
-            setTimeout(function () {
-                @if(Customsetting::get('facebook_pixel_conversion_id') || Customsetting::get('facebook_pixel_site_id') || Customsetting::get('trigger_facebook_events'))
-                fbq('track', 'Purchase', {currency: "EUR", value: event.total});
-                @endif
-                @if(Customsetting::get('google_tagmanager_id'))
-                dataLayer.push({
-                    'event': 'purchase',
-                    'ecommerce': {
-                        'currency': 'EUR',
-                        'value': event[0].total,
-                        'transaction_id': event[0].orderId,
-                        'items': event[0].items,
-                        'coupon': event[0].discountCode,
-                        'tax': event[0].tax,
-                        'new_customer': event[0].newCustomer,
-                        'email': event[0].email,
-                        'phone_number': event[0].phoneNumber
-                    }
-                });
-                @endif
-                @if(Customsetting::get('trigger_tiktok_events'))
-                ttq.track('Purchase', event[0].tiktokItems);
-                @endif
-            }, 1000);
-            @if(Customsetting::get('google_merchant_center_id') && Customsetting::get('enable_google_merchant_center_review_survey'))
-            window.gapi.load('surveyoptin', function () {
-                window.gapi.surveyoptin.render(
-                    {
-                        "merchant_id": {{ Customsetting::get('google_merchant_center_id') }},
-                        "order_id": event[0].orderId,
-                        "email": event[0].email,
-                        "delivery_country": event[0].countryCode,
-                        "estimated_delivery_date": event[0].estimatedDeliveryDate,
-                        "products": event[0].items.map((item) => {
-                            return {
-                                "gtin": item.ean,
-                            };
-                        }),
+            const payload = event[0];
+
+            setTimeout(() => {
+                if (tracking.facebook && typeof fbq !== 'undefined') {
+                    fbq('track', 'Purchase', {currency: 'EUR', value: payload.total});
+                }
+
+                if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                    dataLayer.push({
+                        event: 'purchase',
+                        ecommerce: {
+                            currency: 'EUR',
+                            value: payload.total,
+                            transaction_id: payload.orderId,
+                            items: payload.items,
+                            coupon: payload.discountCode,
+                            tax: payload.tax,
+                            new_customer: payload.newCustomer,
+                            email: payload.email,
+                            phone_number: payload.phoneNumber,
+                        },
                     });
-            });
-            @endif
+                }
+
+                if (tracking.tiktok && typeof ttq !== 'undefined') {
+                    ttq.track('Purchase', payload.tiktokItems);
+                }
+            }, 1000);
+
+            if (tracking.gmcReviewSurvey && typeof window.gapi !== 'undefined') {
+                window.gapi.load('surveyoptin', function () {
+                    window.gapi.surveyoptin.render({
+                        merchant_id: tracking.gmcMerchantId,
+                        order_id: payload.orderId,
+                        email: payload.email,
+                        delivery_country: payload.countryCode,
+                        estimated_delivery_date: payload.estimatedDeliveryDate,
+                        products: payload.items.map((item) => ({
+                            gtin: item.ean,
+                        })),
+                    });
+                });
+            }
         });
     });
 </script>

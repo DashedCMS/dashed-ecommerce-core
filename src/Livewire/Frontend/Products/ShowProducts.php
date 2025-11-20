@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
-use Dashed\DashedCore\Classes\Sites;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -208,27 +208,27 @@ class ShowProducts extends Component
             . '-site-' . $siteId
             . '-locale-' . $locale;
 
-//        $products = Cache::rememberForever($cacheKey, function () use ($productCategory) {
-            $query = Product::query()
+        //        $products = Cache::rememberForever($cacheKey, function () use ($productCategory) {
+        $query = Product::query()
+            ->publicShowableWithIndex()
+            ->with([
+                'productFilters',
+                'productFilters.productFilterOptions',
+            ]);
+
+        if ($productCategory) {
+            $query = $productCategory
+                ->products()
                 ->publicShowableWithIndex()
                 ->with([
                     'productFilters',
                     'productFilters.productFilterOptions',
                 ]);
+        }
 
-            if ($productCategory) {
-                $query = $productCategory
-                    ->products()
-                    ->publicShowableWithIndex()
-                    ->with([
-                        'productFilters',
-                        'productFilters.productFilterOptions',
-                    ]);
-            }
-
-            $products = $query->get();
-//            return $query->get();
-//        });
+        $products = $query->get();
+        //            return $query->get();
+        //        });
 
         $this->allProducts = $products;
     }

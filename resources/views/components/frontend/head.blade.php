@@ -1,22 +1,42 @@
-<x-dashed-ecommerce-core::frontend.orders.schema :order="$order ?? false"/>
+<x-dashed-ecommerce-core::frontend.orders.schema :order="$order ?? false" />
 
-@if(Customsetting::get('google_merchant_center_id'))
+@php
+    $tracking = $trackingSettings ?? [];
+
+    $gmcId = $tracking['google_merchant_center_id'] ?? null;
+    $gmcReviewBadgeEnabled = $tracking['enable_google_merchant_center_review_badge'] ?? false;
+    $triggerTikTok = $tracking['trigger_tiktok_events'] ?? false;
+@endphp
+
+@if($gmcId)
     <script src="https://apis.google.com/js/platform.js" async defer></script>
 @endif
 
 <script>
-    @if(Customsetting::get('trigger_tiktok_events'))
-    ttq.identify({
-        email: "{{ \Dashed\DashedEcommerceCore\Classes\TikTokHelper::getHashedEmail() }}",
-        phone_number: "{{ \Dashed\DashedEcommerceCore\Classes\TikTokHelper::getHashedPhone() }}",
-        external_id: "{{ \Dashed\DashedEcommerceCore\Classes\TikTokHelper::getExternalId() }}"
+    document.addEventListener('DOMContentLoaded', function () {
+        const tracking = {
+            tiktok: @json($triggerTikTok),
+            gmcId: @json($gmcId),
+            gmcReviewBadge: @json($gmcReviewBadgeEnabled),
+        };
+
+        if (tracking.tiktok && typeof ttq !== 'undefined') {
+            ttq.identify({
+                email: "{{ \Dashed\DashedEcommerceCore\Classes\TikTokHelper::getHashedEmail() }}",
+                phone_number: "{{ \Dashed\DashedEcommerceCore\Classes\TikTokHelper::getHashedPhone() }}",
+                external_id: "{{ \Dashed\DashedEcommerceCore\Classes\TikTokHelper::getExternalId() }}",
+            });
+        }
+
+        if (tracking.gmcId && tracking.gmcReviewBadge && typeof window.gapi !== 'undefined') {
+            const ratingBadgeContainer = document.createElement('div');
+            document.body.appendChild(ratingBadgeContainer);
+
+            window.gapi.load('ratingbadge', function () {
+                window.gapi.ratingbadge.render(ratingBadgeContainer, {
+                    merchant_id: tracking.gmcId,
+                });
+            });
+        }
     });
-    @endif
-    @if(Customsetting::get('google_merchant_center_id') && Customsetting::get('enable_google_merchant_center_review_badge'))
-    var ratingBadgeContainer = document.createElement("div");
-    document.body.appendChild(ratingBadgeContainer);
-    window.gapi.load('ratingbadge', function () {
-        window.gapi.ratingbadge.render(ratingBadgeContainer, {"merchant_id": {{ Customsetting::get('google_merchant_center_id') }}});
-    });
-    @endif
 </script>

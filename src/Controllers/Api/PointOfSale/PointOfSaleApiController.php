@@ -1111,7 +1111,7 @@ class PointOfSaleApiController extends Controller
 
         $posIdentifier = $data['posIdentifier'] ?? null;
         $order = $data['order'] ?? null;
-        if(!$order || !isset($order['id'])) {
+        if (! $order || ! isset($order['id'])) {
             return response()
                 ->json([
                     'success' => false,

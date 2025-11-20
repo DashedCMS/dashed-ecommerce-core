@@ -2,11 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Gloudemans\Shoppingcart\Facades\Cart;
@@ -20,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Illuminate\Support\Collection as SupportCollection;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 trait ProductCartActions
@@ -378,6 +378,7 @@ trait ProductCartActions
             foreach ($this->filters as $filter) {
                 if (! $filter['active']) {
                     $productIsValid = false;
+
                     break;
                 }
 
@@ -388,6 +389,7 @@ trait ProductCartActions
 
                 if (! $hasOption) {
                     $productIsValid = false;
+
                     break;
                 }
             }
@@ -876,6 +878,7 @@ trait ProductCartActions
         foreach ($this->extras as $extraPossibleKey => $extra) {
             if (($extra['id'] ?? null) == $extraId) {
                 $extraKey = $extraPossibleKey;
+
                 break;
             }
         }

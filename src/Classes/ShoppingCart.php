@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Exception;
-use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedPages\Models\Page;
@@ -15,10 +14,9 @@ use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Illuminate\Support\Collection as SupportCollection;
 
 class ShoppingCart
 {
@@ -134,7 +132,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -244,7 +242,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -319,7 +317,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     if (strtolower($searchField) == strtolower($countryName)) {
@@ -350,7 +348,7 @@ class ShoppingCart
 
     public static function getShippingZoneByCountry(?string $countryName): ?ShippingZone
     {
-        if (!$countryName) {
+        if (! $countryName) {
             return null;
         }
 
@@ -387,7 +385,7 @@ class ShoppingCart
                 }
             }
 
-            if (!$shippingZoneIsActive && $shippingZone->search_fields) {
+            if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
@@ -410,7 +408,7 @@ class ShoppingCart
         $userId = $userId ?: (auth()->check() ? auth()->user()->id : 0);
 
         $paymentMethods = PaymentMethod::where('site_id', Sites::getActive())->where('active', 1)->where('type', $type);
-        if (!$skipTotalCheck) {
+        if (! $skipTotalCheck) {
             $total = $total ?: cartHelper()->getTotal();
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
@@ -422,11 +420,11 @@ class ShoppingCart
 
             if ($userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->where('user_id', $userId)->count() == 0) {
                 $paymentMethodValid = false;
-            } elseif (!$userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0) {
+            } elseif (! $userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0) {
                 $paymentMethodValid = false;
             }
 
-            if (!$paymentMethodValid) {
+            if (! $paymentMethodValid) {
                 unset($paymentMethods[$key]);
             } else {
                 $paymentMethod['full_image_path'] = $paymentMethod->image ? Storage::disk('dashed')->url($paymentMethod->image) : '';
@@ -453,8 +451,7 @@ class ShoppingCart
     public static function getCrossSellAndSuggestedProducts(
         int  $limit = 4,
         bool $removeIfAlreadyPresentInShoppingCart = true
-    ): Collection
-    {
+    ): Collection {
         $suggestedProductIds = collect();
 
         $cartItems = cartHelper()->getCartItems();
@@ -470,7 +467,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $product = $productsById[$cartItem->id] ?? null;
 
-            if (!$product) {
+            if (! $product) {
                 continue;
             }
 
@@ -502,12 +499,10 @@ class ShoppingCart
             ->get();
     }
 
-
     public static function getCrossSellProducts(
         int  $limit = 4,
         bool $removeIfAlreadyPresentInShoppingCart = true
-    ): Collection|SupportCollection
-    {
+    ): Collection|SupportCollection {
         $crossSellProductIds = collect();
 
         $cartItems = cartHelper()->getCartItems();
@@ -522,7 +517,7 @@ class ShoppingCart
         foreach ($cartItems as $cartItem) {
             $product = $productsById[$cartItem->id] ?? null;
 
-            if (!$product) {
+            if (! $product) {
                 continue;
             }
 

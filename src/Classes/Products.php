@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
@@ -38,11 +38,11 @@ class Products
             }
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -146,9 +146,8 @@ class Products
         ?bool                                     $enableFilters = true,
         null|array|Collection                     $products = null,
         ?array                                    $priceRange = []
-    )
-    {
-        if (!in_array($orderBy, self::canFilterOnShortOrColumn())) {
+    ) {
+        if (! in_array($orderBy, self::canFilterOnShortOrColumn())) {
             $orderBy = '';
         }
         if (str($order)->lower() != 'asc' && str($order)->lower() != 'desc') {
@@ -181,15 +180,15 @@ class Products
             $order = '';
         }
 
-        if (!$orderBy) {
+        if (! $orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (!$order) {
+        if (! $order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        if (!$products) {
+        if (! $products) {
             if ($categoryId) {
                 $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
                 $products = $productCategory->products()
@@ -279,7 +278,7 @@ class Products
                     $weight = $columnCount - $idx; // eerste kolom = hoogste weight
 
                     $value = ($product->getTranslation($col, app()->getLocale()) ?? '');
-                    if(is_array($value)) {
+                    if (is_array($value)) {
                         $value = json_encode($value);
                     }
                     $valueLower = mb_strtolower($value);
@@ -373,7 +372,7 @@ class Products
         /*
          * STAP 1: Recently viewed producten ophalen (maximaal 1 per productgroep)
          */
-        if (!empty($recentlyViewedGroupIds)) {
+        if (! empty($recentlyViewedGroupIds)) {
             $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
                 ->publicShowable()
                 ->with(['productFilters', 'productCategories', 'productGroup'])
@@ -488,5 +487,4 @@ class Products
         // Zorg dat we exact $limit items teruggeven, netjes ge-reindexed
         return $result->take($limit)->values();
     }
-
 }

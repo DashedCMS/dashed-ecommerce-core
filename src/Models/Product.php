@@ -1102,7 +1102,6 @@ class Product extends Model
         return $productsQuery->limit($limit)->get();
     }
 
-
     public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = false): Collection
     {
         if ($includeFromProductGroup) {
@@ -1290,7 +1289,6 @@ class Product extends Model
             'without_discount' => $basePrice,
         ];
     }
-
 
     public static function stockFilamentSchema(): array
     {
