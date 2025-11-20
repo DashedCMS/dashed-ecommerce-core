@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Dashed\DashedCore\Classes\Sites;
@@ -33,9 +34,9 @@ trait ProductCartActions
     public $crossSellProducts;
     public $recentlyViewedProducts;
     public array $filters = [];
-    public ?Collection $productTabs = null;
-    public ?Collection $productExtras = null;
-    public ?Collection $productFaqs = null;
+    public null|Collection|SupportCollection $productTabs = null;
+    public null|Collection|SupportCollection $productExtras = null;
+    public null|Collection|SupportCollection $productFaqs = null;
     public ?array $extras = [];
     public ?array $hiddenOptions = [];
     public string|int $quantity = 1;
