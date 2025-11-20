@@ -120,6 +120,8 @@ class EditProductGroup extends EditRecord
 
         unset($data['new_images']);
 
+        $record->setTranslation('description', $this->activeLocale, $data['description'] ?? '');
+        unset($data['description']);
         $record->update($data);
 
         return $record;
