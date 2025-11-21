@@ -75,7 +75,7 @@ class UpdateProductInformationJob implements ShouldQueue
             if ($this->productGroup->only_show_parent_product && $this->productGroup->firstSelectedProduct && $this->productGroup->firstSelectedProduct->public && $this->productGroup->firstSelectedProduct->id === $product->id && $product->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
-            } elseif ((($this->productGroup->only_show_parent_product && !$hasIndexableProduct && (!$this->productGroup->firstSelectedProduct || ($this->productGroup->firstSelectedProduct && !$this->productGroup->firstSelectedProduct->public))) || !$this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
+            } elseif ((($this->productGroup->only_show_parent_product && ! $hasIndexableProduct && (! $this->productGroup->firstSelectedProduct || ($this->productGroup->firstSelectedProduct && ! $this->productGroup->firstSelectedProduct->public))) || ! $this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
             } else {
@@ -141,14 +141,14 @@ class UpdateProductInformationJob implements ShouldQueue
                 $keyParts = [];
 
                 foreach ($filters as $filterRow) {
-                    if (!in_array($filterRow->product_filter_id, $variationFilterIds, true)) {
+                    if (! in_array($filterRow->product_filter_id, $variationFilterIds, true)) {
                         continue;
                     }
 
                     $keyParts[] = $filterRow->product_filter_id . '-' . $filterRow->product_filter_option_id;
                 }
 
-                if (!count($keyParts)) {
+                if (! count($keyParts)) {
                     continue;
                 }
 

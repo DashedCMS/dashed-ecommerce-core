@@ -38,11 +38,11 @@ class Products
             }
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -151,12 +151,13 @@ class Products
         ?bool                                     $enableFilters = true,
         null|array|Collection                     $products = null,
         ?array                                    $priceRange = []
-    ) {
-        if (! in_array($orderBy, self::canFilterOnShortOrColumn(), true)) {
+    )
+    {
+        if (!in_array($orderBy, self::canFilterOnShortOrColumn(), true)) {
             $orderBy = '';
         }
 
-        if (strtolower((string) $order) != 'asc' && strtolower((string) $order) != 'desc') {
+        if (strtolower((string)$order) != 'asc' && strtolower((string)$order) != 'desc') {
             $order = '';
         }
 
@@ -186,15 +187,15 @@ class Products
             $order = '';
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        if (! $products) {
+        if (!$products) {
             if ($categoryId) {
                 $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
                 $products = $productCategory->products()
@@ -244,11 +245,11 @@ class Products
             ->values();
 
         // 4) Prijsfilter lokaal toepassen
-        if (! empty($priceRange['min'])) {
-            $products = $products->filter(fn ($p) => $p->price >= $priceRange['min']);
+        if (!empty($priceRange['min'])) {
+            $products = $products->filter(fn($p) => $p->price >= $priceRange['min']);
         }
-        if (! empty($priceRange['max'])) {
-            $products = $products->filter(fn ($p) => $p->price <= $priceRange['max']);
+        if (!empty($priceRange['max'])) {
+            $products = $products->filter(fn($p) => $p->price <= $priceRange['max']);
         }
 
         // 5) Sorteren + search (hybride)
@@ -258,7 +259,7 @@ class Products
 
             // Translatable kolommen voor Product
             $productColumns = collect((new Product())->getTranslatableAttributes())
-                ->reject(fn (string $attr) => method_exists(Product::class, $attr))
+                ->reject(fn(string $attr) => method_exists(Product::class, $attr))
                 ->values()
                 ->all();
 
@@ -267,7 +268,7 @@ class Products
 
             // Translatable kolommen voor ProductGroup (aparte set!)
             $groupColumns = collect((new ProductGroup())->getTranslatableAttributes() ?? [])
-                ->reject(fn (string $attr) => method_exists(ProductGroup::class, $attr))
+                ->reject(fn(string $attr) => method_exists(ProductGroup::class, $attr))
                 ->values()
                 ->all();
 
@@ -287,7 +288,7 @@ class Products
 
                 // Exacte match op sku/ean/article_code → grote boost
                 foreach (['sku', 'ean', 'article_code'] as $exactField) {
-                    $value = (string) ($product->{$exactField} ?? '');
+                    $value = (string)($product->{$exactField} ?? '');
                     if ($value !== '' && strcasecmp($value, $search) === 0) {
                         $score += $topWeight;
                     }
@@ -383,7 +384,7 @@ class Products
             $pagination,
             $page,
             [
-                'path'  => request()->url(),
+                'path' => request()->url(),
                 'query' => request()->query(),
             ]
         );
@@ -428,10 +429,11 @@ class Products
         /*
          * STAP 1: Recently viewed producten ophalen (maximaal 1 per productgroep)
          */
-        if (! empty($recentlyViewedGroupIds)) {
+        if (!empty($recentlyViewedGroupIds)) {
             $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
                 ->publicShowable()
-                ->with(['productFilters', 'productCategories', 'productGroup', 'productGroup.products'])
+                ->without(['productFilters'])
+//                ->select(['id', 'product_group_id'])
                 ->get();
 
             // Sorteer op volgorde van recently viewed (eerste in array = meest recent)
@@ -468,6 +470,7 @@ class Products
             if ($productGroup) {
                 // Pak alle producten in deze productgroep en verzamel hun categorieën
                 $groupProducts = Product::where('product_group_id', $productGroup->id)
+                    ->without(['productFilters'])
                     ->with('productCategories:id')
                     ->get();
 
@@ -491,7 +494,7 @@ class Products
                     ->whereHas('productCategories', function ($q) use ($categoryIds, $table) {
                         $q->whereIn("$table.id", $categoryIds);
                     })
-                    ->with(['productFilters', 'productCategories', 'productGroup', 'productGroup.products'])
+                    ->without(['productFilters'])
                     ->inRandomOrder()
                     ->limit($limit * 3)
                     ->get();
@@ -518,7 +521,8 @@ class Products
         if ($result->count() < $limit) {
             $fallbackProducts = Product::publicShowable()
                 ->whereNotIn('product_group_id', $usedGroupIds)
-                ->with(['productFilters', 'productCategories', 'productGroup', 'productGroup.products'])
+                ->without(['productFilters'])
+                ->with(['productGroup'])
                 ->inRandomOrder()
                 ->limit($limit * 3)
                 ->get();
@@ -540,6 +544,7 @@ class Products
 
         // Namen overschrijven als de productgroep alleen de parent wil tonen
         $result = $applyParentNames($result);
+
         // Zorg dat we exact $limit items teruggeven, netjes ge-reindexed
         return $result->take($limit)->values();
     }

@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;

@@ -100,7 +100,7 @@ trait ProductCartActions
         }
 
         $productIds = $publicProducts->pluck('id')->toArray();
-        $activeFilters = $this->productGroup->activeProductFilters;
+        $activeFilters = $this->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
 
         foreach ($activeFilters as $filter) {
             if (! $filter->pivot->use_for_variations) {
@@ -401,7 +401,6 @@ trait ProductCartActions
         }
     }
 
-
     public function findVariation(): void
     {
         // Geen filters gekozen = geen variant
@@ -529,7 +528,6 @@ trait ProductCartActions
 
         $this->filters = $filters;
     }
-
 
     public function calculateCurrentPrices(): void
     {

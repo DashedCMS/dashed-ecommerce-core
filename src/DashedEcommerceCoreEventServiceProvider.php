@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Listeners\ClearProductCache;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
+use Dashed\DashedEcommerceCore\Listeners\UpdateOrderReservedStock;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Listeners\PrintDocumentsAfterPaidOrder;
-use Dashed\DashedEcommerceCore\Listeners\UpdateOrderReservedStock;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class DashedEcommerceCoreEventServiceProvider extends ServiceProvider

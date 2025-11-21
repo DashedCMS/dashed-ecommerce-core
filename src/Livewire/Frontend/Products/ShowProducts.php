@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\Products;
@@ -64,7 +63,7 @@ class ShowProducts extends Component
         $activeFilters = request()->get('activeFilters', []);
         foreach ($activeFilters as $filterKey => $activeFilter) {
             foreach ($activeFilter as $optionKey => $value) {
-                if (!$value || $value === 'false') {
+                if (! $value || $value === 'false') {
                     unset($activeFilters[$filterKey][$optionKey]);
                 } else {
                     $activeFilters[$filterKey][$optionKey] = true;
@@ -110,12 +109,12 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-//        if ($isMount) {
+        //        if ($isMount) {
         $this->getProducts();
         if ($this->enableFilters) {
             $this->getFilters();
         }
-//        }
+        //        }
 
         $response = Products::getAll($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->filters, $this->enableFilters, $this->allProducts, $this->priceSlider);
         $this->products = $response['products'];

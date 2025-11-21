@@ -14,7 +14,7 @@ return new class () extends Migration {
             $table->integer('child_products_count')->default(0);
         });
 
-        foreach(\Dashed\DashedEcommerceCore\Models\ProductGroup::all() as $productGroup) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ProductGroup::all() as $productGroup) {
             $productGroup->child_products_count = $productGroup->products()->count();
             $productGroup->save();
         }

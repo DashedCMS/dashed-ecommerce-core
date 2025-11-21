@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class Countries
 {
@@ -52,7 +52,7 @@ class Countries
 
             foreach (ShippingZones::getActiveRegions() as $region) {
                 $countryCode = self::getCountryIsoCode($region['value']);
-                if ($countryCode && !in_array($countryCode, $countryCodes)) {
+                if ($countryCode && ! in_array($countryCode, $countryCodes)) {
                     $countryCodes[] = $countryCode;
                 }
             }
