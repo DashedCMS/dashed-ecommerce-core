@@ -253,19 +253,36 @@ class Products
         if ($search) {
             $needle = trim(mb_strtolower($search));
 
-            // Translatable columns ophalen zoals in scopeSearch, maar correct non-static
-            $columns = collect((new Product())->getTranslatableAttributes())
-                ->reject(fn (string $attr) => method_exists(Product::class, $attr)) // relaties skippen
+            // Translatable kolommen voor Product
+            $productColumns = collect((new Product())->getTranslatableAttributes())
+                ->reject(fn (string $attr) => method_exists(Product::class, $attr))
                 ->values()
                 ->all();
 
-            $columnCount = count($columns);
-            $topWeight = $columnCount + 10; // dezelfde logica als in scopeSearch
+            $productColumnCount = count($productColumns);
+            $topWeight = $productColumnCount + 10;
 
-            $products = $products->sortByDesc(function (Product $product) use ($search, $needle, $columns, $topWeight, $columnCount) {
+            // Translatable kolommen voor ProductGroup (aparte set!)
+            $groupColumns = collect((new ProductGroup())->getTranslatableAttributes() ?? [])
+                ->reject(fn (string $attr) => method_exists(ProductGroup::class, $attr))
+                ->values()
+                ->all();
+
+            $groupColumnCount = count($groupColumns);
+
+            // 1) Per product een search_score berekenen
+            $products = $products->map(function (Product $product) use (
+                $search,
+                $needle,
+                $productColumns,
+                $productColumnCount,
+                $groupColumns,
+                $groupColumnCount,
+                $topWeight
+            ) {
                 $score = 0.0;
 
-                // 1) Exacte match op sku/ean/article_code → dikke bonus
+                // Exacte match op sku/ean/article_code → grote boost
                 foreach (['sku', 'ean', 'article_code'] as $exactField) {
                     $value = (string) ($product->{$exactField} ?? '');
                     if ($value !== '' && strcasecmp($value, $search) === 0) {
@@ -273,9 +290,9 @@ class Products
                     }
                 }
 
-                // 2) Translatable kolommen op het product
-                foreach ($columns as $idx => $col) {
-                    $weight = $columnCount - $idx; // eerste kolom = hoogste weight
+                // Product translatable kolommen
+                foreach ($productColumns as $idx => $col) {
+                    $weight = $productColumnCount - $idx;
 
                     $value = ($product->getTranslation($col, app()->getLocale()) ?? '');
                     if (is_array($value)) {
@@ -291,26 +308,53 @@ class Products
 
                         $score += $localScore;
                     }
+                }
 
-                    // 3) Zelfde veld op productGroup (iets lagere weight)
-                    if ($product->relationLoaded('productGroup') && $product->productGroup) {
-                        $groupValue = (string) ($product->productGroup->{$col} ?? '');
+                // ProductGroup translatable kolommen, lagere weight
+                if ($product->relationLoaded('productGroup') && $product->productGroup) {
+                    foreach ($groupColumns as $idx => $col) {
+                        $weight = max(1, ($groupColumnCount - $idx)) * 0.8;
+
+                        $groupValue = ($product->productGroup->getTranslation($col, app()->getLocale()) ?? '');
+                        if (is_array($groupValue)) {
+                            $groupValue = json_encode($groupValue);
+                        }
+
                         $groupValueLower = mb_strtolower($groupValue);
 
                         if ($groupValueLower !== '' && str_contains($groupValueLower, $needle)) {
-                            $localScore = $weight * 0.8;
+                            $localScore = $weight;
 
                             similar_text($groupValueLower, $needle, $percentGroup);
-                            $localScore += ($percentGroup / 100) * $weight * 0.8;
+                            $localScore += ($percentGroup / 100) * $weight;
 
                             $score += $localScore;
                         }
                     }
                 }
 
-                return $score;
-            })->values();
+                // Clone om gekke referentie-dingen te voorkomen
+                $clone = clone $product;
+                $clone->search_score = $score;
+
+                return $clone;
+            });
+
+            // 2) Eerst sorteren op gekozen orderBy/order (price/newest/whatever)
+            if ($orderBy) {
+                $products = $products->sortBy(
+                    $orderBy,
+                    SORT_REGULAR,
+                    strtolower($order) === 'desc'
+                );
+            }
+
+            // 3) Daarna sorteren op search_score desc (meest relevant eerst)
+            $products = $products
+                ->sortByDesc('search_score')
+                ->values();
         }
+
 
         // 6) Min/max prijs over volledige (gefilterde) set
         $minPrice = $products->min('price');
