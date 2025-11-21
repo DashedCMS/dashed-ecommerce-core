@@ -109,6 +109,7 @@ class ProductGroupResource extends Resource
                 Select::make('first_selected_product_id')
                     ->label('Eerste geselecteerde product')
                     ->relationship('firstSelectedProduct', 'name')
+                    ->options(fn($record) => $record ? $record->products->pluck('name', 'id') : [])
                     ->preload()
                     ->searchable()
                     ->helperText('Indien je een product selecteert, wordt deze standaard geselecteerd op de product groep pagina'),

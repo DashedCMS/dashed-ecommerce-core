@@ -75,7 +75,7 @@ class UpdateProductInformationJob implements ShouldQueue
             if ($this->productGroup->only_show_parent_product && $this->productGroup->firstSelectedProduct && $this->productGroup->firstSelectedProduct->public && $this->productGroup->firstSelectedProduct->id === $product->id && $product->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
-            } elseif ((($this->productGroup->only_show_parent_product && ! $hasIndexableProduct && (! $this->productGroup->firstSelectedProduct || ($this->productGroup->firstSelectedProduct && ! $this->productGroup->firstSelectedProduct->public))) || ! $this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
+            } elseif ((($this->productGroup->only_show_parent_product && !$hasIndexableProduct && (!$this->productGroup->firstSelectedProduct || ($this->productGroup->firstSelectedProduct && !$this->productGroup->firstSelectedProduct->public))) || !$this->productGroup->only_show_parent_product) && $product->public && $this->productGroup->public) {
                 $product->indexable = 1;
                 $hasIndexableProduct = true;
             } else {
@@ -113,6 +113,54 @@ class UpdateProductInformationJob implements ShouldQueue
         $this->productGroup->total_stock = $this->productGroup->products->sum('total_stock');
         $this->productGroup->total_purchases = $this->productGroup->products->sum('total_purchases');
         $this->productGroup->child_products_count = $this->productGroup->products()->count();
+
+        $productIds = $this->productGroup->products->pluck('id');
+
+        if ($productIds->isEmpty()) {
+            $this->productGroup->variation_index = null;
+        } else {
+
+            // Alle filter combos per product, in één query
+            $rows = DB::table('dashed__product_filter')
+                ->select('product_id', 'product_filter_id', 'product_filter_option_id')
+                ->whereIn('product_id', $productIds)
+                ->orderBy('product_id')
+                ->orderBy('product_filter_id')
+                ->get()
+                ->groupBy('product_id');
+
+            $index = [];
+
+            foreach ($rows as $productId => $filters) {
+                // Alleen filters gebruiken die use_for_variations = 1 hebben
+                // → haal die 1x op:
+                $variationFilterIds = $this->productGroup->activeProductFiltersForVariations
+                    ->pluck('id')
+                    ->toArray();
+
+                $keyParts = [];
+
+                foreach ($filters as $filterRow) {
+                    if (!in_array($filterRow->product_filter_id, $variationFilterIds, true)) {
+                        continue;
+                    }
+
+                    $keyParts[] = $filterRow->product_filter_id . '-' . $filterRow->product_filter_option_id;
+                }
+
+                if (!count($keyParts)) {
+                    continue;
+                }
+
+                sort($keyParts); // volgorde vastzetten
+
+                $key = implode('|', $keyParts);
+
+                // conflictstrategie: eerste wint, of laatste wint
+                $index[$key] = (int)$productId;
+            }
+            $this->productGroup->variation_index = $index;
+        }
         $this->productGroup->saveQuietly();
 
         Cache::forget('products-for-show-products-');

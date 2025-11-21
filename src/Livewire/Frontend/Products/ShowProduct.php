@@ -21,6 +21,8 @@ class ShowProduct extends Component
             'products',
 //            'products.productFilters',
 //            'products.productFilters.productFilterOptions',
+            'activeProductFilters.productFilterOptions',
+            'productCategories',
             'products.volumeDiscounts',
             'products.productCategories',
         ]);

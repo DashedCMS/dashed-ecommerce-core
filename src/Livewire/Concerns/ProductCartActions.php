@@ -63,6 +63,7 @@ trait ProductCartActions
 
     /**
      * In-memory cache van public varianten onder de productgroep.
+     * LET OP: hier laden we alleen lichte modellen (id's), geen zware relaties.
      */
     public ?Collection $publicProducts = null;
 
@@ -72,63 +73,15 @@ trait ProductCartActions
             return $this->publicProducts;
         }
 
-        $query = $this->productGroup
+        // Alleen de nodige kolommen + geen default $with eager loads
+        $products = $this->productGroup
             ->products()
-            ->publicShowable();
-//            ->with([
-//                'productFilters' => function ($q) {
-//                    $q->select([
-//                        'id',
-//                        'product_id',
-//                        'product_filter_id',
-//                        'product_filter_option_id',
-//                    ]);
-//                },
-//                'productFilters.productFilterOptions' => function ($q) {
-//                    $q->select([
-//                        'id',
-//                        'product_filter_id',
-//                        'name',
-//                        'order',
-//                    ]);
-//                },
-//                'volumeDiscounts' => function ($q) {
-//                    $q->select([
-//                        'id',
-//                        'product_id',
-//                        'from_quantity',
-//                        'discount_amount',
-//                        'discount_type',
-//                    ]);
-//                },
-//                'productCategories' => function ($q) {
-//                    $q->select([
-//                        'id',
-//                        'name',
-//                        'slug',
-//                    ]);
-//                },
-//            ]);
+            ->publicShowable()
+            ->select(['id', 'product_group_id']) // genoeg voor onze use-cases hier
+            ->setEagerLoads([]) // overschrijft Product::$with (productFilters etc.)
+            ->get();
 
-        $this->publicProducts = $query->get();
-
-        return $this->publicProducts;
-
-        if ($this->publicProducts === null) {
-            $this->publicProducts = $this->productGroup
-                ->products()
-                ->publicShowable()
-                ->without([
-                    'productFilters'
-                ])
-//                ->with([
-//                    'productFilters',
-//                    'productFilters.productFilterOptions',
-//                    'volumeDiscounts',
-//                    'productCategories',
-//                ])
-                ->get();
-        }
+        $this->publicProducts = $products;
 
         return $this->publicProducts;
     }
@@ -165,6 +118,8 @@ trait ProductCartActions
                 continue;
             }
 
+            // Hier mag je gewoon de relation gebruiken; die is op de group al ingeladen
+            // of wordt 1x opgehaald per filter.
             $filterOptions = $filter->productFilterOptions()
                 ->whereIn('id', $productFilterOptionIds)
                 ->get()
@@ -258,8 +213,31 @@ trait ProductCartActions
         $previousProduct = $this->product;
 
         if ($isMount) {
-            // 1x alle varianten + relaties binnenhalen
+            // 1x alle varianten (licht) binnenhalen
             $this->getPublicProducts();
+
+            // Bepaal startproduct:
+            // - als er al een product is (bijv. via route), gebruik die
+            // - anders originalProduct
+            // - anders firstSelectedProduct
+            // - anders eerste public child
+            if (! $this->product) {
+                $defaultProduct = $this->originalProduct
+                    ?? $this->productGroup->firstSelectedProduct
+                    ?? $this->getPublicProducts()->first();
+
+                if ($defaultProduct) {
+                    // Volledig inladen met benodigde relaties
+                    $this->product = Product::with([
+                        'productFilters',
+                        'productCategories',
+                        'volumeDiscounts',
+                        'productExtras.productExtraOptions',
+                    ])->find($defaultProduct->id);
+
+                    $this->originalProduct = $this->product;
+                }
+            }
 
             $this->productCategories = $this->productGroup->productCategories;
             $this->filters = $this->buildFiltersFromPublicProducts();
@@ -281,15 +259,19 @@ trait ProductCartActions
             $publicProducts = $this->getPublicProducts();
 
             if ($publicProducts->count() > 1) {
+                // Bij filter-change opnieuw variant zoeken
                 $this->product = null;
             } else {
+                // Eén variant? Dan gewoon de originele houden
                 $this->product = $this->originalProduct;
             }
         }
 
+        // Filters vullen op basis van huidig product (bij mount dus: startproduct)
         $this->fillFilters($isMount);
 
-        if (! $this->product) {
+        // Alleen bij NIET-mount automatisch variant zoeken op basis van filters
+        if (! $isMount && ! $this->product) {
             $this->findVariation();
         }
 
@@ -419,53 +401,106 @@ trait ProductCartActions
         }
     }
 
+
     public function findVariation(): void
     {
-        foreach ($this->getPublicProducts() as $product) {
-            $productIsValid = true;
+        // Geen filters gekozen = geen variant
+        $activeFilters = [];
 
-            foreach ($this->filters as $filter) {
-                if (! $filter['active']) {
-                    $productIsValid = false;
-
-                    break;
-                }
-
-                $hasOption = $product->productFilters
-                    ->contains(function ($pf) use ($filter) {
-                        return $pf->pivot->product_filter_option_id == $filter['active'];
-                    });
-
-                if (! $hasOption) {
-                    $productIsValid = false;
-
-                    break;
-                }
-            }
-
-            if (! $product->status) {
-                $productIsValid = false;
-            }
-
-            if ($productIsValid) {
-                $this->variationExists = true;
-                $this->product = $product;
+        foreach ($this->filters as $filter) {
+            if (! $filter['active']) {
+                $this->variationExists = false;
+                $this->product = null;
 
                 return;
-            } else {
-                $this->variationExists = false;
+            }
+
+            $activeFilters[] = $filter['id'] . '-' . $filter['active'];
+        }
+
+        sort($activeFilters);
+        $key = implode('|', $activeFilters);
+
+        // 1. Probeer variation_index (precomputed)
+        $rawIndex = $this->productGroup->variation_index ?? [];
+
+        if (is_string($rawIndex)) {
+            $index = json_decode($rawIndex, true) ?: [];
+        } elseif (is_array($rawIndex)) {
+            $index = $rawIndex;
+        } else {
+            $index = [];
+        }
+
+        $productId = $index[$key] ?? null;
+
+        // 2. Geen index-hit? Fallback naar DB-lookup op basis van filters
+        if (! $productId) {
+            $publicProducts = $this->getPublicProducts();
+            $productIds = $publicProducts->pluck('id')->toArray();
+
+            if (! empty($productIds)) {
+                $matchingIds = $productIds;
+
+                foreach ($this->filters as $filter) {
+                    $idsForFilter = DB::table('dashed__product_filter')
+                        ->where('product_filter_id', $filter['id'])
+                        ->where('product_filter_option_id', $filter['active'])
+                        ->whereIn('product_id', $productIds)
+                        ->pluck('product_id')
+                        ->toArray();
+
+                    $matchingIds = array_values(array_intersect($matchingIds, $idsForFilter));
+
+                    if (empty($matchingIds)) {
+                        break;
+                    }
+                }
+
+                if (! empty($matchingIds)) {
+                    $productId = $matchingIds[0];
+                }
             }
         }
 
-        if (! $this->variationExists && $this->getPublicProducts()->count() && Customsetting::get('fill_with_first_product_if_product_group_loaded', null, false)) {
-            if ($this->productGroup->firstSelectedProduct) {
-                $this->product = $this->productGroup->firstSelectedProduct;
-            } else {
-                $this->product = $this->getPublicProducts()->first();
+        // 3. Nog steeds niks? Fallback naar firstSelectedProduct / eerste variant (optioneel)
+        if (! $productId && Customsetting::get('fill_with_first_product_if_product_group_loaded', null, false)) {
+            $fallbackProduct = $this->productGroup->firstSelectedProduct ?: $this->getPublicProducts()->first();
+
+            if ($fallbackProduct) {
+                $this->product = Product::with([
+                    'productFilters',
+                    'productCategories',
+                    'volumeDiscounts',
+                    'productExtras.productExtraOptions',
+                ])->find($fallbackProduct->id);
+
+                $this->variationExists = (bool) $this->product;
+
+                if ($this->variationExists) {
+                    $this->fillFilters(true);
+                }
+
+                return;
             }
-            $this->variationExists = true;
-            $this->fillFilters(true);
         }
+
+        if (! $productId) {
+            $this->variationExists = false;
+            $this->product = null;
+
+            return;
+        }
+
+        // 4. Uiteindelijk de echte variant laden
+        $this->variationExists = true;
+
+        $this->product = Product::with([
+            'productFilters',        // voor view / characteristics
+            'productCategories',
+            'volumeDiscounts',
+            'productExtras.productExtraOptions',
+        ])->find($productId);
     }
 
     public function fillFilters(bool $isMount = false): void
@@ -494,6 +529,7 @@ trait ProductCartActions
 
         $this->filters = $filters;
     }
+
 
     public function calculateCurrentPrices(): void
     {

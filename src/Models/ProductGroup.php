@@ -39,6 +39,7 @@ class ProductGroup extends Model
 
     protected $casts = [
         'site_ids' => 'array',
+        'variation_index' => 'array',
         'images' => 'array',
         'missing_variations' => 'array',
         'created_at' => 'datetime',
