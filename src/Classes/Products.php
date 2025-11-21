@@ -431,7 +431,7 @@ class Products
         if (! empty($recentlyViewedGroupIds)) {
             $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
                 ->publicShowable()
-                ->with(['productFilters', 'productCategories', 'productGroup'])
+                ->with(['productFilters', 'productCategories', 'productGroup', 'productGroup.products'])
                 ->get();
 
             // Sorteer op volgorde van recently viewed (eerste in array = meest recent)
@@ -461,6 +461,7 @@ class Products
          * - Als een $productGroup is meegegeven: categorieën van die groep gebruiken
          * - Anders: categorieën van de al gevonden producten gebruiken
          */
+
         if ($result->count() < $limit) {
             $categoryIds = collect();
 
@@ -490,7 +491,7 @@ class Products
                     ->whereHas('productCategories', function ($q) use ($categoryIds, $table) {
                         $q->whereIn("$table.id", $categoryIds);
                     })
-                    ->with(['productFilters', 'productCategories', 'productGroup'])
+                    ->with(['productFilters', 'productCategories', 'productGroup', 'productGroup.products'])
                     ->inRandomOrder()
                     ->limit($limit * 3)
                     ->get();
@@ -517,7 +518,7 @@ class Products
         if ($result->count() < $limit) {
             $fallbackProducts = Product::publicShowable()
                 ->whereNotIn('product_group_id', $usedGroupIds)
-                ->with(['productFilters', 'productCategories', 'productGroup'])
+                ->with(['productFilters', 'productCategories', 'productGroup', 'productGroup.products'])
                 ->inRandomOrder()
                 ->limit($limit * 3)
                 ->get();
@@ -539,7 +540,6 @@ class Products
 
         // Namen overschrijven als de productgroep alleen de parent wil tonen
         $result = $applyParentNames($result);
-
         // Zorg dat we exact $limit items teruggeven, netjes ge-reindexed
         return $result->take($limit)->values();
     }

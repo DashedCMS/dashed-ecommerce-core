@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedPages\Models\Page;
 use Dashed\DashedCore\Classes\Sites;
@@ -1043,6 +1044,7 @@ class Product extends Model
             $suggestedProductIds = $this->suggestedProducts->pluck('id')->toArray();
         }
 
+
         // Huidige product nooit als suggestion
         $suggestedProductIds = array_filter($suggestedProductIds, fn($id) => $id !== $this->id);
         $suggestedProductIds = array_values(array_unique($suggestedProductIds));
@@ -1106,7 +1108,9 @@ class Product extends Model
             $productsQuery->inRandomOrder();
         }
 
-        return $productsQuery->limit($limit)->get();
+        $products = $productsQuery->limit($limit)->get();
+
+        return $products;
     }
 
     public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = false): Collection

@@ -112,6 +112,7 @@ class UpdateProductInformationJob implements ShouldQueue
         $this->productGroup->max_price = $this->productGroup->products->max('price');
         $this->productGroup->total_stock = $this->productGroup->products->sum('total_stock');
         $this->productGroup->total_purchases = $this->productGroup->products->sum('total_purchases');
+        $this->productGroup->child_products_count = $this->productGroup->products()->count();
         $this->productGroup->saveQuietly();
 
         Cache::forget('products-for-show-products-');

@@ -585,7 +585,7 @@ class ProductGroup extends Model
 
     public function showSingleProduct(): bool
     {
-        return $this->only_show_parent_product || $this->products->count() <= 1;
+        return $this->only_show_parent_product || $this->child_products_count <= 1;
     }
 
     public function removeInvalidImages(): void

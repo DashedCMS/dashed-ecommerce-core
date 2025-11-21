@@ -64,20 +64,69 @@ trait ProductCartActions
     /**
      * In-memory cache van public varianten onder de productgroep.
      */
-    protected ?Collection $publicProducts = null;
+    public ?Collection $publicProducts = null;
 
     protected function getPublicProducts(): Collection
     {
+        if ($this->publicProducts !== null) {
+            return $this->publicProducts;
+        }
+
+        $query = $this->productGroup
+            ->products()
+            ->publicShowable();
+//            ->with([
+//                'productFilters' => function ($q) {
+//                    $q->select([
+//                        'id',
+//                        'product_id',
+//                        'product_filter_id',
+//                        'product_filter_option_id',
+//                    ]);
+//                },
+//                'productFilters.productFilterOptions' => function ($q) {
+//                    $q->select([
+//                        'id',
+//                        'product_filter_id',
+//                        'name',
+//                        'order',
+//                    ]);
+//                },
+//                'volumeDiscounts' => function ($q) {
+//                    $q->select([
+//                        'id',
+//                        'product_id',
+//                        'from_quantity',
+//                        'discount_amount',
+//                        'discount_type',
+//                    ]);
+//                },
+//                'productCategories' => function ($q) {
+//                    $q->select([
+//                        'id',
+//                        'name',
+//                        'slug',
+//                    ]);
+//                },
+//            ]);
+
+        $this->publicProducts = $query->get();
+
+        return $this->publicProducts;
+
         if ($this->publicProducts === null) {
             $this->publicProducts = $this->productGroup
                 ->products()
                 ->publicShowable()
-                ->with([
-                    'productFilters',
-                    'productFilters.productFilterOptions',
-                    'volumeDiscounts',
-                    'productCategories',
+                ->without([
+                    'productFilters'
                 ])
+//                ->with([
+//                    'productFilters',
+//                    'productFilters.productFilterOptions',
+//                    'volumeDiscounts',
+//                    'productCategories',
+//                ])
                 ->get();
         }
 
