@@ -213,6 +213,7 @@ class ShowProducts extends Component
         $query = Product::query()
             ->publicShowableWithIndex()
             ->with([
+                'productGroup',
                 'productFilters',
                 'productFilters.productFilterOptions',
             ]);
@@ -222,6 +223,7 @@ class ShowProducts extends Component
                 ->products()
                 ->publicShowableWithIndex()
                 ->with([
+                    'productGroup',
                     'productFilters',
                     'productFilters.productFilterOptions',
                 ]);

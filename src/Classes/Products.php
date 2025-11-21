@@ -46,11 +46,17 @@ class Products
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        $products = Product::search()->publicShowable()->limit($limit)->orderBy($orderBy, $order)->with(['parent']);
+        $products = Product::search()
+            ->publicShowable()
+            ->limit($limit)
+            ->orderBy($orderBy, $order)
+            ->with(['parent']);
+
         if ($topLevelProductOnly) {
             //publicShowable stops the childProducts from showing
             $products->topLevel();
         }
+
         $products = $products->get();
 
         foreach ($products as $product) {
@@ -84,8 +90,7 @@ class Products
             $order = 'ASC';
         }
 
-        if ($categoryId && $category = ProductCategory::with(['products'])
-                ->findOrFail($categoryId)) {
+        if ($categoryId && $category = ProductCategory::with(['products'])->findOrFail($categoryId)) {
             $products = $category->products()
                 ->search($search)
                 ->thisSite()
@@ -147,10 +152,11 @@ class Products
         null|array|Collection                     $products = null,
         ?array                                    $priceRange = []
     ) {
-        if (! in_array($orderBy, self::canFilterOnShortOrColumn())) {
+        if (! in_array($orderBy, self::canFilterOnShortOrColumn(), true)) {
             $orderBy = '';
         }
-        if (str($order)->lower() != 'asc' && str($order)->lower() != 'desc') {
+
+        if (strtolower((string) $order) != 'asc' && strtolower((string) $order) != 'desc') {
             $order = '';
         }
 
@@ -206,8 +212,6 @@ class Products
             }
         }
 
-        $correctProductIds = [];
-
         $productFilters = DB::table('dashed__product_filter')
             ->whereIn('product_id', $products->pluck('id'))
             ->get()
@@ -216,7 +220,7 @@ class Products
         $validProductIds = collect($products->pluck('id'));
 
         foreach ($filters as $filter) {
-            $checkedOptionIds = collect($filter->productFilterOptions)
+            $checkedOptionIds = collect($filter->productFilterOptions ?? [])
                 ->where('checked', true)
                 ->pluck('id');
 
@@ -235,7 +239,9 @@ class Products
             }
         }
 
-        $products = $products->whereIn('id', $validProductIds->values())->values();
+        $products = $products
+            ->whereIn('id', $validProductIds->values())
+            ->values();
 
         // 4) Prijsfilter lokaal toepassen
         if (! empty($priceRange['min'])) {
@@ -245,13 +251,10 @@ class Products
             $products = $products->filter(fn ($p) => $p->price <= $priceRange['max']);
         }
 
-        // 5) Sorteren op collection ipv query
-        if ($orderBy) {
-            $products = $products->sortBy($orderBy, SORT_REGULAR, strtolower($order) === 'desc')->values();
-        }
-
+        // 5) Sorteren + search (hybride)
         if ($search) {
             $needle = trim(mb_strtolower($search));
+            $orderLower = strtolower($order);
 
             // Translatable kolommen voor Product
             $productColumns = collect((new Product())->getTranslatableAttributes())
@@ -345,7 +348,7 @@ class Products
                 $products = $products->sortBy(
                     $orderBy,
                     SORT_REGULAR,
-                    strtolower($order) === 'desc'
+                    $orderLower === 'desc'
                 );
             }
 
@@ -353,8 +356,17 @@ class Products
             $products = $products
                 ->sortByDesc('search_score')
                 ->values();
+        } else {
+            // Geen search: gewoon sorteren op gekozen kolom
+            if ($orderBy) {
+                $products = $products
+                    ->sortBy($orderBy, SORT_REGULAR, strtolower($order) === 'desc')
+                    ->values();
+            }
         }
 
+        // 👉 Hier: duplicates hard afvangen op id
+        $products = $products->unique('id')->values();
 
         // 6) Min/max prijs over volledige (gefilterde) set
         $minPrice = $products->min('price');
@@ -371,7 +383,7 @@ class Products
             $pagination,
             $page,
             [
-                'path' => request()->url(),
+                'path'  => request()->url(),
                 'query' => request()->query(),
             ]
         );
