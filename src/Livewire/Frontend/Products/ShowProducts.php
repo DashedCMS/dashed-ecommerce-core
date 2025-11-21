@@ -111,10 +111,10 @@ class ShowProducts extends Component
         ], []));
 
 //        if ($isMount) {
-            $this->getProducts();
-            if ($this->enableFilters) {
-                $this->getFilters();
-            }
+        $this->getProducts();
+        if ($this->enableFilters) {
+            $this->getFilters();
+        }
 //        }
 
         $response = Products::getAll($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->filters, $this->enableFilters, $this->allProducts, $this->priceSlider);
@@ -209,7 +209,6 @@ class ShowProducts extends Component
             . '-site-' . $siteId
             . '-locale-' . $locale;
 
-        //        $products = Cache::rememberForever($cacheKey, function () use ($productCategory) {
         $query = Product::query()
             ->publicShowableWithIndex()
             ->with([
@@ -230,8 +229,6 @@ class ShowProducts extends Component
         }
 
         $products = $query->get();
-        //            return $query->get();
-        //        });
 
         $this->allProducts = $products;
     }
