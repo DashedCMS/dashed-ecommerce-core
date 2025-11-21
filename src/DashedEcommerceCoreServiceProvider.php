@@ -17,6 +17,7 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
+use Dashed\DashedCore\Support\MeasuresServiceProvider;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
@@ -83,10 +84,14 @@ use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWith
 
 class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 {
+    use MeasuresServiceProvider;
+
     public static string $name = 'dashed-ecommerce-core';
 
     public function bootingPackage()
     {
+        $this->logProviderMemory('bootingPackage:start');
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
@@ -203,6 +208,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->builder('plugins', [
             new DashedEcommerceCorePlugin(),
         ]);
+
+        $this->logProviderMemory('bootingPackage:end');
     }
 
     public static function builderBlocks()
@@ -291,6 +298,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function configurePackage(Package $package): void
     {
+        $this->logProviderMemory('configurePackage:start');
+
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         //        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'dashed-ecommerce-core');
@@ -349,6 +358,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 MigrateToV3::class,
                 UpdateExpiredGlobalDiscountCodes::class,
             ]);
+
+        $this->logProviderMemory('configurePackage:end');
     }
 
     public static function createDefaultPages(): void
