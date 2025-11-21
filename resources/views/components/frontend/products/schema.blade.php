@@ -1,5 +1,5 @@
 <div itemscope itemtype="http://schema.org/Product">
-    {{--        <meta itemprop="brand" content="facebook">--}}
+    @php($countryCodes = \Dashed\DashedEcommerceCore\Classes\Countries::getAllSelectedCountryCodes())
     <meta itemprop="name" content="{{$product->name}}">
     <meta itemprop="description"
           content="{{strip_tags((($product->short_description ?: ($product->productGroup->short_description ?? '')) ?: cms()->convertToHtml($product->description)) ?: (cms()->convertToHtml($product->productGroup->description ?? '')))}}">
@@ -10,10 +10,6 @@
     @if($product->firstImage)
         <meta itemprop="image" content="{{mediaHelper()->getSingleMedia($product->firstImage, 'original')->url ?? ''}}">
     @endif
-    {{--    <div itemprop="value" itemscope itemtype="http://schema.org/PropertyValue">--}}
-    {{--        <span itemprop="propertyID" content="item_group_id"></span>--}}
-    {{--        <meta itemprop="value" content="fb_tshirts">--}}
-    {{--    </div>--}}
     <div itemprop="offers" itemscope itemtype="http://schema.org/Offer">
         @if($product->inStock())
             <link itemprop="availability" href="http://schema.org/InStock">
@@ -32,14 +28,14 @@
             <meta itemprop="returnPolicySeasonalOverride" content="false">
             <meta itemprop="returnMethod" content="http://schema.org/ReturnByMail">
             <meta itemprop="returnFees" content="http://schema.org/FreeReturn">
-            @foreach(\Dashed\DashedEcommerceCore\Classes\Countries::getAllSelectedCountryCodes() as $countryCode)
+            @foreach($countryCodes as $countryCode)
                 <div itemprop="applicableCountry" itemscope itemtype="http://schema.org/Country">
                     <meta itemprop="name" content="{{ $countryCode }}">
                 </div>
             @endforeach
         </div>
 
-        @foreach(\Dashed\DashedEcommerceCore\Classes\Countries::getAllSelectedCountryCodes() as $countryCode)
+        @foreach($countryCodes as $countryCode)
             <div itemprop="shippingDetails" itemscope itemtype="http://schema.org/OfferShippingDetails">
                 <div itemprop="shippingDestination" itemscope itemtype="http://schema.org/DefinedRegion">
                     <meta itemprop="addressCountry" content="NL">
@@ -48,7 +44,7 @@
                     <div itemprop="handlingTime" itemscope itemtype="http://schema.org/QuantitativeValue">
                         <meta itemprop="minValue" content="0">
                         <meta itemprop="maxValue" content="0">
-                        <meta itemprop="unitCode" content="d"> {{-- d = dagen --}}
+                        <meta itemprop="unitCode" content="d">
                     </div>
                     <div itemprop="transitTime" itemscope itemtype="http://schema.org/QuantitativeValue">
                         <meta itemprop="minValue" content="1">
@@ -76,7 +72,7 @@
                     <div itemprop="handlingTime" itemscope itemtype="http://schema.org/QuantitativeValue">
                         <meta itemprop="minValue" content="0">
                         <meta itemprop="maxValue" content="0">
-                        <meta itemprop="unitCode" content="d"> {{-- d = dagen --}}
+                        <meta itemprop="unitCode" content="d">
                     </div>
                     <div itemprop="transitTime" itemscope itemtype="http://schema.org/QuantitativeValue">
                         <meta itemprop="minValue" content="1">

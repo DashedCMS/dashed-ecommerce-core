@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
@@ -45,6 +46,10 @@ class ShippingZone extends Model
 
         static::deleting(function ($shippingZone) {
             $shippingZone->shippingMethods()->delete();
+        });
+
+        static::saved(function ($shippingZone) {
+            Cache::forget('all-selected-country-codes');
         });
     }
 

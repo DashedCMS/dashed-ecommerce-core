@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Countries
@@ -46,14 +47,18 @@ class Countries
 
     public static function getAllSelectedCountryCodes(): array
     {
-        $countryCodes = [];
+        $countryCodes = Cache::rememberForever('all-selected-country-codes', function () {
+            $countryCodes = [];
 
-        foreach (ShippingZones::getActiveRegions() as $region) {
-            $countryCode = self::getCountryIsoCode($region['value']);
-            if ($countryCode && ! in_array($countryCode, $countryCodes)) {
-                $countryCodes[] = $countryCode;
+            foreach (ShippingZones::getActiveRegions() as $region) {
+                $countryCode = self::getCountryIsoCode($region['value']);
+                if ($countryCode && !in_array($countryCode, $countryCodes)) {
+                    $countryCodes[] = $countryCode;
+                }
             }
-        }
+
+            return $countryCodes;
+        });
 
         return $countryCodes;
     }
