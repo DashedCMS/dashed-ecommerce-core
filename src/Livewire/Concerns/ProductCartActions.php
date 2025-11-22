@@ -316,7 +316,6 @@ trait ProductCartActions
             $this->extras = $extrasCollection->toArray();
         }
 
-
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
         $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;

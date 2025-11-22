@@ -63,7 +63,7 @@ class ShowProduct extends Component
 
     public function updated($name, $value)
     {
-        $this->fillInformation();
+//        $this->fillInformation();
     }
 
     public function rules()
