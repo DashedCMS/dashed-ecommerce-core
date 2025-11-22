@@ -56,7 +56,7 @@ class ProductGroupResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string|BackedEnum|null $navigatioonIcon = 'heroicon-o-shopping-bag';
     protected static string|UnitEnum|null $navigationGroup = 'Producten';
     protected static ?string $navigationLabel = 'Product groepen';
     protected static ?string $label = 'Product groep';

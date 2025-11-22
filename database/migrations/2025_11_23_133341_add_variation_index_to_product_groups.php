@@ -10,7 +10,7 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        Schema::table('dashed__product_groups', function (Blueprint $table) {// in ProductGroup migration:
+        Schema::table('dashed__product_groups', function (Blueprint $table) {
             $table->json('variation_index')->nullable();
         });
 

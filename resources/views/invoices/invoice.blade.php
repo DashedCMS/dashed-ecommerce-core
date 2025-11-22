@@ -31,12 +31,12 @@
                 @if($order->invoice_street)
                     <p>{{ $order->invoice_street }} {{ $order->invoice_house_nr }}</p>
 
-                    <p>{{ $order->invoice_zip_code . ', ' . $order->invoice_city }}</p>
+                    <p>{{ $order->invoice_zip_code . ' ' . $order->invoice_city }}</p>
                     <p>{{ $order->invoice_country }}</p>
                 @else
                     <p>{{ $order->street }} {{ $order->house_nr }}</p>
 
-                    <p>{{ $order->zip_code . ', ' . $order->city }}</p>
+                    <p>{{ $order->zip_code . ' ' . $order->city }}</p>
                     <p>{{ $order->country }}</p>
                 @endif
 
@@ -211,9 +211,10 @@
                     <b>{{ Customsetting::get('site_name') }}</b>
                 </p>
 
-                <p>{{ Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') }}</p>
+                <p>{{ Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') }}</p>
+                <p>{{ Customsetting::get('company_postal_code') . ' ' . Customsetting::get('company_city') }}</p>
 
-                <p>{{ Customsetting::get('company_city') . ', ' . Customsetting::get('company_country') }}</p>
+                <p>{{ Customsetting::get('company_country') }}</p>
             </td>
 
             <td class="sender">
