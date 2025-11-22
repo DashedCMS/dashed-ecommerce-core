@@ -47,6 +47,13 @@ class ProductGroup extends Model
         'deleted_at' => 'datetime',
     ];
 
+    protected $with = [
+        'suggestedProducts',
+        'crossSellProducts',
+        'tabs',
+        'globalTabs',
+    ];
+
     protected static function booted()
     {
         static::saved(function ($productGroup) {

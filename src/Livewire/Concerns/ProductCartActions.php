@@ -316,6 +316,7 @@ trait ProductCartActions
             $this->extras = $extrasCollection->toArray();
         }
 
+
         $this->name = $this->product->name ?? $this->productGroup->name;
         $this->images = $this->product ? $this->product->imagesToShow : $this->productGroup->imagesToShow;
         $this->originalImages = $this->product ? $this->product->originalImagesToShow : $this->productGroup->originalImagesToShow;
@@ -326,7 +327,7 @@ trait ProductCartActions
             ? $this->product->replaceContentVariables($this->product->short_description, $this->filters)
             : $this->productGroup->replaceContentVariables($this->productGroup->short_description, $this->filters, $this->product);
         $this->sku = $this->product->sku ?? '';
-        $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs();
+//        $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs(); //wordt al ingeladen via de layout
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
         $this->contentBlocks = $this->product ? $this->product->contentBlocks : $this->productGroup->contentBlocks;
 
@@ -472,6 +473,14 @@ trait ProductCartActions
                     'productCategories',
                     'volumeDiscounts',
                     'productExtras.productExtraOptions',
+                    'suggestedProducts',
+                    'crossSellProducts',
+                    'tabs',
+                    'globalTabs',
+                    'ownTabs',
+                    'faqs',
+                    'globalFaqs',
+                    'ownFaqs',
                 ])->find($fallbackProduct->id);
 
                 $this->variationExists = (bool) $this->product;
@@ -499,6 +508,14 @@ trait ProductCartActions
             'productCategories',
             'volumeDiscounts',
             'productExtras.productExtraOptions',
+            'suggestedProducts',
+            'crossSellProducts',
+            'tabs',
+            'globalTabs',
+            'ownTabs',
+            'faqs',
+            'globalFaqs',
+            'ownFaqs',
         ])->find($productId);
     }
 

@@ -433,7 +433,7 @@ class Products
             $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
                 ->publicShowable()
                 ->without(['productFilters'])
-//                ->select(['id', 'product_group_id'])
+                ->select(['id', 'product_group_id'])
                 ->get();
 
             // Sorteer op volgorde van recently viewed (eerste in array = meest recent)
@@ -457,90 +457,91 @@ class Products
             }
         }
 
-        /*
-         * STAP 2: Aanvullen met producten uit dezelfde categorieën
-         *
-         * - Als een $productGroup is meegegeven: categorieën van die groep gebruiken
-         * - Anders: categorieën van de al gevonden producten gebruiken
-         */
-
-        if ($result->count() < $limit) {
-            $categoryIds = collect();
-
-            if ($productGroup) {
-                // Pak alle producten in deze productgroep en verzamel hun categorieën
-                $groupProducts = Product::where('product_group_id', $productGroup->id)
-                    ->without(['productFilters'])
-                    ->with('productCategories:id')
-                    ->get();
-
-                $categoryIds = $groupProducts->flatMap(function ($product) {
-                    return $product->productCategories->pluck('id');
-                });
-            } else {
-                // Categorieën op basis van de al gekozen recently viewed producten
-                $categoryIds = $result->flatMap(function ($product) {
-                    return $product->productCategories->pluck('id');
-                });
-            }
-
-            $categoryIds = $categoryIds->unique()->values();
-
-            if ($categoryIds->isNotEmpty()) {
-                $table = (new ProductCategory())->getTable();
-
-                $sameCategoryProducts = Product::publicShowable()
-                    ->whereNotIn('product_group_id', $usedGroupIds)
-                    ->whereHas('productCategories', function ($q) use ($categoryIds, $table) {
-                        $q->whereIn("$table.id", $categoryIds);
-                    })
-                    ->without(['productFilters'])
-                    ->inRandomOrder()
-                    ->limit($limit * 3)
-                    ->get();
-
-                foreach ($sameCategoryProducts as $product) {
-                    if ($result->count() >= $limit) {
-                        break;
-                    }
-
-                    if (in_array($product->product_group_id, $usedGroupIds, true)) {
-                        continue;
-                    }
-
-                    $result->push($product);
-                    $usedGroupIds[] = $product->product_group_id;
-                    $usedProductIds[] = $product->id;
-                }
-            }
-        }
-
-        /*
-         * STAP 3: Fallback – random producten (als er nog niet genoeg zijn)
-         */
-        if ($result->count() < $limit) {
-            $fallbackProducts = Product::publicShowable()
-                ->whereNotIn('product_group_id', $usedGroupIds)
-                ->without(['productFilters'])
-                ->with(['productGroup'])
-                ->inRandomOrder()
-                ->limit($limit * 3)
-                ->get();
-
-            foreach ($fallbackProducts as $product) {
-                if ($result->count() >= $limit) {
-                    break;
-                }
-
-                if (in_array($product->product_group_id, $usedGroupIds, true)) {
-                    continue;
-                }
-
-                $result->push($product);
-                $usedGroupIds[] = $product->product_group_id;
-                $usedProductIds[] = $product->id;
-            }
-        }
+//        /*
+//         * STAP 2: Aanvullen met producten uit dezelfde categorieën
+//         *
+//         * - Als een $productGroup is meegegeven: categorieën van die groep gebruiken
+//         * - Anders: categorieën van de al gevonden producten gebruiken
+//         */
+//
+//        if ($result->count() < $limit) {
+//            $categoryIds = collect();
+//
+//            if ($productGroup) {
+//                // Pak alle producten in deze productgroep en verzamel hun categorieën
+//                $groupProducts = Product::where('product_group_id', $productGroup->id)
+//                    ->without(['productFilters'])
+//                    ->with('productCategories:id')
+//                    ->select(['id', 'product_group_id'])
+//                    ->get();
+//
+//                $categoryIds = $groupProducts->flatMap(function ($product) {
+//                    return $product->productCategories->pluck('id');
+//                });
+//            } else {
+//                // Categorieën op basis van de al gekozen recently viewed producten
+//                $categoryIds = $result->flatMap(function ($product) {
+//                    return $product->productCategories->pluck('id');
+//                });
+//            }
+//
+//            $categoryIds = $categoryIds->unique()->values();
+//
+//            if ($categoryIds->isNotEmpty()) {
+//                $table = (new ProductCategory())->getTable();
+//
+//                $sameCategoryProducts = Product::publicShowable()
+//                    ->whereNotIn('product_group_id', $usedGroupIds)
+//                    ->whereHas('productCategories', function ($q) use ($categoryIds, $table) {
+//                        $q->whereIn("$table.id", $categoryIds);
+//                    })
+//                    ->without(['productFilters'])
+//                    ->inRandomOrder()
+//                    ->limit($limit * 3)
+//                    ->get();
+//
+//                foreach ($sameCategoryProducts as $product) {
+//                    if ($result->count() >= $limit) {
+//                        break;
+//                    }
+//
+//                    if (in_array($product->product_group_id, $usedGroupIds, true)) {
+//                        continue;
+//                    }
+//
+//                    $result->push($product);
+//                    $usedGroupIds[] = $product->product_group_id;
+//                    $usedProductIds[] = $product->id;
+//                }
+//            }
+//        }
+//
+//        /*
+//         * STAP 3: Fallback – random producten (als er nog niet genoeg zijn)
+//         */
+//        if ($result->count() < $limit) {
+//            $fallbackProducts = Product::publicShowable()
+//                ->whereNotIn('product_group_id', $usedGroupIds)
+//                ->without(['productFilters'])
+//                ->with(['productGroup'])
+//                ->inRandomOrder()
+//                ->limit($limit * 3)
+//                ->get();
+//
+//            foreach ($fallbackProducts as $product) {
+//                if ($result->count() >= $limit) {
+//                    break;
+//                }
+//
+//                if (in_array($product->product_group_id, $usedGroupIds, true)) {
+//                    continue;
+//                }
+//
+//                $result->push($product);
+//                $usedGroupIds[] = $product->product_group_id;
+//                $usedProductIds[] = $product->id;
+//            }
+//        }
 
         // Namen overschrijven als de productgroep alleen de parent wil tonen
         $result = $applyParentNames($result);

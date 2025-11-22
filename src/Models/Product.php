@@ -589,7 +589,7 @@ class Product extends Model
 
     public function inStock(): bool
     {
-        return $this->in_stock;
+        return $this->in_stock ?: false;
     }
 
     public function calculateInStock(): void
