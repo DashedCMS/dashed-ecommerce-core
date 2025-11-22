@@ -41,17 +41,17 @@ class ShowProduct extends Component
         $metaModel = $this->product ?: $this->productGroup;
 
         $metaDescription = $metaModel->metadata->description ?? '';
-        if (! $metaDescription) {
+        if (!$metaDescription) {
             $metaDescription = $metaModel->productGroup ? ($metaModel->productGroup->metadata->description ?? '') : '';
         }
 
         seo()->metaData('metaTitle', $metaModel->metadata && $metaModel->metadata->title ? $metaModel->metadata->title : $metaModel->name);
         seo()->metaData('metaDescription', $metaDescription);
         $metaImage = $metaModel->metadata->image ?? '';
-        if (! $metaImage) {
+        if (!$metaImage) {
             $metaImage = $metaModel->productGroup ? ($metaModel->productGroup->metadata->image ?? '') : '';
         }
-        if (! $metaImage) {
+        if (!$metaImage) {
             $metaImage = $metaModel->firstImage;
         }
         if ($metaImage) {
@@ -63,7 +63,11 @@ class ShowProduct extends Component
 
     public function updated($name, $value)
     {
-//        $this->fillInformation();
+        if(str($name)->contains(['qty', 'quantity', 'extras', 'files'])) {
+            return;
+        }
+
+        $this->fillInformation();
     }
 
     public function rules()
