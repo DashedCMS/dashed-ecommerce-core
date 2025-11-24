@@ -10,7 +10,7 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('dashed__product_groups', 'child_products_count')) {
+        if (! Schema::hasColumn('dashed__product_groups', 'child_products_count')) {
             Schema::table('dashed__product_groups', function (Blueprint $table) {
                 $table->integer('child_products_count')->default(0);
             });
