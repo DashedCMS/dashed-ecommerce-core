@@ -63,7 +63,7 @@ class ShowProduct extends Component
 
     public function updated($name, $value)
     {
-        if(str($name)->contains(['qty', 'quantity', 'extras', 'files'])) {
+        if(str($name)->contains(['qty', 'quantity'])) {
             return;
         }
 
