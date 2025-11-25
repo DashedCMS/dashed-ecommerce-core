@@ -349,7 +349,7 @@ class DiscountCode extends Model
                     return false;
                 }
             } elseif ($this->minimal_requirements == 'amount') {
-                if ($this->minimum_amount > ShoppingCart::total(false, false)) {
+                if ($this->minimum_amount > cartHelper()->getTotalWithoutDiscount()) {
                     return false;
                 }
             }
