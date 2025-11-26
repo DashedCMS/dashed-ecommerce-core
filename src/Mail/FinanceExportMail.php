@@ -15,15 +15,17 @@ class FinanceExportMail extends Mailable
     use SerializesModels;
 
     public string $hash;
+    public ?string $subjectString = '';
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $hash)
+    public function __construct(string $hash, ?string $subjectString = '')
     {
         $this->hash = $hash;
+        $this->subjectString = $subjectString;
     }
 
     /**
@@ -37,12 +39,12 @@ class FinanceExportMail extends Mailable
 
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
-            ->subject(Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
+            ->subject($this->subjectString ?: Translation::get('exported-invoice-email-subject', 'orders', 'Exported invoice'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf', Customsetting::get('site_name') . ' - exported invoice.pdf');
+        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf', $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported invoice.pdf'));
 
         return $mail;
     }

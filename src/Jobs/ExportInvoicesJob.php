@@ -147,7 +147,7 @@ class ExportInvoicesJob implements ShouldQueue
             Storage::disk('public')->put($invoicePath, $output);
         }
 
-        Mail::to($this->email)->send(new FinanceExportMail($this->hash));
+        Mail::to($this->email)->send(new FinanceExportMail($this->hash, 'Facturen van ' . ($startDate ? $startDate->format('d-m-Y') : 'het begin') . ' tot ' . ($endDate ? $endDate->format('d-m-Y') : 'nu')));
         Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }

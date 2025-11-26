@@ -114,7 +114,7 @@ class ExportFinancialReportJob implements ShouldQueue
         $pdfPath = '/dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf';
         Storage::disk('public')->put($pdfPath, $output);
 
-        Mail::to($this->email)->send(new FinanceReportMail($this->hash));
+        Mail::to($this->email)->send(new FinanceReportMail($this->hash, 'Financieel rapport van ' . $startDate->format('Y-m-d') . ' tot ' . $endDate->format('Y-m-d')));
         Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }

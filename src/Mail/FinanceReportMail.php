@@ -15,15 +15,17 @@ class FinanceReportMail extends Mailable
     use SerializesModels;
 
     public string $hash;
+    public ?string $subjectString = null;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $hash)
+    public function __construct(string $hash, ?string $subjectString = null)
     {
         $this->hash = $hash;
+        $this->subjectString = $subjectString;
     }
 
     /**
@@ -37,12 +39,12 @@ class FinanceReportMail extends Mailable
 
         $mail = $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
-            ->subject(Translation::get('exported-finance-report-email-subject', 'finance-report', 'Exported finance report'))
+            ->subject($this->subjectString ?: Translation::get('exported-finance-report-email-subject', 'finance-report', 'Exported finance report'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', Customsetting::get('site_name') . ' - exported finance report.pdf');
+        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported finance report.pdf'));
 
         return $mail;
     }

@@ -40,12 +40,12 @@ class ProductListExportMail extends Mailable
 
         return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
-            ->subject(Translation::get('exported-product-list-email-subject', 'products', 'Exported product list'))
+            ->subject(Translation::get('exported-product-list-email-subject', 'products', 'Geexporteerde productlijst'))
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])
             ->attach($productListPath, [
-                'as' => Customsetting::get('site_name') . ' - exported product list.xlsx',
+                'as' => Customsetting::get('site_name') . ' - geexporteerde productlijst.xlsx',
                 'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);
     }
