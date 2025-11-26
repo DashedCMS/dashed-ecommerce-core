@@ -271,6 +271,7 @@ class DiscountCode extends Model
     public function isValidForCart($email = null, ?string $cartType = 'default'): bool
     {
         cartHelper()->initialize($cartType);
+        cartHelper()->setTotal(true);
         $itemsInCart = cartHelper()->getCartItems();
 
         if ($this->use_stock && $this->stock() < 1) {
