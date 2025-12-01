@@ -48,8 +48,6 @@ class OrderSettingsPage extends Page
         }
 
         $formData["apis"] = Customsetting::get('apis', null, []);
-        $formData["order_index_show_other_statuses"] = Customsetting::get('order_index_show_other_statuses', null, true) ? true : false;
-        $formData["order_index_show_order_products"] = Customsetting::get('order_index_show_order_products', null, false) ? true : false;
         $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
         $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
         $formData["packing_slip_printer_connector_type"] = Customsetting::get('packing_slip_printer_connector_type', null, '');
@@ -127,10 +125,6 @@ class OrderSettingsPage extends Page
         $newSchema = [
             TextEntry::make('label')
                 ->state("Algemene instelling voor bestellingen"),
-            Toggle::make("order_index_show_other_statuses")
-                ->label('Toon de extra statussen op het bestellingsoverzicht'),
-            Toggle::make("order_index_show_order_products")
-                ->label('Toon de bestelde producten op het bestellingsoverzicht'),
             Section::make('Facturen printer')->columnSpanFull()
                 ->schema([
                     Select::make("invoice_printer_connector_type")
@@ -323,8 +317,6 @@ class OrderSettingsPage extends Page
         }
 
         Customsetting::set('apis', $this->form->getState()["apis"]);
-        Customsetting::set('order_index_show_other_statuses', $this->form->getState()["order_index_show_other_statuses"]);
-        Customsetting::set('order_index_show_order_products', $this->form->getState()["order_index_show_order_products"]);
 
         foreach ($locales as $locale) {
             Customsetting::set('fulfillment_status_unhandled_enabled', $this->form->getState()["fulfillment_status_unhandled_enabled_{$locale['id']}"], null, $locale['id']);

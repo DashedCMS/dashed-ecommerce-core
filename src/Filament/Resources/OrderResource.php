@@ -253,13 +253,16 @@ class OrderResource extends Resource
             ->columns([
                 TextColumn::make('invoice_id')
                     ->label('Bestelling ID')
+                    ->toggleable()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Betaalmethode')
+                    ->toggleable()
                     ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
                 TextColumn::make('payment_status')
                     ->label('Betaalstatus')
+                    ->toggleable()
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
                     ->colors([
@@ -270,6 +273,7 @@ class OrderResource extends Resource
                     ]),
                 TextColumn::make('fulfillment_status')
                     ->label('Fulfillment status')
+                    ->toggleable()
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->credit_for_order_id ? (Orders::getReturnStatusses()[$record->retour_status] ?? '') : (Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? ''))
                     ->colors([
@@ -278,6 +282,7 @@ class OrderResource extends Resource
                     ]),
                 TextColumn::make('name')
                     ->label('Klant')
+                    ->toggleable()
                     ->searchable(array_merge([
                         'hash',
                         'id',
@@ -313,14 +318,18 @@ class OrderResource extends Resource
                         ->toArray()))
                     ->sortable(),
                 TextColumn::make('total')
+                    ->toggleable()
                     ->sortable()
                     ->label('Totaal')
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('orderProducts.name')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->getStateUsing(fn($record) => str($record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))->limit(30))
+                    ->tooltip(fn ($record) => $record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))
                     ->label('Bestelde producten')
-                    ->searchable()
-                    ->visible(Customsetting::get('order_index_show_order_products', null, false)),
+                    ->searchable(),
                 TextColumn::make('created_at')
+                    ->toggleable()
                     ->label('Aangemaakt op')
                     ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
                     ->searchable()

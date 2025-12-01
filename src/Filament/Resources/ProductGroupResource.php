@@ -317,7 +317,7 @@ class ProductGroupResource extends Resource
                     ->columnSpanFull()
                     ->helperText('Afbeeldingen van een variant worden VOOR de afbeelding van de product groep getoond'),
                 cms()->getFilamentBuilderBlock(),
-            ], array_merge(static::customBlocksTab('productBlocks'), static::customBlocksTab('productGroupBlocks'))))
+            ], static::customBlocksTab(['productBlocks', 'productGroupBlocks'])))
             ->collapsible()
             ->persistCollapsed()
             ->columns([
