@@ -659,6 +659,7 @@ class PointOfSaleApiController extends Controller
     public function createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId): array
     {
         $this->updateCart($cartInstance, $posCart->identifier);
+        cartHelper()->updateData();
         $cartItems = cartHelper()->getCartItems();
 
         if (! count($cartItems)) {
@@ -751,6 +752,7 @@ class PointOfSaleApiController extends Controller
         $order->invoice_id = 'PROFORMA';
 
         session(['discountCode' => $posCart->discount_code]);
+        cartHelper()->applyDiscountCode($posCart->discount_code);
         $subTotal = cartHelper()->getSubtotal();
         $discount = cartHelper()->getDiscount();
         $btw = cartHelper()->getTax();

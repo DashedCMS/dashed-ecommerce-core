@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Dashed\DashedEcommerceCore\Filament\Imports\EANCodesImporter;
 use Filament\Actions\Action;
+use Filament\Actions\ImportAction;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Maatwebsite\Excel\Facades\Excel;
@@ -26,7 +28,7 @@ class ListProducts extends ListRecords
 
     protected static string $resource = ProductResource::class;
 
-    protected Width | string | null $maxContentWidth = 'full';
+    protected Width|string|null $maxContentWidth = 'full';
 
     protected function getTableQuery(): ?Builder
     {
@@ -76,6 +78,15 @@ class ListProducts extends ListRecords
                         ->success()
                         ->send();
                 }),
+//            ImportAction::make()
+//                ->importer(EANCodesImporter::class)
+//                ->label('Importeer EAN codes')
+//                ->modelLabel('EAN codes')
+////                ->getCustomModalHeading('test')
+////                ->help('Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . Product::whereNull('ean')->count() . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
+//                ->icon('heroicon-s-qr-code')
+//                ->color('primary')
+//                ->hiddenLabel(),
             Action::make('importEANCodes')
                 ->label('Importeer EAN codes')
                 ->icon('heroicon-s-qr-code')
