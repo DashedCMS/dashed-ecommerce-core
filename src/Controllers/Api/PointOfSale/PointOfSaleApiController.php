@@ -1438,7 +1438,7 @@ class PointOfSaleApiController extends Controller
 
         $orders = $orders
             ->skip($skip)
-            ->limit(100)
+            ->limit(50)
             ->get()
             ->groupBy(function ($order) {
                 return $order->created_at->format('Y-m-d'); // Group orders by the date part
