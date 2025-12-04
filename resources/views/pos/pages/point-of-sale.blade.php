@@ -2372,6 +2372,7 @@
 
         async clearProducts() {
             this.loading = true;
+            this.removeDiscount();
             try {
                 let response = await fetch('{{ route('api.point-of-sale.clear-products') }}', {
                     method: 'POST',
