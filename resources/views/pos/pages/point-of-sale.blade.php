@@ -6,7 +6,6 @@
                 <div class="flex flex-wrap justify-between items-center">
                     <div class="flex items-center justify-center gap-4">
                         <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
-                        <p class="font-bold text-xl" x-html="selectedOrder.id">|</p>
                         <p class="font-bold text-xl">|</p>
                         <p class="font-bold text-5xl" x-html="time"></p>
                     </div>
