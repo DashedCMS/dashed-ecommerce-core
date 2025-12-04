@@ -349,14 +349,19 @@ class PointOfSaleApiController extends Controller
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
         $posCart->products = [
-            'id' => null,
-            'name' => 'Bestelling ' . $order['invoice_id'],
-            'price' => $order['total'],
-            'quantity' => 1,
-            'singlePrice' => $order['total'],
-            'priceFormatted' => CurrencyHelper::formatPrice($order['total']),
-            'customProduct' => true,
-            'product' => null,
+            [
+                'id' => null,
+                'name' => 'Bestelling ' . $order['invoiceId'],
+                'price' => $order['total'],
+                'quantity' => 1,
+                'singlePrice' => $order['total'],
+                'priceFormatted' => CurrencyHelper::formatPrice($order['total']),
+                'customProduct' => true,
+                'vatPercentage' => 0,
+                'product' => null,
+                'identifier' => Str::random(),
+                'customId' => 'custom-' . rand(1, 10000000),
+            ]
         ];
         $posCart->save();
 
@@ -562,6 +567,10 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $posIdentifier = $data['posIdentifier'] ?? null;
+        $order = $data['order'] ?? null;
+        if($order){
+            $order = Order::find($order['id']);
+        }
         $cartInstance = $data['cartInstance'] ?? null;
         $orderOrigin = $data['orderOrigin'] ?? null;
         $paymentMethodId = $data['paymentMethodId'] ?? null;
@@ -569,12 +578,16 @@ class PointOfSaleApiController extends Controller
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
-        $response = $this->createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId);
+        if (!$order) {
+            $response = $this->createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId);
+        }
 
-        if ($response['success']) {
+        if ($order || $response['success']) {
             $paymentMethod = PaymentMethod::find($paymentMethodId);
 
-            $order = $response['order'];
+            if (!$order) {
+                $order = $response['order'];
+            }
 
             $suggestedCashPaymentAmounts = $this->getPaymentOptions($order->total);
 

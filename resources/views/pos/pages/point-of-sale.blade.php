@@ -2551,6 +2551,7 @@
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
+                        order: this.selectedOrder,
                         posIdentifier: this.posIdentifier,
                         cartInstance: this.cartInstance,
                         orderOrigin: this.orderOrigin,
@@ -3144,47 +3145,48 @@
         async startCheckoutWithOrder() {
             this.checkoutPopup = true;
             this.ordersPopup = false;
+            this.total = this.selectedOrder.total;
 
-            try {
-                let response = await fetch('{{ route('api.point-of-sale.insert-order-in-pos-cart') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        posIdentifier: this.posIdentifier,
-                        userId: this.userId,
-                        order: this.selectedOrder,
-                    })
-                });
+            {{--try {--}}
+            {{--    let response = await fetch('{{ route('api.point-of-sale.insert-order-in-pos-cart') }}', {--}}
+            {{--        method: 'POST',--}}
+            {{--        headers: {--}}
+            {{--            'Content-Type': 'application/json',--}}
+            {{--            'Accept': 'application/json',--}}
+            {{--        },--}}
+            {{--        body: JSON.stringify({--}}
+            {{--            posIdentifier: this.posIdentifier,--}}
+            {{--            userId: this.userId,--}}
+            {{--            order: this.selectedOrder,--}}
+            {{--        })--}}
+            {{--    });--}}
 
-                let data = await response.json();
+            {{--    let data = await response.json();--}}
 
-                if (!response.ok) {
-                    this.loading = false;
-                    return $wire.dispatch('notify', {
-                        type: 'danger',
-                        message: data.message,
-                    })
-                }
+            {{--    if (!response.ok) {--}}
+            {{--        this.loading = false;--}}
+            {{--        return $wire.dispatch('notify', {--}}
+            {{--            type: 'danger',--}}
+            {{--            message: data.message,--}}
+            {{--        })--}}
+            {{--    }--}}
 
-                this.retrieveCart();
-                this.loading = false;
+            {{--    this.retrieveCart();--}}
+            {{--    this.loading = false;--}}
 
-                return $wire.dispatch('notify', {
-                    type: 'success',
-                    message: 'De bestelling is ingeladen.',
-                })
+            {{--    return $wire.dispatch('notify', {--}}
+            {{--        type: 'success',--}}
+            {{--        message: 'De bestelling is ingeladen.',--}}
+            {{--    })--}}
 
-            } catch (error) {
-                console.log(error);
-                this.loading = false;
-                return $wire.dispatch('notify', {
-                    type: 'danger',
-                    message: 'Kan het product niet bijwerken'
-                })
-            }
+            {{--} catch (error) {--}}
+            {{--    console.log(error);--}}
+            {{--    this.loading = false;--}}
+            {{--    return $wire.dispatch('notify', {--}}
+            {{--        type: 'danger',--}}
+            {{--        message: 'Kan het product niet bijwerken'--}}
+            {{--    })--}}
+            {{--}--}}
         },
 
         async updateSelectedStockQuantity(quantity) {
