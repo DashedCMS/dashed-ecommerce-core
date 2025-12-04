@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -27,10 +28,10 @@ use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderSettingsPage extends Page
 {
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bell';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Bestelling instellingen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string|UnitEnum|null $navigationGroup = 'Overige';
     protected static ?string $title = 'Bestelling instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';
@@ -56,21 +57,11 @@ class OrderSettingsPage extends Page
         $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
 
         foreach ($locales as $locale) {
-            $formData["fulfillment_status_unhandled_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_unhandled_enabled', null, false, $locale['id']) ? true : false;
-            $formData["fulfillment_status_unhandled_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_unhandled_email_subject', null, null, $locale['id']);
-            $formData["fulfillment_status_unhandled_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_unhandled_email_content', null, null, $locale['id']);
-            $formData["fulfillment_status_in_treatment_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_in_treatment_enabled', null, false, $locale['id']) ? true : false;
-            $formData["fulfillment_status_in_treatment_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_in_treatment_email_subject', null, null, $locale['id']);
-            $formData["fulfillment_status_in_treatment_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_in_treatment_email_content', null, null, $locale['id']);
-            $formData["fulfillment_status_packed_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_packed_enabled', null, false, $locale['id']) ? true : false;
-            $formData["fulfillment_status_packed_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_packed_email_subject', null, null, $locale['id']);
-            $formData["fulfillment_status_packed_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_packed_email_content', null, null, $locale['id']);
-            $formData["fulfillment_status_shipped_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_shipped_enabled', null, false, $locale['id']) ? true : false;
-            $formData["fulfillment_status_shipped_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_shipped_email_subject', null, null, $locale['id']);
-            $formData["fulfillment_status_shipped_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_shipped_email_content', null, null, $locale['id']);
-            $formData["fulfillment_status_handled_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_handled_enabled', null, false, $locale['id']) ? true : false;
-            $formData["fulfillment_status_handled_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_handled_email_subject', null, null, $locale['id']);
-            $formData["fulfillment_status_handled_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_handled_email_content', null, null, $locale['id']);
+            foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
+                $formData["fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_enabled', null, false, $locale['id']) ? true : false;
+                $formData["fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_email_subject', null, null, $locale['id']);
+                $formData["fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_email_content', null, null, $locale['id']);
+            }
         }
 
         $this->form->fill($formData);
@@ -87,7 +78,7 @@ class OrderSettingsPage extends Page
         foreach (forms()->builder('orderApiClasses') as $api) {
             foreach ($api['class']::formFields() as $field) {
                 $apiFields[] = $field
-                    ->visible(fn (Get $get) => $get('class') == $api['class']);
+                    ->visible(fn(Get $get) => $get('class') == $api['class']);
             }
         }
 
@@ -97,7 +88,7 @@ class OrderSettingsPage extends Page
                 ->helperText('Stel hier in welke APIs er bij een nieuwe bestelling aangeroepen moeten worden.')
                 ->visible(count(forms()->builder('orderApiClasses')))
                 ->reactive()
-                ->schema(fn (Get $get) => array_merge([
+                ->schema(fn(Get $get) => array_merge([
                     Select::make('class')
                         ->label('API class')
                         ->options(collect(forms()->builder('orderApiClasses'))->pluck('name', 'class')->toArray())
@@ -137,7 +128,7 @@ class OrderSettingsPage extends Page
                         ->label('Printer connectie type'),
                     TextInput::make("invoice_printer_connector_descriptor")
                         ->label('Naam van de printer')
-                        ->required(fn (Get $get) => $get("invoice_printer_connector_type"))
+                        ->required(fn(Get $get) => $get("invoice_printer_connector_type"))
                         ->reactive()
                         ->helperText('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
                 ])
@@ -154,7 +145,7 @@ class OrderSettingsPage extends Page
                         ->label('Printer connectie type'),
                     TextInput::make("packing_slip_printer_connector_descriptor")
                         ->label('Naam van de printer')
-                        ->required(fn (Get $get) => $get("packing_slip_printer_connector_type"))
+                        ->required(fn(Get $get) => $get("packing_slip_printer_connector_type"))
                         ->reactive()
                         ->helperText('Als je dit koppelt worden de pakbonnen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
                 ])
@@ -203,77 +194,26 @@ class OrderSettingsPage extends Page
                 TextEntry::make('label')
                     ->state("Fulfillment notificaties voor {$locale['name']}")
                     ->helperText('Je kan de volgende variablen gebruiken in de mails: ' . implode(', ', OrderVariableReplacer::getAvailableVariables())),
-                Toggle::make("fulfillment_status_unhandled_enabled_{$locale['id']}")
-                    ->label('Fulfillment status "Niet afgehandeld" actie')
-                    ->reactive()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ]),
-                TextInput::make("fulfillment_status_unhandled_email_subject_{$locale['id']}")
-                    ->label('Fulfillment status "Niet afgehandeld" mail onderwerp')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
-                cms()->editorField("fulfillment_status_unhandled_email_content_{$locale['id']}", 'Fulfillment status "Niet afgehandeld" mail inhoud')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_unhandled_enabled_{$locale['id']}")),
-                Toggle::make("fulfillment_status_in_treatment_enabled_{$locale['id']}")
-                    ->label('Fulfillment status "In behandeling" actie')
-                    ->reactive()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ]),
-                TextInput::make("fulfillment_status_in_treatment_email_subject_{$locale['id']}")
-                    ->label('Fulfillment status "In behandeling" mail onderwerp')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
-                cms()->editorField("fulfillment_status_in_treatment_email_content_{$locale['id']}", 'Fulfillment status "In behandeling" mail inhoud')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_in_treatment_enabled_{$locale['id']}")),
-                Toggle::make("fulfillment_status_packed_enabled_{$locale['id']}")
-                    ->label('Fulfillment status "Ingepakt" actie')
-                    ->reactive()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ]),
-                TextInput::make("fulfillment_status_packed_email_subject_{$locale['id']}")
-                    ->label('Fulfillment status "Ingepakt" mail onderwerp')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
-                cms()->editorField("fulfillment_status_packed_email_content_{$locale['id']}", 'Fulfillment status "Ingepakt" mail inhoud')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_packed_enabled_{$locale['id']}")),
-                Toggle::make("fulfillment_status_shipped_enabled_{$locale['id']}")
-                    ->label('Fulfillment status "Verzonden" actie')
-                    ->reactive()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ]),
-                TextInput::make("fulfillment_status_shipped_email_subject_{$locale['id']}")
-                    ->label('Fulfillment status "Verzonden" mail onderwerp')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
-                cms()->editorField("fulfillment_status_shipped_email_content_{$locale['id']}", 'Fulfillment status "Verzonden" mail inhoud')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_shipped_enabled_{$locale['id']}")),
-                Toggle::make("fulfillment_status_handled_enabled_{$locale['id']}")
-                    ->label('Fulfillment status "Afgehandeld" actie')
-                    ->reactive()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 2,
-                    ]),
-                TextInput::make("fulfillment_status_handled_email_subject_{$locale['id']}")
-                    ->label('Fulfillment status "Afgehandeld" mail onderwerp')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
-                cms()->editorField("fulfillment_status_handled_email_content_{$locale['id']}", 'Fulfillment status "Afgehandeld" mail inhoud')
-                    ->columnSpanFull()
-                    ->hidden(fn ($get) => ! $get("fulfillment_status_handled_enabled_{$locale['id']}")),
             ];
+
+            foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
+                $newSchema = array_merge($newSchema, [
+                    Toggle::make("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")
+                        ->label('Fulfillment status "' . $name . '" actie')
+                        ->reactive()
+                        ->columnSpan([
+                            'default' => 1,
+                            'lg' => 2,
+                        ]),
+                    TextInput::make("fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}")
+                        ->label('Fulfillment status "' . $name . '" mail onderwerp')
+                        ->columnSpanFull()
+                        ->hidden(fn($get) => !$get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
+                    cms()->editorField("fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}", 'Fulfillment status "' . $name . '" mail inhoud')
+                        ->columnSpanFull()
+                        ->hidden(fn($get) => !$get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
+                ]);
+            }
 
             $tabs[] = Tab::make($locale['id'])
                 ->label(ucfirst($locale['name']))
@@ -299,7 +239,7 @@ class OrderSettingsPage extends Page
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -308,7 +248,7 @@ class OrderSettingsPage extends Page
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -319,21 +259,11 @@ class OrderSettingsPage extends Page
         Customsetting::set('apis', $this->form->getState()["apis"]);
 
         foreach ($locales as $locale) {
-            Customsetting::set('fulfillment_status_unhandled_enabled', $this->form->getState()["fulfillment_status_unhandled_enabled_{$locale['id']}"], null, $locale['id']);
-            Customsetting::set('fulfillment_status_unhandled_email_subject', $this->form->getState()["fulfillment_status_unhandled_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_unhandled_email_content', $this->form->getState()["fulfillment_status_unhandled_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_in_treatment_enabled', $this->form->getState()["fulfillment_status_in_treatment_enabled_{$locale['id']}"], null, $locale['id']);
-            Customsetting::set('fulfillment_status_in_treatment_email_subject', $this->form->getState()["fulfillment_status_in_treatment_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_in_treatment_email_content', $this->form->getState()["fulfillment_status_in_treatment_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_packed_enabled', $this->form->getState()["fulfillment_status_packed_enabled_{$locale['id']}"], null, $locale['id']);
-            Customsetting::set('fulfillment_status_packed_email_subject', $this->form->getState()["fulfillment_status_packed_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_packed_email_content', $this->form->getState()["fulfillment_status_packed_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_shipped_enabled', $this->form->getState()["fulfillment_status_shipped_enabled_{$locale['id']}"], null, $locale['id']);
-            Customsetting::set('fulfillment_status_shipped_email_subject', $this->form->getState()["fulfillment_status_shipped_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_shipped_email_content', $this->form->getState()["fulfillment_status_shipped_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_handled_enabled', $this->form->getState()["fulfillment_status_handled_enabled_{$locale['id']}"], null, $locale['id']);
-            Customsetting::set('fulfillment_status_handled_email_subject', $this->form->getState()["fulfillment_status_handled_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
-            Customsetting::set('fulfillment_status_handled_email_content', $this->form->getState()["fulfillment_status_handled_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
+            foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
+                Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_enabled', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}"], null, $locale['id']);
+                Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_email_subject', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
+                Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_email_content', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
+            }
         }
 
         Customsetting::set('invoice_printer_connector_type', $this->form->getState()["invoice_printer_connector_type"], $site['id']);
@@ -360,7 +290,7 @@ class OrderSettingsPage extends Page
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();
 
-                    if (! $order) {
+                    if (!$order) {
                         $this->error('No paid orders found to test with');
 
                         return;
@@ -374,7 +304,7 @@ class OrderSettingsPage extends Page
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();
 
-                    if (! $order) {
+                    if (!$order) {
                         $this->error('No paid orders found to test with');
 
                         return;

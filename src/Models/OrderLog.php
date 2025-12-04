@@ -84,6 +84,8 @@ class OrderLog extends Model
             $string = 'heeft een notitie aangemaakt.';
         } elseif ($this->tag == 'order.changed-fulfillment-status-to-handled') {
             $string = 'heeft de bestelling als afgehandeld gemarkeerd.';
+        } elseif ($this->tag == 'order.changed-fulfillment-status-to-ready_for_pickup') {
+            $string = 'heeft de bestelling als klaar om op te halen gemarkeerd.';
         } elseif ($this->tag == 'order.changed-fulfillment-status-to-unhandled') {
             $string = 'heeft de bestelling als niet afgehandeld gemarkeerd.';
         } elseif ($this->tag == 'order.changed-fulfillment-status-to-packed') {
@@ -110,6 +112,10 @@ class OrderLog extends Model
             $string = 'heeft de fulfillment status update voor Niet afgehandeld laten versturen.';
         } elseif ($this->tag == 'order.fulfillment-status-update-to-unhandled.mail.not-send') {
             $string = 'heeft de fulfillment status update voor Niet afgehandeld niet laten versturen.';
+        } elseif ($this->tag == 'order.fulfillment-status-update-to-ready_for_pickup.mail.send') {
+            $string = 'heeft de fulfillment status update voor Klaar om op te halen laten versturen.';
+        } elseif ($this->tag == 'order.fulfillment-status-update-to-ready_for_pickup.mail.not-send') {
+            $string = 'heeft de fulfillment status update voor Klaar om op te halen niet laten versturen.';
         } elseif ($this->tag == 'order.fulfillment-status-update-to-handled.mail.send') {
             $string = 'heeft de fulfillment status update voor Afgehandeld laten versturen.';
         } elseif ($this->tag == 'order.fulfillment-status-update-to-handled.mail.not-send') {

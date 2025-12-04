@@ -19,6 +19,7 @@ class Orders
             'handled' => 'Afgehandeld',
             'in_treatment' => 'In behandeling',
             'packed' => 'Ingepakt',
+            'ready_for_pickup' => 'Klaar om opgehaald te worden',
             'shipped' => 'Verzonden',
         ];
     }

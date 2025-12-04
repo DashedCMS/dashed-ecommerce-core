@@ -224,7 +224,11 @@ class ProductCategory extends Model
                         }
                     }
                     if (View::exists(config('dashed-core.site_theme') . '.categories.index') && $productCategory) {
-                        seo()->metaData('metaTitle', $productCategory->name);
+                        seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
+                        seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
+                        if ($productCategory->metadata && $productCategory->metadata->image) {
+                            seo()->metaData('metaImage', $productCategory->metadata->image);
+                        }
 
                         View::share('model', $productCategory);
                         View::share('productCategory', $productCategory);

@@ -278,7 +278,7 @@ class OrderResource extends Resource
                     ->getStateUsing(fn ($record) => $record->credit_for_order_id ? (Orders::getReturnStatusses()[$record->retour_status] ?? '') : (Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? ''))
                     ->colors([
                         'danger',
-                        'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden'),
+                        'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden' || $state == 'Klaar om opgehaald te worden'),
                     ]),
                 TextColumn::make('name')
                     ->label('Klant')
