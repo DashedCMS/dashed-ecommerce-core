@@ -15,6 +15,8 @@ Route::group(
             ->name('api.point-of-sale.initialize');
         Route::post('/update-cart', [PointOfSaleApiController::class, 'retrieveCart'])
             ->name('api.point-of-sale.retrieve-cart');
+        Route::post('/retrieve-cart-for-customer', [PointOfSaleApiController::class, 'insertOrderInPOSCart'])
+            ->name('api.point-of-sale.insert-order-in-pos-cart');
         Route::post('/retrieve-cart-for-customer', [PointOfSaleApiController::class, 'retrieveCartForCustomer'])
             ->name('api.point-of-sale.retrieve-cart-for-customer');
         Route::post('/print-receipt', [PointOfSaleApiController::class, 'printReceipt'])

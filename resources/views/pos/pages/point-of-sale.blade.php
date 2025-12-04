@@ -6,6 +6,7 @@
                 <div class="flex flex-wrap justify-between items-center">
                     <div class="flex items-center justify-center gap-4">
                         <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
+                        <p class="font-bold text-xl" x-html="selectedOrder.id">|</p>
                         <p class="font-bold text-xl">|</p>
                         <p class="font-bold text-5xl" x-html="time"></p>
                     </div>
@@ -575,11 +576,11 @@
         x-cloak
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
-        <div class="absolute h-full w-full" @click="toggle('checkoutPopup')"></div>
+        <div class="absolute h-full w-full" @click="hideCheckoutPopup"></div>
         <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="bg-white rounded-lg p-8 grid gap-4">
                 <div class="absolute top-2 right-2 text-black cursor-pointer"
-                     @click="toggle('checkoutPopup')">
+                     @click="hideCheckoutPopup">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -588,7 +589,7 @@
                 </div>
                 <div>
                     <p class="text-3xl font-bold" x-html="'Totaal: ' + total"></p>
-                    <p class="text-xl text-gray-400">Selecteer betalingsoptie</p>
+                    <p class="text-xl text-gray-400">Selecteer betaalmethode</p>
                 </div>
                 <div class="grid gap-8" x-show="paymentMethods.length">
                     <template x-for="paymentMethod in paymentMethods">
@@ -899,10 +900,10 @@
     </div>
     <div class="fixed inset-0 flex items-center justify-center z-50 text-black" x-cloak x-show="ordersPopup"
          x-transition.opacity.scale.origin>
-        <div class="absolute h-full w-full" @click="showOrdersPopup"></div>
+        <div class="absolute h-full w-full" @click="hideOrdersPopup"></div>
         <div class="bg-primary-500 h-[95%] w-[95%] rounded-lg grid gap-0.5 relative grid-cols-8">
             <div class="absolute top-5 right-5 text-black cursor-pointer"
-                 @click="showOrdersPopup">
+                 @click="hideOrdersPopup">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="size-10">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -959,7 +960,10 @@
                     <div>
                         <p class="text-2xl font-bold">Bestellingen</p>
                     </div>
-                    <div class="grid gap-4 overflow-y-auto">
+                    <div
+                        class="grid gap-4 overflow-y-auto"
+                        x-ref="scrollContainer"
+                    >
                         <template x-for="orderDate in orders">
                             <div class="grid gap-2">
                                 <p class="text-gray-600 uppercase text-xs" x-html="orderDate.date"></p>
@@ -1007,6 +1011,7 @@
                                 </template>
                             </div>
                         </template>
+                        <div x-ref="sentinel" class="h-4"></div>
                     </div>
                 </div>
             </div>
@@ -1407,6 +1412,18 @@
 
                                         <span>Retourneren</span>
                                     </button>
+                                    <button @click="startCheckoutWithOrder"
+                                            x-show="selectedOrder.hasOpenAmount"
+                                            class="h-12 w-fit px-2 py-1 gap-2 bg-primary-500 text-white hover:bg-primary-700 transition-all duration-300 ease-in-out rounded-full flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                             stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/>
+                                        </svg>
+
+                                        <span>Betaling starten (Nog te betalen: <span
+                                                x-html="selectedOrder.openAmountFormatted"></span>)</span>
+                                    </button>
                                 </div>
                             </div>
                             <div class="grid gap-2">
@@ -1724,6 +1741,7 @@
         searchStockProductQuery: '',
         lastOrder: null,
         orders: [],
+        orderAmountToSkip: 0,
         selectedOrder: null,
         selectedStockProduct: null,
         searchOrderQuery: '',
@@ -2672,6 +2690,10 @@
 
         async closePayment() {
             this.loading = true;
+            if(this.selectedOrder){
+                this.clearProducts();
+            }
+            this.selectedOrder = '';
             try {
                 let response = await fetch('{{ route('api.point-of-sale.close-payment') }}', {
                     method: 'POST',
@@ -2985,7 +3007,7 @@
             }
         },
 
-        async retrieveOrders() {
+        async retrieveOrders(append = false) {
             try {
                 let response = await fetch('{{ route('api.point-of-sale.retrieve-orders') }}', {
                     method: 'POST',
@@ -2995,6 +3017,7 @@
                     },
                     body: JSON.stringify({
                         userId: this.userId,
+                        skip: this.orderAmountToSkip,
                         searchOrderQuery: this.searchOrderQuery,
                     })
                 });
@@ -3020,10 +3043,15 @@
                     ];
                     this.selectedOrder = data.order;
                 } else {
-                    this.orders = data.orders;
+                    if (append) {
+                        this.orders = this.orders.concat(data.orders);
+                    } else {
+                        this.orders = data.orders;
+                    }
                     if (!this.selectedOrder && data.firstOrder) {
                         this.selectedOrder = data.firstOrder;
                     }
+                    this.orderAmountToSkip = this.orderAmountToSkip + data.orders.reduce((acc, group) => acc + group.orders.length, 0);
                 }
 
             } catch (error) {
@@ -3113,6 +3141,52 @@
             }
         },
 
+        async startCheckoutWithOrder() {
+            this.checkoutPopup = true;
+            this.ordersPopup = false;
+
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.insert-order-in-pos-cart') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        userId: this.userId,
+                        order: this.selectedOrder,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.retrieveCart();
+                this.loading = false;
+
+                return $wire.dispatch('notify', {
+                    type: 'success',
+                    message: 'De bestelling is ingeladen.',
+                })
+
+            } catch (error) {
+                console.log(error);
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'Kan het product niet bijwerken'
+                })
+            }
+        },
+
         async updateSelectedStockQuantity(quantity) {
             this.selectedStockProduct.actual_stock = quantity;
         },
@@ -3162,9 +3236,32 @@
             } else {
                 this.ordersPopup = true;
                 this.cancelOrderPopup = false;
+                this.orderAmountToSkip = 0;
                 this.retrieveOrders();
                 this.focusSearchOrder();
             }
+            this.loading = false;
+        },
+
+        hideOrdersPopup() {
+            this.loading = true;
+            this.ordersPopup = false;
+            if(this.selectedOrder){
+                this.clearProducts();
+            }
+            this.selectedOrder = '';
+            this.focus();
+            this.loading = false;
+        },
+
+        hideCheckoutPopup() {
+            this.loading = true;
+            this.checkoutPopup = false;
+            if(this.selectedOrder){
+                this.clearProducts();
+            }
+            this.selectedOrder = '';
+            this.focus();
             this.loading = false;
         },
 
@@ -3330,12 +3427,31 @@
             });
 
             $watch('searchOrderQuery', (value, oldValue) => {
+                this.orderAmountToSkip = 0;
                 this.retrieveOrders();
             });
 
             this.updateTime();
 
             setInterval(() => this.updateTime(), 1000)
+
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) return
+
+                        // bijna onderaan → meer orders ophalen
+                        this.retrieveOrders(true)
+                    })
+                },
+                {
+                    root: this.$refs.scrollContainer, // scrollende div
+                    rootMargin: '0px 0px 200px 0px', // 200px vóór je echte bodem
+                    threshold: 0,
+                }
+            )
+
+            observer.observe(this.$refs.sentinel)
         }
     }))
     ;

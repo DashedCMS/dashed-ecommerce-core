@@ -60,9 +60,9 @@ class PointOfSaleApiController extends Controller
         }
 
         foreach ($products ?? [] as $productKey => &$product) {
-            if (! isset($product['customProduct']) || $product['customProduct'] == false) {
+            if (!isset($product['customProduct']) || $product['customProduct'] == false) {
                 $product = Product::find($product['id'] ?? 0);
-                if (! $product) {
+                if (!$product) {
                     unset($products[$productKey]);
 
                     continue;
@@ -265,7 +265,7 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (! $order) {
+        if (!$order) {
             return response()
                 ->json([
                     'success' => false,
@@ -289,13 +289,13 @@ class PointOfSaleApiController extends Controller
 
         $order = Order::find($orderId);
 
-        if (! $order) {
+        if (!$order) {
             return response()
                 ->json([
                     'success' => false,
                     'message' => 'Bestelling niet gevonden',
                 ], 404);
-        } elseif (! $order->email) {
+        } elseif (!$order->email) {
             return response()
                 ->json([
                     'success' => false,
@@ -336,6 +336,32 @@ class PointOfSaleApiController extends Controller
         return response()
             ->json([
                 'products' => $products ?? [],
+                'success' => true,
+            ]);
+    }
+
+    public function insertOrderInPOSCart(Request $request)
+    {
+        $data = $request->all();
+
+        $order = $data['order'] ?? null;
+        $posIdentifier = $data['posIdentifier'] ?? null;
+
+        $posCart = POSCart::where('identifier', $posIdentifier)->first();
+        $posCart->products = [
+            'id' => null,
+            'name' => 'Bestelling ' . $order['invoice_id'],
+            'price' => $order['total'],
+            'quantity' => 1,
+            'singlePrice' => $order['total'],
+            'priceFormatted' => CurrencyHelper::formatPrice($order['total']),
+            'customProduct' => true,
+            'product' => null,
+        ];
+        $posCart->save();
+
+        return response()
+            ->json([
                 'success' => true,
             ]);
     }
@@ -385,7 +411,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        if (! $productAlreadyInCart) {
+        if (!$productAlreadyInCart) {
             $products[] = [
                 'id' => $selectedProduct['id'],
                 'identifier' => Str::random(),
@@ -420,7 +446,7 @@ class PointOfSaleApiController extends Controller
             ->orWhere('ean', $productSearchQuery)
             ->first();
 
-        if (! $selectedProduct) {
+        if (!$selectedProduct) {
 
             $discountCode = DiscountCode::usable()->where('code', $productSearchQuery)->first();
 
@@ -599,7 +625,7 @@ class PointOfSaleApiController extends Controller
 
         $shippingMethod = ShippingMethod::find($data['shippingMethodId']);
 
-        if (! $shippingMethod) {
+        if (!$shippingMethod) {
             return response()
                 ->json([
                     'success' => false,
@@ -662,7 +688,7 @@ class PointOfSaleApiController extends Controller
         cartHelper()->updateData();
         $cartItems = cartHelper()->getCartItems();
 
-        if (! count($cartItems)) {
+        if (!count($cartItems)) {
             return [
                 'success' => false,
                 'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen'),
@@ -691,10 +717,10 @@ class PointOfSaleApiController extends Controller
         if ($posCart->discount_code) {
             $discountCode = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
 
-            if (! $discountCode) {
+            if (!$discountCode) {
                 session(['discountCode' => '']);
                 $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($posCart->email, $cartInstance)) {
+            } elseif ($discountCode && !$discountCode->isValidForCart($posCart->email, $cartInstance)) {
                 session(['discountCode' => '']);
 
                 $posCart->discount_code = '';
@@ -948,13 +974,13 @@ class PointOfSaleApiController extends Controller
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
         if ($paymentMethod->is_cash_payment) {
-            if (! $cashPaymentAmount) {
+            if (!$cashPaymentAmount) {
                 return response()
                     ->json([
                         'success' => false,
                         'message' => 'Geen bedrag ingevoerd',
                     ], 400);
-            } elseif (! $hasMultiplePayments && $cashPaymentAmount < $order->total) {
+            } elseif (!$hasMultiplePayments && $cashPaymentAmount < $order->total) {
                 return response()
                     ->json([
                         'success' => false,
@@ -989,7 +1015,7 @@ class PointOfSaleApiController extends Controller
 
         if ($paymentMethod->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
             $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
-            if (! $paymentMethod) {
+            if (!$paymentMethod) {
                 return response()
                     ->json([
                         'success' => false,
@@ -1055,7 +1081,7 @@ class PointOfSaleApiController extends Controller
         $order->refresh();
 
         if ($order->isPaidFor()) {
-            if (! $order->pos_order_handled) {
+            if (!$order->pos_order_handled) {
                 POSHelper::finishPaidOrder($order, $posCart);
             }
 
@@ -1113,7 +1139,7 @@ class PointOfSaleApiController extends Controller
 
         $posIdentifier = $data['posIdentifier'] ?? null;
         $order = $data['order'] ?? null;
-        if (! $order || ! isset($order['id'])) {
+        if (!$order || !isset($order['id'])) {
             return response()
                 ->json([
                     'success' => false,
@@ -1261,7 +1287,7 @@ class PointOfSaleApiController extends Controller
             $extraOrderLineName = $data['extraOrderLineName'] ?? '';
             $extraOrderLinePrice = $data['extraOrderLinePrice'] ?? '';
 
-            if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
+            if (!$extraOrderLine && $cancelledProductsQuantity == 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Geen producten geretourneerd',
@@ -1297,6 +1323,7 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $userId = $data['userId'] ?? null;
+        $skip = $data['skip'] ?? null;
         $searchOrderQuery = $data['searchOrderQuery'] ?? null;
         $fulfillmentStatusOptions = Orders::getFulfillmentStatusses();
         $paymentMethods = PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray();
@@ -1334,6 +1361,9 @@ class PointOfSaleApiController extends Controller
                         'id' => $order->id,
                         'invoiceId' => $order->invoice_id,
                         'createdAt' => $order->created_at->format('d-m-Y H:i'),
+                        'hasOpenAmount' => $order->openAmount > 0.00 ? true : false,
+                        'openAmount' => $order->openAmount,
+                        'openAmountFormatted' => CurrencyHelper::formatPrice($order->openAmount),
                         'total' => $order->total,
                         'totalFormatted' => CurrencyHelper::formatPrice($order->total),
                         'taxFormatted' => CurrencyHelper::formatPrice($order->btw),
@@ -1387,13 +1417,15 @@ class PointOfSaleApiController extends Controller
 
         $orders = Order::orderBy('created_at', 'desc');
 
-        if (! $searchOrderQuery) {
+        if (!$searchOrderQuery) {
             $orders->where('created_at', '>=', $endDate);
         } else {
             $orders->quickSearch($searchOrderQuery);
         }
 
         $orders = $orders
+            ->skip($skip)
+            ->limit(100)
             ->get()
             ->groupBy(function ($order) {
                 return $order->created_at->format('Y-m-d'); // Group orders by the date part
@@ -1432,6 +1464,9 @@ class PointOfSaleApiController extends Controller
                             'id' => $order->id,
                             'invoiceId' => $order->invoice_id,
                             'createdAt' => $order->created_at->format('d-m-Y H:i'),
+                            'hasOpenAmount' => $order->openAmount > 0.00 ? true : false,
+                            'openAmount' => $order->openAmount,
+                            'openAmountFormatted' => CurrencyHelper::formatPrice($order->openAmount),
                             'total' => $order->total,
                             'totalFormatted' => CurrencyHelper::formatPrice($order->total),
                             'taxFormatted' => CurrencyHelper::formatPrice($order->btw),
@@ -1477,7 +1512,7 @@ class PointOfSaleApiController extends Controller
 
         foreach ($orders as $date) {
             foreach ($date['orders'] as $order) {
-                if (! $firstOrder) {
+                if (!$firstOrder) {
                     $firstOrder = $order;
                 }
             }
