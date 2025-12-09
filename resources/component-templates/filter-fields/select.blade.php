@@ -9,7 +9,7 @@
         </div>
     @endif
     <select
-            class="form-input"
+            class="custom-form-input"
             id="filter-{{$filter['id']}}"
             wire:model.live="filters.{{$filterKey}}.active">
         <option

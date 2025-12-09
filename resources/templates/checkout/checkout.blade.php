@@ -123,7 +123,7 @@
                                         <div class="grid lg:grid-cols-2 gap-2 my-6 lg:col-span-2">
                                             <input
                                                 placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
-                                                class="form-input"
+                                                class="custom-form-input"
                                                 wire:model="discountCode">
                                             <button type="button" wire:click="applyDiscountCode"
                                                     class="w-full button button--primary"

@@ -99,7 +99,7 @@
                         <section class="mx-4 space-y-4 border-b border-gray-200 py-6 text-sm font-medium text-gray-900">
                             <div
                                 class="inline-flex items-center overflow-hidden w-full">
-                                <input type="text" class="form-input border border-primary-500 w-full" id="search"
+                                <input type="text" class="custom-form-input border border-primary-500 w-full" id="search"
                                        name="search"
                                        wire:model.live="search"
                                        placeholder="{{Translation::get('search-term', 'products', 'Zoeken...')}}">
@@ -288,7 +288,7 @@
                             <section class="space-y-4 border-b border-gray-200 py-6 text-sm font-medium text-gray-900">
                                 <div
                                     class="inline-flex items-center overflow-hidden w-full">
-                                    <input type="text" class="form-input border border-primary-500 w-full" id="search"
+                                    <input type="text" class="custom-form-input border border-primary-500 w-full" id="search"
                                            name="search"
                                            wire:model.live="search"
                                            placeholder="{{Translation::get('search-term', 'products', 'Zoeken...')}}">

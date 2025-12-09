@@ -3087,6 +3087,7 @@
                 }
 
                 this.cancelOrderPopup = false;
+                this.openCashRegister();
 
             } catch (error) {
                 return $wire.dispatch('notify', {

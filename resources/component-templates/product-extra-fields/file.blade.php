@@ -8,7 +8,7 @@
     <div class="relative flex items-start">
         <input type="file"
                @if($extra->required) required @endif
-               class="form-input"
+               class="custom-form-input"
                id="product-extra-{{$extra->id}}"
                name="product-extra-{{$extra->id}}"
                wire:model.live="files.{{ $extra->id }}.value">

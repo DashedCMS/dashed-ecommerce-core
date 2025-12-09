@@ -25,7 +25,7 @@
                                 <form wire:submit.prevent="applyDiscountCode"
                                       class="flex flex-col lg:flex-row justify-between gap-2">
                                     <input placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
-                                           class="form-input h-14"
+                                           class="custom-form-input h-14"
                                            wire:model.lazy="discountCode">
                                     <button type="submit"
                                             class="w-full button button--primary-light"

@@ -9,7 +9,7 @@
         <div class="relative flex items-start">
             <div class="flex h-6 items-center">
                 <input type="checkbox"
-                       class="h-4 rounded border-2 border-primary-600 text-primary-600 focus:ring-primary-600 form-input"
+                       class="h-4 rounded border-2 border-primary-600 text-primary-600 focus:ring-primary-600 custom-form-input"
                        id="product-extra-{{$option->id}}"
                        name="product-extra-{{$option->id}}"
                        value="{{$option->id}}"

@@ -13,7 +13,7 @@
                    minlength="{{ $extra->min_length }}" maxlength="{{ $extra->max_length }}"
                @endif
                @if($extra->required) required @endif
-               class="form-input"
+               class="custom-form-input"
                id="product-extra-{{$extra->id}}"
                name="product-extra-{{$extra->id}}"
                wire:model.live.debounce.500ms="extras.{{ $extraKey }}.value">

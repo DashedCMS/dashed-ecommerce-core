@@ -6,7 +6,7 @@
         @endif
     </label>
     <select
-            class="form-input"
+            class="custom-form-input"
             id="product-extra-{{$extra->id}}"
             name="product-extra-{{$extra->id}}"
             wire:model.live="extras.{{ $extraKey }}.value"
