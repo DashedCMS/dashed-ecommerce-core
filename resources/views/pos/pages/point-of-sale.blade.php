@@ -2358,6 +2358,10 @@
                     })
                 }
 
+                if(this.products.length && data.products.length === 0) {
+                    this.removeDiscount();
+                }
+
                 this.products = data.products;
                 this.retrieveCart();
                 this.loading = false;
@@ -2372,7 +2376,6 @@
 
         async clearProducts() {
             this.loading = true;
-            this.removeDiscount();
             try {
                 let response = await fetch('{{ route('api.point-of-sale.clear-products') }}', {
                     method: 'POST',
