@@ -28,6 +28,7 @@ class ViewOrder extends ViewRecord
     {
         $invoiceUrl = $this->record->downloadInvoiceUrl();
         $packingSlipUrl = $this->record->downloadPackingslipUrl();
+
         $previousOrder = $this->record->fulfillment_status == 'unhandled' ? Order::where('id', '<', $this->record->id)
             ->orderBy('id', 'desc')
             ->where('fulfillment_status', 'unhandled')
@@ -58,12 +59,14 @@ class ViewOrder extends ViewRecord
                 ->tooltip('Download de factuur als PDF')
                 ->icon('heroicon-s-arrow-down-tray')
                 ->url($invoiceUrl)
+                ->openUrlInNewTab()
                 ->visible((bool)$invoiceUrl),
             Action::make('Pakbon')
                 ->button()
                 ->icon('heroicon-s-arrow-down-tray')
                 ->tooltip('Download de pakbon als PDF')
                 ->url($packingSlipUrl)
+                ->openUrlInNewTab()
                 ->visible((bool)$packingSlipUrl),
             Action::make('Vorige bestelling')
                 ->button()
