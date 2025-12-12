@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
+use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -25,9 +26,18 @@ class ViewOrder extends ViewRecord
 
     protected function getActions(): array
     {
-
         $invoiceUrl = $this->record->downloadInvoiceUrl();
         $packingSlipUrl = $this->record->downloadPackingslipUrl();
+        $previousOrder = Order::where('id', '<', $this->record->id)
+            ->orderBy('id', 'desc')
+            ->where('fulfillment_status', 'unhandled')
+            ->isPaid()
+            ->first();
+        $nextOrder = Order::where('id', '>', $this->record->id)
+            ->orderBy('id', 'asc')
+            ->where('fulfillment_status', 'unhandled')
+            ->isPaid()
+            ->first();
 
         return array_merge([
             Action::make('viewInWebsite')
@@ -51,6 +61,18 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-s-arrow-down-tray')
                 ->url($packingSlipUrl)
                 ->visible((bool)$packingSlipUrl),
+            Action::make('Vorige bestelling')
+                ->button()
+                ->hiddenLabel()
+                ->icon('heroicon-s-arrow-left')
+                ->url(fn() => $previousOrder ? route('filament.dashed.resources.orders.view', ['record' => $previousOrder->id]) : '')
+                ->visible((bool)$previousOrder),
+            Action::make('Volgende bestelling')
+                ->button()
+                ->hiddenLabel()
+                ->icon('heroicon-s-arrow-right')
+                ->url(fn() => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
+                ->visible((bool)$nextOrder),
         ], ecommerce()->buttonActions('order'));
     }
 
