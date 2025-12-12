@@ -571,7 +571,11 @@ class ProductResource extends Resource
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable(query: SearchQuery::make())
+                    ->searchable([
+                        'name',
+                        'sku',
+                        'ean',
+                    ])
                     ->sortable(),
                 TextColumn::make('price')
                     ->label('Prijs')
