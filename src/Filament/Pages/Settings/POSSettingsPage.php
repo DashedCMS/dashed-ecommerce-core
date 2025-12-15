@@ -116,7 +116,7 @@ class POSSettingsPage extends Page
                 }),
             Action::make('testRegister')
                 ->label('Test kassalade')
-                ->visible(Customsetting::get('receipt_printer_connector_type') && Customsetting::get('cash_register_available'))
+                ->visible(Customsetting::get('receipt_printer_connector_type', default: false) && Customsetting::get('cash_register_available', default: false))
                 ->action(function () {
                     try {
                         $printer = new ReceiptPrinter();
