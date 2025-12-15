@@ -29,7 +29,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
@@ -324,7 +323,7 @@ class OrderResource extends Resource
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('orderProducts.name')
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->getStateUsing(fn($record) => str($record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))->limit(30))
+                    ->getStateUsing(fn ($record) => str($record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))->limit(30))
                     ->tooltip(fn ($record) => $record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))
                     ->label('Bestelde producten')
                     ->searchable(),

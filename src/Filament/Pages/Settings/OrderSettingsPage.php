@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\DashedEcommerceCore\Classes\Orders;
 use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -23,6 +22,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
@@ -78,7 +78,7 @@ class OrderSettingsPage extends Page
         foreach (forms()->builder('orderApiClasses') as $api) {
             foreach ($api['class']::formFields() as $field) {
                 $apiFields[] = $field
-                    ->visible(fn(Get $get) => $get('class') == $api['class']);
+                    ->visible(fn (Get $get) => $get('class') == $api['class']);
             }
         }
 
@@ -88,7 +88,7 @@ class OrderSettingsPage extends Page
                 ->helperText('Stel hier in welke APIs er bij een nieuwe bestelling aangeroepen moeten worden.')
                 ->visible(count(forms()->builder('orderApiClasses')))
                 ->reactive()
-                ->schema(fn(Get $get) => array_merge([
+                ->schema(fn (Get $get) => array_merge([
                     Select::make('class')
                         ->label('API class')
                         ->options(collect(forms()->builder('orderApiClasses'))->pluck('name', 'class')->toArray())
@@ -128,7 +128,7 @@ class OrderSettingsPage extends Page
                         ->label('Printer connectie type'),
                     TextInput::make("invoice_printer_connector_descriptor")
                         ->label('Naam van de printer')
-                        ->required(fn(Get $get) => $get("invoice_printer_connector_type"))
+                        ->required(fn (Get $get) => $get("invoice_printer_connector_type"))
                         ->reactive()
                         ->helperText('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
                 ])
@@ -145,7 +145,7 @@ class OrderSettingsPage extends Page
                         ->label('Printer connectie type'),
                     TextInput::make("packing_slip_printer_connector_descriptor")
                         ->label('Naam van de printer')
-                        ->required(fn(Get $get) => $get("packing_slip_printer_connector_type"))
+                        ->required(fn (Get $get) => $get("packing_slip_printer_connector_type"))
                         ->reactive()
                         ->helperText('Als je dit koppelt worden de pakbonnen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
                 ])
@@ -208,10 +208,10 @@ class OrderSettingsPage extends Page
                     TextInput::make("fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}")
                         ->label('Fulfillment status "' . $name . '" mail onderwerp')
                         ->columnSpanFull()
-                        ->hidden(fn($get) => !$get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
+                        ->hidden(fn ($get) => ! $get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
                     cms()->editorField("fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}", 'Fulfillment status "' . $name . '" mail inhoud')
                         ->columnSpanFull()
-                        ->hidden(fn($get) => !$get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
+                        ->hidden(fn ($get) => ! $get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
                 ]);
             }
 
@@ -239,7 +239,7 @@ class OrderSettingsPage extends Page
         foreach ($sites as $site) {
             $emails = $this->form->getState()["notification_invoice_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -248,7 +248,7 @@ class OrderSettingsPage extends Page
 
             $emails = $this->form->getState()["notification_low_stock_emails_{$site['id']}"];
             foreach ($emails ?? [] as $key => $email) {
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     unset($emails[$key]);
                 }
             }
@@ -290,7 +290,7 @@ class OrderSettingsPage extends Page
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();
 
-                    if (!$order) {
+                    if (! $order) {
                         $this->error('No paid orders found to test with');
 
                         return;
@@ -304,7 +304,7 @@ class OrderSettingsPage extends Page
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();
 
-                    if (!$order) {
+                    if (! $order) {
                         $this->error('No paid orders found to test with');
 
                         return;

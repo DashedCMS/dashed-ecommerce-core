@@ -2,13 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Imports;
 
-use App\Models\ImportEANCodes;
+use Illuminate\Support\Number;
+use Filament\Actions\Imports\Importer;
+use Filament\Actions\Imports\ImportColumn;
+use Filament\Actions\Imports\Models\Import;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Actions\Imports\Exceptions\RowImportFailedException;
-use Filament\Actions\Imports\ImportColumn;
-use Filament\Actions\Imports\Importer;
-use Filament\Actions\Imports\Models\Import;
-use Illuminate\Support\Number;
 
 class EANCodesImporter extends Importer
 {

@@ -93,7 +93,7 @@ class POSSettingsPage extends Page
         return [
             Action::make('testPrinter')
                 ->label('Test bonnen printer')
-                ->visible(Customsetting::get('receipt_printer_connector_type'))
+                ->visible(Customsetting::get('receipt_printer_connector_type', default: false))
                 ->action(function () {
                     try {
                         $printer = new ReceiptPrinter();

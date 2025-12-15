@@ -2,11 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Imports\EANCodesImporter;
 use Filament\Actions\Action;
-use Filament\Actions\ImportAction;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
+use Filament\Actions\ImportAction;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
@@ -19,6 +18,7 @@ use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
 use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
+use Dashed\DashedEcommerceCore\Filament\Imports\EANCodesImporter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 

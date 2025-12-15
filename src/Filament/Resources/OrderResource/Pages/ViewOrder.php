@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
-use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class ViewOrder extends ViewRecord
@@ -72,14 +72,14 @@ class ViewOrder extends ViewRecord
                 ->button()
                 ->hiddenLabel()
                 ->icon('heroicon-s-arrow-left')
-                ->url(fn() => $previousOrder ? route('filament.dashed.resources.orders.view', ['record' => $previousOrder->id]) : '')
+                ->url(fn () => $previousOrder ? route('filament.dashed.resources.orders.view', ['record' => $previousOrder->id]) : '')
                 ->visible((bool)$previousOrder)
                 ->tooltip('Bekijk de vorige onverwerkte bestelling'),
             Action::make('Volgende bestelling')
                 ->button()
                 ->hiddenLabel()
                 ->icon('heroicon-s-arrow-right')
-                ->url(fn() => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
+                ->url(fn () => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
                 ->visible((bool)$nextOrder)
                 ->tooltip('Bekijk de volgende onverwerkte bestelling'),
         ], ecommerce()->buttonActions('order'));

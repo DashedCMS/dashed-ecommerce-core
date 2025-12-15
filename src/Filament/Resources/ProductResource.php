@@ -38,7 +38,6 @@ use Filament\Forms\Components\Repeater\TableColumn;
 use Dashed\DashedEcommerceCore\Models\ShippingClass;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
