@@ -238,7 +238,7 @@
 
                         <div class="mt-6">
                             <x-cart.add-to-cart :product="$product" :filters="$filters" :productExtras="$productExtras"
-                                                :extras="$extras"
+                                                :extras="$extras" :volumeDiscounts="$volumeDiscounts"
                                                 :quantity="$quantity" :price="$price" :discountPrice="$discountPrice"/>
                         </div>
 

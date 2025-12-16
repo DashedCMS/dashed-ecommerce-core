@@ -66,6 +66,7 @@ class ProductFilterResource extends Resource
                             ->options([
                                 'select' => 'Dropdown',
                                 'image' => 'Afbeelding',
+                                'button' => 'Buttons',
                             ])
                             ->required(),
                     ])),
