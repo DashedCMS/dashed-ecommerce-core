@@ -21,7 +21,7 @@ class ProductsWithPastDuePreOrderDateMail extends Mailable
 
     public function build()
     {
-        $view = view()->exists(config('dashed-core.site_theme') . '.emails.products-with-past-due-pre-order-date') ? config('dashed-core.site_theme') . '.emails.products-with-past-due-pre-order-date' : 'dashed-ecommerce-core::emails.products-with-past-due-pre-order-date';
+        $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.products-with-past-due-pre-order-date') ? config('dashed-core.site_theme', 'dashed') . '.emails.products-with-past-due-pre-order-date' : 'dashed-ecommerce-core::emails.products-with-past-due-pre-order-date';
 
         return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))

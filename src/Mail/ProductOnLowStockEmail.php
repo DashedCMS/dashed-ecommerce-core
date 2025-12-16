@@ -24,7 +24,7 @@ class ProductOnLowStockEmail extends Mailable
 
     public function build()
     {
-        $view = view()->exists(config('dashed-core.site_theme') . '.emails.product-low-stock') ? config('dashed-core.site_theme') . '.emails.product-low-stock' : 'dashed-ecommerce-core::emails.product-low-stock';
+        $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.product-low-stock') ? config('dashed-core.site_theme', 'dashed') . '.emails.product-low-stock' : 'dashed-ecommerce-core::emails.product-low-stock';
 
         return $this->view($view)
             ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))

@@ -11,7 +11,7 @@ class AccountController extends FrontendController
 {
     public function orders()
     {
-        if (View::exists(config('dashed-core.site_theme') . '.account.orders')) {
+        if (View::exists(config('dashed-core.site_theme', 'dashed') . '.account.orders')) {
             seo()->metaData('metaTitle', Translation::get('account-orders-page-meta-title', 'account', 'My orders'));
             seo()->metaData('metaDescription', Translation::get('account-orders-page-meta-description', 'account', 'View your orders here'));
 
@@ -19,7 +19,7 @@ class AccountController extends FrontendController
                 'livewireComponent' => Orders::class,
             ]);
 
-            return view(config('dashed-core.site_theme') . '.account.orders');
+            return view(config('dashed-core.site_theme', 'dashed') . '.account.orders');
         } else {
             return $this->pageNotFound();
         }

@@ -68,6 +68,6 @@ class CartPopup extends Component
 
     public function render()
     {
-        return view(config('dashed-core.site_theme') . '.cart.' . ($this->view ?: 'cart-popup'));
+        return view(config('dashed-core.site_theme', 'dashed') . '.cart.' . ($this->view ?: 'cart-popup'));
     }
 }

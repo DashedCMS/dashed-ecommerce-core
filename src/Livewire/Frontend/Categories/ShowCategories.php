@@ -20,6 +20,6 @@ class ShowCategories extends Component
 
     public function render()
     {
-        return view(config('dashed-core.site_theme') . '.categories.show-categories');
+        return view(config('dashed-core.site_theme', 'dashed') . '.categories.show-categories');
     }
 }

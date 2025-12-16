@@ -34,7 +34,7 @@ class ProductListExportMail extends Mailable
      */
     public function build()
     {
-        $view = view()->exists(config('dashed-core.site_theme') . '.emails.exported-product-list') ? config('dashed-core.site_theme') . '.emails.exported-product-list' : 'dashed-ecommerce-core::emails.exported-product-list';
+        $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.exported-product-list') ? config('dashed-core.site_theme', 'dashed') . '.emails.exported-product-list' : 'dashed-ecommerce-core::emails.exported-product-list';
 
         $productListPath = Storage::disk('dashed')->url('dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx');
 

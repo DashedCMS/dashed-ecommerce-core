@@ -181,7 +181,7 @@ class ProductCategory extends Model
                 }
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();
             }
-            if (View::exists(config('dashed-core.site_theme') . '.categories.show') && $productCategory) {
+            if (View::exists(config('dashed-core.site_theme', 'dashed') . '.categories.show') && $productCategory) {
                 seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
                 seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
                 if ($productCategory->metadata && $productCategory->metadata->image) {
@@ -191,7 +191,7 @@ class ProductCategory extends Model
                 View::share('model', $productCategory);
                 View::share('productCategory', $productCategory);
 
-                return view(config('dashed-core.site_theme') . '.categories.show');
+                return view(config('dashed-core.site_theme', 'dashed') . '.categories.show');
             } else {
                 return 'pageNotFound';
             }
@@ -199,7 +199,7 @@ class ProductCategory extends Model
 
         if (Customsetting::get('product_category_index_page_enabled', null, true) && $slugComponents[0] == Translation::get('categories-slug', 'slug', 'categories')) {
             if (count($slugComponents) == 1) {
-                if (View::exists(config('dashed-core.site_theme') . '.categories.index')) {
+                if (View::exists(config('dashed-core.site_theme', 'dashed') . '.categories.index')) {
                     seo()->metaData('metaTitle', Translation::get('all-categories', 'categories', 'All categories'));
 
                     View::share('productCategory', null);
@@ -207,7 +207,7 @@ class ProductCategory extends Model
                     $childProductCategories = ProductCategories::getTopLevel(1000);
                     View::share('childProductCategories', $childProductCategories);
 
-                    return view(config('dashed-core.site_theme') . '.categories.index');
+                    return view(config('dashed-core.site_theme', 'dashed') . '.categories.index');
                 } else {
                     return 'pageNotFound';
                 }
@@ -223,7 +223,7 @@ class ProductCategory extends Model
                             return 'pageNotFound';
                         }
                     }
-                    if (View::exists(config('dashed-core.site_theme') . '.categories.index') && $productCategory) {
+                    if (View::exists(config('dashed-core.site_theme', 'dashed') . '.categories.index') && $productCategory) {
                         seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
                         seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
                         if ($productCategory->metadata && $productCategory->metadata->image) {
@@ -235,7 +235,7 @@ class ProductCategory extends Model
                         $childProductCategories = $productCategory->getFirstChilds();
                         View::share('childProductCategories', $childProductCategories);
 
-                        return view(config('dashed-core.site_theme') . '.categories.index');
+                        return view(config('dashed-core.site_theme', 'dashed') . '.categories.index');
                     } else {
                         return 'pageNotFound';
                     }

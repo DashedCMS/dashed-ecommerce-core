@@ -138,6 +138,6 @@ class ViewOrder extends Component
 
     public function render()
     {
-        return view(config('dashed-core.site_theme') . '.orders.view-order');
+        return view(config('dashed-core.site_theme', 'dashed') . '.orders.view-order');
     }
 }

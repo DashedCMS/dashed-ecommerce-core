@@ -928,6 +928,6 @@ class Checkout extends Component
 
     public function render()
     {
-        return view(config('dashed-core.site_theme') . '.checkout.checkout');
+        return view(config('dashed-core.site_theme', 'dashed') . '.checkout.checkout');
     }
 }

@@ -28,6 +28,6 @@ class CartCount extends Component
 
     public function render()
     {
-        return view(config('dashed-core.site_theme') . '.cart.cart-count');
+        return view(config('dashed-core.site_theme', 'dashed') . '.cart.cart-count');
     }
 }

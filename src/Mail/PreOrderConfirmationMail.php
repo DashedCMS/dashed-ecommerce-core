@@ -33,7 +33,7 @@ class PreOrderConfirmationMail extends Mailable
      */
     public function build()
     {
-        $view = view()->exists(config('dashed-core.site_theme') . '.emails.confirm-pre-order') ? config('dashed-core.site_theme') . '.emails.confirm-pre-order' : 'dashed-ecommerce-core::emails.confirm-pre-order';
+        $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.confirm-pre-order') ? config('dashed-core.site_theme', 'dashed') . '.emails.confirm-pre-order' : 'dashed-ecommerce-core::emails.confirm-pre-order';
 
         $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
 
