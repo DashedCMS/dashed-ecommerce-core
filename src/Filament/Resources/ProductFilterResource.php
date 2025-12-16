@@ -52,7 +52,8 @@ class ProductFilterResource extends Resource
     {
         return $schema
             ->schema(array_merge([
-                Section::make('Content')->columnSpanFull()
+                Section::make('Content')
+                    ->columnSpanFull()
                     ->schema(array_merge([
                         Toggle::make('hide_filter_on_overview_page')
                             ->label('Moet deze filter verborgen worden op de overzichts pagina van de producten?'),
