@@ -1,5 +1,10 @@
 <div class="relative w-full h-full"
      x-data="POSData()">
+    <style>
+        .scrollbar-wide::-webkit-scrollbar {
+            width: 16px;
+        }
+    </style>
     <div class="p-8 border-4 border-primary-500 overflow-hidden bg-black/90 z-10 w-full h-full">
         <div class="grid grid-cols-10 divide-x divide-primary-500 h-full">
             <div class="sm:col-span-7 sm:pr-8 flex flex-col gap-8 overflow-y-auto">
@@ -312,7 +317,10 @@
             </div>
             <div class="sm:col-span-3 sm:pl-8 flex flex-col gap-8 overflow-y-auto">
                 <div x-show="products.length > 0"
-                     class="flex flex-col grow p-4 rounded-lg border border-primary-500 overflow-y-auto gap-4">
+                     style="
+    scrollbar-width: 50px;
+    scrollbar-color: #888 #f1f1f1;"
+                     class="flex flex-col grow p-4 rounded-lg border border-primary-500 overflow-y-auto gap-4 scrollbar-wide">
                     <template x-for="product in products">
                         <div class="flex flex-wrap items-center gap-4">
                             <div class="relative">
