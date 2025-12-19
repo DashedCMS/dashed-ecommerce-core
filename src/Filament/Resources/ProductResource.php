@@ -6,6 +6,7 @@ use Closure;
 use Dashed\DashedCore\Classes\OpenAIHelper;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
+use Filament\Schemas\Components\Utilities\Set;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -441,7 +442,7 @@ class ProductResource extends Resource
                             ])
                             ->fillForm(function ($record) {
                                 return [
-                                    'description' => Translation::get('product_description_prompt', 'product', 'Schrijf een uitgebreide product beschrijving voor het volgende product: :name:. Dit is de link van het product: :url:. Zorg dat de beschrijving aantrekkelijk is en de voordelen benoemd voor de klant. Schrijf in een vlotte en overtuigende stijl. Vermeld ook de categorie waarin het product valt: :categoryName:. Gebruik maximaal 3000 tekens. Een voorbeeld beschrijving hoe wij het wensen is als volgt: naam met categorie, beschrijving, opsomming van kenmerken.', 'textarea', [
+                                    'description' => Translation::get('product_description_prompt', 'product', 'Schrijf een uitgebreide product beschrijving voor het volgende product: :name:. Dit is de link van het product: :url:. Zorg dat de beschrijving aantrekkelijk is en de voordelen benoemd voor de klant. Je mag gebruikmaken van HTML voor bijvoorbeeld Bold tekst. Schrijf in een vlotte en overtuigende stijl. Vermeld ook de categorie waarin het product valt: :categoryName:. Gebruik maximaal 3000 tekens. Een voorbeeld beschrijving hoe wij het wensen is als volgt: naam met categorie, beschrijving, opsomming van kenmerken.', 'textarea', [
                                         'name' => $record->name,
                                         'url' => url($record->getUrl()),
                                         'categoryName' => $record->productCategories->first() ? $record->productCategories->first()->nameWithParents : 'Onbekend',
