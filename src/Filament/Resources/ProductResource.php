@@ -3,6 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
+use Dashed\DashedCore\Classes\OpenAIHelper;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedTranslations\Models\Translation;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -426,6 +429,36 @@ class ProductResource extends Resource
                     ->helperText('Laat leeg om automatisch te laten genereren'),
                 cms()->editorField('description', 'Uitgebreide beschrijving')
                     ->helperText('Mogelijke variablen: :name:, :categorie naam:')
+                        Action::make('generateDescription')
+                            ->label('Genereer beschrijving')
+                            ->icon(Heroicon::PencilSquare)
+                            ->schema([
+                                Textarea::make('description')
+                                    ->label('Beschrijving')
+                                    ->rows(7)
+                                    ->required()
+                                    ->helperText('Beschrijf hierin het product en bijvoorbeeld een voorbeeld beschrijving. De standaard prompt kan je aanpassen in vertalingen.'),
+                            ])
+                            ->fillForm(function ($record) {
+                                return [
+                                    'description' => Translation::get('product_description_prompt', 'product', 'Schrijf een uitgebreide product beschrijving voor het volgende product: :name:. Dit is de link van het product: :url:. Zorg dat de beschrijving aantrekkelijk is en de voordelen benoemd voor de klant. Schrijf in een vlotte en overtuigende stijl. Vermeld ook de categorie waarin het product valt: :categorie naam:. Gebruik maximaal 3000 tekens. Een voorbeeld beschrijving hoe wij het wensen is als volgt: naam met categorie, beschrijving, opsomming van kenmerken.', 'text', [
+                                        'name' => $record->name,
+                                        'url' => $record->getUrl(),
+                                        'categorie naam' => $record->productCategories->first() ? $record->productCategories->first()->nameWithParents : 'Onbekend',
+                                    ]),
+                                ];
+                            })
+                            ->visible(fn($record) => $record && (bool)Customsetting::get('open_ai_api_key'))
+                            ->action(function ($data, Set $set) {
+                                $description = $data['description'] ?? '';
+                                $description = OpenAIHelper::runPrompt(prompt: $description);
+                                $set('description', $description);
+
+                                Notification::make()
+                                    ->title('De beschrijving is gegenereerd')
+                                    ->success()
+                                    ->send();
+                            })
                     ->rules([
                         'max:10000',
                     ])
