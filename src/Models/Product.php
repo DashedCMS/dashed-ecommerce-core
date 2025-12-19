@@ -106,6 +106,10 @@ class Product extends Model
             $product->productFilters()->detach();
             $product->shippingClasses()->detach();
         });
+
+        static::deleted(function ($product) {
+            UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+        });
     }
 
     public function productFilters()
