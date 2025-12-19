@@ -311,7 +311,7 @@ class ProductGroupResource extends Resource
                             ->action(function ($data, Set $set, $record, $livewire) {
                                 $description = $data['description'] ?? '';
 
-                                GenerateAIContent::dispatch($record, 'decription', $description, $livewire->activeLocale);
+                                GenerateAIContent::dispatch($record, 'description', $description, $livewire->activeLocale);
 
                                 Notification::make()
                                     ->title('De beschrijving wordt gegenereerd. Refresh de pagina om de nieuwe beschrijving te zien.')
