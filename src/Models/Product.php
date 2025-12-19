@@ -51,7 +51,7 @@ class Product extends Model
         'search_terms',
         'product_search_terms',
         'content',
-        'images',
+//        'images',
     ];
 
     public $resourceRelations = [

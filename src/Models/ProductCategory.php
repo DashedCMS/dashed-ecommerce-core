@@ -31,7 +31,7 @@ class ProductCategory extends Model
         'name',
         'slug',
         'content',
-        'image',
+//        'image',
     ];
 
     protected $with = [

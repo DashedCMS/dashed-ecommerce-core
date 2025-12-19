@@ -33,7 +33,7 @@ class ProductGroup extends Model
         'short_description',
         'description',
         'content',
-        'images',
+//        'images',
         'search_terms',
     ];
 
