@@ -457,7 +457,7 @@ class ProductResource extends Resource
                                 $set('description', $description);
 
                                 Notification::make()
-                                    ->title('De beschrijving is gegenereerd')
+                                    ->title('De beschrijving wordt gegenereerd. Refresh de pagina om de nieuwe beschrijving te zien.')
                                     ->success()
                                     ->send();
                             })

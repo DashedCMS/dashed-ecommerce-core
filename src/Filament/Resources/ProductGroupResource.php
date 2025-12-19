@@ -3,7 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Dashed\DashedCore\Classes\OpenAIHelper;
+use Dashed\DashedCore\Jobs\GenerateAIContent;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Jobs\GenerateDescription;
 use Dashed\DashedTranslations\Models\Translation;
 use Filament\Support\Icons\Heroicon;
 use Mockery\Matcher\Not;
@@ -306,13 +308,13 @@ class ProductGroupResource extends Resource
                                 ];
                             })
                             ->visible(fn($record) => $record && (bool)Customsetting::get('open_ai_api_key'))
-                            ->action(function ($data, Set $set) {
+                            ->action(function ($data, Set $set, $record, $livewire) {
                                 $description = $data['description'] ?? '';
-                                $description = OpenAIHelper::runPrompt(prompt: $description);
-                                $set('description', $description);
+
+                                GenerateAIContent::dispatch($record, 'decription', $description, $livewire->activeLocale);
 
                                 Notification::make()
-                                    ->title('De beschrijving is gegenereerd')
+                                    ->title('De beschrijving wordt gegenereerd. Refresh de pagina om de nieuwe beschrijving te zien.')
                                     ->success()
                                     ->send();
                             })
