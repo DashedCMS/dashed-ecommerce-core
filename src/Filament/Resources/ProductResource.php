@@ -441,9 +441,9 @@ class ProductResource extends Resource
                             ])
                             ->fillForm(function ($record) {
                                 return [
-                                    'description' => Translation::get('product_description_prompt', 'product', 'Schrijf een uitgebreide product beschrijving voor het volgende product: :name:. Dit is de link van het product: :url:. Zorg dat de beschrijving aantrekkelijk is en de voordelen benoemd voor de klant. Schrijf in een vlotte en overtuigende stijl. Vermeld ook de categorie waarin het product valt: :categoryName:. Gebruik maximaal 3000 tekens. Een voorbeeld beschrijving hoe wij het wensen is als volgt: naam met categorie, beschrijving, opsomming van kenmerken.', 'text', [
+                                    'description' => Translation::get('product_description_prompt', 'product', 'Schrijf een uitgebreide product beschrijving voor het volgende product: :name:. Dit is de link van het product: :url:. Zorg dat de beschrijving aantrekkelijk is en de voordelen benoemd voor de klant. Schrijf in een vlotte en overtuigende stijl. Vermeld ook de categorie waarin het product valt: :categoryName:. Gebruik maximaal 3000 tekens. Een voorbeeld beschrijving hoe wij het wensen is als volgt: naam met categorie, beschrijving, opsomming van kenmerken.', 'textarea', [
                                         'name' => $record->name,
-                                        'url' => $record->getUrl(),
+                                        'url' => url($record->getUrl()),
                                         'categoryName' => $record->productCategories->first() ? $record->productCategories->first()->nameWithParents : 'Onbekend',
                                     ]),
                                 ];
