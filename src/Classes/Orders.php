@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -43,9 +44,9 @@ class Orders
 
         try {
             if ($order->contains_pre_orders) {
-                Mail::to($email ?: $order->email)->send(new PreOrderConfirmationMail($order));
+                Mail::to($email ?: $order->email)->bcc(Mails::getBCCNotificationEmails())->send(new PreOrderConfirmationMail($order));
             } else {
-                Mail::to($email ?: $order->email)->send(new OrderConfirmationMail($order));
+                Mail::to($email ?: $order->email)->bcc(Mails::getBCCNotificationEmails())->send(new OrderConfirmationMail($order));
             }
             if (app()->runningInConsole() && ! $mailSendByUser) {
                 $orderLog = new OrderLog();

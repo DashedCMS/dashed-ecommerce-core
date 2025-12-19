@@ -46,6 +46,7 @@ class OrderSettingsPage extends Page
         foreach ($sites as $site) {
             $formData["notification_invoice_emails_{$site['id']}"] = Customsetting::get('notification_invoice_emails', $site['id']);
             $formData["notification_low_stock_emails_{$site['id']}"] = Customsetting::get('notification_low_stock_emails', $site['id']);
+            $formData["notification_bcc_order_emails_{$site['id']}"] = Customsetting::get('notification_bcc_order_emails', $site['id']);
         }
 
         $formData["apis"] = Customsetting::get('apis', null, []);
@@ -175,6 +176,11 @@ class OrderSettingsPage extends Page
                     ->label('Emails om de notificaties van lage voorraad naartoe te sturen')
                     ->placeholder('Voer een email in')
                     ->reactive(),
+                TagsInput::make("notification_bcc_order_emails_{$site['id']}")
+                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->label('Emails om alle bestel notificaties van de klant naar te sturen in BCC')
+                    ->placeholder('Voer een email in')
+                    ->reactive(),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -254,6 +260,15 @@ class OrderSettingsPage extends Page
             }
             Customsetting::set('notification_low_stock_emails', $emails, $site['id']);
             $formState["notification_low_stock_emails_{$site['id']}"] = $emails;
+
+            $emails = $this->form->getState()["notification_bcc_order_emails_{$site['id']}"];
+            foreach ($emails ?? [] as $key => $email) {
+                if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    unset($emails[$key]);
+                }
+            }
+            Customsetting::set('notification_bcc_order_emails', $emails, $site['id']);
+            $formState["notification_bcc_order_emails_{$site['id']}"] = $emails;
         }
 
         Customsetting::set('apis', $this->form->getState()["apis"]);
