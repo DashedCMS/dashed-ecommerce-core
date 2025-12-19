@@ -7,6 +7,7 @@ use Dashed\DashedCore\Classes\OpenAIHelper;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
