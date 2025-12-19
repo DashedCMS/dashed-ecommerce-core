@@ -31,17 +31,17 @@ class EditProduct extends EditRecord
     public function mount($record): void
     {
         $thisRecord = $this->resolveRecord($record);
-        foreach (Locales::getLocales() as $locale) {
-            if (! $thisRecord->images) {
-                $images = $thisRecord->getTranslation('images', $locale['id']);
-                if (! $images) {
-                    if (! is_array($images)) {
-                        $thisRecord->setTranslation('images', $locale['id'], []);
-                        $thisRecord->save();
-                    }
-                }
-            }
-        }
+//        foreach (Locales::getLocales() as $locale) {
+//            if (! $thisRecord->images) {
+//                $images = $thisRecord->getTranslation('images', $locale['id']);
+//                if (! $images) {
+//                    if (! is_array($images)) {
+//                        $thisRecord->setTranslation('images', $locale['id'], []);
+//                        $thisRecord->save();
+//                    }
+//                }
+//            }
+//        }
 
         parent::mount($record);
     }
