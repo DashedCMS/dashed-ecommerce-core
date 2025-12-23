@@ -23,8 +23,8 @@ return new class () extends Migration {
         }
 
         $productCategories = \Dashed\DashedEcommerceCore\Models\ProductCategory::withTrashed()->get();
-        foreach($productCategories as $productCategory) {
-            $productCategory->image = $productCategory->image[app()->getLocale()] ?? null;
+        foreach ($productCategories as $productCategory) {
+            $productCategory->image = $productCategory->image ? (json_decode($productCategory->image, true)[app()->getLocale()] ?? null) : null;
             $productCategory->saveQuietly();
         }
     }
