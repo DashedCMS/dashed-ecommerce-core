@@ -15,7 +15,7 @@ class ShowCategories extends Component
 
     public function mount(?Collection $productCategories = null, ?ProductCategory $productCategory = null)
     {
-        $this->productCategories = $productCategories ?: ProductCategories::getTopLevel(100, orderBy: Customsetting::get('product_categories_default_order_by', 'created_at'), order: Customsetting::get('product_categories_default_order', 'DESC'));
+        $this->productCategories = $productCategories ?: ProductCategories::getTopLevel(100);
         $this->singleProductCategory = $productCategory;
     }
 
