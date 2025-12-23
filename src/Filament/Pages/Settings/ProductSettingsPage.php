@@ -38,6 +38,8 @@ class ProductSettingsPage extends Page
             $formData["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"] = Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', $site['id'], 1);
             $formData["product_default_order_type_{$site['id']}"] = Customsetting::get('product_default_order_type', $site['id'], 'price');
             $formData["product_default_order_sort_{$site['id']}"] = Customsetting::get('product_default_order_sort', $site['id'], 'DESC');
+            $formData["product_categories_default_order_by_{$site['id']}"] = Customsetting::get('product_categories_default_order_by', $site['id'], 'price');
+            $formData["product_categories_default_order_{$site['id']}"] = Customsetting::get('product_categories_default_order', $site['id'], 'DESC');
             $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
             $formData["product_use_simple_variation_style_{$site['id']}"] = Customsetting::get('product_use_simple_variation_style', $site['id'], false);
             $formData["products_hide_parents_in_overview_{$site['id']}"] = Customsetting::get('products_hide_parents_in_overview', $site['id'], false);
@@ -105,6 +107,20 @@ class ProductSettingsPage extends Page
                     ])
                     ->label('Standaard sortering van producten')
                     ->required(),
+                Select::make("product_categories_default_order_by_{$site['id']}")
+                    ->options([
+                        'created_at' => 'Aangemaakte op',
+                        'order' => 'Volgorde van product categorieen',
+                    ])
+                    ->label('Product categorieen sorteren op')
+                    ->required(),
+                Select::make("product_categories_default_order_{$site['id']}")
+                    ->options([
+                        'DESC' => 'Aflopend',
+                        'ASC' => 'Oplopend',
+                    ])
+                    ->label('Standaard sortering van product categorieen')
+                    ->required(),
                 TextInput::make("product_default_amount_of_products_{$site['id']}")
                     ->label('Standaard aantal producten per pagina')
                     ->numeric()
@@ -164,6 +180,8 @@ class ProductSettingsPage extends Page
             Customsetting::set('product_out_of_stock_sellable_date_should_be_valid', $this->form->getState()["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_order_type', $this->form->getState()["product_default_order_type_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_order_sort', $this->form->getState()["product_default_order_sort_{$site['id']}"], $site['id']);
+            Customsetting::set('product_categories_default_order_by', $this->form->getState()["product_categories_default_order_by_{$site['id']}"], $site['id']);
+            Customsetting::set('product_categories_default_order', $this->form->getState()["product_categories_default_order_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
             Customsetting::set('product_use_simple_variation_style', $this->form->getState()["product_use_simple_variation_style_{$site['id']}"], $site['id']);
             //            Customsetting::set('products_hide_parents_in_overview', $this->form->getState()["products_hide_parents_in_overview_{$site['id']}"], $site['id']);
