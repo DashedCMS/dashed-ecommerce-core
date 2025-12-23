@@ -95,7 +95,7 @@ class ProductSettingsPage extends Page
                         'price' => 'Prijs',
                         'purchases' => 'Aantal verkopen',
                         'stock' => 'Vooraad',
-                        'created_at' => 'Aangemaakte op',
+                        'created_at' => 'Aangemaakt op',
                         'order' => 'Volgorde van producten',
                     ])
                     ->label('Producten sorteren op')
@@ -109,7 +109,7 @@ class ProductSettingsPage extends Page
                     ->required(),
                 Select::make("product_categories_default_order_by_{$site['id']}")
                     ->options([
-                        'created_at' => 'Aangemaakte op',
+                        'created_at' => 'Aangemaakt op',
                         'order' => 'Volgorde van product categorieen',
                     ])
                     ->label('Product categorieen sorteren op')
