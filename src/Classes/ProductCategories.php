@@ -11,10 +11,10 @@ class ProductCategories
     public static function get($limit = 4, $orderBy = null, $order = null)
     {
         if(!$orderBy){
-            $orderBy = Customsetting::get('product_categories_default_order_by', 'created_at');
+            $orderBy = Customsetting::get('product_categories_default_order_by', default: 'created_at');
         }
         if(!$order){
-            $order = Customsetting::get('product_categories_default_order', 'DESC');
+            $order = Customsetting::get('product_categories_default_order', default: 'DESC');
         }
         return ProductCategory::with(['products'])->limit($limit)->orderBy($orderBy, $order)->get();
     }
@@ -22,10 +22,10 @@ class ProductCategories
     public static function getTopLevel($limit = 4, $orderBy = null, $order = null)
     {
         if(!$orderBy){
-            $orderBy = Customsetting::get('product_categories_default_order_by', 'created_at');
+            $orderBy = Customsetting::get('product_categories_default_order_by', default: 'created_at');
         }
         if(!$order){
-            $order = Customsetting::get('product_categories_default_order', 'DESC');
+            $order = Customsetting::get('product_categories_default_order', default: 'DESC');
         }
         //        return Cache::tags(['product-categories'])->rememberForever("product-categories-top-level-$limit-$orderBy-$order", function () use ($limit, $orderBy, $order) {
         return ProductCategory::with(['products'])->where('parent_id', null)->limit($limit)->orderBy($orderBy, $order)->get();
