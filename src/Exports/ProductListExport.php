@@ -72,8 +72,8 @@ class ProductListExport implements FromArray
             $productsArray[] = array_merge([
                 $product->name,
                 $product->slug,
-                $product->price,
-                $product->new_price ?: '-',
+                $product->price ? number_format($product->price, 2, ',', '') : '-',
+                $product->new_price ? number_format($product->new_price, 2, ',', '') : '-',
                 $product->use_stock ?: '-',
                 $product->use_stock ? ($product->stock ?: '-') : '-',
                 $product->use_stock ? '-' : $product->stock_status,
