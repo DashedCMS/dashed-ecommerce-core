@@ -38,7 +38,7 @@ class ProductSettingsPage extends Page
             $formData["product_out_of_stock_sellable_date_should_be_valid_{$site['id']}"] = Customsetting::get('product_out_of_stock_sellable_date_should_be_valid', $site['id'], 1);
             $formData["product_default_order_type_{$site['id']}"] = Customsetting::get('product_default_order_type', $site['id'], 'price');
             $formData["product_default_order_sort_{$site['id']}"] = Customsetting::get('product_default_order_sort', $site['id'], 'DESC');
-            $formData["product_categories_default_order_by_{$site['id']}"] = Customsetting::get('product_categories_default_order_by', $site['id'], 'price');
+            $formData["product_categories_default_order_by_{$site['id']}"] = Customsetting::get('product_categories_default_order_by', $site['id'], 'created_at');
             $formData["product_categories_default_order_{$site['id']}"] = Customsetting::get('product_categories_default_order', $site['id'], 'DESC');
             $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
             $formData["product_use_simple_variation_style_{$site['id']}"] = Customsetting::get('product_use_simple_variation_style', $site['id'], false);
