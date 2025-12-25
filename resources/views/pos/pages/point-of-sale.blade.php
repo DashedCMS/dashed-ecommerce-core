@@ -2326,6 +2326,9 @@
                 this.products = data.products;
                 if (data.discountCode) {
                     this.discountCode = data.discountCode;
+                }else if(data.order){
+                    this.showOrdersPopup();
+                    this.selectedOrder = data.order;
                 }
                 this.focus();
                 this.retrieveCart();

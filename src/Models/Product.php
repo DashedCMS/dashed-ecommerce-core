@@ -360,9 +360,9 @@ class Product extends Model
     public function getFirstImageAttribute(): ?string
     {
         if (is_array($this->images) && count($this->images)) {
-            return $this->images[0];
+            return $this->images[0] ?? null;
         } elseif ($this->productGroup && is_array($this->productGroup->images) && count($this->productGroup->images)) {
-            return $this->productGroup->images[0];
+            return $this->productGroup->images[0] ?? null;
         }
 
         return null;
