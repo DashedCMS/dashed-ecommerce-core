@@ -57,6 +57,8 @@ class ProductFilterResource extends Resource
                     ->schema(array_merge([
                         Toggle::make('hide_filter_on_overview_page')
                             ->label('Moet deze filter verborgen worden op de overzichts pagina van de producten?'),
+                        Toggle::make('use_stock')
+                            ->label('Voorraad gebruiken bij deze filter?'),
                         TextInput::make('name')
                             ->label('Naam')
                             ->required()

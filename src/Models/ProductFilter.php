@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
@@ -42,7 +43,14 @@ class ProductFilter extends Model
             foreach ($productFilter->productFilterOptions as $option) {
                 $option->delete();
             }
+
             DB::table('dashed__active_product_filter')->where('product_filter_id', $productFilter->id)->delete();
+        });
+
+        static::saved(function ($productFilter) {
+//            if ((bool)($productFilter->previous['use_stock'] ?? null) !== (bool)$productFilter->use_stock) {
+            $productFilter->syncStock();
+//            }
         });
     }
 
@@ -59,5 +67,14 @@ class ProductFilter extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'dashed__product_filter')->withPivot(['product_filter_option_id']);
+    }
+
+    public function syncStock()
+    {
+        $productGroupIds = $this->products()->pluck('product_group_id')->toArray();
+        $productGroups = ProductGroup::whereIn('id', $productGroupIds)->get();
+        foreach ($productGroups as $productGroup) {
+            UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
+        }
     }
 }

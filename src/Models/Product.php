@@ -478,6 +478,15 @@ class Product extends Model
             }
         }
 
+        if($stock > 0){
+            foreach($this->productFilters()->where('use_stock', 1)->get() as $productFilter){
+                $productFilterOption = ProductFilterOption::find($productFilter->pivot->product_filter_option_id);
+                if(!$productFilterOption->in_stock){
+                     $stock = 0;
+                }
+            }
+        }
+
         $this->total_stock = $stock;
         $this->saveQuietly();
         $this->calculateInStock();

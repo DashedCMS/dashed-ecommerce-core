@@ -31,6 +31,12 @@ class ProductFilterOption extends Model
         static::deleting(function ($filterOption) {
             $filterOption->products()->detach();
         });
+
+        static::saved(function ($filterOption) {
+            if ((bool)($filterOption->previous['in_stock'] ?? null) !== (bool)$filterOption->in_stock) {
+                $filterOption->productFilter->syncStock();
+            }
+        });
     }
 
     public function getActivitylogOptions(): LogOptions
