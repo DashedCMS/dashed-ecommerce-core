@@ -1122,14 +1122,14 @@
                                                     <p>Voeg een extra bestel regel toe</p>
                                                 </div>
                                                 <div x-show="selectedOrder.cancelData.extraOrderLine"
-                                                     class="grid grid-cols-2 gap-4 bg-white items-center rounded-lg p-4">
+                                                     class="grid grid-cols-2 gap-4 bg-white items-center rounded-lg">
                                                     <input x-model="selectedOrder.cancelData.extraOrderLineName"
                                                            placeholder="Extra bestel regel naam"
-                                                           class="text-black w-full rounded-lg text-md">
+                                                           class="text-black w-full rounded-lg text-md px-1 py-2 border-black border-2">
                                                     <input x-model="selectedOrder.cancelData.extraOrderLinePrice"
                                                            type="number"
                                                            placeholder="Extra bestel regel prijs"
-                                                           class="text-black w-full rounded-lg text-md">
+                                                           class="text-black w-full rounded-lg text-md px-1 py-2 border-black border-2">
                                                 </div>
                                                 <div
                                                     @click="selectedOrder.cancelData.sendCustomerEmail = !selectedOrder.cancelData.sendCustomerEmail"
@@ -1275,7 +1275,7 @@
                                                 <div class="grid">
                                                     <p>Betaalmethode</p>
                                                     <select x-model="selectedOrder.cancelData.paymentMethodId"
-                                                            class="text-black w-full rounded-lg text-md">
+                                                            class="text-black w-full rounded-lg text-md px-1 py-2 border-black border-2">
                                                         <template
                                                             x-for="(name, id) in selectedOrder.cancelData.paymentMethods">
                                                             <option x-value="id" x-html="name"></option>
@@ -1286,7 +1286,7 @@
                                                 <div class="grid">
                                                     <p>Fulfillment status</p>
                                                     <select x-model="selectedOrder.cancelData.fulfillmentStatus"
-                                                            class="text-black w-full rounded-lg text-md">
+                                                            class="text-black w-full rounded-lg text-md px-1 py-2 border-black border-2">
                                                         <template
                                                             x-for="(name, id) in selectedOrder.cancelData.fulfillmentStatusOptions">
                                                             <option x-value="id" x-html="name"></option>

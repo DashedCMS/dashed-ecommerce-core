@@ -41,7 +41,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
     public function action(): Action
     {
         $fillForm = [
-            'fulfillment_status' => $this->order->fulfillment_status,
+            'fulfillment_status' => 'handled',
             'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('is_cash_payment', 1)->first()->id ?? null,
 //            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
         ];
