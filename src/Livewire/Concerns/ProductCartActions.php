@@ -135,6 +135,7 @@ trait ProductCartActions
                     $name = $option->name;
                     $arr = $option->toArray();
                     $arr['name'] = $name;
+                    $arr['originalName'] = $name;
 
                     return $arr;
                 })
@@ -1108,7 +1109,7 @@ trait ProductCartActions
 
                 if ($filters[$filterKey]['options'][$optionKey]['priceDiff']) {
                     $filters[$filterKey]['options'][$optionKey]['name'] = Translation::get('product-filter-option-name', 'products', ':optionName: (:type: :priceDiff:)', 'text', [
-                        'optionName' => $filters[$filterKey]['options'][$optionKey]['name'],
+                        'optionName' => $filters[$filterKey]['options'][$optionKey]['originalName'],
                         'type' => $filters[$filterKey]['options'][$optionKey]['priceDiffType'] == 'plus' ? '+' : '-',
                         'priceDiff' => CurrencyHelper::formatPrice($filters[$filterKey]['options'][$optionKey]['priceDiff'])
                     ]);
