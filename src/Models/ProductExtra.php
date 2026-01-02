@@ -91,6 +91,7 @@ class ProductExtra extends Model
                     'multiple' => 'Meerdere opties',
                     'checkbox' => 'Checkbox',
                     'input' => 'Invulveld',
+                    'textarea' => 'Groot tekstveld',
                     'image' => 'Afbeelding kiezen',
                     'file' => 'Upload bestand',
                 ])
@@ -106,18 +107,18 @@ class ProductExtra extends Model
                     'dateTime' => 'Datum + tijd',
                 ])
                 ->default('text')
-                ->visible(fn (Get $get) => $get('type') == 'input')
-                ->required(fn (Get $get) => $get('type') == 'input'),
+                ->visible(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
+                ->required(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea'),
             TextInput::make('min_length')
                 ->label('Minimale lengte/waarde')
                 ->numeric()
-                ->visible(fn (Get $get) => $get('type') == 'input')
-                ->required(fn (Get $get) => $get('type') == 'input'),
+                ->visible(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
+                ->required(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea'),
             TextInput::make('max_length')
                 ->label('Maximale lengte/waarde')
                 ->numeric()
-                ->visible(fn (Get $get) => $get('type') == 'input')
-                ->required(fn (Get $get) => $get('type') == 'input')
+                ->visible(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
+                ->required(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
                 ->reactive(),
             TextInput::make('helper_text')
                 ->label('Help tekst'),
