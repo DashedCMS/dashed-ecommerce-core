@@ -107,8 +107,8 @@ class ProductExtra extends Model
                     'dateTime' => 'Datum + tijd',
                 ])
                 ->default('text')
-                ->visible(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
-                ->required(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea'),
+                ->visible(fn (Get $get) => $get('type') == 'input')
+                ->required(fn (Get $get) => $get('type') == 'input'),
             TextInput::make('min_length')
                 ->label('Minimale lengte/waarde')
                 ->numeric()

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
@@ -63,7 +64,7 @@ trait ProductCartActions
 
     /**
      * In-memory cache van public varianten onder de productgroep.
-     * LET OP: hier laden we alleen lichte modellen (id's), geen zware relaties.
+     * LET OP: hier laden we alleen lichte modellen (id's + prijsvelden), geen zware relaties.
      */
     public ?Collection $publicProducts = null;
 
@@ -74,14 +75,23 @@ trait ProductCartActions
         }
 
         // Alleen de nodige kolommen + geen default $with eager loads
+        // Belangrijk: prijsvelden meenemen zodat we geen extra Product queries nodig hebben.
         $products = $this->productGroup
             ->products()
             ->publicShowable()
-            ->select(['id', 'product_group_id']) // genoeg voor onze use-cases hier
+//            ->select([
+//                'id',
+//                'product_group_id',
+//                'price',
+//                'discount_price',
+//                // Voeg hier extra kolommen toe als jouw currentPrice accessor ze nodig heeft.
+//                // bv: 'tax_rate', 'price_includes_tax', 'currency', etc.
+//            ])
             ->setEagerLoads([]) // overschrijft Product::$with (productFilters etc.)
             ->get();
 
-        $this->publicProducts = $products;
+        // KeyBy zodat lookups O(1) worden
+        $this->publicProducts = $products->keyBy('id');
 
         return $this->publicProducts;
     }
@@ -99,11 +109,11 @@ trait ProductCartActions
             return [];
         }
 
-        $productIds = $publicProducts->pluck('id')->toArray();
+        $productIds = $publicProducts->keys()->all();
         $activeFilters = $this->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
 
         foreach ($activeFilters as $filter) {
-            if (! $filter->pivot->use_for_variations) {
+            if (!$filter->pivot->use_for_variations) {
                 continue;
             }
 
@@ -114,12 +124,10 @@ trait ProductCartActions
                 ->pluck('product_filter_option_id')
                 ->toArray();
 
-            if (! count($productFilterOptionIds)) {
+            if (!count($productFilterOptionIds)) {
                 continue;
             }
 
-            // Hier mag je gewoon de relation gebruiken; die is op de group al ingeladen
-            // of wordt 1x opgehaald per filter.
             $filterOptions = $filter->productFilterOptions()
                 ->whereIn('id', $productFilterOptionIds)
                 ->get()
@@ -132,7 +140,7 @@ trait ProductCartActions
                 })
                 ->toArray();
 
-            if (! count($filterOptions)) {
+            if (!count($filterOptions)) {
                 continue;
             }
 
@@ -182,7 +190,7 @@ trait ProductCartActions
 
     public function updatedQuantity()
     {
-        if (! $this->product) {
+        if (!$this->product) {
             $this->quantity = 1;
             Notification::make()
                 ->danger()
@@ -192,11 +200,7 @@ trait ProductCartActions
             return;
         }
 
-        if (! $this->product) {
-            $this->quantity = 1;
-        }
-
-        if (! $this->quantity) {
+        if (!$this->quantity) {
             $this->quantity = 1;
         } elseif ($this->quantity < 1) {
             $this->quantity = 1;
@@ -226,18 +230,12 @@ trait ProductCartActions
             // 1x alle varianten (licht) binnenhalen
             $this->getPublicProducts();
 
-            // Bepaal startproduct:
-            // - als er al een product is (bijv. via route), gebruik die
-            // - anders originalProduct
-            // - anders firstSelectedProduct
-            // - anders eerste public child
-            if (! $this->product) {
+            if (!$this->product) {
                 $defaultProduct = $this->originalProduct
                     ?? $this->productGroup->firstSelectedProduct
                     ?? $this->getPublicProducts()->first();
 
                 if ($defaultProduct) {
-                    // Volledig inladen met benodigde relaties
                     $this->product = Product::with([
                         'productFilters',
                         'productCategories',
@@ -269,10 +267,8 @@ trait ProductCartActions
             $publicProducts = $this->getPublicProducts();
 
             if ($publicProducts->count() > 1) {
-                // Bij filter-change opnieuw variant zoeken
                 $this->product = null;
             } else {
-                // Eén variant? Dan gewoon de originele houden
                 $this->product = $this->originalProduct;
             }
         }
@@ -281,9 +277,12 @@ trait ProductCartActions
         $this->fillFilters($isMount);
 
         // Alleen bij NIET-mount automatisch variant zoeken op basis van filters
-        if (! $isMount && ! $this->product) {
+        if (!$isMount && !$this->product) {
             $this->findVariation();
         }
+
+        // Verrijk filter-opties met variant prijs + diff (via publicProducts)
+        $this->enrichFilterOptionPrices();
 
         if ($this->getPublicProducts()->count() === 1) {
             $this->variationExists = true;
@@ -316,8 +315,8 @@ trait ProductCartActions
             ? $this->product->allProductFaqs()
             : $this->productGroup->allProductFaqs();
 
-        if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
-            if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false) && $this->product) {
+        if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || !$this->productExtras) {
+            if (!$isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false) && $this->product) {
                 return redirect($this->product->getUrl(forceOwnUrl: true));
             }
 
@@ -336,22 +335,20 @@ trait ProductCartActions
             ? $this->product->replaceContentVariables($this->product->short_description, $this->filters)
             : $this->productGroup->replaceContentVariables($this->productGroup->short_description, $this->filters, $this->product);
         $this->sku = $this->product->sku ?? '';
-        //        $this->breadcrumbs = $this->product ? $this->product->breadcrumbs() : $this->productGroup->breadcrumbs(); //wordt al ingeladen via de layout
         $this->content = $this->product ? $this->product->content : $this->productGroup->content;
         $this->contentBlocks = $this->product ? $this->product->contentBlocks : $this->productGroup->contentBlocks;
 
         if ($this->product) {
-            if (! count($this->content ?: [])) {
+            if (!count($this->content ?: [])) {
                 $this->content = $this->productGroup->content;
             }
             foreach ($this->productGroup->contentBlocks as $block => $contentBlock) {
-                if (! isset($this->contentBlocks[$block]) || ! $this->contentBlocks[$block]) {
+                if (!isset($this->contentBlocks[$block]) || !$this->contentBlocks[$block]) {
                     $this->contentBlocks[$block] = $contentBlock;
                 }
             }
         }
 
-        // Global discounts cachen binnen de request
         static $allGlobalDiscounts = null;
         if ($allGlobalDiscounts === null) {
             $allGlobalDiscounts = DiscountCode::isGlobalDiscount()->get();
@@ -382,7 +379,7 @@ trait ProductCartActions
                 ->toArray();
         }
 
-        if (! $isMount) {
+        if (!$isMount) {
             $this->dispatch('productUpdated', [
                 'extras' => $this->extras,
                 'name' => $this->name,
@@ -413,11 +410,10 @@ trait ProductCartActions
 
     public function findVariation(): void
     {
-        // Geen filters gekozen = geen variant
         $activeFilters = [];
 
         foreach ($this->filters as $filter) {
-            if (! $filter['active']) {
+            if (!$filter['active']) {
                 $this->variationExists = false;
                 $this->product = null;
 
@@ -430,9 +426,7 @@ trait ProductCartActions
         sort($activeFilters);
         $key = implode('|', $activeFilters);
 
-        // 1. Probeer variation_index (precomputed)
         $rawIndex = $this->productGroup->variation_index ?? [];
-
         if (is_string($rawIndex)) {
             $index = json_decode($rawIndex, true) ?: [];
         } elseif (is_array($rawIndex)) {
@@ -443,12 +437,11 @@ trait ProductCartActions
 
         $productId = $index[$key] ?? null;
 
-        // 2. Geen index-hit? Fallback naar DB-lookup op basis van filters
-        if (! $productId) {
+        if (!$productId) {
             $publicProducts = $this->getPublicProducts();
-            $productIds = $publicProducts->pluck('id')->toArray();
+            $productIds = $publicProducts->keys()->all();
 
-            if (! empty($productIds)) {
+            if (!empty($productIds)) {
                 $matchingIds = $productIds;
 
                 foreach ($this->filters as $filter) {
@@ -466,14 +459,13 @@ trait ProductCartActions
                     }
                 }
 
-                if (! empty($matchingIds)) {
+                if (!empty($matchingIds)) {
                     $productId = $matchingIds[0];
                 }
             }
         }
 
-        // 3. Nog steeds niks? Fallback naar firstSelectedProduct / eerste variant (optioneel)
-        if (! $productId && Customsetting::get('fill_with_first_product_if_product_group_loaded', null, false)) {
+        if (!$productId && Customsetting::get('fill_with_first_product_if_product_group_loaded', null, false)) {
             $fallbackProduct = $this->productGroup->firstSelectedProduct ?: $this->getPublicProducts()->first();
 
             if ($fallbackProduct) {
@@ -502,18 +494,17 @@ trait ProductCartActions
             }
         }
 
-        if (! $productId) {
+        if (!$productId) {
             $this->variationExists = false;
             $this->product = null;
 
             return;
         }
 
-        // 4. Uiteindelijk de echte variant laden
         $this->variationExists = true;
 
         $this->product = Product::with([
-            'productFilters',        // voor view / characteristics
+            'productFilters',
             'productCategories',
             'volumeDiscounts',
             'productExtras.productExtraOptions',
@@ -557,7 +548,7 @@ trait ProductCartActions
 
     public function calculateCurrentPrices(): void
     {
-        if (! $this->product) {
+        if (!$this->product) {
             $this->price = null;
             $this->discountPrice = null;
 
@@ -566,7 +557,7 @@ trait ProductCartActions
 
         $productPrice = $this->product->currentPrice;
 
-        if (! $this->productExtras) {
+        if (!$this->productExtras) {
             $this->productExtras = $this->product->allProductExtras();
         }
 
@@ -643,7 +634,7 @@ trait ProductCartActions
 
         cartHelper()->setCartType($this->cartType);
 
-        if (! $product) {
+        if (!$product) {
             return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
         }
 
@@ -666,7 +657,7 @@ trait ProductCartActions
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
 
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -703,7 +694,7 @@ trait ProductCartActions
             } elseif ($productExtra->type == 'checkbox') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
 
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -738,7 +729,7 @@ trait ProductCartActions
             } elseif ($productExtra->type == 'multiple') {
                 $productValues = $this->extras[$extraKey]['value'] ?? null;
 
-                if ($productExtra->required && ! $productValues) {
+                if ($productExtra->required && !$productValues) {
                     return $this->checkCart('danger', Translation::get('select-multiple-for-product-extra', 'products', 'Select at least 1 option for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -783,7 +774,7 @@ trait ProductCartActions
             } elseif ($productExtra->type == 'input') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
 
-                if ($productExtra->required && ! $productValue) {
+                if ($productExtra->required && !$productValue) {
                     return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -803,11 +794,11 @@ trait ProductCartActions
             } elseif ($productExtra->type == 'file') {
                 $productValue = $this->files[$productExtra->id] ?? null;
 
-                if (! $productValue) {
+                if (!$productValue) {
                     $productValue = $this->extras[$extraKey]['value'] ?? null;
                 }
 
-                if ($productExtra->required && ! ($productValue['value'] ?? null)) {
+                if ($productExtra->required && !($productValue['value'] ?? null)) {
                     return $this->checkCart('danger', Translation::get('file-upload-option-for-product-extra', 'products', 'Upload an file for option :optionName:', 'text', [
                         'optionName' => $productExtra->name,
                     ]));
@@ -835,7 +826,7 @@ trait ProductCartActions
                 foreach ($productExtra->productExtraOptions as $option) {
                     $productOptionValue = $option['value'] ?? null;
 
-                    if ($productExtra->required && ! $productOptionValue) {
+                    if ($productExtra->required && !$productOptionValue) {
                         return $this->checkCart('danger', Translation::get('select-multiple-options-for-product-extra', 'products', 'Select one or more options for :optionName:', 'text', [
                             'optionName' => $productExtra->name,
                         ]));
@@ -867,7 +858,7 @@ trait ProductCartActions
         $attributes['options'] = $options;
         $attributes['hiddenOptions'] = $this->hiddenOptions;
 
-        if (! $productPrice) {
+        if (!$productPrice) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('product-price-zero', $this->cartType, 'De prijs mag niet op 0 staan, neem contact met ons op om de bestelling af te ronden'))
@@ -901,7 +892,7 @@ trait ProductCartActions
             }
         }
 
-        if (! $cartUpdated) {
+        if (!$cartUpdated) {
             if ($product->limit_purchases_per_customer && $this->quantity > $product->limit_purchases_per_customer_limit) {
                 Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $attributes)
                     ->associate(Product::class);
@@ -978,7 +969,7 @@ trait ProductCartActions
         $extraId = $attributes['extraId'] ?? null;
         $value = $attributes['value'] ?? null;
 
-        if (! $extraId) {
+        if (!$extraId) {
             return;
         }
 
@@ -987,7 +978,6 @@ trait ProductCartActions
         foreach ($this->extras as $extraPossibleKey => $extra) {
             if (($extra['id'] ?? null) == $extraId) {
                 $extraKey = $extraPossibleKey;
-
                 break;
             }
         }
@@ -998,5 +988,171 @@ trait ProductCartActions
 
         $this->extras[$extraKey]['value'] = $value;
         $this->fillInformation();
+    }
+
+    /**
+     * Verrijk filter opties met:
+     * - variantProductId
+     * - variantPrice / variantDiscountPrice
+     * - priceDiff / discountPriceDiff (t.o.v. huidige variant)
+     *
+     * Gebruikt alleen $this->publicProducts (geen extra Product queries).
+     */
+    protected function enrichFilterOptionPrices(): void
+    {
+        if (!$this->filters || $this->getPublicProducts()->isEmpty()) {
+            return;
+        }
+
+        $publicProducts = $this->getPublicProducts(); // keyBy id
+        $publicProductIds = $publicProducts->keys()->all();
+
+        $currentBasePrice = $this->product?->currentPrice;
+        $currentDiscountPrice = $this->product?->discountPrice;
+
+        $rawIndex = $this->productGroup->variation_index ?? [];
+        if (is_string($rawIndex)) {
+            $index = json_decode($rawIndex, true) ?: [];
+        } elseif (is_array($rawIndex)) {
+            $index = $rawIndex;
+        } else {
+            $index = [];
+        }
+
+        $variationFilters = collect($this->filters)->map(fn($f) => [
+            'id' => $f['id'],
+            'active' => $f['active'] ?? null,
+        ])->values();
+
+        $filters = $this->filters;
+
+        foreach ($filters as $filterKey => $filter) {
+            foreach (($filter['options'] ?? []) as $optionKey => $option) {
+
+                // Defaults
+                $filters[$filterKey]['options'][$optionKey]['variantProductId'] = null;
+                $filters[$filterKey]['options'][$optionKey]['variantPrice'] = null;
+                $filters[$filterKey]['options'][$optionKey]['variantDiscountPrice'] = null;
+                $filters[$filterKey]['options'][$optionKey]['priceDiff'] = null;
+                $filters[$filterKey]['options'][$optionKey]['discountPriceDiff'] = null;
+                $filters[$filterKey]['options'][$optionKey]['priceDiffType'] = 'plus';
+                $filters[$filterKey]['options'][$optionKey]['discountPriceDiffType'] = 'plus';
+
+                // Bouw selection key alsof user deze optie kiest
+                $selection = [];
+
+                foreach ($variationFilters as $vf) {
+                    $fid = $vf['id'];
+
+                    $oid = ($fid == $filter['id'])
+                        ? ($option['id'] ?? null)
+                        : ($vf['active'] ?? null);
+
+                    if (!$oid) {
+                        $selection = [];
+                        break;
+                    }
+
+                    $selection[] = $fid . '-' . $oid;
+                }
+
+                if (!$selection) {
+                    continue;
+                }
+
+                sort($selection);
+                $key = implode('|', $selection);
+
+                $productId = $index[$key] ?? null;
+
+                if (!$productId) {
+                    $productId = $this->lookupVariationProductIdFromDb($selection, $publicProductIds);
+                }
+
+                if (!$productId) {
+                    continue;
+                }
+
+                $variant = $publicProducts->get((int)$productId);
+
+                if (!$variant) {
+                    continue;
+                }
+
+                $variantPrice = $variant->currentPrice;
+                $variantDiscountPrice = $variant->discountPrice;
+
+                $filters[$filterKey]['options'][$optionKey]['variantProductId'] = (int)$productId;
+                $filters[$filterKey]['options'][$optionKey]['variantPrice'] = $variantPrice;
+                $filters[$filterKey]['options'][$optionKey]['variantDiscountPrice'] = $variantDiscountPrice;
+
+                if ($currentBasePrice !== null && $variantPrice !== null) {
+                    $filters[$filterKey]['options'][$optionKey]['priceDiff'] = $variantPrice - $currentBasePrice;
+                    if ($filters[$filterKey]['options'][$optionKey]['priceDiff'] > 0) {
+                        $filters[$filterKey]['options'][$optionKey]['priceDiffType'] = 'plus';
+                    } elseif ($filters[$filterKey]['options'][$optionKey]['priceDiff'] < 0) {
+                        $filters[$filterKey]['options'][$optionKey]['priceDiffType'] = 'min';
+                        $filters[$filterKey]['options'][$optionKey]['priceDiff'] = 0 - $filters[$filterKey]['options'][$optionKey]['priceDiff'];
+                    }
+                }
+
+                if ($currentDiscountPrice !== null && $variantDiscountPrice !== null) {
+                    $filters[$filterKey]['options'][$optionKey]['discountPriceDiff'] = $variantDiscountPrice - $currentDiscountPrice;
+                    if ($filters[$filterKey]['options'][$optionKey]['discountPriceDiff'] > 0) {
+                        $filters[$filterKey]['options'][$optionKey]['discountPriceDiffType'] = 'plus';
+                    } elseif ($filters[$filterKey]['options'][$optionKey]['discountPriceDiff'] < 0) {
+                        $filters[$filterKey]['options'][$optionKey]['discountPriceDiffType'] = 'min';
+                        $filters[$filterKey]['options'][$optionKey]['discountPriceDiff'] = 0 - $filters[$filterKey]['options'][$optionKey]['discountPriceDiff'];
+                    }
+                }
+
+                if ($filters[$filterKey]['options'][$optionKey]['priceDiff']) {
+                    $filters[$filterKey]['options'][$optionKey]['name'] = Translation::get('product-filter-option-name', 'products', ':optionName: (:type: :priceDiff:)', 'text', [
+                        'optionName' => $filters[$filterKey]['options'][$optionKey]['name'],
+                        'type' => $filters[$filterKey]['options'][$optionKey]['priceDiffType'] == 'plus' ? '+' : '-',
+                        'priceDiff' => CurrencyHelper::formatPrice($filters[$filterKey]['options'][$optionKey]['priceDiff'])
+                    ]);
+                }
+            }
+        }
+
+        $this->filters = $filters;
+    }
+
+    /**
+     * DB fallback: vind de product_id die EXACT matcht op alle (filterId-optionId) pairs.
+     *
+     * @param array $selection e.g. ['12-55','13-80']
+     * @param array $productIds public product ids binnen de groep
+     */
+    protected function lookupVariationProductIdFromDb(array $selection, array $productIds): ?int
+    {
+        if (!count($selection) || !count($productIds)) {
+            return null;
+        }
+
+        $pairs = array_map(function ($item) {
+            [$fid, $oid] = explode('-', $item);
+            return [(int)$fid, (int)$oid];
+        }, $selection);
+
+        $query = DB::table('dashed__product_filter')
+            ->select('product_id')
+            ->whereIn('product_id', $productIds)
+            ->where(function ($q) use ($pairs) {
+                foreach ($pairs as [$fid, $oid]) {
+                    $q->orWhere(function ($q2) use ($fid, $oid) {
+                        $q2->where('product_filter_id', $fid)
+                            ->where('product_filter_option_id', $oid);
+                    });
+                }
+            })
+            ->groupBy('product_id')
+            ->havingRaw('COUNT(DISTINCT product_filter_id) = ?', [count($pairs)])
+            ->limit(1);
+
+        $productId = $query->value('product_id');
+
+        return $productId ? (int)$productId : null;
     }
 }
