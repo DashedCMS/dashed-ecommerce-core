@@ -409,6 +409,7 @@ trait CreateManualOrderActions
         $total = cartHelper()->getTotal();
         $shippingCosts = cartHelper()->getShippingCosts();
         $paymentCosts = cartHelper()->getPaymentCosts();
+        $discountCode = cartHelper()->getDiscountCode();
 
         $order->total = $total;
         $order->subtotal = $subTotal;
@@ -418,9 +419,9 @@ trait CreateManualOrderActions
         $order->status = 'pending';
         $order->ga_user_id = null;
 
-        //        if ($discountCode) {
-        //            $order->discount_code_id = $discountCode->id;
-        //        }
+        if ($discountCode) {
+            $order->discount_code_id = $discountCode->id;
+        }
 
         $order->shipping_method_id = $this->shipping_method_id;
 
