@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;

@@ -136,6 +136,12 @@
         </table>
     </div>
 
+    @if(Customsetting::get('pos_enabled', null, false))
+        <div style="text-align: center; width: 100%; margin-top: 20px;">
+            {!! \Milon\Barcode\Facades\DNS1DFacade::getBarcodeHTML('order-'.  $order->id, 'C128', 2, 80) !!}
+        </div>
+    @endif
+
     <table class="table-details">
         <tr>
             <td class="sender" colspan="3">

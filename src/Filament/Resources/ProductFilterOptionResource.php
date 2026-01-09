@@ -2,13 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Forms\Components\Toggle;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -51,7 +51,7 @@ class ProductFilterOptionResource extends Resource
                     ->label('Filter')
                     ->required()
                     ->reactive()
-                    ->getOptionLabelFromRecordUsing(fn($record) => $record->name),
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name),
                 TextInput::make('name')
                     ->label('Naam')
                     ->required()
@@ -59,11 +59,11 @@ class ProductFilterOptionResource extends Resource
                 Toggle::make('in_stock')
                     ->label('Op voorraad')
                     ->columnSpanFull()
-                    ->visible(fn($record) => $record && $record->productFilter->use_stock)
+                    ->visible(fn ($record) => $record && $record->productFilter->use_stock)
                     ->default(true),
                 mediaHelper()->field('image', 'Afbeelding')
                     ->required()
-                    ->visible(fn(Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
+                    ->visible(fn (Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
                 TextInput::make('order')
                     ->label('Volgorde')
                     ->required()

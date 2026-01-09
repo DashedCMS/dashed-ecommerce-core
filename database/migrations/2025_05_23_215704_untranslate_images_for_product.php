@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 return new class () extends Migration {
@@ -11,13 +9,13 @@ return new class () extends Migration {
     public function up(): void
     {
         $products = \Dashed\DashedEcommerceCore\Models\Product::withTrashed()->get();
-        foreach($products as $product) {
+        foreach ($products as $product) {
             $product->images = $product->images[app()->getLocale()] ?? [];
             $product->saveQuietly();
         }
 
         $productGroups = \Dashed\DashedEcommerceCore\Models\ProductGroup::withTrashed()->get();
-        foreach($productGroups as $productGroup) {
+        foreach ($productGroups as $productGroup) {
             $productGroup->images = $productGroup->images[app()->getLocale()] ?? [];
             $productGroup->saveQuietly();
         }

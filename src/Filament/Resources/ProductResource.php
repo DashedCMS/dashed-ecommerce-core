@@ -3,12 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use Closure;
-use Dashed\DashedCore\Classes\OpenAIHelper;
-use Dashed\DashedCore\Jobs\GenerateAIContent;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedTranslations\Models\Translation;
-use Filament\Schemas\Components\Utilities\Set;
-use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -21,6 +15,7 @@ use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Filters\Filter;
 use Dashed\DashedCore\Classes\Sites;
+use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
@@ -34,10 +29,14 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
+use Dashed\DashedCore\Jobs\GenerateAIContent;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedEcommerceCore\Models\ProductTab;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Filament\Forms\Components\Repeater\TableColumn;
@@ -451,7 +450,7 @@ class ProductResource extends Resource
                                     ]),
                                 ];
                             })
-                            ->visible(fn($record) => $record && (bool)Customsetting::get('open_ai_api_key'))
+                            ->visible(fn ($record) => $record && (bool)Customsetting::get('open_ai_api_key'))
                             ->action(function ($data, Set $set, $record, $livewire) {
                                 $description = $data['description'] ?? '';
 

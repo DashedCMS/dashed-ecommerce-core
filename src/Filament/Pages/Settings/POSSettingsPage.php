@@ -20,10 +20,10 @@ use Filament\Schemas\Components\Utilities\Get;
 
 class POSSettingsPage extends Page
 {
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'POS instellingen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string|UnitEnum|null $navigationGroup = 'Overige';
     protected static ?string $title = 'POS instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';
@@ -39,6 +39,7 @@ class POSSettingsPage extends Page
         $formData["cash_register_amount"] = Customsetting::get('cash_register_amount', null, 0);
         $formData["pos_auto_print_receipt"] = Customsetting::get('pos_auto_print_receipt', null, true);
         $formData["pos_auto_print_other_orders"] = Customsetting::get('pos_auto_print_other_orders', null, false);
+        $formData["pos_enabled"] = Customsetting::get('pos_enabled', null, false);
 
         $this->form->fill($formData);
     }
@@ -47,7 +48,11 @@ class POSSettingsPage extends Page
     {
         $newSchema = [
             TextEntry::make("POS instellingen voor")
+                ->label('POS instellingen')
                 ->columnSpanFull(),
+            Toggle::make("pos_enabled")
+                ->reactive()
+                ->label('POS activeren'),
             Select::make("receipt_printer_connector_type")
                 ->options([
                     'cups' => 'cups',
@@ -55,17 +60,20 @@ class POSSettingsPage extends Page
                     'windows' => 'windows',
                 ])
                 ->reactive()
+                ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->label('Bonnen printer connectie type'),
             TextInput::make("receipt_printer_connector_descriptor")
                 ->label('Naam van de printer')
+                ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->required(fn (Get $get) => $get("receipt_printer_connector_type")),
             Toggle::make("cash_register_available")
                 ->reactive()
+                ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->label('Kassa beschikbaar'),
             Toggle::make("cash_register_track_cash_book")
                 ->label('Kasboek bijhouden')
                 ->reactive()
-                ->visible(fn (Get $get) => $get("cash_register_available")),
+                ->visible(fn (Get $get) => $get("pos_enabled") && $get("cash_register_available")),
             TextInput::make("cash_register_amount")
                 ->label('Bedrag in de kassa')
                 ->required()
@@ -73,12 +81,14 @@ class POSSettingsPage extends Page
                 ->prefix('€')
                 ->minValue(0)
                 ->maxValue(100000)
-                ->visible(fn (Get $get) => $get("cash_register_track_cash_book")),
+                ->visible(fn (Get $get) => $get("pos_enabled") && $get("cash_register_track_cash_book")),
             Toggle::make("pos_auto_print_receipt")
                 ->label('Automatisch een bon printen na een bestelling')
+                ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->reactive(),
             Toggle::make("pos_auto_print_other_orders")
                 ->label('Automatisch een bon printen bestellingen buiten de kassa om')
+                ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->reactive(),
         ];
 
@@ -141,13 +151,16 @@ class POSSettingsPage extends Page
         $sites = Sites::getSites();
 
         foreach ($sites as $site) {
-            Customsetting::set('cash_register_available', $this->form->getState()["cash_register_available"], $site['id']);
-            Customsetting::set('cash_register_track_cash_book', $this->form->getState()["cash_register_track_cash_book"], $site['id']);
-            Customsetting::set('cash_register_amount', $this->form->getState()["cash_register_amount"], $site['id']);
-            Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type"], $site['id']);
-            Customsetting::set('receipt_printer_connector_descriptor', $this->form->getState()["receipt_printer_connector_descriptor"], $site['id']);
-            Customsetting::set('pos_auto_print_receipt', $this->form->getState()["pos_auto_print_receipt"], $site['id']);
-            Customsetting::set('pos_auto_print_other_orders', $this->form->getState()["pos_auto_print_other_orders"], $site['id']);
+            if ($this->form->getState()["pos_enabled"]) {
+                Customsetting::set('cash_register_available', $this->form->getState()["cash_register_available"], $site['id']);
+                Customsetting::set('cash_register_track_cash_book', $this->form->getState()["cash_register_track_cash_book"], $site['id']);
+                Customsetting::set('cash_register_amount', $this->form->getState()["cash_register_amount"], $site['id']);
+                Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type"], $site['id']);
+                Customsetting::set('receipt_printer_connector_descriptor', $this->form->getState()["receipt_printer_connector_descriptor"], $site['id']);
+                Customsetting::set('pos_auto_print_receipt', $this->form->getState()["pos_auto_print_receipt"], $site['id']);
+                Customsetting::set('pos_auto_print_other_orders', $this->form->getState()["pos_auto_print_other_orders"], $site['id']);
+            }
+            Customsetting::set('pos_enabled', $this->form->getState()["pos_enabled"], $site['id']);
         }
 
         Notification::make()

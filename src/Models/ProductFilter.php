@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Dashed\DashedCore\Classes\Sites;
@@ -12,6 +11,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Dashed\DashedCore\Models\Concerns\HasSearchScope;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class ProductFilter extends Model
 {
@@ -48,9 +48,9 @@ class ProductFilter extends Model
         });
 
         static::saved(function ($productFilter) {
-//            if ((bool)($productFilter->previous['use_stock'] ?? null) !== (bool)$productFilter->use_stock) {
+            //            if ((bool)($productFilter->previous['use_stock'] ?? null) !== (bool)$productFilter->use_stock) {
             $productFilter->syncStock();
-//            }
+            //            }
         });
     }
 

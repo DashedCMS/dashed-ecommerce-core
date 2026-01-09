@@ -6,6 +6,7 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Dashed\DashedCore\Models\Customsetting;
 
 class POSPageRedirect extends Page
 {
@@ -16,6 +17,11 @@ class POSPageRedirect extends Page
     protected static ?string $slug = 'point-of-sale';
     protected static ?int $navigationSort = 3;
     protected Width | string | null $maxContentWidth = 'full';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Customsetting::get('pos_enabled', null, false);
+    }
 
     public static function getNavigationUrl(): string
     {
