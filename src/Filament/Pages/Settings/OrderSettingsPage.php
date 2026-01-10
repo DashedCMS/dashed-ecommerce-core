@@ -271,7 +271,7 @@ class OrderSettingsPage extends Page
             $formState["notification_bcc_order_emails_{$site['id']}"] = $emails;
         }
 
-        Customsetting::set('apis', $this->form->getState()["apis"]);
+        Customsetting::set('apis', $this->form->getState()["apis"] ?? []);
 
         foreach ($locales as $locale) {
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
