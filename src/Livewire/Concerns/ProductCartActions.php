@@ -128,6 +128,16 @@ trait ProductCartActions
                 continue;
             }
 
+            $enabledProductFilterOptions = DB::table('dashed__product_enabled_filter_options')
+                ->where('product_filter_id', $filter->id)
+                ->where('product_group_id', $this->productGroup->id)
+                ->pluck('product_filter_option_id')
+                ->toArray();
+
+            if(count($enabledProductFilterOptions)){
+                $productFilterOptionIds = array_intersect($productFilterOptionIds, $enabledProductFilterOptions);
+            }
+
             $filterOptions = $filter->productFilterOptions()
                 ->whereIn('id', $productFilterOptionIds)
                 ->get()
