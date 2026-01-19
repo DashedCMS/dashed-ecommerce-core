@@ -116,6 +116,22 @@ class UpdateProductInformationJob implements ShouldQueue
 
         $productIds = $this->productGroup->products->pluck('id');
 
+        $activeFilters = $this->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
+        foreach ($activeFilters as $filter) {
+            $allProductFilterOptions = $filter->productFilterOptions->pluck('id')->toArray();
+            $enabledProductFilterOptions = DB::table('dashed__product_enabled_filter_options')
+                ->where('product_filter_id', $filter->id)
+                ->where('product_group_id', $this->productGroup->id)
+                ->pluck('product_filter_option_id')
+                ->toArray();
+
+            DB::table('dashed__product_filter')
+                ->whereIn('product_filter_option_id', $allProductFilterOptions)
+                ->whereNotIn('product_filter_option_id', $enabledProductFilterOptions)
+                ->whereIn('product_id', $productIds)
+                ->delete();
+        }
+
         if ($productIds->isEmpty()) {
             $this->productGroup->variation_index = null;
         } else {
