@@ -24,7 +24,7 @@
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Helvetica, sans-serif;
             color: #44403c;
         }
 

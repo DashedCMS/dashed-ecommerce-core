@@ -134,7 +134,7 @@ trait ProductCartActions
                 ->pluck('product_filter_option_id')
                 ->toArray();
 
-            if(count($enabledProductFilterOptions)){
+            if (count($enabledProductFilterOptions)) {
                 $productFilterOptionIds = array_intersect($productFilterOptionIds, $enabledProductFilterOptions);
             }
 
