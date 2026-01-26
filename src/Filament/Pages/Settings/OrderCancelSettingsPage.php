@@ -51,7 +51,6 @@ class OrderCancelSettingsPage extends Page
                     ->state("Bestelling annuleren instellingen voor {$site['name']}"),
                 Select::make("order_cancel_default_fulfillment_status_{$site['id']}")
                     ->label('Verander fulfillment status naar')
-                    ->required()
                     ->options(array_merge([
                         '' => 'Leeg'
                     ], Orders::getFulfillmentStatusses())),
