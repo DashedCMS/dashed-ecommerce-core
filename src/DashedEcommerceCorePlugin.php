@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -80,6 +81,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductGroupStatisticsPage::class,
                 ActionsStatisticsPage::class,
                 DefaultEcommerceSettingsPage::class,
+                OrderCancelSettingsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,

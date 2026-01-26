@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -331,6 +332,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->registerSettingsPage(OrderLogTemplateResource::class, 'Bestel log templates', 'newspaper', 'Stel templates in voor bestel logs');
         cms()->registerSettingsPage(PaymentMethodResource::class, 'Betaalmethodes', 'credit-card', 'Stel handmatige betaalmethodes in');
         cms()->registerSettingsPage(VATSettingsPage::class, 'BTW instellingen', 'receipt-percent', 'Beheren hoe je winkel belastingen in rekening brengt');
+        cms()->registerSettingsPage(OrderCancelSettingsPage::class, 'Annuleer bestelling instellingen', 'arrow-uturn-left', 'Beheer instellingen voor het annuleren van bestellingen');
         cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');
         cms()->registerSettingsPage(CheckoutSettingsPage::class, 'Afreken instellingen', 'shopping-cart', 'Je online betaalprocess aanpassen');
         cms()->registerSettingsPage(ShippingClassResource::class, 'Verzendklasses', 'truck', 'Is een product breekbaar of veel groter? Reken een meerprijs');

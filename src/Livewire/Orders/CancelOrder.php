@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -41,7 +42,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
     public function action(): Action
     {
         $fillForm = [
-            'fulfillment_status' => 'handled',
+            'fulfillment_status' => Customsetting::get('order_cancel_default_fulfillment_status', null, 'handled'),
             'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('is_cash_payment', 1)->first()->id ?? null,
 //            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
         ];
