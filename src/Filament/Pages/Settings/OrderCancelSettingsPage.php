@@ -33,7 +33,7 @@ class OrderCancelSettingsPage extends Page
         $formData = [];
         $sites = Sites::getSites();
         foreach ($sites as $site) {
-            $formData["order_cancel_default_fulfillment_status_{$site['id']}"] = Customsetting::get('order_cancel_default_fulfillment_status', $site['id'], 'handled');
+            $formData["order_cancel_default_fulfillment_status_{$site['id']}"] = Customsetting::get('order_cancel_default_fulfillment_status', $site['id']);
         }
 
         $this->form->fill($formData);
