@@ -152,7 +152,7 @@ class POSSettingsPage extends Page
 
         foreach ($sites as $site) {
             if ($this->form->getState()["pos_enabled"]) {
-                Customsetting::set('cash_register_available', $this->form->getState()["cash_register_available"], $site['id']);
+                Customsetting::set('cash_register_available', $this->form->getState()["cash_register_available"] ?? false, $site['id']);
                 Customsetting::set('cash_register_track_cash_book', $this->form->getState()["cash_register_track_cash_book"] ?? false, $site['id']);
                 Customsetting::set('cash_register_amount', $this->form->getState()["cash_register_amount"] ?? 0, $site['id']);
                 Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type"] ?? '', $site['id']);
