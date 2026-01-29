@@ -26,7 +26,7 @@ class ProductsToEdit implements FromArray
             ],
         ];
 
-        foreach (Product::all() as $product) {
+        foreach (Product::orderBy('product_group_id')->get() as $product) {
             $productsArray[] = [
                 $product->id,
                 $product->name,
