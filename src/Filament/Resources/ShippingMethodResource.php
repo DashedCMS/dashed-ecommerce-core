@@ -71,7 +71,7 @@ class ShippingMethodResource extends Resource
                         ->required()
                         ->maxLength(100),
                     Radio::make('sort')
-                        ->label('Soort verzendmethod')
+                        ->label('Soort verzendmethode')
                         ->options([
                             'static_amount' => 'Vast bedrag',
                             'variable_amount' => 'Variabel bedrag',
