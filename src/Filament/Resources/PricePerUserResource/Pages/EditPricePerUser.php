@@ -16,6 +16,7 @@ use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
 use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
 use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
+use STS\FilamentImpersonate\Actions\Impersonate;
 
 class EditPricePerUser extends EditRecord
 {
@@ -29,6 +30,7 @@ class EditPricePerUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Impersonate::make(),
             Action::make('exportProducts')
                 ->label('Producten')
                 ->icon('heroicon-s-arrow-down-tray')
