@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use STS\FilamentImpersonate\Actions\Impersonate;
 use UnitEnum;
 use BackedEnum;
 use App\Models\User;
@@ -178,6 +179,7 @@ class PricePerUserResource extends Resource
                 //
             ])
             ->recordActions([
+                Impersonate::make(),
                 EditAction::make()
                     ->button(),
             ]);
