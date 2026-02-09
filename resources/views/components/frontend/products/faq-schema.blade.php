@@ -1,7 +1,7 @@
 @php
     $faqQuestions = [];
-    foreach($faqs as $faqGroup) {
-        foreach($faqGroup->questions as $faq) {
+    foreach($faqs ?? [] as $faqGroup) {
+        foreach($faqGroup->questions ?: [] as $faq) {
             $faqQuestions[] = [
                 '@type' => 'Question',
                 'name' => $faq['question'] ?? '',
