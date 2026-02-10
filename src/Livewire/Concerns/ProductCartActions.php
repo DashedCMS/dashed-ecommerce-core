@@ -1037,7 +1037,6 @@ trait ProductCartActions
         ])->values();
 
         $filters = $this->filters;
-
         foreach ($filters as $filterKey => $filter) {
             foreach (($filter['options'] ?? []) as $optionKey => $option) {
 
@@ -1125,6 +1124,19 @@ trait ProductCartActions
                         'type' => $filters[$filterKey]['options'][$optionKey]['priceDiffType'] == 'plus' ? '+' : '-',
                         'priceDiff' => CurrencyHelper::formatPrice($filters[$filterKey]['options'][$optionKey]['priceDiff']),
                     ]);
+                }
+
+                if($filters[$filterKey]['options'][$optionKey]['id'] == ($filter['active'] ?? null)){
+                    $filters[$filterKey]['options'][$optionKey]['name'] = $filters[$filterKey]['options'][$optionKey]['originalName'];
+                }
+            }
+        }
+
+        foreach($this->filters as $filter){
+            foreach (($filter['options'] ?? []) as $optionKey => $option) {
+                if($filter['active'] && ($option['id'] == $filter['active']) && isset($filters[$filterKey]['options'][$optionKey])){
+                    $filters[$filterKey]['options'][$optionKey]['name'] =
+                        $filters[$filterKey]['options'][$optionKey]['originalName'];
                 }
             }
         }
