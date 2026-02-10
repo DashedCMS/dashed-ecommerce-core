@@ -15,7 +15,7 @@ class Searchbar extends Component
 
     public function mount()
     {
-        $this->search = request()->get('search');
+        $this->search = is_array(request()->get('search')) ? null : request()->get('search');
     }
 
     public function getProductsFromSearch()
@@ -31,17 +31,14 @@ class Searchbar extends Component
         $this->dispatch('searchInitiated');
     }
 
-    public function updatingSearch($value)
+    public function updatedSearch()
     {
         if (is_array($value)) {
             $this->search = null;
 
             return false;
         }
-    }
 
-    public function updatedSearch()
-    {
         $this->getProductsFromSearch();
     }
 
