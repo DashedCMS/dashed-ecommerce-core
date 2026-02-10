@@ -31,6 +31,15 @@ class Searchbar extends Component
         $this->dispatch('searchInitiated');
     }
 
+    public function updatingSearch($value)
+    {
+        if (is_array($value)) {
+            $this->search = null;
+
+            return false;
+        }
+    }
+
     public function updatedSearch()
     {
         $this->getProductsFromSearch();
