@@ -33,7 +33,7 @@ class Searchbar extends Component
 
     public function updatedSearch()
     {
-        if (is_array($value)) {
+        if (is_array($this->search)) {
             $this->search = null;
 
             return false;
