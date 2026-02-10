@@ -22,7 +22,6 @@
                         'pl-0 bg-transparent border-none w-96 placeholder:text-white',
                         'focus:border-none focus:ring-0',
                     ])
-                    value="{{Request::get('search')}}"
                     type="text"
                     id="searchField"
                     name="search"
