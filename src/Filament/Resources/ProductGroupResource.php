@@ -99,6 +99,10 @@ class ProductGroupResource extends Resource
                     ->label('Openbaar')
                     ->default(true)
                     ->helperText('Als je deze op NIET openbaar zet, worden alle variaties verborgen'),
+                Toggle::make('showable_in_index')
+                    ->label('Tonen in index')
+                    ->default(true)
+                    ->helperText('Indien je deze uitzet, worden de variaties niet getoond op overzichtspagina\'s maar zijn ze nog wel zichtbaar via directe link.'),
                 Toggle::make('only_show_parent_product')
                     ->label('Toon 1 variatie op overzichtspagina'),
                 Toggle::make('sync_categories_to_products')

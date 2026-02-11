@@ -492,35 +492,34 @@ class Product extends Model
         $this->calculateReservedStock();
     }
 
-    public function calculatePrices()
+    public function calculatePrices(): void
     {
-        if ($this->is_bundle && $this->use_bundle_product_price) {
-            $currentPrice = $this->bundleProducts()->sum('price');
-        } else {
-            $currentPrice = $this->price;
-        }
+        // 1) Base price bepalen
+        $currentPrice = ($this->is_bundle && $this->use_bundle_product_price)
+            ? $this->bundleProducts()->sum('price')
+            : $this->price;
+
         $this->current_price = $currentPrice;
+
+        // 2) Discount price bepalen
+        $discountPrice = null;
 
         if ($this->is_bundle && $this->use_bundle_product_price) {
             $discountPrice = $this->bundleProducts()->sum('new_price');
-        } else {
-            if ($this->new_price) {
-                $discountPrice = $this->new_price;
-            } else {
-                $discountPrice = null;
-            }
+        } elseif ($this->new_price) {
+            $discountPrice = $this->new_price;
         }
 
         $this->discount_price = $discountPrice;
 
+        // 3) Global discounts
         $discountFromGlobalDiscounts = 0;
+
         foreach (DiscountCode::isGlobalDiscount()->get() as $discountCode) {
             if ($discountCode->isValidForProduct($this)) {
-                if ($discountCode->type == 'percentage') {
-                    $discountFromGlobalDiscounts += $currentPrice / 100 * $discountCode->discount_percentage;
-                } else {
-                    $discountFromGlobalDiscounts += $discountCode->discount_amount;
-                }
+                $discountFromGlobalDiscounts += $discountCode->type === 'percentage'
+                    ? ($currentPrice / 100 * $discountCode->discount_percentage)
+                    : $discountCode->discount_amount;
             }
         }
 
@@ -528,38 +527,41 @@ class Product extends Model
             $this->discount_price = $currentPrice;
             $this->current_price = $currentPrice - $discountFromGlobalDiscounts;
         }
+
         if ($this->current_price < 0) {
             $this->current_price = 0.01;
         }
 
         $this->saveQuietly();
 
-        foreach (User::where('has_custom_pricing', true)->get() as $user) {
-            $productUser = DB::table('dashed__product_user')
-                ->where('product_id', $this->id)
-                ->where('user_id', $user->id)
-                ->first();
-            if ($productUser) {
-                $productPrice = $this->current_price;
-                if ($productUser->discount_price) {
-                    $productPrice -= $productUser->discount_price;
-                } elseif ($productUser->discount_percentage) {
-                    $productPrice -= $productPrice / 100 * $productUser->discount_percentage;
-                }
+        // 4) Pivot prijzen in BULK updaten (1 query)
+        $base = (float) $this->current_price;
 
-                if ($productPrice < 0) {
-                    $productPrice = 0.01;
-                }
-
-                DB::table('dashed__product_user')
-                    ->where('product_id', $this->id)
-                    ->where('user_id', $user->id)
-                    ->update([
-                        'price' => $productPrice,
-                    ]);
-            }
-        }
+        DB::table('dashed__product_user')
+            ->where('product_id', $this->id)
+            ->whereIn('user_id', function ($q) {
+                $q->select('id')
+                    ->from('users')
+                    ->where('has_custom_pricing', 1);
+            })
+            ->update([
+                'price' => DB::raw("
+                GREATEST(
+                    0.01,
+                    {$base}
+                    - COALESCE(discount_price, 0)
+                    - (
+                        CASE
+                            WHEN discount_price IS NULL AND discount_percentage IS NOT NULL
+                            THEN ({$base} * (discount_percentage / 100))
+                            ELSE 0
+                        END
+                    )
+                )
+            "),
+            ]);
     }
+
 
     public function hasDirectSellableStock(): bool
     {
