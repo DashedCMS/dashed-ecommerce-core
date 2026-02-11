@@ -2,7 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Dashed\DashedEcommerceCore\Resources\ProductFeedResource;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
@@ -124,37 +126,41 @@ class UpdateProductInformationJob implements ShouldQueue
                 // 4) Indexable logic (zelfde als jouw code, alleen iets leesbaarder)
                 $shouldBeIndexable = false;
 
-                if (
-                    $this->productGroup->only_show_parent_product
-                    && $this->productGroup->firstSelectedProduct
-                    && $this->productGroup->firstSelectedProduct->public
-                    && $this->productGroup->firstSelectedProduct->id === $product->id
-                    && $product->public
-                    && $this->productGroup->public
-                ) {
-                    $shouldBeIndexable = true;
-                } elseif (
-                    (
+                if($this->productGroup->showable_in_index){
+                    if (
+                        $this->productGroup->only_show_parent_product
+                        && $this->productGroup->firstSelectedProduct
+                        && $this->productGroup->firstSelectedProduct->public
+                        && $this->productGroup->firstSelectedProduct->id === $product->id
+                        && $product->public
+                        && $this->productGroup->public
+                    ) {
+                        $shouldBeIndexable = true;
+                    } elseif (
                         (
-                            $this->productGroup->only_show_parent_product
-                            && ! $hasIndexableProduct
-                            && (
-                                ! $this->productGroup->firstSelectedProduct
-                                || (
-                                    $this->productGroup->firstSelectedProduct
-                                    && ! $this->productGroup->firstSelectedProduct->public
+                            (
+                                $this->productGroup->only_show_parent_product
+                                && ! $hasIndexableProduct
+                                && (
+                                    ! $this->productGroup->firstSelectedProduct
+                                    || (
+                                        $this->productGroup->firstSelectedProduct
+                                        && ! $this->productGroup->firstSelectedProduct->public
+                                    )
                                 )
                             )
+                            || ! $this->productGroup->only_show_parent_product
                         )
-                        || ! $this->productGroup->only_show_parent_product
-                    )
-                    && $product->public
-                    && $this->productGroup->public
-                ) {
-                    $shouldBeIndexable = true;
-                }
+                        && $product->public
+                        && $this->productGroup->public
+                    ) {
+                        $shouldBeIndexable = true;
+                    }
 
-                $product->indexable = $shouldBeIndexable ? 1 : 0;
+                    $product->indexable = $shouldBeIndexable ? 1 : 0;
+                }else{
+                    $product->indexable = 0;
+                }
                 if ($shouldBeIndexable) {
                     $hasIndexableProduct = true;
                 }
@@ -198,6 +204,27 @@ class UpdateProductInformationJob implements ShouldQueue
                 Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-yes');
                 Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-no');
             }
+
+            $originalLocale = App::getLocale();
+            foreach (Locales::getLocalesArray() as $locale => $name) {
+                App::setLocale($locale);
+
+                $payload = (new ProductFeedResource($product))->toArray(null);
+                $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                DB::table('dashed__product_feed_data')->upsert(
+                    [[
+                        'product_id' => $product->id,
+                        'locale' => $locale,
+                        'payload' => $json,
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]],
+                    ['product_id', 'locale'],
+                    ['payload', 'updated_at']
+                );
+            }
+            App::setLocale($originalLocale);
         }
 
         // Aggregate fields + variation index + filter cleanup
