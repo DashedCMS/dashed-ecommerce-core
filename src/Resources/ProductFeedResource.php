@@ -148,6 +148,8 @@ class ProductFeedResource extends JsonResource
             'attributes' => $attributes,
         ];
 
+        $array = array_merge($array, $attributes);
+
         if (! empty($images)) {
             foreach (array_values(array_slice($images, 1)) as $idx => $url) {
                 $array['image_link_' . ($idx + 2)] = $url;
