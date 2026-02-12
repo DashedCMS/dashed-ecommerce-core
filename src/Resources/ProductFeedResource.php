@@ -124,6 +124,7 @@ class ProductFeedResource extends JsonResource
         $array = [
             'id' => $product->id,
             'product_group_id' => $product->product_group_id ?? ($product->productGroup->id ?? null),
+            'product_group_title' => $product->product_group_id ?? ($product->productGroup->name ?? null),
             'title' => $product->name,
             'link' => url($product->getUrl()),
             'price' => $product->currentPrice,
