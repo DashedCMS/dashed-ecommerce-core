@@ -60,7 +60,7 @@ class ProductFeedResource extends JsonResource
         $description = null;
         $shortDescription = null;
 
-        if (str($product->description)->stripTags()) {
+        if (str(cms()->convertToHtml($product->description))->stripTags()->toString()) {
             $description = $product->replaceContentVariables($product->description, $filters);
         } elseif ($product->productGroup?->description) {
             $description = $product->productGroup->replaceContentVariables(
