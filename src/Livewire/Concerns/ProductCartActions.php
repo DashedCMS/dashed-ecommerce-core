@@ -353,7 +353,7 @@ trait ProductCartActions
             if (! count($this->content ?: [])) {
                 $this->content = $this->productGroup->content;
             }
-            foreach ($this->productGroup->contentBlocks as $block => $contentBlock) {
+            foreach ((array)$this->productGroup->contentBlocks as $block => $contentBlock) {
                 if (! isset($this->contentBlocks[$block]) || ! $this->contentBlocks[$block]) {
                     $this->contentBlocks[$block] = $contentBlock;
                 }
