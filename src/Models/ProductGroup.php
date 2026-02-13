@@ -190,9 +190,9 @@ class ProductGroup extends Model
 
     public function globalProductExtras(): BelongsToMany
     {
-        return $this->belongsToMany(ProductExtra::class, 'dashed__product_extra_product', 'product_group_id', 'product_extra_id')
-            ->orderBy('order')
+        return $this->belongsToMany(ProductExtra::class, 'dashed__product_extra_product_groups', 'product_group_id', 'product_extra_id')
             ->where('global', 1)
+            ->orderBy('order')
             ->with(['productExtraOptions']);
     }
 

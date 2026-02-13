@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -53,7 +54,20 @@ class ProductExtraResource extends Resource
             ->schema(array_merge(
                 ProductExtra::getFilamentFields(),
                 [
-
+                    Select::make('productGroups')
+                        ->relationship('productGroups', 'name')
+                        ->label('Gekoppelde product groepen')
+                        ->getSearchResultsUsing(fn (string $search) => ProductGroup::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->searchable()
+                        ->multiple()
+                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
+                        ->hintAction(
+                            Action::make('addAllProductGroups')
+                                ->label('Voeg alle product groepen toe')
+                                ->action(function (Set $set) {
+                                    $set('productGroups', ProductGroup::all()->pluck('id')->toArray());
+                                }),
+                        ),
                     Select::make('products')
                         ->relationship('products', 'name')
                         ->label('Gekoppelde producten')

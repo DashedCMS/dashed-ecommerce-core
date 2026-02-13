@@ -61,6 +61,12 @@ class ProductExtra extends Model
         return LogOptions::defaults();
     }
 
+    public function productGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductGroup::class, 'dashed__product_extra_product_groups', 'product_extra_id', 'product_group_id');
+    }
+
+
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'dashed__product_extra_product', 'product_extra_id', 'product_id');
