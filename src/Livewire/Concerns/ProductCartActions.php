@@ -128,6 +128,10 @@ trait ProductCartActions
                 continue;
             }
 
+            if(count(array_unique($productFilterOptionIds)) < 2){
+                continue;
+            }
+
             $enabledProductFilterOptions = DB::table('dashed__product_enabled_filter_options')
                 ->where('product_filter_id', $filter->id)
                 ->where('product_group_id', $this->productGroup->id)
