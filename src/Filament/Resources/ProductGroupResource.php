@@ -198,7 +198,8 @@ class ProductGroupResource extends Resource
                     ->visible(fn ($livewire, $record, $get) => count($record->missing_variations ?? []) && $livewire instanceof EditProductGroup)
                     ->requiresConfirmation()
                     ->action(function ($record) {
-                        CreateMissingProductVariationsJob::dispatch($record);
+                        CreateMissingProductVariationsJob::dispatch($record)
+                        ->onQueue('ecommerce');
 
                         Notification::make()
                             ->title('Missende variaties worden aangemaakt, refresh de pagina om de voortgang te zien')

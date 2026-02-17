@@ -38,11 +38,11 @@ class Products
             }
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
@@ -151,8 +151,9 @@ class Products
         ?bool                                     $enableFilters = true,
         null|array|Collection                     $products = null,
         ?array                                    $priceRange = []
-    ) {
-        if (! in_array($orderBy, self::canFilterOnShortOrColumn(), true)) {
+    )
+    {
+        if (!in_array($orderBy, self::canFilterOnShortOrColumn(), true)) {
             $orderBy = '';
         }
 
@@ -186,17 +187,18 @@ class Products
             $order = '';
         }
 
-        if (! $orderBy) {
+        if (!$orderBy) {
             $orderBy = Customsetting::get('product_default_order_type', null, 'price');
         }
 
-        if (! $order) {
+        if (!$order) {
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
-        if (! $products) {
+        if (!$products) {
             if ($categoryId) {
-                $productCategory = ProductCategory::with(['products'])->findOrFail($categoryId);
+                $productCategory = ProductCategory::with(['products'])
+                    ->findOrFail($categoryId);
                 $products = $productCategory->products()
                     ->search($search)
                     ->publicShowable()
@@ -244,11 +246,11 @@ class Products
             ->values();
 
         // 4) Prijsfilter lokaal toepassen
-        if (! empty($priceRange['min'])) {
-            $products = $products->filter(fn ($p) => $p->price >= $priceRange['min']);
+        if (!empty($priceRange['min'])) {
+            $products = $products->filter(fn($p) => $p->price >= $priceRange['min']);
         }
-        if (! empty($priceRange['max'])) {
-            $products = $products->filter(fn ($p) => $p->price <= $priceRange['max']);
+        if (!empty($priceRange['max'])) {
+            $products = $products->filter(fn($p) => $p->price <= $priceRange['max']);
         }
 
         // 5) Sorteren + search (hybride)
@@ -258,7 +260,7 @@ class Products
 
             // Translatable kolommen voor Product
             $productColumns = collect((new Product())->getTranslatableAttributes())
-                ->reject(fn (string $attr) => method_exists(Product::class, $attr))
+                ->reject(fn(string $attr) => method_exists(Product::class, $attr))
                 ->values()
                 ->all();
 
@@ -267,7 +269,7 @@ class Products
 
             // Translatable kolommen voor ProductGroup (aparte set!)
             $groupColumns = collect((new ProductGroup())->getTranslatableAttributes() ?? [])
-                ->reject(fn (string $attr) => method_exists(ProductGroup::class, $attr))
+                ->reject(fn(string $attr) => method_exists(ProductGroup::class, $attr))
                 ->values()
                 ->all();
 
@@ -428,7 +430,7 @@ class Products
         /*
          * STAP 1: Recently viewed producten ophalen (maximaal 1 per productgroep)
          */
-        if (! empty($recentlyViewedGroupIds)) {
+        if (!empty($recentlyViewedGroupIds)) {
             $recentProducts = Product::whereIn('product_group_id', $recentlyViewedGroupIds)
                 ->publicShowable()
                 ->without(['productFilters'])
