@@ -2941,9 +2941,48 @@
             if (this.searchProductQuery.length < 3) {
                 this.searchedProducts = [];
             }
+            const query = this.searchProductQuery.trim().toLowerCase();
+
+            if (!query) {
+                this.searchedProducts = this.allProducts.slice(0, 100);
+                return;
+            }
+
+            const words = query.split(/\s+/);
+
             this.searchedProducts = this.allProducts
-                .filter(product => product.search.toLowerCase().includes(this.searchProductQuery.toLowerCase()))
+                .map(product => {
+                    const haystack = product.search.toLowerCase();
+                    let score = 0;
+
+                    // Exact match boost
+                    if (haystack === query) {
+                        score += 1000;
+                    }
+
+                    // Starts with boost
+                    if (haystack.startsWith(query)) {
+                        score += 500;
+                    }
+
+                    // Per woord score
+                    words.forEach(word => {
+                        if (haystack.includes(word)) {
+                            score += 100;
+                        }
+                    });
+
+                    // Alle woorden aanwezig bonus
+                    if (words.every(word => haystack.includes(word))) {
+                        score += 300;
+                    }
+
+                    return { ...product, _score: score };
+                })
+                .filter(p => p._score > 0)
+                .sort((a, b) => b._score - a._score)
                 .slice(0, 100);
+
 
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {
@@ -2985,9 +3024,48 @@
                 return;
             }
 
+            const query = this.searchStockProductQuery.trim().toLowerCase();
+
+            if (!query) {
+                this.searchedStockProducts = this.allProducts.slice(0, 100);
+                return;
+            }
+
+            const words = query.split(/\s+/);
+
             this.searchedStockProducts = this.allProducts
-                .filter(product => product.search.toLowerCase().includes(this.searchStockProductQuery.toLowerCase().trim()))
+                .map(product => {
+                    const haystack = product.search.toLowerCase();
+                    let score = 0;
+
+                    // Exact match boost
+                    if (haystack === query) {
+                        score += 1000;
+                    }
+
+                    // Starts with boost
+                    if (haystack.startsWith(query)) {
+                        score += 500;
+                    }
+
+                    // Per woord score
+                    words.forEach(word => {
+                        if (haystack.includes(word)) {
+                            score += 100;
+                        }
+                    });
+
+                    // Alle woorden aanwezig bonus
+                    if (words.every(word => haystack.includes(word))) {
+                        score += 300;
+                    }
+
+                    return { ...product, _score: score };
+                })
+                .filter(p => p._score > 0)
+                .sort((a, b) => b._score - a._score)
                 .slice(0, 100);
+
 
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {

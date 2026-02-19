@@ -14,11 +14,19 @@ class CartCount extends Component
         'refreshCart',
     ];
 
-    public function mount($cartType = 'default')
+    public function mount($cartType = 'default'): void
     {
+        if (is_array($cartType)) {
+            $cartType = $cartType[0] ?? 'default';
+        }
+
+        $cartType = (string) $cartType;
+
         $this->cartType = $cartType;
+
         $this->refreshCart();
     }
+
 
     public function refreshCart()
     {

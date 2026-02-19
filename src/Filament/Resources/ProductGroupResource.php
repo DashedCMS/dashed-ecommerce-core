@@ -564,7 +564,8 @@ class ProductGroupResource extends Resource
 
                         return $query->whereHas('productCategories', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
                     }),
-            ]);
+            ])
+            ->deferFilters(false);
     }
 
     public static function getRelations(): array
