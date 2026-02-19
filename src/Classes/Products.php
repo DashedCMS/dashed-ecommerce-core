@@ -361,10 +361,21 @@ class Products
         } else {
             // Geen search: gewoon sorteren op gekozen kolom
             if ($orderBy) {
-                $products = $products
-                    ->sortBy($orderBy, SORT_REGULAR, strtolower($order) === 'desc')
-                    ->values();
+                if ($orderBy === 'orderByProductGroups') {
+                    $products = $products
+                        ->sortBy(
+                            fn ($product) => optional($product->productGroup)->order ?? 999999,
+                            SORT_REGULAR,
+                            false
+                        )
+                        ->values();
+                } else {
+                    $products = $products
+                        ->sortBy($orderBy, SORT_REGULAR, strtolower($order) === 'desc')
+                        ->values();
+                }
             }
+
         }
 
         // 👉 Hier: duplicates hard afvangen op id

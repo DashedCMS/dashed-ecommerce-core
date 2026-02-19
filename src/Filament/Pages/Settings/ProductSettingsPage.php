@@ -97,6 +97,7 @@ class ProductSettingsPage extends Page
                         'stock' => 'Vooraad',
                         'created_at' => 'Aangemaakt op',
                         'order' => 'Volgorde van producten',
+                        'orderByProductGroups' => 'Volgorde van product groepen',
                     ])
                     ->label('Producten sorteren op')
                     ->required(),

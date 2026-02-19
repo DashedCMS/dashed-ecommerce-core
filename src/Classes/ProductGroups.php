@@ -29,6 +29,9 @@ class ProductGroups
             } elseif ($orderByRequest == 'order') {
                 $orderBy = 'order';
                 $order = 'ASC';
+            } elseif ($orderByRequest == 'orderByProductGroups') {
+                $orderBy = 'orderByProductGroups';
+                $order = 'ASC';
             }
         }
 
