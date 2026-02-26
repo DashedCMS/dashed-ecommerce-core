@@ -5,9 +5,9 @@ namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 use Illuminate\Support\Facades\View;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
-use Dashed\DashedCore\Controllers\Frontend\GoogleOAuthController;
+use App\Http\Controllers\Controller;;
 
-class AccountController extends GoogleOAuthController
+class AccountController extends Controller
 {
     public function orders()
     {
