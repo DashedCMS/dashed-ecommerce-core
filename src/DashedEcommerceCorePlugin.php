@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore;
 
+use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
@@ -116,6 +117,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 PricePerUserResource::class,
                 FulfillmentCompanyResource::class,
                 GiftcardResource::class,
+                CartResource::class,
             ]);
     }
 

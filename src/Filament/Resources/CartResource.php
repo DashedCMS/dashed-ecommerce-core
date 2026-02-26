@@ -2,7 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -15,23 +19,32 @@ class CartResource extends Resource
 {
     protected static ?string $model = Cart::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
-    protected static ?string $navigationGroup = 'E-commerce';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-cart';
+    protected static string|\UnitEnum|null $navigationGroup = 'E-commerce';
     protected static ?string $navigationLabel = 'Winkelwagens';
     protected static ?string $modelLabel = 'Winkelwagen';
     protected static ?string $pluralModelLabel = 'Winkelwagens';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Section::make('Winkelwagen')
+        return $schema->schema([
+            Section::make('Winkelwagen')
+                ->columnSpanFull()
                 ->schema([
-                    Forms\Components\TextInput::make('id')->disabled(),
-                    Forms\Components\TextInput::make('cart_type')->label('Cart type')->disabled(),
-                    Forms\Components\TextInput::make('status')->disabled(),
-                    Forms\Components\TextInput::make('user_id')->label('User ID')->disabled(),
-                    Forms\Components\TextInput::make('created_at')->disabled(),
-                    Forms\Components\TextInput::make('updated_at')->disabled(),
+                    Forms\Components\TextInput::make('id')
+                        ->disabled(),
+                    Forms\Components\TextInput::make('type')
+                        ->label('Type')
+                        ->disabled(),
+                    Forms\Components\TextInput::make('user_id')
+                        ->label('Gebruiker')
+                        ->disabled(),
+                    Forms\Components\TextInput::make('created_at')
+                        ->label('Aangemaakt op')
+                        ->disabled(),
+                    Forms\Components\TextInput::make('updated_at')
+                        ->label('Bijgewerkt op')
+                        ->disabled(),
                 ])
                 ->columns(2),
         ]);
@@ -42,10 +55,26 @@ class CartResource extends Resource
         return $table
             ->defaultSort('updated_at', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('cart_type')->label('Type')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('status')->badge()->sortable(),
-                Tables\Columns\TextColumn::make('user.name')->label('User')->searchable(),
+                Tables\Columns\TextColumn::make('id')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Type')
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(function ($state) {
+                        return match ($state) {
+                            'default' => 'Webshop',
+                            'pos' => 'POS',
+                            'handorder' => 'Handorder',
+                            'customer-pos' => 'Customer POS',
+                            default => $state,
+                        };
+                    }),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Gebruiker')
+                    ->default('-')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('items_count')
                     ->counts('items')
                     ->label('Items')
@@ -53,39 +82,24 @@ class CartResource extends Resource
                 Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'active' => 'Active',
-                        'closed' => 'Closed',
-                        'converted' => 'Converted',
-                    ]),
-                Tables\Filters\SelectFilter::make('cart_type')
+                Tables\Filters\SelectFilter::make('type')
                     ->label('Type')
                     ->options([
-                        'default' => 'default',
+                        'default' => 'Webshop',
                         'pos' => 'pos',
                         'handorder' => 'handorder',
                         'customer-pos' => 'customer-pos',
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                ViewAction::make(),
 
-                Tables\Actions\Action::make('empty')
+                Action::make('empty')
                     ->label('Leeggooien')
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
                     ->action(function (Cart $record) {
                         $record->items()->delete();
-                    }),
-
-                Tables\Actions\Action::make('close')
-                    ->label('Sluiten')
-                    ->icon('heroicon-o-lock-closed')
-                    ->requiresConfirmation()
-                    ->action(function (Cart $record) {
-                        $record->status = 'closed';
-                        $record->save();
                     }),
             ]);
     }
@@ -101,7 +115,7 @@ class CartResource extends Resource
     {
         return [
             'index' => Pages\ListCarts::route('/'),
-            'view'  => Pages\ItemsRelationManager::route('/{record}'),
+            'view' => Pages\ViewCart::route('/{record}'),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers;
 
+use Filament\Actions\DeleteAction;
 use Filament\Tables;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
@@ -17,9 +18,8 @@ class ItemsRelationManager extends RelationManager
         return $table
             ->defaultSort('id', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable(),
-
-                Tables\Columns\TextColumn::make('product_type')->label('Type')->badge()->sortable(),
+                Tables\Columns\TextColumn::make('id')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('product_id')
                     ->label('Product ID')
@@ -31,22 +31,25 @@ class ItemsRelationManager extends RelationManager
                     ->searchable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('quantity')->label('Qty')->sortable(),
+                Tables\Columns\TextColumn::make('quantity')->label('Aantal')->sortable(),
 
-                Tables\Columns\TextColumn::make('single_price')
-                    ->label('Stuk')
+                Tables\Columns\TextColumn::make('unit_price')
+                    ->label('Per stuk')
                     ->money('EUR', locale: 'nl_NL')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total_price')
+                    ->getStateUsing(fn($record) => $record->unit_price * $record->quantity)
                     ->label('Totaal')
-                    ->money('EUR', locale: 'nl_NL')
-                    ->sortable(),
+                    ->money('EUR', locale: 'nl_NL'),
 
-                Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Bijgewerkt op')
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make(),
+                DeleteAction::make(),
             ]);
     }
 }
