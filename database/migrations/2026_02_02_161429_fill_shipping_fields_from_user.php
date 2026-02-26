@@ -1,10 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration {
+return new class () extends Migration {
     public function up(): void
     {
         User::query()->chunkById(100, function ($users) {
@@ -13,92 +12,92 @@ return new class extends Migration {
 
                 $lastOrder = $user?->lastOrderFromAllOrders();
 
-                if (!$lastOrder) {
+                if (! $lastOrder) {
                     continue;
                 }
 
                 $updated = false;
 
                 // Contact
-                if (!$user->phone_number && $lastOrder->phone_number) {
+                if (! $user->phone_number && $lastOrder->phone_number) {
                     $user->phone_number = $lastOrder->phone_number;
                     $updated = true;
                 }
 
-                if (!$user->date_of_birth && $lastOrder->date_of_birth) {
+                if (! $user->date_of_birth && $lastOrder->date_of_birth) {
                     $user->date_of_birth = $lastOrder->date_of_birth;
                     $updated = true;
                 }
 
-                if (!$user->gender && $lastOrder->gender) {
+                if (! $user->gender && $lastOrder->gender) {
                     $user->gender = $lastOrder->gender;
                     $updated = true;
                 }
 
                 // Shipping
-                if (!$user->street && $lastOrder->street) {
+                if (! $user->street && $lastOrder->street) {
                     $user->street = $lastOrder->street;
                     $updated = true;
                 }
 
-                if (!$user->house_nr && $lastOrder->house_nr) {
+                if (! $user->house_nr && $lastOrder->house_nr) {
                     $user->house_nr = $lastOrder->house_nr;
                     $updated = true;
                 }
 
-                if (!$user->zip_code && $lastOrder->zip_code) {
+                if (! $user->zip_code && $lastOrder->zip_code) {
                     $user->zip_code = $lastOrder->zip_code;
                     $updated = true;
                 }
 
-                if (!$user->city && $lastOrder->city) {
+                if (! $user->city && $lastOrder->city) {
                     $user->city = $lastOrder->city;
                     $updated = true;
                 }
 
-                if (!$user->country && $lastOrder->country) {
+                if (! $user->country && $lastOrder->country) {
                     $user->country = $lastOrder->country;
                     $updated = true;
                 }
 
                 // Company
-                if (!$user->is_company && $lastOrder->is_company) {
+                if (! $user->is_company && $lastOrder->is_company) {
                     $user->is_company = $lastOrder->is_company;
                     $updated = true;
                 }
 
-                if (!$user->company && $lastOrder->company) {
+                if (! $user->company && $lastOrder->company) {
                     $user->company = $lastOrder->company;
                     $updated = true;
                 }
 
-                if (!$user->tax_id && $lastOrder->tax_id) {
+                if (! $user->tax_id && $lastOrder->tax_id) {
                     $user->tax_id = $lastOrder->tax_id;
                     $updated = true;
                 }
 
                 // Invoice
-                if (!$user->invoice_street && $lastOrder->invoice_street) {
+                if (! $user->invoice_street && $lastOrder->invoice_street) {
                     $user->invoice_street = $lastOrder->invoice_street;
                     $updated = true;
                 }
 
-                if (!$user->invoice_house_nr && $lastOrder->invoice_house_nr) {
+                if (! $user->invoice_house_nr && $lastOrder->invoice_house_nr) {
                     $user->invoice_house_nr = $lastOrder->invoice_house_nr;
                     $updated = true;
                 }
 
-                if (!$user->invoice_zip_code && $lastOrder->invoice_zip_code) {
+                if (! $user->invoice_zip_code && $lastOrder->invoice_zip_code) {
                     $user->invoice_zip_code = $lastOrder->invoice_zip_code;
                     $updated = true;
                 }
 
-                if (!$user->invoice_city && $lastOrder->invoice_city) {
+                if (! $user->invoice_city && $lastOrder->invoice_city) {
                     $user->invoice_city = $lastOrder->invoice_city;
                     $updated = true;
                 }
 
-                if (!$user->invoice_country && $lastOrder->invoice_country) {
+                if (! $user->invoice_country && $lastOrder->invoice_country) {
                     $user->invoice_country = $lastOrder->invoice_country;
                     $updated = true;
                 }

@@ -2,11 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard;
 
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Filament\Widgets\StatsOverviewWidget;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\CartItem;
-use Filament\Widgets\StatsOverviewWidget;
-use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
 class CartStatistics extends StatsOverviewWidget
 {

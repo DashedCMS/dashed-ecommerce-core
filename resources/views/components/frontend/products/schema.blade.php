@@ -23,7 +23,7 @@
         <meta itemprop="priceValidUntil" content="{{now()->addYear()}}">
 
         <div itemprop="hasMerchantReturnPolicy" itemscope itemtype="http://schema.org/MerchantReturnPolicy">
-            <meta itemprop="returnPolicyCategory" content="http://schema.org/Returnable">
+            <meta itemprop="returnPolicyCategory" content="http://schema.org/MerchantReturnFiniteReturnWindow">
             <meta itemprop="merchantReturnDays" content="30">
             <meta itemprop="returnPolicySeasonalOverride" content="false">
             <meta itemprop="returnMethod" content="http://schema.org/ReturnByMail">
@@ -54,10 +54,10 @@
                 </div>
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
 
-                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">
-                    <meta itemprop="minPrice" content="99.01">
-                    <meta itemprop="priceCurrency" content="EUR">
-                </div>
+{{--                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">--}}
+{{--                    <meta itemprop="minPrice" content="99.01">--}}
+{{--                    <meta itemprop="priceCurrency" content="EUR">--}}
+{{--                </div>--}}
                 <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
                     <meta itemprop="value" content="0.00">
                     <meta itemprop="currency" content="EUR">
@@ -82,10 +82,10 @@
                 </div>
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
 
-                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">
-                    <meta itemprop="maxPrice" content="99.00">
-                    <meta itemprop="priceCurrency" content="EUR">
-                </div>
+{{--                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">--}}
+{{--                    <meta itemprop="maxPrice" content="99.00">--}}
+{{--                    <meta itemprop="priceCurrency" content="EUR">--}}
+{{--                </div>--}}
                 <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
                     <meta itemprop="value"
                           content="{{ Translation::get('max-shipping-price-for-' . $countryCode, 'shipping', '4.95') }}">
@@ -104,7 +104,7 @@
                           content="{{ Translation::get('max-shipping-price-for-' . $countryCode, 'shipping', '4.95') }}">
                     <meta itemprop="currency" content="EUR">
                 </div>
-                <meta itemprop="shippingRateCurrency" content="EUR">
+{{--                <meta itemprop="shippingRateCurrency" content="EUR">--}}
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
             </div>
         @endforeach

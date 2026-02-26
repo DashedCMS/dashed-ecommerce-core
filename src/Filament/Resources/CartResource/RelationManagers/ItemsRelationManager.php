@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers;
 
-use Filament\Actions\DeleteAction;
 use Filament\Tables;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -39,7 +39,7 @@ class ItemsRelationManager extends RelationManager
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total_price')
-                    ->getStateUsing(fn($record) => $record->unit_price * $record->quantity)
+                    ->getStateUsing(fn ($record) => $record->unit_price * $record->quantity)
                     ->label('Totaal')
                     ->money('EUR', locale: 'nl_NL'),
 

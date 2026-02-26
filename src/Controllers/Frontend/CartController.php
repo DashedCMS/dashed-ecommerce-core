@@ -14,10 +14,10 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedCore\Controllers\Frontend\FrontendController;
+use Dashed\DashedCore\Controllers\Frontend\GoogleOAuthController;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
 
-class CartController extends FrontendController
+class CartController extends GoogleOAuthController
 {
     public function cart()
     {

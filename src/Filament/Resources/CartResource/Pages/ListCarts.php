@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Pages;
 
-use Dashed\DashedEcommerceCore\Models\Cart;
 use Filament\Resources\Pages\ListRecords;
-use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedEcommerceCore\Models\Cart;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 
 class ListCarts extends ListRecords
 {

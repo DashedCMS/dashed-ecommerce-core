@@ -20,11 +20,11 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedCore\Controllers\Frontend\FrontendController;
+use Dashed\DashedCore\Controllers\Frontend\GoogleOAuthController;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 
-class TransactionController extends FrontendController
+class TransactionController extends GoogleOAuthController
 {
     public function startTransaction(StartTransactionRequest $request)
     {
