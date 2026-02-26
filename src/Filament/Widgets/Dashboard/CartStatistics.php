@@ -2,6 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard;
 
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\Cart;
+use Dashed\DashedEcommerceCore\Models\CartItem;
 use Filament\Widgets\StatsOverviewWidget;
 use Dashed\DashedEcommerceCore\Models\Product;
 
@@ -16,14 +19,18 @@ class CartStatistics extends StatsOverviewWidget
 
     protected function getCards(): array
     {
-        $soldOutCount = Product::where('total_stock', '<=', 0)->count();
-        $almostSoldOutCount = Product::where('total_stock', '<=', 5)->count();
+        $activeCarts = Cart::whereHas('items')->get();
+        $cartItems = CartItem::whereIn('cart_id', $activeCarts->pluck('id'))->get();
+
+        $cartItemsValue = 0;
+        foreach ($cartItems as $cartItem) {
+            $cartItemsValue += $cartItem->unit_price * $cartItem->quantity;
+        }
 
         return [
-            StatsOverviewWidget\Stat::make('Uitverkochte producten', $soldOutCount)
-                ->description('Aantal producten die uitverkocht zijn'),
-            StatsOverviewWidget\Stat::make('Bijna uitverkochte producten', $almostSoldOutCount)
-                ->description('Deze producten hebben minder dan 5 voorraad'),
+            StatsOverviewWidget\Stat::make('Aantal actieve winkelwagens', $activeCarts->count()),
+            StatsOverviewWidget\Stat::make('Aantal producten in winkelwagens', $cartItems->sum('quantity')),
+            StatsOverviewWidget\Stat::make('Waarde in winkelwagens', CurrencyHelper::formatPrice($cartItemsValue)),
         ];
     }
 }
