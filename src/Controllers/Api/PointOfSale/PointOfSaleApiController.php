@@ -7,10 +7,8 @@ use Paynl\Payment;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Dashed\DashedCore\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
-use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
@@ -43,13 +41,14 @@ class PointOfSaleApiController extends Controller
     public function initialize(Request $request)
     {
         $data = $request->all();
-
         $userId = $data['userId'] ?? null;
 
         $posCart = POSCart::where('user_id', $userId)->where('status', 'active')->first();
+        $products = [];
+
         if ($posCart) {
             $posIdentifier = $posCart->identifier;
-            $products = $posCart->products;
+            $products = $posCart->products ?? [];
         } else {
             $posIdentifier = uniqid();
             $posCart = new POSCart();
@@ -59,21 +58,28 @@ class PointOfSaleApiController extends Controller
             $posCart->save();
         }
 
+        // Product enrich (image) voor niet-custom items
         foreach ($products ?? [] as $productKey => &$product) {
             if (! isset($product['customProduct']) || $product['customProduct'] == false) {
-                $product = Product::find($product['id'] ?? 0);
-                if (! $product) {
+                $dbProduct = Product::find($product['id'] ?? 0);
+                if (! $dbProduct) {
                     unset($products[$productKey]);
 
                     continue;
                 }
-                $product['image'] = $product->firstImage;
+
+                $product['image'] = $dbProduct->firstImage;
+                $product['name'] = $dbProduct->getTranslation('name', app()->getLocale());
+                $product['singlePrice'] = (float) ($product['singlePrice'] ?? $dbProduct->currentPrice);
+                $product['price'] = (float) ($product['price'] ?? ($product['singlePrice'] * (int) ($product['quantity'] ?? 1)));
+                $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
             }
         }
 
         $shippingMethods = ShippingMethod::all();
         foreach ($shippingMethods as $shippingMethod) {
             $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
+
             if (count($shippingMethod->shippingZone->zones) > 1) {
                 $shippingMethod->fullName .= ' (' . implode(', ', $shippingMethod->shippingZone->zones) . ')';
             } else {
@@ -86,144 +92,120 @@ class PointOfSaleApiController extends Controller
 
         $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
 
-        return response()
-            ->json([
-                'posIdentifier' => $posIdentifier ?? null,
-                'products' => array_reverse($products ?? []),
-                'shippingMethods' => $shippingMethods,
-                'shippingMethodId' => $chosenShippingMethod->id ?? null,
-                'shippingCosts' => $chosenShippingMethod ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)) : null,
-                'customerUserId' => $posCart->customer_user_id,
-                'firstName' => $posCart->first_name,
-                'lastName' => $posCart->last_name,
-                'phoneNumber' => $posCart->phone_number,
-                'email' => $posCart->email,
-                'street' => $posCart->street,
-                'houseNr' => $posCart->house_nr,
-                'zipCode' => $posCart->zip_code,
-                'city' => $posCart->city,
-                'country' => $posCart->country,
-                'company' => $posCart->company,
-                'btwId' => $posCart->btw_id,
-                'invoiceStreet' => $posCart->invoice_street,
-                'invoiceHouseNr' => $posCart->invoice_house_nr,
-                'invoiceZipCode' => $posCart->invoice_zip_code,
-                'invoiceCity' => $posCart->invoice_city,
-                'invoiceCountry' => $posCart->invoice_country,
-                'note' => $posCart->note,
-                'discountCode' => $posCart->discount_code,
-                'customFields' => $posCart->custom_fields,
-                'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
-                'success' => true,
-            ]);
+        return response()->json([
+            'posIdentifier' => $posIdentifier ?? null,
+            'products' => array_reverse(array_values($products ?? [])),
+            'shippingMethods' => $shippingMethods,
+            'shippingMethodId' => $chosenShippingMethod->id ?? null,
+            'shippingCosts' => $chosenShippingMethod
+                ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null))
+                : null,
+
+            'customerUserId' => $posCart->customer_user_id,
+            'firstName' => $posCart->first_name,
+            'lastName' => $posCart->last_name,
+            'phoneNumber' => $posCart->phone_number,
+            'email' => $posCart->email,
+            'street' => $posCart->street,
+            'houseNr' => $posCart->house_nr,
+            'zipCode' => $posCart->zip_code,
+            'city' => $posCart->city,
+            'country' => $posCart->country,
+            'company' => $posCart->company,
+            'btwId' => $posCart->btw_id,
+            'invoiceStreet' => $posCart->invoice_street,
+            'invoiceHouseNr' => $posCart->invoice_house_nr,
+            'invoiceZipCode' => $posCart->invoice_zip_code,
+            'invoiceCity' => $posCart->invoice_city,
+            'invoiceCountry' => $posCart->invoice_country,
+            'note' => $posCart->note,
+            'discountCode' => $posCart->discount_code,
+            'customFields' => $posCart->custom_fields,
+            'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
+            'success' => true,
+        ]);
     }
 
     public function retrieveCart(Request $request): JsonResponse
     {
         $data = $request->all();
 
-        $cartInstance = $data['cartInstance'] ?? '';
+        $cartInstance = $data['cartInstance'] ?? ''; // wordt nog meegestuurd door frontend; we gebruiken 'm als identifier input
         $posIdentifier = $data['posIdentifier'] ?? '';
         $discountCode = $data['discountCode'] ?? '';
 
-        return response()
-            ->json($this->updateCart(
-                $cartInstance,
-                $posIdentifier,
-                $discountCode
-            ));
+        return response()->json(
+            $this->updateCart($cartInstance, $posIdentifier, $discountCode)
+        );
     }
 
+    /**
+     * NIEUW: rekent volledig vanuit POSCart->products (database cart)
+     */
     public function updateCart(string $cartInstance, string $posIdentifier, ?string $discountCode = null): array
     {
-        //        cartHelper()->initialize($cartInstance);
-        cartHelper()->setCartType($cartInstance);
-        cartHelper()->emptyCart();
-
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
-        $discountCode = $discountCode ?? $posCart->discount_code;
+        if (! $posCart) {
+            return [
+                'success' => false,
+                'message' => 'POS cart niet gevonden',
+            ];
+        }
 
-        $products = $posCart->products ?? [];
+        // Discount code kiezen: request > opgeslagen in posCart
+        $discountCodeString = $discountCode !== null ? (string) $discountCode : (string) ($posCart->discount_code ?? '');
 
-        foreach ($products ?: [] as $chosenProduct) {
-            $product = Product::find($chosenProduct['id']);
-            if (($chosenProduct['quantity'] ?? 0) > 0) {
-                $productPrice = (($chosenProduct['customProduct'] ?? false) || ($chosenProduct['isCustomPrice'] ?? false)) ? $chosenProduct['singlePrice'] : $product->getOriginal('price');
-                $options = [];
-                foreach ($chosenProduct['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
-                    if ($productExtraOptionId) {
-                        $thisProductExtra = ProductExtra::find($productExtraId);
-                        $thisOption = ProductExtraOption::find($productExtraOptionId);
-                        if ($thisOption->calculate_only_1_quantity) {
-                            $productPrice += ($thisOption->price / $this->products[$product->id]['quantity']);
-                        } else {
-                            $productPrice += $thisOption->price;
-                        }
-                        $options[$thisOption->id] = [
-                            'name' => $thisProductExtra->name,
-                            'value' => $thisOption->value,
-                        ];
-                    }
-                }
-
-                $options['options'] = $options;
-                $options['vat_rate'] = $chosenProduct['vat_rate'] ?? '';
-                $options['singlePrice'] = $chosenProduct['singlePrice'];
-                if ($chosenProduct['customProduct'] ?? false) {
-                    $options['customProduct'] = true;
-                }
-
-                if ($chosenProduct['isCustomPrice'] ?? false) {
-                    $options['isCustomPrice'] = true;
-                }
-
-                if ($product->id ?? false) {
-                    \Cart::instance($cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options)
-                        ->associate(Product::class);
-                } else {
-                    \Cart::instance($cartInstance)
-                        ->add($chosenProduct['customId'], $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options);
-                }
+        $discountCodeModel = null;
+        if ($discountCodeString !== '') {
+            $discountCodeModel = DiscountCode::usable()->where('code', $discountCodeString)->first();
+            if (! $discountCodeModel) {
+                $discountCodeString = '';
+            } else {
+                // Hou oude validatie aan (als dit bij jullie bestaat)
+                // Let op: die methode verwacht cartInstance, we geven iets stabiels mee
+                //                if (method_exists($discountCodeModel, 'isValidForCart') && ! $discountCodeModel->isValidForCart($posCart->email, $cartInstance ?: ('pos-' . $posIdentifier))) {
+                //                    $discountCodeString = '';
+                //                    $discountCodeModel = null;
+                //                }
             }
         }
 
-        cartHelper()->initialize($cartInstance);
-        cartHelper()->applyDiscountCode($discountCode);
-        $activeDiscountCode = cartHelper()->getDiscountCodeString();
-
-        $posCart->discount_code = $activeDiscountCode ?? null;
+        $posCart->discount_code = $discountCodeString ?: null;
         $posCart->save();
 
-        //        cartHelper()->initialize();
+        // Totals uit database cart
+        $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
 
-        if ($posCart->shipping_method_id) {
-            cartHelper()->setShippingMethod($posCart->shipping_method_id);
-            cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0])->id ?? null);
-        }
+        // Shipping
+        $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
+        $shippingCosts = $chosenShippingMethod
+            ? (float) $chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)
+            : 0.0;
 
-        cartHelper()->updateData();
+        // TOTAL incl shipping (prijzen zijn bij jullie POS meestal incl BTW)
+        $totalUnformatted = (float) $totals['subtotal'] + (float) $shippingCosts;
 
-        $discount = CurrencyHelper::formatPrice(cartHelper()->getDiscount());
-        $vat = CurrencyHelper::formatPrice(cartHelper()->getTax());
-        $vatPercentages = cartHelper()->getTaxPercentages();
+        // VAT percentages formatteren
+        $vatPercentages = $totals['vatPercentages'] ?? [];
         foreach ($vatPercentages as $key => $value) {
-            $vatPercentages[$key] = CurrencyHelper::formatPrice($value);
+            $vatPercentages[$key] = CurrencyHelper::formatPrice((float) $value);
         }
-        $subTotal = CurrencyHelper::formatPrice(cartHelper()->getSubtotal());
-        $total = CurrencyHelper::formatPrice(cartHelper()->getTotal());
-        $totalUnformatted = cartHelper()->getTotal();
 
+        // Payment methods
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
-
         foreach ($paymentMethods as &$paymentMethod) {
             $paymentMethod['fullName'] = $paymentMethod->getTranslation('name', app()->getLocale());
-            $paymentMethod['image'] = $paymentMethod['image'] ? (mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '') : '';
+            $paymentMethod['image'] = $paymentMethod['image']
+                ? (mediaHelper()->getSingleMedia($paymentMethod['image'], ['widen' => 300])->url ?? '')
+                : '';
         }
 
+        // Shipping methods list
         $shippingMethods = ShippingMethod::all();
         foreach ($shippingMethods as $shippingMethod) {
             $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
+
             if (count($shippingMethod->shippingZone->zones) > 1) {
                 $shippingMethod->fullName .= ' (' . implode(', ', $shippingMethod->shippingZone->zones) . ')';
             } else {
@@ -234,24 +216,25 @@ class PointOfSaleApiController extends Controller
             $shippingMethod->fullName .= ' ' . ($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
         }
 
-        $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
-        $shippingCosts = $chosenShippingMethod ? $chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null) : null;
-
         return [
-            'products' => array_reverse($products ?? []),
-            'discountCode' => $discountCode ?? null,
-            'activeDiscountCode' => $activeDiscountCode ?? null,
-            'discount' => $discount ?? null,
-            'vat' => $vat ?? null,
-            'vatPercentages' => $vatPercentages ?? null,
-            'subTotal' => $subTotal ?? null,
-            'total' => $total ?? null,
-            'totalUnformatted' => $totalUnformatted ?? null,
+            'products' => array_reverse(array_values($posCart->products ?? [])),
+            'discountCode' => $discountCodeString ?: null,
+            'activeDiscountCode' => $discountCodeString ?: null,
+
+            'discount' => CurrencyHelper::formatPrice((float) ($totals['discount'] ?? 0)),
+            'vat' => CurrencyHelper::formatPrice((float) ($totals['vat'] ?? 0)),
+            'vatPercentages' => $vatPercentages,
+
+            'subTotal' => CurrencyHelper::formatPrice((float) ($totals['subtotal'] ?? 0)),
+            'total' => CurrencyHelper::formatPrice($totalUnformatted),
+            'totalUnformatted' => $totalUnformatted,
+
             'paymentMethods' => $paymentMethods,
-            'shippingMethods' => $shippingMethods ?? null,
+            'shippingMethods' => $shippingMethods,
             'shippingMethodId' => $chosenShippingMethod->id ?? null,
             'shippingCosts' => CurrencyHelper::formatPrice($shippingCosts),
             'shippingCostsUnformatted' => $shippingCosts,
+
             'success' => true,
         ];
     }
@@ -266,55 +249,44 @@ class PointOfSaleApiController extends Controller
         $order = Order::find($orderId);
 
         if (! $order) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Bestelling niet gevonden',
-                ], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling niet gevonden',
+            ], 404);
         }
 
         $order->printReceipt($isCopy);
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function sendInvoice(Request $request)
     {
         $data = $request->all();
-
         $orderId = $data['orderId'] ?? null;
 
         $order = Order::find($orderId);
 
         if (! $order) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Bestelling niet gevonden',
-                ], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling niet gevonden',
+            ], 404);
         } elseif (! $order->email) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Geen e-mailadres gekoppeld aan de bestelling',
-                ], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Geen e-mailadres gekoppeld aan de bestelling',
+            ], 404);
         }
 
         Orders::sendNotification($order, $order->email, auth()->user());
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function searchProducts(Request $request)
     {
         $data = $request->all();
-
         $search = str($data['search'] ?? null)->trim()->toString();
 
         $products = Product::handOrderShowable()
@@ -333,11 +305,10 @@ class PointOfSaleApiController extends Controller
             })
             ->toArray();
 
-        return response()
-            ->json([
-                'products' => $products ?? [],
-                'success' => true,
-            ]);
+        return response()->json([
+            'products' => $products ?? [],
+            'success' => true,
+        ]);
     }
 
     public function insertOrderInPOSCart(Request $request)
@@ -348,6 +319,7 @@ class PointOfSaleApiController extends Controller
         $posIdentifier = $data['posIdentifier'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
+
         $posCart->products = [
             [
                 'id' => null,
@@ -361,14 +333,12 @@ class PointOfSaleApiController extends Controller
                 'product' => null,
                 'identifier' => Str::random(),
                 'customId' => 'custom-' . rand(1, 10000000),
+                'extra' => [],
             ],
         ];
         $posCart->save();
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function addProduct(Request $request)
@@ -376,30 +346,26 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $productId = $data['productId'] ?? null;
-        $productSearchQuery = $data['productSearchQuery'] ?? null;
         $posIdentifier = $data['posIdentifier'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
-        $selectedProduct = Product::handOrderShowable()
-            ->find($productId);
+        $selectedProduct = Product::handOrderShowable()->find($productId);
 
         if ($selectedProduct) {
             $products = $this->addProductToCart($posCart, $selectedProduct);
 
-            return response()
-                ->json([
-                    'products' => array_reverse($products ?? []),
-                    'success' => true,
-                ]);
-        } else {
-            return response()
-                ->json([
-                    'products' => array_reverse($products ?? []),
-                    'message' => 'Product niet gevonden',
-                    'success' => false,
-                ], 404);
+            return response()->json([
+                'products' => array_reverse($products ?? []),
+                'success' => true,
+            ]);
         }
+
+        return response()->json([
+            'products' => array_reverse($posCart?->products ?? []),
+            'message' => 'Product niet gevonden',
+            'success' => false,
+        ], 404);
     }
 
     public function addProductToCart(POSCart $POSCart, Product $selectedProduct): array
@@ -408,17 +374,22 @@ class PointOfSaleApiController extends Controller
 
         $products = $POSCart->products ?? [];
         foreach ($products as &$product) {
-            if ($product['id'] == $selectedProduct['id']) { //Todo: compare options once supported
+            if (($product['id'] ?? null) == $selectedProduct->id) { // TODO: opties vergelijken zodra ondersteund
                 $productAlreadyInCart = true;
-                $product['quantity']++;
-                $product['price'] = $selectedProduct->currentPrice * $product['quantity'];
+
+                $product['quantity'] = (int) ($product['quantity'] ?? 0) + 1;
+
+                // price = singlePrice * qty
+                $single = (float) ($product['singlePrice'] ?? $selectedProduct->currentPrice);
+                $product['singlePrice'] = $single;
+                $product['price'] = $single * (int) $product['quantity'];
                 $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
             }
         }
 
         if (! $productAlreadyInCart) {
             $products[] = [
-                'id' => $selectedProduct['id'],
+                'id' => $selectedProduct->id,
                 'identifier' => Str::random(),
                 'name' => $selectedProduct->getTranslation('name', app()->getLocale()),
                 'image' => mediaHelper()->getSingleMedia($selectedProduct->firstImage, ['widen' => 300])->url ?? '',
@@ -430,7 +401,7 @@ class PointOfSaleApiController extends Controller
             ];
         }
 
-        $POSCart->products = $products;
+        $POSCart->products = array_values($products);
         $POSCart->save();
 
         return $products;
@@ -452,20 +423,18 @@ class PointOfSaleApiController extends Controller
             ->first();
 
         if (! $selectedProduct) {
-
             $discountCode = DiscountCode::usable()->where('code', $productSearchQuery)->first();
 
             if ($discountCode) {
                 $posCart->discount_code = $discountCode->code;
                 $posCart->save();
 
-                return response()
-                    ->json([
-                        'products' => array_reverse($products ?? []),
-                        'message' => 'Korting toegepast',
-                        'discountCode' => $discountCode->code,
-                        'success' => true,
-                    ]);
+                return response()->json([
+                    'products' => array_reverse($posCart->products ?? []),
+                    'message' => 'Korting toegepast',
+                    'discountCode' => $discountCode->code,
+                    'success' => true,
+                ]);
             }
 
             if (str($productSearchQuery)->startsWith('order-')) {
@@ -473,7 +442,7 @@ class PointOfSaleApiController extends Controller
                 $order = Order::find($orderId);
                 if ($order) {
                     return response()->json([
-                        'products' => array_reverse($products ?? []),
+                        'products' => array_reverse($posCart->products ?? []),
                         'success' => true,
                         'message' => 'Bestelling gevonden',
                         'order' => self::orderResponse($order),
@@ -481,21 +450,19 @@ class PointOfSaleApiController extends Controller
                 }
             }
 
-            return response()
-                ->json([
-                    'products' => array_reverse($products ?? []),
-                    'message' => 'Product niet gevonden',
-                    'success' => false,
-                ], 404);
+            return response()->json([
+                'products' => array_reverse($posCart->products ?? []),
+                'message' => 'Product niet gevonden',
+                'success' => false,
+            ], 404);
         }
 
         $products = $this->addProductToCart($posCart, $selectedProduct);
 
-        return response()
-            ->json([
-                'products' => array_reverse($products ?? []),
-                'success' => true,
-            ]);
+        return response()->json([
+            'products' => array_reverse($products ?? []),
+            'success' => true,
+        ]);
     }
 
     public function changeQuantity(Request $request)
@@ -503,76 +470,63 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $productIdentifier = $data['productIdentifier'] ?? null;
-        $quantity = $data['quantity'] ?? null;
+        $quantity = (int) ($data['quantity'] ?? 0);
         $posIdentifier = $data['posIdentifier'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
-
         $products = $posCart->products ?? [];
 
         if ($quantity < 1) {
-            $products = collect($products)->reject(function ($product) use ($productIdentifier) {
-                return $product['identifier'] === $productIdentifier;
-            })
+            $products = collect($products)
+                ->reject(fn ($product) => ($product['identifier'] ?? null) === $productIdentifier)
                 ->values()
                 ->toArray();
         } else {
-            foreach ($products as $productKey => &$product) {
-                if ($product['identifier'] == $productIdentifier) {
-                    $actualProduct = Product::find($product['id']);
+            foreach ($products as &$product) {
+                if (($product['identifier'] ?? null) == $productIdentifier) {
                     $product['quantity'] = $quantity;
-                    if ($actualProduct) {
-                        $product['price'] = $actualProduct->getOriginal('price') * $quantity;
-                    } else {
-                        $product['price'] = $product['singlePrice'] * $quantity;
-                    }
+
+                    $single = (float) ($product['singlePrice'] ?? 0);
+                    $product['price'] = $single * $quantity;
                     $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
                 }
             }
         }
 
-        $posCart->products = $products;
+        $posCart->products = array_values($products);
         $posCart->save();
 
-        return response()
-            ->json([
-                'products' => array_reverse($products ?? []),
-                'success' => true,
-            ]);
+        return response()->json([
+            'products' => array_reverse($products ?? []),
+            'success' => true,
+        ]);
     }
 
     public function clearProducts(Request $request)
     {
         $data = $request->all();
-
         $posIdentifier = $data['posIdentifier'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
-
         $posCart->products = [];
         $posCart->save();
 
-        return response()
-            ->json([
-                'products' => [],
-                'success' => true,
-            ]);
+        return response()->json([
+            'products' => [],
+            'success' => true,
+        ]);
     }
 
     public function removeDiscount(Request $request)
     {
         $data = $request->all();
-
         $posIdentifier = $data['posIdentifier'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
         $posCart->discount_code = '';
         $posCart->save();
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function selectPaymentMethod(Request $request)
@@ -584,6 +538,7 @@ class PointOfSaleApiController extends Controller
         if ($order) {
             $order = Order::find($order['id']);
         }
+
         $cartInstance = $data['cartInstance'] ?? null;
         $orderOrigin = $data['orderOrigin'] ?? null;
         $paymentMethodId = $data['paymentMethodId'] ?? null;
@@ -595,7 +550,7 @@ class PointOfSaleApiController extends Controller
             $response = $this->createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId);
         }
 
-        if ($order || $response['success']) {
+        if ($order || ($response['success'] ?? false)) {
             $paymentMethod = PaymentMethod::find($paymentMethodId);
 
             if (! $order) {
@@ -604,38 +559,33 @@ class PointOfSaleApiController extends Controller
 
             $suggestedCashPaymentAmounts = $this->getPaymentOptions($order->total);
 
-            $isPinTerminalPayment = false;
-            if ($paymentMethod->pinTerminal) {
-                $isPinTerminalPayment = true;
-            }
+            $isPinTerminalPayment = (bool) ($paymentMethod?->pinTerminal);
+            $postPay = (bool) ($paymentMethod?->postpay);
 
-            $postPay = $paymentMethod->postpay;
             if ($postPay) {
                 POSHelper::finishPaidOrder($order, $posCart, 'waiting_for_confirmation', 'unhandled');
             }
 
-            return response()
-                ->json([
-                    'success' => true,
-                    'order' => $order,
-                    'suggestedCashPaymentAmounts' => $suggestedCashPaymentAmounts,
-                    'paymentMethod' => [
-                        'id' => $paymentMethod->id,
-                        'name' => $paymentMethod->getTranslation('name', app()->getLocale()),
-                        'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
-                        'isCashPayment' => $paymentMethod->is_cash_payment,
-                    ],
-                    'isPinTerminalPayment' => $isPinTerminalPayment,
-                    'postPay' => $postPay,
-                    'orderUrl' => route('filament.dashed.resources.orders.view', ['record' => $order->id]),
-                ]);
-        } else {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => $response['message'],
-                ], 500);
+            return response()->json([
+                'success' => true,
+                'order' => $order,
+                'suggestedCashPaymentAmounts' => $suggestedCashPaymentAmounts,
+                'paymentMethod' => [
+                    'id' => $paymentMethod->id,
+                    'name' => $paymentMethod->getTranslation('name', app()->getLocale()),
+                    'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
+                    'isCashPayment' => $paymentMethod->is_cash_payment,
+                ],
+                'isPinTerminalPayment' => $isPinTerminalPayment,
+                'postPay' => $postPay,
+                'orderUrl' => route('filament.dashed.resources.orders.view', ['record' => $order->id]),
+            ]);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => $response['message'] ?? 'Er ging iets mis bij het aanmaken van de bestelling',
+        ], 500);
     }
 
     public function selectShippingMethod(Request $request)
@@ -643,275 +593,210 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $posIdentifier = $data['posIdentifier'] ?? null;
-        $cartInstance = $data['cartInstance'] ?? null;
-        $orderOrigin = $data['orderOrigin'] ?? null;
-        $userId = $data['userId'] ?? null;
-
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
         $shippingMethod = ShippingMethod::find($data['shippingMethodId']);
 
         if (! $shippingMethod) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Verzendmethode niet gevonden',
-                ], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Verzendmethode niet gevonden',
+            ], 500);
         }
 
         $posCart->shipping_method_id = $shippingMethod->id;
         $posCart->save();
 
-        return response()
-            ->json([
-                'success' => true,
-                'shippingMethodId' => $shippingMethod->id,
-                'shippingCosts' => CurrencyHelper::formatPrice($shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)),
-            ]);
+        return response()->json([
+            'success' => true,
+            'shippingMethodId' => $shippingMethod->id,
+            'shippingCosts' => CurrencyHelper::formatPrice(
+                $shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)
+            ),
+        ]);
     }
 
     public function removeShippingMethod(Request $request)
     {
         $data = $request->all();
-
         $posIdentifier = $data['posIdentifier'] ?? null;
-        $cartInstance = $data['cartInstance'] ?? null;
-        $orderOrigin = $data['orderOrigin'] ?? null;
-        $userId = $data['userId'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
         $posCart->shipping_method_id = null;
         $posCart->save();
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function updateCustomerData(Request $request)
     {
         $data = $request->all();
-
         $posIdentifier = $data['posIdentifier'] ?? null;
-        $cartInstance = $data['cartInstance'] ?? null;
-        $orderOrigin = $data['orderOrigin'] ?? null;
-        $userId = $data['userId'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
-
         $posCart->save();
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
+    /**
+     * NIEUW: Order wordt opgebouwd vanuit POSCart->products (database cart)
+     */
     public function createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId): array
     {
-        $this->updateCart($cartInstance, $posCart->identifier);
-        cartHelper()->updateData();
-        $cartItems = cartHelper()->getCartItems();
+        $posCart = POSCart::where('identifier', $posCart->identifier)->first();
 
-        if (! count($cartItems)) {
+        $products = $posCart->products ?? [];
+        if (! count($products)) {
             return [
                 'success' => false,
                 'message' => Translation::get('no-items-in-cart', 'cart', 'Je hebt geen producten in je winkelwagen'),
             ];
         }
 
-        //        $paymentMethods = ShoppingCart::getPaymentMethods();
-        //        $paymentMethod = '';
-        //        foreach ($paymentMethods as $thisPaymentMethod) {
-        //            if ($thisPaymentMethod['id'] == $this->payment_method_id) {
-        //                $paymentMethod = $thisPaymentMethod;
-        //            }
-        //        }
-
-        //        if (!$paymentMethod) {
-        //            Notification::make()
-        //                ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
-        //                ->danger()
-        //                ->send();
-        //
-        //            return;
-        //        }
-
         $shippingMethod = ShippingMethod::find($posCart->shipping_method_id);
+        //        if (! $shippingMethod) {
+        //            return [
+        //                'success' => false,
+        //                'message' => Translation::get('no-valid-shipping-method-chosen', 'cart', 'Je hebt geen geldige verzendmethode gekozen'),
+        //            ];
+        //        }
 
+        // Discount code validatie
+        $discountCodeModel = null;
         if ($posCart->discount_code) {
-            $discountCode = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
+            $discountCodeModel = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
 
-            if (! $discountCode) {
-                session(['discountCode' => '']);
-                $discountCode = '';
-            } elseif ($discountCode && ! $discountCode->isValidForCart($posCart->email, $cartInstance)) {
-                session(['discountCode' => '']);
-
+            if (! $discountCodeModel) {
                 $posCart->discount_code = '';
                 $posCart->save();
-
-                return [
-                    'success' => false,
-                    'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig'),
-                ];
+            } else {
+                //                if (method_exists($discountCodeModel, 'isValidForCart') && ! $discountCodeModel->isValidForCart($posCart->email, $cartInstance ?: ('pos-' . $posCart->identifier))) {
+                //                    $posCart->discount_code = '';
+                //                    $posCart->save();
+                //
+                //                    return [
+                //                        'success' => false,
+                //                        'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig'),
+                //                    ];
+                //                }
             }
         }
 
-        //        if (Customsetting::get('checkout_account') != 'disabled' && Auth::guest() && $this->password) {
-        //            if (User::where('email', $this->email)->count()) {
-        //                Notification::make()
-        //                    ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
-        //                    ->danger()
-        //                    ->send();
-        //
-        //                return [
-        //                    'success' => false,
-        //                ];
-        //            }
-        //
-        //            $user = new User();
-        //            $user->first_name = $this->first_name;
-        //            $user->last_name = $this->last_name;
-        //            $user->email = $this->email;
-        //            $user->password = Hash::make($this->password);
-        //            $user->save();
-        //        }
+        // Totals uit DB cart
+        $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
+
+        // Shipping costs
+        $shippingCosts = (float) $shippingMethod ? $shippingMethod->costsForCart(
+            ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0])->id ?? null
+        ) : 0;
+
+        $total = (float) ($totals['subtotal'] ?? 0) + $shippingCosts;
 
         $order = new Order();
         $order->order_origin = $orderOrigin;
+
         $order->first_name = $posCart->first_name;
         $order->last_name = $posCart->last_name;
         $order->email = $posCart->email;
         $order->user_id = $posCart->customer_user_id;
-        //        $order->gender = $posCart->gender;
-        //        $order->date_of_birth = $posCart->date_of_birth ? Carbon::parse($this->date_of_birth) : null;
+
         $order->phone_number = $posCart->phone_number;
         $order->street = $posCart->street;
         $order->house_nr = $posCart->house_nr;
         $order->zip_code = $posCart->zip_code;
         $order->city = $posCart->city;
         $order->country = $posCart->country;
+
         $order->company_name = $posCart->company;
         $order->btw_id = $posCart->btw_id;
         $order->note = $posCart->note;
+
         $order->invoice_street = $posCart->invoice_street;
         $order->invoice_house_nr = $posCart->invoice_house_nr;
         $order->invoice_zip_code = $posCart->invoice_zip_code;
         $order->invoice_city = $posCart->invoice_city;
         $order->invoice_country = $posCart->invoice_country;
+
         $order->invoice_id = 'PROFORMA';
 
-        session(['discountCode' => $posCart->discount_code]);
-        cartHelper()->applyDiscountCode($posCart->discount_code);
-        $subTotal = cartHelper()->getSubtotal();
-        $discount = cartHelper()->getDiscount();
-        $btw = cartHelper()->getTax();
-        $btwPercentages = cartHelper()->getTaxPercentages();
-        $total = cartHelper()->getTotal();
-        $shippingCosts = 0;
-        $paymentCosts = 0;
-
-        if (($shippingMethod->costs ?? 0) > 0) {
-            $shippingCosts = $shippingMethod->costs;
-        }
-
-        if (isset($paymentMethod['extra_costs']) && $paymentMethod['extra_costs'] > 0) {
-            $paymentCosts = $paymentMethod['extra_costs'];
-        }
-
+        $order->subtotal = (float) ($totals['subtotal'] ?? 0);
+        $order->discount = (float) ($totals['discount'] ?? 0);
+        $order->btw = (float) ($totals['vat'] ?? 0);
+        $order->vat_percentages = (array) ($totals['vatPercentages'] ?? []);
         $order->total = $total;
-        $order->subtotal = $subTotal;
-        $order->btw = $btw;
-        $order->vat_percentages = $btwPercentages;
-        $order->discount = $discount;
+
         $order->status = 'pending';
         $order->ga_user_id = null;
 
-        if ($discountCode ?? false) {
-            $order->discount_code_id = $discountCode->id;
+        if ($discountCodeModel) {
+            $order->discount_code_id = $discountCodeModel->id;
         }
 
-        $order->shipping_method_id = $shippingMethod['id'] ?? null;
-
-        if (isset($user)) {
-            $order->user_id = $user->id;
-        } else {
-            //            if ($this->user_id) {
-            //                $order->user_id = $this->user_id;
-            //            }
-        }
-
+        $order->shipping_method_id = $shippingMethod->id ?? null;
         $order->save();
 
-        $orderContainsPreOrders = false;
-        foreach ($cartItems as $cartItem) {
+        // OrderProducts vanuit dezelfde “lines”
+        $extraOptionCache = [];
+        $extraCache = [];
+
+        foreach (($totals['lines'] ?? []) as $line) {
             $orderProduct = new OrderProduct();
-            $orderProduct->quantity = $cartItem->qty;
-            $orderProduct->product_id = $cartItem->model->id ?? null;
+            $orderProduct->quantity = (int) $line['quantity'];
+            $orderProduct->product_id = $line['product_id'] ? (int) $line['product_id'] : null;
             $orderProduct->order_id = $order->id;
-            $orderProduct->name = $cartItem->model->name ?? $cartItem->name;
-            $orderProduct->sku = $cartItem->model->sku ?? null;
-            $orderProduct->vat_rate = $cartItem->options['vat_rate'] ?? $cartItem->taxRate;
-            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, $discountCode ?? null);
-            $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
+            $orderProduct->name = $line['name'];
+            $orderProduct->sku = null;
+            $orderProduct->vat_rate = $line['vat_rate'] ?? 21;
+            $orderProduct->price = (float) $line['line_total'];
+            $orderProduct->discount = (float) $line['discount'];
+
+            // Extras voor audit/bonnetje: pak ze uit POSCart->products zelf
             $productExtras = [];
-            foreach ($cartItem->options as $optionId => $option) {
-                if ($option['name'] ?? false) {
-                    $productExtras[] = [
-                        'id' => $optionId,
-                        'name' => $option['name'],
-                        'value' => $option['value'],
-                        'price' => ProductExtraOption::find($optionId)->price,
-                    ];
+            $originalPosItem = collect($posCart->products ?? [])
+                ->first(fn ($p) => ($p['id'] ?? null) == ($line['product_id'] ?? null) && (int) ($p['quantity'] ?? 0) === (int) $line['quantity']);
+
+            foreach (($originalPosItem['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
+                if (! $productExtraOptionId) {
+                    continue;
                 }
+
+                if (! isset($extraOptionCache[$productExtraOptionId])) {
+                    $extraOptionCache[$productExtraOptionId] = ProductExtraOption::find($productExtraOptionId);
+                }
+                $opt = $extraOptionCache[$productExtraOptionId];
+
+                if (! isset($extraCache[$productExtraId])) {
+                    $extraCache[$productExtraId] = ProductExtra::find($productExtraId);
+                }
+                $extra = $extraCache[$productExtraId];
+
+                $productExtras[] = [
+                    'id' => $productExtraOptionId,
+                    'name' => $extra?->name ?? ($opt?->productExtra?->name ?? ''),
+                    'value' => $opt?->value ?? '',
+                    'price' => (float) ($opt?->price ?? 0),
+                ];
             }
+
             $orderProduct->product_extras = $productExtras;
-
-            if ($cartItem->model && $cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
-                $orderProduct->is_pre_order = true;
-                $orderProduct->pre_order_restocked_date = $cartItem->model->expected_in_stock_date;
-                $orderContainsPreOrders = true;
-            }
-
             $orderProduct->save();
         }
 
-        if ($paymentCosts) {
-            $orderProduct = new OrderProduct();
-            $orderProduct->quantity = 1;
-            $orderProduct->product_id = null;
-            $orderProduct->order_id = $order->id;
-            $orderProduct->name = $paymentMethod['name'];
-            $orderProduct->price = $paymentCosts;
-            if ($order->paymentMethod) {
-                $orderProduct->btw = cartHelper()->getVatForPaymentMethod();
-            }
-            $orderProduct->discount = 0;
-            $orderProduct->product_extras = [];
-            $orderProduct->sku = 'payment_costs';
-            $orderProduct->save();
-        }
-
-        if ($shippingCosts) {
-            $orderProduct = new OrderProduct();
-            $orderProduct->quantity = 1;
-            $orderProduct->product_id = null;
-            $orderProduct->order_id = $order->id;
-            $orderProduct->name = $order->shippingMethod->name;
-            $orderProduct->price = $shippingCosts;
-            $orderProduct->btw = cartHelper()->getVatForShippingMethod();
-            $orderProduct->vat_rate = cartHelper()->getVatRateForShippingMethod();
-            $orderProduct->discount = cartHelper()->getVatForShippingMethod() - $orderProduct->btw;
-            $orderProduct->product_extras = [];
-            $orderProduct->sku = 'shipping_costs';
-            $orderProduct->save();
-        }
-
-        if ($orderContainsPreOrders) {
-            $order->contains_pre_orders = true;
-            $order->save();
+        // Shipping als orderregel (zoals je oude flow)
+        if ($shippingCosts > 0) {
+            $shippingLine = new OrderProduct();
+            $shippingLine->quantity = 1;
+            $shippingLine->product_id = null;
+            $shippingLine->order_id = $order->id;
+            $shippingLine->name = $shippingMethod->name;
+            $shippingLine->price = $shippingCosts;
+            $shippingLine->btw = $this->calculateVatFromGross($shippingCosts, 21); // fallback
+            $shippingLine->vat_rate = 21;
+            $shippingLine->discount = 0;
+            $shippingLine->product_extras = [];
+            $shippingLine->sku = 'shipping_costs';
+            $shippingLine->save();
         }
 
         $orderLog = new OrderLog();
@@ -969,20 +854,21 @@ class PointOfSaleApiController extends Controller
 
         $posIdentifier = $data['posIdentifier'] ?? null;
         $hasMultiplePayments = $data['hasMultiplePayments'] ?? false;
+
         $order = $data['order'] ?? null;
         $order = Order::find($order['id']);
+
         $paymentMethod = $data['paymentMethod'] ?? null;
         $paymentMethod = PaymentMethod::find($paymentMethod['id']);
+
         if ($hasMultiplePayments) {
             $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
         }
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
-
         $pinTerminalResponse = PinTerminal::startPayment($order, $paymentMethod, $posCart);
 
-        return response()
-            ->json($pinTerminalResponse, $pinTerminalResponse['success'] ? 200 : 400);
+        return response()->json($pinTerminalResponse, $pinTerminalResponse['success'] ? 200 : 400);
     }
 
     public function markAsPaid(Request $request): JsonResponse
@@ -992,8 +878,10 @@ class PointOfSaleApiController extends Controller
         $posIdentifier = $data['posIdentifier'] ?? null;
         $hasMultiplePayments = $data['hasMultiplePayments'] ?? false;
         $cashPaymentAmount = $data['cashPaymentAmount'] ?? false;
+
         $order = $data['order'] ?? null;
         $order = Order::find($order['id']);
+
         $paymentMethod = $data['paymentMethod'] ?? null;
         $paymentMethod = PaymentMethod::find($paymentMethod['id']);
 
@@ -1001,17 +889,9 @@ class PointOfSaleApiController extends Controller
 
         if ($paymentMethod->is_cash_payment) {
             if (! $cashPaymentAmount) {
-                return response()
-                    ->json([
-                        'success' => false,
-                        'message' => 'Geen bedrag ingevoerd',
-                    ], 400);
+                return response()->json(['success' => false, 'message' => 'Geen bedrag ingevoerd'], 400);
             } elseif (! $hasMultiplePayments && $cashPaymentAmount < $order->total) {
-                return response()
-                    ->json([
-                        'success' => false,
-                        'message' => 'Bedrag is te laag',
-                    ], 400);
+                return response()->json(['success' => false, 'message' => 'Bedrag is te laag'], 400);
             }
         }
 
@@ -1042,56 +922,50 @@ class PointOfSaleApiController extends Controller
         if ($paymentMethod->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
             $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
             if (! $paymentMethod) {
-                return response()
-                    ->json([
-                        'success' => false,
-                        'message' => 'Geen pin terminal gevonden, bestelling incorrect afgehandeld',
-                    ], 400);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Geen pin terminal gevonden, bestelling incorrect afgehandeld',
+                ], 400);
             }
 
-            return response()
-                ->json([
-                    'success' => true,
-                    'order' => $order,
-                    'startPinTerminalPayment' => true,
-                    'paymentMethod' => [
-                        'id' => $paymentMethod->id,
-                        'name' => $paymentMethod->name,
-                        'image' => mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '',
-                    ],
-                ]);
-            //            $response = PinTerminal::startPayment($order, $paymentMethod, $posCart);
-            //
-            //            return response()
-            //                ->json($response, $response['success'] ? 200 : 400);
-        } else {
-            POSHelper::finishPaidOrder($order, $posCart);
-
-            $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
-            $order->paidAmount = $order->paidAmount;
-            $order->paidAmountFormatted = CurrencyHelper::formatPrice($order->paidAmount);
-            $order->changeMoney = CurrencyHelper::formatPrice($orderPayment->amount - $order->total);
-            $order->shouldChangeMoney = $orderPayment->amount > $order->total;
-            $orderPayments = $order->orderPayments;
-            foreach ($orderPayments as $orderPayment) {
-                $orderPayment->amountFormatted = CurrencyHelper::formatPrice($orderPayment->amount);
-                $orderPayment->paymentMethodName = $orderPayment->paymentMethod->name;
-            }
-
-            return response()
-                ->json([
-                    'success' => true,
-                    'order' => $order,
-                    'orderPayments' => $orderPayments,
-                    'startPinTerminalPayment' => false,
-                    'firstPaymentMethod' => [
-                        'id' => $paymentMethod->id,
-                        'is_cash_payment' => $paymentMethod->is_cash_payment,
-                        'name' => $paymentMethod->name,
-                        'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
-                    ],
-                ]);
+            return response()->json([
+                'success' => true,
+                'order' => $order,
+                'startPinTerminalPayment' => true,
+                'paymentMethod' => [
+                    'id' => $paymentMethod->id,
+                    'name' => $paymentMethod->name,
+                    'image' => mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '',
+                ],
+            ]);
         }
+
+        POSHelper::finishPaidOrder($order, $posCart);
+
+        $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
+        $order->paidAmount = $order->paidAmount;
+        $order->paidAmountFormatted = CurrencyHelper::formatPrice($order->paidAmount);
+        $order->changeMoney = CurrencyHelper::formatPrice($orderPayment->amount - $order->total);
+        $order->shouldChangeMoney = $orderPayment->amount > $order->total;
+
+        $orderPayments = $order->orderPayments;
+        foreach ($orderPayments as $op) {
+            $op->amountFormatted = CurrencyHelper::formatPrice($op->amount);
+            $op->paymentMethodName = $op->paymentMethod->name;
+        }
+
+        return response()->json([
+            'success' => true,
+            'order' => $order,
+            'orderPayments' => $orderPayments,
+            'startPinTerminalPayment' => false,
+            'firstPaymentMethod' => [
+                'id' => $paymentMethod->id,
+                'is_cash_payment' => $paymentMethod->is_cash_payment,
+                'name' => $paymentMethod->name,
+                'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
+            ],
+        ]);
     }
 
     public function checkPinTerminalPayment(Request $request): JsonResponse
@@ -1113,50 +987,51 @@ class PointOfSaleApiController extends Controller
 
             $orderPayment = $order->orderPayments()->where('status', 'paid')->first();
             $paymentMethod = $orderPayment->paymentMethod;
+
             $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
             $order->paidAmount = $order->paidAmount;
             $order->paidAmountFormatted = CurrencyHelper::formatPrice($order->paidAmount);
             $order->changeMoney = CurrencyHelper::formatPrice($orderPayment->amount - $order->total);
             $order->shouldChangeMoney = $orderPayment->amount > $order->total;
+
             $orderPayments = $order->orderPayments;
-            foreach ($orderPayments as $orderPayment) {
-                $orderPayment->amountFormatted = CurrencyHelper::formatPrice($orderPayment->amount);
-                $orderPayment->paymentMethodName = $orderPayment->paymentMethod->name;
+            foreach ($orderPayments as $op) {
+                $op->amountFormatted = CurrencyHelper::formatPrice($op->amount);
+                $op->paymentMethodName = $op->paymentMethod->name;
             }
 
-            return response()
-                ->json([
-                    'success' => true,
-                    'pinTerminalStatus' => 'paid',
-                    'pinTerminalError' => false,
-                    'pinTerminalErrorMessage' => null,
-                    'order' => $order,
-                    'orderPayments' => $orderPayments,
-                    'startPinTerminalPayment' => false,
-                    'firstPaymentMethod' => [
-                        'id' => $paymentMethod->id,
-                        'is_cash_payment' => $paymentMethod->is_cash_payment,
-                        'name' => $paymentMethod->name,
-                        'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
-                    ],
-                ]);
-        } elseif ($order->status == 'cancelled') {
-            return response()
-                ->json([
-                    'success' => true,
-                    'pinTerminalStatus' => 'cancelled_by_customer',
-                    'pinTerminalError' => true,
-                    'pinTerminalErrorMessage' => 'Betaling geannuleerd door klant',
-                ]);
-        } else {
-            return response()
-                ->json([
-                    'success' => true,
-                    'pinTerminalStatus' => 'pending',
-                    'pinTerminalError' => false,
-                    'pinTerminalErrorMessage' => null,
-                ]);
+            return response()->json([
+                'success' => true,
+                'pinTerminalStatus' => 'paid',
+                'pinTerminalError' => false,
+                'pinTerminalErrorMessage' => null,
+                'order' => $order,
+                'orderPayments' => $orderPayments,
+                'startPinTerminalPayment' => false,
+                'firstPaymentMethod' => [
+                    'id' => $paymentMethod->id,
+                    'is_cash_payment' => $paymentMethod->is_cash_payment,
+                    'name' => $paymentMethod->name,
+                    'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
+                ],
+            ]);
         }
+
+        if ($order->status == 'cancelled') {
+            return response()->json([
+                'success' => true,
+                'pinTerminalStatus' => 'cancelled_by_customer',
+                'pinTerminalError' => true,
+                'pinTerminalErrorMessage' => 'Betaling geannuleerd door klant',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'pinTerminalStatus' => 'pending',
+            'pinTerminalError' => false,
+            'pinTerminalErrorMessage' => null,
+        ]);
     }
 
     public function closePayment(Request $request): JsonResponse
@@ -1165,34 +1040,30 @@ class PointOfSaleApiController extends Controller
 
         $posIdentifier = $data['posIdentifier'] ?? null;
         $order = $data['order'] ?? null;
+
         if (! $order || ! isset($order['id'])) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Geen bestelling gevonden',
-                ], 400);
+            return response()->json([
+                'success' => false,
+                'message' => 'Geen bestelling gevonden',
+            ], 400);
         }
 
         $order = Order::find($order['id']);
-
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
         if ($order->isPaidFor()) {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Bestelling is al betaald',
-                ]);
-        } else {
-
-            $order->changeStatus('cancelled');
-
-            return response()
-                ->json([
-                    'success' => true,
-                    'message' => 'De bestelling is geannuleerd',
-                ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling is al betaald',
+            ]);
         }
+
+        $order->changeStatus('cancelled');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'De bestelling is geannuleerd',
+        ]);
     }
 
     public function getAllProducts(Request $request): JsonResponse
@@ -1202,21 +1073,18 @@ class PointOfSaleApiController extends Controller
             Cache::forget('pos_products');
         }
 
-        //        $products = Cache::remember('pos_products', 60 * 60 * 24 * 7, function () { //Cache one week
         $products = Product::handOrderShowable()
             ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status'])
             ->get()
             ->map(function ($product) {
                 $name = $product->getTranslation('name', app()->getLocale());
                 $currentPrice = $product->currentPrice;
-                //                    $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
 
                 return [
                     'id' => $product->id,
                     'name' => $name,
                     'stock' => $product->directSellableStock(),
                     'actual_stock' => $product->stock,
-//                        'image' => $image ? "data:image/png;base64,".base64_encode(file_get_contents($image)) : '',
                     'currentPrice' => $currentPrice,
                     'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
                     'search' => $name . ' ' . $product->sku . ' ' . $product->ean,
@@ -1224,21 +1092,15 @@ class PointOfSaleApiController extends Controller
             })
             ->toArray();
 
-        //            return $products;
-        //        });
-
-
-        return response()
-            ->json([
-                'success' => true,
-                'products' => $products,
-            ]);
+        return response()->json([
+            'success' => true,
+            'products' => $products,
+        ]);
     }
 
     public function updateProductInfo(Request $request): JsonResponse
     {
         $data = $request->all();
-
         $products = $data['products'] ?? null;
 
         foreach ($products as &$product) {
@@ -1248,27 +1110,22 @@ class PointOfSaleApiController extends Controller
             $product['image'] = $thisProduct->firstImage ? (mediaHelper()->getSingleMedia($thisProduct->firstImage, ['widen' => 300])->url ?? '') : '';
         }
 
-        return response()
-            ->json([
-                'success' => true,
-                'products' => $products,
-            ]);
+        return response()->json([
+            'success' => true,
+            'products' => $products,
+        ]);
     }
 
     public function updateProduct(Request $request): JsonResponse
     {
         $data = $request->all();
-
         $product = $data['product'] ?? null;
 
         $thisProduct = Product::find($product['id']);
         $thisProduct->stock = $product['actual_stock'];
         $thisProduct->save();
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function updateSearchQueryInputmode(Request $request): JsonResponse
@@ -1276,14 +1133,9 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $searchQueryInputmode = $data['searchQueryInputmode'] ?? null;
-        $userId = $data['userId'] ?? null;
-
         Customsetting::set('pos_search_query_inputmode', $searchQueryInputmode);
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function cancelOrder(Request $request): JsonResponse
@@ -1291,27 +1143,25 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $order = $data['order'] ?? null;
-        $data = $order['cancelData'] ?? null;
-        $userId = $data['userId'] ?? null;
+        $cancelData = $order['cancelData'] ?? null;
 
         $order = Order::find($order['id']);
 
         if (in_array($order->order_origin, ['own', 'pos']) && $order->invoice_id != 'PROFORMA') {
-            $sendCustomerEmail = $data['sendCustomerEmail'];
-            $productsMustBeReturned = $data['productsMustBeReturned'];
-            $restock = $data['restock'];
-            $refundDiscountCosts = $data['refundDiscountCosts'];
+            $sendCustomerEmail = $cancelData['sendCustomerEmail'];
+            $productsMustBeReturned = $cancelData['productsMustBeReturned'];
+            $restock = $cancelData['restock'];
+            $refundDiscountCosts = $cancelData['refundDiscountCosts'];
 
             $cancelledProductsQuantity = 0;
-            $orderProducts = $data['orderProducts'];
+            $orderProducts = $cancelData['orderProducts'];
             foreach ($orderProducts as $orderProduct) {
                 $cancelledProductsQuantity += $orderProduct['refundQuantity'];
-                $orderProduct['refundQuantity'] = $orderProduct['refundQuantity'];
             }
 
-            $extraOrderLine = $data['extraOrderLine'];
-            $extraOrderLineName = $data['extraOrderLineName'] ?? '';
-            $extraOrderLinePrice = $data['extraOrderLinePrice'] ?? '';
+            $extraOrderLine = $cancelData['extraOrderLine'];
+            $extraOrderLineName = $cancelData['extraOrderLineName'] ?? '';
+            $extraOrderLinePrice = $cancelData['extraOrderLinePrice'] ?? '';
 
             if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
                 return response()->json([
@@ -1320,35 +1170,35 @@ class PointOfSaleApiController extends Controller
                 ]);
             }
 
-            $newOrder = $order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, collect($orderProducts), $data['fulfillmentStatus'], $data['paymentMethodId']);
+            $order->markAsCancelledWithCredit(
+                $sendCustomerEmail,
+                $productsMustBeReturned,
+                $restock,
+                $refundDiscountCosts,
+                $extraOrderLineName,
+                $extraOrderLinePrice,
+                collect($orderProducts),
+                $cancelData['fulfillmentStatus'],
+                $cancelData['paymentMethodId']
+            );
 
             if (Customsetting::get('pos_auto_print_receipt', null, true)) {
                 try {
-                    $newOrder->printReceipt();
+                    $order->printReceipt();
                 } catch (\Exception $e) {
                 }
             }
 
-            return response()->json([
-                'success' => true,
-            ]);
-        } else {
-            return response()->json([
-                'success' => true,
-            ]);
+            return response()->json(['success' => true]);
         }
 
-        return response()
-            ->json([
-                'success' => true,
-            ]);
+        return response()->json(['success' => true]);
     }
 
     public function retrieveOrders(Request $request): JsonResponse
     {
         $data = $request->all();
 
-        $userId = $data['userId'] ?? null;
         $skip = $data['skip'] ?? null;
         $searchOrderQuery = $data['searchOrderQuery'] ?? null;
 
@@ -1360,16 +1210,13 @@ class PointOfSaleApiController extends Controller
                     'success' => true,
                     'order' => self::orderResponse($order),
                 ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bestelling niet gevonden',
-                ]);
             }
-        }
 
-        $firstOrder = null;
-        $now = now()->startOfDay();
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling niet gevonden',
+            ]);
+        }
 
         $endDate = now()->subQuarter()->startOfDay();
 
@@ -1385,34 +1232,30 @@ class PointOfSaleApiController extends Controller
             ->skip($skip)
             ->limit(50)
             ->get()
-            ->groupBy(function ($order) {
-                return $order->created_at->format('Y-m-d'); // Group orders by the date part
-            })
+            ->groupBy(fn ($order) => $order->created_at->format('Y-m-d'))
             ->map(function ($orders, $date) {
                 return [
-                    'date' => Carbon::parse($date)->isToday() ? 'Vandaag' : (Carbon::parse($date)->isYesterday() ? 'Gisteren' : Carbon::parse($date)->format('d M')),
-                    'orders' => $orders->map(function ($order) {
-                        return self::orderResponse($order);
-                    }),
+                    'date' => Carbon::parse($date)->isToday()
+                        ? 'Vandaag'
+                        : (Carbon::parse($date)->isYesterday() ? 'Gisteren' : Carbon::parse($date)->format('d M')),
+                    'orders' => $orders->map(fn ($order) => self::orderResponse($order)),
                 ];
             })
-            ->values() // Reset the keys for easier handling in JSON responses
+            ->values()
             ->toArray();
 
+        $firstOrder = null;
         foreach ($orders as $date) {
             foreach ($date['orders'] as $order) {
-                if (! $firstOrder) {
-                    $firstOrder = $order;
-                }
+                $firstOrder ??= $order;
             }
         }
 
-        return response()
-            ->json([
-                'success' => true,
-                'orders' => $orders,
-                'firstOrder' => $firstOrder,
-            ]);
+        return response()->json([
+            'success' => true,
+            'orders' => $orders,
+            'firstOrder' => $firstOrder,
+        ]);
     }
 
     public function orderResponse(Order $order): array
@@ -1447,7 +1290,7 @@ class PointOfSaleApiController extends Controller
             'id' => $order->id,
             'invoiceId' => $order->invoice_id,
             'createdAt' => $order->created_at->format('d-m-Y H:i'),
-            'hasOpenAmount' => $order->openAmount > 0.00 ? true : false,
+            'hasOpenAmount' => $order->openAmount > 0.00,
             'openAmount' => $order->openAmount,
             'openAmountFormatted' => CurrencyHelper::formatPrice($order->openAmount),
             'total' => $order->total,
@@ -1492,7 +1335,6 @@ class PointOfSaleApiController extends Controller
     public function retrieveCartForCustomer(Request $request): JsonResponse
     {
         $data = $request->all();
-
         $userId = $data['userId'] ?? null;
 
         $posCart = POSCart::where('user_id', $userId)->where('status', 'active')->first();
@@ -1501,18 +1343,138 @@ class PointOfSaleApiController extends Controller
             $posIdentifier = $posCart['identifier'];
             $discountCode = $posCart['discount_code'];
 
-            return response()
-                ->json($this->updateCart(
-                    $cartInstance,
-                    $posIdentifier,
-                    $discountCode
-                ));
-        } else {
-            return response()
-                ->json([
-                    'success' => false,
-                    'message' => 'Geen actieve winkelwagen gevonden voor deze klant',
-                ], 404);
+            return response()->json(
+                $this->updateCart($cartInstance, $posIdentifier, $discountCode)
+            );
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Geen actieve winkelwagen gevonden voor deze klant',
+        ], 404);
+    }
+
+    /**
+     * -----------------------------
+     * Helpers (DB-cart pricing)
+     * -----------------------------
+     */
+    private function normalizePosCartItem(array $chosenProduct): object
+    {
+        $options = $chosenProduct['options'] ?? [];
+        $options['options'] = $options['options'] ?? [];
+
+        foreach (($chosenProduct['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
+            if (! $productExtraOptionId) {
+                continue;
+            }
+
+            $options['options'][(string) $productExtraOptionId] = [
+                'quantity' => (int) ($chosenProduct['quantity'] ?? 1),
+            ];
+        }
+
+        if (! empty($chosenProduct['customProduct'])) {
+            $options['customProduct'] = true;
+        }
+        if (! empty($chosenProduct['isCustomPrice'])) {
+            $options['isCustomPrice'] = true;
+        }
+
+        if (isset($chosenProduct['singlePrice'])) {
+            $options['singlePrice'] = (float) $chosenProduct['singlePrice'];
+        }
+
+        if (isset($chosenProduct['vat_rate'])) {
+            $options['vat_rate'] = $chosenProduct['vat_rate'];
+        } elseif (isset($chosenProduct['vatPercentage'])) {
+            $options['vat_rate'] = $chosenProduct['vatPercentage'];
+        }
+
+        return (object) [
+            'qty' => max(1, (int) ($chosenProduct['quantity'] ?? 1)),
+            'quantity' => max(1, (int) ($chosenProduct['quantity'] ?? 1)),
+            'product_id' => $chosenProduct['id'] ?? null,
+            'name' => $chosenProduct['name'] ?? null,
+            'price' => $chosenProduct['price'] ?? null,
+            'options' => $options,
+            'model' => null,
+        ];
+    }
+
+    private function calculateVatFromGross(float $gross, float $vatRate): float
+    {
+        if ($vatRate <= 0) {
+            return 0.0;
+        }
+
+        $divider = 1 + ($vatRate / 100);
+        if ($divider <= 0) {
+            return 0.0;
+        }
+
+        return $gross - ($gross / $divider);
+    }
+
+    private function calculatePosCartTotals(POSCart $posCart, ?DiscountCode $discountCodeModel = null): array
+    {
+        $products = $posCart->products ?? [];
+
+        $lines = [];
+        $subtotal = 0.0;
+        $subtotalWithoutDiscount = 0.0;
+
+        $vatTotal = 0.0;
+        $vatPercentages = [];
+
+        foreach ($products as $chosenProduct) {
+            $qty = (int) ($chosenProduct['quantity'] ?? 0);
+            if ($qty < 1) {
+                continue;
+            }
+
+            $item = $this->normalizePosCartItem($chosenProduct);
+
+            $model = null;
+            if (! empty($item->product_id) && is_numeric($item->product_id)) {
+                $model = Product::with(['volumeDiscounts', 'productCategories'])->find((int) $item->product_id);
+            }
+            $item->model = $model;
+
+            // Let op: jouw Product::getShoppingCartItemPrice moet object/stdClass ondersteunen
+            $lineWithDiscount = (float) Product::getShoppingCartItemPrice($item, $discountCodeModel);
+            $lineWithoutDiscount = (float) Product::getShoppingCartItemPrice($item, null);
+
+            $subtotal += $lineWithDiscount;
+            $subtotalWithoutDiscount += $lineWithoutDiscount;
+
+            $vatRate = (float) ($item->options['vat_rate'] ?? ($model->vat_rate ?? $model->tax_rate ?? 21));
+            $lineVat = $this->calculateVatFromGross($lineWithDiscount, $vatRate);
+
+            $vatTotal += $lineVat;
+            $vatPercentages[(string) $vatRate] = ($vatPercentages[(string) $vatRate] ?? 0) + $lineVat;
+
+            $lines[] = [
+                'product_id' => $item->product_id,
+                'name' => $chosenProduct['name'] ?? ($model?->getTranslation('name', app()->getLocale()) ?? $item->name),
+                'quantity' => $qty,
+                'vat_rate' => $vatRate,
+                'line_total' => $lineWithDiscount,
+                'line_total_without_discount' => $lineWithoutDiscount,
+                'discount' => max(0, $lineWithoutDiscount - $lineWithDiscount),
+                'is_custom' => (bool) ($chosenProduct['customProduct'] ?? false) || (bool) ($chosenProduct['isCustomPrice'] ?? false) || ! $model,
+            ];
+        }
+
+        $discount = max(0, $subtotalWithoutDiscount - $subtotal);
+
+        return [
+            'lines' => $lines,
+            'subtotal' => $subtotal,
+            'subtotalWithoutDiscount' => $subtotalWithoutDiscount,
+            'discount' => $discount,
+            'vat' => $vatTotal,
+            'vatPercentages' => $vatPercentages,
+        ];
     }
 }

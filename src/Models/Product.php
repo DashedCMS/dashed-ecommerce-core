@@ -50,7 +50,7 @@ class Product extends Model
         'search_terms',
         'product_search_terms',
         'content',
-//        'images',
+        // 'images',
     ];
 
     public $resourceRelations = [
@@ -63,8 +63,8 @@ class Product extends Model
 
     protected $with = [
         'productFilters',
-//        'parent',
-//        'bundleProducts',
+        // 'parent',
+        // 'bundleProducts',
     ];
 
     protected $casts = [
@@ -123,6 +123,9 @@ class Product extends Model
         return $this->hasMany(EcommerceActionLog::class);
     }
 
+    /**
+     * Zoeken + relevance score, zonder "lekkende" ORs die je prijsfilters slopen.
+     */
     public function scopeSearch($query, ?string $search = null)
     {
         $minPrice = request('min-price');
@@ -148,46 +151,50 @@ class Product extends Model
             ->values()
             ->all();
 
-        // 1) Waar-voorwaarden (zoals je al deed)
-        $query->where(function ($q) use ($columns, $needle, $search) {
-            foreach ($columns as $i => $col) {
-                $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
-                $q->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
-            }
+        // Alles wat met search te maken heeft in 1 group (zodat min/max prijs netjes blijft werken)
+        $query->where(function ($outer) use ($columns, $needle, $search) {
 
-            $q->orWhere('sku', $search)
-                ->orWhere('ean', $search)
-                ->orWhere('article_code', $search);
-        })->orWhereHas('productGroup', function ($q) use ($columns, $needle) {
-            $q->where(function ($qq) use ($columns, $needle) {
+            // Match op eigen velden
+            $outer->where(function ($q) use ($columns, $needle, $search) {
                 foreach ($columns as $i => $col) {
                     $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
-                    $qq->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
+                    $q->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
                 }
+
+                $q->orWhere('sku', $search)
+                    ->orWhere('ean', $search)
+                    ->orWhere('article_code', $search);
+            });
+
+            // Match op productGroup velden (ook binnen dezelfde group)
+            $outer->orWhereHas('productGroup', function ($q) use ($columns, $needle) {
+                $q->where(function ($qq) use ($columns, $needle) {
+                    foreach ($columns as $i => $col) {
+                        $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
+                        $qq->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
+                    }
+                });
             });
         });
 
-        // 2) Relevance score opbouwen in de exacte volgorde van $columns
-        //    Exacte matches op sku/ean/article_code krijgen de hoogste weging.
+        // Relevance score
         $cases = [];
         $bindings = [];
 
-        // Hoge weging voor exacte matches
         $topWeight = count($columns) + 10;
+
         foreach (['sku', 'ean', 'article_code'] as $exactField) {
             $cases[] = "CASE WHEN {$exactField} = ? THEN {$topWeight} ELSE 0 END";
             $bindings[] = $search;
         }
 
-        // Afnemende weging per kolom in jouw volgorde
         foreach ($columns as $idx => $col) {
-            $weight = count($columns) - $idx; // eerste kolom = hoogste weight
+            $weight = count($columns) - $idx;
             $cases[] = "CASE WHEN LOWER(`{$col}`) LIKE ? THEN {$weight} ELSE 0 END";
             $bindings[] = "%{$needle}%";
         }
 
-        // Relevance select + sortering
-        $query->select($query->getQuery()->columns ?? ['*'])
+        $query->select($query->getQuery()->columns ?: ['*'])
             ->selectRaw('(' . implode(' + ', $cases) . ') as relevance', $bindings)
             ->orderByDesc('relevance');
 
@@ -248,26 +255,11 @@ class Product extends Model
 
     public function scopePublicShowable($query, bool $overridePublic = false)
     {
-        //        if (auth()->check() && auth()->user()->role == 'admin' && $overridePublic) {
-        //            return;
-        //        }
-
         $query
             ->public()
             ->thisSite();
 
-        //        $query = $query->where(function ($query) {
-        //            $query->where('start_date', null);
-        //        })->orWhere(function ($query) {
-        //            $query->where('start_date', '<=', Carbon::now());
-        //        })->where(function ($query) {
-        //            $query->where('end_date', null);
-        //        })->orWhere(function ($query) {
-        //            $query->where('end_date', '>=', Carbon::now());
-        //        });
-
         return $query;
-        //        }
     }
 
     public function scopePublicShowableWithIndex($query, bool $overridePublic = false)
@@ -308,7 +300,7 @@ class Product extends Model
 
         $productCategory = $this->productCategories()->first();
 
-        //Check if has child, to make sure all categories show in breadcrumbs
+        // Check if has child, to make sure all categories show in breadcrumbs
         while ($productCategory && $productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first()) {
             $productCategory = $productCategory->getFirstChilds()->whereIn('id', $this->productCategories->pluck('id'))->first();
         }
@@ -337,13 +329,10 @@ class Product extends Model
     public function getCurrentPriceAttribute()
     {
         return $this->priceForUser();
-        //        return $this->getRawOriginal('current_price');
     }
 
     public function getDiscountPriceAttribute(): ?float
     {
-        //        return $this->discountPriceForUser();
-
         return $this->getRawOriginal('discount_price') > 0 ? $this->getRawOriginal('discount_price') : null;
     }
 
@@ -353,7 +342,6 @@ class Product extends Model
     public function getFirstImageUrlAttribute()
     {
         throw new Exception('This method is deprecated. Use the firstImage attribute instead.');
-        //        return $this->images[0] ?? '';
     }
 
     public function getFirstImageAttribute(): ?string
@@ -373,7 +361,6 @@ class Product extends Model
     public function getAllImagesAttribute()
     {
         throw new Exception('This method is deprecated. Use the images attribute instead.');
-        //        return $this->images ? collect($this->images) : collect();
     }
 
     /**
@@ -382,12 +369,6 @@ class Product extends Model
     public function getAllImagesExceptFirstAttribute()
     {
         throw new Exception('This method is deprecated. Use the imagesExceptFirst attribute instead.');
-        //        $images = $this->allImages;
-        //        if (count($images)) {
-        //            unset($images[0]);
-        //        }
-        //
-        //        return $images;
     }
 
     public function getImagesExceptFirstAttribute(): array
@@ -427,16 +408,20 @@ class Product extends Model
 
     public function getStatusAttribute()
     {
-        if (! $this->public) {
-            return false;
-        } else {
-            return true;
-        }
+        return (bool) $this->public;
     }
 
+    /**
+     * FIX: reserved stock moet quantity SUM zijn (niet count rows)
+     */
     public function calculateReservedStock(): void
     {
-        $this->reserved_stock = OrderProduct::where('product_id', $this->id)->whereIn('order_id', Order::whereIn('status', ['pending'])->pluck('id'))->count();
+        $pendingOrderIds = Order::whereIn('status', ['pending'])->pluck('id');
+
+        $this->reserved_stock = (int) OrderProduct::where('product_id', $this->id)
+            ->whereIn('order_id', $pendingOrderIds)
+            ->sum('quantity');
+
         $this->saveQuietly();
     }
 
@@ -562,7 +547,6 @@ class Product extends Model
             ]);
     }
 
-
     public function hasDirectSellableStock(): bool
     {
         if ($this->is_bundle) {
@@ -586,19 +570,18 @@ class Product extends Model
         return false;
     }
 
+    /**
+     * FIX: unreachable return verwijderd + logisch strak.
+     */
     public function directSellableStock($skipReservedStock = false)
     {
         if ($this->use_stock) {
-            return $this->stock - ($skipReservedStock ? 0 : $this->reservedStock());
+            $reserved = $skipReservedStock ? 0 : $this->reservedStock();
 
-            return $this->stock();
-        } else {
-            if ($this->stock_status == 'in_stock') {
-                return 100000;
-            } else {
-                return 0;
-            }
+            return (int) $this->stock - (int) $reserved;
         }
+
+        return $this->stock_status == 'in_stock' ? 100000 : 0;
     }
 
     public function inStock(): bool
@@ -702,8 +685,15 @@ class Product extends Model
         return $this->expected_in_stock_date ? $this->expected_in_stock_date->format('d-m-Y') : null;
     }
 
+    /**
+     * FIX: null-safe
+     */
     public function expectedInStockDateValid()
     {
+        if (! $this->expected_in_stock_date) {
+            return false;
+        }
+
         return $this->expected_in_stock_date >= now();
     }
 
@@ -805,6 +795,9 @@ class Product extends Model
         return $this->hasMany(ProductCharacteristic::class);
     }
 
+    /**
+     * FIX: relation name casing en consistent eager load
+     */
     public function allProductExtras(): ?Collection
     {
         $productExtraIds = [];
@@ -821,9 +814,11 @@ class Product extends Model
             $productExtraIds = array_merge($productExtraIds, $this->productGroup->globalProductExtras->pluck('id')->toArray());
         }
 
+        $productExtraIds = array_values(array_unique($productExtraIds));
+
         return ProductExtra::whereIn('id', $productExtraIds)
             ->orderBy('order')
-            ->with(['ProductExtraOptions'])
+            ->with(['productExtraOptions'])
             ->get();
     }
 
@@ -858,11 +853,6 @@ class Product extends Model
         foreach ($this->productCategories as $productCategory) {
             $productFaqIds = array_merge($productFaqIds, $productCategory->globalFaqs->pluck('id')->toArray() ?? []);
         }
-
-        //        if ($this->productGroup) {
-        //            $productTabIds = array_merge($productTabIds, $this->productGroup->faqs->pluck('id')->toArray());
-        //            $productTabIds = array_merge($productTabIds, $this->productGroup->globalFaqs->pluck('id')->toArray());
-        //        }
 
         return ProductFaq::whereIn('id', $productFaqIds)
             ->orderBy('order')
@@ -1047,7 +1037,6 @@ class Product extends Model
 
     public function getSuggestedProducts(int $limit = 4, bool $random = true, $includeFromProductGroup = false): Collection
     {
-        // 1. Start met de expliciet ingestelde suggested products
         if ($includeFromProductGroup) {
             $suggestedProductIds = array_merge(
                 $this->suggestedProducts->pluck('id')->toArray(),
@@ -1057,21 +1046,15 @@ class Product extends Model
             $suggestedProductIds = $this->suggestedProducts->pluck('id')->toArray();
         }
 
-
-        // Huidige product nooit als suggestion
         $suggestedProductIds = array_filter($suggestedProductIds, fn ($id) => $id !== $this->id);
         $suggestedProductIds = array_values(array_unique($suggestedProductIds));
 
         $remaining = $limit - count($suggestedProductIds);
 
-        /*
-         * 2. Aanvullen met producten uit dezelfde categorieën
-         */
         if ($remaining > 0) {
             $categoryModel = new ProductCategory();
             $categoryTable = $categoryModel->getTable();
 
-            // Haal categorie-ids van dit product op
             $categoryIds = $this->productCategories()
                 ->pluck($categoryTable . '.id')
                 ->toArray();
@@ -1094,9 +1077,6 @@ class Product extends Model
             }
         }
 
-        /*
-         * 3. Nog niet vol? Aanvullen met random producten
-         */
         if ($remaining > 0) {
             $randomProductIds = Product::thisSite()
                 ->publicShowableWithIndex()
@@ -1110,9 +1090,6 @@ class Product extends Model
             $suggestedProductIds = array_values(array_unique(array_merge($suggestedProductIds, $randomProductIds)));
         }
 
-        /*
-         * 4. Uiteindelijk de producten ophalen
-         */
         $productsQuery = Product::thisSite()
             ->publicShowable()
             ->whereIn('id', $suggestedProductIds);
@@ -1121,9 +1098,7 @@ class Product extends Model
             $productsQuery->inRandomOrder();
         }
 
-        $products = $productsQuery->limit($limit)->get();
-
-        return $products;
+        return $productsQuery->limit($limit)->get();
     }
 
     public function getCrossSellProducts(bool $includeFromProductGroup = false, bool $removeIfAlreadyInCart = false): Collection
@@ -1147,118 +1122,161 @@ class Product extends Model
         return $products->get();
     }
 
-    public static function getShoppingCartItemPrice(CartItem $cartItem, string|DiscountCode|null $discountCode = null)
+    public static function getShoppingCartItemPrice($cartItem, string|DiscountCode|null $discountCode = null): float
     {
-        // We ondersteunen hier alleen een DiscountCode object, strings worden genegeerd (zoals je nu al deed)
+        // We ondersteunen hier alleen een DiscountCode object; strings negeren
         if (is_string($discountCode)) {
             $discountCode = null;
         }
 
-        // Cache voor deze request om DB-calls te beperken
-        static $productExtraOptionCache = [];
-        static $productExtraCache = [];
+        // 1) Normalize input (stdClass/array/model) naar object
+        if (is_array($cartItem)) {
+            $cartItem = (object) $cartItem;
+        }
 
-        $itemQty = max(1, (int)$cartItem->qty);
-        $options = (array)($cartItem->options['options'] ?? []);
+        // 2) Options normalizen (kan JSON string zijn in DB)
+        $rawOptions = $cartItem->options ?? [];
+        if (is_string($rawOptions)) {
+            $decoded = json_decode($rawOptions, true);
+            $rawOptions = is_array($decoded) ? $decoded : [];
+        } elseif ($rawOptions instanceof \Illuminate\Support\Collection) {
+            $rawOptions = $rawOptions->toArray();
+        } elseif (is_object($rawOptions) && ! is_array($rawOptions)) {
+            $rawOptions = (array) $rawOptions;
+        }
 
-        $isCustom = (! $cartItem->model || ($cartItem->options['customProduct'] ?? false) || ($cartItem->options['isCustomPrice'] ?? false));
+        $options = (array)($rawOptions['options'] ?? []);
 
-        // Basistotaal (productprijs * aantal)
+        // 3) Qty bepalen
+        $itemQty = (int) ($cartItem->qty ?? $cartItem->quantity ?? 1);
+        $itemQty = max(1, $itemQty);
+
+        // 4) Model bepalen (DB cart heeft vaak geen ->model zoals CartItem)
+        $model = $cartItem->model ?? null;
+
+        // Mogelijke product id velden vanuit DB cart
+        $productId =
+            $cartItem->product_id
+            ?? $cartItem->model_id
+            ?? ($model->id ?? null)
+            ?? null;
+
+        // Als model ontbreekt maar we hebben productId: lazy load
+        if (! $model && $productId && is_numeric($productId)) {
+            $model = Product::with(['volumeDiscounts', 'productCategories'])->find((int) $productId);
+        }
+
+        // 5) Custom item detectie (DB cart kan customProduct/isCustomPrice/singlePrice opslaan)
+        $isCustom =
+            (! $model)
+            || (($rawOptions['customProduct'] ?? false) === true)
+            || (($rawOptions['isCustomPrice'] ?? false) === true);
+
+        // 6) Base unit price bepalen
+        // - custom: singlePrice of fallback op cartItem->price
+        // - normaal: model->currentPrice
         $baseUnitPrice = $isCustom
-            ? (float)($cartItem->options['singlePrice'] ?? 0)
-            : (float)($cartItem->model->currentPrice ?? 0);
+            ? (float) ($rawOptions['singlePrice'] ?? $cartItem->single_price ?? $cartItem->price ?? 0)
+            : (float) ($model->currentPrice ?? 0);
 
         $price = $baseUnitPrice * $itemQty;
 
-        // Extra opties
+        // 7) Caches om DB hits te beperken
+        static $productExtraOptionCache = []; // [id => ProductExtraOption|null]
+        static $productExtraCache = [];       // [id => ProductExtra|null]
+
+        // 8) Extras verwerken
         foreach ($options as $productExtraOptionId => $productExtraOption) {
             $optionId = null;
             $extraId = null;
 
-            // product-extra-X vs gewone option id
+            // product-extra-X vs "normale" option id
             if (! str($productExtraOptionId)->contains('product-extra-')) {
                 $optionId = $productExtraOptionId;
             } else {
                 $extraId = str($productExtraOptionId)->explode('-')->last();
             }
 
-            // Variant / optie met ProductExtraOption
-            if ($optionId) {
+            // 8a) ProductExtraOption (option id)
+            if ($optionId !== null) {
                 if (! is_numeric($optionId)) {
                     continue;
                 }
 
-                $optionId = (int)$optionId;
+                $optionId = (int) $optionId;
                 if ($optionId <= 0) {
                     continue;
                 }
 
-                $optionQty = max(1, (int)($productExtraOption['quantity'] ?? $itemQty));
+                // quantity op optie niveau (als je dat opslaat)
+                $optionQty = (int) (($productExtraOption['quantity'] ?? null) ?? $itemQty);
+                $optionQty = max(1, $optionQty);
 
-                if (! isset($productExtraOptionCache[$optionId])) {
-                    $productExtraOptionCache[$optionId] = ProductExtraOption::find($optionId);
+                if (! array_key_exists($optionId, $productExtraOptionCache)) {
+                    $productExtraOptionCache[$optionId] = ProductExtraOption::with('productExtra')->find($optionId);
                 }
 
                 $thisProductExtraOption = $productExtraOptionCache[$optionId];
 
                 if ($thisProductExtraOption) {
-                    $extraPrice = (float)$thisProductExtraOption->price;
-                    $productExtraPrice = (float)($thisProductExtraOption->productExtra->price ?? 0);
+                    $extraPrice = (float) ($thisProductExtraOption->price ?? 0);
+                    $productExtraBasePrice = (float) ($thisProductExtraOption->productExtra->price ?? 0);
 
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
+                        // 1x op hele cart item
                         $price += $extraPrice;
-                        $price += $productExtraPrice;
+                        $price += $productExtraBasePrice;
                     } else {
+                        // per qty
                         $price += $extraPrice * $optionQty;
-                        $price += $productExtraPrice * $optionQty;
+                        $price += $productExtraBasePrice * $optionQty;
                     }
                 }
             }
 
-            // Losse ProductExtra (product-extra-X)
-            if ($extraId) {
+            // 8b) Losse ProductExtra base price via product-extra-X key
+            if ($extraId !== null) {
                 if (! is_numeric($extraId)) {
                     continue;
                 }
 
-                $productExtraId = (int)$extraId;
+                $productExtraId = (int) $extraId;
                 if ($productExtraId <= 0) {
                     continue;
                 }
 
-                if (! isset($productExtraCache[$productExtraId])) {
+                if (! array_key_exists($productExtraId, $productExtraCache)) {
                     $productExtraCache[$productExtraId] = ProductExtra::find($productExtraId);
                 }
 
                 $thisProductExtra = $productExtraCache[$productExtraId];
 
                 if ($thisProductExtra) {
-                    $extraQty = $itemQty; // extras zijn per cart item
-                    $price += (float)$thisProductExtra->price * $extraQty;
+                    // extras zijn per cart item qty
+                    $price += (float) ($thisProductExtra->price ?? 0) * $itemQty;
                 }
             }
         }
 
-        // Volume discount op totaal (inclusief extras)
-        if ($cartItem->model && $cartItem->model->volumeDiscounts) {
-            $volumeDiscount = $cartItem->model->volumeDiscounts()
+        // 9) Volume discounts (alleen als er een model is)
+        if ($model && method_exists($model, 'volumeDiscounts')) {
+            $volumeDiscount = $model->volumeDiscounts()
                 ->where('min_quantity', '<=', $itemQty)
                 ->orderBy('min_quantity', 'desc')
                 ->first();
 
             if ($volumeDiscount) {
-                $price = $volumeDiscount->getPrice($price);
+                $price = (float) $volumeDiscount->getPrice($price);
             }
         }
 
-        // Percentage kortingscode
+        // 10) Percentage discount code (zelfde logica als je had)
         if ($discountCode instanceof DiscountCode && $discountCode->type === 'percentage') {
             $discountValidForProduct = false;
 
-            if ($cartItem->model) {
+            if ($model) {
                 if ($discountCode->valid_for === 'categories') {
-                    $productCategoryIds = $cartItem->model
-                        ->productCategories()
+                    $productCategoryIds = $model->productCategories()
                         ->pluck('product_category_id');
 
                     $discountValidForProduct = $discountCode
@@ -1268,20 +1286,18 @@ class Product extends Model
                 } elseif ($discountCode->valid_for === 'products') {
                     $discountValidForProduct = $discountCode
                         ->products()
-                        ->where('product_id', $cartItem->model->id)
+                        ->where('product_id', $model->id)
                         ->exists();
                 } else {
-                    // 'all' of iets anders → gewoon geldig
                     $discountValidForProduct = true;
                 }
             } else {
-                // Custom product zonder model → alleen korting als 'all'
+                // Custom items: alleen geldig als discount niet beperkt is tot categories/products
                 $discountValidForProduct = $discountCode->valid_for !== 'categories'
                     && $discountCode->valid_for !== 'products';
             }
 
             if ($discountValidForProduct && $itemQty > 0) {
-                // Hou rounding per stuk aan zoals jij deed, maar dan expliciet op itemQty gebaseerd
                 $unitPrice = $price / $itemQty;
                 $unitPrice = round($unitPrice * (100 - $discountCode->discount_percentage) / 100, 2);
                 $price = $unitPrice * $itemQty;
@@ -1292,10 +1308,10 @@ class Product extends Model
             }
         }
 
-        return (float)$price;
+        return (float) $price;
     }
 
-    public static function getShoppingCartItemPrices(CartItem $cartItem, ?DiscountCode $discountCode = null): array
+    public static function getShoppingCartItemPrices($cartItem, ?DiscountCode $discountCode = null): array
     {
         $basePrice = self::getShoppingCartItemPrice($cartItem, null);
 
@@ -1439,13 +1455,6 @@ class Product extends Model
         if (! $user && auth()->check()) {
             $user = auth()->user();
         }
-
-        //        if ($user) {
-        //            return DB::table('dashed__product_user')
-        //                ->where('user_id', $user->id)
-        //                ->where('product_id', $this->id)
-        //                ->value('discount_price') ?? ($fillFromProduct ? $this->getRawOriginal('discount_price') : null);
-        //        }
 
         return $this->getRawOriginal('discount_price');
     }

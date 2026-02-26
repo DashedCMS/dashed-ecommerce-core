@@ -42,7 +42,7 @@ class ProductsRelationManager extends RelationManager
         return $table
             ->columns([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : ($record->productGroup->images ? (mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url ?? '') : null))
+                    ->getStateUsing(fn ($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : ($record->productGroup->images ? (mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url ?? '') : null))
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
@@ -58,7 +58,7 @@ class ProductsRelationManager extends RelationManager
                     ->label('Prijs')
                     ->searchable()
                     ->sortable()
-                    ->formatStateUsing(fn($state) => CurrencyHelper::formatPrice($state)),
+                    ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
                     ->sortable(),
@@ -107,7 +107,7 @@ class ProductsRelationManager extends RelationManager
                                     ->maxValue(100000)
                                     ->numeric()
                                     ->required()
-                                    ->default(fn($record) => $record->price),
+                                    ->default(fn ($record) => $record->price),
                                 TextInput::make('new_price')
                                     ->label('Vorige prijs (de hogere prijs)')
                                     ->helperText('Voorbeeld: 14.25')
@@ -115,7 +115,7 @@ class ProductsRelationManager extends RelationManager
                                     ->minValue(1)
                                     ->maxValue(100000)
                                     ->numeric()
-                                    ->default(fn($record) => $record->new_price),
+                                    ->default(fn ($record) => $record->new_price),
                             ])
                             ->columns([
                                 'default' => 1,
@@ -141,7 +141,7 @@ class ProductsRelationManager extends RelationManager
                     }),
                 Action::make('edit')
                     ->label('Bewerken')
-                    ->url(fn(Product $record) => route('filament.dashed.resources.products.edit', [$record])),
+                    ->url(fn (Product $record) => route('filament.dashed.resources.products.edit', [$record])),
             ])
             ->filters([
                 //
@@ -215,7 +215,7 @@ class ProductsRelationManager extends RelationManager
             ->headerActions([
                 \Filament\Actions\Action::make('Product aanmaken')
                     ->button()
-                    ->url(fn() => route('filament.dashed.resources.products.create') . '?productGroupId=' . $ownerRecord->id),
+                    ->url(fn () => route('filament.dashed.resources.products.create') . '?productGroupId=' . $ownerRecord->id),
             ]);
     }
 }

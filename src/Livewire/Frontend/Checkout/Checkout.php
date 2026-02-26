@@ -35,12 +35,15 @@ class Checkout extends Component
     public $shippingMethod;
     public $paymentMethod;
     public $depositPaymentMethod;
+
     public string $discountCode = '';
     public bool $invoiceAddress = false;
     public bool $isCompany = false;
+
     public string $note = '';
     public bool $marketing = false;
     public bool $generalCondition = false;
+
     public string $gender = '';
     public string $dateOfBirth = '';
     public string $email = '';
@@ -55,13 +58,16 @@ class Checkout extends Component
     public string $city = '';
     public string $country = '';
     public array $countryList = [];
+
     public string $invoiceStreet = '';
     public string $invoiceHouseNr = '';
     public string $invoiceZipCode = '';
     public string $invoiceCity = '';
     public string $invoiceCountry = '';
+
     public string $company = '';
     public string $taxId = '';
+
     public array $customFields = [];
     public array $customFieldRules = [];
     public array $customFieldValues = [];
@@ -79,6 +85,7 @@ class Checkout extends Component
     public $paymentCosts;
     public $shippingCosts;
     public $depositAmount;
+
     public bool $postpayPaymentMethod = false;
     public Collection|array $paymentMethods = [];
     public Collection|array $depositPaymentMethods = [];
@@ -89,11 +96,14 @@ class Checkout extends Component
 
     public function mount(Product $product)
     {
+        // cart instance netjes zetten
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
+
         $user = auth()->user();
-        $lastOrder = $user?->lastOrderFromAllOrders();
 
         // Invoice address
-        if ($user && $lastOrder && $lastOrder->invoice_street) {
+        if ($user && $user->invoice_street) {
             $this->invoiceAddress = true;
         } else {
             $this->invoiceAddress = Customsetting::get('checkout_delivery_address_standard_invoice_address')
@@ -102,30 +112,30 @@ class Checkout extends Component
         }
 
         // Company
-        if ($user && $lastOrder && $lastOrder->company_name) {
+        if ($user && $user->company_name) {
             $this->isCompany = true;
         } else {
             $this->isCompany = Customsetting::get('checkout_form_company_name') == 'required';
         }
 
-        $this->country = $lastOrder?->country ?? 'Nederland';
-        $this->dateOfBirth = $lastOrder?->date_of_birth ?? '';
-        $this->gender = $lastOrder?->gender ?? '';
-        $this->email = $lastOrder?->email ?? '';
-        $this->firstName = $lastOrder?->first_name ?? '';
-        $this->lastName = $lastOrder?->last_name ?? '';
-        $this->street = $lastOrder?->street ?? '';
-        $this->houseNr = $lastOrder?->house_nr ?? '';
-        $this->zipCode = $lastOrder?->zip_code ?? '';
-        $this->city = $lastOrder?->city ?? '';
-        $this->company = $lastOrder?->company_name ?? '';
-        $this->taxId = $lastOrder?->btw_id ?? '';
-        $this->phoneNumber = $lastOrder?->phone_number ?? '';
-        $this->invoiceStreet = $lastOrder?->invoice_street ?? '';
-        $this->invoiceHouseNr = $lastOrder?->invoice_house_nr ?? '';
-        $this->invoiceZipCode = $lastOrder?->invoice_zip_code ?? '';
-        $this->invoiceCity = $lastOrder?->invoice_city ?? '';
-        $this->invoiceCountry = $lastOrder?->invoice_country ?? '';
+        $this->country = $user?->country ?? 'Nederland';
+        $this->dateOfBirth = $user?->date_of_birth ?? '';
+        $this->gender = $user?->gender ?? '';
+        $this->email = $user?->email ?? '';
+        $this->firstName = $user?->first_name ?? '';
+        $this->lastName = $user?->last_name ?? '';
+        $this->street = $user?->street ?? '';
+        $this->houseNr = $user?->house_nr ?? '';
+        $this->zipCode = $user?->zip_code ?? '';
+        $this->city = $user?->city ?? '';
+        $this->company = $user?->company_name ?? '';
+        $this->taxId = $user?->btw_id ?? '';
+        $this->phoneNumber = $user?->phone_number ?? '';
+        $this->invoiceStreet = $user?->invoice_street ?? '';
+        $this->invoiceHouseNr = $user?->invoice_house_nr ?? '';
+        $this->invoiceZipCode = $user?->invoice_zip_code ?? '';
+        $this->invoiceCity = $user?->invoice_city ?? '';
+        $this->invoiceCountry = $user?->invoice_country ?? '';
 
         $this->countryList = Countries::getAllSelectedCountries();
 
@@ -163,24 +173,29 @@ class Checkout extends Component
         }
 
         $this->checkCart();
-        //        cartHelper()->initialize();
         $this->fillPrices();
 
         $itemLoop = 0;
         $items = [];
 
         foreach ($this->cartItems as $cartItem) {
+            $model = $cartItem->model ?? null;
+            if (! $model) {
+                continue;
+            }
+
             $items[] = [
-                'item_id' => $cartItem->model->id,
-                'item_name' => $cartItem->model->name,
+                'item_id' => $model->id,
+                'item_name' => $model->name,
                 'index' => $itemLoop,
-                'discount' => $cartItem->model->discount_price > 0
-                    ? number_format(($cartItem->model->discount_price - $cartItem->model->current_price), 2, '.', '')
+                'discount' => ($model->discount_price ?? 0) > 0
+                    ? number_format((($model->discount_price ?? 0) - ($model->current_price ?? 0)), 2, '.', '')
                     : 0,
-                'item_category' => $cartItem->model->productCategories->first()?->name ?? null,
-                'price' => number_format($cartItem->price, 2, '.', ''),
-                'quantity' => $cartItem->qty,
+                'item_category' => $model->productCategories->first()?->name ?? null,
+                'price' => number_format((float) ($cartItem->price ?? 0), 2, '.', ''),
+                'quantity' => (int) ($cartItem->qty ?? 0),
             ];
+
             $itemLoop++;
         }
 
@@ -195,23 +210,44 @@ class Checkout extends Component
 
     public function getCartItemsProperty()
     {
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
+
         return cartHelper()->getCartItems();
     }
 
-    public function retrievePaymentMethods()
+    public function retrievePaymentMethods(): void
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country) : [];
-        if (Customsetting::get('first_payment_method_selected', null, true) && (! $this->paymentMethod || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())) && count($this->paymentMethods)) {
+
+        if (
+            Customsetting::get('first_payment_method_selected', null, true)
+            && (
+                ! $this->paymentMethod
+                || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())
+            )
+            && count($this->paymentMethods)
+        ) {
             $this->paymentMethod = $this->paymentMethods[0]['id'] ?? '';
         }
     }
 
-    public function retrieveShippingMethods()
+    public function retrieveShippingMethods(): void
     {
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
-        $this->shippingMethods = $this->country ? ShoppingCart::getAvailableShippingMethods($this->country, $shippingAddress, $this->paymentMethod) : [];
-        if (Customsetting::get('first_shipping_method_selected', null, true) && (! $this->shippingMethod || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())) && count($this->shippingMethods)) {
+        $this->shippingMethods = $this->country
+            ? ShoppingCart::getAvailableShippingMethods($this->country, $shippingAddress, $this->paymentMethod)
+            : [];
+
+        if (
+            Customsetting::get('first_shipping_method_selected', null, true)
+            && (
+                ! $this->shippingMethod
+                || ! in_array($this->shippingMethod, collect($this->shippingMethods)->pluck('id')->toArray())
+            )
+            && count($this->shippingMethods)
+        ) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
     }
@@ -230,7 +266,6 @@ class Checkout extends Component
             $this->updateAddressByApi();
         }
 
-        // Alleen deze velden mogen de cart herberekenen
         $fieldsAffectingCart = [
             'country',
             'shippingMethod',
@@ -241,18 +276,13 @@ class Checkout extends Component
         if (in_array($name, $fieldsAffectingCart, true)) {
             $this->fillPrices();
         }
-
-        // BELANGRIJK:
-        // Alle andere velden (email, telefoon, naam, wachtwoord, company, custom fields)
-        // DOEN HIER BEWUST HELEMAAL NIKS.
     }
 
     public function updateAddressByApi(): void
     {
-        $zip = preg_replace('/\s+/', '', (string)$this->zipCode);
-        $houseNr = (string)$this->houseNr;
+        $zip = preg_replace('/\s+/', '', (string) $this->zipCode);
+        $houseNr = (string) $this->houseNr;
 
-        // Minimale NL-check: pas zoeken als we een "echte" postcode + huisnr hebben
         if (strlen($zip) < 6 || $houseNr === '') {
             return;
         }
@@ -267,8 +297,8 @@ class Checkout extends Component
 
     public function updateInvoiceAddressByApi(): void
     {
-        $zip = preg_replace('/\s+/', '', (string)$this->invoiceZipCode);
-        $houseNr = (string)$this->invoiceHouseNr;
+        $zip = preg_replace('/\s+/', '', (string) $this->invoiceZipCode);
+        $houseNr = (string) $this->invoiceHouseNr;
 
         if (strlen($zip) < 6 || $houseNr === '') {
             return;
@@ -291,7 +321,6 @@ class Checkout extends Component
             return [];
         }
 
-        // Voorkom dubbele calls voor dezelfde combinatie
         if ($zipCode === $this->lastZipLookedUp && $houseNr === $this->lastHouseNrLookedUp) {
             return [];
         }
@@ -346,7 +375,7 @@ class Checkout extends Component
                     ];
                 }
             } catch (Exception $exception) {
-                // niks, we geven gewoon lege array terug
+                // niks
             }
         }
 
@@ -370,7 +399,9 @@ class Checkout extends Component
 
     public function fillPrices(): void
     {
-        cartHelper()->setTotal();
+        // Zorg dat cartHelper altijd in goede instance zit
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
 
         $this->retrievePaymentMethods();
         $this->retrieveShippingMethods();
@@ -378,29 +409,32 @@ class Checkout extends Component
         cartHelper()->setShippingMethod($this->shippingMethod);
         cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
         cartHelper()->setPaymentMethod($this->paymentMethod);
+
+        // Deposit methods hangen van payment af
         $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
         cartHelper()->setDepositPaymentMethod($this->depositPaymentMethod);
 
+        // Recalc alles
         cartHelper()->updateData();
 
         $this->subtotal = cartHelper()->getSubtotal();
         $this->discount = cartHelper()->getDiscount();
         $this->tax = cartHelper()->getTax();
         $this->total = cartHelper()->getTotal();
+
         $this->shippingCosts = cartHelper()->getShippingCosts();
         $this->paymentCosts = cartHelper()->getPaymentCosts();
+
         $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
         $this->postpayPaymentMethod = cartHelper()->getIsPostpayPaymentMethod();
         $this->depositAmount = cartHelper()->getDepositAmount();
+
         $this->getSuggestedProducts();
     }
 
     public function rules()
     {
         return array_merge([
-//            'generalCondition' => [
-//                'accepted',
-//            ],
             'firstName' => [
                 'max:255',
                 Rule::requiredIf($this->firstAndLastnameRequired == 1 || $this->postpayPaymentMethod),
@@ -461,24 +495,21 @@ class Checkout extends Component
                 'max:255',
             ],
             'invoiceHouseNr' => [
-                Rule::requiredIf((bool)$this->invoiceStreet),
+                Rule::requiredIf((bool) $this->invoiceStreet),
                 'max:255',
             ],
             'invoiceZipCode' => [
-                Rule::requiredIf((bool)$this->invoiceStreet),
+                Rule::requiredIf((bool) $this->invoiceStreet),
                 'max:255',
             ],
             'invoiceCity' => [
-                Rule::requiredIf((bool)$this->invoiceStreet),
+                Rule::requiredIf((bool) $this->invoiceStreet),
                 'max:255',
             ],
             'invoiceCountry' => [
-                Rule::requiredIf((bool)$this->invoiceStreet),
+                Rule::requiredIf((bool) $this->invoiceStreet),
                 'max:255',
             ],
-//            'payment_method' => [
-//                'required',
-//            ],
             'shippingMethod' => [
                 'required',
                 'max:255',
@@ -488,7 +519,9 @@ class Checkout extends Component
 
     public function submit()
     {
-        cartHelper()->initialize();
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
+
         $this->dispatch('checkoutSubmitted');
 
         $this->fillPrices();
@@ -536,13 +569,22 @@ class Checkout extends Component
         foreach (ecommerce()->builder('fulfillmentProviders') as $fulfillmentProvider) {
             if ($fulfillmentProvider['class']::isConnected() && method_exists($fulfillmentProvider['class'], 'validateAddress')) {
                 $addressValid = $fulfillmentProvider['class']::validateAddress($this->street, $this->houseNr, $this->zipCode, $this->city, $this->country);
+
                 if (! $addressValid['success']) {
                     Notification::make()
                         ->danger()
-                        ->title(Translation::get('address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(), 'checkout', $addressValid['message']))
+                        ->title(Translation::get(
+                            'address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(),
+                            'checkout',
+                            $addressValid['message']
+                        ))
                         ->send();
 
-                    return $this->dispatch('showAlert', 'error', Translation::get('address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(), 'checkout', $addressValid['message']));
+                    return $this->dispatch('showAlert', 'error', Translation::get(
+                        'address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(),
+                        'checkout',
+                        $addressValid['message']
+                    ));
                 }
             }
         }
@@ -559,7 +601,6 @@ class Checkout extends Component
         }
 
         $extraOptionIds = [];
-
         foreach ($cartItems as $cartItem) {
             foreach ($cartItem->options['options'] ?? [] as $optionId => $option) {
                 if (! str($optionId)->contains('product-extra-')) {
@@ -574,7 +615,6 @@ class Checkout extends Component
             ? ProductExtraOption::whereIn('id', $extraOptionIds)->get()->keyBy('id')
             : collect();
 
-
         $paymentMethods = ShoppingCart::getPaymentMethods();
         $paymentMethod = '';
         foreach ($paymentMethods as $thisPaymentMethod) {
@@ -583,13 +623,14 @@ class Checkout extends Component
             }
         }
 
-        $paymentMethodPresent = (bool)$paymentMethod;
+        $paymentMethodPresent = (bool) $paymentMethod;
         if (! $paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
                     $paymentMethodPresent = true;
                 }
             }
+
             if (! $paymentMethodPresent) {
                 Notification::make()
                     ->danger()
@@ -653,7 +694,6 @@ class Checkout extends Component
 
         if (Customsetting::get('checkout_account') != 'disabled' && auth()->guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
-
                 Notification::make()
                     ->danger()
                     ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
@@ -711,10 +751,11 @@ class Checkout extends Component
         $order->vat_percentages = cartHelper()->getTaxPercentages();
         $order->discount = cartHelper()->getDiscount();
         $order->status = 'pending';
+
         $gaUserId = preg_replace("/^.+\.(.+?\..+?)$/", '\\1', @$_COOKIE['_ga']);
         $order->ga_user_id = $gaUserId;
 
-        if (cartHelper()->getDiscount()) {
+        if (cartHelper()->getDiscount() && cartHelper()->getDiscountCode()) {
             $order->discount_code_id = cartHelper()->getDiscountCode()->id;
         }
 
@@ -728,10 +769,10 @@ class Checkout extends Component
         $order->save();
 
         $orderContainsPreOrders = false;
+
         foreach ($cartItems as $cartItem) {
-            $isBundleItemWithIndividualPricing = false;
-            if ($cartItem->model->is_bundle && $cartItem->model->use_bundle_product_price) {
-                $isBundleItemWithIndividualPricing = true;
+            if (! $cartItem->model) {
+                continue;
             }
 
             $orderProduct = new OrderProduct();
@@ -740,14 +781,10 @@ class Checkout extends Component
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
-            //            if ($discountCode) {
-            //                $discountedPrice = $discountCode->getDiscountedPriceForProduct($cartItem->model, $cartItem->qty);
-            //                $orderProduct->price = $discountedPrice;
-            //                $orderProduct->discount = ($cartItem->model->currentPrice * $orderProduct->quantity) - $discountedPrice;
-            //            } else {
+
             $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, cartHelper()->getDiscountCode());
             $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
-            //            }
+
             $productExtras = [];
             foreach ($cartItem->options['options'] ?? [] as $optionId => $option) {
                 $price = 0;
@@ -777,35 +814,22 @@ class Checkout extends Component
             $orderProduct->save();
 
             foreach ($cartItem->model->bundleProducts as $bundleProduct) {
-
-                $orderProduct = new OrderProduct();
-                $orderProduct->quantity = $cartItem->qty;
-                $orderProduct->product_id = $bundleProduct->id;
-                $orderProduct->order_id = $order->id;
-                $orderProduct->name = $bundleProduct->name;
-                $orderProduct->sku = $bundleProduct->sku;
-
-                //                if ($isBundleItemWithIndividualPricing) {
-                //                    if ($discountCode) {
-                //                        $discountedPrice = $discountCode->getDiscountedPriceForProduct($bundleProduct, $cartItem->qty);
-                //                        $orderProduct->price = $discountedPrice;
-                //                        $orderProduct->discount = ($bundleProduct->currentPrice * $orderProduct->quantity) - $discountedPrice;
-                //                    } else {
-                //                        $orderProduct->price = $bundleProduct->currentPrice * $orderProduct->quantity;
-                //                        $orderProduct->discount = 0;
-                //                    }
-                //                } else {
-                $orderProduct->price = 0;
-                $orderProduct->discount = 0;
-                //                }
+                $bundleOrderProduct = new OrderProduct();
+                $bundleOrderProduct->quantity = $cartItem->qty;
+                $bundleOrderProduct->product_id = $bundleProduct->id;
+                $bundleOrderProduct->order_id = $order->id;
+                $bundleOrderProduct->name = $bundleProduct->name;
+                $bundleOrderProduct->sku = $bundleProduct->sku;
+                $bundleOrderProduct->price = 0;
+                $bundleOrderProduct->discount = 0;
 
                 if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
-                    $orderProduct->is_pre_order = true;
-                    $orderProduct->pre_order_restocked_date = $bundleProduct->expected_in_stock_date;
+                    $bundleOrderProduct->is_pre_order = true;
+                    $bundleOrderProduct->pre_order_restocked_date = $bundleProduct->expected_in_stock_date;
                     $orderContainsPreOrders = true;
                 }
 
-                $orderProduct->save();
+                $bundleOrderProduct->save();
             }
         }
 
@@ -816,9 +840,11 @@ class Checkout extends Component
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $paymentMethod['name'];
             $orderProduct->price = $paymentCosts;
+
             if ($order->paymentMethod) {
                 $orderProduct->btw = cartHelper()->getVatForPaymentMethod();
             }
+
             $orderProduct->discount = 0;
             $orderProduct->product_extras = [];
             $orderProduct->sku = 'payment_costs';
@@ -848,6 +874,7 @@ class Checkout extends Component
         $orderPayment = new OrderPayment();
         $orderPayment->amount = $order->total;
         $orderPayment->order_id = $order->id;
+
         if ($paymentMethod) {
             $psp = $paymentMethod['psp'];
         } else {
@@ -867,6 +894,14 @@ class Checkout extends Component
 
             if ($depositAmount > 0.00) {
                 $orderPayment->amount = $depositAmount;
+
+                $depositPaymentMethod = '';
+                foreach ($paymentMethods as $thisPaymentMethod) {
+                    if ($thisPaymentMethod['id'] == $this->depositPaymentMethod) {
+                        $depositPaymentMethod = $thisPaymentMethod;
+                    }
+                }
+
                 $orderPayment->psp = $depositPaymentMethod['psp'];
                 $orderPayment->payment_method_id = $depositPaymentMethod['id'];
 
@@ -897,33 +932,31 @@ class Checkout extends Component
             $order->changeStatus($newPaymentStatus);
 
             return redirect(url(ShoppingCart::getCompleteUrl()) . '?paymentId=' . $orderPayment->hash);
-        } else {
-            try {
-                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
-            } catch (\Exception $exception) {
-                if (app()->isLocal()) {
-                    throw new \Exception('Cannot start payment: ' . $exception->getMessage());
-                } else {
+        }
 
-                    $orderLog = new OrderLog();
-                    $orderLog->order_id = $order->id;
-                    $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
-                    $orderLog->tag = 'order.note.created';
-                    $orderLog->note = Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started:') . ' ' . $exception->getMessage();
-                    $orderLog->save();
-
-                    Notification::make()
-                        ->danger()
-                        ->title(Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))
-                        ->send();
-
-                    return $this->dispatch('showAlert', 'error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'));
-                }
-
+        try {
+            $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
+        } catch (\Exception $exception) {
+            if (app()->isLocal()) {
+                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
             }
 
-            return redirect($transaction['redirectUrl'], 303);
+            $orderLog = new OrderLog();
+            $orderLog->order_id = $order->id;
+            $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
+            $orderLog->tag = 'order.note.created';
+            $orderLog->note = Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started:') . ' ' . $exception->getMessage();
+            $orderLog->save();
+
+            Notification::make()
+                ->danger()
+                ->title(Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))
+                ->send();
+
+            return $this->dispatch('showAlert', 'error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'));
         }
+
+        return redirect($transaction['redirectUrl'], 303);
     }
 
     public function render()

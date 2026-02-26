@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Gloudemans\Shoppingcart\Facades\Cart;
 
 class CartCount extends Component
 {
@@ -27,11 +26,10 @@ class CartCount extends Component
         $this->refreshCart();
     }
 
-
     public function refreshCart()
     {
         cartHelper()->setCartType($this->cartType);
-        $this->cartCount = Cart::count();
+        $this->cartCount = cartHelper()->getCartItems()->count();
     }
 
     public function render()

@@ -29,7 +29,9 @@ class ProductFeedResource extends JsonResource
         // Zet active op filters
         foreach ($filters as &$filter) {
             $filterId = (int) ($filter['id'] ?? 0);
-            if (! $filterId) continue;
+            if (! $filterId) {
+                continue;
+            }
 
             $active = $activeByFilterId[$filterId] ?? null;
 
@@ -91,6 +93,7 @@ class ProductFeedResource extends JsonResource
                 foreach ($filters as $f) {
                     if ((int)($f['id'] ?? 0) === $filterId) {
                         $activeId = $f['active'] ?? null;
+
                         break;
                     }
                 }

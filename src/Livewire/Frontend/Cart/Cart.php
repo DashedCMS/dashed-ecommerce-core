@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
@@ -17,12 +16,7 @@ class Cart extends Component
     public $subtotal;
     public $tax;
     public $total;
-    //    public $paymentCosts;
-    //    public $shippingCosts;
-    //    public $depositAmount;
-    //    public bool $postpayPaymentMethod = false;
-    //    public array $paymentMethods = [];
-    //    public array $depositPaymentMethods = [];
+
     public string $cartType = 'default';
 
     protected $listeners = [
@@ -31,10 +25,14 @@ class Cart extends Component
 
     public function mount(string $cartType = 'default')
     {
-        cartHelper()->initialize();
+        $this->cartType = $cartType ?: 'default';
+
+        // Zorg dat cartHelper in de juiste instance zit
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
+
         $this->discountCode = cartHelper()->getDiscountCodeString();
-        //        $this->cartType = $cartType;
-        //        ShoppingCart::setInstance($this->cartType);
+
         $this->checkCart();
         $this->fillPrices();
 
@@ -42,15 +40,24 @@ class Cart extends Component
         $items = [];
 
         foreach ($this->cartItems as $cartItem) {
+            $model = $cartItem->model ?? null;
+
+            if (! $model) {
+                continue;
+            }
+
             $items[] = [
-                'item_id' => $cartItem->model->id,
-                'item_name' => $cartItem->model->name,
+                'item_id' => $model->id,
+                'item_name' => $model->name,
                 'index' => $itemLoop,
-                'discount' => $cartItem->model->discount_price > 0 ? number_format(($cartItem->model->discount_price - $cartItem->model->current_price), 2, '.', '') : 0,
-                'item_category' => $cartItem->model->productCategories->first()?->name ?? null,
-                'price' => number_format($cartItem->price, 2, '.', ''),
-                'quantity' => $cartItem->qty,
+                'discount' => ($model->discount_price ?? 0) > 0
+                    ? number_format((($model->discount_price ?? 0) - ($model->current_price ?? 0)), 2, '.', '')
+                    : 0,
+                'item_category' => $model->productCategories->first()?->name ?? null,
+                'price' => number_format((float) ($cartItem->price ?? 0), 2, '.', ''),
+                'quantity' => (int) ($cartItem->qty ?? 0),
             ];
+
             $itemLoop++;
         }
 
@@ -63,36 +70,49 @@ class Cart extends Component
         ]);
     }
 
-    public function fillPrices()
+    public function fillPrices(): void
     {
-        cartHelper()->initialize();
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
+
         $this->subtotal = CurrencyHelper::formatPrice(cartHelper()->getSubtotal());
+
         $discount = cartHelper()->getDiscount();
-        $this->discount = $discount ? CurrencyHelper::formatPrice(cartHelper()->getDiscount()) : null;
+        $this->discount = $discount ? CurrencyHelper::formatPrice($discount) : null;
+
         $this->tax = CurrencyHelper::formatPrice(cartHelper()->getTax());
         $this->total = CurrencyHelper::formatPrice(cartHelper()->getTotal());
+
         $this->getSuggestedProducts();
     }
 
     public function getCartItemsProperty()
     {
+        cartHelper()->initialize($this->cartType);
+        cartHelper()->setCartType($this->cartType);
+
         return cartHelper()->getCartItems();
     }
 
-    public function updated()
+    public function updated(): void
     {
         $this->fillPrices();
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
-//            'extras.*.value' => ['nullable'],
+            // 'extras.*.value' => ['nullable'],
         ];
     }
 
     public function render()
     {
-        return view(config('dashed-core.site_theme', 'dashed') . '.cart.' . ($this->cartType != 'default' ? $this->cartType . '-' : '') . 'cart');
+        return view(
+            config('dashed-core.site_theme', 'dashed')
+            . '.cart.'
+            . ($this->cartType != 'default' ? $this->cartType . '-' : '')
+            . 'cart'
+        );
     }
 }

@@ -10,7 +10,7 @@ return new class () extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('dashed__product_groups', 'showable_in_index')) {
+        if (! Schema::hasColumn('dashed__product_groups', 'showable_in_index')) {
             Schema::table('dashed__product_groups', function (Blueprint $table) {
                 $table->boolean('showable_in_index')->default(1);
             });

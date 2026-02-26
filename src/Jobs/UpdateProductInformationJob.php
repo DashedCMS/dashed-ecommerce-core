@@ -2,19 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Dashed\DashedEcommerceCore\Resources\ProductFeedResource;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Dashed\DashedEcommerceCore\Resources\ProductFeedResource;
 use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
 
 class UpdateProductInformationJob implements ShouldQueue
@@ -126,7 +126,7 @@ class UpdateProductInformationJob implements ShouldQueue
                 // 4) Indexable logic (zelfde als jouw code, alleen iets leesbaarder)
                 $shouldBeIndexable = false;
 
-                if($this->productGroup->showable_in_index){
+                if ($this->productGroup->showable_in_index) {
                     if (
                         $this->productGroup->only_show_parent_product
                         && $this->productGroup->firstSelectedProduct
@@ -158,7 +158,7 @@ class UpdateProductInformationJob implements ShouldQueue
                     }
 
                     $product->indexable = $shouldBeIndexable ? 1 : 0;
-                }else{
+                } else {
                     $product->indexable = 0;
                 }
                 if ($shouldBeIndexable) {

@@ -12,6 +12,7 @@ class CartPopup extends Component
 {
     use CartActions;
 
+    public bool $initialized = false;
     public ?string $view = '';
     public bool $showCartPopup = false;
     public $cartSubtotal;
@@ -44,7 +45,7 @@ class CartPopup extends Component
 
     public function updated()
     {
-        if ($this->showCartPopup) {
+        if ($this->showCartPopup || ! $this->initialized) {
             cartHelper()->initialize();
             $this->cartItems = cartHelper()->getCartItems();
             $this->cartTotal = cartHelper()->getTotal();
@@ -58,6 +59,7 @@ class CartPopup extends Component
             } else {
                 $this->freeShippingPercentage = 100;
             }
+            $this->initialized = true;
         }
     }
 

@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -40,6 +39,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;

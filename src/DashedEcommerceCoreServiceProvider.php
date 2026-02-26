@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore;
 
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
@@ -19,6 +18,7 @@ use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedCore\Support\MeasuresServiceProvider;
+use Dashed\DashedEcommerceCore\Commands\ClearOldCarts;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
@@ -73,6 +73,7 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
@@ -104,6 +105,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 ->withoutOverlapping();
             $schedule->command(UpdateExpiredGlobalDiscountCodes::class)
                 ->everyFiveMinutes()
+                ->withoutOverlapping();
+            $schedule->command(ClearOldCarts::class)
+                ->daily()
                 ->withoutOverlapping();
         });
 
@@ -359,6 +363,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 UpdateProductInformations::class,
                 MigrateToV3::class,
                 UpdateExpiredGlobalDiscountCodes::class,
+                ClearOldCarts::class,
             ]);
 
         $this->logProviderMemory('configurePackage:end');

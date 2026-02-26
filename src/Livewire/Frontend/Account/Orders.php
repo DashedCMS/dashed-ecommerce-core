@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Account;
 
+use Dashed\DashedCore\Models\User;
 use Livewire\Component;
 use Dashed\DashedCore\Classes\AccountHelper;
 use Illuminate\Database\Eloquent\Collection;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 class Orders extends Component
 {
     public Collection $orders;
+    public ?User $user;
 
     public function mount()
     {
@@ -17,6 +19,8 @@ class Orders extends Component
         }
 
         $this->orders = auth()->user()->orders()->get();
+        $this->user = auth()->user();
+
     }
 
     public function render()

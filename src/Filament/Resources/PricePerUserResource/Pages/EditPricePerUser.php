@@ -10,13 +10,13 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Contracts\Support\Htmlable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use STS\FilamentImpersonate\Actions\Impersonate;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerUser;
 use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
 use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
 use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
-use STS\FilamentImpersonate\Actions\Impersonate;
 
 class EditPricePerUser extends EditRecord
 {

@@ -2,19 +2,18 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Filament\Forms\Components\Select;
 use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Tabs;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Infolists\Components\TextEntry;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 
 class OrderCancelSettingsPage extends Page
 {
@@ -52,7 +51,7 @@ class OrderCancelSettingsPage extends Page
                 Select::make("order_cancel_default_fulfillment_status_{$site['id']}")
                     ->label('Verander fulfillment status naar')
                     ->options(array_merge([
-                        '' => 'Leeg'
+                        '' => 'Leeg',
                     ], Orders::getFulfillmentStatusses())),
             ];
 

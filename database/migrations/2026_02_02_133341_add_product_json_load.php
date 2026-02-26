@@ -24,7 +24,7 @@ return new class () extends Migration {
         });
 
 
-        foreach(\Dashed\DashedEcommerceCore\Models\ProductGroup::all() as $productGroup) {
+        foreach (\Dashed\DashedEcommerceCore\Models\ProductGroup::all() as $productGroup) {
             \Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
         }
     }

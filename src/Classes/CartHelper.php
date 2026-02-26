@@ -2,17 +2,22 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Models\CartItem as CartItemModel;
 
 class CartHelper
 {
@@ -49,6 +54,9 @@ class CartHelper
     public static null|array|Collection $cartItems = [];
     public static array $cartProductsById = [];
     public static bool $initialized = false;
+
+    /** @var CartModel|null */
+    public static ?CartModel $cart = null;
 
     // Flags om te weten wat al berekend is
     public static bool $cartItemsInitialized = false;
@@ -119,6 +127,15 @@ class CartHelper
         // Eerst alle flags resetten
         $this->resetComputedFlags();
 
+        // Zorg dat we cart loaded hebben
+        $this->getOrCreateCart();
+
+        // Sync runtime vars uit DB cart
+        static::$shippingMethod = static::$cart?->shipping_method_id;
+        static::$shippingZone = static::$cart?->shipping_zone_id;
+        static::$paymentMethod = static::$cart?->payment_method_id;
+        static::$depositPaymentMethod = static::$cart?->deposit_payment_method_id;
+
         // Alles opnieuw berekenen, geforceerd
         $this->setCartItems(true);
         $this->setDiscountCode(false, true);
@@ -133,18 +150,138 @@ class CartHelper
         $this->setTaxPercentages(true);
     }
 
+    // -------------------------------------------------------------------------
+    // Cart fetch / create (DB)
+    // -------------------------------------------------------------------------
+
+    protected function getCookieName(): string
+    {
+        return config('dashed-ecommerce.cart_cookie', 'cart_token');
+    }
+
+    protected function getOrCreateToken(): string
+    {
+        $cookieName = $this->getCookieName();
+
+        $token = request()->cookie($cookieName);
+        if ($token && Str::isUuid($token)) {
+            return $token;
+        }
+
+        $token = (string) Str::uuid();
+
+        // 90 dagen is prima
+        Cookie::queue($cookieName, $token, 60 * 24 * 90);
+
+        return $token;
+    }
+
+    protected function getOrCreateCart(bool $lockForUpdate = false): CartModel
+    {
+        if (static::$cart && ! $lockForUpdate) {
+            return static::$cart;
+        }
+
+        $token = $this->getOrCreateToken();
+        $userId = auth()->id();
+
+        $query = CartModel::query()->where('type', static::$cartType ?? 'default');
+
+        if ($lockForUpdate) {
+            $query->lockForUpdate();
+        }
+
+        // Eerst user-cart (als ingelogd)
+        $cart = null;
+        if ($userId) {
+            $cart = (clone $query)->where('user_id', $userId)->first();
+        }
+
+        // Anders token-cart (guest)
+        if (! $cart) {
+            $cart = (clone $query)->where('token', $token)->first();
+        }
+
+        if (! $cart) {
+            $cart = CartModel::create([
+                'user_id' => $userId,
+                'token' => $token,
+                'type' => static::$cartType ?? 'default',
+                'locale' => app()->getLocale(),
+                'currency' => config('app.currency', 'EUR'),
+            ]);
+        } else {
+            // claim cart bij login
+            if ($userId && ! $cart->user_id) {
+                $cart->user_id = $userId;
+                $cart->save();
+            }
+        }
+
+        static::$cart = $cart;
+
+        return $cart;
+    }
+
+    // -------------------------------------------------------------------------
+    // Cart items (DB -> "cart item object" shape)
+    // -------------------------------------------------------------------------
+
+    /**
+     * We bouwen een lightweight object dat lijkt op Gloudemans cart item:
+     * - rowId
+     * - id (product_id)
+     * - qty
+     * - price (unit price)
+     * - options (array)
+     * - model (Product|null)
+     *
+     * Zo blijven Product::getShoppingCartItemPrice(s) calls werken zonder grote refactor.
+     */
+    protected function mapDbCartItemToRuntime(CartItemModel $item): object
+    {
+        $o = new \stdClass();
+
+        $o->rowId = (string) $item->id;
+        $o->id = $item->product_id; // gloudemans: id = product_id
+        $o->qty = (int) $item->quantity;
+        $o->price = (float) ($item->unit_price ?? 0.0);
+
+        $options = $item->options ?? [];
+        if (! is_array($options)) {
+            $options = (array) $options;
+        }
+
+        // Zorg dat opties altijd array zijn
+        $o->options = $options;
+
+        // model vullen later via preload
+        $o->model = null;
+
+        // Voor compat: sommige code checkt associatedModel
+        $o->associatedModel = null;
+
+        return $o;
+    }
+
     private function setCartItems(bool $force = false): void
     {
         if (static::$cartItemsInitialized && ! $force) {
             return;
         }
 
-        if (static::$cartType) {
-            Cart::instance(static::$cartType);
-        }
+        $cart = $this->getOrCreateCart();
 
-        static::$cartItems = Cart::content()->reverse();
+        // Items ophalen
+        $items = CartItemModel::query()
+            ->where('cart_id', $cart->id)
+            ->orderByDesc('id')
+            ->get();
+
+        // Map naar runtime objects
+        static::$cartItems = $items->map(fn (CartItemModel $i) => $this->mapDbCartItemToRuntime($i));
         static::$cartItemsInitialized = true;
+
         static::$cartProductsById = [];
         $this->preloadCartProducts();
     }
@@ -152,7 +289,7 @@ class CartHelper
     public static function preloadProductsForCartItems($cartItems, array $relations = []): \Illuminate\Support\Collection
     {
         $ids = collect($cartItems)
-            ->pluck('id') // gloudemans: product_id
+            ->pluck('id') // product_id
             ->filter()
             ->unique();
 
@@ -178,7 +315,7 @@ class CartHelper
         $this->setCartItems(); // zorgt dat static::$cartItems gevuld is
 
         $ids = collect(static::$cartItems)
-            ->pluck('id') // Gloudemans: id = product_id
+            ->pluck('id') // id = product_id
             ->filter()
             ->unique();
 
@@ -200,14 +337,29 @@ class CartHelper
             ->keyBy('id');
 
         static::$cartProductsById = $products->all();
+
+        // runtime items model koppelen
+        static::$cartItems = collect(static::$cartItems)->map(function ($cartItem) {
+            $product = static::$cartProductsById[$cartItem->id] ?? null;
+            if ($product) {
+                $cartItem->model = $product;
+                $cartItem->associatedModel = $product;
+            }
+
+            return $cartItem;
+        });
     }
 
     public function getProductForCartItem($cartItem): ?Product
     {
-        $id = $cartItem->id; // product_id in gloudemans
+        $id = $cartItem->id; // product_id
 
         return static::$cartProductsById[$id] ?? null;
     }
+
+    // -------------------------------------------------------------------------
+    // Payment methods + Discount code (DB)
+    // -------------------------------------------------------------------------
 
     private function setAllPaymentMethods(bool $force = false): void
     {
@@ -216,6 +368,7 @@ class CartHelper
         }
 
         static::$allPaymentMethods = ShoppingCart::getPaymentMethods(skipTotalCheck: true);
+        static::$allPaymentMethodsInitialized = true;
     }
 
     private function setDiscountCode(bool $forceString = false, bool $force = false): void
@@ -224,14 +377,32 @@ class CartHelper
             return;
         }
 
-        $code = $forceString
-            ? static::$discountCodeString
-            : (session('discountCode') ?: static::$discountCodeString);
+        $cart = $this->getOrCreateCart();
+
+        // code komt uit DB (cart->discount_code_id), maar we supporten nog forceString voor apply flow
+        $code = $forceString ? static::$discountCodeString : null;
+
+        if (! $code && $cart->discount_code_id) {
+            $discount = DiscountCode::find($cart->discount_code_id);
+            if ($discount) {
+                static::$discountCode = $discount;
+                static::$discountCodeString = $discount->code ?? null;
+                static::$discountCodeInitialized = true;
+
+                return;
+            }
+        }
 
         if (! $code) {
             static::$discountCode = null;
             static::$discountCodeString = null;
-            session(['discountCode' => null]);
+
+            // ensure db cleared
+            if ($cart->discount_code_id) {
+                $cart->discount_code_id = null;
+                $cart->save();
+            }
+
             static::$discountCodeInitialized = true;
 
             return;
@@ -243,21 +414,26 @@ class CartHelper
             ->first();
 
         if (! $discountCode || ! $discountCode->isValidForCart(cartType: static::$cartType)) {
-            session(['discountCode' => '']);
             static::$discountCode = null;
             static::$discountCodeString = null;
+
+            $cart->discount_code_id = null;
+            $cart->save();
         } else {
             static::$discountCode = $discountCode;
             static::$discountCodeString = $discountCode->code ?? null;
-            session(['discountCode' => static::$discountCodeString]);
+
+            $cart->discount_code_id = $discountCode->id;
+            $cart->save();
         }
 
         static::$discountCodeInitialized = true;
     }
 
-    /**
-     * Basale VAT-informatie berekenen voor alle producten in de cart.
-     */
+    // -------------------------------------------------------------------------
+    // VAT / TAX / totals (jouw bestaande logic blijft mostly intact)
+    // -------------------------------------------------------------------------
+
     private function setVatBaseInfoForCalculation(bool $force = false): void
     {
         if (static::$vatBaseInitialized && ! $force) {
@@ -289,15 +465,9 @@ class CartHelper
                     $cartItem->model = $cartProduct;
                     $prices = Product::getShoppingCartItemPrices($cartItem, static::$discountCode);
                     $cartItem->model = $originalModel;
+
                     $price = $prices['with_discount'];
                     $priceWithoutDiscount = $prices['without_discount'];
-                    //                    if (static::$discountCode && static::$discountCode->type == 'percentage') {
-                    //                        $price = Product::getShoppingCartItemPrice($cartItem, static::$discountCode);
-                    //                        $priceWithoutDiscount = Product::getShoppingCartItemPrice($cartItem);
-                    //                    } else {
-                    //                        $price = Product::getShoppingCartItemPrice($cartItem);
-                    //                        $priceWithoutDiscount = $price;
-                    //                    }
 
                     $totalPriceForProducts += $price;
 
@@ -380,7 +550,7 @@ class CartHelper
     public function getVatRateForShippingMethod(): int
     {
         if (static::$shippingMethod && static::$vatRatesCount) {
-            return round(static::$vatRates / static::$vatRatesCount, 2);
+            return (int) round(static::$vatRates / static::$vatRatesCount, 2);
         }
 
         return 0;
@@ -438,7 +608,7 @@ class CartHelper
             return;
         }
 
-        $this->setVatBaseInfoForCalculation(); // zeker dat vat-base is gezet
+        $this->setVatBaseInfoForCalculation();
 
         $tax = static::$tax;
         $taxWithoutDiscount = static::$taxWithoutDiscount;
@@ -474,8 +644,8 @@ class CartHelper
             $taxWithoutDiscount = 0;
         }
 
-        static::$tax = (float)number_format($tax, 2, '.', '');
-        static::$taxWithoutDiscount = (float)number_format($taxWithoutDiscount, 2, '.', '');
+        static::$tax = (float) number_format($tax, 2, '.', '');
+        static::$taxWithoutDiscount = (float) number_format($taxWithoutDiscount, 2, '.', '');
 
         static::$taxInitialized = true;
     }
@@ -509,7 +679,7 @@ class CartHelper
             $total = 0.01;
         }
 
-        static::$subtotal = (float)number_format($total, 2, '.', '');
+        static::$subtotal = (float) number_format($total, 2, '.', '');
         static::$subtotalInitialized = true;
     }
 
@@ -586,12 +756,12 @@ class CartHelper
                 $cartItem->model = $product;
                 $total += Product::getShoppingCartItemPrice($cartItem);
             } else {
-                $total += $cartItem->price * $cartItem->qty;
+                $total += ((float) $cartItem->price) * ((int) $cartItem->qty);
             }
         }
 
         if (! static::$calculateInclusiveTax) {
-            $this->setTax(); // zeker dat tax gezet is
+            $this->setTax();
             $total += static::$tax;
         }
 
@@ -612,7 +782,7 @@ class CartHelper
             $total = 0.01;
         }
 
-        static::$total = $total;
+        static::$total = (float) $total;
         static::$totalInitialized = true;
     }
 
@@ -644,8 +814,8 @@ class CartHelper
             $totalDiscount = $total - 0.01;
         }
 
-        static::$discount = (float)number_format($totalDiscount, 2, '.', '');
-        static::$total = (float)number_format(static::$totalWithoutDiscount - $totalDiscount, 2, '.', '');
+        static::$discount = (float) number_format($totalDiscount, 2, '.', '');
+        static::$total = (float) number_format(static::$totalWithoutDiscount - $totalDiscount, 2, '.', '');
 
         static::$discountInitialized = true;
     }
@@ -654,7 +824,10 @@ class CartHelper
     {
         static::$shippingMethod = $shippingMethod;
 
-        // Invalidate gerelateerde computed waarden
+        $cart = $this->getOrCreateCart();
+        $cart->shipping_method_id = $shippingMethod;
+        $cart->save();
+
         static::$shippingCostsInitialized = false;
         static::$taxInitialized = false;
         static::$taxPercentagesInitialized = false;
@@ -667,6 +840,10 @@ class CartHelper
     {
         static::$shippingZone = $shippingZone;
 
+        $cart = $this->getOrCreateCart();
+        $cart->shipping_zone_id = $shippingZone;
+        $cart->save();
+
         static::$shippingCostsInitialized = false;
         static::$taxInitialized = false;
         static::$taxPercentagesInitialized = false;
@@ -678,6 +855,10 @@ class CartHelper
     public function setPaymentMethod(?int $paymentMethod = null): void
     {
         static::$paymentMethod = $paymentMethod;
+
+        $cart = $this->getOrCreateCart();
+        $cart->payment_method_id = $paymentMethod;
+        $cart->save();
 
         static::$paymentCostsInitialized = false;
         static::$isPostPayMethod = false;
@@ -695,6 +876,10 @@ class CartHelper
     public function setDepositPaymentMethod(?int $depositPaymentMethod = null): void
     {
         static::$depositPaymentMethod = $depositPaymentMethod;
+
+        $cart = $this->getOrCreateCart();
+        $cart->deposit_payment_method_id = $depositPaymentMethod;
+        $cart->save();
 
         static::$depositAmountInitialized = false;
     }
@@ -741,14 +926,13 @@ class CartHelper
                     if ($paymentMethod['deposit_calculation']) {
                         $formula = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', static::$total, $paymentMethod['deposit_calculation']);
                         $formula = str_replace('{ORDER_TOTAL}', static::$total, $formula);
-                        // Ja, dit was al zo: eval
                         $depositAmount = eval('return ' . $formula . ';');
                     }
                 }
             }
         }
 
-        static::$depositAmount = (float)number_format($depositAmount, 2);
+        static::$depositAmount = (float) number_format($depositAmount, 2);
         static::$depositAmountInitialized = true;
     }
 
@@ -784,7 +968,7 @@ class CartHelper
 
         if (static::$shippingMethod) {
             foreach ($totalVatPerPercentage as $percentage => $value) {
-                $result = $this->getVatForShippingMethod((int)$percentage);
+                $result = $this->getVatForShippingMethod((int) $percentage);
                 $totalVatPerPercentage[$percentage] += $result;
             }
         }
@@ -802,7 +986,9 @@ class CartHelper
         static::$taxPercentagesInitialized = true;
     }
 
-    // ---------- Getters ----------
+    // -------------------------------------------------------------------------
+    // Getters
+    // -------------------------------------------------------------------------
 
     public function getAllPaymentMethods(): null|array|Collection
     {
@@ -939,189 +1125,153 @@ class CartHelper
         return static::$cartItems;
     }
 
-    // ---------- Cart mutators ----------
+    // -------------------------------------------------------------------------
+    // Mutators (DB)
+    // -------------------------------------------------------------------------
 
-    public function removeInvalidItems($checkStock = true): bool
+    /**
+     * Add item (merge by product_id + options hash)
+     */
+    public function addToCart(string|int $productId, int $quantity = 1, array $options = []): array
     {
-        $cartChanged = false;
-        $this->setCartItems(true);
-        $this->preloadCartProducts(['productGroup', 'volumeDiscounts', 'productCategories']);
-        $cartItems = static::$cartItems;
-        $parentItemsToCheck = collect();
+        $quantity = max(1, (int) $quantity);
 
-        foreach ($cartItems as $cartItem) {
-            $cartItemDeleted = false;
+        DB::transaction(function () use ($productId, $quantity, $options) {
+            $cart = $this->getOrCreateCart(lockForUpdate: true);
 
-            if (! $cartItem->model) {
-                if ($cartItem->associatedModel) {
-                    Cart::remove($cartItem->rowId);
-                    $cartChanged = true;
-                }
+            $options = $this->normalizeOptions($options);
+            $hash = $this->optionsHash($options);
 
-                continue;
-            }
+            $existing = CartItemModel::query()
+                ->where('cart_id', $cart->id)
+                ->where('product_id', $productId)
+                ->where('options_hash', $hash)
+                ->lockForUpdate()
+                ->first();
 
-            $model = $this->getProductForCartItem($cartItem);
+            if ($existing) {
+                $existing->quantity += $quantity;
+                $existing->save();
+            } else {
+                $product = Product::find($productId);
 
-            if (! $model && ! ($cartItem->options['customProduct'] ?? false)) {
-                // als het geen custom product is en er is geen model → weghalen
-                Cart::remove($cartItem->rowId);
-                $cartChanged = true;
-
-                continue;
-            }
-
-            // Product verwijderd of niet meer toonbaar
-            if ($model->trashed() || ! $model->publicShowable()) {
-                Cart::remove($cartItem->rowId);
-                EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $model->id);
-                $cartItemDeleted = true;
-                $cartChanged = true;
-
-                Notification::make()
-                    ->body(Translation::get('product-removed', 'cart', ':product: is uit je winkelwagen gehaald omdat het product niet meer beschikbaar is.', 'text', [
-                        'product' => $model->name,
-                    ]))
-                    ->danger()
-                    ->send();
-            }
-
-            // Stock checks
-            if ($checkStock && ! $cartItemDeleted && $model->stock() < $cartItem->qty) {
-                $newStock = $model->stock();
-                if ($newStock > 0) {
-                    Cart::update($cartItem->rowId, $newStock);
-                    EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty - $newStock, productId: $model->id);
-
-                    Notification::make()
-                        ->body(Translation::get('product-less-stock', 'cart', ':product: is verlaagd in je winkelwagen omdat er maar :stock: voorraad is.', 'text', [
-                            'product' => $model->name,
-                            'stock' => $newStock,
-                        ]))
-                        ->danger()
-                        ->send();
-
-                    $cartChanged = true;
-                } else {
-                    EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $model->id);
-                    Cart::remove($cartItem->rowId);
-                    $cartItemDeleted = true;
-
-                    Notification::make()
-                        ->body(Translation::get('product-out-of-stock', 'cart', ':product: is uit je winkelwagen gehaald omdat er geen voorraad meer is.', 'text', [
-                            'product' => $model->name,
-                        ]))
-                        ->danger()
-                        ->send();
-
-                    $cartChanged = true;
-                }
-            }
-
-            // Aankooplimieten per klant
-            if (! $cartItemDeleted && $model->limit_purchases_per_customer && $cartItem->qty > $model->limit_purchases_per_customer_limit) {
-                EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty - $model->limit_purchases_per_customer_limit, productId: $model->id);
-                Cart::update($cartItem->rowId, $model->limit_purchases_per_customer_limit);
-                $cartChanged = true;
-            }
-
-            // Merge items met zelfde product & opties
-            if (! $cartItemDeleted) {
-                foreach ($cartItems as $otherCartItem) {
-                    if ($cartItem->rowId === $otherCartItem->rowId || ! $otherCartItem->model) {
-                        continue;
-                    }
-
-                    if ($model->id === $otherCartItem->model->id && $cartItem->options === $otherCartItem->options) {
-                        $newQuantity = $cartItem->qty + $otherCartItem->qty;
-
-                        if ($model->limit_purchases_per_customer && $newQuantity > $model->limit_purchases_per_customer_limit) {
-                            $newQuantity = $model->limit_purchases_per_customer_limit;
-                        }
-
-                        Cart::update($cartItem->rowId, $newQuantity);
-                        Cart::remove($otherCartItem->rowId);
-                        $cartChanged = true;
-                    }
-                }
-            }
-
-            // Parent product group stock
-            if (! $cartItemDeleted && $model && $model->productGroup && ($model->productGroup->use_parent_stock ?? false)) {
-                $parentItemsToCheck->push($model->productGroup->id);
-            }
-
-            // Volume korting & prijs sync
-            if (! $cartItemDeleted) {
-                $price = $cartItem->options['originalPrice'];
-
-                if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty()) {
-                    $volumeDiscount = $model->volumeDiscounts
-                        ->where('min_quantity', '<=', $cartItem->qty)
-                        ->sortByDesc('min_quantity')
-                        ->first();
-
-                    if ($volumeDiscount) {
-                        if (! $cartItem->options['originalPrice']) {
-                            Cart::update($cartItem->rowId, [
-                                'options' => array_merge($cartItem->options, ['originalPrice' => $cartItem->price]),
-                            ]);
-                            $cartChanged = true;
-                        }
-                        $price = $volumeDiscount->getPrice($price);
-                    }
-                }
-
-                if ($cartItem->price != $price) {
-                    Cart::update($cartItem->rowId, [
-                        'price' => $price,
-                    ]);
-                    $cartChanged = true;
-                }
-            }
-        }
-
-        // Parent product (groep) stock check
-        $parentItemsToCheck->unique()->each(function ($parentId) use (&$cartChanged) {
-            $parentProduct = Product::find($parentId);
-            if (! $parentProduct) {
-                return;
-            }
-
-            $cartItems = static::$cartItems->filter(function ($cartItem) use ($parentId) {
-                return $cartItem->model && $cartItem->model->parent && $cartItem->model->parent->id === $parentId;
-            });
-
-            $maxStock = $parentProduct->stock();
-            $maxLimit = $parentProduct->limit_purchases_per_customer_limit;
-            $currentAmount = $cartItems->sum('qty');
-
-            if ($currentAmount > $maxStock || $currentAmount > $maxLimit) {
-                Notification::make()
-                    ->danger()
-                    ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
-                    ->send();
-
-                EcommerceActionLog::createLog('remove_from_cart', $currentAmount, productId: $parentProduct->id);
-
-                $cartItems->each(function ($cartItem) {
-                    Cart::remove($cartItem->rowId);
-                });
-                $cartChanged = true;
+                CartItemModel::create([
+                    'cart_id' => $cart->id,
+                    'product_id' => $productId,
+                    'name' => $product?->name,
+                    'unit_price' => $product ? (float) $product->price : 0.0,
+                    'quantity' => $quantity,
+                    'options' => $options,
+                    'options_hash' => $hash,
+                ]);
             }
         });
 
-        if ($cartChanged) {
+        $this->updateData();
+
+        return [
+            'status' => 'success',
+            'message' => Translation::get('product-added-to-cart', static::$cartType, 'The product has been added to your cart'),
+        ];
+    }
+
+    /**
+     * Update qty by cart_item_id (voorheen rowId)
+     */
+    public function changeQuantity(string $rowId, int $quantity): array
+    {
+        $dispatch = [];
+
+        $cart = $this->getOrCreateCart();
+        $itemId = (int) $rowId;
+
+        $cartItem = CartItemModel::query()
+            ->where('cart_id', $cart->id)
+            ->where('id', $itemId)
+            ->first();
+
+        if (! $cartItem) {
             $this->updateData();
+
+            return [
+                'status' => 'success',
+                'message' => Translation::get('product-updated-to-cart', static::$cartType, 'The product has been updated to your cart'),
+                'dispatch' => $dispatch,
+            ];
         }
 
-        return $cartChanged;
+        if ($quantity <= 0) {
+            $product = $cartItem->product_id ? Product::find($cartItem->product_id) : null;
+
+            EcommerceActionLog::createLog('remove_from_cart', $cartItem->quantity, productId: $product?->id);
+
+            $cartItem->delete();
+
+            $this->updateData();
+
+            $cartTotal = static::$total;
+
+            $dispatch = [
+                'event' => 'productRemovedFromCart',
+                'data' => [
+                    'product' => $product,
+                    'productName' => $product?->name,
+                    'quantity' => $quantity,
+                    'price' => $product ? number_format((float) $product->price, 2, '.', '') : '0.00',
+                    'cartTotal' => number_format($cartTotal, 2, '.', ''),
+                    'category' => $product?->productCategories?->first()?->name ?? null,
+                    'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal) ?? [],
+                ],
+            ];
+
+            return [
+                'status' => 'success',
+                'message' => Translation::get('product-removed-from-cart', static::$cartType, 'The product has been removed from your cart'),
+                'dispatch' => $dispatch,
+            ];
+        }
+
+        // logging add/remove delta
+        $product = $cartItem->product_id ? Product::find($cartItem->product_id) : null;
+
+        if ($cartItem->quantity > $quantity) {
+            EcommerceActionLog::createLog('remove_from_cart', ($cartItem->quantity - $quantity), productId: $product?->id);
+        } else {
+            EcommerceActionLog::createLog('add_to_cart', ($quantity - $cartItem->quantity), productId: $product?->id);
+        }
+
+        $cartItem->quantity = (int) $quantity;
+        $cartItem->save();
+
+        $this->updateData();
+
+        return [
+            'status' => 'success',
+            'message' => Translation::get('product-updated-to-cart', static::$cartType, 'The product has been updated to your cart'),
+            'dispatch' => $dispatch,
+        ];
+    }
+
+    public function removeItem(string $rowId): void
+    {
+        $this->changeQuantity($rowId, 0);
     }
 
     public function emptyCart(): void
     {
-        session(['discountCode' => '']);
-        Cart::destroy();
+        $cart = $this->getOrCreateCart();
+
+        DB::transaction(function () use ($cart) {
+            CartItemModel::query()->where('cart_id', $cart->id)->delete();
+
+            $cart->discount_code_id = null;
+            $cart->shipping_method_id = null;
+            $cart->shipping_zone_id = null;
+            $cart->payment_method_id = null;
+            $cart->deposit_payment_method_id = null;
+            $cart->meta = null;
+            $cart->save();
+        });
 
         $this->resetComputedFlags();
         static::$cartItems = [];
@@ -1140,14 +1290,21 @@ class CartHelper
         static::$shippingMethod = null;
         static::$paymentMethod = null;
         static::$depositPaymentMethod = null;
+
+        // Refresh cart pointer
+        static::$cart = null;
     }
 
     public function applyDiscountCode(?string $code = null): array
     {
+        $cart = $this->getOrCreateCart();
+
         if (! $code) {
-            session(['discountCode' => '']);
             static::$discountCodeString = null;
             static::$discountCode = null;
+
+            $cart->discount_code_id = null;
+            $cart->save();
 
             $this->updateData();
 
@@ -1174,62 +1331,190 @@ class CartHelper
         ];
     }
 
-    public function changeQuantity(string $rowId, int $quantity): array
+    /**
+     * Dit blijft inhoudelijk hetzelfde, maar nu DB removals/updates.
+     */
+    public function removeInvalidItems($checkStock = true): bool
     {
-        $dispatch = [];
+        $cartChanged = false;
 
-        if (! $quantity) {
-            if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                $cartItem = Cart::get($rowId);
-                Cart::remove($rowId);
+        $this->setCartItems(true);
+        $this->preloadCartProducts(['productGroup', 'volumeDiscounts', 'productCategories']);
 
-                EcommerceActionLog::createLog('remove_from_cart', $cartItem->qty, productId: $cartItem->model->id);
+        $cart = $this->getOrCreateCart();
+        $cartItems = collect(static::$cartItems);
+        $parentItemsToCheck = collect();
 
-                $this->updateData();
+        foreach ($cartItems as $runtimeItem) {
+            $itemId = (int) $runtimeItem->rowId;
 
-                $cartTotal = static::$total;
+            /** @var CartItemModel|null $dbItem */
+            $dbItem = CartItemModel::query()
+                ->where('cart_id', $cart->id)
+                ->where('id', $itemId)
+                ->first();
 
-                $dispatch = [
-                    'event' => 'productRemovedFromCart',
-                    'data' => [
-                        'product' => $cartItem->model,
-                        'productName' => $cartItem->model->name,
-                        'quantity' => $quantity,
-                        'price' => number_format($cartItem->model->price, 2, '.', ''),
-                        'cartTotal' => number_format($cartTotal, 2, '.', ''),
-                        'category' => $cartItem->model->productCategories->first()?->name ?? null,
-                        'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal) ?? [],
-                    ],
-                ];
+            if (! $dbItem) {
+                continue;
             }
 
-            return [
-                'status' => 'success',
-                'message' => Translation::get('product-removed-from-cart', static::$cartType, 'The product has been removed from your cart'),
-                'dispatch' => $dispatch,
-            ];
-        }
+            $model = $this->getProductForCartItem($runtimeItem);
 
-        if (ShoppingCart::hasCartitemByRowId($rowId)) {
-            $cartItem = Cart::get($rowId);
+            if (! $model && ! ($runtimeItem->options['customProduct'] ?? false)) {
+                $dbItem->delete();
+                $cartChanged = true;
 
-            if ($cartItem->qty > $quantity) {
-                EcommerceActionLog::createLog('remove_from_cart', ($cartItem->qty - $quantity), productId: $cartItem->model->id);
-            } else {
-                EcommerceActionLog::createLog('add_to_cart', ($quantity - $cartItem->qty), productId: $cartItem->model->id);
+                continue;
             }
 
-            Cart::update($rowId, $quantity);
+            // Product verwijderd of niet meer toonbaar
+            if ($model && ($model->trashed() || ! $model->publicShowable())) {
+                $dbItem->delete();
+                EcommerceActionLog::createLog('remove_from_cart', $runtimeItem->qty, productId: $model->id);
+
+                Notification::make()
+                    ->body(Translation::get('product-removed', 'cart', ':product: is uit je winkelwagen gehaald omdat het product niet meer beschikbaar is.', 'text', [
+                        'product' => $model->name,
+                    ]))
+                    ->danger()
+                    ->send();
+
+                $cartChanged = true;
+
+                continue;
+            }
+
+            // Stock checks
+            if ($checkStock && $model && $model->stock() < $runtimeItem->qty) {
+                $newStock = $model->stock();
+                if ($newStock > 0) {
+                    $dbItem->quantity = $newStock;
+                    $dbItem->save();
+
+                    EcommerceActionLog::createLog('remove_from_cart', $runtimeItem->qty - $newStock, productId: $model->id);
+
+                    Notification::make()
+                        ->body(Translation::get('product-less-stock', 'cart', ':product: is verlaagd in je winkelwagen omdat er maar :stock: voorraad is.', 'text', [
+                            'product' => $model->name,
+                            'stock' => $newStock,
+                        ]))
+                        ->danger()
+                        ->send();
+
+                    $cartChanged = true;
+                } else {
+                    EcommerceActionLog::createLog('remove_from_cart', $runtimeItem->qty, productId: $model->id);
+                    $dbItem->delete();
+
+                    Notification::make()
+                        ->body(Translation::get('product-out-of-stock', 'cart', ':product: is uit je winkelwagen gehaald omdat er geen voorraad meer is.', 'text', [
+                            'product' => $model->name,
+                        ]))
+                        ->danger()
+                        ->send();
+
+                    $cartChanged = true;
+                }
+            }
+
+            // Aankooplimieten per klant
+            if ($model && $model->limit_purchases_per_customer && $runtimeItem->qty > $model->limit_purchases_per_customer_limit) {
+                EcommerceActionLog::createLog('remove_from_cart', $runtimeItem->qty - $model->limit_purchases_per_customer_limit, productId: $model->id);
+
+                $dbItem->quantity = $model->limit_purchases_per_customer_limit;
+                $dbItem->save();
+
+                $cartChanged = true;
+            }
+
+            // Parent product group stock
+            if ($model && $model->productGroup && ($model->productGroup->use_parent_stock ?? false)) {
+                $parentItemsToCheck->push($model->productGroup->id);
+            }
+
+            // Volume korting & prijs sync (unit_price snapshot)
+            if ($model) {
+                $price = $runtimeItem->options['originalPrice'] ?? null;
+
+                if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty()) {
+                    $volumeDiscount = $model->volumeDiscounts
+                        ->where('min_quantity', '<=', $runtimeItem->qty)
+                        ->sortByDesc('min_quantity')
+                        ->first();
+
+                    if ($volumeDiscount) {
+                        if (! ($runtimeItem->options['originalPrice'] ?? false)) {
+                            $opts = $dbItem->options ?? [];
+                            $opts['originalPrice'] = $dbItem->unit_price ?? (float) $model->price;
+                            $dbItem->options = $opts;
+                            $dbItem->save();
+                            $cartChanged = true;
+                        }
+
+                        $base = (float) ($runtimeItem->options['originalPrice'] ?? $dbItem->unit_price ?? $model->price);
+                        $price = $volumeDiscount->getPrice($base);
+                    }
+                }
+
+                if ($price !== null && (float) $dbItem->unit_price !== (float) $price) {
+                    $dbItem->unit_price = (float) $price;
+                    $dbItem->save();
+                    $cartChanged = true;
+                }
+            }
         }
 
-        $this->updateData();
+        // Parent product (groep) stock check
+        $parentItemsToCheck->unique()->each(function ($parentId) use (&$cartChanged, $cart) {
+            $parentProduct = Product::find($parentId);
+            if (! $parentProduct) {
+                return;
+            }
 
-        return [
-            'status' => 'success',
-            'message' => Translation::get('product-updated-to-cart', static::$cartType, 'The product has been updated to your cart'),
-            'dispatch' => $dispatch,
-        ];
+            $dbItems = CartItemModel::query()
+                ->where('cart_id', $cart->id)
+                ->whereNotNull('product_id')
+                ->get();
+
+            // runtime needed: check children belong to parent group
+            $products = Product::query()->with('parent')->whereIn('id', $dbItems->pluck('product_id')->filter()->unique())->get()->keyBy('id');
+
+            $itemsForParent = $dbItems->filter(function (CartItemModel $item) use ($products, $parentId) {
+                $p = $products[$item->product_id] ?? null;
+
+                return $p && $p->parent && $p->parent->id === $parentId;
+            });
+
+            $maxStock = $parentProduct->stock();
+            $maxLimit = $parentProduct->limit_purchases_per_customer_limit;
+            $currentAmount = (int) $itemsForParent->sum('quantity');
+
+            if ($currentAmount > $maxStock || $currentAmount > $maxLimit) {
+                Notification::make()
+                    ->danger()
+                    ->title(Translation::get('parent-product-limit-reached', 'cart', 'You cannot have more than the allowed amount of this product in your cart'))
+                    ->send();
+
+                EcommerceActionLog::createLog('remove_from_cart', $currentAmount, productId: $parentProduct->id);
+
+                $itemsForParent->each(function (CartItemModel $item) {
+                    $item->delete();
+                });
+
+                $cartChanged = true;
+            }
+        });
+
+        if ($cartChanged) {
+            $this->updateData();
+        }
+
+        return $cartChanged;
     }
+
+    // -------------------------------------------------------------------------
+    // Cart type
+    // -------------------------------------------------------------------------
 
     public function setCartType(?string $cartType = null): void
     {
@@ -1239,7 +1524,8 @@ class CartHelper
             static::$cartType = 'default';
         }
 
-        Cart::instance(static::$cartType);
+        // re-load cart pointer for this type
+        static::$cart = null;
     }
 
     public function getCartType(): string
@@ -1250,5 +1536,22 @@ class CartHelper
     public function isInitialized(): bool
     {
         return static::$initialized;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers: options hashing (merge items)
+    // -------------------------------------------------------------------------
+
+    protected function normalizeOptions(array $options): array
+    {
+        $options = Arr::dot($options);
+        ksort($options);
+
+        return Arr::undot($options);
+    }
+
+    protected function optionsHash(array $options): string
+    {
+        return hash('sha256', json_encode($options, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 }
