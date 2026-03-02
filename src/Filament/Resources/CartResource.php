@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Actions\BulkAction;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -13,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Pages;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers\ItemsRelationManager;
+use Illuminate\Support\Collection;
 
 class CartResource extends Resource
 {
@@ -74,8 +76,8 @@ class CartResource extends Resource
                     ->label('Gebruiker')
                     ->default('-')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('items_count')
-                    ->counts('items')
+                Tables\Columns\TextColumn::make('items_sum_quantity')
+                    ->sum('items', 'quantity')
                     ->label('Items')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
@@ -90,7 +92,18 @@ class CartResource extends Resource
                         'customer-pos' => 'customer-pos',
                     ]),
             ])
-            ->actions([
+            ->toolbarActions([
+                BulkAction::make('bulkEmpty')
+                    ->label('Leeggooien')
+                    ->icon('heroicon-o-trash')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records) {
+                        foreach ($records as $record) {
+                            $record->delete();
+                        }
+                    }),
+            ])
+            ->recordActions([
                 ViewAction::make(),
 
                 Action::make('empty')
@@ -98,7 +111,7 @@ class CartResource extends Resource
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
                     ->action(function (Cart $record) {
-                        $record->items()->delete();
+                        $record->delete();
                     }),
             ]);
     }
