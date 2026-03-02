@@ -240,7 +240,18 @@ class ShowProducts extends Component
 
     public function removeFilter($filterKey, $optionKey)
     {
-        $this->activeFilters[$filterKey][$optionKey] = false;
+        if (isset($this->activeFilters[$filterKey][$optionKey])) {
+            unset($this->activeFilters[$filterKey][$optionKey]);
+        }
+
+        // Als er geen opties meer over zijn binnen deze filter → hele filter verwijderen
+        if (empty($this->activeFilters[$filterKey])) {
+            unset($this->activeFilters[$filterKey]);
+        }
+
+        // Forceer Livewire om array opnieuw te "zien"
+        $this->activeFilters = array_filter($this->activeFilters);
+
         $this->loadProducts();
     }
 

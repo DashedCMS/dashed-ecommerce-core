@@ -97,6 +97,7 @@ class CartResource extends Resource
                     ->label('Leeggooien')
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
+                    ->deselectRecordsAfterCompletion()
                     ->action(function (Collection $records) {
                         foreach ($records as $record) {
                             $record->delete();
