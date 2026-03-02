@@ -107,7 +107,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
             $schedule->command(ClearOldCarts::class)
-                ->daily()
+                ->hourly()
                 ->withoutOverlapping();
         });
 
