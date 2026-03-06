@@ -112,6 +112,7 @@ class ProductsRelationManager extends RelationManager
                                         ->helperText($priceField['helperText'])
                                         ->prefix('€')
                                         ->minValue(0)
+                                        ->numeric()
                                         ->maxValue(100000)
                                         ->required($priceField['required'] ?? false)
                                         ->default(fn ($record) => $record->{$key});
@@ -162,6 +163,7 @@ class ProductsRelationManager extends RelationManager
                                 ->prefix('€')
                                 ->minValue(0)
                                 ->maxValue(100000)
+                                ->numeric()
                                 ->required($priceField['required'] ?? false);
                         }
 

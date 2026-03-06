@@ -191,6 +191,7 @@ class ProductResource extends Resource
                 ->prefix('€')
                 ->minValue(0)
                 ->maxValue(100000)
+                ->numeric()
                 ->required($priceField['required'] ?? false)
                 ->default(fn ($record) => $record->{$key})
                 ->columnSpan([
@@ -667,6 +668,7 @@ class ProductResource extends Resource
                                     $schema[] = TextInput::make($key)
                                         ->label($priceField['label'])
                                         ->helperText($priceField['helperText'])
+                                        ->numeric()
                                         ->prefix('€')
                                         ->minValue(0)
                                         ->maxValue(100000)
@@ -711,6 +713,7 @@ class ProductResource extends Resource
                             $schema[] = TextInput::make($key)
                                 ->label($priceField['label'])
                                 ->helperText($priceField['helperText'])
+                                ->numeric()
                                 ->prefix('€')
                                 ->minValue(0)
                                 ->maxValue(100000)
