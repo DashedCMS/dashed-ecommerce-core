@@ -162,8 +162,7 @@ class ProductsRelationManager extends RelationManager
                                 ->prefix('€')
                                 ->minValue(0)
                                 ->maxValue(100000)
-                                ->required($priceField['required'] ?? false)
-                                ->default(fn ($record) => $record->{$key});
+                                ->required($priceField['required'] ?? false);
                         }
 
                         return $schema;
