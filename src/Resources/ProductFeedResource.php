@@ -23,13 +23,13 @@ class ProductFeedResource extends JsonResource
         // Map: filterId => activeOptionId
         $activeByFilterId = [];
         foreach ($productFilters as $pf) {
-            $activeByFilterId[(int) $pf->product_filter_id] = (int) ($pf->pivot->product_filter_option_id ?? 0);
+            $activeByFilterId[(int)$pf->product_filter_id] = (int)($pf->pivot->product_filter_option_id ?? 0);
         }
 
         // Zet active op filters
         foreach ($filters as &$filter) {
-            $filterId = (int) ($filter['id'] ?? 0);
-            if (! $filterId) {
+            $filterId = (int)($filter['id'] ?? 0);
+            if (!$filterId) {
                 continue;
             }
 
@@ -87,7 +87,7 @@ class ProductFeedResource extends JsonResource
 
         if ($product->productGroup && $product->productGroup->relationLoaded('activeProductFilters')) {
             foreach ($product->productGroup->activeProductFilters as $filterModel) {
-                $filterId = (int) $filterModel->id;
+                $filterId = (int)$filterModel->id;
                 $activeId = null;
 
                 foreach ($filters as $f) {
@@ -112,14 +112,14 @@ class ProductFeedResource extends JsonResource
 
         if ($product->productGroup) {
             foreach ($product->productGroup->allCharacteristicsWithoutFilters() as $gc) {
-                if (! empty($gc['value'])) {
+                if (!empty($gc['value'])) {
                     $attributes[$gc['name']] = $gc['value'];
                 }
             }
         }
 
         foreach ($product->allCharacteristics() as $gc) {
-            if (! empty($gc['value'])) {
+            if (!empty($gc['value'])) {
                 $attributes[$gc['name']] = $gc['value'];
             }
         }
@@ -132,7 +132,7 @@ class ProductFeedResource extends JsonResource
             'link' => url($product->getUrl()),
             'price' => $product->currentPrice,
             'sale_price' => $product->discountPrice,
-            'availability' => (bool) $availability,
+            'availability' => (bool)$availability,
             'stock' => $stock,
             'description' => $description,
             'short_description' => $shortDescription,
@@ -151,9 +151,12 @@ class ProductFeedResource extends JsonResource
             'attributes' => $attributes,
         ];
 
+        $array['bol_price'] = $product->bol_price;
+        $array['bol_old_price'] = $product->bol_old_price;
+
         $array = array_merge($array, $attributes);
 
-        if (! empty($images)) {
+        if (!empty($images)) {
             foreach (array_values(array_slice($images, 1)) as $idx => $url) {
                 $array['image_link_' . ($idx + 2)] = $url;
             }

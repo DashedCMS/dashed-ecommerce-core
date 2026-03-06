@@ -97,26 +97,24 @@ class ProductsRelationManager extends RelationManager
                         ];
                     })
                     ->schema([
-                        Section::make('Beheer de prijzen')->columnSpanFull()
-                            ->schema([
-                                TextInput::make('price')
-                                    ->label('Prijs van het product')
-                                    ->helperText('Voorbeeld: 10.25')
-                                    ->prefix('€')
-                                    ->minValue(1)
-                                    ->maxValue(100000)
-                                    ->numeric()
-                                    ->required()
-                                    ->default(fn ($record) => $record->price),
-                                TextInput::make('new_price')
-                                    ->label('Vorige prijs (de hogere prijs)')
-                                    ->helperText('Voorbeeld: 14.25')
-                                    ->prefix('€')
-                                    ->minValue(1)
-                                    ->maxValue(100000)
-                                    ->numeric()
-                                    ->default(fn ($record) => $record->new_price),
-                            ])
+                        Section::make('Beheer de prijzen')
+                            ->columnSpanFull()
+                            ->schema(function(){
+                                $schema = [];
+
+                                foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                                    $schema[] = TextInput::make($key)
+                                        ->label($priceField['label'])
+                                        ->helperText($priceField['helperText'])
+                                        ->prefix('€')
+                                        ->minValue(0)
+                                        ->maxValue(100000)
+                                        ->required($priceField['required'] ?? false)
+                                        ->default(fn ($record) => $record->{$key});
+                                }
+
+                                return $schema;
+                            })
                             ->columns([
                                 'default' => 1,
                                 'lg' => 2,

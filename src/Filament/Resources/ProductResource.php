@@ -182,31 +182,25 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
+        $pricesSchema = [];
+
+        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+            $pricesSchema[] = TextInput::make($key)
+                ->label($priceField['label'])
+                ->helperText($priceField['helperText'])
+                ->prefix('€')
+                ->minValue(0)
+                ->maxValue(100000)
+                ->required($priceField['required'] ?? false)
+                ->default(fn ($record) => $record->{$key})
+                ->columnSpan([
+                    'default' => 1,
+                    'lg' => 3,
+                ]);
+        }
+
         $newSchema[] = Section::make('Praktische informatie beheren')->columnSpanFull()
-            ->schema([
-                TextInput::make('price')
-                    ->label('Prijs van het product')
-                    ->helperText('Voorbeeld: 10.25')
-                    ->prefix('€')
-                    ->minValue(0)
-                    ->maxValue(100000)
-                    ->required()
-                    ->numeric()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 4,
-                    ]),
-                TextInput::make('new_price')
-                    ->label('Vorige prijs (de hogere prijs)')
-                    ->helperText('Voorbeeld: 14.25')
-                    ->prefix('€')
-                    ->minValue(0)
-                    ->maxValue(100000)
-                    ->numeric()
-                    ->columnSpan([
-                        'default' => 1,
-                        'lg' => 4,
-                    ]),
+            ->schema(array_merge($pricesSchema, [
                 TextInput::make('purchase_price')
                     ->label('Inkoop prijs')
                     ->helperText('Voorbeeld: 3.50')
@@ -216,7 +210,7 @@ class ProductResource extends Resource
                     ->numeric()
                     ->columnSpan([
                         'default' => 1,
-                        'lg' => 4,
+                        'lg' => 3,
                     ]),
                 TextInput::make('vat_rate')
                     ->label('BTW percentage')
@@ -291,7 +285,7 @@ class ProductResource extends Resource
                         'default' => 1,
                         'lg' => 3,
                     ]),
-            ])
+            ]))
             ->columns([
                 'default' => 1,
                 'lg' => 12,
@@ -661,23 +655,22 @@ class ProductResource extends Resource
                     ->schema([
                         Section::make('Beheer de prijzen')
                             ->columnSpanFull()
-                            ->schema([
-                                TextInput::make('price')
-                                    ->label('Prijs van het product')
-                                    ->helperText('Voorbeeld: 10.25')
-                                    ->prefix('€')
-                                    ->minValue(0)
-                                    ->maxValue(100000)
-                                    ->required()
-                                    ->default(fn ($record) => $record->price),
-                                TextInput::make('new_price')
-                                    ->label('Vorige prijs (de hogere prijs)')
-                                    ->helperText('Voorbeeld: 14.25')
-                                    ->prefix('€')
-                                    ->minValue(0)
-                                    ->maxValue(100000)
-                                    ->default(fn ($record) => $record->new_price),
-                            ])
+                            ->schema(function(){
+                                $schema = [];
+
+                                foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                                    $schema[] = TextInput::make($key)
+                                        ->label($priceField['label'])
+                                        ->helperText($priceField['helperText'])
+                                        ->prefix('€')
+                                        ->minValue(0)
+                                        ->maxValue(100000)
+                                        ->required($priceField['required'] ?? false)
+                                        ->default(fn ($record) => $record->{$key});
+                                }
+
+                                return $schema;
+                            })
                             ->columns([
                                 'default' => 1,
                                 'lg' => 2,
@@ -706,23 +699,22 @@ class ProductResource extends Resource
                 BulkAction::make('changePrice')
                     ->color('primary')
                     ->label('Verander prijzen')
-                    ->schema([
-                        TextInput::make('price')
-                            ->label('Prijs van het product')
-                            ->helperText('Voorbeeld: 10.25')
-                            ->prefix('€')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100000)
-                            ->required(),
-                        TextInput::make('new_price')
-                            ->label('Vorige prijs (de hogere prijs)')
-                            ->helperText('Voorbeeld: 14.25')
-                            ->prefix('€')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100000),
-                    ])
+                    ->schema(function(){
+                        $schema = [];
+
+                        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                            $schema[] = TextInput::make($key)
+                                ->label($priceField['label'])
+                                ->helperText($priceField['helperText'])
+                                ->prefix('€')
+                                ->minValue(0)
+                                ->maxValue(100000)
+                                ->required($priceField['required'] ?? false)
+                                ->default(fn ($record) => $record->{$key});
+                        }
+
+                        return $schema;
+                    })
                     ->action(function (Collection $records, array $data): void {
                         foreach ($records as $record) {
                             $record->price = $data['price'];

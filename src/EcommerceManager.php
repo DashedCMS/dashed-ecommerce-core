@@ -9,6 +9,7 @@ class EcommerceManager
     protected static $builders = [
         'paymentServiceProviders' => [],
         'fulfillmentProviders' => [],
+        'productPriceFields' => [],
         'customOrderFields' => [
 //            Example:
 //            'orderNumber' => [
