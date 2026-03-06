@@ -153,6 +153,16 @@ class ProductFeedResource extends JsonResource
 
         $array['bol_price'] = $product->bol_price;
         $array['bol_old_price'] = $product->bol_old_price;
+        $array['bol_title'] = '';
+        if (isset($orderProduct->product->contentBlocks['bol-product-title'])) {
+            $array['bol_title'] = $orderProduct->product->contentBlocks['bol-product-title'];
+        } elseif (isset($orderProduct->product->productGroup->contentBlocks['bol-product-title'])) {
+            $array['bol_title'] = $orderProduct->product->productGroup->contentBlocks['bol-product-title'];
+        }
+
+        if ($array['bol_title']) {
+            $array['bol_title'] = $product->replaceContentVariables($array['bol_title'], $filters);
+        }
 
         $array = array_merge($array, $attributes);
 
