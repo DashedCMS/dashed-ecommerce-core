@@ -80,9 +80,7 @@ class ProductsRelationManager extends RelationManager
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
                     ->fillForm(function (Product $record) {
-                        return [
-                            'price' => $record->price,
-                            'new_price' => $record->new_price,
+                        $data = [
                             'use_stock' => $record->use_stock,
                             'limit_purchases_per_customer' => $record->limit_purchases_per_customer,
                             'out_of_stock_sellable' => $record->out_of_stock_sellable,
@@ -95,6 +93,12 @@ class ProductsRelationManager extends RelationManager
                             'limit_purchases_per_customer_limit' => $record->limit_purchases_per_customer_limit,
                             'fulfillment_provider' => $record->fulfillment_provider,
                         ];
+
+                        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                            $data[$key] = $record->{$key};
+                        }
+
+                        return $data;
                     })
                     ->schema([
                         Section::make('Beheer de prijzen')
@@ -148,27 +152,29 @@ class ProductsRelationManager extends RelationManager
                 BulkAction::make('changePrice')
                     ->color('primary')
                     ->label('Verander prijzen')
-                    ->schema([
-                        TextInput::make('price')
-                            ->label('Prijs van het product')
-                            ->helperText('Voorbeeld: 10.25')
-                            ->prefix('€')
-                            ->minValue(1)
-                            ->maxValue(100000)
-                            ->required()
-                            ->numeric(),
-                        TextInput::make('new_price')
-                            ->label('Vorige prijs (de hogere prijs)')
-                            ->helperText('Voorbeeld: 14.25')
-                            ->prefix('€')
-                            ->minValue(1)
-                            ->maxValue(100000)
-                            ->numeric(),
-                    ])
+                    ->schema(function(){
+                        $schema = [];
+
+                        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                            $schema[] = TextInput::make($key)
+                                ->label($priceField['label'])
+                                ->helperText($priceField['helperText'])
+                                ->prefix('€')
+                                ->minValue(0)
+                                ->maxValue(100000)
+                                ->required($priceField['required'] ?? false)
+                                ->default(fn ($record) => $record->{$key});
+                        }
+
+                        return $schema;
+                    })
                     ->action(function (Collection $records, array $data): void {
                         foreach ($records as $record) {
-                            $record->price = $data['price'];
-                            $record->new_price = $data['new_price'];
+                            foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                                if (isset($data[$key])) {
+                                    $record->{$key} = $data[$key];
+                                }
+                            }
                             $record->save();
                         }
 

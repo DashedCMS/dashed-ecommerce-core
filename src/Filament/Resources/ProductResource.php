@@ -636,9 +636,8 @@ class ProductResource extends Resource
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
                     ->fillForm(function (Product $record) {
-                        return [
-                            'price' => $record->price,
-                            'new_price' => $record->new_price,
+
+                        $data = [
                             'use_stock' => $record->use_stock,
                             'limit_purchases_per_customer' => $record->limit_purchases_per_customer,
                             'out_of_stock_sellable' => $record->out_of_stock_sellable,
@@ -651,6 +650,12 @@ class ProductResource extends Resource
                             'limit_purchases_per_customer_limit' => $record->limit_purchases_per_customer_limit,
                             'fulfillment_provider' => $record->fulfillment_provider,
                         ];
+
+                        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                            $data[$key] = $record->{$key};
+                        }
+
+                        return $data;
                     })
                     ->schema([
                         Section::make('Beheer de prijzen')
@@ -717,8 +722,11 @@ class ProductResource extends Resource
                     })
                     ->action(function (Collection $records, array $data): void {
                         foreach ($records as $record) {
-                            $record->price = $data['price'];
-                            $record->new_price = $data['new_price'];
+                            foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                                if (isset($data[$key])) {
+                                    $record->{$key} = $data[$key];
+                                }
+                            }
                             $record->save();
                         }
 
