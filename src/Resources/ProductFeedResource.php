@@ -161,7 +161,11 @@ class ProductFeedResource extends JsonResource
         }
 
         if ($array['bol_title']) {
-            $array['bol_title'] = $product->replaceContentVariables($array['bol_title'], $attributes);
+            $bolTitle = str($array['bol_title']);
+            foreach ($attributes as $name => $value) {
+                $bolTitle = $bolTitle->replace(':' . str($name)->lower() . ':', $value);
+            }
+            $array['bol_title'] = $bolTitle->toString();
         }
 
         $array = array_merge($array, $attributes);
