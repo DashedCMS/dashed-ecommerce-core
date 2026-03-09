@@ -26,7 +26,7 @@ class DiscountTable extends TableWidget
         $this->graphData = $data;
     }
 
-    protected static ?string $heading = 'Verkochten producten';
+    protected static ?string $heading = 'Verkochte producten';
 
     public function table(Table $table): Table
     {
