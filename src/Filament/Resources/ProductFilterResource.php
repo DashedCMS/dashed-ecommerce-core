@@ -95,6 +95,13 @@ class ProductFilterResource extends Resource
                     ->counts('productFilterOptions')
                     ->label('Aantal waardes')
                     ->sortable(),
+                IconColumn::make('use_stock')
+                    ->label('Gebruik met voorraad')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->trueColor('success')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->falseColor('danger')
+                    ->sortable(),
             ])
             ->reorderable('order')
             ->filters([

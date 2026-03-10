@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\RelationManagers;
 
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
@@ -35,6 +36,14 @@ class ProductFilterOptionRelationManager extends RelationManager
                     ->sortable(),
                 MediaColumn::make('image')
                     ->label('Afbeelding'),
+                IconColumn::make('in_stock')
+                    ->label('Op voorraad')
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->trueColor('success')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->falseColor('danger')
+                    ->sortable()
+                    ->visible(fn () => $this->ownerRecord->use_stock),
             ])
             ->filters([
                 //
