@@ -527,7 +527,7 @@ class ProductGroupResource extends Resource
         return $table
             ->columns(array_merge([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn ($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : null)
+                    ->getStateUsing(fn ($record) => $record->firstImage ? (mediaHelper()->getSingleMedia($record->firstImage, 'original')->url ?? '') : null)
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
