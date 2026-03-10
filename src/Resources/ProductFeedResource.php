@@ -135,8 +135,8 @@ class ProductFeedResource extends JsonResource
             'availability' => (bool)$availability,
             'stock' => $stock,
             'direct_sellable_stock' => $product->directSellableStock(true),
-            'description' => json_encode($description, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            'short_description' => json_encode($shortDescription, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'description' => $description,
+            'short_description' => $shortDescription,
             'ean' => $product->ean,
             'sku' => $product->sku,
             'image_link' => $imageLink,
@@ -169,7 +169,7 @@ class ProductFeedResource extends JsonResource
             $array['bol_title'] = $bolTitle->toString();
         }
 
-        $array['bol_description'] = json_encode(self::bolDescription($description), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $array['bol_description'] = self::bolDescription($description);
 
         $array = array_merge($array, $attributes);
 
@@ -189,27 +189,29 @@ class ProductFeedResource extends JsonResource
         }
 
         // Decode html entities
-        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+//        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        // Nieuwe regels altijd omzetten naar <br>
+        $html = str_replace(["\r\n", "\r", "\n"], '<br>', $html);
 
         // Alle headings omzetten naar h3
-        $html = preg_replace_callback('/<h[1-6]\b([^>]*)>(.*?)<\/h[1-6]>/is', function ($matches) {
-            $attributes = trim($matches[1] ?? '');
-            $content = $matches[2] ?? '';
-
-            return '<h3' . ($attributes ? ' ' . $attributes : '') . '>' . $content . '</h3>';
-        }, $html);
+        $html = preg_replace('/<h[1-6]\b[^>]*>(.*?)<\/h[1-6]>/is', '<h3>$1</h3>', $html);
 
         // Alleen deze tags toestaan
-        $html = strip_tags($html, '<p><br><ul><ol><li><strong><b><em><i><h3>');
+        $html = strip_tags($html, '<b><strong><p><ul><li><br>');
 
-        // Lege paragrafen opruimen
-        $html = preg_replace('/<p>\s*<\/p>/i', '', $html);
+        // Lege paragrafen verwijderen
+        $html = preg_replace('/<p>\s*(<br>\s*)*<\/p>/i', '', $html);
+
+        // Lege li's verwijderen
+        $html = preg_replace('/<li>\s*(<br>\s*)*<\/li>/i', '', $html);
 
         // Meerdere <br>'s achter elkaar beperken
-        $html = preg_replace('/(?:<br\s*\/?>\s*){3,}/i', '<br><br>', $html);
+        $html = preg_replace('/(?:<br>\s*){3,}/i', '<br><br>', $html);
 
-        // Witruimte tussen tags iets netter maken
-        $html = preg_replace('/>\s+</', '> <', $html);
+        // Witruimte opschonen
+        $html = preg_replace('/[ \t]+/', ' ', $html);
+        $html = preg_replace('/>\s+</', '><', $html);
 
         return trim($html);
     }
