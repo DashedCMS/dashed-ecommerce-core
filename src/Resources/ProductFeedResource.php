@@ -134,6 +134,7 @@ class ProductFeedResource extends JsonResource
             'sale_price' => $product->discountPrice,
             'availability' => (bool)$availability,
             'stock' => $stock,
+            'direct_sellable_stock' => $product->directSellableStock(true),
             'description' => json_encode($description, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'short_description' => json_encode($shortDescription, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'ean' => $product->ean,
