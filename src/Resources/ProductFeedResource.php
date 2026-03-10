@@ -189,7 +189,7 @@ class ProductFeedResource extends JsonResource
         }
 
         // Decode html entities
-//        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         // Nieuwe regels altijd omzetten naar <br>
         $html = str_replace(["\r\n", "\r", "\n"], '<br>', $html);
