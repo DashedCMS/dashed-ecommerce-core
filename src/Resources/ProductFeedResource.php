@@ -169,6 +169,8 @@ class ProductFeedResource extends JsonResource
             $array['bol_title'] = $bolTitle->toString();
         }
 
+        $array['bol_description'] = json_encode(self::bolDescription($description), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
         $array = array_merge($array, $attributes);
 
         if (!empty($images)) {
@@ -178,5 +180,25 @@ class ProductFeedResource extends JsonResource
         }
 
         return $array;
+    }
+
+    public static function bolDescription($html)
+    {
+        // decode html entities
+        $html = html_entity_decode($html);
+
+        // alle headings omzetten (bol toont dit als H3)
+        $html = preg_replace('/<h[1-6][^>]*>(.*?)<\/h[1-6]>/', "\n\n$1\n", $html);
+
+        // paragrafen naar linebreaks
+        $html = str_replace(['</p>', '<br>', '<br/>', '<br />'], "\n\n", $html);
+
+        // ongewenste tags strippen maar UL/LI laten bestaan
+        $html = strip_tags($html, '<ul><li>');
+
+        // whitespace opschonen
+        $html = preg_replace("/\n{3,}/", "\n\n", $html);
+
+        return trim($html);
     }
 }
