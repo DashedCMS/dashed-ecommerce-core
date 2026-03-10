@@ -182,22 +182,34 @@ class ProductFeedResource extends JsonResource
         return $array;
     }
 
-    public static function bolDescription($html)
+    public static function bolDescription($html): string
     {
-        // decode html entities
-        $html = html_entity_decode($html);
+        if (! $html) {
+            return '';
+        }
 
-        // alle headings omzetten (bol toont dit als H3)
-        $html = preg_replace('/<h[1-6][^>]*>(.*?)<\/h[1-6]>/', "\n\n$1\n", $html);
+        // Decode html entities
+        $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-        // paragrafen naar linebreaks
-        $html = str_replace(['</p>', '<br>', '<br/>', '<br />'], "\n\n", $html);
+        // Alle headings omzetten naar h3
+        $html = preg_replace_callback('/<h[1-6]\b([^>]*)>(.*?)<\/h[1-6]>/is', function ($matches) {
+            $attributes = trim($matches[1] ?? '');
+            $content = $matches[2] ?? '';
 
-        // ongewenste tags strippen maar UL/LI laten bestaan
-        $html = strip_tags($html, '<ul><li>');
+            return '<h3' . ($attributes ? ' ' . $attributes : '') . '>' . $content . '</h3>';
+        }, $html);
 
-        // whitespace opschonen
-        $html = preg_replace("/\n{3,}/", "\n\n", $html);
+        // Alleen deze tags toestaan
+        $html = strip_tags($html, '<p><br><ul><ol><li><strong><b><em><i><h3>');
+
+        // Lege paragrafen opruimen
+        $html = preg_replace('/<p>\s*<\/p>/i', '', $html);
+
+        // Meerdere <br>'s achter elkaar beperken
+        $html = preg_replace('/(?:<br\s*\/?>\s*){3,}/i', '<br><br>', $html);
+
+        // Witruimte tussen tags iets netter maken
+        $html = preg_replace('/>\s+</', '> <', $html);
 
         return trim($html);
     }
