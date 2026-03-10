@@ -20,7 +20,7 @@ class RevenueStats extends StatsOverviewWidget
 
     protected function getHeading(): ?string
     {
-        return Dashboard::getPeriodOptions()[$this->filters['period']];
+        return Dashboard::getPeriodOptions()[$this->filters['period'] ?: 'month'];
     }
 
     public function mount(): void
