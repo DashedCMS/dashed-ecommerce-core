@@ -541,6 +541,10 @@ class ProductGroupResource extends Resource
                     ->counts('products')
                     ->label('Aantal producten')
                     ->sortable(),
+                TextColumn::make('products_sum_stock')
+                    ->label('Totale voorraad')
+                    ->sum('products', 'stock')
+                    ->sortable(),
             ], static::visitableTableColumns()))
             ->reorderable('order')
             ->recordActions([
