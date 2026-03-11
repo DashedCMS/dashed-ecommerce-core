@@ -7,13 +7,13 @@ use Illuminate\Database\Migrations\Migration;
 return new class () extends Migration {
     public function up(): void
     {
+        \Illuminate\Support\Facades\Artisan::call('dashed:clear-old-carts');
+
         Schema::table('dashed__carts', function (Blueprint $table) {
             $table->decimal('total', 10, 2)
                 ->default(0)
                 ->after('user_id');
         });
-
-        \Dashed\DashedEcommerceCore\Models\Cart::where('updated_at', '<', now()->subHours(6))->delete();
 
         foreach(\Dashed\DashedEcommerceCore\Models\Cart::get() as $cart){
             $cart->updateTotal();
