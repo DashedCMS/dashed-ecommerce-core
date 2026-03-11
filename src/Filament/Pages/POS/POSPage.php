@@ -3,6 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
@@ -27,9 +30,10 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 // Ik trek ‘m gelijk met jullie core.
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 
-class POSPage extends Component implements HasSchemas
+class POSPage extends Component implements HasSchemas, HasActions
 {
     use InteractsWithSchemas;
+    use InteractsWithActions;
 
     public $searchQueryInputmode = false;
 
