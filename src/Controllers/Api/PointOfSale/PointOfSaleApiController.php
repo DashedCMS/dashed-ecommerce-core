@@ -687,9 +687,9 @@ class PointOfSaleApiController extends Controller
         $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
 
         // Shipping costs
-        $shippingCosts = (float) $shippingMethod ? $shippingMethod->costsForCart(
+        $shippingCosts = (float) ($shippingMethod ? $shippingMethod->costsForCart(
             ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0])->id ?? null
-        ) : 0;
+        ) : 0);
 
         $total = (float) ($totals['subtotal'] ?? 0) + $shippingCosts;
 
