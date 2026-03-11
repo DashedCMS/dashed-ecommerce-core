@@ -74,13 +74,7 @@ class Cart extends Model
 
     public function updateTotal(): void
     {
-        $total = $this->items()->sum(\DB::raw('unit_price * quantity'));
-
-        if ($this->discountCode) {
-            $total = $this->discountCode->applyDiscount($total);
-        }
-
-        $this->total = $total;
+        $this->total = $this->items()->sum(\DB::raw('unit_price * quantity'));
         $this->saveQuietly();
     }
 }
