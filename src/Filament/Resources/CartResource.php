@@ -37,8 +37,12 @@ class CartResource extends Resource
                     Forms\Components\TextInput::make('type')
                         ->label('Type')
                         ->disabled(),
-                    Forms\Components\TextInput::make('user_id')
+                    Forms\Components\TextInput::make('user')
                         ->label('Gebruiker')
+                        ->disabled(),
+                    Forms\Components\TextInput::make('total')
+                        ->label('Totale waarde')
+                        ->numeric()
                         ->disabled(),
                     Forms\Components\TextInput::make('created_at')
                         ->label('Aangemaakt op')
@@ -76,6 +80,10 @@ class CartResource extends Resource
                     ->label('Gebruiker')
                     ->default('-')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('total')
+                    ->label('Totaal')
+                    ->money('eur')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('items_sum_quantity')
                     ->sum('items', 'quantity')
                     ->label('Items')
