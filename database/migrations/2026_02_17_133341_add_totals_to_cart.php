@@ -13,6 +13,8 @@ return new class () extends Migration {
                 ->after('user_id');
         });
 
+        \Dashed\DashedEcommerceCore\Models\Cart::where('updated_at', '<', now()->subHours(6))->delete();
+
         foreach(\Dashed\DashedEcommerceCore\Models\Cart::get() as $cart){
             $cart->updateTotal();
         }
