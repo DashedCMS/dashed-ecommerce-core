@@ -2326,7 +2326,7 @@
                 this.products = data.products;
                 if (data.discountCode) {
                     this.discountCode = data.discountCode;
-                }else if(data.order){
+                } else if (data.order) {
                     this.showOrdersPopup();
                     this.selectedOrder = data.order;
                 }
@@ -2369,7 +2369,7 @@
                     })
                 }
 
-                if(this.products.length && data.products.length === 0) {
+                if (this.products.length && data.products.length === 0) {
                     this.removeDiscount();
                 }
 
@@ -2705,7 +2705,7 @@
 
         async closePayment() {
             this.loading = true;
-            if(this.selectedOrder){
+            if (this.selectedOrder) {
                 this.clearProducts();
             }
             this.selectedOrder = '';
@@ -2977,7 +2977,7 @@
                         score += 300;
                     }
 
-                    return { ...product, _score: score };
+                    return {...product, _score: score};
                 })
                 .filter(p => p._score > 0)
                 .sort((a, b) => b._score - a._score)
@@ -3060,7 +3060,7 @@
                         score += 300;
                     }
 
-                    return { ...product, _score: score };
+                    return {...product, _score: score};
                 })
                 .filter(p => p._score > 0)
                 .sort((a, b) => b._score - a._score)
@@ -3341,7 +3341,7 @@
         hideOrdersPopup() {
             this.loading = true;
             this.ordersPopup = false;
-            if(this.selectedOrder){
+            if (this.selectedOrder) {
                 this.clearProducts();
             }
             this.selectedOrder = '';
@@ -3352,7 +3352,7 @@
         hideCheckoutPopup() {
             this.loading = true;
             this.checkoutPopup = false;
-            if(this.selectedOrder){
+            if (this.selectedOrder) {
                 this.clearProducts();
             }
             this.selectedOrder = '';

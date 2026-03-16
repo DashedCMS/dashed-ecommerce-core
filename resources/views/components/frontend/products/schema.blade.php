@@ -1,8 +1,11 @@
 <div itemscope itemtype="http://schema.org/Product">
     @php($countryCodes = \Dashed\DashedEcommerceCore\Classes\Countries::getAllSelectedCountryCodes())
     <meta itemprop="name" content="{{$product->name}}">
-    <meta itemprop="description"
-          content="{{strip_tags((($product->short_description ?: ($product->productGroup->short_description ?? '')) ?: cms()->convertToHtml($product->description)) ?: (cms()->convertToHtml($product->productGroup->description ?? '')))}}">
+    @php($description = strip_tags((($product->short_description ?: ($product->productGroup->short_description ?? '')) ?: cms()->convertToHtml($product->description)) ?: (cms()->convertToHtml($product->productGroup->description ?? ''))))
+    @if($description)
+        <meta itemprop="description"
+              content="{{ $description }}">
+    @endif
     <meta itemprop="productID" content="{{$product->id}}">
     <meta itemprop="url" content="{{$product->getUrl()}}">
     <meta itemprop="sku" content="{{$product->sku}}">
@@ -54,10 +57,10 @@
                 </div>
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
 
-{{--                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">--}}
-{{--                    <meta itemprop="minPrice" content="99.01">--}}
-{{--                    <meta itemprop="priceCurrency" content="EUR">--}}
-{{--                </div>--}}
+                {{--                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">--}}
+                {{--                    <meta itemprop="minPrice" content="99.01">--}}
+                {{--                    <meta itemprop="priceCurrency" content="EUR">--}}
+                {{--                </div>--}}
                 <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
                     <meta itemprop="value" content="0.00">
                     <meta itemprop="currency" content="EUR">
@@ -82,10 +85,10 @@
                 </div>
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
 
-{{--                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">--}}
-{{--                    <meta itemprop="maxPrice" content="99.00">--}}
-{{--                    <meta itemprop="priceCurrency" content="EUR">--}}
-{{--                </div>--}}
+                {{--                <div itemprop="eligibleTransactionVolume" itemscope itemtype="http://schema.org/PriceSpecification">--}}
+                {{--                    <meta itemprop="maxPrice" content="99.00">--}}
+                {{--                    <meta itemprop="priceCurrency" content="EUR">--}}
+                {{--                </div>--}}
                 <div itemprop="shippingRate" itemscope itemtype="http://schema.org/MonetaryAmount">
                     <meta itemprop="value"
                           content="{{ Translation::get('max-shipping-price-for-' . $countryCode, 'shipping', '4.95') }}">
@@ -104,7 +107,7 @@
                           content="{{ Translation::get('max-shipping-price-for-' . $countryCode, 'shipping', '4.95') }}">
                     <meta itemprop="currency" content="EUR">
                 </div>
-{{--                <meta itemprop="shippingRateCurrency" content="EUR">--}}
+                {{--                <meta itemprop="shippingRateCurrency" content="EUR">--}}
                 <link itemprop="transitTimeLabel" href="http://schema.org/StandardShipping">
             </div>
         @endforeach

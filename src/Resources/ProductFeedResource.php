@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Resources;
 
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -147,6 +148,17 @@ class ProductFeedResource extends JsonResource
             'height' => $product->height,
             'length' => $product->length,
             'weight' => $product->weight,
+            'filters_title' => collect($attributes)
+                ->map(function ($attribute) {
+
+                    return $attribute;
+                })
+                ->filter()
+                ->implode(Translation::get(
+                    'missing-product-variation-option-divider',
+                    'missing-product-variations',
+                    ' | '
+                )),
 
             // nieuw:
             'attributes' => $attributes,
