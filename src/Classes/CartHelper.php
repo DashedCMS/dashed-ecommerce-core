@@ -723,7 +723,7 @@ class CartHelper
             foreach (self::getAllPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == static::$paymentMethod) {
                     $paymentCosts = $paymentMethod['extra_costs'];
-                    $isPostPayMethod = $paymentMethod['postpay'];
+                    $isPostPayMethod = $paymentMethod['postpay'] && $paymentMethod['psp'] != 'own';
                 }
             }
         }

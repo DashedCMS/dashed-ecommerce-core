@@ -60,6 +60,7 @@ class ProductFilterOptionResource extends Resource
                     ->label('Op voorraad')
                     ->columnSpanFull()
                     ->visible(fn ($record) => $record && $record->productFilter->use_stock)
+                    ->helperText('Als je deze optie op uitverkocht zet, dan kunnen ook producten met "doorverkoop" niet meer verkocht worden.')
                     ->default(true),
                 mediaHelper()->field('image', 'Afbeelding')
                     ->required()

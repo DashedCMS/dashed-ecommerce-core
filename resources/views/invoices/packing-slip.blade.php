@@ -125,6 +125,10 @@
                                 <br>
                                 <small>{{$option['name']}}: {{$option['value']}}</small>
                             @endforeach
+                            @if($orderProduct->is_pre_order)
+                                <br>
+                                <small>{{ Translation::get('pre-order', 'invoice', 'Pre-order') }}</small>
+                            @endif
                         @endif
                     </td>
 

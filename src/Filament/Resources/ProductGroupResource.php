@@ -116,7 +116,7 @@ class ProductGroupResource extends Resource
                     ->reactive(),
                 Select::make('first_selected_product_id')
                     ->label('Eerste geselecteerde product')
-                    ->relationship('firstSelectedProduct', 'name')
+//                    ->relationship('firstSelectedProduct', 'name')
                     ->options(fn ($record) => $record ? $record->products->pluck('name', 'id') : [])
                     ->preload()
                     ->searchable()
