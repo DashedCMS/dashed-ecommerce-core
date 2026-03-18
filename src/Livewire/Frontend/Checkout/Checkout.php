@@ -91,18 +91,21 @@ class Checkout extends Component
     public Collection|array $depositPaymentMethods = [];
     public string $cartType = 'default';
 
+    public ?bool $taxIdValidated = null;
+    public ?string $taxIdValidationMessage = null;
+
     protected ?string $lastZipLookedUp = null;
     protected ?string $lastHouseNrLookedUp = null;
+    protected ?string $lastValidatedTaxId = null;
+    protected ?string $lastValidatedTaxCountry = null;
 
     public function mount(Product $product)
     {
-        // cart instance netjes zetten
         cartHelper()->initialize($this->cartType);
         cartHelper()->setCartType($this->cartType);
 
         $user = auth()->user();
 
-        // Invoice address
         if ($user && $user->invoice_street) {
             $this->invoiceAddress = true;
         } else {
@@ -111,7 +114,6 @@ class Checkout extends Component
                 : true;
         }
 
-        // Company
         if ($user && $user->company_name) {
             $this->isCompany = true;
         } else {
@@ -254,20 +256,29 @@ class Checkout extends Component
 
     public function updated($name, $value)
     {
-        // Adres voor facturatie
         if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'], true)) {
             $this->updateInvoiceAddressByApi();
 
             return;
         }
 
-        // Adres voor levering (heeft impact op verzendkosten)
         if (in_array($name, ['houseNr', 'zipCode'], true)) {
             $this->updateAddressByApi();
         }
 
+        if (in_array($name, ['country', 'taxId', 'company'], true)) {
+            $this->taxIdValidated = null;
+            $this->taxIdValidationMessage = null;
+            $this->lastValidatedTaxId = null;
+            $this->lastValidatedTaxCountry = null;
+
+            $this->resetErrorBag('taxId');
+        }
+
         $fieldsAffectingCart = [
             'country',
+            'company',
+            'taxId',
             'shippingMethod',
             'paymentMethod',
             'depositPaymentMethod',
@@ -399,22 +410,23 @@ class Checkout extends Component
 
     public function fillPrices(): void
     {
-        // Zorg dat cartHelper altijd in goede instance zit
         cartHelper()->initialize($this->cartType);
         cartHelper()->setCartType($this->cartType);
 
         $this->retrievePaymentMethods();
         $this->retrieveShippingMethods();
 
-        cartHelper()->setShippingMethod($this->shippingMethod);
-        cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
-        cartHelper()->setPaymentMethod($this->paymentMethod);
+        $shippingZone = ShoppingCart::getShippingZoneByCountry($this->country);
+        $vatReverseCharge = $this->shouldApplyVatReverseCharge(validateTaxId: true);
 
-        // Deposit methods hangen van payment af
+        cartHelper()->setShippingMethod($this->shippingMethod);
+        cartHelper()->setShippingZone($shippingZone->id ?? null);
+        cartHelper()->setPaymentMethod($this->paymentMethod);
+        cartHelper()->setVatReverseCharge($vatReverseCharge);
+
         $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
         cartHelper()->setDepositPaymentMethod($this->depositPaymentMethod);
 
-        // Recalc alles
         cartHelper()->updateData();
 
         $this->subtotal = cartHelper()->getSubtotal();
@@ -430,6 +442,25 @@ class Checkout extends Component
         $this->depositAmount = cartHelper()->getDepositAmount();
 
         $this->getSuggestedProducts();
+    }
+
+    public function shouldApplyVatReverseCharge(bool $validateTaxId = true): bool
+    {
+        if (! filled($this->company) || ! filled($this->taxId) || ! filled($this->country)) {
+            return false;
+        }
+
+        $shippingZone = ShoppingCart::getShippingZoneByCountry($this->country);
+
+        if (! $shippingZone || ! $shippingZone->vat_reverse_charge) {
+            return false;
+        }
+
+        if (! $validateTaxId) {
+            return true;
+        }
+
+        return $this->validateTaxIdWithVies();
     }
 
     public function rules()
@@ -564,6 +595,24 @@ class Checkout extends Component
                 ->send();
 
             return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
+        }
+
+        $shippingZone = ShoppingCart::getShippingZoneByCountry($this->country);
+
+        if (
+            $shippingZone?->vat_reverse_charge
+            && filled($this->company)
+            && filled($this->taxId)
+            && ! $this->validateTaxIdWithVies()
+        ) {
+            $this->addError('taxId', $this->taxIdValidationMessage);
+
+            Notification::make()
+                ->danger()
+                ->title($this->taxIdValidationMessage)
+                ->send();
+
+            return $this->dispatch('showAlert', 'error', $this->taxIdValidationMessage);
         }
 
         foreach (ecommerce()->builder('fulfillmentProviders') as $fulfillmentProvider) {
@@ -726,7 +775,7 @@ class Checkout extends Component
         $order->country = $this->country;
         $order->marketing = $this->marketing;
         $order->company_name = $this->company;
-        $order->btw_id = $this->taxId;
+        $order->btw_id = $this->normalizeTaxId($this->taxId);
         $order->note = $this->note;
         $order->invoice_street = $this->invoiceStreet;
         $order->invoice_house_nr = $this->invoiceHouseNr;
@@ -751,6 +800,7 @@ class Checkout extends Component
         $order->vat_percentages = cartHelper()->getTaxPercentages();
         $order->discount = cartHelper()->getDiscount();
         $order->status = 'pending';
+        $order->vat_reverse_charge = $this->shouldApplyVatReverseCharge(validateTaxId: true);
 
         $gaUserId = preg_replace("/^.+\.(.+?\..+?)$/", '\\1', @$_COOKIE['_ga']);
         $order->ga_user_id = $gaUserId;
@@ -782,8 +832,21 @@ class Checkout extends Component
             $orderProduct->name = $cartItem->model->name;
             $orderProduct->sku = $cartItem->model->sku;
 
-            $orderProduct->price = Product::getShoppingCartItemPrice($cartItem, cartHelper()->getDiscountCode());
-            $orderProduct->discount = Product::getShoppingCartItemPrice($cartItem) - $orderProduct->price;
+            $originalPrice = (float) Product::getShoppingCartItemPrice($cartItem);
+            $discountedPrice = (float) Product::getShoppingCartItemPrice($cartItem, cartHelper()->getDiscountCode());
+
+            if ($order->vat_reverse_charge) {
+                $vatRate = $this->getVatRateForProduct($cartItem->model);
+
+                $originalPrice = $this->getPriceExcludingVat($originalPrice, $vatRate);
+                $discountedPrice = $this->getPriceExcludingVat($discountedPrice, $vatRate);
+            }
+
+            $orderProduct->price = $discountedPrice;
+            $orderProduct->discount = round($originalPrice - $discountedPrice, 2);
+            $orderProduct->vat_rate = $order->vat_reverse_charge
+                ? 0
+                : $this->getVatRateForProduct($cartItem->model);
 
             $productExtras = [];
             foreach ($cartItem->options['options'] ?? [] as $optionId => $option) {
@@ -840,6 +903,7 @@ class Checkout extends Component
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $paymentMethod['name'];
             $orderProduct->price = $paymentCosts;
+            $orderProduct->vat_rate = $order->vat_reverse_charge ? 0 : 21;
 
             if ($order->paymentMethod) {
                 $orderProduct->btw = cartHelper()->getVatForPaymentMethod();
@@ -957,6 +1021,187 @@ class Checkout extends Component
         }
 
         return redirect($transaction['redirectUrl'], 303);
+    }
+
+    protected function normalizeTaxId(?string $taxId): string
+    {
+        return strtoupper(preg_replace('/\s+/', '', (string) $taxId));
+    }
+
+    protected function getCountryCodeForVies(?string $country): ?string
+    {
+        if (! $country) {
+            return null;
+        }
+
+        $country = trim((string) $country);
+
+        $map = [
+            'nederland' => 'NL',
+            'netherlands' => 'NL',
+            'belgië' => 'BE',
+            'belgie' => 'BE',
+            'belgium' => 'BE',
+            'duitsland' => 'DE',
+            'germany' => 'DE',
+            'frankrijk' => 'FR',
+            'france' => 'FR',
+            'spanje' => 'ES',
+            'spain' => 'ES',
+            'italië' => 'IT',
+            'italie' => 'IT',
+            'italy' => 'IT',
+            'oostenrijk' => 'AT',
+            'austria' => 'AT',
+            'polen' => 'PL',
+            'poland' => 'PL',
+            'ierland' => 'IE',
+            'ireland' => 'IE',
+            'portugal' => 'PT',
+            'zweden' => 'SE',
+            'sweden' => 'SE',
+            'denemarken' => 'DK',
+            'denmark' => 'DK',
+            'finland' => 'FI',
+            'roemenië' => 'RO',
+            'roemenie' => 'RO',
+            'romania' => 'RO',
+            'tsjechië' => 'CZ',
+            'tsjechie' => 'CZ',
+            'czech republic' => 'CZ',
+            'slowakije' => 'SK',
+            'slovakia' => 'SK',
+            'hongarije' => 'HU',
+            'hungary' => 'HU',
+            'bulgarije' => 'BG',
+            'bulgaria' => 'BG',
+            'griekenland' => 'EL',
+            'greece' => 'EL',
+            'kroatië' => 'HR',
+            'kroatie' => 'HR',
+            'croatia' => 'HR',
+            'slovenië' => 'SI',
+            'slovenie' => 'SI',
+            'slovenia' => 'SI',
+            'litouwen' => 'LT',
+            'lithuania' => 'LT',
+            'letland' => 'LV',
+            'latvia' => 'LV',
+            'estland' => 'EE',
+            'estonia' => 'EE',
+            'luxemburg' => 'LU',
+            'luxembourg' => 'LU',
+            'malta' => 'MT',
+            'cyprus' => 'CY',
+        ];
+
+        $key = mb_strtolower($country);
+
+        if (isset($map[$key])) {
+            return $map[$key];
+        }
+
+        if (strlen($country) === 2) {
+            return strtoupper($country);
+        }
+
+        return null;
+    }
+
+    protected function validateTaxIdWithVies(): bool
+    {
+        $taxId = $this->normalizeTaxId($this->taxId);
+        $countryCode = $this->getCountryCodeForVies($this->country);
+
+        if (! $taxId || ! $countryCode) {
+            $this->taxIdValidated = false;
+            $this->taxIdValidationMessage = Translation::get(
+                'invalid-tax-id-missing-data',
+                'checkout',
+                'Vul een geldig btw-nummer en land in.'
+            );
+
+            return false;
+        }
+
+        if (
+            $this->lastValidatedTaxId === $taxId
+            && $this->lastValidatedTaxCountry === $countryCode
+            && $this->taxIdValidated !== null
+        ) {
+            return (bool) $this->taxIdValidated;
+        }
+
+        $this->lastValidatedTaxId = $taxId;
+        $this->lastValidatedTaxCountry = $countryCode;
+        $this->taxIdValidationMessage = null;
+
+        try {
+            $number = $taxId;
+
+            if (str_starts_with($number, $countryCode)) {
+                $number = substr($number, 2);
+            }
+
+            $number = preg_replace('/[^A-Z0-9]/', '', $number);
+
+            $response = Http::timeout(15)
+                ->acceptJson()
+                ->get("https://ec.europa.eu/taxation_customs/vies/rest-api/ms/{$countryCode}/vat/{$number}", []);
+
+            if (! $response->successful()) {
+                $this->taxIdValidated = false;
+                $this->taxIdValidationMessage = Translation::get(
+                    'invalid-tax-id-vies-unavailable',
+                    'checkout',
+                    'Het btw-nummer kon niet worden gecontroleerd. Controleer het nummer en probeer het opnieuw.'
+                );
+
+                return false;
+            }
+
+            $data = $response->json();
+
+            $isValid = (bool) data_get($data, 'isValid', false);
+
+            $this->taxIdValidated = $isValid;
+            $this->taxIdValidationMessage = $isValid
+                ? null
+                : Translation::get(
+                    'invalid-tax-id-vies',
+                    'checkout',
+                    'Het ingevulde btw-nummer is niet geldig.'
+                );
+
+            return $isValid;
+        } catch (\Throwable $e) {
+            $this->taxIdValidated = false;
+            $this->taxIdValidationMessage = Translation::get(
+                'invalid-tax-id-vies-unavailable',
+                'checkout',
+                'Het btw-nummer kon niet worden gecontroleerd. Controleer het nummer en probeer het opnieuw.'
+            );
+
+            return false;
+        }
+    }
+
+    protected function getPriceExcludingVat(float $price, float $vatRate): float
+    {
+        if ($vatRate <= 0) {
+            return round($price, 2);
+        }
+
+        if (! Customsetting::get('taxes_prices_include_taxes')) {
+            return round($price, 2);
+        }
+
+        return round($price / (100 + $vatRate) * 100, 2);
+    }
+
+    protected function getVatRateForProduct(Product $product): float
+    {
+        return (float) ($product->options['vat_rate'] ?? $product->vat_rate ?? 0);
     }
 
     public function render()

@@ -15,4 +15,13 @@ class CurrencyHelper
 
         return CurrencyShowTypes::from(Customsetting::get('currency_format_type', null, 'type1'))->getValue($amount);
     }
+
+    public static function formatPriceForPDF($amount): string
+    {
+        if (is_null($amount)) {
+            return '';
+        }
+
+        return '€ ' . number_format($amount, 2, ',', '.');
+    }
 }

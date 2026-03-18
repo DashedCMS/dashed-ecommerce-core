@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Carbon\Carbon;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
@@ -101,6 +102,10 @@ class ExportInvoicesJob implements ShouldQueue
                 ];
             }
 
+            $normalZoneTotals = [];
+            $ossTotals = [];
+            $icpTotals = [];
+
             foreach ($orders as $order) {
                 $subTotal += $order->subtotal;
                 $btw += $order->btw;
@@ -111,6 +116,7 @@ class ExportInvoicesJob implements ShouldQueue
                     if (! isset($vatPercentages[number_format($percentage, 0)])) {
                         $vatPercentages[number_format($percentage, 0)] = 0;
                     }
+
                     $vatPercentages[number_format($percentage, 0)] += $amount;
                 }
 
@@ -135,9 +141,109 @@ class ExportInvoicesJob implements ShouldQueue
                         ];
                     }
                 }
+
+                $shippingZone = $order->shippingMethod?->shippingZone;
+                if(!$shippingZone){
+                    $shippingZone = ShoppingCart::getShippingZoneByCountry($order->invoice_country ?: $order->country);
+                }
+                $country = $order->invoice_country ?: $order->country ?: 'Onbekend';
+                $zoneName = $shippingZone->name ?? 'Onbekende zone';
+
+                $zoneReverseCharge = (bool) ($shippingZone->vat_reverse_charge ?? false);
+
+                // ICP / verlegd: zone heeft reverse charge aan
+                if ($zoneReverseCharge) {
+                    $icpKey = $country . '|' . ($order->btw_id ?: 'geen-btw-nummer');
+
+                    if (! isset($icpTotals[$icpKey])) {
+                        $icpTotals[$icpKey] = [
+                            'country' => $country,
+                            'vat_number' => $order->btw_id ?: '-',
+                            'revenue' => 0,
+                            'zone' => $zoneName,
+                        ];
+                    }
+
+                    $icpTotals[$icpKey]['revenue'] += $order->subtotal;
+
+                    continue;
+                }
+
+                // Buitenlandse btw / OSS-achtig: zone zonder reverse charge, maar wel buitenlandse btw
+                $hasForeignVat = false;
+                foreach ($order->vat_percentages ?: [] as $percentage => $amount) {
+                    if ((float) $amount > 0 && ! in_array((int) $percentage, [9, 21], true)) {
+                        $hasForeignVat = true;
+                    }
+                }
+
+                if ($hasForeignVat) {
+                    $ossKey = $zoneName ?: 'Onbekende zone';
+
+                    if (! isset($ossTotals[$ossKey])) {
+                        $ossTotals[$ossKey] = [
+                            'zone' => $zoneName ?: 'Onbekende zone',
+                            'ex_vat' => 0,
+                            'vat' => 0,
+                            'incl_vat' => 0,
+                        ];
+                    }
+
+                    $ossTotals[$ossKey]['ex_vat'] += $order->subtotal;
+                    $ossTotals[$ossKey]['vat'] += $order->btw;
+                    $ossTotals[$ossKey]['incl_vat'] += $order->total;
+
+                    continue;
+                }
+
+                // Normale zones alleen per verzendzone
+                $normalKey = $zoneName ?: 'Onbekende zone';
+
+                if (! isset($normalZoneTotals[$normalKey])) {
+                    $normalZoneTotals[$normalKey] = [
+                        'zone' => $zoneName ?: 'Onbekende zone',
+                        'ex_vat' => 0,
+                        'vat' => 0,
+                        'incl_vat' => 0,
+                    ];
+                }
+
+                $normalZoneTotals[$normalKey]['ex_vat'] += $order->subtotal;
+                $normalZoneTotals[$normalKey]['vat'] += $order->btw;
+                $normalZoneTotals[$normalKey]['incl_vat'] += $order->total;
             }
 
-            $view = View::make('dashed-ecommerce-core::invoices.combined-invoices', compact('subTotal', 'btw', 'vatPercentages', 'paymentCosts', 'shippingCosts', 'discount', 'total', 'productSales', 'startDate', 'endDate'));
+            $normalZoneTotals = collect($normalZoneTotals)
+                ->sortBy('zone')
+                ->values()
+                ->all();
+
+            $ossTotals = collect($ossTotals)
+                ->sortBy('zone')
+                ->values()
+                ->all();
+
+            $icpTotals = collect($icpTotals)->sortBy([
+                ['country', 'asc'],
+                ['vat_number', 'asc'],
+            ])->values()->all();
+
+            $view = View::make('dashed-ecommerce-core::invoices.combined-invoices', compact(
+                'subTotal',
+                'btw',
+                'vatPercentages',
+                'paymentCosts',
+                'shippingCosts',
+                'discount',
+                'total',
+                'productSales',
+                'startDate',
+                'endDate',
+                'normalZoneTotals',
+                'ossTotals',
+                'icpTotals',
+            ));
+
             $contents = $view->render();
             $pdf = App::make('dompdf.wrapper');
             $pdf->loadHTML($contents);
@@ -148,6 +254,6 @@ class ExportInvoicesJob implements ShouldQueue
         }
 
         Mail::to($this->email)->send(new FinanceExportMail($this->hash, 'Facturen van ' . ($startDate ? $startDate->format('d-m-Y') : 'het begin') . ' tot ' . ($endDate ? $endDate->format('d-m-Y') : 'nu')));
-        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
+//        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }

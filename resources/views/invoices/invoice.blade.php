@@ -58,7 +58,7 @@
                 @endif
                 @if($logo)
                     <img
-                        src="{{mediaHelper()->getSingleMedia($logo, 'original')->url ?? ''}}"
+                        src="{{ mediaHelper()->getSingleMedia($logo, 'original')->url ?? '' }}"
                         class="logo"
                         alt=""
                     >
@@ -109,8 +109,8 @@
             </tr>
 
             <tr>
-                <td>{{ CurrencyHelper::formatPrice($order->paidAmount) }}</td>
-                <td>{{ CurrencyHelper::formatPrice($order->openAmount) }}</td>
+                <td>{{ CurrencyHelper::formatPriceForPDF($order->paidAmount) }}</td>
+                <td>{{ CurrencyHelper::formatPriceForPDF($order->openAmount) }}</td>
             </tr>
         </table>
     @endif
@@ -132,17 +132,17 @@
                         @if($orderProduct->product_extras)
                             @foreach($orderProduct->product_extras as $option)
                                 <br>
-                                <small>{{$option['name']}}: {{$option['value']}}</small>
+                                <small>{{ $option['name'] }}: {{ $option['value'] }}</small>
                             @endforeach
                         @endif
                     </td>
 
                     <td class="numeric">
-                        {{$orderProduct->quantity}}x
+                        {{ $orderProduct->quantity }}x
                     </td>
 
                     <td class="numeric">
-                        {{CurrencyHelper::formatPrice($orderProduct->price, 'EUR', true)}}
+                        {{ CurrencyHelper::formatPriceForPDF($orderProduct->price, 'EUR', true) }}
                     </td>
                 </tr>
             @endforeach
@@ -152,7 +152,19 @@
     <div class="order">
         <h2>{{ Translation::get('totals', 'invoice', 'Totalen') }}</h2>
 
-        @if((!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice))
+        @if($order->vat_reverse_charge)
+            <p class="total">
+                {{ Translation::get('vat-shifted', 'invoice', 'BTW verlegd') . ': ' . CurrencyHelper::formatPriceForPDF(0, 'EUR', true) }}
+            </p>
+
+{{--            <p class="total">--}}
+{{--                {{ Translation::get(--}}
+{{--                    'vat-reverse-charge-note',--}}
+{{--                    'invoice',--}}
+{{--                    'BTW verlegd naar afnemer (artikel 44 en 196 EU btw-richtlijn)'--}}
+{{--                ) }}--}}
+{{--            </p>--}}
+        @elseif((!$order->shippingMethod || !$order->shippingMethod->shippingZone->hide_vat_on_invoice))
             @if(count($order->vat_percentages ?? []) > 1)
                 <table>
                     <tr>
@@ -164,36 +176,55 @@
                     @foreach($order->vat_percentages as $vatPercentage => $vatAmount)
                         <tr>
                             <td colspan="2"></td>
-                            <td class="numeric">{{ Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
+                            <td class="numeric">
+                                {{ Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
                                     'percentage' => number_format($vatPercentage, 0),
-                                ]) }}</td>
-                            <td class="numeric">{{ CurrencyHelper::formatPrice($vatAmount, 'EUR', true) }}</td>
+                                ]) }}
+                            </td>
+                            <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($vatAmount, 'EUR', true) }}</td>
                         </tr>
                     @endforeach
                 </table>
             @endif
 
-            <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($order->vat_percentages ?? []) == 1 ? ' ' . array_key_first($order->vat_percentages) . '%' : '') .  ': ' . CurrencyHelper::formatPrice($order->btw, 'EUR', true) }}</p>
+            <p class="total">
+                {{ Translation::get('vat', 'invoice', 'BTW') . (count($order->vat_percentages ?? []) == 1 ? ' ' . array_key_first($order->vat_percentages) . '%' : '') . ': ' . CurrencyHelper::formatPriceForPDF($order->btw, 'EUR', true) }}
+            </p>
         @endif
 
-
-        <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPrice($order->subtotal, 'EUR', true) }}</p>
+        <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPriceForPDF($order->subtotal, 'EUR', true) }}</p>
 
         @if($order->discount != 0.00)
-            <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPrice($order->discount, 'EUR', true) }}</p>
+            <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPriceForPDF($order->discount, 'EUR', true) }}</p>
         @endif
 
-        <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPrice($order->total, 'EUR', true) }}</p>
+        <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPriceForPDF($order->total, 'EUR', true) }}</p>
     </div>
 
-    @if ($order->note)
+    @if ($order->note || $order->vat_reverse_charge)
         <table class="table-note">
             <tr>
                 <th>{{ Translation::get('note', 'invoice', 'Opmerking') }}</th>
             </tr>
 
             <tr>
-                <td>{{ $order->note }}</td>
+                <td>
+                    @if($order->note)
+                        {{ $order->note }}
+                    @endif
+
+                    @if($order->note && $order->vat_reverse_charge)
+                        <br><br>
+                    @endif
+
+                    @if($order->vat_reverse_charge)
+                        {{ Translation::get(
+                            'vat-reverse-charge-note',
+                            'invoice',
+                            'BTW verlegd naar afnemer (artikel 44 en 196 EU btw-richtlijn)'
+                        ) }}
+                    @endif
+                </td>
             </tr>
         </table>
     @endif

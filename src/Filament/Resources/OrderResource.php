@@ -193,7 +193,7 @@ class OrderResource extends Resource
                     ->label('Btw ID')
                     ->maxLength(255),
             ])
-            ->hiddenOn(ViewOrder::class)
+//            ->hiddenOn(ViewOrder::class)
             ->columns([
                 'default' => 1,
                 'lg' => 2,

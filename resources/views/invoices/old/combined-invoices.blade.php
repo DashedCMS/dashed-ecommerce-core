@@ -196,7 +196,7 @@
                             {{$productSale['name']}} {{$productSale['quantity']}}x
                         </td>
                         <td>
-                            {{CurrencyHelper::formatPrice($productSale['totalPrice'], 'EUR', true)}}
+                            {{CurrencyHelper::formatPriceForPDF($productSale['totalPrice'], 'EUR', true)}}
                         </td>
                     </tr>
                 @endif
@@ -211,7 +211,7 @@
                     {{Translation::get('subtotal', 'invoice', 'Subtotal')}}
                 </td>
                 <td>
-                    {{CurrencyHelper::formatPrice($subTotal, 'EUR', true)}}
+                    {{CurrencyHelper::formatPriceForPDF($subTotal, 'EUR', true)}}
                 </td>
             </tr>
             @foreach($vatPercentages as $vatPercentage => $vatAmount)
@@ -222,7 +222,7 @@
                         ]) . ':'}}
                     </td>
                     <td>
-                        {{CurrencyHelper::formatPrice($vatAmount, 'EUR', true)}}
+                        {{CurrencyHelper::formatPriceForPDF($vatAmount, 'EUR', true)}}
                     </td>
                 </tr>
             @endforeach
@@ -232,7 +232,7 @@
                         {{Translation::get('btw', 'invoice', 'BTW')}}
                     </td>
                     <td>
-                        {{CurrencyHelper::formatPrice($btw, 'EUR', true)}}
+                        {{CurrencyHelper::formatPriceForPDF($btw, 'EUR', true)}}
                     </td>
                 </tr>
             @endif
@@ -242,7 +242,7 @@
             {{--                </td>--}}
             {{--                <td>--}}
             {{--                    @if($shippingCosts != 0.00)--}}
-            {{--                        {{CurrencyHelper::formatPrice($shippingCosts, 'EUR', true)}} @else {{Translation::get('free-shipping', 'invoice', 'Free')}} @endif--}}
+            {{--                        {{CurrencyHelper::formatPriceForPDF($shippingCosts, 'EUR', true)}} @else {{Translation::get('free-shipping', 'invoice', 'Free')}} @endif--}}
             {{--                </td>--}}
             {{--            </tr>--}}
             {{--            @if($paymentCosts != 0.00)--}}
@@ -251,7 +251,7 @@
             {{--                        {{Translation::get('payment-costs', 'invoice', 'Betalingsmethode kosten')}}:--}}
             {{--                    </td>--}}
             {{--                    <td>--}}
-            {{--                        {{CurrencyHelper::formatPrice($paymentCosts, 'EUR', true)}}--}}
+            {{--                        {{CurrencyHelper::formatPriceForPDF($paymentCosts, 'EUR', true)}}--}}
             {{--                    </td>--}}
             {{--                </tr>--}}
             {{--            @endif--}}
@@ -261,7 +261,7 @@
                         {{Translation::get('discount', 'invoice', 'Discount')}}:
                     </td>
                     <td>
-                        {{CurrencyHelper::formatPrice($discount, 'EUR', true)}}
+                        {{CurrencyHelper::formatPriceForPDF($discount, 'EUR', true)}}
                     </td>
                 </tr>
             @endif
@@ -270,7 +270,7 @@
                     {{Translation::get('total', 'invoice', 'Total')}}:
                 </td>
                 <td>
-                    {{CurrencyHelper::formatPrice($total, 'EUR', true)}}
+                    {{CurrencyHelper::formatPriceForPDF($total, 'EUR', true)}}
                 </td>
             </tr>
         </table>

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use Filament\Schemas\Components\Utilities\Get;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -34,8 +35,8 @@ class ShippingZoneResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static bool $shouldRegisterNavigation = false;
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-truck';
-    protected static string | UnitEnum | null $navigationGroup = 'Content';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
+    protected static string|UnitEnum|null $navigationGroup = 'Content';
     protected static ?string $navigationLabel = 'Verzendzones';
     protected static ?string $label = 'Verzendzone';
     protected static ?string $pluralLabel = 'Verzendzones';
@@ -58,11 +59,11 @@ class ShippingZoneResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(! (Sites::getAmountOfSites() > 1))
+                            ->hidden(!(Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(! (Sites::getAmountOfSites() > 1))
-                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
+                    ->hidden(!(Sites::getAmountOfSites() > 1))
+                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
@@ -71,6 +72,7 @@ class ShippingZoneResource extends Resource
                             ->maxLength(100),
                         TextInput::make('search_fields')
                             ->label('Voer extra woorden in waarop deze verzendzone geactiveerd mag worden, woorden scheiden met een komma')
+                            ->helperText('Alleen relevant als land veld geen select box is.')
                             ->maxLength(255),
                         Toggle::make('hide_vat_on_invoice')
                             ->label('Verberg BTW op de factuur bij het kiezen van deze verzendzone'),
@@ -90,6 +92,20 @@ class ShippingZoneResource extends Resource
                             ->label('Deactiveer betalingsmethodes voor deze verzendzone')
                             ->multiple()
                             ->options(collect(PaymentMethods::get())->pluck('name', 'id')->toArray()),
+                        Toggle::make('vat_reverse_charge')
+                            ->label('Deze verzendzone heeft een BTW verleggingsregeling'),
+                        Toggle::make('country_specific_vat')
+                            ->reactive()
+                            ->label('Deze verzendzone heeft een land specifieke BTW percentage')
+                            ->helperText('Gebruik deze optie indien dit nodig is voor de OSS (vanaf 10.000 ex btw omzet in alle buitenlandse EU landen)'),
+                        TextInput::make('country_specific_vat_rate')
+                            ->visible(fn(Get $get) => $get('country_specific_vat'))
+                            ->required()
+                            ->nullable()
+                            ->numeric()
+                            ->suffix('%')
+                            ->minValue(0)
+                            ->maxValue(100),
                     ]),
             ]);
     }
@@ -105,7 +121,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(! (Sites::getAmountOfSites() > 1)),
+                    ->hidden(!(Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //

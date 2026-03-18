@@ -140,6 +140,7 @@
         .numeric {
             text-align: right;
             font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
 
         .total {
