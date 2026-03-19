@@ -83,6 +83,8 @@
                     </span>
                         <input autofocus x-model="searchProductQuery"
                                id="search-product-query"
+                               wire:loading.disabled
+                               wire:target="searchProducts"
                                x-bind:class="loading ? 'bg-gray-200' : 'bg-white'"
                                :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                placeholder="Zoek een product op naam, SKU of barcode..."

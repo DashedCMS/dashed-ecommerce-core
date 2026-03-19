@@ -1,15 +1,14 @@
 <div>
     @if(count($this->cartItems))
         <div class="relative overflow-hidden">
-            <div
-                class="absolute right-0 top-0 hidden h-full w-1/2 bg-gradient-to-tr from-primary-700 to-primary-300 lg:block"
-                aria-hidden="true"></div>
+            <div class="absolute right-0 top-0 hidden h-full w-1/2 bg-gradient-to-tr from-secondary to-primary lg:block bg-pattern-white"
+                 aria-hidden="true"></div>
             <section class="relative py-12 overflow-hidden lg:py-24">
                 <x-container>
                     <div class="relative">
                         <header>
                             <h1 class="text-2xl font-bold tracking-tight lg:text-4xl">{{ Translation::get('checkout-now', 'checkout', 'Afrekenen') }}</h1>
-                            <a href="{{ShoppingCart::getCartUrl()}}" class="text-primary-500 hover:text-primary-500/70">
+                            <a href="{{ShoppingCart::getCartUrl()}}" class="text-primary hover:text-primary/70">
                                 {{Translation::get('back-to-cart', 'checkout', 'Terug naar winkelwagen')}}
                             </a>
                         </header>
@@ -26,13 +25,13 @@
                                         wire:submit="submit"
                                     >
                                         <div class="lg:col-span-2">
-                                            <h2 class="text-xl font-bold text-primary-500">{{ Translation::get('contact-information', 'checkout', 'Contact informatie') }}</h2>
+                                            <h2 class="text-xl font-bold text-primary">{{ Translation::get('contact-information', 'checkout', 'Contact informatie') }}</h2>
 
                                             @if(Auth::guest() && $accountRequired == 2)
                                                 <p class="text-black">
                                                     {{Translation::get('already-have-account', 'checkout', 'Heb je al een account?')}}
                                                     <a href="{{AccountHelper::getAccountUrl()}}"
-                                                       class="text-primary-500 hover:text-primary-500/70">{{Translation::get('login', 'checkout', 'Inloggen')}}</a>
+                                                       class="text-primary hover:text-primary/70">{{Translation::get('login', 'checkout', 'Inloggen')}}</a>
                                                 </p>
                                             @endif
                                         </div>
@@ -109,28 +108,16 @@
                                             />
                                         </div>
 
-                                        @foreach($customFields as $key => $customField)
-                                            <x-fields.input
-                                                :required="$customField['required']"
-                                                :type="$customField['type']"
-                                                :model="'customFieldValues.' . $key"
-                                                :id="$key"
-                                                :label="$customField['label']"
-                                                placeholder="{{ $customField['placeholder'] }}"
-                                            />
-                                        @endforeach
-
                                         <div class="grid lg:grid-cols-2 gap-2 my-6 lg:col-span-2">
-                                            <input
-                                                placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
-                                                class="custom-form-input"
-                                                wire:model="discountCode">
+                                            <input placeholder="{{Translation::get('add-discount-code', 'cart', 'Voeg kortingscode toe')}}"
+                                                   class="form-input"
+                                                   wire:model="discountCode">
                                             <button type="button" wire:click="applyDiscountCode"
                                                     class="w-full button button--primary"
                                                     aria-label="Apply button">{{Translation::get('add-discount', 'cart', 'Add discount code')}}</button>
                                         </div>
 
-                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary-500 border-black/5">
+                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('shipping-information', 'checkout', 'Verzend informatie') }}
                                         </h2>
 
@@ -219,7 +206,7 @@
                                             />
                                         </div>
                                         @if($invoiceAddress)
-                                            <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary-500 border-black/5">
+                                            <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                                 {{ Translation::get('invoice-address', 'checkout', 'Factuur adres') }}
                                             </h2>
                                             <x-fields.input
@@ -254,21 +241,17 @@
                                                 :label="Translation::get('enter-city', 'checkout', 'Vul je stad in')"
                                                 placeholder="{{Translation::get('city', 'checkout', 'Stad')}}"
                                             />
-
-                                            <x-fields.select
+                                            <x-fields.input
                                                 required
+                                                type="text"
                                                 model="invoiceCountry"
                                                 id="invoiceCountry"
                                                 :label="Translation::get('enter-country', 'checkout', 'Vul je land in')"
                                                 placeholder="{{Translation::get('country', 'checkout', 'Land')}}"
-                                            >
-                                                @foreach($countryList as $country)
-                                                    <option value="{{ $country }}">{{ $country }}</option>
-                                                @endforeach
-                                            </x-fields.select>
+                                            />
                                         @endif
 
-                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary-500 border-black/5">
+                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('payment-method', 'checkout', 'Betaalmethode') }}
                                         </h2>
 
@@ -276,17 +259,16 @@
                                             @if(count($paymentMethods))
                                                 @foreach($paymentMethods as $thisPaymentMethod)
                                                     <div class="grid gap-2">
-                                                        <label
-                                                            class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
+                                                        <label class="p-4 cursor-pointer bg-primary/10 hover:bg-primary/50  rounded-lg relative flex items-center">
                                                             <input required
                                                                    id="payment_method{{$thisPaymentMethod['id']}}"
-                                                                   class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
+                                                                   class="transition shadow-inner focus:ring-primary text-primary border-black/20 shadow-black/5 peer"
                                                                    name="payment_method" type="radio"
                                                                    wire:model.live="paymentMethod"
                                                                    value="{{$thisPaymentMethod['id']}}">
 
                                                             <div
-                                                                class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                                class="absolute inset-0 transition rounded-lg peer-checked:ring-2  peer-checked:ring-primary peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
                                                             <span class="ml-3 mr-auto">
                                                             {{ $thisPaymentMethod['name'] }}
@@ -304,17 +286,15 @@
                                                             @endif
                                                         </label>
                                                         @if($paymentMethod == $thisPaymentMethod['id'] && ($thisPaymentMethod['additional_info'] || count($depositPaymentMethods)))
-                                                            @if($thisPaymentMethod['additional_info'])
-                                                                <div
-                                                                    class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
+                                                            <div class="bg-white ring-2 ring-primary rounded-lg px-4 py-2 mt-2 text-black">
+                                                                @if($thisPaymentMethod['additional_info'])
                                                                     <p class="payment-method-content">
                                                                         {!! nl2br($thisPaymentMethod['additional_info']) !!}
                                                                     </p>
-                                                                </div>
-                                                            @endif
+                                                                @endif
+                                                            </div>
                                                             @if(count($depositPaymentMethods) && $depositAmount > 0)
-                                                                <div
-                                                                    class="bg-white ring-2 ring-primary-500 rounded-lg px-4 py-2 mt-2 text-black">
+                                                                <div class="bg-white ring-2 ring-primary rounded-lg px-4 py-2 mt-2 text-black">
                                                                     <div>
                                                                         <fieldset role="group">
                                                                             <label
@@ -327,18 +307,17 @@
                                                                             </label>
                                                                             <div class="mt-4 space-y-4">
                                                                                 @foreach($depositPaymentMethods as $thisDepositPaymentMethod)
-                                                                                    <label
-                                                                                        class="p-4 cursor-pointer hover:bg-primary-500/50 rounded-lg relative flex items-center">
+                                                                                    <label class="p-4 cursor-pointer hover:bg-primary/50 rounded-lg relative flex items-center">
                                                                                         <input required
                                                                                                id="depositPaymentMethod{{$thisDepositPaymentMethod['id']}}"
-                                                                                               class="transition shadow-inner focus:ring-primary-500 text-primary-500 border-black/20 shadow-black/5 peer"
+                                                                                               class="transition shadow-inner focus:ring-primary text-primary border-black/20 shadow-black/5 peer"
                                                                                                name="depositPaymentMethod"
                                                                                                type="radio"
                                                                                                wire:model.live="depositPaymentMethod"
                                                                                                value="{{$thisDepositPaymentMethod['id']}}">
 
                                                                                         <div
-                                                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary-500 peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
                                                                                         <span class="ml-3 mr-auto">
                                                             {{ $thisDepositPaymentMethod['name'] }}
@@ -370,40 +349,31 @@
                                             @endif
                                         </div>
 
-                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary-500 border-black/5">
+                                        <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('shipping-method', 'checkout', 'Verzend methode') }}
                                         </h2>
 
                                         @if($country && count($shippingMethods))
                                             <div class="grid gap-4 lg:grid-cols-2 lg:col-span-2">
                                                 @foreach($shippingMethods as $thisShippingMethod)
-                                                    <label
-                                                        class="relative p-4 cursor-pointer hover:bg-primary/50 rounded-lg">
-                                                        <div class="flex items-center">
-                                                            <input id="shipping_method{{$thisShippingMethod['id']}}"
-                                                                   name="shipping_method" required
-                                                                   class="transition shadow-inner focus:ring-primary text-primary border-black/20 shadow-black/5 peer"
-                                                                   type="radio"
-                                                                   value="{{ $thisShippingMethod['id'] }}"
-                                                                   wire:model.live="shippingMethod">
+                                                    <label class="relative flex items-center p-4 cursor-pointer hover:bg-primary/50 rounded-lg">
+                                                        <input id="shipping_method{{$thisShippingMethod['id']}}"
+                                                               name="shipping_method" required
+                                                               class="transition shadow-inner focus:ring-primary text-primary border-black/20 shadow-black/5 peer"
+                                                               type="radio"
+                                                               value="{{ $thisShippingMethod['id'] }}"
+                                                               wire:model.live="shippingMethod">
 
-                                                            <div
-                                                                class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
+                                                        <div
+                                                            class="absolute inset-0 transition rounded-lg peer-checked:ring-2 peer-checked:ring-primary peer-checked:shadow-xl peer-checked:shadow-black/5"></div>
 
-                                                            <span class="ml-3 mr-auto">
+                                                        <span class="ml-3 mr-auto">
                                                         {{ $thisShippingMethod['name'] }}
-                                                                @if($thisShippingMethod['costs'] > 0)
-                                                                    ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }}
-                                                                    )
-                                                                @endif
-                                                        </span>
-                                                        </div>
-                                                        @foreach($thisShippingMethod['activatedShippingClasses'] as $activatedShippingClass)
-                                                            <span
-                                                                class="inline-block pt-1 text-xs font-medium bg-primary-light text-primary rounded-lg">
-                                                                {{ $activatedShippingClass['name'] }} (+{{CurrencyHelper::formatPrice($activatedShippingClass['price'])}})
-                                                            </span>
-                                                        @endforeach
+                                                            @if($thisShippingMethod['costs'] > 0)
+                                                                ({{ CurrencyHelper::formatPrice($thisShippingMethod['costs']) }}
+                                                                )
+                                                            @endif
+                                            </span>
                                                     </label>
                                                 @endforeach
                                             </div>
@@ -484,15 +454,17 @@
                                             </svg>
                                         </button>
                                     </form>
+                                    <div class="mt-8">
+                                        <x-blocks.review-bar/>
+                                    </div>
                                 </div>
                             </aside>
 
                             <aside
                                 class="order-1 text-white lg:order-3 lg:col-span-2 rounded-xl">
-                                <h2 class="text-lg font-bold text-primary-500 lg:text-white">{{Translation::get('your-order', 'cart', 'Jouw bestelling')}}</h2>
+                                <h2 class="text-lg font-bold text-white">{{Translation::get('your-order', 'cart', 'Jouw bestelling')}}</h2>
 
-                                <div
-                                    class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary-500 lg:bg-transparent">
+                                <div class="mt-4 rounded-lg border border-gray-200 text-white shadow-sm bg-primary lg:bg-transparent">
                                     <h3 class="sr-only">{{Translation::get('items-in-your-cart', 'cart', 'Producten in je winkelwagen')}}</h3>
                                     <div class="px-4">
                                         <x-cart.cart-items :items="$this->cartItems" forceWhite="true"/>
@@ -534,8 +506,7 @@
                                             <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($total) }}</dd>
                                         </div>
                                         @if($depositAmount > 0)
-                                            <div
-                                                class="flex items-center justify-between border-t border-gray-200 pt-6">
+                                            <div class="flex items-center justify-between border-t border-gray-200 pt-6">
                                                 <dt class="text-base font-bold">{{Translation::get('pre-payment', 'cart', 'Aanbetaling')}}</dt>
                                                 <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($depositAmount) }}</dd>
                                             </div>
@@ -548,13 +519,51 @@
                 </x-container>
             </section>
         </div>
-    @else
-        <x-blocks.header :data="[
+
+        <x-dashed-core::global-blocks name="checkout-page"/>
+
+        <div
+            wire:loading.flex
+            wire:target="submit"
+            class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/50 backdrop-blur-sm"
+        >
+            <div class="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-4 max-w-sm mx-4">
+                <svg
+                    class="w-10 h-10 animate-spin text-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                >
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    ></circle>
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                </svg>
+
+                <div class="text-center">
+                    <p class="text-lg font-bold text-primary">
+                        {{ Translation::get('processing-order', 'checkout', 'Betaling wordt gestart') }}
+                    </p>
+                    <p class="text-sm text-black/70 mt-1">
+                        {{ Translation::get('please-wait-processing-order', 'checkout', 'Een moment geduld, starten je betaling...') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+</div>
+@else
+    <x-blocks.header :data="[
             'title' => Translation::get('no-items-in-cart', 'cart', 'Geen items in je winkelwagen!'),
             'subtitle' => Translation::get('keep-shopping', 'cart', 'Verder shoppen!'),
             'image' => Translation::get('image', 'cart', '', 'image'),
         ]"></x-blocks.header>
-    @endif
-</div>
-
-<x-dashed-core::global-blocks name="checkout-page"/>
+@endif

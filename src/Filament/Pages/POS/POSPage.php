@@ -63,7 +63,9 @@ class POSPage extends Component implements HasSchemas, HasActions
 
     public $note = '';
     public $customFields = [];
-    public $productToChange = [];
+    public $productToChange = [
+        'singlePrice' => 0,
+    ];
 
     public ?array $customProductData = [
         'name' => '',
