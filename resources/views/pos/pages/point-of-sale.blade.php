@@ -2291,6 +2291,10 @@
         },
 
         async selectProduct() {
+            if (this.loading) {
+                return;
+            }
+
             this.loading = true;
 
             if (!this.searchProductQuery) {
@@ -2299,11 +2303,13 @@
             }
 
             try {
-                let response = await fetch('{{ route('api.point-of-sale.select-product') }}', {
+                const response = await fetch('{{ route('api.point-of-sale.select-product') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
                     },
                     body: JSON.stringify({
                         productSearchQuery: this.searchProductQuery,
@@ -2311,36 +2317,49 @@
                     })
                 });
 
-                let data = await response.json();
+                const contentType = response.headers.get('content-type') || '';
+                let data = {};
+
+                if (contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server returned no JSON response');
+                }
+
                 this.focus();
 
                 this.searchedProducts = [];
                 this.searchProductQuery = '';
 
                 if (!response.ok) {
-                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
-                        message: data.message,
-                    })
+                        message: data.message || 'Er ging iets mis bij het ophalen van het product.',
+                    });
                 }
 
                 this.products = data.products;
+
                 if (data.discountCode) {
                     this.discountCode = data.discountCode;
                 } else if (data.order) {
                     this.showOrdersPopup();
                     this.selectedOrder = data.order;
                 }
+
                 this.focus();
                 this.retrieveCart();
-                this.loading = false;
             } catch (error) {
-                this.loading = false;
+                console.error(error);
+
                 return $wire.dispatch('notify', {
                     type: 'danger',
-                    message: 'Het gezochte product konden niet worden opgehaald'
-                })
+                    message: 'Het gezochte product kon niet worden opgehaald',
+                });
+            } finally {
+                this.loading = false;
             }
         },
 
