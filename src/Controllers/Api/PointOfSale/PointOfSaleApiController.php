@@ -3,31 +3,30 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
-use Paynl\Payment;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Classes\POSHelper;
-use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\PinTerminal;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedTranslations\Models\Translation;
 
 class PointOfSaleApiController extends Controller
 {
@@ -58,7 +57,6 @@ class PointOfSaleApiController extends Controller
             $posCart->save();
         }
 
-        // Product enrich (image) voor niet-custom items
         foreach ($products ?? [] as $productKey => &$product) {
             if (! isset($product['customProduct']) || $product['customProduct'] == false) {
                 $dbProduct = Product::find($product['id'] ?? 0);
@@ -80,13 +78,14 @@ class PointOfSaleApiController extends Controller
         foreach ($shippingMethods as $shippingMethod) {
             $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
 
-            if (count($shippingMethod->shippingZone->zones) > 1) {
+            if ($shippingMethod->shippingZone && count($shippingMethod->shippingZone->zones) > 1) {
                 $shippingMethod->fullName .= ' (' . implode(', ', $shippingMethod->shippingZone->zones) . ')';
-            } else {
+            } elseif ($shippingMethod->shippingZone) {
                 $shippingMethod->fullName .= ' (' . $shippingMethod->shippingZone->name . ')';
             }
 
-            $costs = $shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null);
+            $shippingZone = $posCart->country ? ShoppingCart::getShippingZoneByCountry($posCart->country) : null;
+            $costs = $shippingMethod->costsForCart($shippingZone->id ?? null);
             $shippingMethod->fullName .= ' ' . ($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
         }
 
@@ -98,7 +97,9 @@ class PointOfSaleApiController extends Controller
             'shippingMethods' => $shippingMethods,
             'shippingMethodId' => $chosenShippingMethod->id ?? null,
             'shippingCosts' => $chosenShippingMethod
-                ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null))
+                ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(
+                    optional(ShoppingCart::getShippingZoneByCountry($posCart->country))->id
+                ))
                 : null,
 
             'customerUserId' => $posCart->customer_user_id,
@@ -130,7 +131,7 @@ class PointOfSaleApiController extends Controller
     {
         $data = $request->all();
 
-        $cartInstance = $data['cartInstance'] ?? ''; // wordt nog meegestuurd door frontend; we gebruiken 'm als identifier input
+        $cartInstance = $data['cartInstance'] ?? '';
         $posIdentifier = $data['posIdentifier'] ?? '';
         $discountCode = $data['discountCode'] ?? '';
 
@@ -139,9 +140,6 @@ class PointOfSaleApiController extends Controller
         );
     }
 
-    /**
-     * NIEUW: rekent volledig vanuit POSCart->products (database cart)
-     */
     public function updateCart(string $cartInstance, string $posIdentifier, ?string $discountCode = null): array
     {
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
@@ -153,7 +151,6 @@ class PointOfSaleApiController extends Controller
             ];
         }
 
-        // Discount code kiezen: request > opgeslagen in posCart
         $discountCodeString = $discountCode !== null ? (string) $discountCode : (string) ($posCart->discount_code ?? '');
 
         $discountCodeModel = null;
@@ -161,38 +158,27 @@ class PointOfSaleApiController extends Controller
             $discountCodeModel = DiscountCode::usable()->where('code', $discountCodeString)->first();
             if (! $discountCodeModel) {
                 $discountCodeString = '';
-            } else {
-                // Hou oude validatie aan (als dit bij jullie bestaat)
-                // Let op: die methode verwacht cartInstance, we geven iets stabiels mee
-                //                if (method_exists($discountCodeModel, 'isValidForCart') && ! $discountCodeModel->isValidForCart($posCart->email, $cartInstance ?: ('pos-' . $posIdentifier))) {
-                //                    $discountCodeString = '';
-                //                    $discountCodeModel = null;
-                //                }
             }
         }
 
         $posCart->discount_code = $discountCodeString ?: null;
         $posCart->save();
 
-        // Totals uit database cart
         $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
 
-        // Shipping
         $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
+        $shippingZone = $posCart->country ? ShoppingCart::getShippingZoneByCountry($posCart->country) : null;
         $shippingCosts = $chosenShippingMethod
-            ? (float) $chosenShippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)
+            ? (float) $chosenShippingMethod->costsForCart($shippingZone->id ?? null)
             : 0.0;
 
-        // TOTAL incl shipping (prijzen zijn bij jullie POS meestal incl BTW)
         $totalUnformatted = (float) $totals['subtotal'] + (float) $shippingCosts;
 
-        // VAT percentages formatteren
         $vatPercentages = $totals['vatPercentages'] ?? [];
         foreach ($vatPercentages as $key => $value) {
             $vatPercentages[$key] = CurrencyHelper::formatPrice((float) $value);
         }
 
-        // Payment methods
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
         foreach ($paymentMethods as &$paymentMethod) {
             $paymentMethod['fullName'] = $paymentMethod->getTranslation('name', app()->getLocale());
@@ -201,18 +187,17 @@ class PointOfSaleApiController extends Controller
                 : '';
         }
 
-        // Shipping methods list
         $shippingMethods = ShippingMethod::all();
         foreach ($shippingMethods as $shippingMethod) {
             $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
 
-            if (count($shippingMethod->shippingZone->zones) > 1) {
+            if ($shippingMethod->shippingZone && count($shippingMethod->shippingZone->zones) > 1) {
                 $shippingMethod->fullName .= ' (' . implode(', ', $shippingMethod->shippingZone->zones) . ')';
-            } else {
+            } elseif ($shippingMethod->shippingZone) {
                 $shippingMethod->fullName .= ' (' . $shippingMethod->shippingZone->name . ')';
             }
 
-            $costs = $shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null);
+            $costs = $shippingMethod->costsForCart($shippingZone->id ?? null);
             $shippingMethod->fullName .= ' ' . ($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
         }
 
@@ -374,12 +359,11 @@ class PointOfSaleApiController extends Controller
 
         $products = $POSCart->products ?? [];
         foreach ($products as &$product) {
-            if (($product['id'] ?? null) == $selectedProduct->id) { // TODO: opties vergelijken zodra ondersteund
+            if (($product['id'] ?? null) == $selectedProduct->id) {
                 $productAlreadyInCart = true;
 
                 $product['quantity'] = (int) ($product['quantity'] ?? 0) + 1;
 
-                // price = singlePrice * qty
                 $single = (float) ($product['singlePrice'] ?? $selectedProduct->currentPrice);
                 $product['singlePrice'] = $single;
                 $product['price'] = $single * (int) $product['quantity'];
@@ -611,7 +595,7 @@ class PointOfSaleApiController extends Controller
             'success' => true,
             'shippingMethodId' => $shippingMethod->id,
             'shippingCosts' => CurrencyHelper::formatPrice(
-                $shippingMethod->costsForCart(ShoppingCart::getShippingZoneByCountry($posCart->country)->id ?? null)
+                $shippingMethod->costsForCart(optional(ShoppingCart::getShippingZoneByCountry($posCart->country))->id)
             ),
         ]);
     }
@@ -639,9 +623,6 @@ class PointOfSaleApiController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /**
-     * NIEUW: Order wordt opgebouwd vanuit POSCart->products (database cart)
-     */
     public function createOrder($cartInstance, $posCart, $paymentMethodId, $orderOrigin, $userId): array
     {
         $posCart = POSCart::where('identifier', $posCart->identifier)->first();
@@ -655,14 +636,7 @@ class PointOfSaleApiController extends Controller
         }
 
         $shippingMethod = ShippingMethod::find($posCart->shipping_method_id);
-        //        if (! $shippingMethod) {
-        //            return [
-        //                'success' => false,
-        //                'message' => Translation::get('no-valid-shipping-method-chosen', 'cart', 'Je hebt geen geldige verzendmethode gekozen'),
-        //            ];
-        //        }
 
-        // Discount code validatie
         $discountCodeModel = null;
         if ($posCart->discount_code) {
             $discountCodeModel = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
@@ -670,25 +644,13 @@ class PointOfSaleApiController extends Controller
             if (! $discountCodeModel) {
                 $posCart->discount_code = '';
                 $posCart->save();
-            } else {
-                //                if (method_exists($discountCodeModel, 'isValidForCart') && ! $discountCodeModel->isValidForCart($posCart->email, $cartInstance ?: ('pos-' . $posCart->identifier))) {
-                //                    $posCart->discount_code = '';
-                //                    $posCart->save();
-                //
-                //                    return [
-                //                        'success' => false,
-                //                        'message' => Translation::get('discount-code-invalid', 'cart', 'De gekozen kortingscode is niet geldig'),
-                //                    ];
-                //                }
             }
         }
 
-        // Totals uit DB cart
         $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
 
-        // Shipping costs
         $shippingCosts = (float) ($shippingMethod ? $shippingMethod->costsForCart(
-            ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0])->id ?? null
+            optional(ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0]))->id
         ) : 0);
 
         $total = (float) ($totals['subtotal'] ?? 0) + $shippingCosts;
@@ -736,7 +698,6 @@ class PointOfSaleApiController extends Controller
         $order->shipping_method_id = $shippingMethod->id ?? null;
         $order->save();
 
-        // OrderProducts vanuit dezelfde “lines”
         $extraOptionCache = [];
         $extraCache = [];
 
@@ -751,10 +712,9 @@ class PointOfSaleApiController extends Controller
             $orderProduct->price = (float) $line['line_total'];
             $orderProduct->discount = (float) $line['discount'];
 
-            // Extras voor audit/bonnetje: pak ze uit POSCart->products zelf
             $productExtras = [];
             $originalPosItem = collect($posCart->products ?? [])
-                ->first(fn ($p) => ($p['id'] ?? null) == ($line['product_id'] ?? null) && (int) ($p['quantity'] ?? 0) === (int) $line['quantity']);
+                ->first(fn ($p) => ($p['identifier'] ?? null) === ($line['source_identifier'] ?? null));
 
             foreach (($originalPosItem['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
                 if (! $productExtraOptionId) {
@@ -783,15 +743,14 @@ class PointOfSaleApiController extends Controller
             $orderProduct->save();
         }
 
-        // Shipping als orderregel (zoals je oude flow)
         if ($shippingCosts > 0) {
             $shippingLine = new OrderProduct();
             $shippingLine->quantity = 1;
             $shippingLine->product_id = null;
             $shippingLine->order_id = $order->id;
-            $shippingLine->name = $shippingMethod->name;
+            $shippingLine->name = $shippingMethod?->name ?? 'Verzendkosten';
             $shippingLine->price = $shippingCosts;
-            $shippingLine->btw = $this->calculateVatFromGross($shippingCosts, 21); // fallback
+            $shippingLine->btw = $this->calculateVatFromGross($shippingCosts, 21);
             $shippingLine->vat_rate = 21;
             $shippingLine->discount = 0;
             $shippingLine->product_extras = [];
@@ -1264,7 +1223,7 @@ class PointOfSaleApiController extends Controller
         $paymentMethods = PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray();
         $paymentMethodId = PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null;
 
-        $vatPercentages = $order->vat_percentages;
+        $vatPercentages = $order->vat_percentages ?? [];
         foreach ($vatPercentages as $percentage => &$value) {
             $value = CurrencyHelper::formatPrice($value);
         }
@@ -1354,11 +1313,6 @@ class PointOfSaleApiController extends Controller
         ], 404);
     }
 
-    /**
-     * -----------------------------
-     * Helpers (DB-cart pricing)
-     * -----------------------------
-     */
     private function normalizePosCartItem(array $chosenProduct): object
     {
         $options = $chosenProduct['options'] ?? [];
@@ -1423,7 +1377,6 @@ class PointOfSaleApiController extends Controller
         $lines = [];
         $subtotal = 0.0;
         $subtotalWithoutDiscount = 0.0;
-
         $vatTotal = 0.0;
         $vatPercentages = [];
 
@@ -1441,9 +1394,12 @@ class PointOfSaleApiController extends Controller
             }
             $item->model = $model;
 
-            // Let op: jouw Product::getShoppingCartItemPrice moet object/stdClass ondersteunen
-            $lineWithDiscount = (float) Product::getShoppingCartItemPrice($item, $discountCodeModel);
             $lineWithoutDiscount = (float) Product::getShoppingCartItemPrice($item, null);
+            $lineWithDiscount = $lineWithoutDiscount;
+
+            if ($discountCodeModel && ($discountCodeModel->type ?? null) === 'percentage') {
+                $lineWithDiscount = (float) Product::getShoppingCartItemPrice($item, $discountCodeModel);
+            }
 
             $subtotal += $lineWithDiscount;
             $subtotalWithoutDiscount += $lineWithoutDiscount;
@@ -1455,25 +1411,69 @@ class PointOfSaleApiController extends Controller
             $vatPercentages[(string) $vatRate] = ($vatPercentages[(string) $vatRate] ?? 0) + $lineVat;
 
             $lines[] = [
+                'source_identifier' => $chosenProduct['identifier'] ?? Str::random(),
                 'product_id' => $item->product_id,
                 'name' => $chosenProduct['name'] ?? ($model?->getTranslation('name', app()->getLocale()) ?? $item->name),
                 'quantity' => $qty,
                 'vat_rate' => $vatRate,
-                'line_total' => $lineWithDiscount,
-                'line_total_without_discount' => $lineWithoutDiscount,
-                'discount' => max(0, $lineWithoutDiscount - $lineWithDiscount),
+                'line_total' => round($lineWithDiscount, 2),
+                'line_total_without_discount' => round($lineWithoutDiscount, 2),
+                'discount' => round(max(0, $lineWithoutDiscount - $lineWithDiscount), 2),
                 'is_custom' => (bool) ($chosenProduct['customProduct'] ?? false) || (bool) ($chosenProduct['isCustomPrice'] ?? false) || ! $model,
             ];
         }
 
         $discount = max(0, $subtotalWithoutDiscount - $subtotal);
 
+        if ($discountCodeModel && ($discountCodeModel->type ?? null) === 'amount') {
+            $fixedDiscount = min($subtotal, (float) ($discountCodeModel->discount_amount ?? 0));
+
+            if ($fixedDiscount > 0 && $subtotal > 0 && count($lines)) {
+                $baseSubtotalForDistribution = $subtotal;
+
+                foreach ($lines as $index => &$line) {
+                    $ratio = $baseSubtotalForDistribution > 0 ? ($line['line_total'] / $baseSubtotalForDistribution) : 0;
+                    $lineDiscountPart = round($fixedDiscount * $ratio, 2);
+
+                    $line['discount'] = round($line['discount'] + $lineDiscountPart, 2);
+                    $line['line_total'] = round(max(0, $line['line_total'] - $lineDiscountPart), 2);
+                }
+                unset($line);
+
+                $distributedTotal = round(array_sum(array_column($lines, 'line_total')), 2);
+                $expectedSubtotal = round($subtotal - $fixedDiscount, 2);
+                $roundingDifference = round($expectedSubtotal - $distributedTotal, 2);
+
+                if ($roundingDifference != 0.0) {
+                    $lastIndex = array_key_last($lines);
+                    $lines[$lastIndex]['line_total'] = round(max(0, $lines[$lastIndex]['line_total'] + $roundingDifference), 2);
+                    $lines[$lastIndex]['discount'] = round(max(0, $lines[$lastIndex]['line_total_without_discount'] - $lines[$lastIndex]['line_total']), 2);
+                }
+
+                $subtotal = round($expectedSubtotal, 2);
+                $discount = round($discount + $fixedDiscount, 2);
+
+                $vatTotal = 0.0;
+                $vatPercentages = [];
+
+                foreach ($lines as $line) {
+                    $lineVat = $this->calculateVatFromGross((float) $line['line_total'], (float) $line['vat_rate']);
+                    $vatTotal += $lineVat;
+                    $vatPercentages[(string) $line['vat_rate']] = ($vatPercentages[(string) $line['vat_rate']] ?? 0) + $lineVat;
+                }
+            }
+        }
+
+        $vatPercentages = collect($vatPercentages)
+            ->map(fn ($value) => round((float) $value, 2))
+            ->toArray();
+
         return [
             'lines' => $lines,
-            'subtotal' => $subtotal,
-            'subtotalWithoutDiscount' => $subtotalWithoutDiscount,
-            'discount' => $discount,
-            'vat' => $vatTotal,
+            'subtotal' => round(max(0, $subtotal), 2),
+            'subtotalWithoutDiscount' => round(max(0, $subtotalWithoutDiscount), 2),
+            'discount' => round(max(0, $discount), 2),
+            'vat' => round(max(0, $vatTotal), 2),
             'vatPercentages' => $vatPercentages,
         ];
     }
