@@ -1828,6 +1828,9 @@
         customFields: $wire.entangle('customFields'),
 
         hasCashRegister: {{ Customsetting::get('cash_register_available', null, false) ? 'true' : 'false' }},
+        productQueue: [],
+        isProcessingProductQueue: false,
+        productQueueDelay: 500,
 
 
         time: '',
@@ -2290,77 +2293,95 @@
             }
         },
 
-        async selectProduct() {
-            if (this.loading) {
+        selectProduct() {
+            const query = this.searchProductQuery?.trim();
+
+            if (!query) {
                 return;
             }
 
-            this.loading = true;
+            this.productQueue.push({
+                productSearchQuery: query,
+                posIdentifier: this.posIdentifier,
+            });
 
-            if (!this.searchProductQuery) {
-                this.loading = false;
+            this.searchProductQuery = '';
+            this.focus();
+
+            this.processProductQueue();
+        },
+
+        async processProductQueue() {
+            if (this.isProcessingProductQueue) {
                 return;
             }
 
-            try {
-                const response = await fetch('{{ route('api.point-of-sale.select-product') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                    },
-                    body: JSON.stringify({
-                        productSearchQuery: this.searchProductQuery,
-                        posIdentifier: this.posIdentifier,
-                    })
-                });
+            this.isProcessingProductQueue = true;
 
-                const contentType = response.headers.get('content-type') || '';
-                let data = {};
+            while (this.productQueue.length > 0) {
+                const item = this.productQueue.shift();
 
-                if (contentType.includes('application/json')) {
-                    data = await response.json();
-                } else {
-                    const text = await response.text();
-                    console.error('Non-JSON response:', text);
-                    throw new Error('Server returned no JSON response');
-                }
+                this.loading = true;
 
-                this.focus();
+                try {
+                    const response = await fetch('{{ route('api.point-of-sale.select-product') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                        },
+                        body: JSON.stringify({
+                            productSearchQuery: item.productSearchQuery,
+                            posIdentifier: item.posIdentifier,
+                        })
+                    });
 
-                this.searchedProducts = [];
-                this.searchProductQuery = '';
+                    const contentType = response.headers.get('content-type') || '';
+                    let data = {};
 
-                if (!response.ok) {
-                    return $wire.dispatch('notify', {
+                    if (contentType.includes('application/json')) {
+                        data = await response.json();
+                    } else {
+                        const text = await response.text();
+                        console.error('Non-JSON response:', text);
+                        throw new Error('Server returned no JSON response');
+                    }
+
+                    if (!response.ok) {
+                        $wire.dispatch('notify', {
+                            type: 'danger',
+                            message: data.message || `Er ging iets mis bij het ophalen van product: ${item.productSearchQuery}`,
+                        });
+                    } else {
+                        this.products = data.products;
+
+                        if (data.discountCode) {
+                            this.discountCode = data.discountCode;
+                        } else if (data.order) {
+                            this.showOrdersPopup();
+                            this.selectedOrder = data.order;
+                        }
+
+                        this.retrieveCart();
+                        this.searchedProducts = [];
+                        this.focus();
+                    }
+                } catch (error) {
+                    console.error(error);
+
+                    $wire.dispatch('notify', {
                         type: 'danger',
-                        message: data.message || 'Er ging iets mis bij het ophalen van het product.',
+                        message: `Het product "${item.productSearchQuery}" kon niet worden opgehaald`,
                     });
                 }
 
-                this.products = data.products;
-
-                if (data.discountCode) {
-                    this.discountCode = data.discountCode;
-                } else if (data.order) {
-                    this.showOrdersPopup();
-                    this.selectedOrder = data.order;
-                }
-
-                this.focus();
-                this.retrieveCart();
-            } catch (error) {
-                console.error(error);
-
-                return $wire.dispatch('notify', {
-                    type: 'danger',
-                    message: 'Het gezochte product kon niet worden opgehaald',
-                });
-            } finally {
-                this.loading = false;
+                await new Promise(resolve => setTimeout(resolve, this.productQueueDelay));
             }
+
+            this.loading = false;
+            this.isProcessingProductQueue = false;
         },
 
         async changeQuantity(productIdentifier, quantity) {
