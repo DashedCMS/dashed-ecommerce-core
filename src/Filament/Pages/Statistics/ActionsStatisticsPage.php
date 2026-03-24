@@ -7,16 +7,19 @@ use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\DatePicker;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 
-class ActionsStatisticsPage extends Page
+class ActionsStatisticsPage extends Page implements HasSchemas
 {
+    use InteractsWithSchemas;
+
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Actie statistieken';
     protected static string | UnitEnum | null $navigationGroup = 'Statistics';
@@ -25,8 +28,9 @@ class ActionsStatisticsPage extends Page
 
     protected string $view = 'dashed-ecommerce-core::statistics.pages.action-statistics';
 
-    public $startDate;
-    public $endDate;
+    public ?array $data = [];
+
+    public array $graphData = [];
 
     public function mount(): void
     {
@@ -35,123 +39,167 @@ class ActionsStatisticsPage extends Page
             'endDate' => now(),
         ]);
 
-        $this->getStatisticsProperty();
+        $this->calculateStatistics();
     }
 
-    public function updated()
+    public function updated(string $propertyName): void
     {
-        $this->getStatisticsProperty();
+        if (str_starts_with($propertyName, 'data.')) {
+            $this->calculateStatistics();
+        }
     }
 
-    public function getStatisticsProperty()
+    protected function calculateStatistics(): void
     {
-        $beginDate = $this->startDate ? Carbon::parse($this->startDate) : now()->subMonth();
-        $endDate = $this->endDate ? Carbon::parse($this->endDate) : now()->addDay();
+        $state = $this->form->getState();
 
-        $addToCartActions = EcommerceActionLog::where('action_type', 'add_to_cart')
-            ->where('created_at', '>=', $beginDate)
-            ->where('created_at', '<=', $endDate)
-            ->get();
-        $removeFromCartActions = EcommerceActionLog::where('action_type', 'remove_from_cart')
-            ->where('created_at', '>=', $beginDate)
-            ->where('created_at', '<=', $endDate)
+        $beginDate = ! empty($state['startDate'])
+            ? Carbon::parse($state['startDate'])->startOfDay()
+            : now()->subMonth()->startOfDay();
+
+        $endDate = ! empty($state['endDate'])
+            ? Carbon::parse($state['endDate'])->endOfDay()
+            : now()->endOfDay();
+
+        $baseQuery = DB::table('dashed__ecommerce_action_logs as eal')
+            ->whereBetween('eal.created_at', [$beginDate, $endDate])
+            ->whereIn('eal.action_type', ['add_to_cart', 'remove_from_cart']);
+
+        $totals = (clone $baseQuery)
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN eal.action_type = 'add_to_cart' THEN eal.quantity ELSE 0 END), 0) as total_add_to_carts,
+                COALESCE(SUM(CASE WHEN eal.action_type = 'remove_from_cart' THEN eal.quantity ELSE 0 END), 0) as total_remove_from_carts
+            ")
+            ->first();
+
+        $productStats = (clone $baseQuery)
+            ->join('dashed__products as p', 'p.id', '=', 'eal.product_id')
+            ->selectRaw("
+                p.id,
+                p.name,
+                COALESCE(SUM(CASE WHEN eal.action_type = 'add_to_cart' THEN eal.quantity ELSE 0 END), 0) as add_to_cart_count,
+                COALESCE(SUM(CASE WHEN eal.action_type = 'remove_from_cart' THEN eal.quantity ELSE 0 END), 0) as remove_from_cart_count
+            ")
+            ->groupBy('p.id', 'p.name')
+            ->orderByDesc('add_to_cart_count')
             ->get();
 
-        $products = Product::query()
-            ->whereIn('id', array_merge(
-                $addToCartActions->pluck('product_id')->toArray(),
-                $removeFromCartActions->pluck('product_id')->toArray()
-            ))
-            ->where('created_at', '>=', $beginDate)
-            ->where('created_at', '<=', $endDate)
-            ->get();
+        $mostAddedProduct = $productStats
+            ->sortByDesc('add_to_cart_count')
+            ->first();
 
-        foreach ($products as &$product) {
-            $product->add_to_cart_count = $addToCartActions->where('product_id', $product->id)->sum('quantity');
-            $product->remove_from_cart_count = $removeFromCartActions->where('product_id', $product->id)->sum('quantity');
+        $mostRemovedProduct = $productStats
+            ->sortByDesc('remove_from_cart_count')
+            ->first();
+
+        $graphRows = (clone $baseQuery)
+            ->selectRaw("
+                DATE(eal.created_at) as date,
+                COALESCE(SUM(CASE WHEN eal.action_type = 'add_to_cart' THEN eal.quantity ELSE 0 END), 0) as add_to_cart_total,
+                COALESCE(SUM(CASE WHEN eal.action_type = 'remove_from_cart' THEN eal.quantity ELSE 0 END), 0) as remove_from_cart_total
+            ")
+            ->groupByRaw('DATE(eal.created_at)')
+            ->orderByRaw('DATE(eal.created_at)')
+            ->get()
+            ->keyBy('date');
+
+        $graphLabels = [];
+        $graphAddData = [];
+        $graphRemoveData = [];
+
+        $cursor = $beginDate->copy()->startOfDay();
+        $lastDay = $endDate->copy()->startOfDay();
+
+        while ($cursor->lte($lastDay)) {
+            $dateKey = $cursor->format('Y-m-d');
+
+            $graphLabels[] = $cursor->format('d-m-Y');
+            $graphAddData[] = (int) ($graphRows[$dateKey]->add_to_cart_total ?? 0);
+            $graphRemoveData[] = (int) ($graphRows[$dateKey]->remove_from_cart_total ?? 0);
+
+            $cursor->addDay();
         }
 
-        $statistics = [
-            'totalAddToCarts' => $addToCartActions->sum('quantity'),
-            'totalRemoveFromCarts' => $removeFromCartActions->sum('quantity'),
-            'averagePerDayAddToCarts' => number_format($addToCartActions->sum('quantity') / ($beginDate->diffInDays($endDate) ?: 1), 2, '.', ','),
-            'averagePerDayRemoveFromCarts' => number_format($removeFromCartActions->sum('quantity') / ($beginDate->diffInDays($endDate) ?: 1), 2, '.', ','),
-            'mostAddedProduct' => ($products->sortByDesc('add_to_cart_count')->first()->name ?? 'geen product') . ' (' . ($products->sortByDesc('add_to_cart_count')->first()->add_to_cart_count ?? '0') . ')',
-            'mostRemovedProduct' => ($products->sortByDesc('remove_from_cart_count')->first()->name ?? 'geen product') . ' (' . ($products->sortByDesc('remove_from_cart_count')->first()->remove_from_cart_count ?? '0') . ')',
-        ];
+        $days = max(1, $beginDate->diffInDays($endDate) + 1);
 
-        $graph = [];
+        $totalAddToCarts = (int) ($totals->total_add_to_carts ?? 0);
+        $totalRemoveFromCarts = (int) ($totals->total_remove_from_carts ?? 0);
 
-        $graphBeginDate = $beginDate->copy();
-        while ($graphBeginDate < $endDate) {
-            $graph['data'][] = $addToCartActions->where('created_at', '>=', $graphBeginDate)
-                ->where('created_at', '<', $graphBeginDate->copy()->addDay())->sum('quantity');
-            $graph['data2'][] = $removeFromCartActions->where('created_at', '>=', $graphBeginDate)
-                ->where('created_at', '<', $graphBeginDate->copy()->addDay())->sum('quantity');
-            $graph['labels'][] = $graphBeginDate->format('d-m-Y');
-            $graphBeginDate->addDay();
-        }
-
-        $graphData = [
+        $this->graphData = [
             'graph' => [
                 'datasets' => [
                     [
                         'label' => 'Add to carts',
-                        'data' => $graph['data'] ?? [],
+                        'data' => $graphAddData,
                         'backgroundColor' => 'orange',
-                        'borderColor' => "orange",
+                        'borderColor' => 'orange',
                         'fill' => 'start',
                     ],
                     [
                         'label' => 'Remove from carts',
-                        'data' => $graph['data2'] ?? [],
+                        'data' => $graphRemoveData,
                         'backgroundColor' => 'blue',
-                        'borderColor' => "blue",
+                        'borderColor' => 'blue',
                         'fill' => 'start',
                     ],
                 ],
-                'labels' => $graph['labels'] ?? [],
+                'labels' => $graphLabels,
             ],
             'filters' => [
-                'beginDate' => $beginDate,
-                'endDate' => $endDate,
+                'beginDate' => $beginDate->toDateTimeString(),
+                'endDate' => $endDate->toDateTimeString(),
             ],
-            'data' => $statistics,
+            'data' => [
+                'totalAddToCarts' => $totalAddToCarts,
+                'totalRemoveFromCarts' => $totalRemoveFromCarts,
+                'averagePerDayAddToCarts' => number_format($totalAddToCarts / $days, 2, '.', ','),
+                'averagePerDayRemoveFromCarts' => number_format($totalRemoveFromCarts / $days, 2, '.', ','),
+                'mostAddedProduct' => $mostAddedProduct
+                    ? $mostAddedProduct->name . ' (' . $mostAddedProduct->add_to_cart_count . ')'
+                    : 'geen product (0)',
+                'mostRemovedProduct' => $mostRemovedProduct
+                    ? $mostRemovedProduct->name . ' (' . $mostRemovedProduct->remove_from_cart_count . ')'
+                    : 'geen product (0)',
+            ],
+            'products' => $productStats,
         ];
 
-        $graphData['products'] = $products;
-
-        $this->graphData = $graphData;
-        $this->dispatch('updateGraphData', $graphData);
+        $this->dispatch('updateGraphData', $this->graphData);
     }
 
     public function form(Schema $schema): Schema
     {
-        return $schema->schema([
-            Section::make()->columnSpanFull()
-                ->schema([
-                    DatePicker::make('startDate')
-                        ->label('Start datum')
-                        ->reactive(),
-                    DatePicker::make('endDate')
-                        ->label('Eind datum')
-                        ->nullable()
-                        ->after('startDate')
-                        ->reactive(),
-                ])
-                ->columns([
-                    'default' => 1,
-                    'sm' => 2,
-                ]),
-        ]);
+        return $schema
+            ->components([
+                Section::make()
+                    ->columnSpanFull()
+                    ->schema([
+                        DatePicker::make('startDate')
+                            ->label('Start datum')
+                            ->default(now()->subMonth())
+                            ->reactive(),
+
+                        DatePicker::make('endDate')
+                            ->label('Eind datum')
+                            ->nullable()
+                            ->after('startDate')
+                            ->default(now())
+                            ->reactive(),
+                    ])
+                    ->columns([
+                        'default' => 1,
+                        'sm' => 2,
+                    ]),
+            ])
+            ->statePath('data');
     }
 
     protected function getFooterWidgets(): array
     {
         return [
-            ActionStatisticsChart::make(),
-            ActionStatisticsCards::make(),
-            ActionStatisticsTable::make(),
+            ActionStatisticsChart::class,
+            ActionStatisticsCards::class,
+            ActionStatisticsTable::class,
         ];
     }
 

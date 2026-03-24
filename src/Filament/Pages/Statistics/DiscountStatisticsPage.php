@@ -7,21 +7,23 @@ use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
 
-class DiscountStatisticsPage extends Page
+class DiscountStatisticsPage extends Page implements HasSchemas
 {
+    use InteractsWithSchemas;
+
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Korting statistieken';
     protected static string | UnitEnum | null $navigationGroup = 'Statistics';
@@ -30,11 +32,9 @@ class DiscountStatisticsPage extends Page
 
     protected string $view = 'dashed-ecommerce-core::statistics.pages.discount-statistics';
 
-    public $discountCode;
-    public $status;
-    public $startDate;
-    public $endDate;
-    public $graphData;
+    public ?array $data = [];
+
+    public array $graphData = [];
 
     public function mount(): void
     {
@@ -45,154 +45,231 @@ class DiscountStatisticsPage extends Page
             'endDate' => now(),
         ]);
 
-        $this->getStatisticsProperty();
+        $this->calculateStatistics();
     }
 
-    public function updated()
+    public function updated(string $propertyName): void
     {
-        $this->getStatisticsProperty();
+        if (str_starts_with($propertyName, 'data.')) {
+            $this->calculateStatistics();
+        }
     }
 
-    public function getStatisticsProperty()
+    protected function calculateStatistics(): void
     {
-        $beginDate = $this->startDate ? Carbon::parse($this->startDate) : now()->subMonth();
-        $endDate = $this->endDate ? Carbon::parse($this->endDate) : now()->addDay();
+        $state = $this->form->getState();
 
-        if ($this->discountCode && $this->discountCode != 'all') {
-            $discountCode = DiscountCode::where('code', $this->discountCode)->first();
-            if (! $discountCode) {
-                $orders = Order::where('id', 0)->get();
+        $beginDate = ! empty($state['startDate'])
+            ? Carbon::parse($state['startDate'])->startOfDay()
+            : now()->subMonth()->startOfDay();
+
+        $endDate = ! empty($state['endDate'])
+            ? Carbon::parse($state['endDate'])->endOfDay()
+            : now()->endOfDay();
+
+        $discountCodeValue = $state['discountCode'] ?? 'all';
+        $status = $state['status'] ?? 'payment_obligation';
+
+        $discountCodeId = null;
+
+        if ($discountCodeValue !== 'all') {
+            $discountCodeId = DiscountCode::query()
+                ->where('code', $discountCodeValue)
+                ->value('id');
+
+            if (! $discountCodeId) {
+                $this->graphData = [
+                    'graph' => [
+                        'datasets' => [
+                            [
+                                'label' => 'Korting',
+                                'data' => [],
+                                'backgroundColor' => 'orange',
+                                'borderColor' => 'orange',
+                                'fill' => 'start',
+                            ],
+                        ],
+                        'labels' => [],
+                    ],
+                    'filters' => [
+                        'beginDate' => $beginDate->toDateTimeString(),
+                        'endDate' => $endDate->toDateTimeString(),
+                        'discountCode' => $discountCodeValue,
+                        'status' => $status,
+                    ],
+                    'data' => [
+                        'ordersAmount' => 0,
+                        'orderAmount' => CurrencyHelper::formatPrice(0),
+                        'discountAmount' => CurrencyHelper::formatPrice(0),
+                        'averageDiscountAmount' => CurrencyHelper::formatPrice(0),
+                        'averageOrderAmount' => CurrencyHelper::formatPrice(0),
+                        'productsSold' => 0,
+                    ],
+                    'orders' => collect(),
+                ];
+
+                $this->dispatch('updateGraphData', $this->graphData);
+
+                return;
             }
         }
 
-        if (! isset($orders)) {
-            $orders = Order::query()
-                ->where('created_at', '>=', $beginDate)
-                ->where('created_at', '<=', $endDate);
+        $ordersQuery = Order::query()
+            ->whereBetween('created_at', [$beginDate, $endDate]);
 
-            if (isset($discountCode) && $discountCode) {
-                $orders->where('discount_code_id', $discountCode->id);
-            }
-
-            if ($this->status == null || $this->status == 'payment_obligation') {
-                $orders->isPaid();
-            } elseif ($this->status != 'all') {
-                $orders->where('status', $this->status);
-            }
-
-            $orders = $orders->latest()->get();
+        if ($discountCodeId) {
+            $ordersQuery->where('discount_code_id', $discountCodeId);
         }
 
-        $totalOrderCount = $orders->count() ?? 0;
-        $totalAmount = $orders->sum('total') ?? 0;
-        $averageOrderAmount = $totalOrderCount > 0 ? ($totalAmount / $totalOrderCount) : 0;
-        $discountAmount = $orders->sum('discount') ?? 0;
-        $averageDiscountAmount = $discountAmount > 0 ? ($discountAmount / $totalOrderCount) : 0;
-
-        $statistics = [
-            'ordersAmount' => $totalOrderCount,
-            'orderAmount' => CurrencyHelper::formatPrice($totalAmount),
-            'discountAmount' => CurrencyHelper::formatPrice($discountAmount),
-            'averageDiscountAmount' => CurrencyHelper::formatPrice($averageDiscountAmount),
-            'averageOrderAmount' => CurrencyHelper::formatPrice($averageOrderAmount),
-            'productsSold' => OrderProduct::whereIn('order_id', $orders->pluck('id'))->sum('quantity'),
-        ];
-
-        $graph = [];
-
-        $graphBeginDate = $beginDate->copy();
-        while ($graphBeginDate < $endDate) {
-            $graph['data'][] = Order::whereIn('id', $orders->pluck('id') ?? [])->where('created_at', '>=', $graphBeginDate->copy()->startOfDay())->where('created_at', '<=', $graphBeginDate->copy()->endOfDay())->sum('discount');
-            $graph['labels'][] = $graphBeginDate->format('d-m-Y');
-            $graphBeginDate->addDay();
+        if ($status === 'payment_obligation') {
+            $ordersQuery->isPaid();
+        } elseif ($status !== 'all') {
+            $ordersQuery->where('status', $status);
         }
 
-        $graphData = [
+        $filteredOrdersQuery = clone $ordersQuery;
+
+        $orderTotals = (clone $filteredOrdersQuery)
+            ->selectRaw('
+                COUNT(*) as total_orders,
+                COALESCE(SUM(total), 0) as total_amount,
+                COALESCE(SUM(discount), 0) as total_discount
+            ')
+            ->first();
+
+        $filteredOrderIds = (clone $filteredOrdersQuery)->select('id');
+
+        $productsSold = DB::table('dashed__order_products')
+            ->whereIn('order_id', $filteredOrderIds)
+            ->whereNotIn('sku', ['product_costs', 'shipping_costs', 'payment_costs'])
+            ->sum('quantity');
+
+        $graphRows = (clone $filteredOrdersQuery)
+            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(discount), 0) as total_discount')
+            ->groupByRaw('DATE(created_at)')
+            ->orderByRaw('DATE(created_at)')
+            ->get()
+            ->keyBy('date');
+
+        $graphLabels = [];
+        $graphValues = [];
+
+        $cursor = $beginDate->copy()->startOfDay();
+        $lastDay = $endDate->copy()->startOfDay();
+
+        while ($cursor->lte($lastDay)) {
+            $dateKey = $cursor->format('Y-m-d');
+
+            $graphLabels[] = $cursor->format('d-m-Y');
+            $graphValues[] = (float) ($graphRows[$dateKey]->total_discount ?? 0);
+
+            $cursor->addDay();
+        }
+
+        $totalOrderCount = (int) ($orderTotals->total_orders ?? 0);
+        $totalAmount = (float) ($orderTotals->total_amount ?? 0);
+        $discountAmount = (float) ($orderTotals->total_discount ?? 0);
+
+        $averageOrderAmount = $totalOrderCount > 0
+            ? $totalAmount / $totalOrderCount
+            : 0;
+
+        $averageDiscountAmount = $totalOrderCount > 0
+            ? $discountAmount / $totalOrderCount
+            : 0;
+
+        $orders = (clone $filteredOrdersQuery)
+            ->latest()
+            ->get();
+
+        $this->graphData = [
             'graph' => [
                 'datasets' => [
                     [
-                        'label' => 'Stats',
-                        'data' => $graph['data'],
+                        'label' => 'Korting',
+                        'data' => $graphValues,
                         'backgroundColor' => 'orange',
-                        'borderColor' => "orange",
+                        'borderColor' => 'orange',
                         'fill' => 'start',
                     ],
                 ],
-                'labels' => $graph['labels'],
+                'labels' => $graphLabels,
             ],
             'filters' => [
-                'beginDate' => $beginDate,
-                'endDate' => $endDate,
-                'discountCode' => $this->discountCode,
-                'status' => $this->status,
+                'beginDate' => $beginDate->toDateTimeString(),
+                'endDate' => $endDate->toDateTimeString(),
+                'discountCode' => $discountCodeValue,
+                'status' => $status,
             ],
-            'data' => $statistics,
+            'data' => [
+                'ordersAmount' => $totalOrderCount,
+                'orderAmount' => CurrencyHelper::formatPrice($totalAmount),
+                'discountAmount' => CurrencyHelper::formatPrice($discountAmount),
+                'averageDiscountAmount' => CurrencyHelper::formatPrice($averageDiscountAmount),
+                'averageOrderAmount' => CurrencyHelper::formatPrice($averageOrderAmount),
+                'productsSold' => (int) $productsSold,
+            ],
             'orders' => $orders,
         ];
 
-        $this->graphData = $graphData;
-        $this->dispatch('updateGraphData', $graphData);
+        $this->dispatch('updateGraphData', $this->graphData);
     }
 
     public function form(Schema $schema): Schema
     {
-        $paymentMethods = [];
-        foreach (PaymentMethod::get() as $paymentMethod) {
-            $paymentMethods[$paymentMethod->id] = $paymentMethod->name;
-        }
+        return $schema
+            ->components([
+                Section::make()
+                    ->columnSpanFull()
+                    ->schema([
+                        DatePicker::make('startDate')
+                            ->label('Start datum')
+                            ->default(now()->subMonth())
+                            ->reactive(),
 
-        foreach (OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method')->unique() as $paymentMethod) {
-            $paymentMethods[$paymentMethod] = $paymentMethod;
-        }
+                        DatePicker::make('endDate')
+                            ->label('Eind datum')
+                            ->nullable()
+                            ->after('startDate')
+                            ->default(now())
+                            ->reactive(),
 
-        $orderOrigins = [];
-        foreach (Order::whereNotNull('order_origin')->distinct('order_origin')->pluck('order_origin')->unique() as $orderOrigin) {
-            $orderOrigins[$orderOrigin] = ucfirst($orderOrigin);
-        }
+                        Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'all' => 'Alles',
+                                'payment_obligation' => 'Betalingsverplichting',
+                                'paid' => 'Betaald',
+                                'waiting_for_confirmation' => 'Wachten op bevestiging',
+                                'pending' => 'Lopende aankoop',
+                                'cancelled' => 'Geannuleerd',
+                                'return' => 'Retour',
+                            ])
+                            ->default('payment_obligation')
+                            ->reactive(),
 
-        return $schema->schema([
-            Section::make()->columnSpanFull()
-                ->schema([
-                    DatePicker::make('startDate')
-                        ->label('Start datum')
-                        ->reactive(),
-                    DatePicker::make('endDate')
-                        ->label('Eind datum')
-                        ->nullable()
-                        ->after('startDate')
-                        ->reactive(),
-                    Select::make('status')
-                        ->label('Status')
-                        ->options([
-                            'all' => 'Alles',
-                            'payment_obligation' => 'Betalingsverplichting',
-                            'paid' => 'Betaald',
-                            'waiting_for_confirmation' => 'Wachten op bevestiging',
-                            'pending' => 'Lopende aankoop',
-                            'cancelled' => 'Geannuleerd',
-                            'return' => 'Retour',
-                        ])
-                        ->reactive(),
-                    Select::make('discountCode')
-                        ->label('Kortingscode')
-                        ->options(array_merge([
-                            'all' => 'Alles',
-                        ], DiscountCode::pluck('name', 'code')->toArray()))
-                        ->reactive(),
-                ])
-                ->columns([
-                    'default' => 1,
-                    'lg' => 4,
-                ]),
-        ]);
+                        Select::make('discountCode')
+                            ->label('Kortingscode')
+                            ->options(array_merge([
+                                'all' => 'Alles',
+                            ], DiscountCode::query()->pluck('name', 'code')->toArray()))
+                            ->default('all')
+                            ->reactive(),
+                    ])
+                    ->columns([
+                        'default' => 1,
+                        'lg' => 4,
+                    ]),
+            ])
+            ->statePath('data');
     }
 
     protected function getFooterWidgets(): array
     {
         return [
-            DiscountChart::make(),
-            DiscountCards::make(),
-            DiscountTable::make(),
+            DiscountChart::class,
+            DiscountCards::class,
+            DiscountTable::class,
         ];
     }
 
