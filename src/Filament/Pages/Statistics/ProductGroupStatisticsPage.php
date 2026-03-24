@@ -7,6 +7,7 @@ use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\TextInput;
@@ -14,9 +15,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
@@ -35,150 +33,26 @@ class ProductGroupStatisticsPage extends Page implements HasSchemas
 
     protected string $view = 'dashed-ecommerce-core::statistics.pages.product-statistics';
 
-    /**
-     * Form state (filters).
-     */
     public ?array $data = [];
 
-    /**
-     * Graph + stats data voor widgets / JS.
-     */
-    public $graphData;
+    public array $graphData = [];
 
     public function mount(): void
     {
-        // Defaults uit schema laten vullen
         $this->form->fill();
-
-        $this->getStatisticsProperty();
+        $this->calculateStatistics();
     }
 
     public function updated(string $propertyName): void
     {
         if (str_starts_with($propertyName, 'data.')) {
-            $this->getStatisticsProperty();
+            $this->calculateStatistics();
         }
     }
 
     public function submit(): void
     {
-        $this->getStatisticsProperty();
-    }
-
-    public function getStatisticsProperty(): void
-    {
-        $state = $this->form->getState();
-
-        $beginDate = ! empty($state['startDate'])
-            ? Carbon::parse($state['startDate'])
-            : now()->subMonth();
-
-        $endDate = ! empty($state['endDate'])
-            ? Carbon::parse($state['endDate'])
-            : now()->addDay();
-
-        $search = $state['search'] ?? null;
-        $locale = $state['locale'] ?? null;
-
-        $productGroupsQuery = ProductGroup::query();
-
-        if (! empty($search)) {
-            $productGroupsQuery->whereRaw('LOWER(name) like ?', '%' . strtolower($search) . '%');
-        }
-
-        $productGroups = $productGroupsQuery
-            ->latest()
-            ->get();
-
-        $orderIdsQuery = Order::isPaid()
-            ->where('created_at', '>=', $beginDate)
-            ->where('created_at', '<=', $endDate);
-
-        if (! empty($locale)) {
-            $orderIdsQuery->where('locale', $locale);
-        }
-
-        $orderIds = $orderIdsQuery->pluck('id');
-
-        $orderProducts = OrderProduct::whereIn('order_id', $orderIds)->get();
-
-        $totalQuantitySold = 0;
-        $totalAmountSold = 0;
-        $averageCostPerProduct = 0;
-
-        foreach ($productGroups as $productGroup) {
-            $productIds = $productGroup->products->pluck('id');
-
-            $productGroup->quantitySold = $orderProducts
-                ->whereIn('product_id', $productIds)
-                ->sum('quantity');
-
-            $productGroup->amountSold = $orderProducts
-                ->whereIn('product_id', $productIds)
-                ->sum('price');
-
-            $totalQuantitySold += $productGroup->quantitySold;
-            $totalAmountSold += $productGroup->amountSold;
-        }
-
-        if ($totalQuantitySold) {
-            $averageCostPerProduct = $totalAmountSold / $totalQuantitySold;
-        }
-
-        $statistics = [
-            'totalQuantitySold' => $totalQuantitySold,
-            'totalAmountSold' => CurrencyHelper::formatPrice($totalAmountSold),
-            'averageCostPerProduct' => CurrencyHelper::formatPrice($averageCostPerProduct),
-        ];
-
-        $graph = [
-            'data' => [],
-            'labels' => [],
-        ];
-
-        $graphBeginDate = $beginDate->copy();
-
-        while ($graphBeginDate < $endDate) {
-            $graph['data'][] = OrderProduct::whereIn('id', $orderProducts->pluck('id'))
-                ->whereIn(
-                    'product_id',
-                    Product::whereIn('product_group_id', $productGroups->pluck('id'))->pluck('id')
-                )
-                ->where('created_at', '>=', $graphBeginDate->copy()->startOfDay())
-                ->where('created_at', '<=', $graphBeginDate->copy()->endOfDay())
-                ->sum('quantity');
-
-            $graph['labels'][] = $graphBeginDate->format('d-m-Y');
-
-            $graphBeginDate->addDay();
-        }
-
-        $graphData = [
-            'graph' => [
-                'datasets' => [
-                    [
-                        'label' => 'Stats',
-                        'data' => $graph['data'] ?? [],
-                        'backgroundColor' => 'orange',
-                        'borderColor' => 'orange',
-                        'fill' => 'start',
-                    ],
-                ],
-                'labels' => $graph['labels'] ?? [],
-            ],
-            'filters' => [
-                'search' => $search,
-                'beginDate' => $beginDate,
-                'endDate' => $endDate,
-                'locale' => $locale,
-            ],
-            'data' => $statistics,
-            'products' => $productGroups,
-        ];
-
-        $this->graphData = $graphData;
-
-        $this->dispatch('updateGraphData', $graphData);
+        $this->calculateStatistics();
     }
 
     public function form(Schema $schema): Schema
@@ -224,6 +98,108 @@ class ProductGroupStatisticsPage extends Page implements HasSchemas
                     ]),
             ])
             ->statePath('data');
+    }
+
+    protected function calculateStatistics(): void
+    {
+        $state = $this->form->getState();
+
+        $beginDate = ! empty($state['startDate'])
+            ? Carbon::parse($state['startDate'])->startOfDay()
+            : now()->subMonth()->startOfDay();
+
+        $endDate = ! empty($state['endDate'])
+            ? Carbon::parse($state['endDate'])->endOfDay()
+            : now()->endOfDay();
+
+        $search = $state['search'] ?? null;
+        $locale = $state['locale'] ?? null;
+
+        $paidOrderIds = Order::isPaid()
+            ->whereBetween('created_at', [$beginDate, $endDate])
+            ->when($locale, fn ($query) => $query->where('locale', $locale))
+            ->select('id');
+
+        $baseQuery = DB::table('dashed__order_products as op')
+            ->join('dashed__products as p', 'p.id', '=', 'op.product_id')
+            ->join('dashed__product_groups as pg', 'pg.id', '=', 'p.product_group_id')
+            ->join('dashed__orders as o', 'o.id', '=', 'op.order_id')
+            ->whereIn('o.id', $paidOrderIds)
+            ->whereNotNull('p.product_group_id');
+
+        if (! empty($search)) {
+            $baseQuery->where('pg.name', 'like', '%' . $search . '%');
+        }
+
+        $productGroupStats = (clone $baseQuery)
+            ->selectRaw('
+                pg.id,
+                pg.name,
+                SUM(op.quantity) as quantity_sold,
+                SUM(op.price) as amount_sold
+            ')
+            ->groupBy('pg.id', 'pg.name')
+            ->orderByDesc('quantity_sold')
+            ->get();
+
+        $totalQuantitySold = (int) $productGroupStats->sum('quantity_sold');
+        $totalAmountSold = (float) $productGroupStats->sum('amount_sold');
+        $averageCostPerProduct = $totalQuantitySold > 0
+            ? $totalAmountSold / $totalQuantitySold
+            : 0;
+
+        $graphRows = (clone $baseQuery)
+            ->selectRaw('DATE(o.created_at) as date, SUM(op.quantity) as total_quantity')
+            ->groupByRaw('DATE(o.created_at)')
+            ->orderByRaw('DATE(o.created_at)')
+            ->get()
+            ->keyBy('date');
+
+        $graphLabels = [];
+        $graphValues = [];
+
+        $cursor = $beginDate->copy()->startOfDay();
+        $lastDay = $endDate->copy()->startOfDay();
+
+        while ($cursor->lte($lastDay)) {
+            $dateKey = $cursor->format('Y-m-d');
+
+            $graphLabels[] = $cursor->format('d-m-Y');
+            $graphValues[] = (int) ($graphRows[$dateKey]->total_quantity ?? 0);
+
+            $cursor->addDay();
+        }
+
+        $statistics = [
+            'totalQuantitySold' => $totalQuantitySold,
+            'totalAmountSold' => CurrencyHelper::formatPrice($totalAmountSold),
+            'averageCostPerProduct' => CurrencyHelper::formatPrice($averageCostPerProduct),
+        ];
+
+        $this->graphData = [
+            'graph' => [
+                'datasets' => [
+                    [
+                        'label' => 'Verkochte aantallen',
+                        'data' => $graphValues,
+                        'backgroundColor' => 'orange',
+                        'borderColor' => 'orange',
+                        'fill' => 'start',
+                    ],
+                ],
+                'labels' => $graphLabels,
+            ],
+            'filters' => [
+                'search' => $search,
+                'beginDate' => $beginDate->toDateTimeString(),
+                'endDate' => $endDate->toDateTimeString(),
+                'locale' => $locale,
+            ],
+            'data' => $statistics,
+            'products' => $productGroupStats,
+        ];
+
+        $this->dispatch('updateGraphData', $this->graphData);
     }
 
     protected function getFooterWidgets(): array

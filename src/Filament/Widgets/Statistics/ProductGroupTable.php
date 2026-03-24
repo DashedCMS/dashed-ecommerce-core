@@ -53,9 +53,13 @@ class ProductGroupTable extends TableWidget
                     ->searchable()
                     ->sortable()
                     ->label('Product group'),
-                TextColumn::make('quantitySold')
-                    ->label('Aantal verkocht')
-                    ->getStateUsing(fn ($record) => $this->orderProducts->whereIn('product_id', $record->products->pluck('id'))->sum('quantity')),
+                TextColumn::make('total_purchases')
+                    ->label('Aantal verkopen')
+                    ->sortable(),
+                TextColumn::make('products_sum_stock')
+                    ->label('Totale voorraad')
+                    ->sum('products', 'stock')
+                    ->sortable(),
                 TextColumn::make('amountSold')
                     ->money('EUR')
                     ->label('Totaal opgeleverd')
