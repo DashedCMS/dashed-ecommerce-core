@@ -59,6 +59,10 @@ class ProductsRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
+                TextColumn::make('stock')
+                    ->label('Voorraad')
+                    ->formatStateUsing(fn($record) => $record->stock . ((!$record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
+                    ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
                     ->sortable(),
