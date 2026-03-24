@@ -52,7 +52,9 @@ class ProductTable extends TableWidget
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Product'),
+                    ->label('Product')
+                    ->openUrlInNewTab()
+                    ->url(fn($record) => route('filament.dashed.resources.products.edit', ['record' => $record->id])),
                 TextColumn::make('purchases')
                     ->label('Aantal verkocht')
                     ->sortable(),
