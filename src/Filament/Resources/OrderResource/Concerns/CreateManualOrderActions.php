@@ -217,9 +217,10 @@ trait CreateManualOrderActions
         $this->loading = true;
 
         foreach ($this->products ?: [] as $chosenProduct) {
-            $product = Product::find($chosenProduct['id']);
+            $isCustomProduct = ! empty($chosenProduct['customProduct']);
+            $product = $isCustomProduct ? null : Product::find($chosenProduct['id']);
             if (($chosenProduct['quantity'] ?? 0) > 0) {
-                $productPrice = ($chosenProduct['customProduct'] ?? false) ? $chosenProduct['singlePrice'] : $product->getOriginal('price');
+                $productPrice = $isCustomProduct ? $chosenProduct['singlePrice'] : $product->getOriginal('price');
                 $options = [];
                 foreach ($chosenProduct['extra'] ?? [] as $productExtraId => $productExtraOptionId) {
                     if ($productExtraOptionId) {
@@ -241,13 +242,13 @@ trait CreateManualOrderActions
                 $attributes['originalPrice'] = $productPrice;
                 $attributes['options'] = $options;
 
-                if ($product->id ?? false) {
+                if (! $isCustomProduct && $product?->id) {
                     \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes)->associate(Product::class);
                 } else {
                     $attributes['customProduct'] = true;
                     $attributes['vat_rate'] = $chosenProduct['vat_rate'];
                     $attributes['singlePrice'] = $chosenProduct['singlePrice'];
-                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes);
+                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes);
                 }
             }
         }

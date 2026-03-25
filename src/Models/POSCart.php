@@ -16,11 +16,12 @@ class POSCart extends Model
 
     protected $casts = [
         'products' => 'array',
+        'custom_fields' => 'array',
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults();
+        return LogOptions::defaults()->logExcept(['products', 'custom_fields']);
     }
 
     public function user()

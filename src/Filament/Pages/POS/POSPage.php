@@ -110,21 +110,24 @@ class POSPage extends Component implements HasSchemas, HasActions
     {
         $userId = auth()->user()?->id;
 
-        $posCart = POSCart::where('user_id', $userId)
-            ->where('status', 'active')
-            ->first();
+        return \DB::transaction(function () use ($userId) {
+            $posCart = POSCart::where('user_id', $userId)
+                ->where('status', 'active')
+                ->lockForUpdate()
+                ->first();
 
-        if (! $posCart) {
-            $posCart = new POSCart();
-            $posCart->user_id = $userId;
-            $posCart->status = 'active';
-            $posCart->identifier = uniqid();
-            $posCart->country = $this->country ?: (Countries::getAllSelectedCountries()[0] ?? 'NL');
-            $posCart->products = [];
-            $posCart->save();
-        }
+            if (! $posCart) {
+                $posCart = new POSCart();
+                $posCart->user_id = $userId;
+                $posCart->status = 'active';
+                $posCart->identifier = uniqid();
+                $posCart->country = $this->country ?: (Countries::getAllSelectedCountries()[0] ?? 'NL');
+                $posCart->products = [];
+                $posCart->save();
+            }
 
-        return $posCart;
+            return $posCart;
+        });
     }
 
     public function customProductForm(Schema $schema): Schema
