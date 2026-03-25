@@ -3,9 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
@@ -16,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Contracts\HasSchemas;
 use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
@@ -24,6 +22,7 @@ use DashedDEV\FilamentNumpadField\NumpadField;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.

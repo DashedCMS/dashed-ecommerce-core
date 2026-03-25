@@ -47,12 +47,7 @@ class ProductGroup extends Model
         'deleted_at' => 'datetime',
     ];
 
-    protected $with = [
-        'suggestedProducts',
-        'crossSellProducts',
-        'tabs',
-        'globalTabs',
-    ];
+    protected $with = [];
 
     protected static function booted()
     {

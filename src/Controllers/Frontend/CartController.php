@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,8 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use App\Http\Controllers\Controller;;
+
+;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
 
 class CartController extends Controller

@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Resources;
 
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Dashed\DashedTranslations\Models\Translation;
 
 /**
  * @mixin \Dashed\DashedEcommerceCore\Models\Product
@@ -30,7 +30,7 @@ class ProductFeedResource extends JsonResource
         // Zet active op filters
         foreach ($filters as &$filter) {
             $filterId = (int)($filter['id'] ?? 0);
-            if (!$filterId) {
+            if (! $filterId) {
                 continue;
             }
 
@@ -113,14 +113,14 @@ class ProductFeedResource extends JsonResource
 
         if ($product->productGroup) {
             foreach ($product->productGroup->allCharacteristicsWithoutFilters() as $gc) {
-                if (!empty($gc['value'])) {
+                if (! empty($gc['value'])) {
                     $attributes[$gc['name']] = $gc['value'];
                 }
             }
         }
 
         foreach ($product->allCharacteristics() as $gc) {
-            if (!empty($gc['value'])) {
+            if (! empty($gc['value'])) {
                 $attributes[$gc['name']] = $gc['value'];
             }
         }
@@ -185,7 +185,7 @@ class ProductFeedResource extends JsonResource
 
         $array = array_merge($array, $attributes);
 
-        if (!empty($images)) {
+        if (! empty($images)) {
             foreach (array_values(array_slice($images, 1)) as $idx => $url) {
                 $array['image_link_' . ($idx + 2)] = $url;
             }

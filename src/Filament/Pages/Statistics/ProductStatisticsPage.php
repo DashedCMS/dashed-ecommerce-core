@@ -3,22 +3,21 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Contracts\HasSchemas;
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductChart;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductTable;
 
 class ProductStatisticsPage extends Page implements HasSchemas
 {

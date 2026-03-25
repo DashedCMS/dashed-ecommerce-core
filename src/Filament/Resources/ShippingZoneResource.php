@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Schemas\Components\Utilities\Get;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
@@ -16,6 +15,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Classes\PaymentMethods;
@@ -59,11 +59,11 @@ class ShippingZoneResource extends Resource
                         Select::make('site_id')
                             ->label('Actief op site')
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
-                            ->hidden(!(Sites::getAmountOfSites() > 1))
+                            ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
-                    ->hidden(!(Sites::getAmountOfSites() > 1))
-                    ->collapsed(fn($livewire) => $livewire instanceof EditShippingZone),
+                    ->hidden(! (Sites::getAmountOfSites() > 1))
+                    ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
                 Section::make('Content')->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
@@ -99,7 +99,7 @@ class ShippingZoneResource extends Resource
                             ->label('Deze verzendzone heeft een land specifieke BTW percentage')
                             ->helperText('Gebruik deze optie indien dit nodig is voor de OSS (vanaf 10.000 ex btw omzet in alle buitenlandse EU landen)'),
                         TextInput::make('country_specific_vat_rate')
-                            ->visible(fn(Get $get) => $get('country_specific_vat'))
+                            ->visible(fn (Get $get) => $get('country_specific_vat'))
                             ->required()
                             ->nullable()
                             ->numeric()
@@ -121,7 +121,7 @@ class ShippingZoneResource extends Resource
                 TextColumn::make('site_id')
                     ->label('Actief op site')
                     ->sortable()
-                    ->hidden(!(Sites::getAmountOfSites() > 1)),
+                    ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])
             ->filters([
                 //

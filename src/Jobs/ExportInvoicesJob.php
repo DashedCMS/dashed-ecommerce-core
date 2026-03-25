@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Carbon\Carbon;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
@@ -16,6 +15,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 
 class ExportInvoicesJob implements ShouldQueue
@@ -143,7 +143,7 @@ class ExportInvoicesJob implements ShouldQueue
                 }
 
                 $shippingZone = $order->shippingMethod?->shippingZone;
-                if(!$shippingZone){
+                if (! $shippingZone) {
                     $shippingZone = ShoppingCart::getShippingZoneByCountry($order->invoice_country ?: $order->country);
                 }
                 $country = $order->invoice_country ?: $order->country ?: 'Onbekend';
@@ -254,6 +254,6 @@ class ExportInvoicesJob implements ShouldQueue
         }
 
         Mail::to($this->email)->send(new FinanceExportMail($this->hash, 'Facturen van ' . ($startDate ? $startDate->format('d-m-Y') : 'het begin') . ' tot ' . ($endDate ? $endDate->format('d-m-Y') : 'nu')));
-//        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
+        //        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
     }
 }

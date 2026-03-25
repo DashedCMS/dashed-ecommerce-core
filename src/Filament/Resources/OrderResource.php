@@ -61,7 +61,7 @@ class OrderResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return Order::unhandled()->count();
+        return cache()->remember('orders_unhandled_count', 60, fn () => Order::unhandled()->count());
     }
 
     protected static ?string $label = 'Bestelling';
@@ -671,7 +671,9 @@ class OrderResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
             ])
+            ->modifyQueryUsing(fn ($query) => $query->without('orderProducts')->with('mainPaymentMethod'))
             ->filtersFormColumns(4)
+            ->deferFilters(false)
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
     }

@@ -61,7 +61,7 @@ class ProductsRelationManager extends RelationManager
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('stock')
                     ->label('Voorraad')
-                    ->formatStateUsing(fn($record) => $record->stock . ((!$record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
+                    ->formatStateUsing(fn ($record) => $record->stock . ((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
                     ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
@@ -98,7 +98,7 @@ class ProductsRelationManager extends RelationManager
                             'fulfillment_provider' => $record->fulfillment_provider,
                         ];
 
-                        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                        foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
                             $data[$key] = $record->{$key};
                         }
 
@@ -107,10 +107,10 @@ class ProductsRelationManager extends RelationManager
                     ->schema([
                         Section::make('Beheer de prijzen')
                             ->columnSpanFull()
-                            ->schema(function(){
+                            ->schema(function () {
                                 $schema = [];
 
-                                foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                                foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
                                     $schema[] = TextInput::make($key)
                                         ->label($priceField['label'])
                                         ->helperText($priceField['helperText'])
@@ -157,10 +157,10 @@ class ProductsRelationManager extends RelationManager
                 BulkAction::make('changePrice')
                     ->color('primary')
                     ->label('Verander prijzen')
-                    ->schema(function(){
+                    ->schema(function () {
                         $schema = [];
 
-                        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                        foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
                             $schema[] = TextInput::make($key)
                                 ->label($priceField['label'])
                                 ->helperText($priceField['helperText'])
@@ -175,7 +175,7 @@ class ProductsRelationManager extends RelationManager
                     })
                     ->action(function (Collection $records, array $data): void {
                         foreach ($records as $record) {
-                            foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+                            foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
                                 if (isset($data[$key])) {
                                     $record->{$key} = $data[$key];
                                 }

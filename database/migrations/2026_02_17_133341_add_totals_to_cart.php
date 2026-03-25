@@ -15,7 +15,7 @@ return new class () extends Migration {
                 ->after('user_id');
         });
 
-        foreach(\Dashed\DashedEcommerceCore\Models\Cart::get() as $cart){
+        foreach (\Dashed\DashedEcommerceCore\Models\Cart::get() as $cart) {
             $cart->updateTotal();
         }
     }

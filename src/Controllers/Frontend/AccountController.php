@@ -2,10 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\View;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
-use App\Http\Controllers\Controller;;
+
+;
 
 class AccountController extends Controller
 {

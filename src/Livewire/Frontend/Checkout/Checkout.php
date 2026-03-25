@@ -346,7 +346,7 @@ class Checkout extends Component
                     'Content-Type' => 'Application/json',
                     'apikey' => $postNLApikey,
                 ])
-                    ->retry(3, 1000)
+                    ->retry(1, 500)
                     ->post('https://api.postnl.nl/address/national/v1/validate', [
                         'PostalCode' => $zipCode,
                         'HouseNumber' => $houseNr,
@@ -371,7 +371,7 @@ class Checkout extends Component
                     'Content-Type' => 'Application/json',
                 ])
                     ->withToken($postcodeApi)
-                    ->retry(3, 1000)
+                    ->retry(1, 500)
                     ->get('https://postcode.tech/api/v1/postcode', [
                         'postcode' => $zipCode,
                         'number' => preg_replace('/\D/', '', $houseNr),

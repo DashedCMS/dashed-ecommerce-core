@@ -26,7 +26,7 @@ class CartItem extends Model
 
     public static function booted()
     {
-        static::saved(function($cartItem){
+        static::saved(function ($cartItem) {
             $cartItem->cart->updateTotal();
         });
 

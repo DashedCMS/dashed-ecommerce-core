@@ -99,31 +99,33 @@ class ShoppingCart
             }
         }
 
+        $allCountries = Countries::getCountries();
+        $countryNameLower = strtolower($countryName);
         $shippingZones = ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
             foreach ($shippingZone->zones as $zone) {
-                foreach (Countries::getCountries() as $country) {
+                foreach ($allCountries as $country) {
                     if ($country['name'] == $zone) {
-                        if (strtolower($country['name']) == strtolower($countryName)) {
+                        if (strtolower($country['name']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha2Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha3Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+                        if (strtolower($country['demonym']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
                         foreach ($country['altSpellings'] as $altSpelling) {
                             if (strlen($countryName) > 5) {
-                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+                                if (Str::contains(strtolower($altSpelling), $countryNameLower)) {
                                     $shippingZoneIsActive = true;
                                 }
                             } else {
-                                if (strtolower($altSpelling) == strtolower($countryName)) {
+                                if (strtolower($altSpelling) == $countryNameLower) {
                                     $shippingZoneIsActive = true;
                                 }
                             }
@@ -136,7 +138,7 @@ class ShoppingCart
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
-                    if (strtolower($searchField) == strtolower($countryName)) {
+                    if (strtolower($searchField) == $countryNameLower) {
                         $shippingZoneIsActive = true;
                     }
                 }
@@ -146,11 +148,16 @@ class ShoppingCart
                 $distanceRange = 10000;
                 $fromAddress = Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') . ' ' . Customsetting::get('company_city') . ', ' . Customsetting::get('company_country');
                 if ($shippingAddress && $fromAddress && Customsetting::get('checkout_google_api_key')) {
-                    $distanceResponse = Http::get("https://maps.googleapis.com/maps/api/distancematrix/json?destinations=$shippingAddress&origins=$fromAddress&units=imperial&key=" . Customsetting::get('checkout_google_api_key'))
-                        ->json();
-                    if ($distanceResponse['status'] == 'OK') {
-                        $distanceRange = ($distanceResponse['rows'][0]['elements'][0]['distance']['value'] ?? 10000000) / 1000;
-                    }
+                    $cacheKey = 'shipping_distance_' . md5($fromAddress . '|' . $shippingAddress);
+                    $distanceRange = cache()->remember($cacheKey, 3600, function () use ($fromAddress, $shippingAddress) {
+                        $distanceResponse = Http::get("https://maps.googleapis.com/maps/api/distancematrix/json?destinations=$shippingAddress&origins=$fromAddress&units=imperial&key=" . Customsetting::get('checkout_google_api_key'))
+                            ->json();
+                        if (($distanceResponse['status'] ?? '') == 'OK') {
+                            return ($distanceResponse['rows'][0]['elements'][0]['distance']['value'] ?? 10000000) / 1000;
+                        }
+
+                        return 10000;
+                    });
                 }
 
                 $total = cartHelper()->getTotal();
@@ -209,31 +216,33 @@ class ShoppingCart
     public static function getAllShippingMethods($countryName)
     {
 
+        $allCountries = Countries::getCountries();
+        $countryNameLower = strtolower($countryName);
         $shippingZones = ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
             foreach ($shippingZone->zones as $zone) {
-                foreach (Countries::getCountries() as $country) {
+                foreach ($allCountries as $country) {
                     if ($country['name'] == $zone) {
-                        if (strtolower($country['name']) == strtolower($countryName)) {
+                        if (strtolower($country['name']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha2Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha3Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+                        if (strtolower($country['demonym']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
                         foreach ($country['altSpellings'] as $altSpelling) {
                             if (strlen($countryName) > 5) {
-                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+                                if (Str::contains(strtolower($altSpelling), $countryNameLower)) {
                                     $shippingZoneIsActive = true;
                                 }
                             } else {
-                                if (strtolower($altSpelling) == strtolower($countryName)) {
+                                if (strtolower($altSpelling) == $countryNameLower) {
                                     $shippingZoneIsActive = true;
                                 }
                             }
@@ -246,7 +255,7 @@ class ShoppingCart
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
-                    if (strtolower($searchField) == strtolower($countryName)) {
+                    if (strtolower($searchField) == $countryNameLower) {
                         $shippingZoneIsActive = true;
                     }
                 }
@@ -283,32 +292,34 @@ class ShoppingCart
     public static function getAvailablePaymentMethods($countryName, ?int $userId = null)
     {
         $paymentMethods = self::getPaymentMethods(userId: $userId);
+        $allCountries = Countries::getCountries();
+        $countryNameLower = strtolower($countryName);
         $shippingZones = ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
 
             foreach ($shippingZone->zones as $zone) {
-                foreach (Countries::getCountries() as $country) {
+                foreach ($allCountries as $country) {
                     if ($country['name'] == $zone) {
-                        if (strtolower($country['name']) == strtolower($countryName)) {
+                        if (strtolower($country['name']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha2Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha3Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+                        if (strtolower($country['demonym']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
                         foreach ($country['altSpellings'] as $altSpelling) {
                             if (strlen($countryName) > 5) {
-                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+                                if (Str::contains(strtolower($altSpelling), $countryNameLower)) {
                                     $shippingZoneIsActive = true;
                                 }
                             } else {
-                                if (strtolower($altSpelling) == strtolower($countryName)) {
+                                if (strtolower($altSpelling) == $countryNameLower) {
                                     $shippingZoneIsActive = true;
                                 }
                             }
@@ -320,7 +331,7 @@ class ShoppingCart
             if (! $shippingZoneIsActive && $shippingZone->search_fields) {
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
-                    if (strtolower($searchField) == strtolower($countryName)) {
+                    if (strtolower($searchField) == $countryNameLower) {
                         $shippingZoneIsActive = true;
                     }
                 }
@@ -352,31 +363,33 @@ class ShoppingCart
             return null;
         }
 
+        $allCountries = Countries::getCountries();
+        $countryNameLower = strtolower($countryName);
         $shippingZones = ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
             foreach ($shippingZone->zones as $zone) {
-                foreach (Countries::getCountries() as $country) {
+                foreach ($allCountries as $country) {
                     if ($country['name'] == $zone) {
-                        if (strtolower($country['name']) == strtolower($countryName)) {
+                        if (strtolower($country['name']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha2Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha2Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['alpha3Code']) == strtolower($countryName)) {
+                        if (strtolower($country['alpha3Code']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
-                        if (strtolower($country['demonym']) == strtolower($countryName)) {
+                        if (strtolower($country['demonym']) == $countryNameLower) {
                             $shippingZoneIsActive = true;
                         }
                         foreach ($country['altSpellings'] as $altSpelling) {
                             if (strlen($countryName) > 5) {
-                                if (Str::contains(strtolower($altSpelling), strtolower($countryName))) {
+                                if (Str::contains(strtolower($altSpelling), $countryNameLower)) {
                                     $shippingZoneIsActive = true;
                                 }
                             } else {
-                                if (strtolower($altSpelling) == strtolower($countryName)) {
+                                if (strtolower($altSpelling) == $countryNameLower) {
                                     $shippingZoneIsActive = true;
                                 }
                             }
@@ -389,7 +402,7 @@ class ShoppingCart
                 $searchFields = explode(',', $shippingZone->search_fields);
                 foreach ($searchFields as $searchField) {
                     $searchField = trim($searchField);
-                    if (strtolower($searchField) == strtolower($countryName)) {
+                    if (strtolower($searchField) == $countryNameLower) {
                         $shippingZoneIsActive = true;
                     }
                 }
@@ -414,14 +427,26 @@ class ShoppingCart
         }
         $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();
 
+        $paymentMethodIds = $paymentMethods->pluck('id');
+        $restrictedMethodIds = DB::table('dashed__payment_method_users')
+            ->whereIn('payment_method_id', $paymentMethodIds)
+            ->distinct()
+            ->pluck('payment_method_id');
+        $userAllowedMethodIds = ($userId && $restrictedMethodIds->isNotEmpty())
+            ? DB::table('dashed__payment_method_users')
+                ->whereIn('payment_method_id', $restrictedMethodIds)
+                ->where('user_id', $userId)
+                ->pluck('payment_method_id')
+            : collect();
+
         foreach ($paymentMethods as $key => &$paymentMethod) {
 
             $paymentMethodValid = true;
 
-            if ($userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0 && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->where('user_id', $userId)->count() == 0) {
-                $paymentMethodValid = false;
-            } elseif (! $userId && DB::table('dashed__payment_method_users')->where('payment_method_id', $paymentMethod->id)->count() > 0) {
-                $paymentMethodValid = false;
+            if ($restrictedMethodIds->contains($paymentMethod->id)) {
+                if (! $userId || ! $userAllowedMethodIds->contains($paymentMethod->id)) {
+                    $paymentMethodValid = false;
+                }
             }
 
             if (! $paymentMethodValid) {

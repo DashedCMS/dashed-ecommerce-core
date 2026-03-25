@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\View;
@@ -20,7 +21,8 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use App\Http\Controllers\Controller;;
+
+;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 

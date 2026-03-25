@@ -110,7 +110,7 @@ class PaymentInformationList extends Component implements HasSchemas
 
                         TextEntry::make('vat_reverse_charge')
                             ->label('BTW verlegd')
-                        ->getStateUsing(fn($record) => $record->vat_reverse_charge ? 'Ja' : 'Nee'),
+                        ->getStateUsing(fn ($record) => $record->vat_reverse_charge ? 'Ja' : 'Nee'),
 
                         TextEntry::make('total')
                             ->label('Totaal')

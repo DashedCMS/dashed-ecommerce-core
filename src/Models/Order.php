@@ -125,22 +125,22 @@ class Order extends Model
 
     public function getPspIdAttribute(): ?string
     {
-        return $this->orderPayments()->first() ? $this->orderPayments()->first()->psp_id : '';
+        return $this->orderPayments->first() ? $this->orderPayments->first()->psp_id : '';
     }
 
     public function getPaymentMethodAttribute(): string
     {
-        return $this->mainPaymentMethod ? $this->mainPaymentMethod->name : ($this->orderPayments()->first() ? $this->orderPayments()->first()->payment_method_name : Translation::get('no-payment-method-available', 'orders', 'Geen methode beschikbaar'));
+        return $this->mainPaymentMethod ? $this->mainPaymentMethod->name : ($this->orderPayments->first() ? $this->orderPayments->first()->payment_method_name : Translation::get('no-payment-method-available', 'orders', 'Geen methode beschikbaar'));
     }
 
     public function getPaymentMethodInstructionsAttribute(): string
     {
-        return $this->orderPayments()->first() ? $this->orderPayments()->first()->paymentMethodInstructions : '';
+        return $this->orderPayments->first() ? $this->orderPayments->first()->paymentMethodInstructions : '';
     }
 
     public function getPaidAmountAttribute()
     {
-        return $this->orderPayments()->where('status', 'paid')->sum('amount');
+        return $this->orderPayments->where('status', 'paid')->sum('amount');
     }
 
     public function getOpenAmountAttribute()

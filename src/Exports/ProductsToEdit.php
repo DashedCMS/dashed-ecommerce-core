@@ -14,7 +14,7 @@ class ProductsToEdit implements FromArray
             'Product',
         ];
 
-        foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+        foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
             $firstRow[] = $priceField['label'] ?? $key;
         }
 
@@ -38,7 +38,7 @@ class ProductsToEdit implements FromArray
                 $product->name,
             ];
 
-            foreach(ecommerce()->builder('productPriceFields') as $key => $priceField){
+            foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
                 $productArray[] = $product->getRawOriginal($key) ?? '';
             }
 

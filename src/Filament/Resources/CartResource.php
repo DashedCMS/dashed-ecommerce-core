@@ -2,19 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Filament\Actions\BulkAction;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
+use Filament\Actions\BulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Illuminate\Support\Collection;
 use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Pages;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers\ItemsRelationManager;
-use Illuminate\Support\Collection;
 
 class CartResource extends Resource
 {

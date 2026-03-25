@@ -3,30 +3,30 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Classes\POSHelper;
-use Dashed\DashedEcommerceCore\Classes\PinTerminal;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\PinTerminal;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
 {
