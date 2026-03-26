@@ -474,12 +474,14 @@
                 </svg>
             </div>
             <p class="text-3xl font-bold">Aangepaste verkoop toevoegen</p>
-            <form wire:submit.prevent="submitCustomProductForm">
+            <form @submit.prevent="addCustomProduct()">
                 <div class="grid gap-4">
                     {{ $this->customProductForm }}
                     <div>
                         <button type="submit"
-                                class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                :disabled="loading"
+                                :class="loading ? 'bg-primary-900 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="px-4 py-2 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
                             Toevoegen
                         </button>
                     </div>
@@ -2293,6 +2295,56 @@
             }
         },
 
+        async addCustomProduct() {
+            const formData = await $wire.get('customProductData');
+            const name = (formData?.name ?? '').trim();
+            const price = parseFloat(formData?.price ?? 0);
+            const quantity = parseInt(formData?.quantity ?? 1);
+            const vatRate = parseFloat(formData?.vat_rate ?? 21);
+
+            if (!name) {
+                return $wire.dispatch('notify', { type: 'danger', message: 'Productnaam is verplicht' });
+            }
+
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.add-custom-product') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        name: name,
+                        price: price,
+                        quantity: quantity,
+                        vat_rate: vatRate,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', { type: 'danger', message: data.message });
+                }
+
+                this.products = data.products;
+                this.customProductPopup = false;
+                $wire.set('customProductData', { name: '', quantity: 1, vat_rate: 21, price: 0 });
+                $wire.dispatch('resetNumpad');
+                this.retrieveCart();
+                this.focus();
+                this.loading = false;
+
+                $wire.dispatch('notify', { type: 'success', message: 'Aangepast product toegevoegd' });
+            } catch (error) {
+                this.loading = false;
+                return $wire.dispatch('notify', { type: 'danger', message: 'Er ging iets fout bij het toevoegen' });
+            }
+        },
+
         selectProduct() {
             const query = this.searchProductQuery?.trim();
 
@@ -3498,13 +3550,6 @@
         init() {
             $wire.on('toggle', (variable) => {
                 this.toggle(variable[0]);
-            })
-
-            $wire.on('addCustomProduct', (variable) => {
-                this.customProductPopup = false;
-                this.products.push(variable[0]);
-                this.focus();
-                this.retrieveCart();
             })
 
             $wire.on('discountCodeCreated', (variable) => {

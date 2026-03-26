@@ -326,6 +326,54 @@ class PointOfSaleApiController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function addCustomProduct(Request $request)
+    {
+        $data = $request->all();
+
+        $posIdentifier = $data['posIdentifier'] ?? null;
+        $name = trim($data['name'] ?? '');
+        $quantity = max(1, (int) ($data['quantity'] ?? 1));
+        $price = (float) ($data['price'] ?? 0);
+        $vatRate = (float) ($data['vat_rate'] ?? 21);
+
+        if (! $name) {
+            return response()->json(['success' => false, 'message' => 'Productnaam is verplicht'], 422);
+        }
+
+        $posCart = POSCart::where('identifier', $posIdentifier)->first();
+
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        $product = [
+            'id' => null,
+            'product' => null,
+            'name' => $name,
+            'quantity' => $quantity,
+            'singlePrice' => $price,
+            'price' => $price * $quantity,
+            'priceFormatted' => CurrencyHelper::formatPrice($price * $quantity),
+            'vat_rate' => $vatRate,
+            'customProduct' => true,
+            'isCustomPrice' => true,
+            'extra' => [],
+            'identifier' => Str::random(),
+            'customId' => 'custom-' . rand(1, 10000000),
+        ];
+
+        $products = $posCart->products ?? [];
+        $products[] = $product;
+        $posCart->products = array_values($products);
+        $posCart->save();
+
+        return response()->json([
+            'success' => true,
+            'product' => $product,
+            'products' => array_reverse($posCart->products),
+        ]);
+    }
+
     public function addProduct(Request $request)
     {
         $data = $request->all();

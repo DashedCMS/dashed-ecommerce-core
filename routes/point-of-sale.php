@@ -25,6 +25,8 @@ Route::group(
             ->name('api.point-of-sale.send-invoice');
         Route::post('/search-products', [PointOfSaleApiController::class, 'searchProducts'])
             ->name('api.point-of-sale.search-products');
+        Route::post('/add-custom-product', [PointOfSaleApiController::class, 'addCustomProduct'])
+            ->name('api.point-of-sale.add-custom-product');
         Route::post('/add-product', [PointOfSaleApiController::class, 'addProduct'])
             ->name('api.point-of-sale.add-product');
         Route::post('/update-product', [PointOfSaleApiController::class, 'updateProduct'])

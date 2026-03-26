@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
 use Livewire\Component;
-use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Models\User;
@@ -219,56 +218,6 @@ class POSPage extends Component implements HasSchemas, HasActions
 
         $this->dispatch('productChanged');
         $this->dispatch('resetNumpad');
-    }
-
-    public function submitCustomProductForm()
-    {
-        $this->customProductForm->validate();
-
-        $qty = max(1, (int) ($this->customProductData['quantity'] ?? 1));
-        $single = (float) ($this->customProductData['price'] ?? 0);
-        $vat = (float) ($this->customProductData['vat_rate'] ?? 21);
-
-        $product = [
-            'id' => null,
-            'product' => null,
-            'name' => (string) ($this->customProductData['name'] ?? ''),
-            'quantity' => $qty,
-            'singlePrice' => $single,
-            'price' => $single * $qty,
-            'priceFormatted' => CurrencyHelper::formatPrice($single * $qty),
-
-            // ✅ consistent key
-            'vat_rate' => $vat,
-
-            'customProduct' => true,
-            'isCustomPrice' => true, // custom = altijd custom price
-            'extra' => [],
-            'identifier' => Str::random(),
-            'customId' => 'custom-' . rand(1, 10000000),
-        ];
-
-        $posCart = $this->getActivePosCart();
-        $products = $posCart->products ?? [];
-        $products[] = $product;
-
-        $posCart->products = array_values($products);
-        $posCart->save();
-
-        $this->customProductData = [
-            'name' => '',
-            'quantity' => 1,
-            'vat_rate' => 21,
-            'price' => 0,
-        ];
-
-        $this->dispatch('addCustomProduct', $product);
-        $this->dispatch('resetNumpad');
-
-        Notification::make()
-            ->body('Aangepast product toegevoegd')
-            ->success()
-            ->send();
     }
 
     public function createDiscountForm(Schema $schema): Schema
