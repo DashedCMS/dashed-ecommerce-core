@@ -76,11 +76,15 @@ class ShowProducts extends Component
         $this->loadProducts(true);
     }
 
-    public function updated($name)
+    public function updated()
     {
-        if ($name !== 'page') {
-            $this->page = 1;
-        }
+        $this->page = 1;
+        $this->loadProducts();
+    }
+
+    public function updatedPage($page)
+    {
+        $this->page = $page;
         $this->loadProducts();
     }
 
