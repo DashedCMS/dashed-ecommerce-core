@@ -124,6 +124,37 @@ class OrderResource extends Resource
     {
         $newSchema = [];
 
+        $newSchema[] = Section::make('Account')->columnSpanFull()
+            ->schema([
+                Select::make('user_id')
+                    ->label('Gekoppeld account')
+                    ->nullable()
+                    ->searchable()
+                    ->getSearchResultsUsing(function (string $search) {
+                        $userModel = config('auth.providers.users.model', \Dashed\DashedCore\Models\User::class);
+
+                        return $userModel::where(function ($q) use ($search) {
+                            $q->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        })
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(fn ($u) => [
+                                $u->id => $u->name . ($u->name !== $u->email ? ' (' . $u->email . ')' : ''),
+                            ])
+                            ->toArray();
+                    })
+                    ->getOptionLabelUsing(function ($value) {
+                        $userModel = config('auth.providers.users.model', \Dashed\DashedCore\Models\User::class);
+                        $u = $userModel::find($value);
+
+                        return $u ? $u->name . ($u->name !== $u->email ? ' (' . $u->email . ')' : '') : null;
+                    }),
+            ])
+            ->hiddenOn(ViewOrder::class)
+            ->columns(1);
+
         $newSchema[] = Section::make('Persoonlijke informatie')->columnSpanFull()
             ->schema([
                 TextInput::make('first_name')

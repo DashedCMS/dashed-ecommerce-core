@@ -24,10 +24,13 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderSettingsPage extends Page
 {
+    use HasSettingsPermission;
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Bestelling instellingen';

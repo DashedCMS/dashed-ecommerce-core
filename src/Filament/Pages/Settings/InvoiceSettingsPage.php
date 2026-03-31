@@ -13,10 +13,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Filament\Infolists\Components\TextEntry;
 
 class InvoiceSettingsPage extends Page
 {
+    use HasSettingsPermission;
+
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-report';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Facturatie instellingen';

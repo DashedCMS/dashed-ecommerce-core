@@ -20,6 +20,11 @@ class ExportOrdersPage extends Page
     protected static ?string $title = 'Exporteer bestellingen';
     protected static ?int $navigationSort = 100000;
 
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->can('view_exports');
+    }
+
     protected string $view = 'dashed-ecommerce-core::exports.pages.export';
 
     public array $data = [];

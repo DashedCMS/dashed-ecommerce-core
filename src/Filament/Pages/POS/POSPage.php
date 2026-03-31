@@ -358,16 +358,22 @@ class POSPage extends Component implements HasSchemas, HasActions
                 Select::make('customerUserId')
                     ->label('Account')
                     ->columnSpanFull()
-                    ->options(function () {
-                        $users = User::all();
-                        $options = [];
-
-                        foreach ($users as $user) {
-                            $options[$user->id] = $user->name . ($user->name != $user->email ? ' ( ' . $user->email . ' )' : '');
-                        }
-
-                        return $options;
+                    ->searchable()
+                    ->preload()
+                    ->getSearchResultsUsing(function (string $search) {
+                        return User::where(function ($q) use ($search) {
+                            $q->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        })
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(fn ($user) => [
+                                $user->id => $user->name . ($user->name !== $user->email ? ' (' . $user->email . ')' : ''),
+                            ])
+                            ->toArray();
                     })
+                    ->getOptionLabelUsing(fn ($value) => optional(User::find($value))->name)
                     ->suffixAction(
                         Action::make('copyCostToPrice')
                             ->label('Gegevens invoeren')
@@ -405,7 +411,7 @@ class POSPage extends Component implements HasSchemas, HasActions
                                 $this->zipCode = $lastOrder->zip_code;
                                 $this->city = $lastOrder->city;
                                 $this->country = $lastOrder->country;
-                                $this->company = $lastOrder->company;
+                                $this->company = $lastOrder->company_name;
                                 $this->btwId = $lastOrder->btw_id;
 
                                 $this->invoiceStreet = $lastOrder->invoice_street;

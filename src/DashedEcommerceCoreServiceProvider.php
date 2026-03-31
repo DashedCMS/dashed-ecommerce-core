@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Gate;
 use Dashed\DashedCore\Models\User;
 use App\Providers\AppServiceProvider;
 use Filament\Forms\Components\Select;
@@ -17,7 +18,6 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
-use Dashed\DashedCore\Support\MeasuresServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\ClearOldCarts;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -86,13 +86,10 @@ use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWith
 
 class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 {
-    use MeasuresServiceProvider;
-
     public static string $name = 'dashed-ecommerce-core';
 
     public function bootingPackage()
     {
-        $this->logProviderMemory('bootingPackage:start');
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
@@ -214,7 +211,96 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             new DashedEcommerceCorePlugin(),
         ]);
 
-        $this->logProviderMemory('bootingPackage:end');
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\DiscountCode::class, \Dashed\DashedEcommerceCore\Policies\DiscountCodePolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\FulfillmentCompany::class, \Dashed\DashedEcommerceCore\Policies\FulfillmentCompanyPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\OrderLogTemplate::class, \Dashed\DashedEcommerceCore\Policies\OrderLogTemplatePolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\Order::class, \Dashed\DashedEcommerceCore\Policies\OrderPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\PaymentMethod::class, \Dashed\DashedEcommerceCore\Policies\PaymentMethodPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductCategory::class, \Dashed\DashedEcommerceCore\Policies\ProductCategoryPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductCharacteristics::class, \Dashed\DashedEcommerceCore\Policies\ProductCharacteristicsPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductExtra::class, \Dashed\DashedEcommerceCore\Policies\ProductExtraPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductFaq::class, \Dashed\DashedEcommerceCore\Policies\ProductFaqPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductFilterOption::class, \Dashed\DashedEcommerceCore\Policies\ProductFilterOptionPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductFilter::class, \Dashed\DashedEcommerceCore\Policies\ProductFilterPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductGroup::class, \Dashed\DashedEcommerceCore\Policies\ProductGroupPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\Product::class, \Dashed\DashedEcommerceCore\Policies\ProductPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductTab::class, \Dashed\DashedEcommerceCore\Policies\ProductTabPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingClass::class, \Dashed\DashedEcommerceCore\Policies\ShippingClassPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingMethod::class, \Dashed\DashedEcommerceCore\Policies\ShippingMethodPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingZone::class, \Dashed\DashedEcommerceCore\Policies\ShippingZonePolicy::class);
+
+        cms()->registerRolePermissions('E-commerce', [
+            'view_order' => 'Bestellingen bekijken',
+            'edit_order' => 'Bestellingen bewerken',
+            'delete_order' => 'Bestellingen verwijderen',
+            'view_cart' => 'Winkelwagens bekijken',
+            'edit_cart' => 'Winkelwagens bewerken',
+            'delete_cart' => 'Winkelwagens verwijderen',
+            'view_product' => 'Producten bekijken',
+            'edit_product' => 'Producten bewerken',
+            'delete_product' => 'Producten verwijderen',
+            'view_product_category' => 'Productcategorieën bekijken',
+            'edit_product_category' => 'Productcategorieën bewerken',
+            'delete_product_category' => 'Productcategorieën verwijderen',
+            'view_product_characteristics' => 'Productkenmerken bekijken',
+            'edit_product_characteristics' => 'Productkenmerken bewerken',
+            'delete_product_characteristics' => 'Productkenmerken verwijderen',
+            'view_product_extra' => 'Productextras bekijken',
+            'edit_product_extra' => 'Productextras bewerken',
+            'delete_product_extra' => 'Productextras verwijderen',
+            'view_product_faq' => 'Product FAQ bekijken',
+            'edit_product_faq' => 'Product FAQ bewerken',
+            'delete_product_faq' => 'Product FAQ verwijderen',
+            'view_product_filter' => 'Productfilters bekijken',
+            'edit_product_filter' => 'Productfilters bewerken',
+            'delete_product_filter' => 'Productfilters verwijderen',
+            'view_product_filter_option' => 'Productfilteropties bekijken',
+            'edit_product_filter_option' => 'Productfilteropties bewerken',
+            'delete_product_filter_option' => 'Productfilteropties verwijderen',
+            'view_product_group' => 'Productgroepen bekijken',
+            'edit_product_group' => 'Productgroepen bewerken',
+            'delete_product_group' => 'Productgroepen verwijderen',
+            'view_product_tab' => 'Producttabs bekijken',
+            'edit_product_tab' => 'Producttabs bewerken',
+            'delete_product_tab' => 'Producttabs verwijderen',
+            'view_discount_code' => 'Kortingscodes bekijken',
+            'edit_discount_code' => 'Kortingscodes bewerken',
+            'delete_discount_code' => 'Kortingscodes verwijderen',
+            'view_order_log_template' => 'Orderlog templates bekijken',
+            'edit_order_log_template' => 'Orderlog templates bewerken',
+            'delete_order_log_template' => 'Orderlog templates verwijderen',
+            'view_pos' => 'Point of Sale bekijken',
+        ]);
+
+        cms()->registerRolePermissions('Verzending', [
+            'view_fulfillment_company' => 'Fulfillment bedrijven bekijken',
+            'edit_fulfillment_company' => 'Fulfillment bedrijven bewerken',
+            'delete_fulfillment_company' => 'Fulfillment bedrijven verwijderen',
+            'view_shipping_class' => 'Verzendklassen bekijken',
+            'edit_shipping_class' => 'Verzendklassen bewerken',
+            'delete_shipping_class' => 'Verzendklassen verwijderen',
+            'view_shipping_method' => 'Verzendmethoden bekijken',
+            'edit_shipping_method' => 'Verzendmethoden bewerken',
+            'delete_shipping_method' => 'Verzendmethoden verwijderen',
+            'view_shipping_zone' => 'Verzendzones bekijken',
+            'edit_shipping_zone' => 'Verzendzones bewerken',
+            'delete_shipping_zone' => 'Verzendzones verwijderen',
+        ]);
+
+        cms()->registerRolePermissions('Betalingen', [
+            'view_payment_method' => 'Betaalmethoden bekijken',
+            'edit_payment_method' => 'Betaalmethoden bewerken',
+            'delete_payment_method' => 'Betaalmethoden verwijderen',
+        ]);
+
+        cms()->registerRolePermissions('Statistics', [
+            'view_statistics' => 'Statistieken bekijken',
+        ]);
+
+        cms()->registerRolePermissions('Export', [
+            'view_exports' => 'Exports bekijken',
+        ]);
     }
 
     public static function builderBlocks()
@@ -303,7 +389,6 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function configurePackage(Package $package): void
     {
-        $this->logProviderMemory('configurePackage:start');
 
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
@@ -366,7 +451,6 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 ClearOldCarts::class,
             ]);
 
-        $this->logProviderMemory('configurePackage:end');
     }
 
     public static function createDefaultPages(): void

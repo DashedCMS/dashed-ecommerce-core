@@ -12,10 +12,13 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Filament\Infolists\Components\TextEntry;
 
 class VATSettingsPage extends Page
 {
+    use HasSettingsPermission;
+
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-receipt-percent';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'BTW instellingen';

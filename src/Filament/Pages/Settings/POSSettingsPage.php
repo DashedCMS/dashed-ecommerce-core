@@ -16,10 +16,13 @@ use Filament\Schemas\Components\Section;
 use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Infolists\Components\TextEntry;
+use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Filament\Schemas\Components\Utilities\Get;
 
 class POSSettingsPage extends Page
 {
+    use HasSettingsPermission;
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'POS instellingen';

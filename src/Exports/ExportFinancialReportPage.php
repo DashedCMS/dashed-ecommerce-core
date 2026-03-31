@@ -19,6 +19,16 @@ class ExportFinancialReportPage extends Page
     protected static ?string $title = 'Exporteer financieel rapport';
     protected static ?int $navigationSort = 100000;
 
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->can('view_exports');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+
     protected string $view = 'dashed-ecommerce-core::exports.pages.export';
 
     public array $data = [];

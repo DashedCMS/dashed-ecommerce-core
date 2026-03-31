@@ -18,9 +18,16 @@ class POSPageRedirect extends Page
     protected static ?int $navigationSort = 3;
     protected Width | string | null $maxContentWidth = 'full';
 
+    public static function canAccess(): bool
+    {
+        return Customsetting::get('pos_enabled', null, false)
+            && auth()->check()
+            && auth()->user()->can('view_pos');
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
-        return Customsetting::get('pos_enabled', null, false);
+        return static::canAccess();
     }
 
     public static function getNavigationUrl(): string

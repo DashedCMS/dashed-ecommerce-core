@@ -39,7 +39,7 @@ class SendInvoices extends Command
      */
     public function handle()
     {
-        $orders = Order::thisSite()->where('status', 'paid')->where('invoice_send_to_customer', 0)->get();
+        $orders = Order::thisSite()->where('status', 'paid')->where('invoice_send_to_customer', 0)->where('created_at', '<', now()->subMinutes(5))->get();
         foreach ($orders as $order) {
             SendInvoiceJob::dispatch($order, null);
         }

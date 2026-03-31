@@ -26,6 +26,12 @@ class ActionsStatisticsPage extends Page implements HasSchemas
     protected static ?string $title = 'Actie statistieken';
     protected static ?int $navigationSort = 100000;
 
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->can('view_statistics');
+    }
+
+
     protected string $view = 'dashed-ecommerce-core::statistics.pages.action-statistics';
 
     public ?array $data = [];

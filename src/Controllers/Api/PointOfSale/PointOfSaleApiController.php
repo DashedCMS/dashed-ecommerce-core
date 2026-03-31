@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -404,6 +405,8 @@ class PointOfSaleApiController extends Controller
     public function addProductToCart(POSCart $POSCart, Product $selectedProduct): array
     {
         $productAlreadyInCart = false;
+        $customerUser = $POSCart->customer_user_id ? User::find($POSCart->customer_user_id) : null;
+        $unitPrice = (float) $selectedProduct->priceForUser($customerUser);
 
         $products = $POSCart->products ?? [];
         foreach ($products as &$product) {
@@ -412,7 +415,7 @@ class PointOfSaleApiController extends Controller
 
                 $product['quantity'] = (int) ($product['quantity'] ?? 0) + 1;
 
-                $single = (float) ($product['singlePrice'] ?? $selectedProduct->currentPrice);
+                $single = (float) ($product['singlePrice'] ?? $unitPrice);
                 $product['singlePrice'] = $single;
                 $product['price'] = $single * (int) $product['quantity'];
                 $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
@@ -426,9 +429,9 @@ class PointOfSaleApiController extends Controller
                 'name' => $selectedProduct->getTranslation('name', app()->getLocale()),
                 'image' => mediaHelper()->getSingleMedia($selectedProduct->firstImage, ['widen' => 300])->url ?? '',
                 'quantity' => 1,
-                'singlePrice' => $selectedProduct->currentPrice,
-                'price' => $selectedProduct->currentPrice,
-                'priceFormatted' => CurrencyHelper::formatPrice($selectedProduct->currentPrice),
+                'singlePrice' => $unitPrice,
+                'price' => $unitPrice,
+                'priceFormatted' => CurrencyHelper::formatPrice($unitPrice),
                 'extra' => [],
             ];
         }
@@ -1421,6 +1424,7 @@ class PointOfSaleApiController extends Controller
     private function calculatePosCartTotals(POSCart $posCart, ?DiscountCode $discountCodeModel = null): array
     {
         $products = $posCart->products ?? [];
+        $customerUser = $posCart->customer_user_id ? User::find($posCart->customer_user_id) : null;
 
         $lines = [];
         $subtotal = 0.0;
@@ -1441,6 +1445,13 @@ class PointOfSaleApiController extends Controller
                 $model = Product::with(['volumeDiscounts', 'productCategories'])->find((int) $item->product_id);
             }
             $item->model = $model;
+
+            if ($customerUser && $model) {
+                $options = (array) ($item->options ?? []);
+                $options['singlePrice'] = (float) $model->priceForUser($customerUser);
+                $options['isCustomPrice'] = true;
+                $item->options = $options;
+            }
 
             $lineWithoutDiscount = (float) Product::getShoppingCartItemPrice($item, null);
             $lineWithDiscount = $lineWithoutDiscount;
