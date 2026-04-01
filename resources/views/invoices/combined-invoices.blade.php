@@ -163,7 +163,7 @@
             <tr>
                 <th>Land</th>
                 <th>BTW-nummer</th>
-                <th class="numeric">Omzet</th>
+                <th class="numeric">Omzet ex BTW</th>
             </tr>
 
             @forelse($icpTotals as $icpTotal)
@@ -178,6 +178,33 @@
                 </tr>
             @endforelse
         </table>
+
+        @if(count($icpWithoutVatTotals ?? []) > 0)
+            <br>
+
+            <table>
+                <tr>
+                    <th colspan="5">ICP-zone zonder BTW-nummer (controleren)</th>
+                </tr>
+                <tr>
+                    <th>Order</th>
+                    <th>Land</th>
+                    <th class="numeric">Excl BTW</th>
+                    <th class="numeric">BTW</th>
+                    <th class="numeric">Incl BTW</th>
+                </tr>
+
+                @foreach($icpWithoutVatTotals as $row)
+                    <tr>
+                        <td>{{ $row['order_id'] }}</td>
+                        <td>{{ $row['country'] }}</td>
+                        <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($row['ex_vat'], 'EUR', true) }}</td>
+                        <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($row['vat'], 'EUR', true) }}</td>
+                        <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($row['incl_vat'], 'EUR', true) }}</td>
+                    </tr>
+                @endforeach
+            </table>
+        @endif
     </div>
 
     <table class="table-details">
