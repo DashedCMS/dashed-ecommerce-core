@@ -1125,7 +1125,7 @@ class Order extends Model
             ];
         } elseif ($this->status == 'waiting_for_confirmation') {
             return [
-                'status' => 'Wachten op bevestiging betaling',
+                'status' => 'Wachten op betaling',
                 'color' => 'purple',
             ];
         } elseif ($this->status == 'return') {

@@ -10,9 +10,11 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Jobs\ExportFinancialReportJob;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\Concerns\HasDateRangePresets;
 
 class ExportFinancialReportPage extends Page
 {
+    use HasDateRangePresets;
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cloud-arrow-down';
     protected static ?string $navigationLabel = 'Exporteer financieel rapport';
     protected static string | UnitEnum | null $navigationGroup = 'Export';

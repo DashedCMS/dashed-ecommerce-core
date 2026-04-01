@@ -79,7 +79,7 @@ class DiscountTable extends TableWidget
                         'primary' => fn ($state): bool => $state === 'Lopende aankoop',
                         'danger' => fn ($state): bool => $state === 'Geannuleerd',
                         'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
-                        'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op bevestiging betaling']),
+                        'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op betaling']),
                     ]),
                 TextColumn::make('name')
                     ->searchable()

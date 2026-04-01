@@ -11,9 +11,14 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Dashed\DashedEcommerceCore\Jobs\ExportOrdersJob;
+use Dashed\DashedEcommerceCore\Filament\Pages\Exports\Concerns\HasDateRangePresets;
 
 class ExportOrdersPage extends Page
 {
+    use HasDateRangePresets;
+
+    protected string $startDateField = 'startDate';
+    protected string $endDateField = 'endDate';
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cloud-arrow-down';
     protected static ?string $navigationLabel = 'Exporteer bestellingen';
     protected static string | UnitEnum | null $navigationGroup = 'Export';

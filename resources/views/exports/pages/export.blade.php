@@ -1,5 +1,24 @@
 <x-filament::page>
 
+    <div class="flex flex-wrap gap-2 mb-4">
+        @foreach([
+            'this_week'    => 'Deze week',
+            'last_week'    => 'Afgelopen week',
+            'this_month'   => 'Deze maand',
+            'last_month'   => 'Afgelopen maand',
+            'this_quarter' => 'Dit kwartaal',
+            'last_quarter' => 'Afgelopen kwartaal',
+            'this_year'    => 'Dit jaar',
+            'last_year'    => 'Afgelopen jaar',
+        ] as $preset => $label)
+            <button type="button"
+                    wire:click="fillDateRange('{{ $preset }}')"
+                    class="px-3 py-1.5 text-sm rounded-lg font-medium transition bg-primary-500 hover:bg-primary-600 text-white">
+                {{ $label }}
+            </button>
+        @endforeach
+    </div>
+
     <form wire:submit.prevent="submit" method="POST">
         {{ $this->form }}
 
