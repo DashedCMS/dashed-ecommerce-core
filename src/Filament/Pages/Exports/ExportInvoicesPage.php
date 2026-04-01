@@ -35,7 +35,7 @@ class ExportInvoicesPage extends Page
     public function mount(): void
     {
         $this->form->fill([
-            'sort' => 'merged',
+            'sort' => 'combined',
         ]);
     }
 
@@ -53,8 +53,8 @@ class ExportInvoicesPage extends Page
                         Select::make('sort')
                             ->label('Soort export')
                             ->options([
-                                'merged' => 'Alle facturen in 1 PDF',
                                 'combined' => 'Alle orders in 1 factuur',
+                                'merged' => 'Alle facturen in 1 PDF',
                             ])
                             ->required(),
                     ]),

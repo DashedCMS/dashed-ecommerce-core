@@ -107,7 +107,7 @@ class ExportInvoicesJob implements ShouldQueue
             $icpTotals = [];
 
             foreach ($orders as $order) {
-                $subTotal += $order->subtotal;
+                $subTotal += ($order->total - $order->btw);
                 $btw += $order->btw;
                 $discount += $order->discount;
                 $total += $order->total;
@@ -151,20 +151,20 @@ class ExportInvoicesJob implements ShouldQueue
 
                 $zoneReverseCharge = (bool) ($shippingZone->vat_reverse_charge ?? false);
 
-                // ICP / verlegd: zone heeft reverse charge aan
-                if ($zoneReverseCharge) {
-                    $icpKey = $country . '|' . ($order->btw_id ?: 'geen-btw-nummer');
+                // ICP / verlegd: zone heeft reverse charge aan én klant heeft BTW-nummer
+                if ($zoneReverseCharge && ! empty($order->btw_id)) {
+                    $icpKey = $country . '|' . $order->btw_id;
 
                     if (! isset($icpTotals[$icpKey])) {
                         $icpTotals[$icpKey] = [
                             'country' => $country,
-                            'vat_number' => $order->btw_id ?: '-',
+                            'vat_number' => $order->btw_id,
                             'revenue' => 0,
                             'zone' => $zoneName,
                         ];
                     }
 
-                    $icpTotals[$icpKey]['revenue'] += $order->subtotal;
+                    $icpTotals[$icpKey]['revenue'] += ($order->total - $order->btw);
 
                     continue;
                 }
@@ -189,7 +189,7 @@ class ExportInvoicesJob implements ShouldQueue
                         ];
                     }
 
-                    $ossTotals[$ossKey]['ex_vat'] += $order->subtotal;
+                    $ossTotals[$ossKey]['ex_vat'] += ($order->total - $order->btw);
                     $ossTotals[$ossKey]['vat'] += $order->btw;
                     $ossTotals[$ossKey]['incl_vat'] += $order->total;
 
@@ -208,7 +208,7 @@ class ExportInvoicesJob implements ShouldQueue
                     ];
                 }
 
-                $normalZoneTotals[$normalKey]['ex_vat'] += $order->subtotal;
+                $normalZoneTotals[$normalKey]['ex_vat'] += ($order->total - $order->btw);
                 $normalZoneTotals[$normalKey]['vat'] += $order->btw;
                 $normalZoneTotals[$normalKey]['incl_vat'] += $order->total;
             }

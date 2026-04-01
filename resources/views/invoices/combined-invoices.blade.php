@@ -88,13 +88,11 @@
             </table>
         @endif
 
-        <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPriceForPDF($subTotal, 'EUR', true) }}</p>
-
         @if($discount != 0.00)
             <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPriceForPDF($discount, 'EUR', true) }}</p>
         @endif
 
-        <p class="total">{{ Translation::get('total-ex-vat', 'invoice', 'Totaal ex BTW') . ': ' . CurrencyHelper::formatPriceForPDF($total - $btw, 'EUR', true) }}</p>
+        <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotaal ex BTW') . ': ' . CurrencyHelper::formatPriceForPDF($subTotal, 'EUR', true) }}</p>
 
         <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($vatPercentages ?? []) == 1 ? ' ' . array_key_first($vatPercentages) . '%' : '') .  ': ' . CurrencyHelper::formatPriceForPDF($btw, 'EUR', true) }}</p>
 
