@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class RevenueStatisticsPage extends Page implements HasSchemas
 {
@@ -43,7 +44,21 @@ class RevenueStatisticsPage extends Page implements HasSchemas
 
     public function mount(): void
     {
-        $this->form->fill();
+        $this->form->fill([
+            'period' => 'this_month',
+            'steps'  => 'per_day',
+        ]);
+        $this->calculateStatistics();
+    }
+
+    public function setPeriod(string $period): void
+    {
+        $defaultData = Dashboard::getDefaultDataByPeriod($period);
+        $this->data['startDate'] = $defaultData['startDate'];
+        $this->data['endDate']   = $defaultData['endDate'];
+        $this->data['period']    = $defaultData['period'];
+        $this->data['steps']     = $defaultData['steps'];
+        $this->form->fill($this->data);
         $this->calculateStatistics();
     }
 
@@ -82,16 +97,41 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             ->components([
                 Section::make()
                     ->schema([
+                        Select::make('period')
+                            ->label('Periode')
+                            ->options(Dashboard::getPeriodOptions())
+                            ->default('this_month')
+                            ->reactive()
+                            ->afterStateUpdated(function (callable $set, $state) {
+                                $defaultData = Dashboard::getDefaultDataByPeriod($state);
+                                $set('startDate', $defaultData['startDate']);
+                                $set('endDate', $defaultData['endDate']);
+                                $set('steps', $defaultData['steps']);
+                            }),
+
+                        Select::make('steps')
+                            ->label('Stappen')
+                            ->options([
+                                'per_hour'    => 'Per uur',
+                                'per_day'     => 'Per dag',
+                                'per_week'    => 'Per week',
+                                'per_month'   => 'Per maand',
+                                'per_quarter' => 'Per kwartaal',
+                                'per_year'    => 'Per jaar',
+                            ])
+                            ->default('per_day')
+                            ->reactive(),
+
                         DatePicker::make('startDate')
                             ->label('Start datum')
-                            ->default(now()->subMonth())
+                            ->default(now()->startOfMonth())
                             ->reactive(),
 
                         DatePicker::make('endDate')
                             ->label('Eind datum')
                             ->nullable()
                             ->after('startDate')
-                            ->default(now())
+                            ->default(now()->endOfMonth())
                             ->reactive(),
 
                         Select::make('status')
@@ -169,11 +209,17 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             ? Carbon::parse($state['endDate'])->endOfDay()
             : now()->endOfDay();
 
+        $steps = $state['steps'] ?? 'per_day';
         $status = $state['status'] ?? 'all';
         $paymentMethod = $state['paymentMethod'] ?? 'all';
         $fulfillmentStatus = $state['fulfillmentStatus'] ?? 'all';
         $retourStatus = $state['retourStatus'] ?? 'all';
         $orderOrigin = $state['orderOrigin'] ?? 'all';
+
+        $formats = Dashboard::getFormatsByStep($steps);
+        $startFormat = $formats['startFormat'];
+        $endFormat   = $formats['endFormat'];
+        $addFormat   = $formats['addFormat'];
 
         $ordersQuery = Order::query()
             ->whereBetween('created_at', [$beginDate, $endDate]);
@@ -234,26 +280,24 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             ")
             ->first();
 
-        $graphRows = (clone $filteredOrdersQuery)
-            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(total), 0) as total_amount')
-            ->groupByRaw('DATE(created_at)')
-            ->orderByRaw('DATE(created_at)')
-            ->get()
-            ->keyBy('date');
-
         $graphLabels = [];
         $graphValues = [];
 
-        $cursor = $beginDate->copy()->startOfDay();
-        $lastDay = $endDate->copy()->startOfDay();
+        $cursor = $beginDate->copy()->$startFormat();
+        $end    = $endDate->copy()->$endFormat();
 
-        while ($cursor->lte($lastDay)) {
-            $dateKey = $cursor->format('Y-m-d');
+        while ($cursor->lte($end)) {
+            $periodStart = $cursor->copy()->$startFormat();
+            $periodEnd   = $cursor->copy()->$endFormat();
 
-            $graphLabels[] = $cursor->format('d-m-Y');
-            $graphValues[] = (float) ($graphRows[$dateKey]->total_amount ?? 0);
+            $periodAmount = (clone $filteredOrdersQuery)
+                ->whereBetween('created_at', [$periodStart, $periodEnd])
+                ->sum('total');
 
-            $cursor->addDay();
+            $graphLabels[] = $periodStart->format('d-m-Y');
+            $graphValues[] = (float) $periodAmount;
+
+            $cursor->$addFormat();
         }
 
         $totalOrderCount = (int) ($orderTotals->total_orders ?? 0);
