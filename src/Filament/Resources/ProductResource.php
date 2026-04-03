@@ -193,7 +193,7 @@ class ProductResource extends Resource
                 ->maxValue(100000)
                 ->numeric()
                 ->required($priceField['required'] ?? false)
-                ->default(fn ($record) => $record->{$key})
+                ->default(fn ($record) => $record ? $record->{$key} : '')
                 ->columnSpan([
                     'default' => 1,
                     'lg' => 3,
