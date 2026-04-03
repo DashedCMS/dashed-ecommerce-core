@@ -18,7 +18,7 @@ class Orders extends Component
             return redirect(AccountHelper::getLoginUrl());
         }
 
-        $this->orders = auth()->user()->orders()->get();
+        $this->orders = auth()->user()->orders()->with(['orderProducts', 'orderProducts.product'])->get();
         $this->user = auth()->user();
 
     }

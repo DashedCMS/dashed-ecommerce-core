@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -227,9 +228,7 @@ class ShowProducts extends Component
                 ]);
         }
 
-        $products = $query->get();
-
-        $this->allProducts = $products;
+        $this->allProducts = Cache::remember($cacheKey, 300, fn () => $query->get());
     }
 
     public function setSortByValue($value)
