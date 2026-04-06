@@ -160,6 +160,7 @@ class EditProductGroup extends EditRecord
             ->action('duplicateProductGroup')
             ->color('warning');
 
+        $buttons[] = \Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction::make();
         $buttons[] = self::translateAction();
         $buttons[] = LocaleSwitcher::make();
         $buttons[] = DeleteAction::make();

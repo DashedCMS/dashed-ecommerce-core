@@ -150,6 +150,7 @@ class EditProduct extends EditRecord
                 ->color('warning');
         }
 
+        $buttons[] = \Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction::make();
         $buttons[] = self::translateAction();
         $buttons[] = LocaleSwitcher::make();
         $buttons[] = DeleteAction::make();

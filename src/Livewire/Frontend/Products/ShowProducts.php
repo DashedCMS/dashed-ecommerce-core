@@ -249,7 +249,6 @@ class ShowProducts extends Component
                     'productGroup',
                     'productFilters',
                     'productFilters.productFilterOptions',
-                    'media',
                 ]);
         }
 
