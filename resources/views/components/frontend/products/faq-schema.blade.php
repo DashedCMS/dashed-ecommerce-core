@@ -7,7 +7,7 @@
                 'name' => $faq['question'] ?? '',
                 'acceptedAnswer' => [
                     '@type' => 'Answer',
-                    'text' => $faq['answer'] ?? ''
+                    'text' => trim(strip_tags(cms()->convertToHtml($faq['answer'] ?? '')))
                 ]
             ];
         }
