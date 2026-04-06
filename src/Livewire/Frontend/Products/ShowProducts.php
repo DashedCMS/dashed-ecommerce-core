@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
 use Livewire\Component;
+use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -30,6 +31,7 @@ class ShowProducts extends Component
 
     public array $priceSlider = [];
     public array $defaultSliderOptions = [];
+
     #[Url]
     public int $page = 1;
 
@@ -73,12 +75,16 @@ class ShowProducts extends Component
         }
         $this->activeFilters = $activeFilters;
 
-
         $this->loadProducts(true);
     }
 
-    public function updated()
+    // Fires for all property updates except page (which has its own handler)
+    public function updated($property)
     {
+        if (str_starts_with($property, 'page')) {
+            return;
+        }
+
         $this->page = 1;
         $this->loadProducts();
     }
@@ -92,7 +98,6 @@ class ShowProducts extends Component
     public function loadProducts(bool $isMount = false)
     {
         $activeFilterQuery = [];
-        $usableFilters = [];
         foreach ($this->activeFilters as $filterKey => $filterValues) {
             foreach ($filterValues as $valueKey => $valueActivated) {
                 if ($valueActivated) {
@@ -110,30 +115,49 @@ class ShowProducts extends Component
             'activeFilters' => $this->activeFilters,
         ], []));
 
-        //        if ($isMount) {
         $this->getProducts();
         if ($this->enableFilters) {
             $this->getFilters();
         }
-        //        }
 
-        $response = Products::getAll($this->pagination, $this->page, $this->sortBy, $this->order, $this->productCategory->id ?? null, $this->search, $this->filters, $this->enableFilters, $this->allProducts, $this->priceSlider);
+        $response = Products::getAll(
+            $this->pagination,
+            $this->page,
+            $this->sortBy,
+            $this->order,
+            $this->productCategory->id ?? null,
+            $this->search,
+            $this->filters,
+            $this->enableFilters,
+            $this->allProducts,
+            $this->priceSlider,
+        );
+
         $this->products = $response['products'];
 
+        $minPrice = (float) ($response['minPrice'] ?? 0);
+        $maxPrice = (float) ($response['maxPrice'] ?? 1000);
+
+        // Guard against equal min/max (e.g. single product or empty set)
+        if ($maxPrice <= $minPrice) {
+            $maxPrice = $minPrice + 1;
+        }
+
         $this->defaultSliderOptions = [
-            'start' => [
-                (float)$response['minPrice'] ?? 0,
-                (float)$response['maxPrice'] ?? 1000,
-            ],
+            'start' => [$minPrice, $maxPrice],
             'range' => [
-                'min' => [(float)$response['minPrice'] ?? 0],
-                'max' => [(float)$response['maxPrice'] ?? 1000],
+                'min' => [$minPrice],
+                'max' => [$maxPrice],
             ],
             'connect' => true,
             'behaviour' => 'tap-drag',
             'tooltips' => true,
             'step' => 1,
         ];
+
+        $this->hasActiveFilters = collect($this->activeFilters)
+            ->flatMap(fn ($options) => array_values($options))
+            ->contains(true);
     }
 
     public function getFilters(): void
@@ -165,20 +189,19 @@ class ShowProducts extends Component
             $mappedOptions = $filterOptions->map(function ($option) use ($filterName, $activeFilters) {
                 $option->option_name = json_decode($option->option_name, true)[app()->getLocale()] ?? 'Onbekend';
 
-                return (object)[
+                return (object) [
                     'id' => $option->option_id,
                     'name' => $option->option_name,
                     'checked' => $activeFilters[$filterName][$option->option_name] ?? false,
                 ];
             });
 
-            return (object)[
+            return (object) [
                 'id' => $filterId,
                 'name' => $filterName,
                 'productFilterOptions' => $mappedOptions,
             ];
         });
-
 
         $activeOptions = DB::table('dashed__product_filter')
             ->whereIn('product_id', $this->allProducts->pluck('id'))
@@ -215,6 +238,7 @@ class ShowProducts extends Component
                 'productGroup',
                 'productFilters',
                 'productFilters.productFilterOptions',
+                'media',
             ]);
 
         if ($productCategory) {
@@ -225,6 +249,7 @@ class ShowProducts extends Component
                     'productGroup',
                     'productFilters',
                     'productFilters.productFilterOptions',
+                    'media',
                 ]);
         }
 
@@ -234,6 +259,7 @@ class ShowProducts extends Component
     public function setSortByValue($value)
     {
         $this->sortBy = $value;
+        $this->page = 1;
         $this->loadProducts();
     }
 
@@ -243,14 +269,20 @@ class ShowProducts extends Component
             unset($this->activeFilters[$filterKey][$optionKey]);
         }
 
-        // Als er geen opties meer over zijn binnen deze filter → hele filter verwijderen
         if (empty($this->activeFilters[$filterKey])) {
             unset($this->activeFilters[$filterKey]);
         }
 
-        // Forceer Livewire om array opnieuw te "zien"
         $this->activeFilters = array_filter($this->activeFilters);
+        $this->page = 1;
+        $this->loadProducts();
+    }
 
+    public function clearAllFilters()
+    {
+        $this->activeFilters = [];
+        $this->search = '';
+        $this->page = 1;
         $this->loadProducts();
     }
 
