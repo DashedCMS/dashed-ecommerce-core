@@ -44,11 +44,13 @@ class CartResource extends Resource
                         ->label('Totale waarde')
                         ->numeric()
                         ->disabled(),
-                    Forms\Components\TextInput::make('created_at')
+                    Forms\Components\DateTimePicker::make('created_at')
                         ->label('Aangemaakt op')
+                        ->displayFormat('d-m-Y H:i')
                         ->disabled(),
-                    Forms\Components\TextInput::make('updated_at')
+                    Forms\Components\DateTimePicker::make('updated_at')
                         ->label('Bijgewerkt op')
+                        ->displayFormat('d-m-Y H:i')
                         ->disabled(),
                 ])
                 ->columns(2),

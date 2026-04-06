@@ -1439,14 +1439,7 @@ class CartHelper
 
         DB::transaction(function () use ($cart) {
             CartItemModel::query()->where('cart_id', $cart->id)->delete();
-
-            $cart->discount_code_id = null;
-            $cart->shipping_method_id = null;
-            $cart->shipping_zone_id = null;
-            $cart->payment_method_id = null;
-            $cart->deposit_payment_method_id = null;
-            $cart->meta = null;
-            $cart->save();
+            $cart->delete();
         });
 
         $this->resetComputedFlags();
