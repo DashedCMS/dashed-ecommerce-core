@@ -238,7 +238,6 @@ class ShowProducts extends Component
                 'productGroup',
                 'productFilters',
                 'productFilters.productFilterOptions',
-                'media',
             ]);
 
         if ($productCategory) {
