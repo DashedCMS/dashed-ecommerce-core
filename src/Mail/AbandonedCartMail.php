@@ -19,11 +19,13 @@ class AbandonedCartMail extends Mailable
         public readonly Cart $cart,
         public readonly AbandonedCartFlowStep $step,
         public readonly ?DiscountCode $discountCode = null,
+        public readonly ?string $stepLocale = null,
     ) {
     }
 
     public function build(): static
     {
+        $locale = $this->stepLocale ?? app()->getLocale();
         $siteName = Customsetting::get('site_name', Sites::getActive(), config('app.name'));
         $fromEmail = Customsetting::get('site_from_email', Sites::getActive());
 
@@ -37,11 +39,18 @@ class AbandonedCartMail extends Mailable
             ':cartTotal:' => $cartTotal,
         ];
 
-        $subject = str_replace(array_keys($variables), array_values($variables), $this->step->subject);
-        $introText = str_replace(array_keys($variables), array_values($variables), $this->step->intro_text ?? '');
+        $subject = str_replace(array_keys($variables), array_values($variables), $this->step->getTranslation('subject', $locale));
+
+        $blocks = collect($this->step->getTranslation('blocks', $locale) ?? [])->map(function ($block) use ($variables) {
+            if ($block['type'] === 'text' && ! empty($block['data']['content'])) {
+                $block['data']['content'] = str_replace(array_keys($variables), array_values($variables), $block['data']['content']);
+            }
+            return $block;
+        })->all();
 
         $review = null;
-        if ($this->step->show_review && class_exists(\Dashed\DashedCore\Models\Review::class)) {
+        $hasReviewBlock = collect($blocks)->contains(fn ($b) => $b['type'] === 'review');
+        if ($hasReviewBlock && class_exists(\Dashed\DashedCore\Models\Review::class)) {
             $review = \Dashed\DashedCore\Models\Review::query()
                 ->where('stars', 5)
                 ->whereNotNull('review')
@@ -69,7 +78,7 @@ class AbandonedCartMail extends Mailable
             ->with([
                 'cart' => $this->cart,
                 'step' => $this->step,
-                'introText' => $introText,
+                'blocks' => $blocks,
                 'siteName' => $siteName,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
                 'checkoutUrl' => $checkoutUrl,

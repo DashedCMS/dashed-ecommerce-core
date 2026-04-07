@@ -41,6 +41,12 @@ class AbandonedCartFlowResource extends Resource
                 ->required()
                 ->maxLength(255),
 
+            TextInput::make('discount_prefix')
+                ->label('Kortingscode prefix')
+                ->helperText('Prefix voor gegenereerde kortingscodes, bijv. TERUG geeft TERUG-ABCD1234')
+                ->default('TERUG')
+                ->maxLength(20),
+
             Toggle::make('is_active')
                 ->label('Actieve flow')
                 ->helperText('Slechts één flow kan actief zijn tegelijk.'),

@@ -8,19 +8,29 @@ use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
+use Illuminate\Support\Facades\Mail;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable;
+use Dashed\DashedEcommerceCore\Models\Cart;
+use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
 
 class FlowStepsRelationManager extends RelationManager
 {
+    use Translatable;
+
     protected static string $relationship = 'steps';
     protected static ?string $title = 'Email stappen';
 
@@ -41,14 +51,52 @@ class FlowStepsRelationManager extends RelationManager
                     ->label('Onderwerp')
                     ->limit(50)
                     ->weight('bold'),
-                IconColumn::make('show_products')->label('Producten')->boolean(),
-                IconColumn::make('show_review')->label('Review')->boolean(),
                 IconColumn::make('incentive_enabled')->label('Korting')->boolean(),
                 IconColumn::make('enabled')->label('Actief')->boolean(),
             ])
             ->recordActions([
                 EditAction::make()
                     ->schema($this->stepSchema()),
+                Action::make('sendTest')
+                    ->label('Stuur test')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('gray')
+                    ->schema([
+                        TextInput::make('test_email')
+                            ->label('E-mailadres')
+                            ->email()
+                            ->required()
+                            ->default(fn () => auth()->user()?->email),
+                    ])
+                    ->action(function (array $data, $record): void {
+                        $cart = Cart::with(['items', 'items.product', 'items.product.productGroup'])
+                            ->whereHas('items')
+                            ->latest()
+                            ->first();
+
+                        if (! $cart) {
+                            Notification::make()
+                                ->title('Geen winkelwagen met producten gevonden om te simuleren.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        try {
+                            Mail::to($data['test_email'])->send(new AbandonedCartMail($cart, $record));
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Fout bij versturen: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        Notification::make()
+                            ->title('Test email verzonden naar ' . $data['test_email'])
+                            ->success()
+                            ->send();
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
@@ -59,6 +107,7 @@ class FlowStepsRelationManager extends RelationManager
                         $data['sort_order'] = $this->getOwnerRecord()->steps()->max('sort_order') + 1;
                         return $data;
                     }),
+                LocaleSwitcher::make(),
                 BulkActionGroup::make([DeleteBulkAction::make()]),
             ]);
     }
@@ -82,8 +131,11 @@ class FlowStepsRelationManager extends RelationManager
                         ])
                         ->default('hours')
                         ->required(),
+                    Toggle::make('enabled')
+                        ->label('Stap inschakelen')
+                        ->default(true),
                 ])
-                ->columns(2),
+                ->columns(3),
 
             Section::make('Email inhoud')
                 ->schema([
@@ -93,33 +145,71 @@ class FlowStepsRelationManager extends RelationManager
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
-                    RichEditor::make('intro_text')
-                        ->label('Berichttekst')
-                        ->helperText('Beschikbare variabelen: :product: :siteName: :cartTotal:')
-                        ->toolbarButtons([
-                            'bold', 'italic', 'underline', 'strike',
-                            'link', 'bulletList', 'orderedList', 'h2', 'h3',
+                    Builder::make('blocks')
+                        ->label('Inhoud blokken')
+                        ->blocks([
+                            Builder\Block::make('text')
+                                ->label('Tekst')
+                                ->icon('heroicon-o-document-text')
+                                ->schema([
+                                    RichEditor::make('content')
+                                        ->label('Tekst')
+                                        ->helperText('Variabelen: :product: :siteName: :cartTotal:')
+                                        ->toolbarButtons([
+                                            'bold', 'italic', 'underline', 'strike',
+                                            'link', 'bulletList', 'orderedList', 'h2', 'h3',
+                                        ]),
+                                ]),
+                            Builder\Block::make('product')
+                                ->label('Hoofdproduct')
+                                ->icon('heroicon-o-shopping-bag')
+                                ->maxItems(1)
+                                ->schema([]),
+                            Builder\Block::make('products')
+                                ->label('Alle producten')
+                                ->icon('heroicon-o-shopping-cart')
+                                ->maxItems(1)
+                                ->schema([]),
+                            Builder\Block::make('review')
+                                ->label('Klantreview')
+                                ->icon('heroicon-o-star')
+                                ->maxItems(1)
+                                ->schema([]),
+                            Builder\Block::make('discount')
+                                ->label('Kortingscode')
+                                ->icon('heroicon-o-tag')
+                                ->maxItems(1)
+                                ->schema([]),
+                            Builder\Block::make('button')
+                                ->label('Knop')
+                                ->icon('heroicon-o-cursor-arrow-rays')
+                                ->schema([
+                                    TextInput::make('label')
+                                        ->label('Knoptekst')
+                                        ->default('Bestel nu')
+                                        ->required()
+                                        ->maxLength(100),
+                                ]),
+                            Builder\Block::make('divider')
+                                ->label('Scheidingslijn')
+                                ->icon('heroicon-o-minus')
+                                ->schema([]),
+                            Builder\Block::make('usp')
+                                ->label('USPs')
+                                ->icon('heroicon-o-check-badge')
+                                ->maxItems(1)
+                                ->schema([
+                                    Textarea::make('items')
+                                        ->label('USPs (één per regel)')
+                                        ->helperText('Voer elke USP op een nieuwe regel in')
+                                        ->rows(4)
+                                        ->default("Gratis verzending\nSnel geleverd\nVeilig betalen"),
+                                ]),
                         ])
-                        ->columnSpanFull(),
-                    TextInput::make('button_label')
-                        ->label('Knoptekst')
-                        ->default('Bestel nu')
-                        ->required()
-                        ->maxLength(100),
+                        ->columnSpanFull()
+                        ->collapsible()
+                        ->reorderableWithButtons(),
                 ]),
-
-            Section::make('Opties')
-                ->schema([
-                    Toggle::make('show_products')
-                        ->label('Producten tonen')
-                        ->default(true),
-                    Toggle::make('show_review')
-                        ->label('Klantreview tonen'),
-                    Toggle::make('enabled')
-                        ->label('Stap inschakelen')
-                        ->default(true),
-                ])
-                ->columns(3),
 
             Section::make('Kortingscode')
                 ->schema([

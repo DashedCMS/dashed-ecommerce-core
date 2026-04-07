@@ -84,6 +84,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
+use Dashed\DashedEcommerceCore\Commands\SendAbandonedCartEmails;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 
 class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
@@ -107,6 +108,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 ->withoutOverlapping();
             $schedule->command(ClearOldCarts::class)
                 ->hourly()
+                ->withoutOverlapping();
+            $schedule->command(SendAbandonedCartEmails::class)
+                ->everyFiveMinutes()
                 ->withoutOverlapping();
         });
 
@@ -456,6 +460,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
                 MigrateToV3::class,
                 UpdateExpiredGlobalDiscountCodes::class,
                 ClearOldCarts::class,
+                SendAbandonedCartEmails::class,
             ]);
 
     }

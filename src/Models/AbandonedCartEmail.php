@@ -14,12 +14,14 @@ class AbandonedCartEmail extends Model
         'email',
         'email_number',
         'flow_step_id',
+        'send_at',
         'sent_at',
         'cancelled_at',
         'discount_code_id',
     ];
 
     protected $casts = [
+        'send_at' => 'datetime',
         'sent_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];

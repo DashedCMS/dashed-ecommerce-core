@@ -26,7 +26,7 @@ class SendAbandonedCartEmailJob implements ShouldQueue
 
     public function handle(): void
     {
-        $record = AbandonedCartEmail::with('flowStep')->find($this->abandonedCartEmailId);
+        $record = AbandonedCartEmail::with('flowStep.flow')->find($this->abandonedCartEmailId);
 
         if (! $record || ! $record->isPending()) {
             return;
@@ -53,14 +53,15 @@ class SendAbandonedCartEmailJob implements ShouldQueue
             $record->update(['discount_code_id' => $discountCode->id]);
         }
 
-        Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode));
+        Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode, $cart->locale));
 
         $record->update(['sent_at' => now()]);
     }
 
     private function generateDiscountCode($step, string $email): DiscountCode
     {
-        $code = 'TERUG-' . strtoupper(Str::random(8));
+        $prefix = $step->flow?->discount_prefix ?: 'TERUG';
+        $code = $prefix . '-' . strtoupper(Str::random(8));
 
         return DiscountCode::create([
             'name' => 'Verlaten winkelwagen - ' . $email,

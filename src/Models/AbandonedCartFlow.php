@@ -12,6 +12,7 @@ class AbandonedCartFlow extends Model
     protected $fillable = [
         'name',
         'is_active',
+        'discount_prefix',
     ];
 
     protected $casts = [
@@ -36,7 +37,7 @@ class AbandonedCartFlow extends Model
 
     public static function createDefault(): self
     {
-        $flow = static::create(['name' => 'Standaard flow', 'is_active' => true]);
+        $flow = static::create(['name' => 'Standaard flow', 'is_active' => true, 'discount_prefix' => 'TERUG']);
         static::where('id', '!=', $flow->id)->update(['is_active' => false]);
 
         $steps = [
@@ -45,36 +46,46 @@ class AbandonedCartFlow extends Model
                 'delay_value' => 1,
                 'delay_unit' => 'hours',
                 'subject' => 'Je hebt iets achtergelaten',
-                'intro_text' => '<p>Je winkelwagen staat nog voor je klaar. Kom terug en rond je bestelling af bij :siteName:!</p>',
                 'button_label' => 'Ga verder met bestellen',
-                'show_products' => true,
-                'show_review' => false,
                 'incentive_enabled' => false,
+                'blocks' => [
+                    ['type' => 'text', 'data' => ['content' => '<p>Je winkelwagen staat nog voor je klaar. Kom terug en rond je bestelling af bij <strong>:siteName:</strong>!</p>']],
+                    ['type' => 'products', 'data' => []],
+                    ['type' => 'button', 'data' => ['label' => 'Ga verder met bestellen', 'url' => '']],
+                ],
             ],
             [
                 'sort_order' => 2,
                 'delay_value' => 24,
                 'delay_unit' => 'hours',
                 'subject' => 'Je :product: wacht nog op je',
-                'intro_text' => '<p>Je bent bijna klaar! Je winkelwagen staat nog voor je klaar. Andere klanten gingen je al voor — dit is wat zij ervan vinden:</p>',
                 'button_label' => 'Bestel nu',
-                'show_products' => true,
-                'show_review' => true,
                 'incentive_enabled' => false,
+                'blocks' => [
+                    ['type' => 'text', 'data' => ['content' => '<p>Je bent bijna klaar! Je winkelwagen staat nog voor je klaar. Andere klanten gingen je al voor:</p>']],
+                    ['type' => 'product', 'data' => []],
+                    ['type' => 'review', 'data' => []],
+                    ['type' => 'button', 'data' => ['label' => 'Bestel nu', 'url' => '']],
+                ],
             ],
             [
                 'sort_order' => 3,
                 'delay_value' => 72,
                 'delay_unit' => 'hours',
                 'subject' => 'Speciaal voor jou: een cadeautje',
-                'intro_text' => '<p>We willen je graag een handje helpen. Gebruik de onderstaande kortingscode bij je bestelling:</p>',
                 'button_label' => 'Bestel met korting',
-                'show_products' => true,
-                'show_review' => false,
                 'incentive_enabled' => true,
                 'incentive_type' => 'amount',
                 'incentive_value' => 5,
                 'incentive_valid_days' => 7,
+                'blocks' => [
+                    ['type' => 'text', 'data' => ['content' => '<p>We willen je graag een handje helpen. Gebruik de onderstaande kortingscode bij je bestelling:</p>']],
+                    ['type' => 'product', 'data' => []],
+                    ['type' => 'discount', 'data' => []],
+                    ['type' => 'divider', 'data' => []],
+                    ['type' => 'usp', 'data' => ['items' => "Gratis verzending\nSnel geleverd\nVeilig betalen"]],
+                    ['type' => 'button', 'data' => ['label' => 'Bestel met korting', 'url' => '']],
+                ],
             ],
         ];
 

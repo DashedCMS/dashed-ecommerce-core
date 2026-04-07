@@ -46,15 +46,13 @@ class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
         foreach ($steps as $step) {
             $cumulativeHours += $step->delay_in_hours;
 
-            $record = AbandonedCartEmail::create([
+            AbandonedCartEmail::create([
                 'cart_id' => $this->cartId,
                 'email' => $cart->abandoned_email,
                 'email_number' => $step->sort_order,
                 'flow_step_id' => $step->id,
+                'send_at' => now()->addHours($cumulativeHours),
             ]);
-
-            SendAbandonedCartEmailJob::dispatch($record->id)
-                ->delay(now()->addHours($cumulativeHours));
         }
     }
 }
