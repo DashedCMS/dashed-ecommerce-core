@@ -43,8 +43,8 @@
                 <tr>
                     <td align="center" style="padding-bottom: 32px;">
                         @if($logo)
-                            @if($logoUrl = mediaHelper()->getSingleMedia($logo, ['fit' => [200, 60]])->url ?? '')
-                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" style="max-height: 48px; max-width: 200px; width: auto; height: auto;">
+                            @if($logoUrl = mediaHelper()->getSingleMedia($logo)->url ?? '')
+                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" width="200" style="max-width: 200px; width: 200px; height: auto;">
                             @else
                                 <span style="font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">{{ $siteName }}</span>
                             @endif
