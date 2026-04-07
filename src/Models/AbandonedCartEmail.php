@@ -13,6 +13,7 @@ class AbandonedCartEmail extends Model
         'cart_id',
         'email',
         'email_number',
+        'flow_step_id',
         'sent_at',
         'cancelled_at',
         'discount_code_id',
@@ -26,6 +27,11 @@ class AbandonedCartEmail extends Model
     public function cart(): BelongsTo
     {
         return $this->belongsTo(Cart::class, 'cart_id');
+    }
+
+    public function flowStep(): BelongsTo
+    {
+        return $this->belongsTo(AbandonedCartFlowStep::class, 'flow_step_id');
     }
 
     public function discountCode(): BelongsTo

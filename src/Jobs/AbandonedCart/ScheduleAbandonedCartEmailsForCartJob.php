@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs\AbandonedCart;
 
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 
 class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
 {
@@ -21,7 +20,9 @@ class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
 
     public function handle(): void
     {
-        if (! Customsetting::get('abandoned_cart_emails_enabled', null, false)) {
+        $flow = AbandonedCartFlow::getActive();
+
+        if (! $flow) {
             return;
         }
 
@@ -34,35 +35,26 @@ class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
         // Cancel any previous pending emails for this cart
         AbandonedCartEmail::cancelAllForCart($this->cartId);
 
-        $email = $cart->abandoned_email;
-        $delay1 = (int) Customsetting::get('abandoned_cart_email1_delay_hours', null, 1);
-        $delay2 = (int) Customsetting::get('abandoned_cart_email2_delay_hours', null, 24);
-        $delay3 = (int) Customsetting::get('abandoned_cart_email3_delay_hours', null, 72);
-        $email3Enabled = (bool) Customsetting::get('abandoned_cart_email3_enabled', null, false);
+        $steps = $flow->steps()->where('enabled', true)->orderBy('sort_order')->get();
 
-        $record1 = AbandonedCartEmail::create([
-            'cart_id' => $this->cartId,
-            'email' => $email,
-            'email_number' => 1,
-        ]);
+        if ($steps->isEmpty()) {
+            return;
+        }
 
-        $record2 = AbandonedCartEmail::create([
-            'cart_id' => $this->cartId,
-            'email' => $email,
-            'email_number' => 2,
-        ]);
+        $cumulativeHours = 0;
 
-        SendAbandonedCartEmailJob::dispatch($record1->id)->delay(now()->addHours($delay1));
-        SendAbandonedCartEmailJob::dispatch($record2->id)->delay(now()->addHours($delay1 + $delay2));
+        foreach ($steps as $step) {
+            $cumulativeHours += $step->delay_in_hours;
 
-        if ($email3Enabled) {
-            $record3 = AbandonedCartEmail::create([
+            $record = AbandonedCartEmail::create([
                 'cart_id' => $this->cartId,
-                'email' => $email,
-                'email_number' => 3,
+                'email' => $cart->abandoned_email,
+                'email_number' => $step->sort_order,
+                'flow_step_id' => $step->id,
             ]);
 
-            SendAbandonedCartEmailJob::dispatch($record3->id)->delay(now()->addHours($delay1 + $delay2 + $delay3));
+            SendAbandonedCartEmailJob::dispatch($record->id)
+                ->delay(now()->addHours($cumulativeHours));
         }
     }
 }

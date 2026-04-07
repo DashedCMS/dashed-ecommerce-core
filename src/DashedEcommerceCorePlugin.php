@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore;
 use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
@@ -118,6 +119,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 FulfillmentCompanyResource::class,
                 GiftcardResource::class,
                 CartResource::class,
+                AbandonedCartFlowResource::class,
             ]);
     }
 

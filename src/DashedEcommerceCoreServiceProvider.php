@@ -68,7 +68,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\AbandonedCartSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
@@ -155,6 +156,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component('products.searchbar', Searchbar::class);
         Livewire::component('account.orders', Orders::class);
         Livewire::component('orders.view-order', ViewOrder::class);
+
+        Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.resources.abandoned-cart-flow-resource.relation-managers.flow-steps-relation-manager',
+            FlowStepsRelationManager::class,
+        );
 
         //POS components
         Livewire::component('point-of-sale', POSPage::class);
@@ -425,7 +431,6 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->registerSettingsPage(OrderCancelSettingsPage::class, 'Annuleer bestelling instellingen', 'arrow-uturn-left', 'Beheer instellingen voor het annuleren van bestellingen');
         cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');
         cms()->registerSettingsPage(CheckoutSettingsPage::class, 'Afreken instellingen', 'shopping-cart', 'Je online betaalprocess aanpassen');
-        cms()->registerSettingsPage(AbandonedCartSettingsPage::class, 'Verlaten winkelwagen emails', 'envelope', 'Stuur automatisch emails naar bezoekers die hun winkelwagen hebben achtergelaten');
         cms()->registerSettingsPage(ShippingClassResource::class, 'Verzendklasses', 'truck', 'Is een product breekbaar of veel groter? Reken een meerprijs');
         cms()->registerSettingsPage(ShippingZoneResource::class, 'Verzendzones', 'truck', 'Bepaal waar je allemaal naartoe verstuurd');
         cms()->registerSettingsPage(ShippingMethodResource::class, 'Verzendmethodes', 'truck', 'Maak verzendmethodes aan');
