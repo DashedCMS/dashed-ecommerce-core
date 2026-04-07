@@ -44,7 +44,7 @@
                     <td align="center" style="padding-bottom: 32px;">
                         @if($logo)
                             @if($logoUrl = mediaHelper()->getSingleMedia($logo)->url ?? '')
-                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" width="200" style="max-width: 200px; width: 200px; height: auto;">
+                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" style="max-width: 100px; max-height: 100px; width: auto; height: auto;">
                             @else
                                 <span style="font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">{{ $siteName }}</span>
                             @endif
