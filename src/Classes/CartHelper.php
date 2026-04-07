@@ -312,6 +312,16 @@ class CartHelper
         return $token;
     }
 
+    public function getCart(): CartModel
+    {
+        if (! static::$cart) {
+            $this->setCartType();
+            $this->getOrCreateCart();
+        }
+
+        return static::$cart;
+    }
+
     protected function getOrCreateCart(bool $lockForUpdate = false): CartModel
     {
         if (static::$cart && ! $lockForUpdate) {

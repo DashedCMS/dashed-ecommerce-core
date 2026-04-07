@@ -263,8 +263,7 @@ class Checkout extends Component
             return;
         }
 
-        cartHelper()->initialize($this->cartType);
-        $cart = CartHelper::$cart;
+        $cart = cartHelper()->getCart();
 
         if (! $cart) {
             return;
