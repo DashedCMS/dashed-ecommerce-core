@@ -29,7 +29,7 @@ use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
-use Dashed\DashedCore\Classes\CartHelper;
+use Dashed\DashedEcommerceCore\Classes\CartHelper;
 
 class Checkout extends Component
 {
@@ -264,7 +264,7 @@ class Checkout extends Component
         }
 
         cartHelper()->initialize($this->cartType);
-        $cart = CartHelper::$cart;
+        $cart = cartHelper()->getCart;
 
         if (! $cart) {
             return;
