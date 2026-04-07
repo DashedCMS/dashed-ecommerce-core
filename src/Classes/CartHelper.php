@@ -300,9 +300,15 @@ class CartHelper
         $cookieName = $this->getCookieName();
 
         // Check restored cart token from session (abandoned cart recovery)
-        $restoredToken = session()->pull('restored_cart_token');
+        $restoredToken = session('restored_cart_token');
         if ($restoredToken && Str::isUuid($restoredToken)) {
+            session()->forget('restored_cart_token');
             Cookie::queue($cookieName, $restoredToken, 60 * 24 * 90);
+
+            // Reset static cart so we load the restored one
+            static::$cart = null;
+            static::$initialized = false;
+
             return $restoredToken;
         }
 

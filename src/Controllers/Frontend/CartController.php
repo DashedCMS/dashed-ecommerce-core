@@ -248,7 +248,8 @@ class CartController extends Controller
         }
 
         $cookieName = config('dashed-ecommerce.cart_cookie', 'cart_token');
-        Cookie::queue($cookieName, $cart->token, 60 * 24 * 90);
+        $cookie = cookie($cookieName, $cart->token, 60 * 24 * 90);
+        Cookie::queue($cookie);
         session(['restored_cart_token' => $cart->token]);
 
         $linkType = $request->query('type', 'button');
