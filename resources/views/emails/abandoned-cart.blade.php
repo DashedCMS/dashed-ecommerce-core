@@ -44,7 +44,7 @@
                     <td align="center" style="padding-bottom: 32px;">
                         @if($logo)
                             @if($logoUrl = mediaHelper()->getSingleMedia($logo, ['fit' => [200, 60]])->url ?? '')
-                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" height="40" style="height: 40px; width: auto;">
+                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" style="max-height: 48px; max-width: 200px; width: auto; height: auto;">
                             @else
                                 <span style="font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">{{ $siteName }}</span>
                             @endif
@@ -69,7 +69,9 @@
                             @if($heroImageUrl)
                                 <tr>
                                     <td>
-                                        <img src="{{ $heroImageUrl }}" width="560" alt="{{ $firstProduct?->name ?? '' }}" style="width: 100%; max-width: 560px; height: auto; object-fit: cover;">
+                                        <a href="{{ $productUrl }}" style="display: block;">
+                                            <img src="{{ $heroImageUrl }}" width="560" alt="{{ $firstProduct?->name ?? '' }}" style="width: 100%; max-width: 560px; height: auto; object-fit: cover;">
+                                        </a>
                                     </td>
                                 </tr>
                             @endif
@@ -97,22 +99,24 @@
                                     @if($prod)
                                         <tr>
                                             <td class="mobile-padding" style="padding: 12px 40px;">
-                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
-                                                    <tr>
-                                                        @if($prodImgUrl)
-                                                            <td width="72" style="padding: 16px;">
-                                                                <img src="{{ $prodImgUrl }}" class="product-img" width="64" height="64" alt="{{ $prod->name }}" style="border-radius: 8px; object-fit: cover; width: 64px; height: 64px;">
+                                                <a href="{{ $productUrl }}" style="text-decoration: none; color: inherit; display: block;">
+                                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                                        <tr>
+                                                            @if($prodImgUrl)
+                                                                <td width="72" style="padding: 16px;">
+                                                                    <img src="{{ $prodImgUrl }}" class="product-img" width="64" height="64" alt="{{ $prod->name }}" style="border-radius: 8px; object-fit: cover; width: 64px; height: 64px;">
+                                                                </td>
+                                                            @endif
+                                                            <td style="padding: 16px 16px 16px {{ $prodImgUrl ? '0' : '16px' }};">
+                                                                <p style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #0f172a;">{{ $prod->name }}</p>
+                                                                <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $prodItem->quantity }}</p>
                                                             </td>
-                                                        @endif
-                                                        <td style="padding: 16px 16px 16px {{ $prodImgUrl ? '0' : '16px' }};">
-                                                            <p style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #0f172a;">{{ $prod->name }}</p>
-                                                            <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $prodItem->quantity }}</p>
-                                                        </td>
-                                                        <td align="right" style="padding: 16px; font-size: 15px; font-weight: 700; color: #0f172a; white-space: nowrap;">
-                                                            &euro; {{ number_format($prodItem->unit_price * $prodItem->quantity, 2, ',', '.') }}
-                                                        </td>
-                                                    </tr>
-                                                </table>
+                                                            <td align="right" style="padding: 16px; font-size: 15px; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                                                                &euro; {{ number_format($prodItem->unit_price * $prodItem->quantity, 2, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </a>
                                             </td>
                                         </tr>
                                     @endif
@@ -128,22 +132,24 @@
                                         @endphp
                                         <tr>
                                             <td class="mobile-padding" style="padding: 6px 40px;">
-                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
-                                                    <tr>
-                                                        @if($imgUrl)
-                                                            <td width="72" style="padding: 12px;">
-                                                                <img src="{{ $imgUrl }}" class="product-img" width="56" height="56" alt="{{ $product?->name }}" style="border-radius: 8px; object-fit: cover; width: 56px; height: 56px;">
+                                                <a href="{{ $productUrl }}" style="text-decoration: none; color: inherit; display: block;">
+                                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                                        <tr>
+                                                            @if($imgUrl)
+                                                                <td width="72" style="padding: 12px;">
+                                                                    <img src="{{ $imgUrl }}" class="product-img" width="56" height="56" alt="{{ $product?->name }}" style="border-radius: 8px; object-fit: cover; width: 56px; height: 56px;">
+                                                                </td>
+                                                            @endif
+                                                            <td style="padding: 12px 12px 12px {{ $imgUrl ? '0' : '12px' }};">
+                                                                <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #0f172a;">{{ $product?->name ?? 'Product' }}</p>
+                                                                <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $item->quantity }}</p>
                                                             </td>
-                                                        @endif
-                                                        <td style="padding: 12px 12px 12px {{ $imgUrl ? '0' : '12px' }};">
-                                                            <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #0f172a;">{{ $product?->name ?? 'Product' }}</p>
-                                                            <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $item->quantity }}</p>
-                                                        </td>
-                                                        <td align="right" style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap;">
-                                                            &euro; {{ number_format($item->unit_price * $item->quantity, 2, ',', '.') }}
-                                                        </td>
-                                                    </tr>
-                                                </table>
+                                                            <td align="right" style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                                                                &euro; {{ number_format($item->unit_price * $item->quantity, 2, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </a>
                                             </td>
                                         </tr>
                                     @endforeach

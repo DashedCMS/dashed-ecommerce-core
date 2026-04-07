@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AbandonedCartEmail extends Model
 {
@@ -16,14 +17,19 @@ class AbandonedCartEmail extends Model
         'flow_step_id',
         'send_at',
         'sent_at',
+        'clicked_at',
         'cancelled_at',
         'discount_code_id',
+        'order_id',
+        'converted_at',
     ];
 
     protected $casts = [
         'send_at' => 'datetime',
         'sent_at' => 'datetime',
+        'clicked_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'converted_at' => 'datetime',
     ];
 
     public function cart(): BelongsTo
@@ -39,6 +45,16 @@ class AbandonedCartEmail extends Model
     public function discountCode(): BelongsTo
     {
         return $this->belongsTo(DiscountCode::class, 'discount_code_id');
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'order_id');
+    }
+
+    public function clicks(): HasMany
+    {
+        return $this->hasMany(AbandonedCartClick::class, 'abandoned_cart_email_id');
     }
 
     public static function cancelAllForCart(int $cartId): void

@@ -6,6 +6,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 
 class EditAbandonedCartFlow extends EditRecord
 {
@@ -15,6 +16,13 @@ class EditAbandonedCartFlow extends EditRecord
     {
         return [
             DeleteAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            AbandonedCartFlowStats::class,
         ];
     }
 

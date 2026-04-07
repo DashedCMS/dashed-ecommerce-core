@@ -48,7 +48,7 @@ class SendAbandonedCartEmails extends Command
                 $record->update(['discount_code_id' => $discountCode->id]);
             }
 
-            Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode, $cart->locale));
+            Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode, $cart->locale, $record->id));
 
             $record->update(['sent_at' => now()]);
 

@@ -829,6 +829,7 @@ class Checkout extends Component
 
         $gaUserId = preg_replace("/^.+\.(.+?\..+?)$/", '\\1', @$_COOKIE['_ga']);
         $order->ga_user_id = $gaUserId;
+        $order->abandoned_cart_recovery = (bool) session()->pull('abandoned_cart_recovery', false);
 
         if (cartHelper()->getDiscount() && cartHelper()->getDiscountCode()) {
             $order->discount_code_id = cartHelper()->getDiscountCode()->id;
@@ -842,6 +843,15 @@ class Checkout extends Component
         }
 
         $order->save();
+
+        // Link abandoned cart email to conversion
+        $abandonedCartEmailId = session()->pull('abandoned_cart_email_id');
+        if ($abandonedCartEmailId) {
+            AbandonedCartEmail::where('id', $abandonedCartEmailId)->update([
+                'order_id' => $order->id,
+                'converted_at' => now(),
+            ]);
+        }
 
         $orderContainsPreOrders = false;
 

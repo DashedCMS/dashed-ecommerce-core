@@ -21,6 +21,7 @@ class AbandonedCartMail extends Mailable
         public readonly AbandonedCartFlowStep $step,
         public readonly ?DiscountCode $discountCode = null,
         public readonly ?string $stepLocale = null,
+        public readonly ?int $abandonedCartEmailId = null,
     ) {
     }
 
@@ -63,10 +64,17 @@ class AbandonedCartMail extends Mailable
                     ->first();
         }
 
-        $checkoutUrl = url('/restore-cart') . '?cart=' . urlencode(Crypt::encryptString($this->cart->token));
-        if ($this->discountCode) {
-            $checkoutUrl .= '&discount=' . $this->discountCode->code;
+        $encryptedCart = urlencode(Crypt::encryptString($this->cart->token));
+        $baseParams = 'cart=' . $encryptedCart;
+        if ($this->abandonedCartEmailId) {
+            $baseParams .= '&email_id=' . $this->abandonedCartEmailId;
         }
+        if ($this->discountCode) {
+            $baseParams .= '&discount=' . $this->discountCode->code;
+        }
+
+        $checkoutUrl = url('/restore-cart') . '?' . $baseParams . '&type=button';
+        $productUrl = url('/restore-cart') . '?' . $baseParams . '&type=product';
 
         $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.abandoned-cart')
             ? config('dashed-core.site_theme', 'dashed') . '.emails.abandoned-cart'
@@ -83,6 +91,7 @@ class AbandonedCartMail extends Mailable
                 'siteName' => $siteName,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
                 'checkoutUrl' => $checkoutUrl,
+                'productUrl' => $productUrl,
                 'discountCode' => $this->discountCode,
                 'review' => $review,
             ]);

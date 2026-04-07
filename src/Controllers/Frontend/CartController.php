@@ -14,6 +14,8 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartClick;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -247,6 +249,28 @@ class CartController extends Controller
 
         $cookieName = config('dashed-ecommerce.cart_cookie', 'cart_token');
         Cookie::queue($cookieName, $cart->token, 60 * 24 * 90);
+        session(['restored_cart_token' => $cart->token]);
+
+        $linkType = $request->query('type', 'button');
+        $emailId = $request->query('email_id');
+
+        if ($emailId) {
+            $abandonedEmail = AbandonedCartEmail::find($emailId);
+            if ($abandonedEmail && $abandonedEmail->cart_id === $cart->id) {
+                if (! $abandonedEmail->clicked_at) {
+                    $abandonedEmail->update(['clicked_at' => now()]);
+                }
+
+                AbandonedCartClick::create([
+                    'abandoned_cart_email_id' => $abandonedEmail->id,
+                    'link_type' => $linkType,
+                ]);
+
+                session(['abandoned_cart_email_id' => $abandonedEmail->id]);
+            }
+        }
+
+        session(['abandoned_cart_recovery' => true]);
 
         $discount = $request->query('discount');
         if ($discount) {
