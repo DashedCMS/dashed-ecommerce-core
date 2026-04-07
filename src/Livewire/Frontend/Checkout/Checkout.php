@@ -27,6 +27,9 @@ use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
+use Dashed\DashedCore\Classes\CartHelper;
 
 class Checkout extends Component
 {
@@ -252,6 +255,29 @@ class Checkout extends Component
         ) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
+    }
+
+    public function updatedEmail(string $value): void
+    {
+        if (! filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        cartHelper()->initialize($this->cartType);
+        $cart = CartHelper::$cart;
+
+        if (! $cart) {
+            return;
+        }
+
+        if ($cart->abandoned_email === $value) {
+            return;
+        }
+
+        $cart->abandoned_email = $value;
+        $cart->saveQuietly();
+
+        ScheduleAbandonedCartEmailsForCartJob::dispatch($cart->id);
     }
 
     public function updated($name, $value)
@@ -988,6 +1014,12 @@ class Checkout extends Component
         $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
         $orderLog->tag = 'order.created';
         $orderLog->save();
+
+        // Cancel any pending abandoned cart emails for this cart
+        $currentCart = CartHelper::$cart;
+        if ($currentCart) {
+            AbandonedCartEmail::cancelAllForCart($currentCart->id);
+        }
 
         OrderCreatedEvent::dispatch($order);
 

@@ -23,6 +23,7 @@ class Cart extends Model
         'payment_method_id',
         'deposit_payment_method_id',
         'meta',
+        'abandoned_email',
     ];
 
     protected $casts = [
