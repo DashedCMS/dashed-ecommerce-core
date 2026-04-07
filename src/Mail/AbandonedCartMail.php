@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Crypt;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Cart;
@@ -62,9 +63,9 @@ class AbandonedCartMail extends Mailable
                     ->first();
         }
 
-        $checkoutUrl = url('/checkout');
+        $checkoutUrl = url('/restore-cart') . '?cart=' . urlencode(Crypt::encryptString($this->cart->token));
         if ($this->discountCode) {
-            $checkoutUrl .= '?discount=' . $this->discountCode->code;
+            $checkoutUrl .= '&discount=' . $this->discountCode->code;
         }
 
         $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.abandoned-cart')

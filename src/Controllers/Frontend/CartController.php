@@ -3,6 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Controllers\Frontend;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Crypt;
 use App\Http\Controllers\Controller;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
@@ -11,12 +13,11 @@ use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-
-;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\Checkout;
 
 class CartController extends Controller
@@ -228,6 +229,31 @@ class CartController extends Controller
         ShoppingCart::removeInvalidItems();
 
         return redirect()->back()->with('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
+    }
+
+    public function restoreCart(Request $request)
+    {
+        try {
+            $cartToken = Crypt::decryptString($request->query('cart'));
+        } catch (\Throwable $e) {
+            return redirect('/');
+        }
+
+        $cart = CartModel::where('token', $cartToken)->first();
+
+        if (! $cart || $cart->items()->count() === 0) {
+            return redirect('/');
+        }
+
+        $cookieName = config('dashed-ecommerce.cart_cookie', 'cart_token');
+        Cookie::queue($cookieName, $cart->token, 60 * 24 * 90);
+
+        $discount = $request->query('discount');
+        if ($discount) {
+            session(['discountCode' => $discount]);
+        }
+
+        return redirect(ShoppingCart::getCheckoutUrl());
     }
 
     public function downloadInvoice(Request $request, $orderHash)

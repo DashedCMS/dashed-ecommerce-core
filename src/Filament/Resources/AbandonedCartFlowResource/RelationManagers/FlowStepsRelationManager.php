@@ -22,9 +22,12 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Cart;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
 
 class FlowStepsRelationManager extends RelationManager
@@ -82,8 +85,27 @@ class FlowStepsRelationManager extends RelationManager
                             return;
                         }
 
+                        $discountCode = null;
+                        if ($record->incentive_enabled && $record->incentive_value > 0) {
+                            $prefix = $record->flow?->discount_prefix ?: 'TERUG';
+                            $discountCode = DiscountCode::create([
+                                'name' => 'Test - Verlaten winkelwagen',
+                                'code' => $prefix . '-TEST-' . strtoupper(Str::random(6)),
+                                'type' => $record->incentive_type === 'percentage' ? 'percentage' : 'amount',
+                                'discount_amount' => $record->incentive_type === 'amount' ? $record->incentive_value : 0,
+                                'discount_percentage' => $record->incentive_type === 'percentage' ? $record->incentive_value : 0,
+                                'use_stock' => true,
+                                'stock' => 1,
+                                'stock_used' => 0,
+                                'limit_use_per_customer' => true,
+                                'start_date' => now(),
+                                'end_date' => now()->addDays($record->incentive_valid_days ?? 7),
+                                'site_ids' => [Sites::getActive()],
+                            ]);
+                        }
+
                         try {
-                            Mail::to($data['test_email'])->send(new AbandonedCartMail($cart, $record));
+                            Mail::to($data['test_email'])->send(new AbandonedCartMail($cart, $record, $discountCode));
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Fout bij versturen: ' . $e->getMessage())

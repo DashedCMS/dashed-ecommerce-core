@@ -44,6 +44,7 @@ Route::group(
         //        Route::get('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [CartController::class, 'checkout'])->name('dashed.frontend.checkout');
         //        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [TransactionController::class, 'startTransaction'])->name('dashed.frontend.start-transaction');
         //        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [TransactionController::class, 'complete'])->name('dashed.frontend.checkout.complete');
+        Route::get('/restore-cart', [CartController::class, 'restoreCart'])->name('dashed.frontend.restore-cart');
         Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->name('dashed.frontend.download-invoice');
         Route::get('/download-packing-slip/{orderHash}', [CartController::class, 'downloadPackingSlip'])->name('dashed.frontend.download-packing-slip');
         Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->name('dashed.frontend.cart.apply-discount-code');
