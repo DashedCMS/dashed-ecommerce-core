@@ -343,11 +343,31 @@ class CartHelper
 
         $token = $this->getOrCreateToken();
         $userId = auth()->id();
+        $cartType = static::$cartType ?? 'default';
 
-        $query = CartModel::query()->where('type', static::$cartType ?? 'default');
+        $query = CartModel::query()->where('type', $cartType);
 
         if ($lockForUpdate) {
             $query->lockForUpdate();
+        }
+
+        // Check if this is a restored cart (abandoned cart recovery)
+        $restoredCart = (clone $query)->where('token', $token)->first();
+        if ($restoredCart && $restoredCart->items()->count() > 0) {
+            // Claim for logged-in user and remove conflicting empty carts
+            if ($userId && $restoredCart->user_id !== $userId) {
+                CartModel::where('user_id', $userId)
+                    ->where('type', $cartType)
+                    ->where('id', '!=', $restoredCart->id)
+                    ->whereDoesntHave('items')
+                    ->delete();
+
+                $restoredCart->user_id = $userId;
+                $restoredCart->save();
+            }
+
+            static::$cart = $restoredCart;
+            return $restoredCart;
         }
 
         // Eerst user-cart (als ingelogd)
