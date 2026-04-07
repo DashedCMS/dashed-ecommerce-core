@@ -89,12 +89,13 @@ class FlowStepsRelationManager extends RelationManager
                 ->schema([
                     TextInput::make('subject')
                         ->label('Onderwerpregel')
-                        ->helperText('Gebruik :product voor de naam van het eerste product.')
+                        ->helperText('Beschikbare variabelen: :product: :siteName: :cartTotal:')
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
                     RichEditor::make('intro_text')
                         ->label('Berichttekst')
+                        ->helperText('Beschikbare variabelen: :product: :siteName: :cartTotal:')
                         ->toolbarButtons([
                             'bold', 'italic', 'underline', 'strike',
                             'link', 'bulletList', 'orderedList', 'h2', 'h3',

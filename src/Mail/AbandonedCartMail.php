@@ -29,8 +29,16 @@ class AbandonedCartMail extends Mailable
 
         $firstItem = $this->cart->items->first();
         $productName = $firstItem?->product?->name ?? $siteName;
+        $cartTotal = '€ ' . number_format($this->cart->total, 2, ',', '.');
 
-        $subject = str_replace(':product', $productName, $this->step->subject);
+        $variables = [
+            ':siteName:' => $siteName,
+            ':product:' => $productName,
+            ':cartTotal:' => $cartTotal,
+        ];
+
+        $subject = str_replace(array_keys($variables), array_values($variables), $this->step->subject);
+        $introText = str_replace(array_keys($variables), array_values($variables), $this->step->intro_text ?? '');
 
         $review = null;
         if ($this->step->show_review && class_exists(\Dashed\DashedCore\Models\Review::class)) {
@@ -61,6 +69,7 @@ class AbandonedCartMail extends Mailable
             ->with([
                 'cart' => $this->cart,
                 'step' => $this->step,
+                'introText' => $introText,
                 'siteName' => $siteName,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
                 'checkoutUrl' => $checkoutUrl,

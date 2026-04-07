@@ -51,10 +51,10 @@
                 @endif
 
                 {{-- Intro text (stored HTML from flow step) --}}
-                @if($step->intro_text)
+                @if($introText)
                     <tr>
                         <td style="padding: 36px 40px 8px; font-size: 16px; color: #333333; line-height: 1.7;">
-                            {!! $step->intro_text !!}
+                            {!! $introText !!}
                         </td>
                     </tr>
                 @endif
