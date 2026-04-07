@@ -1,225 +1,283 @@
+@php
+    use Dashed\DashedTranslations\Models\Translation;
+    $primaryColor = Translation::get('primary-color-code', 'emails', '#A0131C');
+@endphp
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $siteName }}</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
     <style>
-        body { margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif; }
-        table { border-collapse: collapse; }
-        img { border: 0; display: block; }
-        .btn { display: inline-block; padding: 14px 32px; background-color: #1a1a1a; color: #ffffff !important; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: bold; }
-        .stars { color: #f5a623; font-size: 20px; letter-spacing: 2px; }
-        p { margin: 0 0 12px; }
+        body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { border: 0; display: block; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+        p { margin: 0; padding: 0; }
+        a { color: {{ $primaryColor }}; }
+        @media only screen and (max-width: 620px) {
+            .container { width: 100% !important; }
+            .mobile-padding { padding-left: 24px !important; padding-right: 24px !important; }
+            .product-img { width: 56px !important; height: 56px !important; }
+        }
     </style>
 </head>
-<body>
-<table width="100%" bgcolor="#f4f4f4" cellpadding="0" cellspacing="0">
-    <tr>
-        <td align="center" style="padding: 30px 15px;">
-            <table width="600" bgcolor="#ffffff" cellpadding="0" cellspacing="0" style="border-radius: 8px; overflow: hidden; max-width: 600px;">
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
-                {{-- Header / logo --}}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc;">
+    <tr>
+        <td align="center" style="padding: 40px 16px;">
+
+            {{-- Main container --}}
+            <table role="presentation" class="container" width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; width: 100%;">
+
+                {{-- Logo --}}
                 <tr>
-                    <td align="center" bgcolor="#1a1a1a" style="padding: 24px;">
+                    <td align="center" style="padding-bottom: 32px;">
                         @if($logo)
                             @if($logoUrl = mediaHelper()->getSingleMedia($logo, ['fit' => [200, 60]])->url ?? '')
-                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" height="50">
+                                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" height="40" style="height: 40px; width: auto;">
                             @else
-                                <span style="color: #ffffff; font-size: 22px; font-weight: bold;">{{ $siteName }}</span>
+                                <span style="font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">{{ $siteName }}</span>
                             @endif
                         @else
-                            <span style="color: #ffffff; font-size: 22px; font-weight: bold;">{{ $siteName }}</span>
+                            <span style="font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">{{ $siteName }}</span>
                         @endif
                     </td>
                 </tr>
 
-                {{-- Hero product image --}}
-                @php
-                    $firstItem = $cart->items->first();
-                    $firstProduct = $firstItem?->product;
-                    $heroImageId = $firstProduct?->firstImage ?? $firstProduct?->productGroup?->firstImage ?? null;
-                    $heroImageUrl = $heroImageId ? (mediaHelper()->getSingleMedia($heroImageId, ['fit' => [560, 300]])->url ?? null) : null;
-                @endphp
-                @if($heroImageUrl)
-                    <tr>
-                        <td>
-                            <img src="{{ $heroImageUrl }}" width="600" alt="{{ $firstProduct?->name ?? '' }}" style="width: 100%; max-width: 600px;">
-                        </td>
-                    </tr>
-                @endif
+                {{-- Card --}}
+                <tr>
+                    <td>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);">
 
-                {{-- Render blocks --}}
-                @foreach($blocks as $block)
-                    @if($block['type'] === 'text' && !empty($block['data']['content']))
-                        <tr>
-                            <td style="padding: 36px 40px 8px; font-size: 16px; color: #333333; line-height: 1.7;">
-                                {!! $block['data']['content'] !!}
-                            </td>
-                        </tr>
-                    @endif
-
-                    @if($block['type'] === 'product')
-                        @php
-                            $prodItem = $cart->items->first();
-                            $prod = $prodItem?->product;
-                            $prodImgId = $prod?->firstImage ?? $prod?->productGroup?->firstImage ?? null;
-                            $prodImgUrl = $prodImgId ? (mediaHelper()->getSingleMedia($prodImgId, ['fit' => [70, 70]])->url ?? null) : null;
-                        @endphp
-                        @if($prod)
-                            <tr>
-                                <td style="padding: 8px 40px 10px;">
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #eeeeee; border-radius: 6px;">
-                                        <tr>
-                                            @if($prodImgUrl)
-                                                <td width="80" style="padding: 10px;">
-                                                    <img src="{{ $prodImgUrl }}" width="70" height="70" alt="{{ $prod->name }}" style="border-radius: 4px; object-fit: cover;">
-                                                </td>
-                                            @endif
-                                            <td style="padding: 10px 12px;">
-                                                <p style="margin: 0 0 3px; font-size: 14px; font-weight: bold; color: #1a1a1a;">{{ $prod->name }}</p>
-                                                <p style="margin: 0; font-size: 13px; color: #999999;">Aantal: {{ $prodItem->quantity }}</p>
-                                            </td>
-                                            <td align="right" style="padding: 10px 16px; font-size: 14px; font-weight: bold; color: #1a1a1a; white-space: nowrap;">
-                                                &euro; {{ number_format($prodItem->unit_price * $prodItem->quantity, 2, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        @endif
-                    @endif
-
-                    @if($block['type'] === 'products')
-                        @foreach($cart->items->take(4) as $item)
+                            {{-- Hero product image --}}
                             @php
-                                $product = $item->product;
-                                $imgId = $product?->firstImage ?? $product?->productGroup?->firstImage ?? null;
-                                $imgUrl = $imgId ? (mediaHelper()->getSingleMedia($imgId, ['fit' => [70, 70]])->url ?? null) : null;
+                                $firstItem = $cart->items->first();
+                                $firstProduct = $firstItem?->product;
+                                $heroImageId = $firstProduct?->firstImage ?? $firstProduct?->productGroup?->firstImage ?? null;
+                                $heroImageUrl = $heroImageId ? (mediaHelper()->getSingleMedia($heroImageId, ['fit' => [560, 320]])->url ?? null) : null;
                             @endphp
-                            <tr>
-                                <td style="padding: 0 40px 10px;">
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #eeeeee; border-radius: 6px;">
+                            @if($heroImageUrl)
+                                <tr>
+                                    <td>
+                                        <img src="{{ $heroImageUrl }}" width="560" alt="{{ $firstProduct?->name ?? '' }}" style="width: 100%; max-width: 560px; height: auto; object-fit: cover;">
+                                    </td>
+                                </tr>
+                            @endif
+
+                            {{-- Blocks --}}
+                            @foreach($blocks as $block)
+
+                                {{-- Text block --}}
+                                @if($block['type'] === 'text' && !empty($block['data']['content']))
+                                    <tr>
+                                        <td class="mobile-padding" style="padding: 32px 40px 16px; font-size: 16px; line-height: 1.75; color: #334155;">
+                                            {!! $block['data']['content'] !!}
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- Single product block --}}
+                                @if($block['type'] === 'product')
+                                    @php
+                                        $prodItem = $cart->items->first();
+                                        $prod = $prodItem?->product;
+                                        $prodImgId = $prod?->firstImage ?? $prod?->productGroup?->firstImage ?? null;
+                                        $prodImgUrl = $prodImgId ? (mediaHelper()->getSingleMedia($prodImgId, ['fit' => [80, 80]])->url ?? null) : null;
+                                    @endphp
+                                    @if($prod)
                                         <tr>
-                                            @if($imgUrl)
-                                                <td width="80" style="padding: 10px;">
-                                                    <img src="{{ $imgUrl }}" width="70" height="70" alt="{{ $product?->name }}" style="border-radius: 4px; object-fit: cover;">
-                                                </td>
-                                            @endif
-                                            <td style="padding: 10px 12px;">
-                                                <p style="margin: 0 0 3px; font-size: 14px; font-weight: bold; color: #1a1a1a;">{{ $product?->name ?? 'Product' }}</p>
-                                                <p style="margin: 0; font-size: 13px; color: #999999;">Aantal: {{ $item->quantity }}</p>
-                                            </td>
-                                            <td align="right" style="padding: 10px 16px; font-size: 14px; font-weight: bold; color: #1a1a1a; white-space: nowrap;">
-                                                &euro; {{ number_format($item->unit_price * $item->quantity, 2, ',', '.') }}
+                                            <td class="mobile-padding" style="padding: 12px 40px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                                    <tr>
+                                                        @if($prodImgUrl)
+                                                            <td width="72" style="padding: 16px;">
+                                                                <img src="{{ $prodImgUrl }}" class="product-img" width="64" height="64" alt="{{ $prod->name }}" style="border-radius: 8px; object-fit: cover; width: 64px; height: 64px;">
+                                                            </td>
+                                                        @endif
+                                                        <td style="padding: 16px 16px 16px {{ $prodImgUrl ? '0' : '16px' }};">
+                                                            <p style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #0f172a;">{{ $prod->name }}</p>
+                                                            <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $prodItem->quantity }}</p>
+                                                        </td>
+                                                        <td align="right" style="padding: 16px; font-size: 15px; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                                                            &euro; {{ number_format($prodItem->unit_price * $prodItem->quantity, 2, ',', '.') }}
+                                                        </td>
+                                                    </tr>
+                                                </table>
                                             </td>
                                         </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        @endforeach
-                        @if($cart->items->count() > 4)
-                            <tr>
-                                <td style="padding: 0 40px 10px; font-size: 13px; color: #aaaaaa;">
-                                    + {{ $cart->items->count() - 4 }} ander(e) product(en)
-                                </td>
-                            </tr>
-                        @endif
-                    @endif
+                                    @endif
+                                @endif
 
-                    @if($block['type'] === 'review' && $review)
-                        <tr>
-                            <td style="padding: 8px 40px 24px;">
-                                <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f9f9f9" style="border-left: 4px solid #1a1a1a; border-radius: 4px;">
-                                    <tr>
-                                        <td style="padding: 18px 22px;">
-                                            <div class="stars">
-                                                @for($i = 1; $i <= 5; $i++){{ $i <= $review->stars ? '★' : '☆' }}@endfor
-                                            </div>
-                                            <p style="margin: 10px 0 8px; font-size: 15px; color: #333333; font-style: italic; line-height: 1.6;">
-                                                "{{ $review->review }}"
-                                            </p>
-                                            <p style="margin: 0; font-size: 13px; color: #999999; font-weight: bold;">
-                                                &mdash; {{ $review->name ?? 'Klant' }}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    @endif
-
-                    @if($block['type'] === 'discount' && $discountCode)
-                        <tr>
-                            <td align="center" style="padding: 8px 40px 24px;">
-                                <table cellpadding="0" cellspacing="0" style="border: 2px dashed #1a1a1a; border-radius: 8px; width: 100%;">
-                                    <tr>
-                                        <td style="padding: 20px 32px; text-align: center;">
-                                            <p style="margin: 0 0 6px; font-size: 12px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Jouw kortingscode</p>
-                                            <p style="margin: 0 0 8px; font-size: 28px; font-weight: bold; color: #1a1a1a; letter-spacing: 3px;">{{ $discountCode->code }}</p>
-                                            <p style="margin: 0; font-size: 14px; color: #555555;">
-                                                @if($discountCode->discount_amount > 0)
-                                                    &euro; {{ number_format($discountCode->discount_amount, 2, ',', '.') }} korting
-                                                @elseif($discountCode->discount_percentage > 0)
-                                                    {{ $discountCode->discount_percentage }}% korting
-                                                @endif
-                                                &nbsp;&bull;&nbsp; Geldig t/m {{ $discountCode->end_date?->format('d-m-Y') }}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    @endif
-
-                    @if($block['type'] === 'divider')
-                        <tr>
-                            <td style="padding: 16px 40px;">
-                                <hr style="border: none; border-top: 1px solid #eeeeee; margin: 0;">
-                            </td>
-                        </tr>
-                    @endif
-
-                    @if($block['type'] === 'usp' && !empty($block['data']['items']))
-                        <tr>
-                            <td style="padding: 8px 40px 24px;">
-                                <table width="100%" cellpadding="0" cellspacing="0">
-                                    @foreach(explode("\n", $block['data']['items']) as $usp)
-                                        @if(trim($usp))
-                                            <tr>
-                                                <td style="padding: 6px 0; font-size: 15px; color: #333333;">
-                                                    <span style="color: #22c55e; font-size: 18px; margin-right: 8px;">&#10003;</span> {{ trim($usp) }}
-                                                </td>
-                                            </tr>
-                                        @endif
+                                {{-- All products block --}}
+                                @if($block['type'] === 'products')
+                                    @foreach($cart->items->take(4) as $item)
+                                        @php
+                                            $product = $item->product;
+                                            $imgId = $product?->firstImage ?? $product?->productGroup?->firstImage ?? null;
+                                            $imgUrl = $imgId ? (mediaHelper()->getSingleMedia($imgId, ['fit' => [80, 80]])->url ?? null) : null;
+                                        @endphp
+                                        <tr>
+                                            <td class="mobile-padding" style="padding: 6px 40px;">
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                                    <tr>
+                                                        @if($imgUrl)
+                                                            <td width="72" style="padding: 12px;">
+                                                                <img src="{{ $imgUrl }}" class="product-img" width="56" height="56" alt="{{ $product?->name }}" style="border-radius: 8px; object-fit: cover; width: 56px; height: 56px;">
+                                                            </td>
+                                                        @endif
+                                                        <td style="padding: 12px 12px 12px {{ $imgUrl ? '0' : '12px' }};">
+                                                            <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #0f172a;">{{ $product?->name ?? 'Product' }}</p>
+                                                            <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $item->quantity }}</p>
+                                                        </td>
+                                                        <td align="right" style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                                                            &euro; {{ number_format($item->unit_price * $item->quantity, 2, ',', '.') }}
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
                                     @endforeach
-                                </table>
-                            </td>
-                        </tr>
-                    @endif
+                                    @if($cart->items->count() > 4)
+                                        <tr>
+                                            <td class="mobile-padding" style="padding: 4px 40px 8px; font-size: 13px; color: #94a3b8; text-align: center;">
+                                                + {{ $cart->items->count() - 4 }} ander(e) product(en)
+                                            </td>
+                                        </tr>
+                                    @endif
+                                @endif
 
-                    @if($block['type'] === 'button')
-                        <tr>
-                            <td align="center" style="padding: 28px 40px 40px;">
-                                <a href="{{ $checkoutUrl }}" class="btn">{{ $block['data']['label'] ?? 'Bestel nu' }}</a>
-                            </td>
-                        </tr>
-                    @endif
-                @endforeach
+                                {{-- Review block --}}
+                                @if($block['type'] === 'review' && $review)
+                                    <tr>
+                                        <td class="mobile-padding" style="padding: 12px 40px;">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-left: 3px solid {{ $primaryColor }}; background-color: #fafafa; border-radius: 0 12px 12px 0;">
+                                                <tr>
+                                                    <td style="padding: 20px 24px;">
+                                                        <p style="margin: 0 0 8px; font-size: 18px; letter-spacing: 2px; color: #f59e0b;">
+                                                            @for($i = 1; $i <= 5; $i++){{ $i <= $review->stars ? '★' : '☆' }}@endfor
+                                                        </p>
+                                                        <p style="margin: 0 0 10px; font-size: 15px; color: #334155; font-style: italic; line-height: 1.6;">
+                                                            &ldquo;{{ $review->review }}&rdquo;
+                                                        </p>
+                                                        <p style="margin: 0; font-size: 13px; color: #94a3b8; font-weight: 600;">
+                                                            &mdash; {{ $review->name ?? 'Klant' }}
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- Discount block --}}
+                                @if($block['type'] === 'discount' && $discountCode)
+                                    <tr>
+                                        <td class="mobile-padding" style="padding: 12px 40px;">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border: 2px dashed {{ $primaryColor }}; border-radius: 12px;">
+                                                <tr>
+                                                    <td style="padding: 24px; text-align: center;">
+                                                        <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px;">Jouw kortingscode</p>
+                                                        <p style="margin: 0 0 12px; font-size: 28px; font-weight: 800; color: {{ $primaryColor }}; letter-spacing: 3px; font-family: monospace, monospace;">{{ $discountCode->code }}</p>
+                                                        <p style="margin: 0; font-size: 14px; color: #64748b;">
+                                                            @if($discountCode->discount_amount > 0)
+                                                                <strong>&euro; {{ number_format($discountCode->discount_amount, 2, ',', '.') }} korting</strong>
+                                                            @elseif($discountCode->discount_percentage > 0)
+                                                                <strong>{{ $discountCode->discount_percentage }}% korting</strong>
+                                                            @endif
+                                                            &nbsp;&middot;&nbsp; Geldig t/m {{ $discountCode->end_date?->format('d-m-Y') }}
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- Divider block --}}
+                                @if($block['type'] === 'divider')
+                                    <tr>
+                                        <td class="mobile-padding" style="padding: 16px 40px;">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="border-top: 1px solid #e2e8f0; font-size: 0; line-height: 0;">&nbsp;</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- USP block --}}
+                                @if($block['type'] === 'usp' && !empty($block['data']['items']))
+                                    <tr>
+                                        <td class="mobile-padding" style="padding: 12px 40px;">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                                @foreach(explode("\n", $block['data']['items']) as $usp)
+                                                    @if(trim($usp))
+                                                        <tr>
+                                                            <td width="28" valign="top" style="padding: 6px 0; font-size: 16px; color: {{ $primaryColor }};">&#10003;</td>
+                                                            <td style="padding: 6px 0; font-size: 15px; color: #334155; line-height: 1.5;">{{ trim($usp) }}</td>
+                                                        </tr>
+                                                    @endif
+                                                @endforeach
+                                            </table>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                                {{-- Button block --}}
+                                @if($block['type'] === 'button')
+                                    <tr>
+                                        <td align="center" class="mobile-padding" style="padding: 28px 40px 36px;">
+                                            <table role="presentation" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td align="center" bgcolor="{{ $primaryColor }}" style="border-radius: 8px;">
+                                                        <!--[if mso]>
+                                                        <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ $checkoutUrl }}" style="height:52px;v-text-anchor:middle;width:240px;" arcsize="15%" strokecolor="{{ $primaryColor }}" fillcolor="{{ $primaryColor }}">
+                                                        <w:anchorlock/>
+                                                        <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;">{{ $block['data']['label'] ?? 'Bestel nu' }}</center>
+                                                        </v:roundrect>
+                                                        <![endif]-->
+                                                        <!--[if !mso]><!-->
+                                                        <a href="{{ $checkoutUrl }}" style="display: inline-block; padding: 14px 40px; background-color: {{ $primaryColor }}; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center; mso-padding-alt: 0;">{{ $block['data']['label'] ?? 'Bestel nu' }}</a>
+                                                        <!--<![endif]-->
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                @endif
+
+                            @endforeach
+
+                        </table>
+                    </td>
+                </tr>
 
                 {{-- Footer --}}
                 <tr>
-                    <td bgcolor="#f9f9f9" style="padding: 18px 40px; border-top: 1px solid #eeeeee;">
-                        <p style="margin: 0; font-size: 12px; color: #bbbbbb; text-align: center; line-height: 1.6;">
+                    <td style="padding: 32px 24px; text-align: center;">
+                        <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.6;">
                             Je ontvangt deze email omdat je een winkelwagen hebt achtergelaten op {{ $siteName }}.
-                            @if($discountCode) De kortingscode is eenmalig te gebruiken. @endif
+                            @if($discountCode) De kortingscode is eenmalig te gebruiken.@endif
                         </p>
                     </td>
                 </tr>
 
             </table>
+
         </td>
     </tr>
 </table>
+
 </body>
 </html>
