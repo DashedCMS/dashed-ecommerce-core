@@ -70,6 +70,7 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
@@ -164,6 +165,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         Livewire::component(
             'dashed.dashed-ecommerce-core.filament.resources.abandoned-cart-flow-resource.relation-managers.flow-steps-relation-manager',
             FlowStepsRelationManager::class,
+        );
+        Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.resources.abandoned-cart-flow-resource.widgets.abandoned-cart-flow-stats',
+            AbandonedCartFlowStats::class,
         );
 
         //POS components

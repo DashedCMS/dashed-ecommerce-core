@@ -177,6 +177,12 @@ class Checkout extends Component
             $this->isCompany = true;
         }
 
+        $sessionDiscount = session()->pull('discountCode');
+        if ($sessionDiscount) {
+            $this->discountCode = $sessionDiscount;
+            cartHelper()->applyDiscountCode($sessionDiscount);
+        }
+
         $this->checkCart();
         $this->fillPrices();
 
