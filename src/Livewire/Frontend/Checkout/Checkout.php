@@ -126,7 +126,7 @@ class Checkout extends Component
         $this->country = $user?->country ?? 'Nederland';
         $this->dateOfBirth = $user?->date_of_birth ?? '';
         $this->gender = $user?->gender ?? '';
-        $this->email = $user?->email ?? '';
+        $this->email = $user?->email ?? cartHelper()->getCart()->abandoned_email ?? '';
         $this->firstName = $user?->first_name ?? '';
         $this->lastName = $user?->last_name ?? '';
         $this->street = $user?->street ?? '';
