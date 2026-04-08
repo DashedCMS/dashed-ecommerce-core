@@ -1,0 +1,10 @@
+{
+    "label": "Bestellingen",
+    "icon": "clipboard-document-list",
+    "sort": 2,
+    "items": [
+        {"file": "overzicht.md", "label": "Bestellingen overzicht"},
+        {"file": "statussen.md", "label": "Bestelstatussen"},
+        {"file": "facturen.md", "label": "Facturen"}
+    ]
+}
