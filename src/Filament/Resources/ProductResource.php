@@ -350,8 +350,6 @@ class ProductResource extends Resource
             ->collapsible()
             ->hidden(fn ($livewire) => $livewire instanceof CreateProduct);
 
-        $productCharacteristics = ProductCharacteristics::orderBy('order', 'ASC')->get();
-
         $productCharacteristicsTableColumns = [
             TableColumn::make('Kenmerk'),
         ];
@@ -360,7 +358,7 @@ class ProductResource extends Resource
                 ->label('Kenmerk')
                 ->reactive()
                 ->helperText(fn (Get $get) => $get('product_characteristic_id') ? ProductCharacteristics::find($get('product_characteristic_id'))->notes : '')
-                ->options($productCharacteristics->pluck('name', 'id')->toArray())
+                ->options(fn () => ProductCharacteristics::orderBy('order', 'ASC')->pluck('name', 'id'))
                 ->searchable()
                 ->required(),
         ];
@@ -627,6 +625,7 @@ class ProductResource extends Resource
                     ->sortable(),
             ], static::visitableTableColumns()))
             ->defaultPaginationPageOption(25)
+            ->deferLoading()
             ->reorderable('order')
             ->recordActions([
                 EditAction::make()
