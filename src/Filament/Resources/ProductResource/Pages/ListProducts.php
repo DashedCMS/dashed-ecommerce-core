@@ -32,7 +32,7 @@ class ListProducts extends ListRecords
 
     protected function getTableQuery(): ?Builder
     {
-        return Product::query();
+        return Product::query()->with(['productGroup']);
     }
 
     protected function getHeaderActions(): array

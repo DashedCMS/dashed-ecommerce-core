@@ -108,21 +108,28 @@ class EditProduct extends EditRecord
 
     public function mutateFormDataBeforeFill($data): array
     {
-        $this->record->refresh();
-        $productFilters = $this->record->productGroup->activeProductFilters;
+        $this->record->load(['productGroup.activeProductFilters.productFilterOptions', 'productFilters', 'productCharacteristics']);
 
-        foreach ($this->record->productGroup->activeProductFilters as $productFilter) {
+        $activeFilters = $this->record->productGroup->activeProductFilters;
+        $existingFilterKeys = $this->record->productFilters
+            ->map(fn ($pf) => $pf->product_filter_id . '_' . $pf->product_filter_option_id)
+            ->flip()
+            ->all();
+
+        foreach ($activeFilters as $productFilter) {
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $key = "product_filter_{$productFilter->id}_option_{$productFilterOption->id}";
-                $data[$key] = $this->record->productFilters()->where('product_filter_id', $productFilter->id)->where('product_filter_option_id', $productFilterOption->id)->exists();
+                $data[$key] = isset($existingFilterKeys[$productFilter->id . '_' . $productFilterOption->id]);
             }
         }
 
         $productCharacteristics = ProductCharacteristics::get();
+        $existingCharacteristics = $this->record->productCharacteristics->keyBy('product_characteristic_id');
 
         foreach (Locales::getLocales() as $locale) {
             foreach ($productCharacteristics as $productCharacteristic) {
-                $data["product_characteristic_{$productCharacteristic->id}_{$locale['id']}"] = $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->exists() ? $this->record->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first()->getTranslation('value', $locale['id']) : null;
+                $existing = $existingCharacteristics->get($productCharacteristic->id);
+                $data["product_characteristic_{$productCharacteristic->id}_{$locale['id']}"] = $existing?->getTranslation('value', $locale['id']);
             }
         }
 
@@ -177,36 +184,40 @@ class EditProduct extends EditRecord
         $newProduct->shippingClasses()->sync($this->record->shippingClasses);
         $newProduct->bundleProducts()->sync($this->record->bundleProducts);
 
-        foreach (DB::table('dashed__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productCharacteristic) {
-            DB::table('dashed__product_characteristic')->insert([
+        $characteristics = DB::table('dashed__product_characteristic')->where('product_id', $this->record->id)->whereNull('deleted_at')->get();
+        if ($characteristics->isNotEmpty()) {
+            DB::table('dashed__product_characteristic')->insert($characteristics->map(fn ($c) => [
                 'product_id' => $newProduct->id,
-                'product_characteristic_id' => $productCharacteristic->product_characteristic_id,
-                'value' => $productCharacteristic->value,
-            ]);
+                'product_characteristic_id' => $c->product_characteristic_id,
+                'value' => $c->value,
+            ])->all());
         }
 
-        foreach (DB::table('dashed__product_filter')->where('product_id', $this->record->id)->get() as $productFilter) {
-            DB::table('dashed__product_filter')->insert([
+        $filters = DB::table('dashed__product_filter')->where('product_id', $this->record->id)->get();
+        if ($filters->isNotEmpty()) {
+            DB::table('dashed__product_filter')->insert($filters->map(fn ($f) => [
                 'product_id' => $newProduct->id,
-                'product_filter_id' => $productFilter->product_filter_id,
-                'product_filter_option_id' => $productFilter->product_filter_option_id,
-            ]);
+                'product_filter_id' => $f->product_filter_id,
+                'product_filter_option_id' => $f->product_filter_option_id,
+            ])->all());
         }
 
-        foreach (DB::table('dashed__product_suggested_product')->where('product_id', $this->record->id)->get() as $suggestedProduct) {
-            DB::table('dashed__product_suggested_product')->insert([
+        $suggested = DB::table('dashed__product_suggested_product')->where('product_id', $this->record->id)->get();
+        if ($suggested->isNotEmpty()) {
+            DB::table('dashed__product_suggested_product')->insert($suggested->map(fn ($s) => [
                 'product_id' => $newProduct->id,
-                'suggested_product_id' => $suggestedProduct->suggested_product_id,
-                'order' => $suggestedProduct->order,
-            ]);
+                'suggested_product_id' => $s->suggested_product_id,
+                'order' => $s->order,
+            ])->all());
         }
 
-        foreach (DB::table('dashed__product_crosssell_product')->where('product_id', $this->record->id)->get() as $crossSellProduct) {
-            DB::table('dashed__product_crosssell_product')->insert([
+        $crossSell = DB::table('dashed__product_crosssell_product')->where('product_id', $this->record->id)->get();
+        if ($crossSell->isNotEmpty()) {
+            DB::table('dashed__product_crosssell_product')->insert($crossSell->map(fn ($c) => [
                 'product_id' => $newProduct->id,
-                'crosssell_product_id' => $crossSellProduct->crosssell_product_id,
-                'order' => $crossSellProduct->order,
-            ]);
+                'crosssell_product_id' => $c->crosssell_product_id,
+                'order' => $c->order,
+            ])->all());
         }
 
         foreach (DB::table('dashed__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {

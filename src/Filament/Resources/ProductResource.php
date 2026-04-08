@@ -105,7 +105,7 @@ class ProductResource extends Resource
                     ->required(),
                 Select::make('product_group_id')
                     ->label('Product groep')
-                    ->options(ProductGroup::all()->pluck('name', 'id')->toArray())
+                    ->options(fn () => ProductGroup::pluck('name', 'id'))
                     ->searchable()
                     ->helperText('Dit waren voorheen bovenliggende producten, voortaan moet ELK product onder een product groep hangen')
                     ->default(request()->get('productGroupId'))
@@ -746,11 +746,7 @@ class ProductResource extends Resource
                         Select::make('product_group_id')
                             ->label('Product groep')
                             ->multiple()
-                            ->options(fn () => ProductGroup::whereHas('products', function ($query) {
-                                $query->whereNull('deleted_at');
-                            })->pluck('name', 'id')->map(function ($name, $id) {
-                                return $name;
-                            })->toArray()),
+                            ->options(fn () => ProductGroup::whereHas('products', fn ($query) => $query->whereNull('deleted_at'))->pluck('name', 'id')),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
                         if (! $data['product_group_id']) {
@@ -768,8 +764,7 @@ class ProductResource extends Resource
                         Select::make('categories')
                             ->multiple()
                             ->label('Categorieen')
-                            ->options(ProductCategory::all()->pluck('name', 'id'))
-                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents),
+                            ->options(fn () => ProductCategory::pluck('name', 'id')),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
                         if (! $data['categories']) {
