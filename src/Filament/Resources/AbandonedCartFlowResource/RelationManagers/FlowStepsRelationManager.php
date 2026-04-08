@@ -2,33 +2,33 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers;
 
+use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
+use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Mail;
 use Filament\Actions\BulkActionGroup;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Builder;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\RichEditor;
-use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Tables\Table;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Resources\RelationManagers\RelationManager;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
-use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable;
-use Dashed\DashedCore\Classes\Sites;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\RichEditor;
 use Dashed\DashedEcommerceCore\Models\Cart;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use Filament\Resources\RelationManagers\RelationManager;
+use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable;
 
 class FlowStepsRelationManager extends RelationManager
 {
@@ -82,6 +82,7 @@ class FlowStepsRelationManager extends RelationManager
                                 ->title('Geen winkelwagen met producten gevonden om te simuleren.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -111,6 +112,7 @@ class FlowStepsRelationManager extends RelationManager
                                 ->title('Fout bij versturen: ' . $e->getMessage())
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -127,6 +129,7 @@ class FlowStepsRelationManager extends RelationManager
                     ->schema($this->stepSchema())
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['sort_order'] = $this->getOwnerRecord()->steps()->max('sort_order') + 1;
+
                         return $data;
                     }),
                 LocaleSwitcher::make(),

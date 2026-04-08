@@ -17,9 +17,9 @@ use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
-use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class RevenueStatisticsPage extends Page implements HasSchemas
 {
@@ -46,7 +46,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
     {
         $this->form->fill([
             'period' => 'this_month',
-            'steps'  => 'per_day',
+            'steps' => 'per_day',
         ]);
         $this->calculateStatistics();
     }
@@ -55,9 +55,9 @@ class RevenueStatisticsPage extends Page implements HasSchemas
     {
         $defaultData = Dashboard::getDefaultDataByPeriod($period);
         $this->data['startDate'] = $defaultData['startDate'];
-        $this->data['endDate']   = $defaultData['endDate'];
-        $this->data['period']    = $defaultData['period'];
-        $this->data['steps']     = $defaultData['steps'];
+        $this->data['endDate'] = $defaultData['endDate'];
+        $this->data['period'] = $defaultData['period'];
+        $this->data['steps'] = $defaultData['steps'];
         $this->form->fill($this->data);
         $this->calculateStatistics();
     }
@@ -112,12 +112,12 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                         Select::make('steps')
                             ->label('Stappen')
                             ->options([
-                                'per_hour'    => 'Per uur',
-                                'per_day'     => 'Per dag',
-                                'per_week'    => 'Per week',
-                                'per_month'   => 'Per maand',
+                                'per_hour' => 'Per uur',
+                                'per_day' => 'Per dag',
+                                'per_week' => 'Per week',
+                                'per_month' => 'Per maand',
                                 'per_quarter' => 'Per kwartaal',
-                                'per_year'    => 'Per jaar',
+                                'per_year' => 'Per jaar',
                             ])
                             ->default('per_day')
                             ->reactive(),
@@ -218,8 +218,8 @@ class RevenueStatisticsPage extends Page implements HasSchemas
 
         $formats = Dashboard::getFormatsByStep($steps);
         $startFormat = $formats['startFormat'];
-        $endFormat   = $formats['endFormat'];
-        $addFormat   = $formats['addFormat'];
+        $endFormat = $formats['endFormat'];
+        $addFormat = $formats['addFormat'];
 
         $ordersQuery = Order::query()
             ->whereBetween('created_at', [$beginDate, $endDate]);
@@ -284,11 +284,11 @@ class RevenueStatisticsPage extends Page implements HasSchemas
         $graphValues = [];
 
         $cursor = $beginDate->copy()->$startFormat();
-        $end    = $endDate->copy()->$endFormat();
+        $end = $endDate->copy()->$endFormat();
 
         while ($cursor->lte($end)) {
             $periodStart = $cursor->copy()->$startFormat();
-            $periodEnd   = $cursor->copy()->$endFormat();
+            $periodEnd = $cursor->copy()->$endFormat();
 
             $periodAmount = (clone $filteredOrdersQuery)
                 ->whereBetween('created_at', [$periodStart, $periodEnd])

@@ -367,6 +367,7 @@ class CartHelper
             }
 
             static::$cart = $restoredCart;
+
             return $restoredCart;
         }
 

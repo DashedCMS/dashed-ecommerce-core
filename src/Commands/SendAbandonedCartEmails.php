@@ -2,14 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Console\Command;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 
 class SendAbandonedCartEmails extends Command
 {
@@ -31,6 +31,7 @@ class SendAbandonedCartEmails extends Command
 
             if (! $step || ! $step->enabled) {
                 $record->update(['cancelled_at' => now()]);
+
                 continue;
             }
 
@@ -38,6 +39,7 @@ class SendAbandonedCartEmails extends Command
 
             if (! $cart || $cart->items->isEmpty()) {
                 $record->update(['cancelled_at' => now()]);
+
                 continue;
             }
 

@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Livewire\Livewire;
-use Illuminate\Support\Facades\Gate;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Gate;
 use App\Providers\AppServiceProvider;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -26,6 +26,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CreateOrderLog;
+use Dashed\DashedEcommerceCore\Commands\SendAbandonedCartEmails;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddToCart;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartCount;
@@ -68,9 +69,6 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
-use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
@@ -85,8 +83,9 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
-use Dashed\DashedEcommerceCore\Commands\SendAbandonedCartEmails;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
 
 class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 {

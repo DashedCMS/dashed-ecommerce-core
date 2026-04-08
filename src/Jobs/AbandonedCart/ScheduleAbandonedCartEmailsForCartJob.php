@@ -4,15 +4,17 @@ namespace Dashed\DashedEcommerceCore\Jobs\AbandonedCart;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
+use Dashed\DashedEcommerceCore\Models\Cart;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedEcommerceCore\Models\Cart;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 
 class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
 
     public function __construct(public readonly int $cartId)
     {

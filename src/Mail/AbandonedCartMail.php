@@ -4,9 +4,9 @@ namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Crypt;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -14,7 +14,8 @@ use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 
 class AbandonedCartMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
         public readonly Cart $cart,
@@ -47,6 +48,7 @@ class AbandonedCartMail extends Mailable
             if ($block['type'] === 'text' && ! empty($block['data']['content'])) {
                 $block['data']['content'] = str_replace(array_keys($variables), array_values($variables), $block['data']['content']);
             }
+
             return $block;
         })->all();
 

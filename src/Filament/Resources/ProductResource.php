@@ -599,7 +599,7 @@ class ProductResource extends Resource
         return $table
             ->columns(array_merge([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn ($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : ($record->productGroup->images ? (mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url ?? '') : null))
+                    ->getStateUsing(fn ($record) => $record->firstImage ? (mediaHelper()->getSingleMedia($record->firstImage, 'original')->url ?? '') : null)
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
@@ -611,7 +611,6 @@ class ProductResource extends Resource
                     ->sortable(),
                 TextColumn::make('price')
                     ->label('Prijs')
-                    ->searchable()
                     ->sortable()
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('stock')
@@ -627,6 +626,7 @@ class ProductResource extends Resource
                     ->falseIcon('heroicon-o-x-circle')
                     ->sortable(),
             ], static::visitableTableColumns()))
+            ->defaultPaginationPageOption(25)
             ->reorderable('order')
             ->recordActions([
                 EditAction::make()

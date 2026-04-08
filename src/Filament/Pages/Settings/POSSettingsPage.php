@@ -16,8 +16,8 @@ use Filament\Schemas\Components\Section;
 use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Infolists\Components\TextEntry;
-use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedCore\Traits\HasSettingsPermission;
 
 class POSSettingsPage extends Page
 {

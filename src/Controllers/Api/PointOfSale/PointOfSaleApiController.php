@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
-use App\Models\User;
 use Carbon\Carbon;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

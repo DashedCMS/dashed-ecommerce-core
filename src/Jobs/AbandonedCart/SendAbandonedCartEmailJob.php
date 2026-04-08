@@ -2,21 +2,23 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs\AbandonedCart;
 
-use Illuminate\Bus\Queueable;
 use Illuminate\Support\Str;
+use Illuminate\Bus\Queueable;
+use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\InteractsWithQueue;
+use Dashed\DashedEcommerceCore\Models\Cart;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Mail;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 
 class SendAbandonedCartEmailJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
 
     public int $tries = 3;
 
@@ -36,6 +38,7 @@ class SendAbandonedCartEmailJob implements ShouldQueue
 
         if (! $step || ! $step->enabled) {
             $record->update(['cancelled_at' => now()]);
+
             return;
         }
 
@@ -43,6 +46,7 @@ class SendAbandonedCartEmailJob implements ShouldQueue
 
         if (! $cart || $cart->items->isEmpty()) {
             $record->update(['cancelled_at' => now()]);
+
             return;
         }
 

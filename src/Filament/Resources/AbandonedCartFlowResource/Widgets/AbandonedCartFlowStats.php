@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets;
 
+use Illuminate\Database\Eloquent\Model;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartClick;
-use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 
 class AbandonedCartFlowStats extends StatsOverviewWidget
 {
@@ -23,13 +23,16 @@ class AbandonedCartFlowStats extends StatsOverviewWidget
         $sent = AbandonedCartEmail::whereIn('flow_step_id', $stepIds)->whereNotNull('sent_at')->count();
         $clicked = AbandonedCartEmail::whereIn('flow_step_id', $stepIds)->whereNotNull('clicked_at')->count();
         $converted = AbandonedCartEmail::whereIn('flow_step_id', $stepIds)->whereNotNull('converted_at')->count();
-        $totalClicks = AbandonedCartClick::whereIn('abandoned_cart_email_id',
+        $totalClicks = AbandonedCartClick::whereIn(
+            'abandoned_cart_email_id',
             AbandonedCartEmail::whereIn('flow_step_id', $stepIds)->pluck('id')
         )->count();
-        $productClicks = AbandonedCartClick::whereIn('abandoned_cart_email_id',
+        $productClicks = AbandonedCartClick::whereIn(
+            'abandoned_cart_email_id',
             AbandonedCartEmail::whereIn('flow_step_id', $stepIds)->pluck('id')
         )->where('link_type', 'product')->count();
-        $buttonClicks = AbandonedCartClick::whereIn('abandoned_cart_email_id',
+        $buttonClicks = AbandonedCartClick::whereIn(
+            'abandoned_cart_email_id',
             AbandonedCartEmail::whereIn('flow_step_id', $stepIds)->pluck('id')
         )->where('link_type', 'button')->count();
 
