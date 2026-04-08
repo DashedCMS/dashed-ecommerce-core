@@ -93,6 +93,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        cms()->registerDocumentation('dashed-ecommerce-core', 'Webshop', 'shopping-cart', __DIR__ . '/../docs', 10);
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
