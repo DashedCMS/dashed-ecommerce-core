@@ -527,7 +527,21 @@ class ProductGroupResource extends Resource
         return $table
             ->columns(array_merge([
                 ImageColumn::make('image')
-                    ->getStateUsing(fn ($record) => $record->firstImage ? (mediaHelper()->getSingleMedia($record->firstImage, 'original')->url ?? '') : null)
+                    ->getStateUsing(function ($record, $livewire) {
+                        static $preloaded = false;
+                        if (! $preloaded) {
+                            $preloaded = true;
+                            try {
+                                $imageIds = $livewire->getTableRecords()->map(fn ($r) => $r->firstImage)->filter()->values()->all();
+                                if ($imageIds) {
+                                    mediaHelper()->preloadMediaUrls($imageIds, 'original');
+                                }
+                            } catch (\Throwable $e) {
+                            }
+                        }
+
+                        return $record->firstImage ? (mediaHelper()->getSingleMedia($record->firstImage, 'original')->url ?? '') : null;
+                    })
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
