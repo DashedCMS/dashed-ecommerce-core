@@ -601,6 +601,7 @@ class ProductResource extends Resource
                         static $preloaded = false;
                         if (! $preloaded) {
                             $preloaded = true;
+
                             try {
                                 $imageIds = $livewire->getTableRecords()->map(fn ($r) => $r->firstImage)->filter()->values()->all();
                                 if ($imageIds) {
