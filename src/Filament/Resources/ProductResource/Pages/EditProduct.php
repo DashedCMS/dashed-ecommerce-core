@@ -112,7 +112,7 @@ class EditProduct extends EditRecord
 
         $activeFilters = $this->record->productGroup->activeProductFilters;
         $existingFilterKeys = $this->record->productFilters
-            ->map(fn ($pf) => $pf->product_filter_id . '_' . $pf->product_filter_option_id)
+            ->map(fn ($pf) => $pf->id . '_' . $pf->pivot->product_filter_option_id)
             ->flip()
             ->all();
 
