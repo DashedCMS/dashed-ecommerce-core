@@ -48,6 +48,7 @@ use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
@@ -624,10 +625,7 @@ class ProductResource extends Resource
                     ->label(''),
                 TextColumn::make('name')
                     ->label('Naam')
-                    ->searchable([
-                        'sku',
-                        'ean',
-                    ])
+                    ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('price')
                     ->label('Prijs')
