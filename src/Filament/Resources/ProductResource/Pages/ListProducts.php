@@ -94,7 +94,7 @@ class ListProducts extends ListRecords
                 ->schema([
                     TextEntry::make('placeholder')
                         ->label('Importeer EAN codes voor producten')
-                        ->label(fn () => 'Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . Product::whereNull('ean')->count() . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
+                        ->label(fn () => 'Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . cache()->remember('products_without_ean_count', 300, fn () => Product::whereNull('ean')->count()) . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
                         ->columnSpanFull(),
                     FileUpload::make('file')
                         ->label('Bestand')

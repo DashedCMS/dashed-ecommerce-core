@@ -312,26 +312,31 @@ class ProductResource extends Resource
                     $productFilters = $record->productGroup->activeProductFilters()->with(['productFilterOptions'])->get();
                     $enabledProductFilterOptionIds = $record->productGroup->enabledProductFilterOptions()->pluck('product_filter_option_id')->toArray();
 
+                    $activeFilterOptionIds = $record->productFilters()
+                        ->get()
+                        ->map(fn ($f) => $f->id . '_' . $f->pivot->product_filter_option_id)
+                        ->toArray();
+
                     foreach ($productFilters as $productFilter) {
                         $productFiltersSchema = [];
 
                         foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                            $isActive = in_array($productFilter->id . '_' . $productFilterOption->id, $activeFilterOptionIds);
+
                             $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                                 ->label("$productFilter->name: $productFilterOption->name")
+                                ->default($isActive)
                                 ->visible(fn ($record) => in_array($productFilterOption->id, $enabledProductFilterOptionIds));
                         }
 
                         $productFilterSchema[] = Section::make("Filter opties voor $productFilter->name")
                             ->schema($productFiltersSchema)
-                            ->saveRelationshipsUsing(function ($record, $state) {
-                                $record->productFilters()->detach();
-                                $productFilters = $record->productGroup->activeProductFilters;
+                            ->saveRelationshipsUsing(function ($record, $state) use ($productFilter) {
+                                $record->productFilters()->detach($productFilter->id);
 
-                                foreach ($productFilters as $productFilter) {
-                                    foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                                        if ($state["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
-                                            $record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
-                                        }
+                                foreach ($productFilter->productFilterOptions as $productFilterOption) {
+                                    if ($state["product_filter_{$productFilter->id}_option_{$productFilterOption->id}"] ?? false) {
+                                        $record->productFilters()->attach($productFilter->id, ['product_filter_option_id' => $productFilterOption->id]);
                                     }
                                 }
                             })
@@ -594,13 +599,16 @@ class ProductResource extends Resource
 
     public static function table(Table $table): Table
     {
+        // STEP 1: columns only, no actions/filters
         return $table
             ->columns(array_merge([
                 ImageColumn::make('image')
                     ->getStateUsing(function ($record, $livewire) {
-                        static $preloaded = false;
-                        if (! $preloaded) {
-                            $preloaded = true;
+                        static $preloadedPage = null;
+                        $currentPage = $livewire->getTablePage() ?? 1;
+
+                        if ($preloadedPage !== $currentPage) {
+                            $preloadedPage = $currentPage;
 
                             try {
                                 $imageIds = $livewire->getTableRecords()->map(fn ($r) => $r->firstImage)->filter()->values()->all();
@@ -617,7 +625,6 @@ class ProductResource extends Resource
                 TextColumn::make('name')
                     ->label('Naam')
                     ->searchable([
-                        'name',
                         'sku',
                         'ean',
                     ])
@@ -651,8 +658,7 @@ class ProductResource extends Resource
                     ->color('primary')
                     ->modalHeading('Snel bewerken')
                     ->modalSubmitActionLabel('Opslaan')
-                    ->fillForm(function (Product $record) {
-
+                    ->mountUsing(function ($form, Product $record) {
                         $data = [
                             'use_stock' => $record->use_stock,
                             'limit_purchases_per_customer' => $record->limit_purchases_per_customer,
@@ -671,7 +677,7 @@ class ProductResource extends Resource
                             $data[$key] = $record->{$key};
                         }
 
-                        return $data;
+                        $form->fill($data);
                     })
                     ->schema([
                         Section::make('Beheer de prijzen')
@@ -760,7 +766,7 @@ class ProductResource extends Resource
                         Select::make('product_group_id')
                             ->label('Product groep')
                             ->multiple()
-                            ->options(fn () => ProductGroup::whereHas('products', fn ($query) => $query->whereNull('deleted_at'))->pluck('name', 'id')),
+                            ->options(fn () => cache()->remember('product_group_filter_options', 300, fn () => ProductGroup::whereHas('products', fn ($query) => $query->whereNull('deleted_at'))->pluck('name', 'id')->all())),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
                         if (! $data['product_group_id']) {
@@ -778,7 +784,7 @@ class ProductResource extends Resource
                         Select::make('categories')
                             ->multiple()
                             ->label('Categorieen')
-                            ->options(fn () => ProductCategory::pluck('name', 'id')),
+                            ->options(fn () => cache()->remember('product_category_filter_options', 300, fn () => ProductCategory::pluck('name', 'id')->all())),
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
                         if (! $data['categories']) {
