@@ -16,16 +16,18 @@ class FinanceExportMail extends Mailable
 
     public string $hash;
     public ?string $subjectString = '';
+    public ?string $filePath;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $hash, ?string $subjectString = '')
+    public function __construct(string $hash, ?string $subjectString = '', ?string $filePath = null)
     {
         $this->hash = $hash;
         $this->subjectString = $subjectString;
+        $this->filePath = $filePath;
     }
 
     /**
@@ -44,7 +46,8 @@ class FinanceExportMail extends Mailable
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf', $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported invoice.pdf'));
+        $relativePath = $this->filePath ?: 'dashed/tmp-exports/' . $this->hash . '/invoices/exported-invoice.pdf';
+        $mail->attachFromStorageDisk('public', $relativePath, $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported invoice.pdf'));
 
         return $mail;
     }

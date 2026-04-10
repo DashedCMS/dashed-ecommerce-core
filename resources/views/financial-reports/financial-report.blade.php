@@ -150,7 +150,7 @@
                     </tr>
                     <tr>
                         <td colspan="2" class="subtitle">
-                            over {{ '€ ' . number_format($amount / $vatPercentage * 100, 2, ',', '') }}</td>
+                            over {{ '€ ' . number_format($vatPercentage > 0 ? $amount / $vatPercentage * 100 : 0, 2, ',', '') }}</td>
                     </tr>
                 </table>
             @endforeach

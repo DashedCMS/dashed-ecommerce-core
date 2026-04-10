@@ -25,7 +25,7 @@ class ExportProductsPage extends Page
     }
 
 
-    protected string $view = 'dashed-ecommerce-core::exports.pages.export';
+    protected string $view = 'dashed-ecommerce-core::exports.pages.export-simple';
 
     public array $data = [];
 
@@ -52,7 +52,11 @@ class ExportProductsPage extends Page
 
     public function submit()
     {
-        ExportProductsJob::dispatch(auth()->user()->email, $this->form->getState()['only_public_showable'] ?? false);
+        ExportProductsJob::dispatch(
+            auth()->user()->email,
+            $this->form->getState()['only_public_showable'] ?? false,
+            auth()->id(),
+        );
         Notification::make()
             ->title('De export wordt klaargemaakt en naar je toe gemaild')
             ->success()

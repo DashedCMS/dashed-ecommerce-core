@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Jobs;
 
 use Carbon\Carbon;
+use Throwable;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
@@ -24,6 +26,7 @@ class ExportInvoicesJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use CreatesExportRecord;
 
     public $tries = 5;
     public $timeout = 1200;
@@ -37,19 +40,48 @@ class ExportInvoicesJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($startDate, $endDate, string $sort, string $email)
+    public function __construct($startDate, $endDate, string $sort, string $email, ?int $userId = null)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
         $this->sort = $sort;
         $this->email = $email;
         $this->hash = Str::random();
+
+        $this->createExportRecord(
+            type: 'invoices',
+            label: 'Facturen export',
+            parameters: [
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'sort' => $sort,
+                'email' => $email,
+            ],
+            userId: $userId,
+            disk: 'public',
+        );
     }
 
     /**
      * Execute the job.
      */
     public function handle(): void
+    {
+        try {
+            $this->markExportAsProcessing();
+            $this->runExport();
+        } catch (Throwable $e) {
+            $this->markExportAsFailed($e);
+            throw $e;
+        }
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        $this->markExportAsFailed($exception);
+    }
+
+    protected function runExport(): void
     {
         $startDate = $this->startDate ? Carbon::parse($this->startDate)->startOfDay() : Order::first()->created_at;
         $endDate = $this->endDate ? Carbon::parse($this->endDate)->endOfDay() : Order::latest()->first()->created_at;
@@ -253,7 +285,23 @@ class ExportInvoicesJob implements ShouldQueue
             Storage::disk('public')->put($invoicePath, $output);
         }
 
-        Mail::to($this->email)->send(new FinanceExportMail($this->hash, 'Facturen van ' . ($startDate ? $startDate->format('d-m-Y') : 'het begin') . ' tot ' . ($endDate ? $endDate->format('d-m-Y') : 'nu')));
-        //        Storage::disk('public')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
+        // Move the generated file to the permanent exports location
+        $fileName = 'invoices-' . now()->format('Y-m-d-His') . '.pdf';
+        $finalRelativePath = 'dashed/exports/' . now()->format('Y/m') . '/' . $this->exportId . '/' . $fileName;
+        $sourceRelativePath = ltrim($invoicePath, '/');
+
+        if (Storage::disk('public')->exists($sourceRelativePath)) {
+            $contents = Storage::disk('public')->get($sourceRelativePath);
+            Storage::disk('public')->put($finalRelativePath, $contents);
+            Storage::disk('public')->delete($sourceRelativePath);
+        }
+
+        Mail::to($this->email)->send(new FinanceExportMail(
+            $this->hash,
+            'Facturen van ' . ($startDate ? $startDate->format('d-m-Y') : 'het begin') . ' tot ' . ($endDate ? $endDate->format('d-m-Y') : 'nu'),
+            $finalRelativePath,
+        ));
+
+        $this->markExportAsCompleted($finalRelativePath, $fileName);
     }
 }

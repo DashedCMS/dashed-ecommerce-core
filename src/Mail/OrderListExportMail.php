@@ -16,15 +16,17 @@ class OrderListExportMail extends Mailable
     use SerializesModels;
 
     public string $hash;
+    public ?string $filePath;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $hash)
+    public function __construct(string $hash, ?string $filePath = null)
     {
         $this->hash = $hash;
+        $this->filePath = $filePath;
     }
 
     /**
@@ -34,7 +36,7 @@ class OrderListExportMail extends Mailable
      */
     public function build()
     {
-        $orderListPath = Storage::disk('dashed')->url('dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx');
+        $relativePath = $this->filePath ?: 'dashed/tmp-exports/' . $this->hash . '/order-lists/order-list.xlsx';
 
         $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.exported-order-list') ? config('dashed-core.site_theme', 'dashed') . '.emails.exported-order-list' : 'dashed-ecommerce-core::emails.exported-order-list';
 
@@ -44,8 +46,7 @@ class OrderListExportMail extends Mailable
             ->with([
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ])
-            ->attach($orderListPath, [
-                'as' => Customsetting::get('site_name') . ' - export van bestellingen.xlsx',
+            ->attachFromStorageDisk('dashed', $relativePath, Customsetting::get('site_name') . ' - export van bestellingen.xlsx', [
                 'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ]);
     }

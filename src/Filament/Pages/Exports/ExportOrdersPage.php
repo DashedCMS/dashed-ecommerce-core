@@ -38,6 +38,8 @@ class ExportOrdersPage extends Page
     {
         $this->form->fill([
             'type' => 'normal',
+            'startDate' => null,
+            'endDate' => null,
         ]);
     }
 
@@ -68,7 +70,13 @@ class ExportOrdersPage extends Page
 
     public function submit()
     {
-        ExportOrdersJob::dispatch($this->form->getState()['startDate'], $this->form->getState()['endDate'], $this->form->getState()['type'], auth()->user()->email);
+        ExportOrdersJob::dispatch(
+            $this->form->getState()['startDate'],
+            $this->form->getState()['endDate'],
+            $this->form->getState()['type'],
+            auth()->user()->email,
+            auth()->id(),
+        );
         Notification::make()
             ->title('De export wordt klaargemaakt en naar je toe gemaild')
             ->success()

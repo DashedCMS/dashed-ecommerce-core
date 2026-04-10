@@ -61,7 +61,12 @@ class ExportFinancialReportPage extends Page
 
     public function submit()
     {
-        ExportFinancialReportJob::dispatch($this->form->getState()['start_date'], $this->form->getState()['end_date'], auth()->user()->email);
+        ExportFinancialReportJob::dispatch(
+            $this->form->getState()['start_date'],
+            $this->form->getState()['end_date'],
+            auth()->user()->email,
+            auth()->id(),
+        );
 
         Notification::make()
             ->title('De export wordt klaargemaakt en naar je toe gemaild')

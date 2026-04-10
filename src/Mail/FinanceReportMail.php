@@ -16,16 +16,18 @@ class FinanceReportMail extends Mailable
 
     public string $hash;
     public ?string $subjectString = null;
+    public ?string $filePath;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(string $hash, ?string $subjectString = null)
+    public function __construct(string $hash, ?string $subjectString = null, ?string $filePath = null)
     {
         $this->hash = $hash;
         $this->subjectString = $subjectString;
+        $this->filePath = $filePath;
     }
 
     /**
@@ -44,7 +46,8 @@ class FinanceReportMail extends Mailable
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
 
-        $mail->attachFromStorageDisk('public', 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf', $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported finance report.pdf'));
+        $relativePath = $this->filePath ?: 'dashed/tmp-exports/' . $this->hash . '/financial-reports/financial-report.pdf';
+        $mail->attachFromStorageDisk('public', $relativePath, $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported finance report.pdf'));
 
         return $mail;
     }

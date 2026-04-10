@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Throwable;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Mail;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedCore\Models\Export;
+use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Exports\ProductListExport;
 use Dashed\DashedEcommerceCore\Mail\ProductListExportMail;
@@ -21,45 +24,61 @@ class ExportProductsJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use CreatesExportRecord;
 
     public $tries = 5;
     public $timeout = 1200;
 
-    public $startDate;
-    public $endDate;
-    public string $sort;
     public string $email;
     public string $hash;
-    public string $onlyPublicShowable;
+    public bool $onlyPublicShowable;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(string $email, bool $onlyPublicShowable = false)
+    public function __construct(string $email, bool $onlyPublicShowable = false, ?int $userId = null)
     {
         $this->email = $email;
         $this->hash = Str::random();
         $this->onlyPublicShowable = $onlyPublicShowable;
+
+        $this->createExportRecord(
+            type: 'products',
+            label: 'Producten export',
+            parameters: [
+                'email' => $email,
+                'onlyPublicShowable' => $onlyPublicShowable,
+            ],
+            userId: $userId,
+        );
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        $products = Product::search()
-            ->latest();
+        try {
+            $this->markExportAsProcessing();
 
-        if ($this->onlyPublicShowable) {
-            $products = $products->publicShowable();
+            $products = Product::search()->latest();
+
+            if ($this->onlyPublicShowable) {
+                $products = $products->publicShowable();
+            }
+
+            $products = $products->get();
+
+            $fileName = 'product-list-' . now()->format('Y-m-d-His') . '.xlsx';
+            $filePath = 'dashed/exports/' . now()->format('Y/m') . '/' . $this->exportId . '/' . $fileName;
+
+            Excel::store(new ProductListExport($products), $filePath, 'dashed');
+
+            Mail::to($this->email)->send(new ProductListExportMail($this->hash, $filePath));
+
+            $this->markExportAsCompleted($filePath, $fileName);
+        } catch (Throwable $e) {
+            $this->markExportAsFailed($e);
+            throw $e;
         }
+    }
 
-        $products = $products->get();
-
-        Excel::store(new ProductListExport($products), '/dashed/tmp-exports/' . $this->hash . '/product-lists/product-list.xlsx', 'dashed');
-
-        Mail::to($this->email)->send(new ProductListExportMail($this->hash));
-
-        Storage::disk('dashed')->deleteDirectory('/dashed/tmp-exports/' . $this->hash);
+    public function failed(Throwable $exception): void
+    {
+        $this->markExportAsFailed($exception);
     }
 }

@@ -64,7 +64,13 @@ class ExportInvoicesPage extends Page
 
     public function submit()
     {
-        ExportInvoicesJob::dispatch($this->form->getState()['start_date'], $this->form->getState()['end_date'], $this->form->getState()['sort'], auth()->user()->email);
+        ExportInvoicesJob::dispatch(
+            $this->form->getState()['start_date'],
+            $this->form->getState()['end_date'],
+            $this->form->getState()['sort'],
+            auth()->user()->email,
+            auth()->id(),
+        );
 
         Notification::make()
             ->title('De export wordt klaargemaakt en naar je toe gemaild')

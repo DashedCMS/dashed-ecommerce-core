@@ -21,6 +21,10 @@ trait HasDateRangePresets
         $startField = $this->startDateField ?? 'start_date';
         $endField = $this->endDateField ?? 'end_date';
 
+        if (! is_array($this->data)) {
+            $this->data = [];
+        }
+
         $this->data[$startField] = $start->format('Y-m-d');
         $this->data[$endField] = $end->format('Y-m-d');
     }
