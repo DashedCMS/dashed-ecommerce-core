@@ -93,6 +93,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        cms()->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class);
+
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
