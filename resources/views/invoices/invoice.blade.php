@@ -1,6 +1,11 @@
 <x-dashed-ecommerce-core::invoices.master :title="Translation::get('invoice-for', 'invoice', 'Factuur voor :siteName:', 'text', [
             'siteName' => Customsetting::get('site_name')
         ])">
+    @php
+        $remainderQr = \Dashed\DashedEcommerceCore\Classes\InvoiceQrCodeGenerator::for($order);
+        $remainderOutstanding = $order->outstandingAmount();
+    @endphp
+
     @if ($order->status == 'return')
         <h1>{{ Translation::get('credit-invoice', 'invoice', 'Creditfactuur') }}</h1>
     @else
@@ -277,4 +282,13 @@
             </td>
         </tr>
     </table>
+
+    @if ($remainderQr && $remainderOutstanding > 0)
+        <div style="margin-top: 20px; text-align: center;">
+            <img src="{{ $remainderQr }}" alt="QR" style="width: 140px; height: 140px;" />
+            <p style="font-size: 11px;">
+                {{ Translation::get('invoice-qr-remainder-hint', 'invoice', 'Openstaand bij verzending: € :amount: - scan de QR-code om het actuele openstaande bedrag te betalen.', 'text', ['amount' => number_format($remainderOutstanding, 2, ',', '.')]) }}
+            </p>
+        </div>
+    @endif
 </x-dashed-ecommerce-core::invoices.master>

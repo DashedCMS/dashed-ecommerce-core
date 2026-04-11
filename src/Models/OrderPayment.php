@@ -79,10 +79,10 @@ class OrderPayment extends Model
     public function getPaymentMethodNameAttribute(): string
     {
         if ($this->paymentMethod) {
-            return $this->paymentMethod->name;
-        } else {
-            return $this->payment_method;
+            return (string) ($this->paymentMethod->name ?? '');
         }
+
+        return (string) ($this->payment_method ?? '');
     }
 
     public function getPaymentMethodInstructionsAttribute(): string

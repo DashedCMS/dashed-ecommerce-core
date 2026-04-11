@@ -28,9 +28,6 @@
             @livewire('order-customer-information-block-list', ['order' => $record])
             @if(!$record->credit_for_order_id)
                 @livewire('change-order-fulfillment-status', ['order' => $record])
-                @if($record->status == 'pending' || $record->status == 'partially_paid' || $record->status == 'waiting_for_confirmation' || $record->status == 'cancelled')
-                    @livewire('add-payment-to-order', ['order' => $record])
-                @endif
                 @livewire('cancel-order', ['order' => $record])
                 @livewire('send-order-to-fulfillment-companies', ['order' => $record])
                 @livewire('send-order-confirmation-to-email', ['order' => $record])

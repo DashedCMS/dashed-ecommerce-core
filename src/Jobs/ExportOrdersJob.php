@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Carbon\Carbon;
 use Throwable;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Mail;
@@ -12,9 +12,9 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Exports\OrderListExport;
+use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Mail\OrderListExportMail;
 use Dashed\DashedEcommerceCore\Exports\OrderListPerInvoiceLineExport;
 
@@ -87,6 +87,7 @@ class ExportOrdersJob implements ShouldQueue
             $this->markExportAsCompleted($filePath, $fileName);
         } catch (Throwable $e) {
             $this->markExportAsFailed($e);
+
             throw $e;
         }
     }

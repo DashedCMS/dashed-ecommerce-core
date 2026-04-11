@@ -62,6 +62,12 @@ class PaymentsList extends Component implements HasSchemas
                             'failed', 'cancelled' => 'danger',
                             default => 'gray',
                         }),
+
+                    TextEntry::make('note_' . $pid)
+                        ->label('Notitie')
+                        ->state(fn () => data_get($orderPayment->getAttribute('attributes'), 'note') ?: '-')
+                        ->columnSpanFull()
+                        ->visible(fn () => filled(data_get($orderPayment->getAttribute('attributes'), 'note'))),
                 ])
                 ->columns(3)
                 ->columnSpanFull();

@@ -96,6 +96,7 @@ class ExportSpecificPackingSlipsJob implements ShouldQueue
                 ->send();
         } catch (Throwable $e) {
             $this->markExportAsFailed($e);
+
             throw $e;
         }
     }

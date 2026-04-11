@@ -42,6 +42,8 @@ class Order extends Model
     use LogsActivity;
     use HasDynamicRelation;
 
+    public const STATUS_CONCEPT = 'concept';
+
     protected static $logFillable = true;
 
     protected $table = 'dashed__orders';
@@ -249,6 +251,18 @@ class Order extends Model
         return false;
     }
 
+    public function isConcept(): bool
+    {
+        return $this->status === self::STATUS_CONCEPT;
+    }
+
+    public function outstandingAmount(): float
+    {
+        $paid = $this->orderPayments()->where('status', 'paid')->sum('amount');
+
+        return (float) max(0, $this->total - $paid);
+    }
+
     public function isReturnStatus(): bool
     {
         if ($this->status == 'return') {
@@ -292,6 +306,16 @@ class Order extends Model
     public function scopeNotHandled($query)
     {
         return $query->where('fulfillment_status', '!=', 'handled')->isPaid();
+    }
+
+    public function scopeConcept($query)
+    {
+        return $query->where('status', self::STATUS_CONCEPT);
+    }
+
+    public function scopeNotConcept($query)
+    {
+        return $query->where('status', '!=', self::STATUS_CONCEPT);
     }
 
     //    public function scopePushableToEfulfillmentShop($query)
@@ -409,6 +433,10 @@ class Order extends Model
 
     public function createInvoice()
     {
+        if ($this->isConcept()) {
+            return;
+        }
+
         //        if (in_array($this->order_origin, ['own', 'pos'])) {
         if ($this->parentCreditOrder) {
             //                OrderLog::createLog(orderId: $this->id, note: 'Creating credit invoice', isDebugLog: true);
@@ -1113,6 +1141,13 @@ class Order extends Model
 
     public function orderStatus()
     {
+        if ($this->isConcept()) {
+            return [
+                'status' => 'Concept',
+                'color' => 'gray',
+            ];
+        }
+
         if ($this->status == 'pending') {
             return [
                 'status' => 'Lopende aankoop',

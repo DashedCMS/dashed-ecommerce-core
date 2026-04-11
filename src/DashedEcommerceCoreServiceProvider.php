@@ -93,7 +93,31 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
-        cms()->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class);
+        cms()
+            ->emailBlock('order-details', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderDetailsBlock::class)
+            ->emailBlock('order-address', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddressBlock::class)
+            ->emailBlock('order-methods', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderMethodsBlock::class)
+            ->emailBlock('order-note', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderNoteBlock::class);
+
+        cms()
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\PreOrderConfirmationMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderCancelledMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderNoteMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\TrackandTraceMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FinanceExportMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FinanceReportMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderListExportMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\ProductListExportMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\PaymentLinkMail::class);
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);

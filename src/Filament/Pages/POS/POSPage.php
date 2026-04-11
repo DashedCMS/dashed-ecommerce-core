@@ -16,6 +16,7 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Contracts\HasSchemas;
 use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use DashedDEV\FilamentNumpadField\NumpadField;
 use Filament\Schemas\Components\Utilities\Get;
@@ -23,10 +24,11 @@ use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.
 // Ik trek ‘m gelijk met jullie core.
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 
 class POSPage extends Component implements HasSchemas, HasActions
 {
@@ -565,6 +567,102 @@ class POSPage extends Component implements HasSchemas, HasActions
         $posCart->save();
 
         $this->dispatch('saveCustomerData');
+    }
+
+    public function saveAsConceptAction(): Action
+    {
+        return Action::make('saveAsConcept')
+            ->label(__('Opslaan als concept'))
+            ->icon('heroicon-o-bookmark')
+            ->color('gray')
+            ->requiresConfirmation()
+            ->modalHeading(__('Huidige cart opslaan als concept?'))
+            ->action(function () {
+                $posCart = $this->getActivePosCart();
+
+                if (empty($posCart->products ?? [])) {
+                    Notification::make()
+                        ->title(__('Geen producten in de cart'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                ConceptOrderService::saveAsConcept(
+                    $posCart,
+                    auth()->user(),
+                );
+
+                $posCart->refresh();
+                $posCart->loaded_concept_order_id = null;
+                $posCart->save();
+
+                Notification::make()
+                    ->title(__('Concept opgeslagen'))
+                    ->success()
+                    ->send();
+
+                $this->redirect(request()->header('Referer') ?? url()->current());
+            });
+    }
+
+    public function conceptQueueAction(): Action
+    {
+        $count = Order::concept()->count();
+
+        return Action::make('conceptQueue')
+            ->label(__('Concepten (:count)', ['count' => $count]))
+            ->icon('heroicon-o-queue-list')
+            ->modalHeading(__('Concept wachtrij'))
+            ->modalContent(fn () => view('dashed-ecommerce-core::pos.partials.concept-queue-modal'))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('Sluiten'));
+    }
+
+    public function loadConcept(int $orderId): void
+    {
+        $order = Order::concept()->find($orderId);
+
+        if (! $order) {
+            Notification::make()
+                ->title(__('Concept bestaat niet meer, ververs de wachtrij'))
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $posCart = $this->getActivePosCart();
+        $posCart->products = [];
+        $posCart->loaded_concept_order_id = $order->id;
+        $posCart->save();
+
+        ConceptOrderService::hydrate($posCart, $order);
+
+        Notification::make()
+            ->title(__('Concept geladen'))
+            ->success()
+            ->send();
+
+        $this->redirect(request()->header('Referer') ?? url()->current());
+    }
+
+    public function cancelConcept(int $orderId): void
+    {
+        $order = Order::concept()->find($orderId);
+        if (! $order) {
+            return;
+        }
+
+        ConceptOrderService::cancel($order);
+
+        Notification::make()
+            ->title(__('Concept verwijderd'))
+            ->success()
+            ->send();
+
+        $this->dispatch('$refresh');
     }
 
     public function render()

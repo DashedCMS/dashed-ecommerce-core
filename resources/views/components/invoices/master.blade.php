@@ -29,7 +29,7 @@
         }
 
         h1 {
-            color: {{Translation::get('primary-color-code', 'emails', '#A0131C')}};
+            color: {{ \Dashed\DashedCore\Models\Customsetting::get('mail_primary_color') ?: Translation::get('primary-color-code', 'emails', '#A0131C') }};
             font-size: 1.5rem;
             margin: 0;
         }
@@ -70,7 +70,7 @@
         }
 
         .divider {
-            border: 0.25rem solid {{Translation::get('primary-color-code', 'emails', '#A0131C')}};
+            border: 0.25rem solid {{ \Dashed\DashedCore\Models\Customsetting::get('mail_primary_color') ?: Translation::get('primary-color-code', 'emails', '#A0131C') }};
         }
 
         .table-note {
@@ -80,7 +80,7 @@
         }
 
         .table-note th {
-            color: {{Translation::get('primary-color-code', 'emails', '#A0131C')}};
+            color: {{ \Dashed\DashedCore\Models\Customsetting::get('mail_primary_color') ?: Translation::get('primary-color-code', 'emails', '#A0131C') }};
         }
 
         .table-details {
@@ -99,7 +99,7 @@
         }
 
         .table-details h2 {
-            color: {{Translation::get('primary-color-code', 'emails', '#A0131C')}};
+            color: {{ \Dashed\DashedCore\Models\Customsetting::get('mail_primary_color') ?: Translation::get('primary-color-code', 'emails', '#A0131C') }};
             font-size: 1rem;
             margin: 0;
         }
@@ -109,7 +109,7 @@
         }
 
         .order {
-            border-top: 1px solid {{Translation::get('primary-color-code', 'emails', '#A0131C')}};
+            border-top: 1px solid {{ \Dashed\DashedCore\Models\Customsetting::get('mail_primary_color') ?: Translation::get('primary-color-code', 'emails', '#A0131C') }};
             padding-top: 1rem;
             margin-top: 1rem;
         }
@@ -117,7 +117,7 @@
         .order h2,
         .order h3 {
             @apply font-bold;
-            color: {{Translation::get('primary-color-code', 'emails', '#A0131C')}};
+            color: {{ \Dashed\DashedCore\Models\Customsetting::get('mail_primary_color') ?: Translation::get('primary-color-code', 'emails', '#A0131C') }};
             font-size: 1rem;
             margin: 0;
         }

@@ -706,7 +706,19 @@ class PointOfSaleApiController extends Controller
 
         $total = (float) ($totals['subtotal'] ?? 0) + $shippingCosts;
 
-        $order = new Order();
+        $loadedConceptId = $posCart->loaded_concept_order_id ?? null;
+        $order = null;
+        if ($orderOrigin === 'pos' && $loadedConceptId) {
+            $order = Order::concept()->find($loadedConceptId);
+            if ($order) {
+                $order->orderProducts()->delete();
+                $posCart->loaded_concept_order_id = null;
+                $posCart->save();
+            }
+        }
+        if (! $order) {
+            $order = new Order();
+        }
         $order->order_origin = $orderOrigin;
 
         $order->first_name = $posCart->first_name;

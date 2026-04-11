@@ -1026,6 +1026,7 @@ trait ProductCartActions
         foreach ($filters as $filterKey => $filter) {
             foreach (($filter['options'] ?? []) as $optionKey => $option) {
                 $filters[$filterKey]['options'][$optionKey]['variantProductId'] = null;
+                $filters[$filterKey]['options'][$optionKey]['variantImage'] = null;
                 $filters[$filterKey]['options'][$optionKey]['variantPrice'] = null;
                 $filters[$filterKey]['options'][$optionKey]['variantDiscountPrice'] = null;
                 $filters[$filterKey]['options'][$optionKey]['priceDiff'] = null;
@@ -1078,6 +1079,7 @@ trait ProductCartActions
                 $variantDiscountPrice = $variant->discountPrice;
 
                 $filters[$filterKey]['options'][$optionKey]['variantProductId'] = (int) $productId;
+                $filters[$filterKey]['options'][$optionKey]['variantImage'] = $variant->firstImage ?? null;
                 $filters[$filterKey]['options'][$optionKey]['variantPrice'] = $variantPrice;
                 $filters[$filterKey]['options'][$optionKey]['variantDiscountPrice'] = $variantDiscountPrice;
 

@@ -3,10 +3,14 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterManualPaymentAction;
 
 class ViewOrder extends ViewRecord
 {
@@ -41,10 +45,21 @@ class ViewOrder extends ViewRecord
             ->first() : '';
 
         return array_merge([
+            Action::make('Vorige bestelling')
+                ->hiddenLabel()
+                ->icon('heroicon-s-arrow-left')
+                ->url(fn () => $previousOrder ? route('filament.dashed.resources.orders.view', ['record' => $previousOrder->id]) : '')
+                ->visible((bool)$previousOrder)
+                ->tooltip('Bekijk de vorige onverwerkte bestelling'),
+            Action::make('Volgende bestelling')
+                ->hiddenLabel()
+                ->icon('heroicon-s-arrow-right')
+                ->url(fn () => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
+                ->visible((bool)$nextOrder)
+                ->tooltip('Bekijk de volgende onverwerkte bestelling'),
             Action::make('viewInWebsite')
                 ->hiddenLabel()
                 ->icon('heroicon-s-globe-alt')
-                ->button()
                 ->url($this->record->getUrl())
                 ->tooltip('Bekijk bestelling in de webshop')
                 ->openUrlInNewTab(),
@@ -52,36 +67,33 @@ class ViewOrder extends ViewRecord
                 ->hiddenLabel()
                 ->icon('heroicon-s-pencil-square')
                 ->tooltip('Bewerk bestelling')
-                ->button()
                 ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
-            Action::make('Factuur')
-                ->button()
-                ->tooltip('Download de factuur als PDF')
-                ->icon('heroicon-s-arrow-down-tray')
-                ->url($invoiceUrl)
-                ->openUrlInNewTab()
-                ->visible((bool)$invoiceUrl),
-            Action::make('Pakbon')
-                ->button()
-                ->icon('heroicon-s-arrow-down-tray')
-                ->tooltip('Download de pakbon als PDF')
-                ->url($packingSlipUrl)
-                ->openUrlInNewTab()
-                ->visible((bool)$packingSlipUrl),
-            Action::make('Vorige bestelling')
-                ->button()
-                ->hiddenLabel()
-                ->icon('heroicon-s-arrow-left')
-                ->url(fn () => $previousOrder ? route('filament.dashed.resources.orders.view', ['record' => $previousOrder->id]) : '')
-                ->visible((bool)$previousOrder)
-                ->tooltip('Bekijk de vorige onverwerkte bestelling'),
-            Action::make('Volgende bestelling')
-                ->button()
-                ->hiddenLabel()
-                ->icon('heroicon-s-arrow-right')
-                ->url(fn () => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
-                ->visible((bool)$nextOrder)
-                ->tooltip('Bekijk de volgende onverwerkte bestelling'),
+            ActionGroup::make([
+                Action::make('Factuur')
+                    ->tooltip('Download de factuur als PDF')
+                    ->icon('heroicon-s-arrow-down-tray')
+                    ->url($invoiceUrl)
+                    ->openUrlInNewTab()
+                    ->visible((bool)$invoiceUrl),
+                Action::make('Pakbon')
+                    ->icon('heroicon-s-arrow-down-tray')
+                    ->tooltip('Download de pakbon als PDF')
+                    ->url($packingSlipUrl)
+                    ->openUrlInNewTab()
+                    ->visible((bool)$packingSlipUrl),
+                RegenerateInvoiceAction::make($this->record),
+            ])
+                ->label('Documenten')
+                ->icon('heroicon-o-document-text')
+                ->button(),
+            ActionGroup::make([
+                RegisterManualPaymentAction::make($this->record),
+                SendPaymentLinkAction::make($this->record),
+            ])
+                ->label('Betaling')
+                ->icon('heroicon-o-banknotes')
+                ->color('primary')
+                ->button(),
         ], ecommerce()->buttonActions('order'));
     }
 

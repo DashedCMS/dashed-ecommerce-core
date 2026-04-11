@@ -14,12 +14,18 @@ use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\RemainderPaymentController;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange');
 Route::post('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.exchange.post');
 Route::get('/dashed/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.dashed.exchange');
 Route::post('/dashed/exchange', [TransactionController::class, 'exchange'])->name('dashed.frontend.checkout.dashed.exchange.post');
+
+Route::middleware(['web'])->group(function () {
+    Route::get('/pay/order/{orderHash}/remainder', RemainderPaymentController::class)
+        ->name('dashed.frontend.remainder-payment');
+});
 
 Route::group(
     [

@@ -300,6 +300,7 @@ class OrderResource extends Resource
                         'danger' => fn ($state): bool => $state === 'Geannuleerd',
                         'warning' => fn ($state): bool => in_array($state, ['Gedeeltelijk betaald', 'Retour']),
                         'success' => fn ($state): bool => in_array($state, ['Betaald', 'Wachten op betaling']),
+                        'gray' => fn ($state): bool => $state === 'Concept',
                     ]),
                 TextColumn::make('fulfillment_status')
                     ->label('Fulfillment status')

@@ -15,6 +15,16 @@
                         <p class="font-bold text-5xl" x-html="time"></p>
                     </div>
                     <div class="flex flex-wrap gap-4">
+                        <button type="button" x-cloak x-show="products.length"
+                                wire:click="mountAction('saveAsConceptAction')"
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                title="{{ __('Opslaan als concept') }}"
+                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                        </button>
                         <button x-cloak x-show="lastOrder"
                                 x-bind:disabled="loading"
                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
@@ -315,6 +325,20 @@
 
                         <p>Voorraadbeheer</p>
                     </button>
+                    @php($conceptCount = \Dashed\DashedEcommerceCore\Models\Order::concept()->count())
+                    @if ($conceptCount > 0)
+                        <button type="button"
+                                wire:click="mountAction('conceptQueueAction')"
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="focus-search-order text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+                            </svg>
+
+                            <p>{{ __('Concepten bekijken') }} ({{ $conceptCount }})</p>
+                        </button>
+                    @endif
                 </div>
             </div>
             <div class="sm:col-span-3 sm:pl-8 flex flex-col gap-8 overflow-y-auto">
@@ -1580,7 +1604,7 @@
                                 d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
                         </svg>
                     </span>
-                            <input autofocus x-model.debounce.500ms="searchStockProductQuery"
+                            <input autofocus x-model="searchStockProductQuery"
                                    id="search-stock-product-query"
                                    :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                    placeholder="Zoek een product op naam, SKU of barcode..."
@@ -1739,6 +1763,8 @@
             </template>
         </div>
     </div>
+
+    <x-filament-actions::modals/>
 </div>
 @script
 <script>
@@ -1993,7 +2019,10 @@
                     })
                 }
 
-                this.allProducts = data.products;
+                this.allProducts = (data.products || []).map(p => ({
+                    ...p,
+                    _searchHaystack: (p.search || '').toLowerCase(),
+                }));
             } catch (error) {
                 return $wire.dispatch('notify', {
                     type: 'danger',
@@ -2303,7 +2332,7 @@
             const vatRate = parseFloat(formData?.vat_rate ?? 21);
 
             if (!name) {
-                return $wire.dispatch('notify', { type: 'danger', message: 'Productnaam is verplicht' });
+                return $wire.dispatch('notify', {type: 'danger', message: 'Productnaam is verplicht'});
             }
 
             this.loading = true;
@@ -2327,21 +2356,21 @@
 
                 if (!response.ok) {
                     this.loading = false;
-                    return $wire.dispatch('notify', { type: 'danger', message: data.message });
+                    return $wire.dispatch('notify', {type: 'danger', message: data.message});
                 }
 
                 this.products = data.products;
                 this.customProductPopup = false;
-                $wire.set('customProductData', { name: '', quantity: 1, vat_rate: 21, price: 0 });
+                $wire.set('customProductData', {name: '', quantity: 1, vat_rate: 21, price: 0});
                 $wire.dispatch('resetNumpad');
                 this.retrieveCart();
                 this.focus();
                 this.loading = false;
 
-                $wire.dispatch('notify', { type: 'success', message: 'Aangepast product toegevoegd' });
+                $wire.dispatch('notify', {type: 'success', message: 'Aangepast product toegevoegd'});
             } catch (error) {
                 this.loading = false;
-                return $wire.dispatch('notify', { type: 'danger', message: 'Er ging iets fout bij het toevoegen' });
+                return $wire.dispatch('notify', {type: 'danger', message: 'Er ging iets fout bij het toevoegen'});
             }
         },
 
@@ -2894,6 +2923,7 @@
                     this.orderPayments = data.orderPayments;
                     this.firstPaymentMethod = data.firstPaymentMethod;
                     this.toggle('orderConfirmationPopup')
+                    $wire.$refresh();
                 }
 
                 this.loading = false;
@@ -3031,53 +3061,59 @@
             this.initialize();
         },
 
-        async getSearchedProducts() {
-            if (this.searchProductQuery.length < 3) {
-                this.searchedProducts = [];
-            }
+        getSearchedProducts() {
             const query = this.searchProductQuery.trim().toLowerCase();
 
-            if (!query) {
-                this.searchedProducts = this.allProducts.slice(0, 100);
+            if (query.length < 2) {
+                this.searchedProducts = [];
                 return;
             }
 
             const words = query.split(/\s+/);
 
-            this.searchedProducts = this.allProducts
+            const filtered = this.allProducts
                 .map(product => {
-                    const haystack = product.search.toLowerCase();
+                    const haystack = product._searchHaystack || (product.search || '').toLowerCase();
                     let score = 0;
 
-                    // Exact match boost
                     if (haystack === query) {
                         score += 1000;
                     }
-
-                    // Starts with boost
                     if (haystack.startsWith(query)) {
                         score += 500;
                     }
 
-                    // Per woord score
-                    words.forEach(word => {
+                    let allMatch = true;
+                    for (const word of words) {
                         if (haystack.includes(word)) {
                             score += 100;
+                        } else {
+                            allMatch = false;
                         }
-                    });
-
-                    // Alle woorden aanwezig bonus
-                    if (words.every(word => haystack.includes(word))) {
+                    }
+                    if (allMatch) {
                         score += 300;
                     }
 
-                    return {...product, _score: score};
+                    return score > 0 ? {...product, _score: score} : null;
                 })
-                .filter(p => p._score > 0)
+                .filter(Boolean)
                 .sort((a, b) => b._score - a._score)
                 .slice(0, 100);
 
+            // Instant render with client-side data
+            this.searchedProducts = filtered;
+            this.loadingSearchedProducts = false;
 
+            // Enrich stock/prices in background — merge when it arrives
+            const requestQuery = query;
+            this.enrichSearchedProducts(filtered, requestQuery);
+        },
+
+        async enrichSearchedProducts(products, requestQuery) {
+            if (!products.length) {
+                return;
+            }
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {
                     method: 'POST',
@@ -3086,81 +3122,81 @@
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        products: this.searchedProducts,
+                        products: products,
                         userId: this.userId,
                     })
                 });
 
-                let data = await response.json();
-                this.focus();
-
                 if (!response.ok) {
-                    return $wire.dispatch('notify', {
-                        type: 'danger',
-                        message: data.message,
-                    })
+                    return;
+                }
+
+                let data = await response.json();
+
+                // Only apply if user hasn't typed further since request
+                if (this.searchProductQuery.trim().toLowerCase() !== requestQuery) {
+                    return;
                 }
 
                 this.searchedProducts = data.products;
-
+                this.focus();
             } catch (error) {
-                return $wire.dispatch('notify', {
-                    type: 'danger',
-                    message: 'Kan de voorraad niet bijwerken'
-                })
+                // Silently ignore — the user already sees the client-side results
             }
         },
 
-        async getSearchedStockProducts() {
-            if (this.searchStockProductQuery.length < 3) {
+        getSearchedStockProducts() {
+            const query = this.searchStockProductQuery.trim().toLowerCase();
+
+            if (query.length < 2) {
                 this.searchedStockProducts = [];
                 this.selectedStockProduct = null;
                 return;
             }
 
-            const query = this.searchStockProductQuery.trim().toLowerCase();
-
-            if (!query) {
-                this.searchedStockProducts = this.allProducts.slice(0, 100);
-                return;
-            }
-
             const words = query.split(/\s+/);
 
-            this.searchedStockProducts = this.allProducts
+            const filtered = this.allProducts
                 .map(product => {
-                    const haystack = product.search.toLowerCase();
+                    const haystack = product._searchHaystack || (product.search || '').toLowerCase();
                     let score = 0;
 
-                    // Exact match boost
                     if (haystack === query) {
                         score += 1000;
                     }
-
-                    // Starts with boost
                     if (haystack.startsWith(query)) {
                         score += 500;
                     }
 
-                    // Per woord score
-                    words.forEach(word => {
+                    let allMatch = true;
+                    for (const word of words) {
                         if (haystack.includes(word)) {
                             score += 100;
+                        } else {
+                            allMatch = false;
                         }
-                    });
-
-                    // Alle woorden aanwezig bonus
-                    if (words.every(word => haystack.includes(word))) {
+                    }
+                    if (allMatch) {
                         score += 300;
                     }
 
-                    return {...product, _score: score};
+                    return score > 0 ? {...product, _score: score} : null;
                 })
-                .filter(p => p._score > 0)
+                .filter(Boolean)
                 .sort((a, b) => b._score - a._score)
                 .slice(0, 100);
 
+            this.searchedStockProducts = filtered;
+            this.selectedStockProduct = filtered.length ? filtered[0] : null;
+            this.loadingSearchedStockProducts = false;
 
+            this.enrichStockSearchedProducts(filtered, query);
+        },
+
+        async enrichStockSearchedProducts(products, requestQuery) {
+            if (!products.length) {
+                return;
+            }
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {
                     method: 'POST',
@@ -3169,28 +3205,25 @@
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        products: this.searchedStockProducts,
+                        products: products,
                         userId: this.userId,
                     })
                 });
 
+                if (!response.ok) {
+                    return;
+                }
+
                 let data = await response.json();
 
-                if (!response.ok) {
-                    return $wire.dispatch('notify', {
-                        type: 'danger',
-                        message: data.message,
-                    })
+                if (this.searchStockProductQuery.trim().toLowerCase() !== requestQuery) {
+                    return;
                 }
 
                 this.searchedStockProducts = data.products;
-                this.selectedStockProduct = this.searchedStockProducts?.length ? this.searchedStockProducts[0] : null
-
+                this.selectedStockProduct = data.products?.length ? data.products[0] : null;
             } catch (error) {
-                return $wire.dispatch('notify', {
-                    type: 'danger',
-                    message: 'Kan de voorraad niet bijwerken'
-                })
+                // Silently ignore — client-side results already shown
             }
         },
 
@@ -3573,39 +3606,22 @@
             this.initialize();
             this.getAllProducts();
 
-            let searchTimeout = null;
-
             $watch('searchProductQuery', (value) => {
-                clearTimeout(searchTimeout);
-                this.loadingSearchedProducts = true;
-
-                searchTimeout = setTimeout(() => {
-                    if (value.length > 2) {
-                        this.getSearchedProducts();
-                    } else {
-                        this.searchedProducts = [];
-                    }
-
-                    this.loadingSearchedProducts = false;
-                }, 300);
+                if (value.length >= 2) {
+                    this.getSearchedProducts();
+                } else {
+                    this.searchedProducts = [];
+                }
             });
 
-            let stockSearchTimeout = null;
             $watch('searchStockProductQuery', (value) => {
-                clearTimeout(stockSearchTimeout);
-                this.loadingSearchedStockProducts = true;
-
-                stockSearchTimeout = setTimeout(() => {
-                    if (value.length > 2) {
-                        this.selectedStockProduct = null;
-                        this.getSearchedStockProducts();
-                    } else {
-                        this.searchedStockProducts = [];
-                        this.selectedStockProduct = null;
-                    }
-
-                    this.loadingSearchedStockProducts = false;
-                }, 300);
+                if (value.length >= 2) {
+                    this.selectedStockProduct = null;
+                    this.getSearchedStockProducts();
+                } else {
+                    this.searchedStockProducts = [];
+                    this.selectedStockProduct = null;
+                }
             });
 
             $watch('searchOrderQuery', (value, oldValue) => {
@@ -3639,4 +3655,6 @@
     ;
 </script>
 @endscript
+
+<x-filament-actions::modals/>
 </div>

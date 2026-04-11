@@ -8,13 +8,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedCore\Models\Export;
-use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Exports\ProductListExport;
 use Dashed\DashedEcommerceCore\Mail\ProductListExportMail;
 
@@ -73,6 +71,7 @@ class ExportProductsJob implements ShouldQueue
             $this->markExportAsCompleted($filePath, $fileName);
         } catch (Throwable $e) {
             $this->markExportAsFailed($e);
+
             throw $e;
         }
     }

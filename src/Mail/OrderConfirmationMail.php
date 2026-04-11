@@ -26,11 +26,6 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
         $this->order = $order;
     }
 
-    public static function emailTemplateKey(): string
-    {
-        return self::class;
-    }
-
     public static function emailTemplateName(): string
     {
         return 'Orderbevestiging (klant)';
@@ -43,17 +38,94 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
 
     public static function availableVariables(): array
     {
-        return ['orderId', 'customerFirstName', 'customerLastName', 'totalFormatted', 'siteName'];
+        return ['orderId', 'customerFirstName', 'customerLastName', 'totalFormatted', 'siteName', 'orderUrl', 'primaryColor'];
     }
 
     public static function availableBlockKeys(): array
     {
-        return ['heading', 'text', 'button', 'image', 'divider', 'order-summary'];
+        return [
+            'heading', 'text', 'button', 'image', 'divider',
+            'order-details', 'order-summary', 'order-address',
+            'order-methods', 'order-note',
+        ];
+    }
+
+    public static function defaultSubject(): string
+    {
+        return 'Bevestiging van je bestelling #:orderId:';
+    }
+
+    public static function defaultBlocks(): array
+    {
+        return [
+            [
+                'type' => 'heading',
+                'data' => ['text' => 'Bedankt voor je bestelling, :customerFirstName:!', 'level' => 'h1'],
+            ],
+            [
+                'type' => 'text',
+                'data' => ['body' => '<p>We hebben je bestelling in goede orde ontvangen en gaan deze zo snel mogelijk voor je verwerken. Hieronder vind je een overzicht van je bestelling.</p>'],
+            ],
+            [
+                'type' => 'order-details',
+                'data' => [],
+            ],
+            [
+                'type' => 'button',
+                'data' => [
+                    'label' => 'Bekijk je bestelling online',
+                    'url' => ':orderUrl:',
+                    'background' => ':primaryColor:',
+                    'color' => '#ffffff',
+                ],
+            ],
+            [
+                'type' => 'divider',
+                'data' => [],
+            ],
+            [
+                'type' => 'order-summary',
+                'data' => ['show_totals' => true],
+            ],
+            [
+                'type' => 'divider',
+                'data' => [],
+            ],
+            [
+                'type' => 'order-methods',
+                'data' => ['show_shipping' => true, 'show_payment' => true, 'show_instructions' => true],
+            ],
+            [
+                'type' => 'divider',
+                'data' => [],
+            ],
+            [
+                'type' => 'order-address',
+                'data' => ['type' => 'shipping'],
+            ],
+            [
+                'type' => 'order-address',
+                'data' => ['type' => 'invoice'],
+            ],
+            [
+                'type' => 'order-note',
+                'data' => [],
+            ],
+            [
+                'type' => 'divider',
+                'data' => [],
+            ],
+            [
+                'type' => 'text',
+                'data' => ['body' => '<p>Heb je vragen over je bestelling? Neem dan gerust contact met ons op.</p><p>Met vriendelijke groet,<br>Het team van :siteName:</p>'],
+            ],
+        ];
     }
 
     public static function sampleData(): array
     {
-        $order = Order::query()->latest()->first();
+        $order = Order::query()->isPaid()->latest()->first()
+            ?? Order::query()->latest()->first();
 
         return [
             'order' => $order,
@@ -62,7 +134,16 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
             'customerLastName' => $order?->last_name ?? 'Jansen',
             'totalFormatted' => $order?->total ?? '€ 99,95',
             'siteName' => Customsetting::get('site_name'),
+            'orderUrl' => $order && method_exists($order, 'getUrl') ? $order->getUrl() : '#',
         ];
+    }
+
+    public static function makeForTest(): ?self
+    {
+        $order = Order::query()->isPaid()->latest()->first()
+            ?? Order::query()->latest()->first();
+
+        return $order ? new self($order) : null;
     }
 
     public function build()
@@ -74,19 +155,26 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
             'customerLastName' => $this->order->last_name,
             'totalFormatted' => $this->order->total ?? '',
             'siteName' => Customsetting::get('site_name'),
+            'orderUrl' => method_exists($this->order, 'getUrl') ? $this->order->getUrl() : '#',
         ];
 
         $templateHtml = $this->renderFromTemplate($context);
 
         if ($templateHtml !== null) {
             $subject = $this->templateSubject(
-                Translation::get('order-confirmation-email-subject', 'orders', 'Order confirmation for order #:orderId:', 'text', [
+                Translation::get('order-confirmation-email-subject', 'orders', 'Orderbevestiging voor bestelling #:orderId:', 'text', [
                     'orderId' => $this->order->invoice_id,
-                ])
+                ]),
+                $context
+            );
+
+            [$fromEmail, $fromName] = $this->templateFrom(
+                Customsetting::get('site_from_email'),
+                Customsetting::get('site_name')
             );
 
             $mail = $this->html($templateHtml)
-                ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
+                ->from($fromEmail, $fromName)
                 ->subject($subject);
         } else {
             $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.confirm-order')
@@ -95,7 +183,7 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
 
             $mail = $this->view($view)
                 ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
-                ->subject(Translation::get('order-confirmation-email-subject', 'orders', 'Order confirmation for order #:orderId:', 'text', [
+                ->subject(Translation::get('order-confirmation-email-subject', 'orders', 'Orderbevestiging voor bestelling #:orderId:', 'text', [
                     'orderId' => $this->order->invoice_id,
                 ]))
                 ->with([

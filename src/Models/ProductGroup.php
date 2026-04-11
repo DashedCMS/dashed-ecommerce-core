@@ -256,6 +256,30 @@ class ProductGroup extends Model
         $filters = [];
         $productIds = $this->products()->publicShowable()->pluck('id')->toArray();
 
+        if (empty($productIds)) {
+            return $filters;
+        }
+
+        // Pre-load: which product has which option, ordered by product order
+        $optionToProductId = DB::table('dashed__product_filter')
+            ->join('dashed__products', 'dashed__products.id', '=', 'dashed__product_filter.product_id')
+            ->whereIn('dashed__product_filter.product_id', $productIds)
+            ->orderBy('dashed__products.order')
+            ->orderBy('dashed__products.id')
+            ->select('dashed__product_filter.product_filter_option_id', 'dashed__product_filter.product_id')
+            ->get()
+            ->groupBy('product_filter_option_id')
+            ->map(fn ($rows) => $rows->first()->product_id)
+            ->toArray();
+
+        // Pre-load first image per product
+        $productImages = \Dashed\DashedEcommerceCore\Models\Product::query()
+            ->whereIn('id', array_values(array_unique(array_filter($optionToProductId))))
+            ->get()
+            ->keyBy('id')
+            ->map(fn ($p) => $p->firstImage)
+            ->toArray();
+
         foreach ($this->activeProductFilters as $filter) {
             if ($filter->pivot->use_for_variations) {
                 $productFilterOptionIds = DB::table('dashed__product_filter')
@@ -272,7 +296,12 @@ class ProductGroup extends Model
                 if (count($filterOptions)) {
                     foreach ($filterOptions as &$filterOption) {
                         $filterOption['name'] = $filterOption['name'][app()->getLocale()] ?? ($filterOption['name'][array_key_first($filterOption['name'])] ?? 'onbekend');
+
+                        $variantProductId = $optionToProductId[$filterOption['id']] ?? null;
+                        $filterOption['variant_product_id'] = $variantProductId;
+                        $filterOption['variant_image'] = $variantProductId ? ($productImages[$variantProductId] ?? null) : null;
                     }
+                    unset($filterOption);
 
                     $filters[] = [
                         'id' => $filter->id,

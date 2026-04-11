@@ -97,6 +97,8 @@ class Product extends Model
 
             ProductSavedEvent::dispatch($product);
             UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+
+            static::bumpSearchbarCacheVersion();
         });
 
         static::deleting(function ($product) {
@@ -107,7 +109,23 @@ class Product extends Model
 
         static::deleted(function ($product) {
             UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+            static::bumpSearchbarCacheVersion();
         });
+    }
+
+    public static function searchbarCacheVersion(): int
+    {
+        return (int) \Illuminate\Support\Facades\Cache::rememberForever('searchbar.cache.version', fn () => 1);
+    }
+
+    public static function bumpSearchbarCacheVersion(): void
+    {
+        $cache = \Illuminate\Support\Facades\Cache::getStore();
+        if (method_exists($cache, 'increment') && \Illuminate\Support\Facades\Cache::has('searchbar.cache.version')) {
+            \Illuminate\Support\Facades\Cache::increment('searchbar.cache.version');
+        } else {
+            \Illuminate\Support\Facades\Cache::forever('searchbar.cache.version', static::searchbarCacheVersion() + 1);
+        }
     }
 
     public function productFilters()

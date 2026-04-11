@@ -458,7 +458,19 @@ trait CreateManualOrderActions2
             $user->save();
         }
 
-        $order = new Order();
+        $loadedConceptId = session('pos.loaded_concept_order_id');
+        $order = null;
+        if ($this->orderOrigin === 'pos' && $loadedConceptId) {
+            $order = \Dashed\DashedEcommerceCore\Models\Order::concept()->find($loadedConceptId);
+            if ($order) {
+                $order->orderProducts()->delete();
+                $order->status = 'pending';
+                session()->forget('pos.loaded_concept_order_id');
+            }
+        }
+        if (! $order) {
+            $order = new Order();
+        }
         $order->order_origin = $this->orderOrigin;
         $order->first_name = $this->first_name;
         $order->last_name = $this->last_name;

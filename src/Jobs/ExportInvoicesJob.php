@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use Carbon\Carbon;
 use Throwable;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
+use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 
 class ExportInvoicesJob implements ShouldQueue
 {
@@ -72,6 +72,7 @@ class ExportInvoicesJob implements ShouldQueue
             $this->runExport();
         } catch (Throwable $e) {
             $this->markExportAsFailed($e);
+
             throw $e;
         }
     }
