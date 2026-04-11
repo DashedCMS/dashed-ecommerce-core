@@ -764,7 +764,7 @@ trait ProductCartActions
                         ];
                     }
                 }
-            } elseif ($productExtra->type == 'input') {
+            } elseif ($productExtra->type == 'input' || $productExtra->type == 'textarea') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
 
                 if ($productExtra->required && ! $productValue) {
