@@ -2,16 +2,16 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
-use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedTranslations\Models\Translation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 
 class PaymentLinkMail extends Mailable implements RegistersEmailTemplate
 {

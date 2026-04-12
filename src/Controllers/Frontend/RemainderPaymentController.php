@@ -23,6 +23,7 @@ class RemainderPaymentController
             if ($psp['class']::isConnected()) {
                 $providerId = $pspId;
                 $providerClass = $psp['class'];
+
                 break;
             }
         }

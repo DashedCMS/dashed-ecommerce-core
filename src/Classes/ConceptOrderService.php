@@ -2,10 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;

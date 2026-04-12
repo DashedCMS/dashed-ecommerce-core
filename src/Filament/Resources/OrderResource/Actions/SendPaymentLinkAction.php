@@ -2,13 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions;
 
-use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 
 class SendPaymentLinkAction
 {
