@@ -16,6 +16,7 @@ use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 
 class ProductCategory extends Model
 {
@@ -55,6 +56,26 @@ class ProductCategory extends Model
 
         static::saved(function ($productCategory) {
             UpdateProductCategoriesInformationJob::dispatch()->onQueue('ecommerce');
+
+            $categoryIds = collect([$productCategory->id]);
+
+            if ($productCategory->parent_id) {
+                $categoryIds->push($productCategory->parent_id);
+            }
+
+            $childIds = self::where('parent_id', $productCategory->id)->pluck('id');
+            $categoryIds = $categoryIds->merge($childIds)->unique();
+
+            $productGroups = Product::whereHas('productCategories', function ($query) use ($categoryIds) {
+                $query->whereIn('dashed__product_categories.id', $categoryIds);
+            })->distinct()->pluck('product_group_id');
+
+            foreach ($productGroups as $productGroupId) {
+                $productGroup = \Dashed\DashedEcommerceCore\Models\ProductGroup::find($productGroupId);
+                if ($productGroup) {
+                    UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
+                }
+            }
         });
 
         static::deleting(function ($productCategory) {
