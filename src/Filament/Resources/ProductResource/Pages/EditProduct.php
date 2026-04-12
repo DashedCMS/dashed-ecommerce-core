@@ -2,23 +2,24 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Illuminate\Support\Str;
-use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\DB;
-use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\Locales;
-use Illuminate\Support\Facades\Storage;
-use Filament\Resources\Pages\EditRecord;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction;
+use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
-use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 
 class EditProduct extends EditRecord
 {
@@ -112,14 +113,14 @@ class EditProduct extends EditRecord
 
         $activeFilters = $this->record->productGroup->activeProductFilters;
         $existingFilterKeys = $this->record->productFilters
-            ->map(fn ($pf) => $pf->id . '_' . $pf->pivot->product_filter_option_id)
+            ->map(fn ($pf) => $pf->id.'_'.$pf->pivot->product_filter_option_id)
             ->flip()
             ->all();
 
         foreach ($activeFilters as $productFilter) {
             foreach ($productFilter->productFilterOptions as $productFilterOption) {
                 $key = "product_filter_{$productFilter->id}_option_{$productFilterOption->id}";
-                $data[$key] = isset($existingFilterKeys[$productFilter->id . '_' . $productFilterOption->id]);
+                $data[$key] = isset($existingFilterKeys[$productFilter->id.'_'.$productFilterOption->id]);
             }
         }
 
@@ -140,7 +141,7 @@ class EditProduct extends EditRecord
     {
         $breadcrumbs = parent::getBreadcrumbs();
         $breadcrumbs = array_merge([route('filament.dashed.resources.product-groups.edit', [$this->record->productGroup->id]) => "{$this->record->productGroup->name}"], $breadcrumbs);
-        $breadcrumbs = array_merge([route('filament.dashed.resources.products.index') => "Producten"], $breadcrumbs);
+        $breadcrumbs = array_merge([route('filament.dashed.resources.products.index') => 'Producten'], $breadcrumbs);
 
         return $breadcrumbs;
     }
@@ -157,7 +158,9 @@ class EditProduct extends EditRecord
                 ->color('warning');
         }
 
-        $buttons[] = \Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction::make();
+        if (class_exists(AnalyzeSeoAction::class)) {
+            $buttons[] = AnalyzeSeoAction::make();
+        }
         $buttons[] = self::translateAction();
         $buttons[] = LocaleSwitcher::make();
         $buttons[] = DeleteAction::make();
@@ -169,11 +172,11 @@ class EditProduct extends EditRecord
     {
         $newProduct = $this->record->replicate();
         $newProduct->purchases = 0;
-        $newProduct->sku = 'SKU' . rand(10000, 99999);
+        $newProduct->sku = 'SKU'.rand(10000, 99999);
         foreach (Locales::getLocales() as $locale) {
             $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']));
-            while (Product::where('slug->' . $locale['id'], $newProduct->getTranslation('slug', $locale['id']))->count()) {
-                $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']) . Str::random(1));
+            while (Product::where('slug->'.$locale['id'], $newProduct->getTranslation('slug', $locale['id']))->count()) {
+                $newProduct->setTranslation('slug', $locale['id'], $newProduct->getTranslation('slug', $locale['id']).Str::random(1));
             }
         }
         $newProduct->save();
@@ -221,7 +224,7 @@ class EditProduct extends EditRecord
         }
 
         foreach (DB::table('dashed__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
-            $newProductExtra = new ProductExtra();
+            $newProductExtra = new ProductExtra;
             $newProductExtra->product_id = $newProduct->id;
             foreach (json_decode($productExtra->name, true) as $locale => $name) {
                 $newProductExtra->setTranslation('name', $locale, $name);
