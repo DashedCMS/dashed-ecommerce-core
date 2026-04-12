@@ -97,7 +97,7 @@ class Products
                 ->publicShowableWithIndex()
                 ->orderBy($orderBy, $order)
                 ->limit($pagination)
-                ->with(['productFilters', 'productGroup'])
+                ->with(['productFilters', 'productGroup', 'productCategories'])
                 ->get();
         } else {
             $products = Product::search($search)
@@ -105,7 +105,7 @@ class Products
                 ->publicShowableWithIndex()
                 ->orderBy($orderBy, $order)
                 ->limit($pagination)
-                ->with(['productFilters', 'productGroup'])
+                ->with(['productFilters', 'productGroup', 'productCategories'])
                 ->get();
         }
 
