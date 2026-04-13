@@ -447,6 +447,11 @@ class Product extends Model
         return $this->reserved_stock;
     }
 
+    public function inCartStock(): int
+    {
+        return (int) \Dashed\DashedEcommerceCore\Models\CartItem::where('product_id', $this->id)->sum('quantity');
+    }
+
     public function stock(): ?int
     {
         return $this->total_stock - $this->reservedStock();
@@ -1367,7 +1372,7 @@ class Product extends Model
             Quantity::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn ($record) => $record ? 'Er zijn er momenteel ' . $record->reservedStock() . ' gereserveerd' : '')
+                ->helperText(fn ($record) => $record ? $record->reservedStock() . ' gereserveerd - ' . $record->inCartStock() . ' in winkelwagen' : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()

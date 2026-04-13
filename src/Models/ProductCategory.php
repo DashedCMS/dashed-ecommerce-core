@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
 
 class ProductCategory extends Model
 {

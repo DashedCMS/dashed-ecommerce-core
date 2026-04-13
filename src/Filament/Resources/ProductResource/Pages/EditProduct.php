@@ -2,24 +2,24 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction;
-use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
-use Dashed\DashedEcommerceCore\Classes\ProductCategories;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
-use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction;
+use Dashed\DashedEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 class EditProduct extends EditRecord
 {
@@ -224,7 +224,7 @@ class EditProduct extends EditRecord
         }
 
         foreach (DB::table('dashed__product_extras')->where('product_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
-            $newProductExtra = new ProductExtra;
+            $newProductExtra = new ProductExtra();
             $newProductExtra->product_id = $newProduct->id;
             foreach (json_decode($productExtra->name, true) as $locale => $name) {
                 $newProductExtra->setTranslation('name', $locale, $name);

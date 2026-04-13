@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics;
 
 class ListCarts extends ListRecords
 {
@@ -15,5 +16,12 @@ class ListCarts extends ListRecords
     protected function getTableQuery(): Builder|Relation|null
     {
         return Cart::query()->whereHas('items');
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            CartStatistics::class,
+        ];
     }
 }

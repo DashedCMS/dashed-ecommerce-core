@@ -2,26 +2,26 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages;
 
-use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction;
-use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
-use Dashed\DashedEcommerceCore\Classes\ProductCategories;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
-use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductFilter;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Classes\Locales;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction;
+use Dashed\DashedEcommerceCore\Classes\ProductCategories;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 
 class EditProductGroup extends EditRecord
 {
@@ -223,7 +223,7 @@ class EditProductGroup extends EditRecord
         }
 
         foreach (DB::table('dashed__product_extras')->where('product_group_id', $this->record->id)->whereNull('deleted_at')->get() as $productExtra) {
-            $newProductGroupExtra = new ProductExtra;
+            $newProductGroupExtra = new ProductExtra();
             $newProductGroupExtra->product_group_id = $newProductGroup->id;
             foreach (json_decode($productExtra->name, true) as $locale => $name) {
                 $newProductGroupExtra->setTranslation('name', $locale, $name);

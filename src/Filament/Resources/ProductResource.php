@@ -8,6 +8,7 @@ use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
+use Dashed\DashedAi\Facades\Ai;
 use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
@@ -29,9 +30,8 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
-use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedAi\Jobs\GenerateAiContent;
 use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedCore\Jobs\GenerateAIContent;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -450,11 +450,11 @@ class ProductResource extends Resource
                                     ]),
                                 ];
                             })
-                            ->visible(fn ($record) => $record && (bool)Customsetting::get('open_ai_api_key'))
+                            ->visible(fn ($record) => $record && Ai::hasProvider())
                             ->action(function ($data, Set $set, $record, $livewire) {
                                 $description = $data['description'] ?? '';
 
-                                GenerateAIContent::dispatch($record, 'description', $description, $livewire->activeLocale);
+                                GenerateAiContent::dispatch($record, 'description', $description, $livewire->activeLocale);
 
                                 Notification::make()
                                     ->title('De beschrijving wordt gegenereerd. Refresh de pagina om de nieuwe beschrijving te zien.')

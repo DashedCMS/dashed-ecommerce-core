@@ -17,6 +17,7 @@
     ],
     "require": {
         "php": "^8.4",
+        "dashed/dashed-ai": "*",
         "barryvdh/laravel-dompdf": "^3.1",
         "daltcore/lara-pdf-merger": "^2.0",
         "dashed/livewire-range-slider": "^1.0",
