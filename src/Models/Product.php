@@ -2,43 +2,43 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Exception;
-use Carbon\Carbon;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Dashed\DashedPages\Models\Page;
+use Carbon\Carbon;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedCore\Models\Concerns\IsVisitable;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Dashed\DashedPages\Models\Page;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Exception;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Gloudemans\Shoppingcart\CartItem;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Components\DatePicker;
-use LaraZeus\Quantity\Components\Quantity;
-use Dashed\DashedCore\Models\Customsetting;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Schemas\Components\Utilities\Get;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Gloudemans\Shoppingcart\CartItem;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use LaraZeus\Quantity\Components\Quantity;
 
 class Product extends Model
 {
-    use SoftDeletes;
+    use HasCustomBlocks;
     use HasDynamicRelation;
     use IsVisitable;
-    use HasCustomBlocks;
+    use SoftDeletes;
 
     protected $table = 'dashed__products';
 
@@ -115,16 +115,16 @@ class Product extends Model
 
     public static function searchbarCacheVersion(): int
     {
-        return (int) \Illuminate\Support\Facades\Cache::rememberForever('searchbar.cache.version', fn () => 1);
+        return (int) Cache::rememberForever('searchbar.cache.version', fn () => 1);
     }
 
     public static function bumpSearchbarCacheVersion(): void
     {
-        $cache = \Illuminate\Support\Facades\Cache::getStore();
-        if (method_exists($cache, 'increment') && \Illuminate\Support\Facades\Cache::has('searchbar.cache.version')) {
-            \Illuminate\Support\Facades\Cache::increment('searchbar.cache.version');
+        $cache = Cache::getStore();
+        if (method_exists($cache, 'increment') && Cache::has('searchbar.cache.version')) {
+            Cache::increment('searchbar.cache.version');
         } else {
-            \Illuminate\Support\Facades\Cache::forever('searchbar.cache.version', static::searchbarCacheVersion() + 1);
+            Cache::forever('searchbar.cache.version', static::searchbarCacheVersion() + 1);
         }
     }
 
@@ -212,7 +212,7 @@ class Product extends Model
         }
 
         $query->select($query->getQuery()->columns ?: ['*'])
-            ->selectRaw('(' . implode(' + ', $cases) . ') as relevance', $bindings)
+            ->selectRaw('('.implode(' + ', $cases).') as relevance', $bindings)
             ->orderByDesc('relevance');
 
         return $query;
@@ -237,9 +237,9 @@ class Product extends Model
             foreach (self::getTranslatableAttributes() as $attribute) {
                 if (! method_exists($this, $attribute)) {
                     if ($loop == 1) {
-                        $query->whereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
+                        $query->whereRaw('LOWER(`'.$attribute.'`) LIKE ? ', ['%'.trim(strtolower($search)).'%']);
                     } else {
-                        $query->orWhereRaw('LOWER(`' . $attribute . '`) LIKE ? ', ['%' . trim(strtolower($search)) . '%']);
+                        $query->orWhereRaw('LOWER(`'.$attribute.'`) LIKE ? ', ['%'.trim(strtolower($search)).'%']);
                     }
                     $loop++;
                 }
@@ -289,10 +289,7 @@ class Product extends Model
         return $query;
     }
 
-    public function scopeHandOrderShowable($query)
-    {
-        return;
-    }
+    public function scopeHandOrderShowable($query) {}
 
     public function scopeAvailableForShoppingFeed($query)
     {
@@ -404,7 +401,7 @@ class Product extends Model
             $locale = app()->getLocale();
         }
 
-        return Cache::remember('product-' . $this->id . '-url-' . $locale . '-force-' . ($forceOwnUrl ? 'yes' : 'no'), 60 * 5, function () use ($locale, $forceOwnUrl) {
+        return Cache::remember('product-'.$this->id.'-url-'.$locale.'-force-'.($forceOwnUrl ? 'yes' : 'no'), 60 * 5, function () use ($locale, $forceOwnUrl) {
             if ($this->productGroup && $this->productGroup->only_show_parent_product && ! $forceOwnUrl) {
                 return $this->productGroup->getUrl($locale);
             } else {
@@ -412,11 +409,11 @@ class Product extends Model
                 if (! $overviewPage) {
                     return 'link-product-overview-page';
                 }
-                $url = $overviewPage->getUrl($locale) . '/' . $this->getTranslation('slug', $locale);
+                $url = $overviewPage->getUrl($locale).'/'.$this->getTranslation('slug', $locale);
             }
 
             if ($locale != config('app.locale')) {
-                $url = $locale . '/' . $url;
+                $url = $locale.'/'.$url;
             }
 
             return LaravelLocalization::localizeUrl($url);
@@ -909,7 +906,7 @@ class Product extends Model
 
     public function showableCharacteristics($withoutIds = [])
     {
-        return Cache::rememberForever("product-showable-characteristics-" . $this->id, function () use ($withoutIds) {
+        return Cache::rememberForever('product-showable-characteristics-'.$this->id, function () use ($withoutIds) {
             $characteristics = [];
 
             $activeFilters = $this->productGroup->activeProductFilters;
@@ -1074,11 +1071,11 @@ class Product extends Model
         $remaining = $limit - count($suggestedProductIds);
 
         if ($remaining > 0) {
-            $categoryModel = new ProductCategory();
+            $categoryModel = new ProductCategory;
             $categoryTable = $categoryModel->getTable();
 
             $categoryIds = $this->productCategories()
-                ->pluck($categoryTable . '.id')
+                ->pluck($categoryTable.'.id')
                 ->toArray();
 
             if (! empty($categoryIds)) {
@@ -1087,7 +1084,7 @@ class Product extends Model
                     ->where('id', '!=', $this->id)
                     ->whereNotIn('id', $suggestedProductIds)
                     ->whereHas('productCategories', function ($q) use ($categoryIds, $categoryTable) {
-                        $q->whereIn($categoryTable . '.id', $categoryIds);
+                        $q->whereIn($categoryTable.'.id', $categoryIds);
                     })
                     ->inRandomOrder()
                     ->limit($remaining)
@@ -1167,7 +1164,7 @@ class Product extends Model
             $rawOptions = (array) $rawOptions;
         }
 
-        $options = (array)($rawOptions['options'] ?? []);
+        $options = (array) ($rawOptions['options'] ?? []);
 
         // 3) Qty bepalen
         $itemQty = (int) ($cartItem->qty ?? $cartItem->quantity ?? 1);
@@ -1280,8 +1277,8 @@ class Product extends Model
             }
         }
 
-        // 9) Volume discounts (alleen als er een model is)
-        if ($model && method_exists($model, 'volumeDiscounts')) {
+        // 9) Volume discounts (alleen als er een model is en de gebruiker geen eigen prijs heeft)
+        if ($model && method_exists($model, 'volumeDiscounts') && ! $model->hasCustomPriceForUser()) {
             $volumeDiscount = $model->volumeDiscounts()
                 ->where('min_quantity', '<=', $itemQty)
                 ->orderBy('min_quantity', 'desc')
@@ -1372,7 +1369,7 @@ class Product extends Model
             Quantity::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn ($record) => $record ? $record->reservedStock() . ' gereserveerd - ' . $record->inCartStock() . ' in winkelwagen' : '')
+                ->helperText(fn ($record) => $record ? $record->reservedStock().' gereserveerd - '.$record->inCartStock().' in winkelwagen' : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()
@@ -1469,7 +1466,23 @@ class Product extends Model
                 ->value('price') ?? ($fillFromProduct ? $this->getRawOriginal('current_price') : null);
         }
 
-        return ($fillFromProduct ? $this->getRawOriginal('current_price') : null);
+        return $fillFromProduct ? $this->getRawOriginal('current_price') : null;
+    }
+
+    public function hasCustomPriceForUser(?User $user = null): bool
+    {
+        if (! $user && auth()->check()) {
+            $user = auth()->user();
+        }
+
+        if (! $user || ! $user->has_custom_pricing) {
+            return false;
+        }
+
+        return DB::table('dashed__product_user')
+            ->where('user_id', $user->id)
+            ->where('product_id', $this->id)
+            ->exists();
     }
 
     public function discountPriceForUser(?User $user = null): ?float
@@ -1560,10 +1573,10 @@ class Product extends Model
         foreach ($variables as $key => $value) {
             if (is_array($content)) {
                 $content = array_map(function ($item) use ($key, $value) {
-                    return str_replace(':' . $key . ':', $value, $item);
+                    return str_replace(':'.$key.':', $value, $item);
                 }, $content);
             } else {
-                $content = str_replace(':' . $key . ':', $value, $content);
+                $content = str_replace(':'.$key.':', $value, $content);
             }
         }
 

@@ -2,63 +2,94 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Illuminate\Support\Str;
-use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Storage;
-use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
-use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\Products;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Illuminate\Support\Collection as SupportCollection;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedTranslations\Models\Translation;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Livewire\WithFileUploads;
 
 trait ProductCartActions
 {
     use WithFileUploads;
 
     public ProductGroup $productGroup;
+
     public ?Product $originalProduct = null;
+
     public ?Product $product = null;
+
     public $characteristics;
+
     public $suggestedProducts;
+
     public $crossSellProducts;
+
     public $recentlyViewedProducts;
+
     public array $filters = [];
+
     public null|Collection|SupportCollection $productTabs = null;
+
     public null|Collection|SupportCollection $productExtras = null;
+
     public null|Collection|SupportCollection $productFaqs = null;
+
     public ?array $extras = [];
+
     public ?array $hiddenOptions = [];
+
     public string|int $quantity = 1;
+
     public array $files = [];
+
     public string $cartType = 'default';
+
     public bool $allFiltersFilled = false;
+
     public bool $variationExists = false;
 
     public ?string $name = '';
+
     public array $images = [];
+
     public array $originalImages = [];
+
     public ?string $description = '';
+
     public ?string $shortDescription = '';
+
     public ?string $sku = '';
+
     public $price = 0;
+
     public $discountPrice = 0;
+
     public $paymentMethods = [];
+
     public $breadcrumbs = [];
+
     public $productCategories = [];
+
     public $contentBlocks = [];
+
     public $content = [];
+
     public null|array|Collection $volumeDiscounts = null;
+
     public null|array|Collection $globalDiscounts = null;
 
     /**
@@ -363,7 +394,7 @@ trait ProductCartActions
 
         $this->calculateCurrentPrices();
 
-        $this->volumeDiscounts = $this->product ? $this->product->volumeDiscounts : null;
+        $this->volumeDiscounts = ($this->product && ! $this->product->hasCustomPriceForUser()) ? $this->product->volumeDiscounts : null;
         if ($this->volumeDiscounts) {
             $this->volumeDiscounts = $this->volumeDiscounts
                 ->map(function ($volumeDiscount) {
@@ -419,7 +450,7 @@ trait ProductCartActions
                 return;
             }
 
-            $activeFilters[] = $filter['id'] . '-' . $filter['active'];
+            $activeFilters[] = $filter['id'].'-'.$filter['active'];
         }
 
         sort($activeFilters);
@@ -757,7 +788,7 @@ trait ProductCartActions
                     }
 
                     if ($customValues) {
-                        $options['custom-value-' . rand(0, 1000000)] = [
+                        $options['custom-value-'.rand(0, 1000000)] = [
                             'name' => $productExtra->name,
                             'value' => $customValues,
                             'price' => $productExtraPrice,
@@ -778,7 +809,7 @@ trait ProductCartActions
                         $productValue = $this->extras[$extraKey]['id'] ?? null;
                     }
 
-                    $options['product-extra-input-' . $productExtra->id] = [
+                    $options['product-extra-input-'.$productExtra->id] = [
                         'name' => $productExtra->name,
                         'value' => $productValue,
                         'price' => $productExtraPrice,
@@ -802,13 +833,13 @@ trait ProductCartActions
                         $path = $productValue['value'];
                         $value = str($path)->explode('/')->last();
                     } else {
-                        $value = Str::uuid() . '-' . $productValue['value']->getClientOriginalName();
+                        $value = Str::uuid().'-'.$productValue['value']->getClientOriginalName();
                         $path = $productValue['value']->storeAs('dashed/product-extras', $value, 'dashed');
                     }
                 }
 
                 if (($value ?? false) && ($path ?? false)) {
-                    $options['product-extra-file-' . $productExtra->id] = [
+                    $options['product-extra-file-'.$productExtra->id] = [
                         'name' => $productExtra->name,
                         'value' => $value,
                         'path' => $path,
@@ -1049,7 +1080,7 @@ trait ProductCartActions
                         break;
                     }
 
-                    $selection[] = $fid . '-' . $oid;
+                    $selection[] = $fid.'-'.$oid;
                 }
 
                 if (! $selection) {

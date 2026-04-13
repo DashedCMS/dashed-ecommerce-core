@@ -3,37 +3,37 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Livewire\Component;
-use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use DashedDEV\FilamentNumpadField\NumpadField;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Schemas\Contracts\HasSchemas;
-use LaraZeus\Quantity\Components\Quantity;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use DashedDEV\FilamentNumpadField\NumpadField;
 use Filament\Schemas\Components\Utilities\Get;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use LaraZeus\Quantity\Components\Quantity;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.
 // Ik trek ‘m gelijk met jullie core.
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Livewire\Component;
 
-class POSPage extends Component implements HasSchemas, HasActions
+class POSPage extends Component implements HasActions, HasSchemas
 {
-    use InteractsWithSchemas;
     use InteractsWithActions;
+    use InteractsWithSchemas;
 
     public $searchQueryInputmode = false;
 
@@ -43,26 +43,43 @@ class POSPage extends Component implements HasSchemas, HasActions
     public $orderOrigin = 'pos';
 
     public $customerUserId = '';
+
     public $firstName = '';
+
     public $lastName = '';
+
     public $phoneNumber = '';
+
     public $email = '';
+
     public $street = '';
+
     public $houseNr = '';
+
     public $zipCode = '';
+
     public $city = '';
+
     public $country = '';
+
     public $company = '';
+
     public $btwId = '';
 
     public $invoiceStreet = '';
+
     public $invoiceHouseNr = '';
+
     public $invoiceZipCode = '';
+
     public $invoiceCity = '';
+
     public $invoiceCountry = '';
 
     public $note = '';
+
     public $customFields = [];
+
     public $productToChange = [
         'singlePrice' => 0,
     ];
@@ -83,7 +100,9 @@ class POSPage extends Component implements HasSchemas, HasActions
     ];
 
     public ?array $cancelOrderData = [];
+
     public ?array $customerData = [];
+
     public $cashPaymentAmount = null;
 
     protected $listeners = [
@@ -118,7 +137,7 @@ class POSPage extends Component implements HasSchemas, HasActions
                 ->first();
 
             if (! $posCart) {
-                $posCart = new POSCart();
+                $posCart = new POSCart;
                 $posCart->user_id = $userId;
                 $posCart->status = 'active';
                 $posCart->identifier = uniqid();
@@ -176,20 +195,33 @@ class POSPage extends Component implements HasSchemas, HasActions
     {
         return $schema
             ->schema([
-                TextInput::make('productToChange.name')
+                TextInput::make('name')
                     ->label('Productnaam')
                     ->required()
                     ->disabled()
                     ->columnSpanFull(),
 
-                NumpadField::make('productToChange.singlePrice')
+                NumpadField::make('singlePrice')
                     ->label('Prijs')
                     ->minCents(0)
                     ->maxCents(999999)
                     ->required()
                     ->columnSpanFull(),
             ])
-            ->columns(2);
+            ->columns(2)
+            ->statePath('productToChange');
+    }
+
+    public function openChangeProductForm(array $product): void
+    {
+        $this->productToChange = [
+            'identifier' => $product['identifier'] ?? null,
+            'name' => $product['name'] ?? '',
+            'singlePrice' => (float) ($product['singlePrice'] ?? 0),
+            'quantity' => (int) ($product['quantity'] ?? 1),
+        ];
+
+        $this->changeProductForm->fill($this->productToChange);
     }
 
     public function submitChangeProductForm()
@@ -275,9 +307,9 @@ class POSPage extends Component implements HasSchemas, HasActions
                         foreach ($discountCodes as $discountCode) {
                             $value = $discountCode->type === 'amount'
                                 ? CurrencyHelper::formatPrice($discountCode->discount_amount)
-                                : ($discountCode->discount_percentage . '%');
+                                : ($discountCode->discount_percentage.'%');
 
-                            $options[$discountCode->id] = $discountCode->name . ' (' . $discountCode->code . ') (' . $value . ')';
+                            $options[$discountCode->id] = $discountCode->name.' ('.$discountCode->code.') ('.$value.')';
                         }
 
                         return $options;
@@ -308,14 +340,14 @@ class POSPage extends Component implements HasSchemas, HasActions
         if (($this->createDiscountData['type'] ?? '') === 'discountCode') {
             $discountCode = DiscountCode::find($this->createDiscountData['discountCode'] ?? null);
         } else {
-            $discountCode = new DiscountCode();
+            $discountCode = new DiscountCode;
             $discountCode->site_ids = [Sites::getActive()];
             $discountCode->name = 'Point of Sale discount';
             $discountCode->note = $this->createDiscountData['note'] ?? '';
             $discountCode->code = '*****-*****-*****-*****-*****';
             $discountCode->type = $this->createDiscountData['type'];
 
-            $field = 'discount_' . $this->createDiscountData['type'];
+            $field = 'discount_'.$this->createDiscountData['type'];
             $discountCode->{$field} = $this->createDiscountData[$this->createDiscountData['type']] ?? null;
 
             $discountCode->start_date = Carbon::now();
@@ -371,7 +403,7 @@ class POSPage extends Component implements HasSchemas, HasActions
                             ->limit(50)
                             ->get()
                             ->mapWithKeys(fn ($user) => [
-                                $user->id => $user->name . ($user->name !== $user->email ? ' (' . $user->email . ')' : ''),
+                                $user->id => $user->name.($user->name !== $user->email ? ' ('.$user->email.')' : ''),
                             ])
                             ->toArray();
                     })

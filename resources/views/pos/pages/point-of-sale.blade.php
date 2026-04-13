@@ -2586,7 +2586,7 @@
 
         async openChangeProductPricePopup(product) {
             this.loading = true;
-            this.productToChange = product;
+            await $wire.openChangeProductForm(product);
             this.toggle('changeProductPricePopup');
             this.loading = false;
         },
