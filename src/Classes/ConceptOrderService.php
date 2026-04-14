@@ -11,17 +11,24 @@ use Dashed\DashedEcommerceCore\Models\Product;
 
 class ConceptOrderService
 {
-    public static function saveAsConcept(POSCart $posCart, User $cashier): Order
+    public static function saveAsConcept(POSCart $posCart, User $cashier, ?Order $existingConcept = null): Order
     {
-        return DB::transaction(function () use ($posCart, $cashier) {
+        return DB::transaction(function () use ($posCart, $cashier, $existingConcept) {
             $products = $posCart->products ?? [];
 
             $subtotal = 0.0;
             foreach ($products as $row) {
-                $subtotal += (float) ($row['price'] ?? 0) * (int) ($row['quantity'] ?? 0);
+                // $row['price'] is already the line total (singlePrice * quantity).
+                $subtotal += (float) ($row['price'] ?? 0);
             }
 
-            $order = new Order();
+            if ($existingConcept && $existingConcept->isConcept()) {
+                $order = $existingConcept;
+                $order->orderProducts()->delete();
+            } else {
+                $order = new Order();
+            }
+
             $order->status = Order::STATUS_CONCEPT;
             $order->order_origin = 'pos';
             $order->user_id = $cashier->id;
@@ -33,10 +40,13 @@ class ConceptOrderService
             $order->save();
 
             foreach ($products as $row) {
+                $quantity = max(1, (int) ($row['quantity'] ?? 1));
+                $lineTotal = (float) ($row['price'] ?? 0);
+
                 $order->orderProducts()->create([
                     'product_id' => $row['id'] ?? null,
-                    'quantity' => (int) ($row['quantity'] ?? 1),
-                    'price' => (float) ($row['price'] ?? 0),
+                    'quantity' => $quantity,
+                    'price' => $lineTotal,
                     'name' => $row['name'] ?? (isset($row['id']) ? (Product::find($row['id'])?->name ?? 'Product') : 'Product'),
                 ]);
             }
@@ -58,8 +68,9 @@ class ConceptOrderService
         $products = [];
         foreach ($order->orderProducts as $op) {
             $quantity = max(1, (int) $op->quantity);
-            $unitPrice = (float) $op->price;
-            $lineTotal = $unitPrice * $quantity;
+            // OrderProduct.price stores the line total, not the unit price.
+            $lineTotal = (float) $op->price;
+            $unitPrice = $quantity > 0 ? $lineTotal / $quantity : $lineTotal;
 
             $product = $op->product_id ? Product::find($op->product_id) : null;
             $image = '';

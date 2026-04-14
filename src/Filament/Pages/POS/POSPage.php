@@ -621,9 +621,14 @@ class POSPage extends Component implements HasActions, HasSchemas
                     return;
                 }
 
+                $existingConcept = $posCart->loaded_concept_order_id
+                    ? Order::find($posCart->loaded_concept_order_id)
+                    : null;
+
                 ConceptOrderService::saveAsConcept(
                     $posCart,
                     auth()->user(),
+                    $existingConcept,
                 );
 
                 $posCart->refresh();
@@ -631,7 +636,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                 $posCart->save();
 
                 Notification::make()
-                    ->title(__('Concept opgeslagen'))
+                    ->title($existingConcept ? __('Concept bijgewerkt') : __('Concept opgeslagen'))
                     ->success()
                     ->send();
 
