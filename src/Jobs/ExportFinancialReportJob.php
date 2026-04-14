@@ -15,6 +15,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\FinanceReportMail;
 use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 
@@ -147,11 +148,11 @@ class ExportFinancialReportJob implements ShouldQueue
         $pdfPath = 'dashed/exports/' . now()->format('Y/m') . '/' . $this->exportId . '/' . $fileName;
         Storage::disk('public')->put($pdfPath, $output);
 
-        Mail::to($this->email)->send(new FinanceReportMail(
+        AdminNotifier::send(new FinanceReportMail(
             $this->hash,
             'Financieel rapport van ' . $startDate->format('Y-m-d') . ' tot ' . $endDate->format('Y-m-d'),
             $pdfPath,
-        ));
+        ), $this->email);
 
         $this->markExportAsCompleted($pdfPath, $fileName);
     }

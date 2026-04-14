@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail;
 
 class FulfillmentCompany extends Model
@@ -43,7 +44,7 @@ class FulfillmentCompany extends Model
     public function sendOrder(Order $order, array $orderProducts, bool $sendProductsToCustomer = true, null|array|Collection $files = []): void
     {
         //        try {
-        Mail::to($this->email)->send(new OrderConfirmationForFulfillerMail($order, $orderProducts, $sendProductsToCustomer, $files));
+        AdminNotifier::send(new OrderConfirmationForFulfillerMail($order, $orderProducts, $sendProductsToCustomer, $files), $this->email);
 
         foreach ($orderProducts as $orderProduct) {
             $orderProduct->send_to_fulfiller = 1;

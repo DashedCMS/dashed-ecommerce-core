@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
@@ -554,7 +555,7 @@ class Order extends Model
             if ($product->low_stock_notification && $product->use_stock && $product->stock() < $product->low_stock_notification_limit) {
                 try {
                     foreach (Mails::getAdminLowStockNotificationEmails() as $lowStockNotificationEmail) {
-                        Mail::to($lowStockNotificationEmail)->send(new ProductOnLowStockEmail($product));
+                        AdminNotifier::send(new ProductOnLowStockEmail($product), $lowStockNotificationEmail);
                     }
                 } catch (\Exception $e) {
                 }
@@ -1008,7 +1009,7 @@ class Order extends Model
         //Always send the invoice to admins
         try {
             //                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
-            Mail::to(Mails::getAdminNotificationEmails())->send(new AdminOrderCancelledMail($newOrder));
+            AdminNotifier::send(new AdminOrderCancelledMail($newOrder), Mails::getAdminNotificationEmails());
             //                }
         } catch (\Exception $e) {
         }

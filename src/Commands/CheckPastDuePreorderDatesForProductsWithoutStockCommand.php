@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Commands;
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
 
@@ -45,13 +46,13 @@ class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command
         if ($products->count()) {
             if (app()->isLocal()) {
                 try {
-                    Mail::to('robin@dashed.nl')->send(new ProductsWithPastDuePreOrderDateMail($products));
+                    AdminNotifier::send(new ProductsWithPastDuePreOrderDateMail($products), 'robin@dashed.nl');
                 } catch (\Exception $e) {
                 }
             } else {
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
-                        Mail::to($notificationInvoiceEmail)->send(new ProductsWithPastDuePreOrderDateMail($products));
+                        AdminNotifier::send(new ProductsWithPastDuePreOrderDateMail($products), $notificationInvoiceEmail);
                     }
                 } catch (\Exception $e) {
                 }

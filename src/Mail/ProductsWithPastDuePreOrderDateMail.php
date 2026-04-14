@@ -10,8 +10,10 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
-class ProductsWithPastDuePreOrderDateMail extends Mailable implements RegistersEmailTemplate
+class ProductsWithPastDuePreOrderDateMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
     use Queueable;
@@ -97,5 +99,18 @@ class ProductsWithPastDuePreOrderDateMail extends Mailable implements RegistersE
                 'products' => $this->products,
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
             ]);
+    }
+
+    public function telegramSummary(): TelegramSummary
+    {
+        $count = is_countable($this->products) ? count($this->products) : 0;
+
+        return new TelegramSummary(
+            title: 'Pre-order datums verlopen',
+            fields: [
+                'Aantal producten' => (string) $count,
+            ],
+            emoji: '⏰',
+        );
     }
 }

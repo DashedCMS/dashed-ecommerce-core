@@ -12,8 +12,10 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
-class OrderConfirmationForFulfillerMail extends Mailable implements RegistersEmailTemplate
+class OrderConfirmationForFulfillerMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
     use Queueable;
@@ -138,5 +140,19 @@ class OrderConfirmationForFulfillerMail extends Mailable implements RegistersEma
         }
 
         return $mail;
+    }
+
+    public function telegramSummary(): TelegramSummary
+    {
+        return new TelegramSummary(
+            title: 'Fulfilment order #' . $this->order->invoice_id,
+            fields: [
+                'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '—'),
+                'Items' => (string) count($this->orderProducts) . ' regels',
+                'Verzendadres' => trim(($this->order->street ?? '') . ' ' . ($this->order->house_nr ?? '') . ', ' . ($this->order->city ?? '')),
+            ],
+            adminUrl: rescue(fn () => route('filament.admin.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            emoji: '📦',
+        );
     }
 }

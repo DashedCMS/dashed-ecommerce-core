@@ -12,8 +12,10 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
-class AdminOrderCancelledMail extends Mailable implements RegistersEmailTemplate
+class AdminOrderCancelledMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
     use Queueable;
@@ -121,5 +123,18 @@ class AdminOrderCancelledMail extends Mailable implements RegistersEmailTemplate
         ]);
 
         return $mail;
+    }
+
+    public function telegramSummary(): TelegramSummary
+    {
+        return new TelegramSummary(
+            title: 'Order geannuleerd #' . $this->order->invoice_id,
+            fields: [
+                'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '—'),
+                'Bedrag' => '€' . number_format((float) $this->order->total, 2, ',', '.'),
+            ],
+            adminUrl: rescue(fn () => route('filament.admin.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            emoji: '❌',
+        );
     }
 }

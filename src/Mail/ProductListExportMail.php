@@ -10,8 +10,10 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
-class ProductListExportMail extends Mailable implements RegistersEmailTemplate
+class ProductListExportMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
     use Queueable;
@@ -86,5 +88,24 @@ class ProductListExportMail extends Mailable implements RegistersEmailTemplate
         ]);
 
         return $mail;
+    }
+
+    public function telegramSummary(): TelegramSummary
+    {
+        return new TelegramSummary(
+            title: 'Producten export gereed',
+            fields: [
+                'Bestand' => $this->filePath ? basename($this->filePath) : null,
+            ],
+            emoji: '📋',
+        );
+    }
+
+    public static function makeForTest(): ?self
+    {
+        return new self(
+            hash: 'test-hash',
+            filePath: null,
+        );
     }
 }

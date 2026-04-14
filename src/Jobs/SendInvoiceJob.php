@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
 use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 
@@ -68,9 +69,9 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                         if ($this->order->contains_pre_orders) {
-                            Mail::to($notificationInvoiceEmail)->send(new AdminPreOrderConfirmationMail($this->order));
+                            AdminNotifier::send(new AdminPreOrderConfirmationMail($this->order), $notificationInvoiceEmail);
                         } else {
-                            Mail::to($notificationInvoiceEmail)->send(new AdminOrderConfirmationMail($this->order));
+                            AdminNotifier::send(new AdminOrderConfirmationMail($this->order), $notificationInvoiceEmail);
                         }
                     }
                 } catch (\Exception $e) {

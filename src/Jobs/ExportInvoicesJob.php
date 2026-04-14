@@ -17,6 +17,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 
@@ -297,11 +298,11 @@ class ExportInvoicesJob implements ShouldQueue
             Storage::disk('public')->delete($sourceRelativePath);
         }
 
-        Mail::to($this->email)->send(new FinanceExportMail(
+        AdminNotifier::send(new FinanceExportMail(
             $this->hash,
             'Facturen van ' . ($startDate ? $startDate->format('d-m-Y') : 'het begin') . ' tot ' . ($endDate ? $endDate->format('d-m-Y') : 'nu'),
             $finalRelativePath,
-        ));
+        ), $this->email);
 
         $this->markExportAsCompleted($finalRelativePath, $fileName);
     }

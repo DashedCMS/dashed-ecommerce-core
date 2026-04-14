@@ -10,8 +10,10 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
-class FinanceExportMail extends Mailable implements RegistersEmailTemplate
+class FinanceExportMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
     use Queueable;
@@ -89,5 +91,26 @@ class FinanceExportMail extends Mailable implements RegistersEmailTemplate
         $mail->attachFromStorageDisk('public', $relativePath, $this->subjectString ? $this->subjectString . '.pdf' : (Customsetting::get('site_name') . ' - exported invoice.pdf'));
 
         return $mail;
+    }
+
+    public function telegramSummary(): TelegramSummary
+    {
+        return new TelegramSummary(
+            title: 'Finance export gereed',
+            fields: [
+                'Onderwerp' => $this->subjectString ?: 'Finance export',
+                'Bestand' => $this->filePath ? basename($this->filePath) : null,
+            ],
+            emoji: '💰',
+        );
+    }
+
+    public static function makeForTest(): ?self
+    {
+        return new self(
+            hash: 'test-hash',
+            subjectString: 'Finance export (test)',
+            filePath: null,
+        );
     }
 }

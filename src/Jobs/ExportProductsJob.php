@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedEcommerceCore\Exports\ProductListExport;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\ProductListExportMail;
 
 class ExportProductsJob implements ShouldQueue
@@ -66,7 +67,7 @@ class ExportProductsJob implements ShouldQueue
 
             Excel::store(new ProductListExport($products), $filePath, 'dashed');
 
-            Mail::to($this->email)->send(new ProductListExportMail($this->hash, $filePath));
+            AdminNotifier::send(new ProductListExportMail($this->hash, $filePath), $this->email);
 
             $this->markExportAsCompleted($filePath, $fileName);
         } catch (Throwable $e) {

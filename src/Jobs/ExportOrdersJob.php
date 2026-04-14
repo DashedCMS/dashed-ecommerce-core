@@ -15,6 +15,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Exports\OrderListExport;
 use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\OrderListExportMail;
 use Dashed\DashedEcommerceCore\Exports\OrderListPerInvoiceLineExport;
 
@@ -82,7 +83,7 @@ class ExportOrdersJob implements ShouldQueue
                 Excel::store(new OrderListPerInvoiceLineExport($orders), $filePath, 'dashed');
             }
 
-            Mail::to($this->email)->send(new OrderListExportMail($this->hash, $filePath));
+            AdminNotifier::send(new OrderListExportMail($this->hash, $filePath), $this->email);
 
             $this->markExportAsCompleted($filePath, $fileName);
         } catch (Throwable $e) {
