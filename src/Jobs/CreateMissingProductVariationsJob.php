@@ -55,10 +55,11 @@ class CreateMissingProductVariationsJob implements ShouldQueue
                 $optionCount = 0;
                 foreach ($missingVariation as $optionId) {
                     if ($optionCount === 0) {
-                        $name .= Translation::get('missing-product-variation-name-divider', 'missing-product-variations', ' | ') . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
+                        $name .= Translation::get('missing-product-variation-name-divider', 'missing-product-variations', '|') . ' ' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
                     } else {
-                        $name .= Translation::get('missing-product-variation-option-divider', 'missing-product-variations', ' | ') . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
+                        $name .= Translation::get('missing-product-variation-option-divider', 'missing-product-variations', '|') . ' ' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
                     }
+                    $name = str($name)->replace('  ', ' ')->toString();
                     $optionCount++;
                 }
                 $newProduct->setTranslation('name', $locale['id'], $name);
