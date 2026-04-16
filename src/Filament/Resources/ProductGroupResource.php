@@ -11,8 +11,13 @@ use Dashed\DashedAi\Facades\Ai;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ForceDeleteBulkAction;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TrashedFilter;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Select;
@@ -566,9 +571,15 @@ class ProductGroupResource extends Resource
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
-            ->toolbarActions(ToolbarActions::getActions())
+            ->toolbarActions(ToolbarActions::getActions([
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
+            ]))
             ->filters([
+                TrashedFilter::make(),
                 Filter::make('categories')
                     ->schema([
                         Select::make('categories')

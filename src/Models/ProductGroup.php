@@ -61,6 +61,13 @@ class ProductGroup extends Model
                 $product->delete();
             }
         });
+
+        static::restoring(function ($productGroup) {
+            Product::onlyTrashed()
+                ->where('product_group_id', $productGroup->id)
+                ->where('deleted_at', $productGroup->deleted_at)
+                ->restore();
+        });
     }
 
     public function products(): HasMany

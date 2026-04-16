@@ -8,7 +8,13 @@ use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -179,9 +185,12 @@ class ChildProductsRelationManager extends RelationManager
                 Action::make('edit')
                     ->label('Bewerken')
                     ->url(fn (Product $record) => route('filament.dashed.resources.products.edit', [$record])),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->toolbarActions([
                 BulkAction::make('changePrice')
@@ -238,6 +247,8 @@ class ChildProductsRelationManager extends RelationManager
                     })
                     ->deselectRecordsAfterCompletion(),
                 DeleteBulkAction::make(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ])
             ->headerActions([
                 \Filament\Actions\Action::make('Aanmaken')

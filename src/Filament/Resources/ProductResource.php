@@ -13,8 +13,13 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ForceDeleteBulkAction;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TrashedFilter;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Select;
@@ -720,6 +725,8 @@ class ProductResource extends Resource
                             ->send();
                     }),
                 DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->toolbarActions(ToolbarActions::getActions([
                 BulkAction::make('changePrice')
@@ -757,8 +764,11 @@ class ProductResource extends Resource
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
+                RestoreBulkAction::make(),
+                ForceDeleteBulkAction::make(),
             ]))
             ->filters([
+                TrashedFilter::make(),
                 Filter::make('specificProductGroup')
                     ->schema([
                         Select::make('product_group_id')
