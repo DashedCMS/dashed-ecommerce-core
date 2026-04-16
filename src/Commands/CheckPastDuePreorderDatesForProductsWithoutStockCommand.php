@@ -4,9 +4,8 @@ namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Classes\Mails;
-use Illuminate\Support\Facades\Mail;
-use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\ProductsWithPastDuePreOrderDateMail;
 
 class CheckPastDuePreorderDatesForProductsWithoutStockCommand extends Command

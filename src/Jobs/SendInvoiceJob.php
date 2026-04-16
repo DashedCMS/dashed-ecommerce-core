@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Jobs;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Dashed\DashedCore\Classes\Mails;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;

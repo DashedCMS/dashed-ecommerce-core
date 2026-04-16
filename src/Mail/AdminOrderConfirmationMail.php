@@ -11,9 +11,9 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
-use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
 class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
@@ -147,7 +147,7 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
         return new TelegramSummary(
             title: 'Nieuwe order #' . $this->order->invoice_id,
             fields: [
-                'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '—'),
+                'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '-'),
                 'Bedrag' => '€' . number_format((float) $this->order->total, 2, ',', '.'),
                 'Items' => (string) ($this->order->orderProducts?->sum('quantity') ?? 0) . ' producten',
                 'Betaalmethode' => $this->order->payment_method ?? null,

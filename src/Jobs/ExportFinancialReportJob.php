@@ -7,7 +7,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;

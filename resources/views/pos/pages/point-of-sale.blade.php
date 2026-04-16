@@ -3105,7 +3105,7 @@
             this.searchedProducts = filtered;
             this.loadingSearchedProducts = false;
 
-            // Enrich stock/prices in background — merge when it arrives
+            // Enrich stock/prices in background - merge when it arrives
             const requestQuery = query;
             this.enrichSearchedProducts(filtered, requestQuery);
         },
@@ -3141,7 +3141,7 @@
                 this.searchedProducts = data.products;
                 this.focus();
             } catch (error) {
-                // Silently ignore — the user already sees the client-side results
+                // Silently ignore - the user already sees the client-side results
             }
         },
 
@@ -3223,7 +3223,7 @@
                 this.searchedStockProducts = data.products;
                 this.selectedStockProduct = data.products?.length ? data.products[0] : null;
             } catch (error) {
-                // Silently ignore — client-side results already shown
+                // Silently ignore - client-side results already shown
             }
         },
 

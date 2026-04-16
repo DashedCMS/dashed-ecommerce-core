@@ -11,8 +11,8 @@
         <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded p-3 bg-white dark:bg-gray-900">
             <div>
                 <div class="font-medium text-gray-900 dark:text-gray-100">
-                    #{{ $concept->id }} —
-                    {{ $concept->orderProducts->sum('quantity') }} items —
+                    #{{ $concept->id }} -
+                    {{ $concept->orderProducts->sum('quantity') }} items -
                     € {{ number_format($concept->total, 2, ',', '.') }}
                 </div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">

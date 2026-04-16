@@ -58,7 +58,7 @@ class AbandonedCartSettingsPage extends Page
                             ->helperText('Stuur automatisch emails naar bezoekers die hun winkelwagen hebben achtergelaten.'),
                     ]),
 
-                Section::make('Email 1 — 1 uur na verlaten')
+                Section::make('Email 1 - 1 uur na verlaten')
                     ->schema([
                         TextInput::make('abandoned_cart_email1_delay_hours')
                             ->label('Uren na verlaten')
@@ -71,7 +71,7 @@ class AbandonedCartSettingsPage extends Page
                     ])
                     ->columns(2),
 
-                Section::make('Email 2 — 24 uur later')
+                Section::make('Email 2 - 24 uur later')
                     ->schema([
                         TextInput::make('abandoned_cart_email2_delay_hours')
                             ->label('Uren na email 1')
@@ -85,7 +85,7 @@ class AbandonedCartSettingsPage extends Page
                     ])
                     ->columns(2),
 
-                Section::make('Email 3 — 72 uur later (optioneel)')
+                Section::make('Email 3 - 72 uur later (optioneel)')
                     ->schema([
                         Toggle::make('abandoned_cart_email3_enabled')
                             ->label('Email 3 inschakelen'),

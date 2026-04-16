@@ -4,12 +4,11 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\LogOptions;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedCore\Notifications\AdminNotifier;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail;
 
 class FulfillmentCompany extends Model

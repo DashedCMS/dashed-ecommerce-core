@@ -10,9 +10,9 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
+use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
-use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 
 class ProductOnLowStockEmail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
@@ -116,10 +116,10 @@ class ProductOnLowStockEmail extends Mailable implements RegistersEmailTemplate,
     public function telegramSummary(): TelegramSummary
     {
         return new TelegramSummary(
-            title: 'Lage voorraad: ' . ($this->product->name ?? '—'),
+            title: 'Lage voorraad: ' . ($this->product->name ?? '-'),
             fields: [
                 'Voorraad' => (string) ($this->product->stock ?? 0),
-                'Drempel' => (string) ($this->product->low_stock_notification_limit ?? '—'),
+                'Drempel' => (string) ($this->product->low_stock_notification_limit ?? '-'),
                 'SKU' => $this->product->sku ?? null,
             ],
             adminUrl: rescue(fn () => route('filament.admin.resources.products.edit', ['record' => $this->product->id]), null, false),

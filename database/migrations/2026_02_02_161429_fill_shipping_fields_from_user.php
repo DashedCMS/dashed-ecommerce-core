@@ -111,6 +111,6 @@ return new class () extends Migration {
 
     public function down(): void
     {
-        // Bewust leeg — we willen geen data verwijderen bij rollback
+        // Bewust leeg - we willen geen data verwijderen bij rollback
     }
 };

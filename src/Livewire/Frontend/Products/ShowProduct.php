@@ -67,7 +67,7 @@ class ShowProduct extends Component
             return;
         }
 
-        // Extras/files wijzigen het product niet — alleen prijzen herberekenen
+        // Extras/files wijzigen het product niet - alleen prijzen herberekenen
         if (str($name)->startsWith(['extras', 'files'])) {
             $this->calculateCurrentPrices();
 
