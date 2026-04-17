@@ -20,13 +20,13 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Notifications\NotificationChannels;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
+use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
+use Dashed\DashedCore\Notifications\NotificationChannels;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 class OrderSettingsPage extends Page
@@ -63,11 +63,13 @@ class OrderSettingsPage extends Page
 
                     if (is_bool($originOverride)) {
                         $formData[$formKey] = $originOverride;
+
                         continue;
                     }
 
                     if (is_array($originOverride) && array_key_exists($channel['key'], $originOverride)) {
                         $formData[$formKey] = (bool) $originOverride[$channel['key']];
+
                         continue;
                     }
 

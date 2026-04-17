@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Queue;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 
 function makeProductGroup(string $name, string $slug): ProductGroup
 {
