@@ -848,7 +848,7 @@ class Checkout extends Component
             $order->user_id = auth()->user()->id;
         }
 
-        $order->cart_id = cartHelper()->getOrCreateCart()->id;
+        $order->cart_id = cartHelper()->getCart()->id;
 
         $order->save();
 
