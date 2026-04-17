@@ -18,7 +18,9 @@ use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
@@ -1455,15 +1457,62 @@ class Product extends Model
     public static function stockFilamentSchema(): array
     {
         return [
+            Select::make('stock_source_product_id')
+                ->label('Voorraad synchroniseren vanaf product')
+                ->helperText('Kies een product om de voorraad van dit product mee te synchroniseren')
+                ->searchable()
+                ->getSearchResultsUsing(function (string $query, $record) {
+                    return Product::where(function ($q) use ($query) {
+                        $q->where('name->nl', 'like', "%{$query}%")
+                            ->orWhere('name->en', 'like', "%{$query}%");
+                    })
+                        ->when($record, fn ($q) => $q->where('id', '!=', $record->id))
+                        ->whereNull('stock_source_product_id')
+                        ->limit(50)
+                        ->pluck('name', 'id');
+                })
+                ->getOptionLabelUsing(fn ($value): ?string => Product::find($value)?->name)
+                ->reactive()
+                ->afterStateUpdated(function ($state, $record, Set $set) {
+                    if ($state && $record) {
+                        $source = Product::find($state);
+                        if ($source) {
+                            $set('stock', $source->stock);
+                            $set('use_stock', $source->use_stock);
+                            $set('stock_status', $source->stock_status);
+                            $set('out_of_stock_sellable', $source->out_of_stock_sellable);
+                        }
+                    }
+                }),
+            Placeholder::make('stock_sync_source_info')
+                ->label('')
+                ->content(fn ($record) => $record && $record->stock_source_product_id
+                    ? 'Voorraad wordt gesynchroniseerd vanaf: ' . ($record->stockSource?->name ?? 'Onbekend product')
+                    : '')
+                ->visible(fn ($record) => $record && $record->stock_source_product_id),
+            Placeholder::make('stock_sync_receivers_info')
+                ->label('')
+                ->content(function ($record) {
+                    if (! $record || ! $record->stockSyncedProducts()->exists()) {
+                        return '';
+                    }
+
+                    $receivers = $record->stockSyncedProducts->pluck('name')->join(', ');
+
+                    return 'Dit product is voorraadbron voor: ' . $receivers;
+                })
+                ->visible(fn ($record) => $record && $record->stockSyncedProducts()->exists()),
             Toggle::make('use_stock')
                 ->label('Voorraad bijhouden')
-                ->reactive(),
+                ->reactive()
+                ->disabled(fn ($record) => $record && $record->stock_source_product_id),
             Toggle::make('limit_purchases_per_customer')
                 ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
                 ->reactive(),
             Toggle::make('out_of_stock_sellable')
                 ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
                 ->reactive()
+                ->disabled(fn ($record) => $record && $record->stock_source_product_id)
                 ->hidden(fn (Get $get) => ! $get('use_stock')),
             Toggle::make('low_stock_notification')
                 ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
@@ -1472,10 +1521,11 @@ class Product extends Model
             Quantity::make('stock')
                 ->type('number')
                 ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn ($record) => $record ? $record->reservedStock().' gereserveerd - '.$record->inCartStock().' in winkelwagen' : '')
+                ->helperText(fn ($record) => $record ? $record->reservedStock() . ' gereserveerd - ' . $record->inCartStock() . ' in winkelwagen' : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()
+                ->disabled(fn ($record) => $record && $record->stock_source_product_id)
                 ->hidden(fn (Get $get) => ! $get('use_stock')),
             DatePicker::make('expected_in_stock_date')
                 ->label('Wanneer komt dit product weer op voorraad')
@@ -1510,6 +1560,7 @@ class Product extends Model
                 ])
                 ->default('in_stock')
                 ->required()
+                ->disabled(fn ($record) => $record && $record->stock_source_product_id)
                 ->hidden(fn (Get $get) => $get('use_stock')),
             Quantity::make('limit_purchases_per_customer_limit')
                 ->type('number')
