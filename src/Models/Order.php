@@ -208,6 +208,11 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function cart(): BelongsTo
+    {
+        return $this->belongsTo(Cart::class);
+    }
+
     public function logs(): HasMany
     {
         return $this->hasMany(OrderLog::class);
@@ -744,9 +749,12 @@ class Order extends Model
             OrderMarkedAsPaidEvent::dispatch($this);
             //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch end', isDebugLog: true);
 
-            //            OrderLog::createLog(orderId: $this->id, note: 'Emptying shopping cart', isDebugLog: true);
+            // Delete linked cart from database
+            if ($this->cart_id && $this->cart) {
+                $this->cart->items()->delete();
+                $this->cart->delete();
+            }
             cartHelper()->emptyCart();
-            //            OrderLog::createLog(orderId: $this->id, note: 'Shopping cart emptied', isDebugLog: true);
 
             $this->sendGAEcommerceHit();
         }

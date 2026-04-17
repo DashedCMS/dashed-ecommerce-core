@@ -1427,6 +1427,28 @@ class CartHelper
 
             $cartItem->delete();
 
+            // Delete cart if it has no more items
+            if ($cart->items()->count() === 0) {
+                $this->emptyCart();
+
+                return [
+                    'status' => 'success',
+                    'message' => Translation::get('product-removed-from-cart', static::$cartType, 'The product has been removed from your cart'),
+                    'dispatch' => [
+                        'event' => 'productRemovedFromCart',
+                        'data' => [
+                            'product' => $product,
+                            'productName' => $product?->name,
+                            'quantity' => $quantity,
+                            'price' => $product ? number_format((float) $product->price, 2, '.', '') : '0.00',
+                            'cartTotal' => '0.00',
+                            'category' => $product?->productCategories?->first()?->name ?? null,
+                            'tiktokItems' => [],
+                        ],
+                    ],
+                ];
+            }
+
             $this->updateData();
 
             $cartTotal = static::$total;

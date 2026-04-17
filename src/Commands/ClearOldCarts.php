@@ -39,10 +39,14 @@ class ClearOldCarts extends Command
      */
     public function handle()
     {
-        $cartIdsToKeep = Cart::query()->whereHas('items')->pluck('id');
-        Cart::whereNotIn('id', $cartIdsToKeep)->delete();
+        // Delete empty carts older than 1 day
+        Cart::whereDoesntHave('items')
+            ->where('updated_at', '<', Carbon::now()->subDay())
+            ->delete();
 
+        // Delete all carts (with items) older than 1 month
         foreach (Cart::where('updated_at', '<', Carbon::now()->subMonth())->get() as $cart) {
+            $cart->items()->delete();
             $cart->delete();
         }
     }

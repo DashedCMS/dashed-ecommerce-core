@@ -848,6 +848,8 @@ class Checkout extends Component
             $order->user_id = auth()->user()->id;
         }
 
+        $order->cart_id = cartHelper()->getOrCreateCart()->id;
+
         $order->save();
 
         // Link abandoned cart email to conversion
