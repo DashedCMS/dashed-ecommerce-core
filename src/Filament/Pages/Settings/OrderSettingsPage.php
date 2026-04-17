@@ -20,6 +20,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs\Tab;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Notifications\NotificationChannels;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
@@ -54,11 +55,24 @@ class OrderSettingsPage extends Page
 
             $overridesForSite = Customsetting::get('admin_notify_per_order_origin', $site['id'], []);
             $overridesForSite = is_array($overridesForSite) ? $overridesForSite : [];
+            $channels = NotificationChannels::all();
             foreach (OrderOrigins::all($site['id']) as $origin) {
-                $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}";
-                $formData[$formKey] = array_key_exists($origin['key'], $overridesForSite)
-                    ? (bool) $overridesForSite[$origin['key']]
-                    : $origin['default_notify'];
+                $originOverride = $overridesForSite[$origin['key']] ?? null;
+                foreach ($channels as $channel) {
+                    $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}_{$channel['key']}";
+
+                    if (is_bool($originOverride)) {
+                        $formData[$formKey] = $originOverride;
+                        continue;
+                    }
+
+                    if (is_array($originOverride) && array_key_exists($channel['key'], $originOverride)) {
+                        $formData[$formKey] = (bool) $originOverride[$channel['key']];
+                        continue;
+                    }
+
+                    $formData[$formKey] = $origin['default_notify'];
+                }
             }
         }
 
@@ -175,6 +189,7 @@ class OrderSettingsPage extends Page
 
         $tabs = [];
         foreach ($sites as $site) {
+            $channels = NotificationChannels::all();
             $newSchema = [
                 TextEntry::make("Notificaties voor bestellingen op {$site['name']}")
                     ->state('Stel extra opties in voor de notificaties.')
@@ -194,14 +209,22 @@ class OrderSettingsPage extends Page
                     ->label('Emails om alle bestel notificaties van de klant naar te sturen in BCC')
                     ->placeholder('Voer een email in')
                     ->reactive(),
-                Section::make('Admin-bevestigingsmail per order-bron')
-                    ->description('Per order-bron aan/uit of de admin-bevestigingsmail verstuurd wordt.')
+                Section::make('Admin-notificaties per order-bron en kanaal')
+                    ->description('Per order-bron en per kanaal aan/uit. Regels per rij (order-bron), kolommen per kanaal.')
                     ->schema(
                         collect(OrderOrigins::all($site['id']))
-                            ->map(fn ($origin) => Toggle::make("admin_notify_origin_{$site['id']}_{$origin['key']}")
-                                ->label($origin['label']))
+                            ->map(fn ($origin) => Section::make($origin['label'])
+                                ->schema(
+                                    collect($channels)
+                                        ->map(fn ($channel) => Toggle::make("admin_notify_origin_{$site['id']}_{$origin['key']}_{$channel['key']}")
+                                            ->label($channel['label'])
+                                            ->inline(false))
+                                        ->all()
+                                )
+                                ->columns(max(1, count($channels))))
                             ->all()
                     )
+                    ->visible(count($channels) > 0)
                     ->collapsible()
                     ->collapsed(),
             ];
@@ -294,13 +317,21 @@ class OrderSettingsPage extends Page
             $formState["notification_bcc_order_emails_{$site['id']}"] = $emails;
 
             $overrides = [];
+            $channels = NotificationChannels::all();
             foreach (OrderOrigins::all($site['id']) as $origin) {
-                $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}";
-                $value = $this->form->getState()[$formKey] ?? null;
-                if ($value === null) {
+                $channelValues = [];
+                foreach ($channels as $channel) {
+                    $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}_{$channel['key']}";
+                    $value = $this->form->getState()[$formKey] ?? null;
+                    if ($value === null) {
+                        continue;
+                    }
+                    $channelValues[$channel['key']] = (bool) $value;
+                }
+                if ($channelValues === []) {
                     continue;
                 }
-                $overrides[$origin['key']] = (bool) $value;
+                $overrides[$origin['key']] = $channelValues;
             }
             Customsetting::set('admin_notify_per_order_origin', $overrides, $site['id']);
         }

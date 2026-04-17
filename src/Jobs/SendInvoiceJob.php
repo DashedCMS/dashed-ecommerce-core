@@ -65,13 +65,14 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
                 $this->order->save();
             }
 
-            if ($this->sendToAdmin && OrderOrigins::shouldNotifyAdmin($this->order->order_origin, $this->order->site_id)) {
+            if ($this->sendToAdmin && OrderOrigins::shouldNotifyAdmin($this->order->order_origin, null, $this->order->site_id)) {
+                $channels = OrderOrigins::channelsFor($this->order->order_origin, $this->order->site_id);
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                         if ($this->order->contains_pre_orders) {
-                            AdminNotifier::send(new AdminPreOrderConfirmationMail($this->order), $notificationInvoiceEmail);
+                            AdminNotifier::send(new AdminPreOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
                         } else {
-                            AdminNotifier::send(new AdminOrderConfirmationMail($this->order), $notificationInvoiceEmail);
+                            AdminNotifier::send(new AdminOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
                         }
                     }
                 } catch (\Exception $e) {
