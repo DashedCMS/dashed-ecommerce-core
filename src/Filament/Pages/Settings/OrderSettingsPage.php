@@ -324,14 +324,7 @@ class OrderSettingsPage extends Page
                 $channelValues = [];
                 foreach ($channels as $channel) {
                     $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}_{$channel['key']}";
-                    $value = $this->form->getState()[$formKey] ?? null;
-                    if ($value === null) {
-                        continue;
-                    }
-                    $channelValues[$channel['key']] = (bool) $value;
-                }
-                if ($channelValues === []) {
-                    continue;
+                    $channelValues[$channel['key']] = (bool) ($this->form->getState()[$formKey] ?? false);
                 }
                 $overrides[$origin['key']] = $channelValues;
             }
