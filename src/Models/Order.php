@@ -34,6 +34,7 @@ use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
 
@@ -548,6 +549,10 @@ class Order extends Model
                     }
                     $orderProduct->product->parent->save();
                 }
+
+                if ($orderProduct->product->stockSyncGroup()) {
+                    SyncProductStockJob::dispatch($orderProduct->product)->onQueue('ecommerce');
+                }
             }
         }
 
@@ -609,6 +614,10 @@ class Order extends Model
                         }
                         $orderProduct->product->parent->save();
                     }
+                }
+
+                if ($orderProduct->product->stockSyncGroup()) {
+                    SyncProductStockJob::dispatch($orderProduct->product)->onQueue('ecommerce');
                 }
             }
         }
