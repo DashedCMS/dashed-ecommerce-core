@@ -23,6 +23,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
@@ -50,6 +51,15 @@ class OrderSettingsPage extends Page
             $formData["notification_invoice_emails_{$site['id']}"] = Customsetting::get('notification_invoice_emails', $site['id']);
             $formData["notification_low_stock_emails_{$site['id']}"] = Customsetting::get('notification_low_stock_emails', $site['id']);
             $formData["notification_bcc_order_emails_{$site['id']}"] = Customsetting::get('notification_bcc_order_emails', $site['id']);
+
+            $overridesForSite = Customsetting::get('admin_notify_per_order_origin', $site['id'], []);
+            $overridesForSite = is_array($overridesForSite) ? $overridesForSite : [];
+            foreach (OrderOrigins::all($site['id']) as $origin) {
+                $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}";
+                $formData[$formKey] = array_key_exists($origin['key'], $overridesForSite)
+                    ? (bool) $overridesForSite[$origin['key']]
+                    : $origin['default_notify'];
+            }
         }
 
         $formData["apis"] = Customsetting::get('apis', null, []);
@@ -184,6 +194,16 @@ class OrderSettingsPage extends Page
                     ->label('Emails om alle bestel notificaties van de klant naar te sturen in BCC')
                     ->placeholder('Voer een email in')
                     ->reactive(),
+                Section::make('Admin-bevestigingsmail per order-bron')
+                    ->description('Per order-bron aan/uit of de admin-bevestigingsmail verstuurd wordt.')
+                    ->schema(
+                        collect(OrderOrigins::all($site['id']))
+                            ->map(fn ($origin) => Toggle::make("admin_notify_origin_{$site['id']}_{$origin['key']}")
+                                ->label($origin['label']))
+                            ->all()
+                    )
+                    ->collapsible()
+                    ->collapsed(),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -272,6 +292,17 @@ class OrderSettingsPage extends Page
             }
             Customsetting::set('notification_bcc_order_emails', $emails, $site['id']);
             $formState["notification_bcc_order_emails_{$site['id']}"] = $emails;
+
+            $overrides = [];
+            foreach (OrderOrigins::all($site['id']) as $origin) {
+                $formKey = "admin_notify_origin_{$site['id']}_{$origin['key']}";
+                $value = $this->form->getState()[$formKey] ?? null;
+                if ($value === null) {
+                    continue;
+                }
+                $overrides[$origin['key']] = (bool) $value;
+            }
+            Customsetting::set('admin_notify_per_order_origin', $overrides, $site['id']);
         }
 
         Customsetting::set('apis', $this->form->getState()["apis"] ?? []);

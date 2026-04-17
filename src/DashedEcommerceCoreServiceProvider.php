@@ -93,6 +93,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('own', 'Webshop', true);
+        \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('pos', 'POS', false);
+
         cms()
             ->emailBlock('order-details', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderDetailsBlock::class)
             ->emailBlock('order-address', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddressBlock::class)

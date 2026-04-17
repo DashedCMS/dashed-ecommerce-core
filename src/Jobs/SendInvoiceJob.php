@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
@@ -64,7 +65,7 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
                 $this->order->save();
             }
 
-            if ($this->sendToAdmin && $this->order->order_origin != 'pos') {
+            if ($this->sendToAdmin && OrderOrigins::shouldNotifyAdmin($this->order->order_origin, $this->order->site_id)) {
                 try {
                     foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
                         if ($this->order->contains_pre_orders) {
