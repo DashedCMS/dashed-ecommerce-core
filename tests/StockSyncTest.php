@@ -1,6 +1,8 @@
 <?php
 
 use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
@@ -171,4 +173,77 @@ it('updates total_stock and in_stock for all synced products', function () {
     expect($freshReceiver->stock)->toBe(0);
     expect($freshReceiver->total_stock)->toBe(0);
     expect((bool) $freshReceiver->in_stock)->toBeFalse();
+});
+
+it('calculates reserved stock across the entire sync group', function () {
+    $source = createProduct('Source', $this->productGroup->id, ['stock' => 100, 'total_stock' => 100]);
+    $receiverA = createProduct('Receiver A', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+    $receiverB = createProduct('Receiver B', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+
+    $orderA = Order::withoutEvents(function () {
+        return Order::create([
+            'status' => 'pending',
+            'hash' => 'test-hash-a',
+            'site_id' => 'default',
+            'ip' => '127.0.0.1',
+        ]);
+    });
+    OrderProduct::create([
+        'order_id' => $orderA->id,
+        'product_id' => $source->id,
+        'quantity' => 2,
+        'price' => 10,
+    ]);
+
+    $orderB = Order::withoutEvents(function () {
+        return Order::create([
+            'status' => 'pending',
+            'hash' => 'test-hash-b',
+            'site_id' => 'default',
+            'ip' => '127.0.0.1',
+        ]);
+    });
+    OrderProduct::create([
+        'order_id' => $orderB->id,
+        'product_id' => $receiverA->id,
+        'quantity' => 3,
+        'price' => 10,
+    ]);
+
+    $source->calculateReservedStock();
+
+    expect($source->fresh()->reserved_stock)->toBe(5);
+    expect($receiverA->fresh()->reserved_stock)->toBe(5);
+    expect($receiverB->fresh()->reserved_stock)->toBe(5);
+});
+
+it('calculates reserved stock normally for non-synced products', function () {
+    $standalone = createProduct('Standalone', $this->productGroup->id, ['stock' => 50]);
+
+    $order = Order::withoutEvents(function () {
+        return Order::create([
+            'status' => 'pending',
+            'hash' => 'test-hash-standalone',
+            'site_id' => 'default',
+            'ip' => '127.0.0.1',
+        ]);
+    });
+    OrderProduct::create([
+        'order_id' => $order->id,
+        'product_id' => $standalone->id,
+        'quantity' => 4,
+        'price' => 10,
+    ]);
+
+    $standalone->calculateReservedStock();
+
+    expect($standalone->fresh()->reserved_stock)->toBe(4);
 });

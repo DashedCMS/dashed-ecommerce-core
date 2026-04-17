@@ -434,11 +434,26 @@ class Product extends Model
     {
         $pendingOrderIds = Order::whereIn('status', ['pending'])->pluck('id');
 
-        $this->reserved_stock = (int) OrderProduct::where('product_id', $this->id)
-            ->whereIn('order_id', $pendingOrderIds)
-            ->sum('quantity');
+        $syncGroup = $this->stockSyncGroup();
 
-        $this->saveQuietly();
+        if ($syncGroup) {
+            $groupProductIds = $syncGroup->pluck('id');
+
+            $reservedStock = (int) OrderProduct::whereIn('product_id', $groupProductIds)
+                ->whereIn('order_id', $pendingOrderIds)
+                ->sum('quantity');
+
+            foreach ($syncGroup as $groupProduct) {
+                $groupProduct->reserved_stock = $reservedStock;
+                $groupProduct->saveQuietly();
+            }
+        } else {
+            $this->reserved_stock = (int) OrderProduct::where('product_id', $this->id)
+                ->whereIn('order_id', $pendingOrderIds)
+                ->sum('quantity');
+
+            $this->saveQuietly();
+        }
     }
 
     public function reservedStock(): ?int
