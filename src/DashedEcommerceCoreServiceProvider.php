@@ -96,6 +96,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('own', 'Webshop', true);
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('pos', 'POS', false);
 
+        $this->registerPopupTemplates();
+
         cms()
             ->emailBlock('order-details', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderDetailsBlock::class)
             ->emailBlock('order-address', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddressBlock::class)
@@ -1794,5 +1796,84 @@ MARKDOWN,
 
             \Dashed\DashedCore\Models\Customsetting::set('checkout_page_id', $page->id);
         }
+    }
+
+    protected function registerPopupTemplates(): void
+    {
+        if (! class_exists(\Dashed\DashedPopups\PopupTemplates\PopupTemplateRegistry::class)) {
+            return;
+        }
+
+        $registry = \Dashed\DashedPopups\PopupTemplates\PopupTemplateRegistry::class;
+
+        $registry::register('welkom_10_korting', [
+            'label' => 'Welkom: 10% korting (email capture)',
+            'attributes' => [
+                'type' => 'discount',
+                'active' => false,
+                'title' => 'Krijg 10% welkomstkorting',
+                'discount_percentage' => 10,
+                'discount_valid_days' => 14,
+                'auto_apply_discount' => true,
+                'trigger_type' => 'delay',
+                'trigger_value' => 8,
+                'show_again_after' => 20160,
+            ],
+            'blocks' => [
+                ['type' => 'heading', 'data' => ['text' => 'Welkom!', 'level' => 'h2']],
+                ['type' => 'discount_highlight', 'data' => ['label' => 'Krijg nu', 'value' => '10%', 'suffix' => 'korting']],
+                ['type' => 'paragraph', 'data' => ['text' => 'Vul je e-mailadres in en ontvang direct een kortingscode in je mand.']],
+                ['type' => 'usp_list', 'data' => ['items' => [
+                    ['text' => 'Geldig op alle producten'],
+                    ['text' => '14 dagen geldig'],
+                    ['text' => 'Eenmalig te gebruiken'],
+                ]]],
+            ],
+        ]);
+
+        $registry::register('exit_intent_last_chance', [
+            'label' => 'Exit-intent: laatste kans (email capture)',
+            'attributes' => [
+                'type' => 'discount',
+                'active' => false,
+                'title' => 'Wacht nog even!',
+                'discount_percentage' => 10,
+                'discount_valid_days' => 14,
+                'auto_apply_discount' => true,
+                'trigger_type' => 'exit_intent',
+                'trigger_value' => 0,
+                'show_again_after' => 20160,
+            ],
+            'blocks' => [
+                ['type' => 'heading', 'data' => ['text' => 'Wacht nog even!', 'level' => 'h2']],
+                ['type' => 'paragraph', 'data' => ['text' => 'Voor je gaat: een laatste kans op 10% korting op je bestelling.']],
+                ['type' => 'discount_highlight', 'data' => ['label' => 'Speciaal voor jou', 'value' => '10%', 'suffix' => 'korting']],
+                ['type' => 'usp_list', 'data' => ['items' => [
+                    ['text' => 'Geldig op alle producten'],
+                    ['text' => '14 dagen geldig'],
+                    ['text' => 'Eenmalig te gebruiken'],
+                ]]],
+            ],
+        ]);
+
+        $registry::register('seasonal_campaign', [
+            'label' => 'Seasonal: Black Friday / kerst (email capture)',
+            'attributes' => [
+                'type' => 'discount',
+                'active' => false,
+                'title' => 'Speciale aanbieding',
+                'discount_percentage' => 15,
+                'discount_valid_days' => 7,
+                'auto_apply_discount' => true,
+                'trigger_type' => 'scroll',
+                'trigger_value' => 40,
+                'show_again_after' => 10080,
+            ],
+            'blocks' => [
+                ['type' => 'heading', 'data' => ['text' => 'Speciale aanbieding', 'level' => 'h2']],
+                ['type' => 'paragraph', 'data' => ['text' => 'Voeg hier je seizoenstekst toe en pas het kortingspercentage aan naar behoefte.']],
+                ['type' => 'discount_highlight', 'data' => ['label' => 'Tijdelijk', 'value' => '15%', 'suffix' => 'korting']],
+            ],
+        ]);
     }
 }
