@@ -3,11 +3,15 @@
 namespace Dashed\DashedEcommerceCore\Tests;
 
 use Orchestra\Testbench\TestCase as Orchestra;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Dashed\DashedCore\DashedCoreServiceProvider;
 use Dashed\DashedEcommerceCore\DashedEcommerceCoreServiceProvider;
 
 class TestCase extends Orchestra
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -20,6 +24,7 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
+            DashedCoreServiceProvider::class,
             DashedEcommerceCoreServiceProvider::class,
         ];
     }
@@ -27,10 +32,5 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
-
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_dashed-ecommerce-core_table.php.stub';
-        $migration->up();
-        */
     }
 }

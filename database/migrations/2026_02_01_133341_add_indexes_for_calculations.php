@@ -8,33 +8,46 @@ use Illuminate\Database\Migrations\Migration;
 return new class () extends Migration {
     public function up(): void
     {
+        $driver = DB::connection()->getDriverName();
+
         /**
          * 1) Verwijder duplicates in dashed__product_user
          */
-        DB::statement("
-            DELETE pu1
-            FROM dashed__product_user pu1
-            INNER JOIN dashed__product_user pu2
-                ON pu1.product_id = pu2.product_id
-               AND pu1.user_id = pu2.user_id
-               AND pu1.id < pu2.id
-               AND (
-                    COALESCE(pu1.price, 0) <= COALESCE(pu2.price, 0)
+        if ($driver === 'sqlite') {
+            // SQLite does not support multi-table DELETE syntax.
+            DB::statement("
+                DELETE FROM dashed__product_user
+                WHERE id NOT IN (
+                    SELECT MAX(id) FROM dashed__product_user
+                    GROUP BY product_id, user_id
                 )
-        ");
+            ");
+        } else {
+            DB::statement("
+                DELETE pu1
+                FROM dashed__product_user pu1
+                INNER JOIN dashed__product_user pu2
+                    ON pu1.product_id = pu2.product_id
+                   AND pu1.user_id = pu2.user_id
+                   AND pu1.id < pu2.id
+                   AND (
+                        COALESCE(pu1.price, 0) <= COALESCE(pu2.price, 0)
+                    )
+            ");
 
-        /**
-         * Extra safety pass:
-         * Als er nog duplicates zijn, pak altijd de hoogste id
-         */
-        DB::statement("
-            DELETE pu1
-            FROM dashed__product_user pu1
-            INNER JOIN dashed__product_user pu2
-                ON pu1.product_id = pu2.product_id
-               AND pu1.user_id = pu2.user_id
-               AND pu1.id < pu2.id
-        ");
+            /**
+             * Extra safety pass:
+             * Als er nog duplicates zijn, pak altijd de hoogste id
+             */
+            DB::statement("
+                DELETE pu1
+                FROM dashed__product_user pu1
+                INNER JOIN dashed__product_user pu2
+                    ON pu1.product_id = pu2.product_id
+                   AND pu1.user_id = pu2.user_id
+                   AND pu1.id < pu2.id
+            ");
+        }
 
 
         /**
@@ -131,13 +144,19 @@ return new class () extends Migration {
         string $type,
         array $columns
     ): void {
-        $exists = DB::selectOne("
-            SELECT COUNT(1) as count
-            FROM INFORMATION_SCHEMA.STATISTICS
-            WHERE table_schema = DATABASE()
-            AND table_name = ?
-            AND index_name = ?
-        ", [$table, $indexName]);
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            $exists = DB::selectOne("SELECT COUNT(1) as count FROM sqlite_master WHERE type='index' AND tbl_name=? AND name=?", [$table, $indexName]);
+        } else {
+            $exists = DB::selectOne("
+                SELECT COUNT(1) as count
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE table_schema = DATABASE()
+                AND table_name = ?
+                AND index_name = ?
+            ", [$table, $indexName]);
+        }
 
         if ($exists->count == 0) {
             Schema::table($table, function (Blueprint $table) use ($type, $columns, $indexName) {

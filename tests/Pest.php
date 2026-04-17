@@ -1,5 +1,5 @@
 <?php
 
-use Dashed\DashedEcommerceCore\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(TestCase::class)->in(__DIR__);
+uses(\Dashed\DashedEcommerceCore\Tests\TestCase::class, RefreshDatabase::class)->in(__DIR__);

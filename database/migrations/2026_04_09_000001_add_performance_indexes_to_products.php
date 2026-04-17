@@ -35,9 +35,14 @@ return new class () extends Migration {
 
     private function hasIndex(string $table, string $indexName): bool
     {
-        $indexes = collect(\DB::select("SHOW INDEX FROM {$table}"))
-            ->pluck('Key_name')
-            ->unique();
+        if (\DB::connection()->getDriverName() === 'sqlite') {
+            $indexes = collect(\DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=?", [$table]))
+                ->pluck('name');
+        } else {
+            $indexes = collect(\DB::select("SHOW INDEX FROM {$table}"))
+                ->pluck('Key_name')
+                ->unique();
+        }
 
         return $indexes->contains($indexName);
     }

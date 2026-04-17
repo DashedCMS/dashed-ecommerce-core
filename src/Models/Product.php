@@ -755,6 +755,55 @@ class Product extends Model
             ->withTrashed();
     }
 
+    public function stockSource()
+    {
+        return $this->belongsTo(Product::class, 'stock_source_product_id');
+    }
+
+    public function stockSyncedProducts()
+    {
+        return $this->hasMany(Product::class, 'stock_source_product_id');
+    }
+
+    /**
+     * Get all products in this product's stock sync group (source + all receivers).
+     * Returns null if product is not part of a sync group.
+     */
+    public function stockSyncGroup(): ?\Illuminate\Database\Eloquent\Collection
+    {
+        $sourceProduct = $this->getStockSourceProduct();
+
+        if (! $sourceProduct) {
+            return null;
+        }
+
+        $receivers = Product::where('stock_source_product_id', $sourceProduct->id)->get();
+
+        if ($receivers->isEmpty() && ! $this->stock_source_product_id) {
+            return null;
+        }
+
+        return $receivers->prepend($sourceProduct)->unique('id');
+    }
+
+    /**
+     * Get the source product for this sync group.
+     * If this product IS the source, returns itself.
+     * If this product has no sync group, returns null.
+     */
+    public function getStockSourceProduct(): ?Product
+    {
+        if ($this->stock_source_product_id) {
+            return $this->stockSource;
+        }
+
+        if ($this->stockSyncedProducts()->exists()) {
+            return $this;
+        }
+
+        return null;
+    }
+
     public function productCategories()
     {
         return $this->belongsToMany(ProductCategory::class, 'dashed__product_category');
