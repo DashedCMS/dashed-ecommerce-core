@@ -1,5 +1,6 @@
 <?php
 
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
@@ -94,4 +95,80 @@ it('returns the stock source product for a receiver', function () {
 
     expect($receiver->getStockSourceProduct()->id)->toBe($source->id);
     expect($source->getStockSourceProduct()->id)->toBe($source->id);
+});
+
+it('syncs stock from source to all receivers', function () {
+    $source = createProduct('Source', $this->productGroup->id, ['stock' => 100, 'total_stock' => 100]);
+    $receiverA = createProduct('Receiver A', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+    $receiverB = createProduct('Receiver B', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+
+    $source->stock = 80;
+    $source->saveQuietly();
+
+    (new SyncProductStockJob($source))->handle();
+
+    expect($receiverA->fresh()->stock)->toBe(80);
+    expect($receiverB->fresh()->stock)->toBe(80);
+});
+
+it('syncs stock from receiver back to source and other receivers', function () {
+    $source = createProduct('Source', $this->productGroup->id, ['stock' => 100, 'total_stock' => 100]);
+    $receiverA = createProduct('Receiver A', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+    $receiverB = createProduct('Receiver B', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+
+    $receiverA->stock = 95;
+    $receiverA->saveQuietly();
+
+    (new SyncProductStockJob($receiverA))->handle();
+
+    expect($source->fresh()->stock)->toBe(95);
+    expect($receiverB->fresh()->stock)->toBe(95);
+});
+
+it('does nothing for products without sync group', function () {
+    $standalone = createProduct('Standalone', $this->productGroup->id, ['stock' => 50]);
+
+    (new SyncProductStockJob($standalone))->handle();
+
+    expect($standalone->fresh()->stock)->toBe(50);
+});
+
+it('updates total_stock and in_stock for all synced products', function () {
+    $source = createProduct('Source', $this->productGroup->id, [
+        'stock' => 10,
+        'total_stock' => 10,
+        'in_stock' => true,
+    ]);
+    $receiver = createProduct('Receiver', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 10,
+        'total_stock' => 10,
+        'in_stock' => true,
+    ]);
+
+    $source->stock = 0;
+    $source->saveQuietly();
+
+    (new SyncProductStockJob($source))->handle();
+
+    $freshReceiver = $receiver->fresh();
+    expect($freshReceiver->stock)->toBe(0);
+    expect($freshReceiver->total_stock)->toBe(0);
+    expect((bool) $freshReceiver->in_stock)->toBeFalse();
 });
