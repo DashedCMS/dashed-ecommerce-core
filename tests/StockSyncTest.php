@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Queue;
 use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -246,4 +247,132 @@ it('calculates reserved stock normally for non-synced products', function () {
     $standalone->calculateReservedStock();
 
     expect($standalone->fresh()->reserved_stock)->toBe(4);
+});
+
+// Task 6: Soft delete handling
+
+it('decouples receivers when source product is soft deleted', function () {
+    $source = createProduct('Source', $this->productGroup->id, ['stock' => 100, 'total_stock' => 100]);
+    $receiver = createProduct('Receiver', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+
+    $source->delete();
+
+    $freshReceiver = $receiver->fresh();
+    expect($freshReceiver->stock_source_product_id)->toBeNull();
+    expect($freshReceiver->stock)->toBe(100);
+});
+
+it('re-syncs stock when a receiver is restored', function () {
+    Queue::fake();
+
+    $source = createProduct('Source', $this->productGroup->id, ['stock' => 80, 'total_stock' => 80]);
+    $receiver = createProduct('Receiver', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 80,
+        'total_stock' => 80,
+    ]);
+
+    $receiver->delete();
+
+    $source->stock = 60;
+    $source->saveQuietly();
+
+    $receiver->restore();
+
+    // Sync from source to bring receiver back in line
+    (new SyncProductStockJob($source->fresh()))->handle();
+
+    expect($receiver->fresh()->stock)->toBe(60);
+});
+
+// Task 9: Validation
+
+it('prevents a product from referencing itself as stock source', function () {
+    Queue::fake();
+
+    $product = createProduct('Self Ref', $this->productGroup->id);
+
+    $product->stock_source_product_id = $product->id;
+    $product->save();
+
+    expect($product->fresh()->stock_source_product_id)->toBeNull();
+});
+
+it('prevents a receiver from becoming a source', function () {
+    Queue::fake();
+
+    $source = createProduct('Source', $this->productGroup->id);
+    $receiver = createProduct('Receiver', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+    ]);
+    $third = createProduct('Third', $this->productGroup->id);
+
+    $third->stock_source_product_id = $receiver->id;
+    $third->save();
+
+    expect($third->fresh()->stock_source_product_id)->toBeNull();
+});
+
+it('prevents a source from becoming a receiver', function () {
+    Queue::fake();
+
+    $source = createProduct('Source', $this->productGroup->id);
+    $receiver = createProduct('Receiver', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+    ]);
+
+    $another = createProduct('Another', $this->productGroup->id);
+    $source->stock_source_product_id = $another->id;
+    $source->save();
+
+    expect($source->fresh()->stock_source_product_id)->toBeNull();
+});
+
+// Task 10: Full lifecycle integration test
+
+it('handles full stock sync lifecycle', function () {
+    $source = createProduct('Source', $this->productGroup->id, ['stock' => 100, 'total_stock' => 100]);
+    $receiverA = createProduct('Receiver A', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+    $receiverB = createProduct('Receiver B', $this->productGroupB->id, [
+        'stock_source_product_id' => $source->id,
+        'stock' => 100,
+        'total_stock' => 100,
+    ]);
+
+    // 1. Simulate sale on receiver A
+    $receiverA->stock = 97;
+    $receiverA->saveQuietly();
+    (new SyncProductStockJob($receiverA))->handle();
+
+    expect($source->fresh()->stock)->toBe(97);
+    expect($receiverB->fresh()->stock)->toBe(97);
+
+    // 2. Simulate sale on source
+    $source->refresh();
+    $source->stock = 94;
+    $source->saveQuietly();
+    (new SyncProductStockJob($source))->handle();
+
+    expect($receiverA->fresh()->stock)->toBe(94);
+    expect($receiverB->fresh()->stock)->toBe(94);
+
+    // 3. Delete source - receivers decouple
+    $source->delete();
+    expect($receiverA->fresh()->stock_source_product_id)->toBeNull();
+    expect($receiverA->fresh()->stock)->toBe(94);
+
+    // 4. Receivers are now independent
+    $receiverA->refresh();
+    $receiverA->stock = 90;
+    $receiverA->saveQuietly();
+
+    expect($receiverB->fresh()->stock)->toBe(94);
 });

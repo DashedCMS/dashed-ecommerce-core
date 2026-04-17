@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
@@ -80,6 +81,33 @@ class Product extends Model
 
     protected static function booted()
     {
+        static::saving(function ($product) {
+            if ($product->stock_source_product_id) {
+                // Prevent self-reference
+                if ($product->stock_source_product_id === $product->id) {
+                    $product->stock_source_product_id = null;
+
+                    return;
+                }
+
+                $sourceProduct = Product::find($product->stock_source_product_id);
+
+                // Prevent using a receiver as a source (no chains)
+                if ($sourceProduct && $sourceProduct->stock_source_product_id) {
+                    $product->stock_source_product_id = null;
+
+                    return;
+                }
+
+                // Prevent a source from becoming a receiver
+                if ($product->exists && Product::where('stock_source_product_id', $product->id)->exists()) {
+                    $product->stock_source_product_id = null;
+
+                    return;
+                }
+            }
+        });
+
         static::created(function ($product) {
             ProductCreatedEvent::dispatch($product);
         });
@@ -98,6 +126,11 @@ class Product extends Model
             ProductSavedEvent::dispatch($product);
             UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
 
+            // Sync stock to linked products when stock changes
+            if ($product->wasChanged('stock') && $product->stockSyncGroup()) {
+                SyncProductStockJob::dispatch($product)->onQueue('ecommerce');
+            }
+
             static::bumpSearchbarCacheVersion();
         });
 
@@ -105,6 +138,10 @@ class Product extends Model
             $product->productCategories()->detach();
             $product->productFilters()->detach();
             $product->shippingClasses()->detach();
+
+            // Decouple stock sync receivers when source is deleted
+            Product::where('stock_source_product_id', $product->id)
+                ->update(['stock_source_product_id' => null]);
         });
 
         static::deleted(function ($product) {
