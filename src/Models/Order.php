@@ -782,6 +782,10 @@ class Order extends Model
 
         OrderMarkedAsPaidEvent::dispatch($this);
 
+        if ($this->cart_id && $this->cart) {
+            $this->cart->items()->delete();
+            $this->cart->delete();
+        }
         cartHelper()->emptyCart();
 
         $this->sendGAEcommerceHit();
@@ -806,6 +810,10 @@ class Order extends Model
         $this->deductDiscount();
         OrderMarkedAsPaidEvent::dispatch($this);
 
+        if ($this->cart_id && $this->cart) {
+            $this->cart->items()->delete();
+            $this->cart->delete();
+        }
         cartHelper()->emptyCart();
 
         $this->sendGAEcommerceHit();
