@@ -143,7 +143,7 @@ class AdminPreOrderConfirmationMail extends Mailable implements RegistersEmailTe
                 'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '-'),
                 'Bedrag' => '€' . number_format((float) $this->order->total, 2, ',', '.'),
             ],
-            adminUrl: rescue(fn () => route('filament.admin.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
             emoji: '📅',
         );
     }

@@ -151,7 +151,7 @@ class OrderConfirmationForFulfillerMail extends Mailable implements RegistersEma
                 'Items' => (string) count($this->orderProducts) . ' regels',
                 'Verzendadres' => trim(($this->order->street ?? '') . ' ' . ($this->order->house_nr ?? '') . ', ' . ($this->order->city ?? '')),
             ],
-            adminUrl: rescue(fn () => route('filament.admin.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
             emoji: '📦',
         );
     }

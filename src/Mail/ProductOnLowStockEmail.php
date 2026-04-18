@@ -122,7 +122,7 @@ class ProductOnLowStockEmail extends Mailable implements RegistersEmailTemplate,
                 'Drempel' => (string) ($this->product->low_stock_notification_limit ?? '-'),
                 'SKU' => $this->product->sku ?? null,
             ],
-            adminUrl: rescue(fn () => route('filament.admin.resources.products.edit', ['record' => $this->product->id]), null, false),
+            adminUrl: rescue(fn () => route('filament.dashed.resources.products.edit', ['record' => $this->product->id]), null, false),
             emoji: '⚠️',
         );
     }

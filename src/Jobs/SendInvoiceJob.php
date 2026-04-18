@@ -56,28 +56,28 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
      */
     public function handle(): void
     {
-        if (! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus) {
-            if ($this->sendToCustomer) {
-                if ($this->order->email) {
-                    Orders::sendNotification($this->order, null, $this->sendByUser);
-                }
-                $this->order->invoice_send_to_customer = 1;
-                $this->order->save();
+        $canSendCustomer = ! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus;
+
+        if ($this->sendToCustomer && $canSendCustomer) {
+            if ($this->order->email) {
+                Orders::sendNotification($this->order, null, $this->sendByUser);
             }
+            $this->order->invoice_send_to_customer = 1;
+            $this->order->save();
+        }
 
-            if ($this->sendToAdmin && OrderOrigins::shouldNotifyAdmin($this->order->order_origin, null, $this->order->site_id)) {
-                $channels = OrderOrigins::channelsFor($this->order->order_origin, $this->order->site_id);
+        if ($this->sendToAdmin && OrderOrigins::shouldNotifyAdmin($this->order->order_origin, null, $this->order->site_id)) {
+            $channels = OrderOrigins::channelsFor($this->order->order_origin, $this->order->site_id);
 
-                try {
-                    foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
-                        if ($this->order->contains_pre_orders) {
-                            AdminNotifier::send(new AdminPreOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
-                        } else {
-                            AdminNotifier::send(new AdminOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
-                        }
+            try {
+                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
+                    if ($this->order->contains_pre_orders) {
+                        AdminNotifier::send(new AdminPreOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
+                    } else {
+                        AdminNotifier::send(new AdminOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
                     }
-                } catch (\Exception $e) {
                 }
+            } catch (\Exception $e) {
             }
         }
     }

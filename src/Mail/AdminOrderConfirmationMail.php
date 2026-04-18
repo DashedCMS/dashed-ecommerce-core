@@ -145,14 +145,14 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
     public function telegramSummary(): TelegramSummary
     {
         return new TelegramSummary(
-            title: 'Nieuwe order #' . $this->order->invoice_id,
+            title: 'Nieuwe bestelling #' . $this->order->invoice_id,
             fields: [
                 'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '-'),
                 'Bedrag' => '€' . number_format((float) $this->order->total, 2, ',', '.'),
                 'Items' => (string) ($this->order->orderProducts?->sum('quantity') ?? 0) . ' producten',
                 'Betaalmethode' => $this->order->payment_method ?? null,
             ],
-            adminUrl: rescue(fn () => route('filament.admin.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
             emoji: '🛒',
         );
     }
