@@ -22,6 +22,13 @@ class CustomerInformationBlockList extends Component implements HasSchemas
 
     public Order $order;
 
+    private ?CustomerHistory $cachedHistory = null;
+
+    protected function history(): CustomerHistory
+    {
+        return $this->cachedHistory ??= new CustomerHistory($this->order);
+    }
+
     protected $listeners = [
         'refreshData' => '$refresh',
     ];
@@ -67,29 +74,24 @@ class CustomerInformationBlockList extends Component implements HasSchemas
                         TextEntry::make('customer_history_text')
                             ->label('Eerdere bestellingen')
                             ->columnSpanFull()
-                            ->getStateUsing(function ($record) {
-                                $history = new CustomerHistory($record);
-                                if ($history->matchKey() === null) {
-                                    return null;
-                                }
-                                $other = $history->otherCount();
-                                if ($other === 0) {
-                                    return 'Dit is de eerste bestelling van deze klant';
-                                }
+                            ->getStateUsing(function () {
+                                $other = $this->history()->otherCount();
 
-                                return 'Deze klant heeft al '.$other.' andere bestelling(en)';
+                                return $other === 0
+                                    ? 'Dit is de eerste bestelling van deze klant'
+                                    : 'Deze klant heeft al '.$other.' andere bestelling(en)';
                             })
-                            ->visible(fn ($record) => (new CustomerHistory($record))->matchKey() !== null)
+                            ->visible(fn () => $this->history()->matchKey() !== null)
                             ->helperText('Op basis van gebruiker, e-mail of voor+achternaam')
                             ->hintAction(
                                 Action::make('customer_history')
                                     ->label('Bekijk details')
                                     ->icon('heroicon-o-chart-bar')
-                                    ->modalHeading(fn ($record) => 'Bestelhistorie — '.($record->name ?: $record->email))
+                                    ->modalHeading(fn ($record) => 'Bestelhistorie: '.($record->name ?: $record->email))
                                     ->modalWidth('5xl')
-                                    ->modalContent(fn ($record) => view(
+                                    ->modalContent(fn () => view(
                                         'dashed-ecommerce-core::filament.orders.customer-history-modal',
-                                        ['history' => new CustomerHistory($record)],
+                                        ['history' => $this->history()],
                                     ))
                                     ->modalSubmitAction(false)
                                     ->modalCancelActionLabel('Sluiten')
@@ -106,7 +108,7 @@ class CustomerInformationBlockList extends Component implements HasSchemas
                                             ]))
                                             ->openUrlInNewTab(false),
                                     ])
-                                    ->visible(fn ($record) => (new CustomerHistory($record))->otherCount() > 0),
+                                    ->visible(fn () => $this->history()->otherCount() > 0),
                             ),
                     ])
                     ->columns(2),
