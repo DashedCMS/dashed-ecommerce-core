@@ -24,7 +24,7 @@ trait CartActions
     public ?array $hiddenOptions = [];
     public string|int $quantity = 1;
     public array $files = [];
-    public string $cartType = 'default';
+    public $cartType = 'default';
 
     public function checkCart(?string $status = null, ?string $message = null)
     {

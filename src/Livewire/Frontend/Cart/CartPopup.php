@@ -21,7 +21,7 @@ class CartPopup extends Component
     public $cartTotal;
     public $freeShippingThreshold;
     public int $freeShippingPercentage = 0;
-    public string $cartType = 'default';
+    public $cartType = 'default';
     private $cartItems = [];
 
     //Needed for the CartActions
