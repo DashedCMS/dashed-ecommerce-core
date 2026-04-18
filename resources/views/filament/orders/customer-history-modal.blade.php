@@ -4,7 +4,9 @@
         'Totaal aantal bestellingen' => $history->totalCount(),
         'Betaalde bestellingen' => $history->paidCount(),
         'Totaal besteed' => CurrencyHelper::formatPrice($history->lifetimeSpent()),
-        'Gemiddelde orderwaarde' => CurrencyHelper::formatPrice($history->averageOrderValue()),
+        'Gemiddelde orderwaarde' => $history->paidCount() > 0
+            ? CurrencyHelper::formatPrice($history->averageOrderValue())
+            : '—',
         'Eerste bestelling' => $history->firstOrderAt()?->format('d-m-Y') ?? '—',
         'Laatste bestelling' => $history->lastOrderAt()?->format('d-m-Y') ?? '—',
         'Dagen sinds laatste' => match (true) {
