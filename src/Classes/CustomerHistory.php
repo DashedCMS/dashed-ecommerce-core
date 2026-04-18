@@ -10,52 +10,67 @@ use Illuminate\Support\Collection;
 
 class CustomerHistory
 {
+    /** @var array<string, mixed> */
+    private array $cache = [];
+
     public function __construct(public readonly Order $anchor) {}
 
     public function matchKey(): ?string
     {
-        if (! $this->anchor->user_id && ! $this->anchor->email
-            && ! ($this->anchor->first_name && $this->anchor->last_name)) {
-            return null;
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
         }
 
-        return 'order:'.$this->anchor->id;
+        if (! $this->anchor->user_id && ! $this->anchor->email
+            && ! ($this->anchor->first_name && $this->anchor->last_name)) {
+            return $this->cache[__FUNCTION__] = null;
+        }
+
+        return $this->cache[__FUNCTION__] = 'order:'.$this->anchor->id;
     }
 
     public function totalCount(): int
     {
-        if ($this->matchKey() === null) {
-            return 0;
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
         }
 
-        return $this->baseQuery()->count();
+        return $this->cache[__FUNCTION__] = $this->matchKey() === null
+            ? 0
+            : $this->baseQuery()->count();
     }
 
     public function otherCount(): int
     {
-        if ($this->matchKey() === null) {
-            return 0;
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
         }
 
-        return $this->baseQuery()->where('id', '!=', $this->anchor->id)->count();
+        return $this->cache[__FUNCTION__] = $this->matchKey() === null
+            ? 0
+            : $this->baseQuery()->where('id', '!=', $this->anchor->id)->count();
     }
 
     public function paidCount(): int
     {
-        if ($this->matchKey() === null) {
-            return 0;
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
         }
 
-        return $this->baseQuery()->isPaid()->count();
+        return $this->cache[__FUNCTION__] = $this->matchKey() === null
+            ? 0
+            : $this->baseQuery()->isPaid()->count();
     }
 
     public function lifetimeSpent(): float
     {
-        if ($this->matchKey() === null) {
-            return 0.0;
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
         }
 
-        return (float) $this->baseQuery()->isPaid()->sum('total');
+        return $this->cache[__FUNCTION__] = $this->matchKey() === null
+            ? 0.0
+            : (float) $this->baseQuery()->isPaid()->sum('total');
     }
 
     public function averageOrderValue(): float
@@ -67,37 +82,53 @@ class CustomerHistory
 
     public function firstOrderAt(): ?Carbon
     {
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
+        }
+
         if ($this->matchKey() === null) {
-            return null;
+            return $this->cache[__FUNCTION__] = null;
         }
 
         $value = $this->baseQuery()->min('created_at');
 
-        return $value ? Carbon::parse($value) : null;
+        return $this->cache[__FUNCTION__] = $value ? Carbon::parse($value) : null;
     }
 
     public function lastOrderAt(): ?Carbon
     {
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
+        }
+
         if ($this->matchKey() === null) {
-            return null;
+            return $this->cache[__FUNCTION__] = null;
         }
 
         $value = $this->baseQuery()->max('created_at');
 
-        return $value ? Carbon::parse($value) : null;
+        return $this->cache[__FUNCTION__] = $value ? Carbon::parse($value) : null;
     }
 
     public function daysSinceLastOrder(): ?int
     {
         $last = $this->lastOrderAt();
 
-        return $last ? (int) $last->diffInDays(now()) : null;
+        if (! $last) {
+            return null;
+        }
+
+        return (int) max(0, $last->diffInDays(now(), absolute: true));
     }
 
     public function favoritePaymentMethod(): ?string
     {
+        if (array_key_exists(__FUNCTION__, $this->cache)) {
+            return $this->cache[__FUNCTION__];
+        }
+
         if ($this->matchKey() === null) {
-            return null;
+            return $this->cache[__FUNCTION__] = null;
         }
 
         $row = $this->baseQuery()
@@ -110,10 +141,10 @@ class CustomerHistory
             ->first();
 
         if (! $row || ! $row->payment_method_id) {
-            return null;
+            return $this->cache[__FUNCTION__] = null;
         }
 
-        return PaymentMethod::find($row->payment_method_id)?->name;
+        return $this->cache[__FUNCTION__] = PaymentMethod::find($row->payment_method_id)?->name;
     }
 
     public function customerType(): string
@@ -130,11 +161,16 @@ class CustomerHistory
     /** @return Collection<int, Order> */
     public function recentOrders(int $limit = 10): Collection
     {
-        if ($this->matchKey() === null) {
-            return collect();
+        $cacheKey = __FUNCTION__.':'.$limit;
+        if (array_key_exists($cacheKey, $this->cache)) {
+            return $this->cache[$cacheKey];
         }
 
-        return $this->baseQuery()
+        if ($this->matchKey() === null) {
+            return $this->cache[$cacheKey] = collect();
+        }
+
+        return $this->cache[$cacheKey] = $this->baseQuery()
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get();
