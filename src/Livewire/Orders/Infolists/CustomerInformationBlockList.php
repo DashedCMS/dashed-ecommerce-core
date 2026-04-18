@@ -2,16 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
-use Livewire\Component;
-use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Helper;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Fieldset;
-use Filament\Schemas\Contracts\HasSchemas;
+use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Infolists\Components\TextEntry;
+use Filament\Actions\Action;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use Livewire\Component;
 
 class CustomerInformationBlockList extends Component implements HasSchemas
 {
@@ -47,7 +50,7 @@ class CustomerInformationBlockList extends Component implements HasSchemas
                                     ->hiddenLabel(),
                                 TextEntry::make('phone_number')
                                     ->label('Telefoonnummer')
-                                    ->url(fn ($record) => 'tel:' . $record->phone_number)
+                                    ->url(fn ($record) => 'tel:'.$record->phone_number)
                                     ->badge()
                                     ->icon('heroicon-o-phone')
                                     ->hiddenLabel(),
@@ -56,11 +59,55 @@ class CustomerInformationBlockList extends Component implements HasSchemas
                             ->columns(1),
                         TextEntry::make('email')
                             ->label('Email')
-                            ->url(fn ($record) => 'mailto:' . $record->email)
+                            ->url(fn ($record) => 'mailto:'.$record->email)
                             ->badge()
                             ->columnSpanFull()
                             ->icon('heroicon-o-envelope')
                             ->hiddenLabel(),
+                        TextEntry::make('customer_history_text')
+                            ->label('Eerdere bestellingen')
+                            ->columnSpanFull()
+                            ->getStateUsing(function ($record) {
+                                $history = new CustomerHistory($record);
+                                if ($history->matchKey() === null) {
+                                    return null;
+                                }
+                                $other = $history->otherCount();
+                                if ($other === 0) {
+                                    return 'Dit is de eerste bestelling van deze klant';
+                                }
+
+                                return 'Deze klant heeft al '.$other.' andere bestelling(en)';
+                            })
+                            ->visible(fn ($record) => (new CustomerHistory($record))->matchKey() !== null)
+                            ->helperText('Op basis van gebruiker, e-mail of voor+achternaam')
+                            ->hintAction(
+                                Action::make('customer_history')
+                                    ->label('Bekijk details')
+                                    ->icon('heroicon-o-chart-bar')
+                                    ->modalHeading(fn ($record) => 'Bestelhistorie — '.($record->name ?: $record->email))
+                                    ->modalWidth('5xl')
+                                    ->modalContent(fn ($record) => view(
+                                        'dashed-ecommerce-core::filament.orders.customer-history-modal',
+                                        ['history' => new CustomerHistory($record)],
+                                    ))
+                                    ->modalSubmitAction(false)
+                                    ->modalCancelActionLabel('Sluiten')
+                                    ->extraModalFooterActions(fn ($record) => [
+                                        Action::make('view_filtered_orders')
+                                            ->label('Bekijk alle bestellingen →')
+                                            ->color('primary')
+                                            ->url(fn () => OrderResource::getUrl('index', [
+                                                'tableFilters' => [
+                                                    'customer_match' => [
+                                                        'value' => 'order:'.$record->id,
+                                                    ],
+                                                ],
+                                            ]))
+                                            ->openUrlInNewTab(false),
+                                    ])
+                                    ->visible(fn ($record) => (new CustomerHistory($record))->otherCount() > 0),
+                            ),
                     ])
                     ->columns(2),
             ]);
