@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
@@ -292,6 +293,36 @@ class Order extends Model
     public function scopeIsPaidOrReturn($query)
     {
         return $query->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid', 'return']);
+    }
+
+    public function scopeForCustomerOf(Builder $query, Order $anchor): Builder
+    {
+        return $query->where(function (Builder $q) use ($anchor) {
+            $applied = false;
+
+            if ($anchor->user_id) {
+                $q->orWhere('user_id', $anchor->user_id);
+                $applied = true;
+            }
+
+            if ($anchor->email) {
+                $q->orWhere('email', $anchor->email);
+                $applied = true;
+            }
+
+            if ($anchor->first_name && $anchor->last_name) {
+                $q->orWhere(function (Builder $q) use ($anchor) {
+                    $q->where('first_name', $anchor->first_name)
+                        ->where('last_name', $anchor->last_name);
+                });
+                $applied = true;
+            }
+
+            if (! $applied) {
+                // Anchor has no identifiers we can match on — return empty set.
+                $q->whereRaw('1 = 0');
+            }
+        });
     }
 
     public function scopeThisSite($query)
