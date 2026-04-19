@@ -2,49 +2,49 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use UnitEnum;
 use BackedEnum;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrder;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
-use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Schema;
-use Filament\Tables\Columns\TextColumn;
+use Dashed\DashedCore\Models\User;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use LynX39\LaraPdfMerger\Facades\PdfMerger;
-use UnitEnum;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrder;
 
 class OrderResource extends Resource
 {
@@ -484,7 +484,7 @@ class OrderResource extends Resource
 
                                 $record->changeFulfillmentStatus($data['fulfillmentStatus']);
 
-                                $orderLog = new OrderLog;
+                                $orderLog = new OrderLog();
                                 $orderLog->order_id = $record->id;
                                 $orderLog->user_id = Auth::user()->id;
                                 $orderLog->tag = 'order.changed-fulfillment-status-to-'.$data['fulfillmentStatus'];
@@ -523,7 +523,7 @@ class OrderResource extends Resource
                                 $record->retour_status = $data['retourStatus'];
                                 $record->save();
 
-                                $orderLog = new OrderLog;
+                                $orderLog = new OrderLog();
                                 $orderLog->order_id = $record->id;
                                 $orderLog->user_id = Auth::user()->id;
                                 $orderLog->tag = 'order.changed-retour-status-to-'.$data['retourStatus'];
@@ -595,7 +595,7 @@ class OrderResource extends Resource
                                     ->rows(3),
                             ])
                             ->action(function ($record, $data) {
-                                $orderLog = new OrderLog;
+                                $orderLog = new OrderLog();
                                 $orderLog->order_id = $record->id;
                                 $orderLog->user_id = Auth::user()->id;
                                 $orderLog->tag = 'order.note.created';

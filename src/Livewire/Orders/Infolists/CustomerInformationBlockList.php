@@ -2,19 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
+use Livewire\Component;
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Helper;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Contracts\HasSchemas;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Actions\Action;
-use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Fieldset;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Filament\Schemas\Contracts\HasSchemas;
-use Filament\Schemas\Schema;
-use Livewire\Component;
 
 class CustomerInformationBlockList extends Component implements HasSchemas
 {

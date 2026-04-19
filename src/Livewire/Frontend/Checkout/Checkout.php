@@ -92,7 +92,7 @@ class Checkout extends Component
     public bool $postpayPaymentMethod = false;
     public Collection|array $paymentMethods = [];
     public Collection|array $depositPaymentMethods = [];
-    public string $cartType = 'default';
+    public $cartType = 'default';
 
     public ?bool $taxIdValidated = null;
     public ?string $taxIdValidationMessage = null;

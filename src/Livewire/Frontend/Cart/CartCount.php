@@ -7,7 +7,7 @@ use Livewire\Component;
 class CartCount extends Component
 {
     public $cartCount = 0;
-    public string $cartType = 'default';
+    public $cartType = 'default';
 
     protected $listeners = [
         'refreshCart',

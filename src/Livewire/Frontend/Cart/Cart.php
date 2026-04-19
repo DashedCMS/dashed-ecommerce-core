@@ -17,7 +17,7 @@ class Cart extends Component
     public $tax;
     public $total;
 
-    public string $cartType = 'default';
+    public $cartType = 'default';
 
     protected $listeners = [
         'refreshCart' => 'updated',

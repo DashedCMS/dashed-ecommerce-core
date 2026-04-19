@@ -211,8 +211,8 @@ class OrderSettingsPage extends Page
                     ->label('Emails om alle bestel notificaties van de klant naar te sturen in BCC')
                     ->placeholder('Voer een email in')
                     ->reactive(),
-                Section::make('Admin-notificaties per order-bron en kanaal')
-                    ->description('Per order-bron en per kanaal aan/uit. Regels per rij (order-bron), kolommen per kanaal.')
+                Section::make('Admin notificaties per bestel kanaal')
+                    ->columnSpanFull()
                     ->schema(
                         collect(OrderOrigins::all($site['id']))
                             ->map(fn ($origin) => Section::make($origin['label'])

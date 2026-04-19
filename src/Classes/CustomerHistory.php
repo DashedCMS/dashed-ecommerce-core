@@ -3,17 +3,19 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 class CustomerHistory
 {
     /** @var array<string, mixed> */
     private array $cache = [];
 
-    public function __construct(public readonly Order $anchor) {}
+    public function __construct(public readonly Order $anchor)
+    {
+    }
 
     public function matchKey(): ?string
     {
