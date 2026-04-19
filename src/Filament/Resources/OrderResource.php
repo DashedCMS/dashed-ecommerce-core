@@ -2,57 +2,61 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use UnitEnum;
 use BackedEnum;
-use Filament\Tables\Table;
-use Illuminate\Support\Str;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrder;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
+use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Resources\Resource;
-use Filament\Tables\Filters\Filter;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Filters\SelectFilter;
-use Illuminate\Database\Eloquent\Builder;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Classes\Orders;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\WithFileUploads;
+use LynX39\LaraPdfMerger\Facades\PdfMerger;
+use UnitEnum;
 
 class OrderResource extends Resource
 {
     use WithFileUploads;
+
     protected static ?string $model = Order::class;
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
-    protected static string | UnitEnum | null $navigationGroup = 'E-commerce';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
+
+    protected static string|UnitEnum|null $navigationGroup = 'E-commerce';
 
     public static function getNavigationLabel(): string
     {
@@ -65,7 +69,9 @@ class OrderResource extends Resource
     }
 
     protected static ?string $label = 'Bestelling';
+
     protected static ?string $pluralLabel = 'Bestellingen';
+
     protected static ?int $navigationSort = 0;
 
     public static function getGlobalSearchResultTitle(Model $record): string
@@ -131,7 +137,7 @@ class OrderResource extends Resource
                     ->nullable()
                     ->searchable()
                     ->getSearchResultsUsing(function (string $search) {
-                        $userModel = config('auth.providers.users.model', \Dashed\DashedCore\Models\User::class);
+                        $userModel = config('auth.providers.users.model', User::class);
 
                         return $userModel::where(function ($q) use ($search) {
                             $q->where('first_name', 'like', "%{$search}%")
@@ -141,15 +147,15 @@ class OrderResource extends Resource
                             ->limit(50)
                             ->get()
                             ->mapWithKeys(fn ($u) => [
-                                $u->id => $u->name . ($u->name !== $u->email ? ' (' . $u->email . ')' : ''),
+                                $u->id => $u->name.($u->name !== $u->email ? ' ('.$u->email.')' : ''),
                             ])
                             ->toArray();
                     })
                     ->getOptionLabelUsing(function ($value) {
-                        $userModel = config('auth.providers.users.model', \Dashed\DashedCore\Models\User::class);
+                        $userModel = config('auth.providers.users.model', User::class);
                         $u = $userModel::find($value);
 
-                        return $u ? $u->name . ($u->name !== $u->email ? ' (' . $u->email . ')' : '') : null;
+                        return $u ? $u->name.($u->name !== $u->email ? ' ('.$u->email.')' : '') : null;
                     }),
             ])
             ->hiddenOn(ViewOrder::class)
@@ -218,8 +224,8 @@ class OrderResource extends Resource
         $newSchema[] = Section::make('Bedrijfsinformatie')->columnSpanFull()
             ->schema([
                 TextInput::make('company_name')
-                ->label('Bedrijfsnaam')
-                ->maxLength(255),
+                    ->label('Bedrijfsnaam')
+                    ->maxLength(255),
                 TextInput::make('btw_id')
                     ->label('Btw ID')
                     ->maxLength(255),
@@ -355,8 +361,8 @@ class OrderResource extends Resource
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('orderProducts.name')
                     ->toggleable(isToggledHiddenByDefault: true)
-                    ->getStateUsing(fn ($record) => str($record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))->limit(30))
-                    ->tooltip(fn ($record) => $record->orderProducts->map(fn ($product) => $product->name . ' x ' . $product->quantity)->join(', '))
+                    ->getStateUsing(fn ($record) => str($record->orderProducts->map(fn ($product) => $product->name.' x '.$product->quantity)->join(', '))->limit(30))
+                    ->tooltip(fn ($record) => $record->orderProducts->map(fn ($product) => $product->name.' x '.$product->quantity)->join(', '))
                     ->label('Bestelde producten')
                     ->searchable(),
                 TextColumn::make('created_at')
@@ -417,6 +423,27 @@ class OrderResource extends Resource
                                 fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
+                Filter::make('customer_match')
+                    ->schema([
+                        TextInput::make('value')
+                            ->label('Klant-match (automatisch gevuld vanuit order-detail)')
+                            ->disabled(),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if (! $value || ! str_starts_with($value, 'order:')) {
+                            return $query;
+                        }
+                        $anchor = Order::find((int) substr($value, 6));
+                        if (! $anchor) {
+                            return $query;
+                        }
+
+                        return $query->forCustomerOf($anchor);
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        return ! empty($data['value']) ? 'Klant: '.$data['value'] : null;
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -457,10 +484,10 @@ class OrderResource extends Resource
 
                                 $record->changeFulfillmentStatus($data['fulfillmentStatus']);
 
-                                $orderLog = new OrderLog();
+                                $orderLog = new OrderLog;
                                 $orderLog->order_id = $record->id;
                                 $orderLog->user_id = Auth::user()->id;
-                                $orderLog->tag = 'order.changed-fulfillment-status-to-' . $data['fulfillmentStatus'];
+                                $orderLog->tag = 'order.changed-fulfillment-status-to-'.$data['fulfillmentStatus'];
                                 $orderLog->save();
 
                                 Notification::make()
@@ -496,10 +523,10 @@ class OrderResource extends Resource
                                 $record->retour_status = $data['retourStatus'];
                                 $record->save();
 
-                                $orderLog = new OrderLog();
+                                $orderLog = new OrderLog;
                                 $orderLog->order_id = $record->id;
                                 $orderLog->user_id = Auth::user()->id;
-                                $orderLog->tag = 'order.changed-retour-status-to-' . $data['retourStatus'];
+                                $orderLog->tag = 'order.changed-retour-status-to-'.$data['retourStatus'];
                                 $orderLog->save();
 
                                 Notification::make()
@@ -568,7 +595,7 @@ class OrderResource extends Resource
                                     ->rows(3),
                             ])
                             ->action(function ($record, $data) {
-                                $orderLog = new OrderLog();
+                                $orderLog = new OrderLog;
                                 $orderLog->order_id = $record->id;
                                 $orderLog->user_id = Auth::user()->id;
                                 $orderLog->tag = 'order.note.created';
@@ -612,16 +639,16 @@ class OrderResource extends Resource
                     ->color('primary')
                     ->action(function (Collection $records, array $data) {
                         $hash = Str::random();
-                        $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
+                        $pdfMerger = PdfMerger::init();
 
                         $hasPdf = false;
                         foreach ($records as $order) {
                             $url = $order->downloadInvoiceUrl();
 
                             if ($url) {
-                                $invoice = Storage::disk('dashed')->get('dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
-                                Storage::disk('public')->put('/dashed/tmp-exports/' . $hash . '/invoices-to-export/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf', $invoice);
-                                $invoicePath = storage_path('app/public/dashed/tmp-exports/' . $hash . '/invoices-to-export/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                                $invoice = Storage::disk('dashed')->get('dashed/invoices/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf');
+                                Storage::disk('public')->put('/dashed/tmp-exports/'.$hash.'/invoices-to-export/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf', $invoice);
+                                $invoicePath = storage_path('app/public/dashed/tmp-exports/'.$hash.'/invoices-to-export/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf');
                                 $pdfMerger->addPDF($invoicePath, 'all');
                                 $hasPdf = true;
                             }
@@ -630,9 +657,9 @@ class OrderResource extends Resource
                         if ($hasPdf) {
                             $pdfMerger->merge();
 
-                            $invoicePath = '/dashed/tmp-exports/' . $hash . '/invoices/exported-invoice.pdf';
+                            $invoicePath = '/dashed/tmp-exports/'.$hash.'/invoices/exported-invoice.pdf';
                             Storage::disk('public')->put($invoicePath, '');
-                            $pdfMerger->save(storage_path('app/public' . $invoicePath));
+                            $pdfMerger->save(storage_path('app/public'.$invoicePath));
                             Notification::make()
                                 ->title('De export is gedownload')
                                 ->success()
@@ -652,16 +679,16 @@ class OrderResource extends Resource
                     ->color('primary')
                     ->action(function (Collection $records, array $data) {
                         $hash = Str::random();
-                        $pdfMerger = \LynX39\LaraPdfMerger\Facades\PdfMerger::init();
+                        $pdfMerger = PdfMerger::init();
 
                         $hasPdf = false;
                         foreach ($records as $order) {
                             $url = $order->downloadPackingSlipUrl();
 
                             if ($url) {
-                                $packingSlip = Storage::disk('dashed')->get('dashed/packing-slips/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf');
-                                Storage::disk('public')->put('/dashed/tmp-exports/' . $hash . '/packing-slips-to-export/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf', $packingSlip);
-                                $packingSlipPath = storage_path('app/public/dashed/tmp-exports/' . $hash . '/packing-slips-to-export/packing-slip-' . $order->invoice_id . '-' . $order->hash . '.pdf');
+                                $packingSlip = Storage::disk('dashed')->get('dashed/packing-slips/packing-slip-'.$order->invoice_id.'-'.$order->hash.'.pdf');
+                                Storage::disk('public')->put('/dashed/tmp-exports/'.$hash.'/packing-slips-to-export/packing-slip-'.$order->invoice_id.'-'.$order->hash.'.pdf', $packingSlip);
+                                $packingSlipPath = storage_path('app/public/dashed/tmp-exports/'.$hash.'/packing-slips-to-export/packing-slip-'.$order->invoice_id.'-'.$order->hash.'.pdf');
                                 $pdfMerger->addPDF($packingSlipPath, 'all');
                                 $hasPdf = true;
                             }
@@ -670,9 +697,9 @@ class OrderResource extends Resource
                         if ($hasPdf) {
                             $pdfMerger->merge();
 
-                            $invoicePath = '/dashed/tmp-exports/' . $hash . '/packing-slips/exported-packing-slip.pdf';
+                            $invoicePath = '/dashed/tmp-exports/'.$hash.'/packing-slips/exported-packing-slip.pdf';
                             Storage::disk('public')->put($invoicePath, '');
-                            $pdfMerger->save(storage_path('app/public' . $invoicePath));
+                            $pdfMerger->save(storage_path('app/public'.$invoicePath));
                             Notification::make()
                                 ->title('De export is gedownload')
                                 ->success()
