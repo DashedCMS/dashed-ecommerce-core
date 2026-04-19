@@ -56,7 +56,7 @@ trait ProductCartActions
 
     public array $files = [];
 
-    public string $cartType = 'default';
+    public $cartType = 'default';
 
     public bool $allFiltersFilled = false;
 
