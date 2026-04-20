@@ -332,6 +332,11 @@ class CartHelper
             $this->getOrCreateCart();
         }
 
+        if (static::$cart && auth()->check() && auth()->user()->show_prices_ex_vat && ! static::$cart->prices_ex_vat) {
+            static::$cart->prices_ex_vat = true;
+            static::$cart->save();
+        }
+
         return static::$cart;
     }
 
