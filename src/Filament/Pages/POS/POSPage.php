@@ -163,7 +163,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->columnSpanFull(),
 
                 NumpadField::make('price')
-                    ->label('Prijs')
+                    ->label(fn () => $this->getActivePosCart()->prices_ex_vat ? 'Prijs (ex BTW)' : 'Prijs (incl BTW)')
                     ->minCents(0)
                     ->maxCents(9999999)
                     ->required()
@@ -204,7 +204,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->columnSpanFull(),
 
                 NumpadField::make('singlePrice')
-                    ->label('Prijs')
+                    ->label(fn () => $this->getActivePosCart()->prices_ex_vat ? 'Prijs (ex BTW)' : 'Prijs (incl BTW)')
                     ->minCents(0)
                     ->maxCents(999999)
                     ->required()
@@ -216,11 +216,20 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public function openChangeProductForm(array $product): void
     {
+        $posCart = $this->getActivePosCart();
+        $storedSingleIncl = (float) ($product['singlePrice'] ?? 0);
+        $vatRate = (float) ($product['vat_rate'] ?? 21);
+
+        $displaySingle = $posCart->prices_ex_vat
+            ? \Dashed\DashedEcommerceCore\Classes\VatDisplay::exFromIncl($storedSingleIncl, $vatRate)
+            : $storedSingleIncl;
+
         $this->productToChange = [
             'identifier' => $product['identifier'] ?? null,
             'name' => $product['name'] ?? '',
-            'singlePrice' => (float) ($product['singlePrice'] ?? 0),
+            'singlePrice' => round($displaySingle, 2),
             'quantity' => (int) ($product['quantity'] ?? 1),
+            'vat_rate' => $vatRate,
         ];
 
         $this->changeProductForm->fill($this->productToChange);
@@ -267,10 +276,16 @@ class POSPage extends Component implements HasActions, HasSchemas
         foreach ($products as &$product) {
             if (($product['identifier'] ?? null) === ($this->productToChange['identifier'] ?? null)) {
                 $qty = max(1, (int) ($product['quantity'] ?? 1));
-                $single = (float) ($this->productToChange['singlePrice'] ?? 0);
+                $enteredSingle = (float) ($this->productToChange['singlePrice'] ?? 0);
+                $vatRate = (float) ($product['vat_rate'] ?? 21);
 
-                $product['singlePrice'] = $single;
-                $product['price'] = $single * $qty;
+                // Cart always stores incl-VAT unit prices; convert from ex when the cashier entered ex.
+                $singleIncl = $posCart->prices_ex_vat
+                    ? $enteredSingle * (1 + max(0.0, $vatRate) / 100)
+                    : $enteredSingle;
+
+                $product['singlePrice'] = $singleIncl;
+                $product['price'] = $singleIncl * $qty;
 
                 // ✅ line price formatted (was vroeger single price formatted)
                 $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);

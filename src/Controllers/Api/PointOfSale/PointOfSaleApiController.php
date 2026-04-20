@@ -386,14 +386,19 @@ class PointOfSaleApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
         }
 
+        // Cart rows always hold incl-VAT. If the cashier entered ex-VAT, convert up.
+        $singlePriceIncl = $posCart->prices_ex_vat
+            ? $price * (1 + max(0.0, $vatRate) / 100)
+            : $price;
+
         $product = [
             'id' => null,
             'product' => null,
             'name' => $name,
             'quantity' => $quantity,
-            'singlePrice' => $price,
-            'price' => $price * $quantity,
-            'priceFormatted' => CurrencyHelper::formatPrice($price * $quantity),
+            'singlePrice' => $singlePriceIncl,
+            'price' => $singlePriceIncl * $quantity,
+            'priceFormatted' => CurrencyHelper::formatPrice($singlePriceIncl * $quantity),
             'vat_rate' => $vatRate,
             'customProduct' => true,
             'isCustomPrice' => true,
