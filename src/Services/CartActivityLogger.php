@@ -26,7 +26,9 @@ class CartActivityLogger
     public static function productAdded(Cart|int|null $cart, $product, int $quantity, array $options = []): void
     {
         $name = is_object($product) ? ($product->name ?? null) : null;
-        self::log($cart, 'cart.product.added',
+        self::log(
+            $cart,
+            'cart.product.added',
             $name ? sprintf('Product "%s" toegevoegd (x%d)', $name, $quantity) : sprintf('Product toegevoegd (x%d)', $quantity),
             array_filter([
                 'product_id' => is_object($product) ? ($product->id ?? null) : $product,
@@ -39,7 +41,9 @@ class CartActivityLogger
 
     public static function quantityChanged(Cart|int|null $cart, string $rowId, int $from, int $to, ?string $productName = null): void
     {
-        self::log($cart, 'cart.product.quantity-changed',
+        self::log(
+            $cart,
+            'cart.product.quantity-changed',
             $productName
                 ? sprintf('Aantal van "%s" gewijzigd: %d → %d', $productName, $from, $to)
                 : sprintf('Aantal gewijzigd: %d → %d', $from, $to),
@@ -49,7 +53,9 @@ class CartActivityLogger
 
     public static function productRemoved(Cart|int|null $cart, string $rowId, ?string $productName = null): void
     {
-        self::log($cart, 'cart.product.removed',
+        self::log(
+            $cart,
+            'cart.product.removed',
             $productName ? sprintf('Product "%s" verwijderd', $productName) : 'Product verwijderd',
             ['row_id' => $rowId, 'product_name' => $productName]
         );
@@ -62,7 +68,9 @@ class CartActivityLogger
 
     public static function discountApplied(Cart|int|null $cart, string $code, ?string $status = null, ?string $message = null): void
     {
-        self::log($cart, 'cart.discount.applied',
+        self::log(
+            $cart,
+            'cart.discount.applied',
             $status === 'success' ? sprintf('Kortingscode "%s" toegepast', $code) : sprintf('Kortingscode "%s" geweigerd', $code),
             array_filter(['code' => $code, 'status' => $status, 'message' => $message])
         );
@@ -70,7 +78,9 @@ class CartActivityLogger
 
     public static function shippingMethodChanged(Cart|int|null $cart, ?int $shippingMethodId, ?string $methodName = null): void
     {
-        self::log($cart, 'cart.shipping-method.changed',
+        self::log(
+            $cart,
+            'cart.shipping-method.changed',
             $methodName ? sprintf('Verzendmethode ingesteld op "%s"', $methodName) : 'Verzendmethode aangepast',
             ['shipping_method_id' => $shippingMethodId, 'name' => $methodName]
         );
@@ -78,7 +88,9 @@ class CartActivityLogger
 
     public static function paymentMethodChanged(Cart|int|null $cart, ?int $paymentMethodId, ?string $methodName = null): void
     {
-        self::log($cart, 'cart.payment-method.changed',
+        self::log(
+            $cart,
+            'cart.payment-method.changed',
             $methodName ? sprintf('Betaalmethode ingesteld op "%s"', $methodName) : 'Betaalmethode aangepast',
             ['payment_method_id' => $paymentMethodId, 'name' => $methodName]
         );
@@ -86,7 +98,9 @@ class CartActivityLogger
 
     public static function emailCaptured(Cart|int|null $cart, string $email, string $source = 'checkout'): void
     {
-        self::log($cart, 'cart.email.captured',
+        self::log(
+            $cart,
+            'cart.email.captured',
             sprintf('E-mailadres vastgelegd: %s (via %s)', $email, $source),
             ['email' => $email, 'source' => $source]
         );
@@ -94,7 +108,9 @@ class CartActivityLogger
 
     public static function abandonedEmailsScheduled(Cart|int|null $cart, $flow, int $stepCount): void
     {
-        self::log($cart, 'cart.abandoned-email.scheduled',
+        self::log(
+            $cart,
+            'cart.abandoned-email.scheduled',
             sprintf('Abandoned cart flow "%s" ingepland (%d mail(s))', $flow->name ?? '?', $stepCount),
             ['flow_id' => $flow->id ?? null, 'flow_name' => $flow->name ?? null, 'step_count' => $stepCount]
         );
@@ -105,7 +121,9 @@ class CartActivityLogger
         $stepLabel = $step->name ?? ('Stap ' . ($step->sort_order ?? '?'));
         $codeValue = $discountCode?->code;
 
-        self::log($cart, 'cart.abandoned-email.sent',
+        self::log(
+            $cart,
+            'cart.abandoned-email.sent',
             $codeValue
                 ? sprintf('Abandoned cart mail verzonden (%s) met kortingscode %s', $stepLabel, $codeValue)
                 : sprintf('Abandoned cart mail verzonden (%s)', $stepLabel),
@@ -120,7 +138,9 @@ class CartActivityLogger
 
     public static function orderConverted(Cart|int|null $cart, int $orderId): void
     {
-        self::log($cart, 'cart.converted-to-order',
+        self::log(
+            $cart,
+            'cart.converted-to-order',
             sprintf('Winkelwagen omgezet naar bestelling #%d', $orderId),
             ['order_id' => $orderId]
         );
