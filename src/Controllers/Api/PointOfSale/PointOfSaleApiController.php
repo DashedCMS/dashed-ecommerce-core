@@ -759,6 +759,7 @@ class PointOfSaleApiController extends Controller
         }
 
         $order->shipping_method_id = $shippingMethod->id ?? null;
+        $order->prices_ex_vat = (bool) ($posCart->prices_ex_vat ?? false);
         $order->save();
 
         $extraOptionCache = [];

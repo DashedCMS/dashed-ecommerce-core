@@ -60,3 +60,36 @@ it('restores the prices_ex_vat flag to the POS cart when hydrating from a concep
 
     expect($posCart->fresh()->prices_ex_vat)->toBeTrue();
 });
+
+it('copies prices_ex_vat from POSCart to the order created via PointOfSaleApiController::createOrder', function () {
+    $cashier = \Dashed\DashedCore\Models\User::create([
+        'first_name' => 'Cash',
+        'last_name' => 'Ier',
+        'email' => 'cashier-'.uniqid().'@test.dev',
+        'password' => bcrypt('x'),
+    ]);
+
+    $posCart = \Dashed\DashedEcommerceCore\Models\POSCart::create([
+        'user_id' => $cashier->id,
+        'identifier' => 'test-'.uniqid(),
+        'products' => [[
+            'id' => null,
+            'identifier' => 'x',
+            'name' => 'Thing',
+            'quantity' => 1,
+            'singlePrice' => 121,
+            'price' => 121,
+            'vat_rate' => 21,
+        ]],
+        'prices_ex_vat' => true,
+    ]);
+
+    $controller = app(\Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController::class);
+    $response = $controller->createOrder('pos', $posCart, null, 'pos', $cashier->id);
+
+    expect($response['success'] ?? false)->toBeTrue();
+
+    $order = \Dashed\DashedEcommerceCore\Models\Order::latest('id')->first();
+    expect($order)->not->toBeNull();
+    expect($order->prices_ex_vat)->toBeTrue();
+});
