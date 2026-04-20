@@ -51,6 +51,7 @@ class ConceptOrderService
             $order->invoice_city = $posCart->invoice_city;
             $order->invoice_country = $posCart->invoice_country;
             $order->note = $posCart->note;
+            $order->prices_ex_vat = (bool) ($posCart->prices_ex_vat ?? false);
             $order->total = $subtotal;
             $order->subtotal = $subtotal;
             $order->btw = 0;
@@ -112,6 +113,7 @@ class ConceptOrderService
         }
 
         $posCart->products = $products;
+        $posCart->prices_ex_vat = (bool) ($order->prices_ex_vat ?? false);
         $posCart->save();
     }
 
