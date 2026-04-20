@@ -35,6 +35,7 @@ class FlowStepsRelationManager extends RelationManager
     use Translatable;
 
     protected static string $relationship = 'steps';
+
     protected static ?string $title = 'Email stappen';
 
     public function table(Table $table): Table
@@ -69,6 +70,24 @@ class FlowStepsRelationManager extends RelationManager
                     ->state(fn ($record) => $record->emails()->whereNotNull('converted_at')->count())
                     ->badge()
                     ->color('success'),
+                TextColumn::make('revenue')
+                    ->label('Omzet')
+                    ->badge()
+                    ->color('success')
+                    ->state(fn ($record) => '€ '.number_format($record->revenueSum(), 2, ',', '.')),
+                TextColumn::make('conversion_rate')
+                    ->label('Conversieratio')
+                    ->badge()
+                    ->color(function ($state) {
+                        $rate = (float) str_replace(['%', ','], ['', '.'], $state);
+
+                        return match (true) {
+                            $rate >= 10.0 => 'success',
+                            $rate >= 3.0 => 'warning',
+                            default => 'gray',
+                        };
+                    })
+                    ->state(fn ($record) => number_format($record->conversionRateFromSent(), 1, ',', '.').'%'),
                 IconColumn::make('incentive_enabled')->label('Korting')->boolean(),
                 IconColumn::make('enabled')->label('Actief')->boolean(),
             ])
@@ -106,7 +125,7 @@ class FlowStepsRelationManager extends RelationManager
                             $prefix = $record->flow?->discount_prefix ?: 'TERUG';
                             $discountCode = DiscountCode::create([
                                 'name' => 'Test - Verlaten winkelwagen',
-                                'code' => $prefix . '-TEST-' . strtoupper(Str::random(6)),
+                                'code' => $prefix.'-TEST-'.strtoupper(Str::random(6)),
                                 'type' => $record->incentive_type === 'percentage' ? 'percentage' : 'amount',
                                 'discount_amount' => $record->incentive_type === 'amount' ? $record->incentive_value : 0,
                                 'discount_percentage' => $record->incentive_type === 'percentage' ? $record->incentive_value : 0,
@@ -124,7 +143,7 @@ class FlowStepsRelationManager extends RelationManager
                             Mail::to($data['test_email'])->send(new AbandonedCartMail($cart, $record, $discountCode));
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Fout bij versturen: ' . $e->getMessage())
+                                ->title('Fout bij versturen: '.$e->getMessage())
                                 ->danger()
                                 ->send();
 
@@ -132,7 +151,7 @@ class FlowStepsRelationManager extends RelationManager
                         }
 
                         Notification::make()
-                            ->title('Test email verzonden naar ' . $data['test_email'])
+                            ->title('Test email verzonden naar '.$data['test_email'])
                             ->success()
                             ->send();
                     }),

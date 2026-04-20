@@ -50,15 +50,39 @@ class AbandonedCartFlowStats extends StatsOverviewWidget
             Stat::make('Verzonden', $sent)
                 ->icon('heroicon-o-paper-airplane'),
             Stat::make('Geklikt', $clicked)
-                ->description($clickRate . '% klikratio')
+                ->description($clickRate.'% klikratio')
                 ->icon('heroicon-o-cursor-arrow-rays'),
             Stat::make('Conversies', $converted)
-                ->description($conversionRate . '% conversieratio')
+                ->description($conversionRate.'% conversieratio')
                 ->icon('heroicon-o-shopping-cart')
                 ->color('success'),
-            Stat::make('Omzet', '€ ' . number_format($revenue, 2, ',', '.'))
+            Stat::make('Omzet', '€ '.number_format($revenue, 2, ',', '.'))
                 ->icon('heroicon-o-banknotes')
                 ->color('success'),
+            Stat::make(
+                'Recovery rate',
+                number_format($this->record->recoveryRate(), 1, ',', '.').'%'
+            )
+                ->description('Conversies gedeeld door verzonden mails')
+                ->icon('heroicon-o-arrow-trending-up')
+                ->color('success'),
+            Stat::make(
+                'Gem. conversietijd',
+                (function () {
+                    $hours = $this->record->averageConversionHours();
+                    if ($hours === null) {
+                        return '-';
+                    }
+                    if ($hours < 1.0) {
+                        return round($hours * 60).' min';
+                    }
+
+                    return number_format($hours, 1, ',', '.').' uur';
+                })()
+            )
+                ->description('Gemiddelde tijd tussen mail en order')
+                ->icon('heroicon-o-clock')
+                ->color('info'),
             Stat::make('Knop kliks', $buttonClicks)
                 ->icon('heroicon-o-hand-raised'),
             Stat::make('Product kliks', $productClicks)
