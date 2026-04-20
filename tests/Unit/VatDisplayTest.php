@@ -45,3 +45,15 @@ it('ignores a user without the flag', function () {
 
     expect(VatDisplay::resolveMode(null, $user))->toBe('incl');
 });
+
+it('formats a line price with primary and secondary values per mode', function () {
+    $incl = VatDisplay::formatLinePrice(121.00, 21, 'incl');
+    expect($incl['primary'])->toBe('€121,-');
+    expect($incl['secondary'])->toBe('€100,- ex');
+    expect($incl['ex'])->toEqualWithDelta(100.00, 0.001);
+    expect($incl['incl'])->toBe(121.00);
+
+    $ex = VatDisplay::formatLinePrice(121.00, 21, 'ex');
+    expect($ex['primary'])->toBe('€100,-');
+    expect($ex['secondary'])->toBe('€121,- incl');
+});

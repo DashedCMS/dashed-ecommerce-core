@@ -27,4 +27,28 @@ class VatDisplay
 
         return 'incl';
     }
+
+    public static function formatLinePrice(float $inclAmount, int|float|null $vatRate, string $mode): array
+    {
+        $ex = self::exFromIncl($inclAmount, $vatRate);
+
+        $formatInclPrice = \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($inclAmount);
+        $formatExPrice = \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($ex);
+
+        if ($mode === 'ex') {
+            return [
+                'primary' => $formatExPrice,
+                'secondary' => $formatInclPrice . ' incl',
+                'ex' => $ex,
+                'incl' => $inclAmount,
+            ];
+        }
+
+        return [
+            'primary' => $formatInclPrice,
+            'secondary' => $formatExPrice . ' ex',
+            'ex' => $ex,
+            'incl' => $inclAmount,
+        ];
+    }
 }
