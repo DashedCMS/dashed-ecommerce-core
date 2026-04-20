@@ -15,6 +15,17 @@
                         <p class="font-bold text-5xl" x-html="time"></p>
                     </div>
                     <div class="flex flex-wrap gap-4">
+                        <button type="button"
+                                wire:click="togglePriceMode"
+                                x-bind:disabled="loading"
+                                x-bind:class="[isExVat ? 'bg-amber-500 hover:bg-amber-600' : 'bg-primary-500 hover:bg-primary-700', loading ? 'opacity-60' : '']"
+                                x-bind:title="isExVat ? 'Prijzen tonen: ex BTW (klik voor incl)' : 'Prijzen tonen: incl BTW (klik voor ex)'"
+                                class="h-12 px-4 text-white transition-all duration-300 ease-in-out rounded-full flex items-center justify-center gap-2 text-sm font-semibold">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 6h.008v.008h-.008V15zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                            <span x-text="isExVat ? 'Ex BTW' : 'Incl BTW'"></span>
+                        </button>
                         <button type="button" x-cloak x-show="products.length"
                                 wire:click="mountAction('saveAsConceptAction')"
                                 x-bind:disabled="loading"
