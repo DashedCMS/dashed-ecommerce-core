@@ -162,6 +162,10 @@ class PricePerUserResource extends Resource
             ->schema(array_merge([
                 Toggle::make('has_custom_pricing')
                     ->label('Custom pricing voor deze gebruiker activeren'),
+                Toggle::make('show_prices_ex_vat')
+                    ->label('Toon prijzen ex BTW')
+                    ->helperText('Deze gebruiker ziet prijzen ex BTW in de webshop, in e-mails en op de factuur.')
+                    ->default(false),
             ], $newSchema));
     }
 

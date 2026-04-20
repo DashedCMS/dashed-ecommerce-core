@@ -150,6 +150,7 @@ class EditPricePerUser extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->record->has_custom_pricing = $data['has_custom_pricing'];
+        $this->record->show_prices_ex_vat = (bool) ($data['show_prices_ex_vat'] ?? false);
         $this->record->save();
 
         ProcessPricesPerUser::dispatch($this->record, $data)->onQueue('ecommerce');
