@@ -629,6 +629,26 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         $posCart->save();
 
+        if (! $this->priceModeOverridden) {
+            $customer = $this->customerUserId
+                ? \Dashed\DashedCore\Models\User::find($this->customerUserId)
+                : null;
+
+            $shouldShowEx = (bool) ($customer->show_prices_ex_vat ?? false);
+
+            if ($shouldShowEx !== (bool) $posCart->prices_ex_vat) {
+                $posCart->prices_ex_vat = $shouldShowEx;
+                $posCart->save();
+
+                \Filament\Notifications\Notification::make()
+                    ->title($shouldShowEx
+                        ? __('Ex BTW modus ingeschakeld voor deze klant')
+                        : __('Incl BTW modus ingeschakeld voor deze klant'))
+                    ->success()
+                    ->send();
+            }
+        }
+
         $this->dispatch('saveCustomerData');
     }
 
