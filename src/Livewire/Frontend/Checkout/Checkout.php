@@ -2,104 +2,149 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
-use Exception;
 use Carbon\Carbon;
-use Livewire\Component;
-use Illuminate\Validation\Rule;
+use Dashed\DashedCore\Classes\AccountHelper;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Classes\CartHelper;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Models\CartLog;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedTranslations\Models\Translation;
+use Exception;
+use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Validator;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Classes\AccountHelper;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Classes\CartHelper;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
-use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class Checkout extends Component
 {
     use CartActions;
 
     public $shippingMethod;
+
     public $paymentMethod;
+
     public $depositPaymentMethod;
 
     public string $discountCode = '';
+
     public bool $invoiceAddress = false;
+
     public bool $isCompany = false;
 
     public string $note = '';
+
     public bool $marketing = false;
+
     public bool $generalCondition = false;
 
     public string $gender = '';
+
     public string $dateOfBirth = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $passwordConfirmation = '';
+
     public string $phoneNumber = '';
+
     public string $firstName = '';
+
     public string $lastName = '';
+
     public string $street = '';
+
     public string $houseNr = '';
+
     public string $zipCode = '';
+
     public string $city = '';
+
     public string $country = '';
+
     public array $countryList = [];
 
     public string $invoiceStreet = '';
+
     public string $invoiceHouseNr = '';
+
     public string $invoiceZipCode = '';
+
     public string $invoiceCity = '';
+
     public string $invoiceCountry = '';
 
     public string $company = '';
+
     public string $taxId = '';
 
     public array $customFields = [];
+
     public array $customFieldRules = [];
+
     public array $customFieldValues = [];
 
     public int $accountRequired;
+
     public int $firstAndLastnameRequired;
+
     public int $companyRequired;
+
     public int $phoneNumberRequired;
+
     public int $useDeliveryAddressAsInvoiceAddress;
 
     public $subtotal;
+
     public $discount;
+
     public $tax;
+
     public $total;
+
     public $paymentCosts;
+
     public $shippingCosts;
+
     public $depositAmount;
 
     public bool $postpayPaymentMethod = false;
+
     public Collection|array $paymentMethods = [];
+
     public Collection|array $depositPaymentMethods = [];
+
     public $cartType = 'default';
 
     public ?bool $taxIdValidated = null;
+
     public ?string $taxIdValidationMessage = null;
 
     protected ?string $lastZipLookedUp = null;
+
     protected ?string $lastHouseNrLookedUp = null;
+
     protected ?string $lastValidatedTaxId = null;
+
     protected ?string $lastValidatedTaxCountry = null;
 
     public function mount(Product $product)
@@ -160,7 +205,7 @@ class Checkout extends Component
         $this->customFields = $customFields;
         $this->customFieldRules = collect($this->customFields)->mapWithKeys(function ($customField, $key) {
             return [
-                'customFieldValues.' . $key => $customField['rules'],
+                'customFieldValues.'.$key => $customField['rules'],
             ];
         })->toArray();
 
@@ -654,14 +699,14 @@ class Checkout extends Component
                     Notification::make()
                         ->danger()
                         ->title(Translation::get(
-                            'address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(),
+                            'address-invalid-'.str($fulfillmentProvider['name'])->slug().'-'.str($addressValid['message'])->slug(),
                             'checkout',
                             $addressValid['message']
                         ))
                         ->send();
 
                     return $this->dispatch('showAlert', 'error', Translation::get(
-                        'address-invalid-' . str($fulfillmentProvider['name'])->slug() . '-' . str($addressValid['message'])->slug(),
+                        'address-invalid-'.str($fulfillmentProvider['name'])->slug().'-'.str($addressValid['message'])->slug(),
                         'checkout',
                         $addressValid['message']
                     ));
@@ -782,7 +827,7 @@ class Checkout extends Component
                 return $this->dispatch('showAlert', 'error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
             }
 
-            $user = new User();
+            $user = new User;
             $user->first_name = $this->firstName;
             $user->last_name = $this->lastName;
             $user->email = $this->email;
@@ -792,7 +837,7 @@ class Checkout extends Component
             Auth::login($user, 1);
         }
 
-        $order = new Order();
+        $order = new Order;
         $order->first_name = $this->firstName;
         $order->gender = $this->gender;
         $order->date_of_birth = $this->dateOfBirth ? Carbon::parse($this->dateOfBirth) : null;
@@ -854,7 +899,7 @@ class Checkout extends Component
 
         $order->save();
 
-        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::orderConverted($order->cart_id, $order->id);
+        CartActivityLogger::orderConverted($order->cart_id, $order->id);
 
         $this->writeAbandonedCartSummaryLog($order);
 
@@ -874,7 +919,7 @@ class Checkout extends Component
                 continue;
             }
 
-            $orderProduct = new OrderProduct();
+            $orderProduct = new OrderProduct;
             $orderProduct->quantity = $cartItem->qty;
             $orderProduct->product_id = $cartItem->model->id;
             $orderProduct->order_id = $order->id;
@@ -926,7 +971,7 @@ class Checkout extends Component
             $orderProduct->save();
 
             foreach ($cartItem->model->bundleProducts as $bundleProduct) {
-                $bundleOrderProduct = new OrderProduct();
+                $bundleOrderProduct = new OrderProduct;
                 $bundleOrderProduct->quantity = $cartItem->qty;
                 $bundleOrderProduct->product_id = $bundleProduct->id;
                 $bundleOrderProduct->order_id = $order->id;
@@ -946,7 +991,7 @@ class Checkout extends Component
         }
 
         if ($paymentCosts) {
-            $orderProduct = new OrderProduct();
+            $orderProduct = new OrderProduct;
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->order_id = $order->id;
@@ -965,7 +1010,7 @@ class Checkout extends Component
         }
 
         if ($shippingCosts) {
-            $orderProduct = new OrderProduct();
+            $orderProduct = new OrderProduct;
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->order_id = $order->id;
@@ -984,7 +1029,7 @@ class Checkout extends Component
             $order->save();
         }
 
-        $orderPayment = new OrderPayment();
+        $orderPayment = new OrderPayment;
         $orderPayment->amount = $order->total;
         $orderPayment->order_id = $order->id;
 
@@ -1032,7 +1077,7 @@ class Checkout extends Component
         $orderPayment->save();
         $orderPayment->refresh();
 
-        $orderLog = new OrderLog();
+        $orderLog = new OrderLog;
         $orderLog->order_id = $order->id;
         $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
         $orderLog->tag = 'order.created';
@@ -1050,21 +1095,21 @@ class Checkout extends Component
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);
 
-            return redirect(url(ShoppingCart::getCompleteUrl()) . '?paymentId=' . $orderPayment->hash);
+            return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$orderPayment->hash);
         }
 
         try {
             $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             if (app()->isLocal()) {
-                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
+                throw new Exception('Cannot start payment: '.$exception->getMessage());
             }
 
-            $orderLog = new OrderLog();
+            $orderLog = new OrderLog;
             $orderLog->order_id = $order->id;
             $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
             $orderLog->tag = 'order.note.created';
-            $orderLog->note = Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started:') . ' ' . $exception->getMessage();
+            $orderLog->note = Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started:').' '.$exception->getMessage();
             $orderLog->save();
 
             Notification::make()
@@ -1261,7 +1306,7 @@ class Checkout extends Component
 
     public function render()
     {
-        return view(config('dashed-core.site_theme', 'dashed') . '.checkout.checkout');
+        return view(config('dashed-core.site_theme', 'dashed').'.checkout.checkout');
     }
 
     protected function writeAbandonedCartSummaryLog(Order $order): void
@@ -1270,7 +1315,7 @@ class Checkout extends Component
             return;
         }
 
-        $logs = \Dashed\DashedEcommerceCore\Models\CartLog::query()
+        $logs = CartLog::query()
             ->where('cart_id', $order->cart_id)
             ->whereIn('event', ['cart.abandoned-email.scheduled', 'cart.abandoned-email.sent'])
             ->orderBy('created_at')
@@ -1294,9 +1339,9 @@ class Checkout extends Component
             $parts[] = sprintf('kortingscode %s', $discountCode);
         }
 
-        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+        OrderLog::createLog(
             orderId: $order->id,
-            note: 'Order volgt uit abandoned cart flow — ' . implode(', ', $parts),
+            note: 'Order volgt uit abandoned cart flow — '.implode(', ', $parts),
             tag: 'abandoned-cart.converted',
         );
     }

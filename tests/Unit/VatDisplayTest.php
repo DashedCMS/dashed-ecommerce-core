@@ -26,21 +26,21 @@ it('defaults to incl when no inputs are given', function () {
 
 it('respects a cart flag over a user flag', function () {
     $cart = new Cart(['prices_ex_vat' => true]);
-    $user = new User();
+    $user = new User;
     $user->show_prices_ex_vat = false;
 
     expect(VatDisplay::resolveMode($cart, $user))->toBe('ex');
 });
 
 it('falls back to the user flag when the cart has no flag set', function () {
-    $user = new User();
+    $user = new User;
     $user->show_prices_ex_vat = true;
 
     expect(VatDisplay::resolveMode(null, $user))->toBe('ex');
 });
 
 it('ignores a user without the flag', function () {
-    $user = new User();
+    $user = new User;
     $user->show_prices_ex_vat = false;
 
     expect(VatDisplay::resolveMode(null, $user))->toBe('incl');

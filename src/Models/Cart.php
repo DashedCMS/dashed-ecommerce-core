@@ -2,9 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Cart extends Model
 {
@@ -35,7 +37,7 @@ class Cart extends Model
     {
         static::creating(function (Cart $cart) {
             if (! $cart->token) {
-                $cart->token = (string) \Illuminate\Support\Str::uuid();
+                $cart->token = (string) Str::uuid();
             }
             if (! $cart->type) {
                 $cart->type = 'default';
@@ -55,28 +57,28 @@ class Cart extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function discountCode(): BelongsTo
     {
-        return $this->belongsTo(\Dashed\DashedEcommerceCore\Models\DiscountCode::class, 'discount_code_id');
+        return $this->belongsTo(DiscountCode::class, 'discount_code_id');
         // als DiscountCode elders staat: pas namespace aan
     }
 
     public function shippingMethod(): BelongsTo
     {
-        return $this->belongsTo(\Dashed\DashedEcommerceCore\Models\ShippingMethod::class, 'shipping_method_id');
+        return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
     }
 
     public function paymentMethod(): BelongsTo
     {
-        return $this->belongsTo(\Dashed\DashedEcommerceCore\Models\PaymentMethod::class, 'payment_method_id');
+        return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
     }
 
     public function depositPaymentMethod(): BelongsTo
     {
-        return $this->belongsTo(\Dashed\DashedEcommerceCore\Models\PaymentMethod::class, 'deposit_payment_method_id');
+        return $this->belongsTo(PaymentMethod::class, 'deposit_payment_method_id');
     }
 
     public function updateTotal(): void

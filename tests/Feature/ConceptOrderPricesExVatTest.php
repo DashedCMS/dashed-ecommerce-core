@@ -1,9 +1,10 @@
 <?php
 
 use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
 
 function makeCashier(): User
 {
@@ -62,14 +63,14 @@ it('restores the prices_ex_vat flag to the POS cart when hydrating from a concep
 });
 
 it('copies prices_ex_vat from POSCart to the order created via PointOfSaleApiController::createOrder', function () {
-    $cashier = \Dashed\DashedCore\Models\User::create([
+    $cashier = User::create([
         'first_name' => 'Cash',
         'last_name' => 'Ier',
         'email' => 'cashier-'.uniqid().'@test.dev',
         'password' => bcrypt('x'),
     ]);
 
-    $posCart = \Dashed\DashedEcommerceCore\Models\POSCart::create([
+    $posCart = POSCart::create([
         'user_id' => $cashier->id,
         'identifier' => 'test-'.uniqid(),
         'products' => [[
@@ -84,12 +85,12 @@ it('copies prices_ex_vat from POSCart to the order created via PointOfSaleApiCon
         'prices_ex_vat' => true,
     ]);
 
-    $controller = app(\Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController::class);
+    $controller = app(PointOfSaleApiController::class);
     $response = $controller->createOrder('pos', $posCart, null, 'pos', $cashier->id);
 
     expect($response['success'] ?? false)->toBeTrue();
 
-    $order = \Dashed\DashedEcommerceCore\Models\Order::latest('id')->first();
+    $order = Order::latest('id')->first();
     expect($order)->not->toBeNull();
     expect($order->prices_ex_vat)->toBeTrue();
 });

@@ -3,7 +3,8 @@
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 
-function makeInvoiceOrder(bool $pricesExVat, bool $reverseCharge = false): Order {
+function makeInvoiceOrder(bool $pricesExVat, bool $reverseCharge = false): Order
+{
     $order = Order::create([
         'status' => 'paid',
         'prices_ex_vat' => $pricesExVat,

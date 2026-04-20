@@ -3,32 +3,32 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Livewire\Component;
-use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use DashedDEV\FilamentNumpadField\NumpadField;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Schemas\Contracts\HasSchemas;
-use LaraZeus\Quantity\Components\Quantity;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use DashedDEV\FilamentNumpadField\NumpadField;
 use Filament\Schemas\Components\Utilities\Get;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use LaraZeus\Quantity\Components\Quantity;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.
 // Ik trek ‘m gelijk met jullie core.
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Livewire\Component;
 
 class POSPage extends Component implements HasActions, HasSchemas
 {
@@ -139,7 +139,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                 ->first();
 
             if (! $posCart) {
-                $posCart = new POSCart();
+                $posCart = new POSCart;
                 $posCart->user_id = $userId;
                 $posCart->status = 'active';
                 $posCart->identifier = uniqid();
@@ -232,7 +232,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         $exMode = (bool) ($posCart->prices_ex_vat ?? false);
 
         return [
-            \Filament\Actions\Action::make('togglePriceMode')
+            Action::make('togglePriceMode')
                 ->label($exMode ? 'Prijzen: ex BTW' : 'Prijzen: incl BTW')
                 ->icon($exMode ? 'heroicon-o-receipt-percent' : 'heroicon-o-currency-euro')
                 ->color($exMode ? 'warning' : 'gray')
@@ -249,7 +249,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         $this->priceModeOverridden = true;
 
-        \Filament\Notifications\Notification::make()
+        Notification::make()
             ->title($posCart->prices_ex_vat ? __('Prijzen tonen ex BTW') : __('Prijzen tonen incl BTW'))
             ->success()
             ->send();
@@ -371,7 +371,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         if (($this->createDiscountData['type'] ?? '') === 'discountCode') {
             $discountCode = DiscountCode::find($this->createDiscountData['discountCode'] ?? null);
         } else {
-            $discountCode = new DiscountCode();
+            $discountCode = new DiscountCode;
             $discountCode->site_ids = [Sites::getActive()];
             $discountCode->name = 'Point of Sale discount';
             $discountCode->note = $this->createDiscountData['note'] ?? '';
@@ -631,7 +631,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         if (! $this->priceModeOverridden) {
             $customer = $this->customerUserId
-                ? \Dashed\DashedCore\Models\User::find($this->customerUserId)
+                ? User::find($this->customerUserId)
                 : null;
 
             $shouldShowEx = (bool) ($customer->show_prices_ex_vat ?? false);
@@ -640,7 +640,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                 $posCart->prices_ex_vat = $shouldShowEx;
                 $posCart->save();
 
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title($shouldShowEx
                         ? __('Ex BTW modus ingeschakeld voor deze klant')
                         : __('Incl BTW modus ingeschakeld voor deze klant'))

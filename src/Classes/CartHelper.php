@@ -2,79 +2,117 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Storage;
-use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Models\CartItem as CartItemModel;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedTranslations\Models\Translation;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CartHelper
 {
     public static float $total = 0.0;
+
     public static float $totalWithoutDiscount = 0.0;
+
     public static float $subtotal = 0.0;
+
     public static float $discount = 0.0;
+
     public static float $tax = 0.0;
+
     public static float $taxWithoutDiscount = 0.0;
+
     public static float $shippingCosts = 0.0;
+
     public static float $paymentCosts = 0.0;
+
     public static float $depositAmount = 0.0;
+
     public static bool $isPostPayMethod = false;
 
     public static ?array $totalAmountForVats = [];
+
     public static ?array $totalVatPerPercentage = [];
+
     public static ?array $vatPercentageOfTotals = [];
+
     public static int $vatRates = 0;
+
     public static array $taxPercentages = [];
+
     public static int $vatRatesCount = 0;
 
     public static ?DiscountCode $discountCode = null;
+
     public static ?string $discountCodeString = null;
+
     public static bool $calculateInclusiveTax = false;
 
     public static ?int $shippingMethod = null;
+
     public static null|array|Collection $allPaymentMethods = [];
+
     public static ?int $paymentMethod = null;
+
     public static ?int $shippingZone = null;
+
     public static null|array|\Illuminate\Database\Eloquent\Collection $depositPaymentMethods = null;
+
     public static ?int $depositPaymentMethod = null;
 
     public static bool $vatReverseCharge = false;
+
     public static bool $vatReverseChargeInitialized = false;
 
     public static ?string $cartType = 'default';
+
     public static null|array|Collection $cartItems = [];
+
     public static array $cartProductsById = [];
+
     public static bool $initialized = false;
 
-    /** @var CartModel|null */
     public static ?CartModel $cart = null;
 
     // Flags om te weten wat al berekend is
     public static bool $cartItemsInitialized = false;
+
     public static bool $discountCodeInitialized = false;
+
     public static bool $vatBaseInitialized = false;
+
     public static bool $taxInitialized = false;
+
     public static bool $subtotalInitialized = false;
+
     public static bool $totalInitialized = false;
+
     public static bool $totalWithoutDiscountInitialized = false;
+
     public static bool $discountInitialized = false;
+
     public static bool $shippingCostsInitialized = false;
+
     public static bool $paymentCostsInitialized = false;
+
     public static bool $depositPaymentMethodsInitialized = false;
+
     public static bool $depositAmountInitialized = false;
+
     public static bool $taxPercentagesInitialized = false;
+
     public static bool $allPaymentMethodsInitialized = false;
 
     /**
@@ -425,7 +463,7 @@ class CartHelper
      */
     protected function mapDbCartItemToRuntime(CartItemModel $item): object
     {
-        $o = new \stdClass();
+        $o = new \stdClass;
 
         $o->rowId = (string) $item->id;
         $o->id = $item->product_id; // gloudemans: id = product_id
@@ -471,7 +509,7 @@ class CartHelper
         $this->preloadCartProducts();
     }
 
-    public static function preloadProductsForCartItems($cartItems, array $relations = []): \Illuminate\Support\Collection
+    public static function preloadProductsForCartItems($cartItems, array $relations = []): Collection
     {
         $ids = collect($cartItems)
             ->pluck('id') // product_id
@@ -1012,7 +1050,7 @@ class CartHelper
 
         if ($changed) {
             $methodName = $shippingMethod ? optional(ShippingMethod::find($shippingMethod))->name : null;
-            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::shippingMethodChanged($cart, $shippingMethod, $methodName);
+            CartActivityLogger::shippingMethodChanged($cart, $shippingMethod, $methodName);
         }
 
         static::$shippingCostsInitialized = false;
@@ -1050,7 +1088,7 @@ class CartHelper
 
         if ($changed) {
             $methodName = $paymentMethod ? optional(PaymentMethod::find($paymentMethod))->name : null;
-            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::paymentMethodChanged($cart, $paymentMethod, $methodName);
+            CartActivityLogger::paymentMethodChanged($cart, $paymentMethod, $methodName);
         }
 
         static::$paymentCostsInitialized = false;
@@ -1119,7 +1157,7 @@ class CartHelper
                     if ($paymentMethod['deposit_calculation']) {
                         $formula = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', static::$total, $paymentMethod['deposit_calculation']);
                         $formula = str_replace('{ORDER_TOTAL}', static::$total, $formula);
-                        $depositAmount = eval('return ' . $formula . ';');
+                        $depositAmount = eval('return '.$formula.';');
                     }
                 }
             }
@@ -1411,7 +1449,7 @@ class CartHelper
             }
         });
 
-        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::productAdded($loggedCart, $loggedProduct, $quantity, $loggedOptions);
+        CartActivityLogger::productAdded($loggedCart, $loggedProduct, $quantity, $loggedOptions);
 
         $this->updateData();
 
@@ -1451,7 +1489,7 @@ class CartHelper
 
             EcommerceActionLog::createLog('remove_from_cart', $cartItem->quantity, productId: $product?->id);
 
-            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::productRemoved($cart, (string) $cartItem->id, $product?->name ?? $cartItem->name);
+            CartActivityLogger::productRemoved($cart, (string) $cartItem->id, $product?->name ?? $cartItem->name);
 
             $cartItem->delete();
 
@@ -1514,7 +1552,7 @@ class CartHelper
         $cartItem->quantity = (int) $quantity;
         $cartItem->save();
 
-        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::quantityChanged(
+        CartActivityLogger::quantityChanged(
             $cart,
             (string) $cartItem->id,
             $oldQuantity,
@@ -1593,7 +1631,7 @@ class CartHelper
         $this->updateData();
 
         if (! static::$discountCode) {
-            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::discountApplied($cart, $code, 'danger');
+            CartActivityLogger::discountApplied($cart, $code, 'danger');
 
             return [
                 'status' => 'danger',
@@ -1601,7 +1639,7 @@ class CartHelper
             ];
         }
 
-        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::discountApplied($cart, $code, 'success');
+        CartActivityLogger::discountApplied($cart, $code, 'success');
 
         return [
             'status' => 'success',

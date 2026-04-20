@@ -2,21 +2,21 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages;
 
+use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
+use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
+use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
+use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
+use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerUser;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Filament\Actions\Action;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Forms\Components\FileUpload;
 use Illuminate\Contracts\Support\Htmlable;
-use Dashed\DashedEcommerceCore\Models\Product;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use STS\FilamentImpersonate\Actions\Impersonate;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerUser;
-use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
-use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
-use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
-use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 
 class EditPricePerUser extends EditRecord
 {
@@ -24,7 +24,7 @@ class EditPricePerUser extends EditRecord
 
     public function getTitle(): string|Htmlable
     {
-        return 'Bewerk prijzen voor  ' . $this->record->name;
+        return 'Bewerk prijzen voor  '.$this->record->name;
     }
 
     protected function getHeaderActions(): array
@@ -41,7 +41,7 @@ class EditPricePerUser extends EditRecord
                         ->success()
                         ->send();
 
-                    return Excel::download(new PricePerProductForUserExport($this->record), 'Prijzen voor ' . $this->record->name . '.xlsx');
+                    return Excel::download(new PricePerProductForUserExport($this->record), 'Prijzen voor '.$this->record->name.'.xlsx');
                 }),
             Action::make('importProducts')
                 ->label('Producten')
@@ -77,7 +77,7 @@ class EditPricePerUser extends EditRecord
                         ->success()
                         ->send();
 
-                    return Excel::download(new PricePerCategoryForUserExport($this->record), 'Prijzen van categorieen voor ' . $this->record->name . '.xlsx');
+                    return Excel::download(new PricePerCategoryForUserExport($this->record), 'Prijzen van categorieen voor '.$this->record->name.'.xlsx');
                 }),
             Action::make('import')
                 ->label('Categorieen')
@@ -139,8 +139,8 @@ class EditPricePerUser extends EditRecord
                     ->where('user_id', $this->record->id)
                     ->where('product_category_id', $productCategory->id)
                     ->first();
-                $data[$productCategory->id . '_category_discount_price'] = $productCategoryUser->discount_price ?? null;
-                $data[$productCategory->id . '_category_discount_percentage'] = $productCategoryUser->discount_percentage ?? null;
+                $data[$productCategory->id.'_category_discount_price'] = $productCategoryUser->discount_price ?? null;
+                $data[$productCategory->id.'_category_discount_percentage'] = $productCategoryUser->discount_percentage ?? null;
             }
         }
 

@@ -2,48 +2,48 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Exception;
-use Illuminate\Support\Str;
-use Dashed\DashedCore\Models\User;
-use Spatie\Activitylog\LogOptions;
-use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Models\Customsetting;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedEcommerceCore\Classes\Printing;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Notifications\AdminNotifier;
-use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\Printing;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
-use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
-use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
-use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
+use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
-    use SoftDeletes;
-    use LogsActivity;
     use HasDynamicRelation;
+    use LogsActivity;
+    use SoftDeletes;
 
     public const STATUS_CONCEPT = 'concept';
 
@@ -77,7 +77,7 @@ class Order extends Model
             $order->ip = request()->ip();
             $order->hash = Str::random(32);
             $order->locale = app()->getLocale();
-            $order->initials = $order->first_name ? strtoupper($order->first_name[0]) . '.' : '';
+            $order->initials = $order->first_name ? strtoupper($order->first_name[0]).'.' : '';
             $order->site_id = Sites::getActive();
         });
 
@@ -448,7 +448,7 @@ class Order extends Model
                     $invoiceNumber .= $codeCharacter;
                 }
 
-                $invoiceId = Customsetting::get('invoice_id_prefix') . $invoiceNumber . Customsetting::get('invoice_id_suffix');
+                $invoiceId = Customsetting::get('invoice_id_prefix').$invoiceNumber.Customsetting::get('invoice_id_suffix');
                 while (Order::where('invoice_id', $invoiceId)->count()) {
                     $invoiceNumber = '';
                     foreach (str_split(Customsetting::get('invoice_id_replacement', config('dashed.currentSite'), '*****')) as $codeCharacter) {
@@ -458,11 +458,11 @@ class Order extends Model
                         $invoiceNumber .= $codeCharacter;
                     }
 
-                    $invoiceId = Customsetting::get('invoice_id_prefix') . $invoiceNumber . Customsetting::get('invoice_id_suffix');
+                    $invoiceId = Customsetting::get('invoice_id_prefix').$invoiceNumber.Customsetting::get('invoice_id_suffix');
                 }
             } else {
                 $invoiceNumber = Customsetting::get('current_invoice_number', config('dashed.currentSite'), 1000) + 1;
-                $invoiceId = Customsetting::get('invoice_id_prefix') . $invoiceNumber . Customsetting::get('invoice_id_suffix');
+                $invoiceId = Customsetting::get('invoice_id_prefix').$invoiceNumber.Customsetting::get('invoice_id_suffix');
                 Customsetting::set('current_invoice_number', $invoiceNumber);
             }
             $this->invoice_id = $invoiceId;
@@ -526,7 +526,7 @@ class Order extends Model
         //            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again', isDebugLog: true);
         $order = Order::find($this->id);
         //            OrderLog::createLog(orderId: $this->id, note: 'Retrieving order again done', isDebugLog: true);
-        $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+        $invoicePath = '/dashed/invoices/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf';
         if (! Storage::disk('dashed')->exists($invoicePath)) {
             //                OrderLog::createLog(orderId: $this->id, note: 'Invoice does not exists yet, creating view', isDebugLog: true);
             $view = View::make('dashed-ecommerce-core::invoices.invoice', [
@@ -542,8 +542,8 @@ class Order extends Model
 
             try {
                 $output = $pdf->output();
-            } catch (\Exception $e) {
-                OrderLog::createLog(orderId: $this->id, note: 'Error: ' . $e->getMessage(), isDebugLog: true);
+            } catch (Exception $e) {
+                OrderLog::createLog(orderId: $this->id, note: 'Error: '.$e->getMessage(), isDebugLog: true);
 
                 throw new Exception($e->getMessage());
             }
@@ -565,14 +565,14 @@ class Order extends Model
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-'.($order->invoice_id ?: $order->id).'-'.$order->hash.'.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf';
+                $invoicePath = '/dashed/packing-slips/packing-slip-'.($order->invoice_id ?: $order->id).'-'.$order->hash.'.pdf';
                 Storage::disk('dashed')->put($invoicePath, $output);
             }
         }
@@ -584,14 +584,14 @@ class Order extends Model
             //        if (in_array($this->order_origin, ['own', 'pos']) && ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder)) {
             $this->generateInvoiceId();
             $order = $this;
-            if (! Storage::disk('dashed')->exists('/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf')) {
+            if (! Storage::disk('dashed')->exists('/invoices/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');
                 $pdf->loadHTML($contents);
                 $output = $pdf->output();
 
-                $invoicePath = '/dashed/invoices/invoice-' . $order->invoice_id . '-' . $order->hash . '.pdf';
+                $invoicePath = '/dashed/invoices/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf';
                 Storage::disk('dashed')->put($invoicePath, $output);
 
                 InvoiceCreatedEvent::dispatch($this);
@@ -627,7 +627,7 @@ class Order extends Model
                     foreach (Mails::getAdminLowStockNotificationEmails() as $lowStockNotificationEmail) {
                         AdminNotifier::send(new ProductOnLowStockEmail($product), $lowStockNotificationEmail);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                 }
             }
         }
@@ -758,7 +758,7 @@ class Order extends Model
                     try {
                         Mail::to($this->email)->send(new OrderFulfillmentStatusChangedMail($this, Customsetting::get("fulfillment_status_{$key}_email_subject", null, null, $this->locale), cms()->convertToHtml(Customsetting::get("fulfillment_status_{$key}_email_content", null, null, $this->locale))));
                         OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.send");
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.not-send");
                     }
                 }
@@ -792,8 +792,8 @@ class Order extends Model
 
             try {
                 $this->createInvoice();
-            } catch (\Exception $e) {
-                OrderLog::createLog(orderId: $this->id, note: 'Error creating invoice: ' . $e->getMessage(), isDebugLog: true);
+            } catch (Exception $e) {
+                OrderLog::createLog(orderId: $this->id, note: 'Error creating invoice: '.$e->getMessage(), isDebugLog: true);
             }
 
             SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
@@ -908,15 +908,15 @@ class Order extends Model
                 try {
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
                     OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send');
-                } catch (\Exception $e) {
-                    OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send.failed', note: 'Error: ' . $e->getMessage());
+                } catch (Exception $e) {
+                    OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send.failed', note: 'Error: '.$e->getMessage());
                 }
             } else {
                 try {
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
                     OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send');
-                } catch (\Exception $e) {
-                    OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send.failed', note: 'Error: ' . $e->getMessage());
+                } catch (Exception $e) {
+                    OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send.failed', note: 'Error: '.$e->getMessage());
                 }
             }
         }
@@ -960,7 +960,7 @@ class Order extends Model
 
         foreach ($chosenOrderProducts as $chosenOrderProduct) {
             if ($chosenOrderProduct['refundQuantity'] > 0) {
-                $orderProduct = new OrderProduct();
+                $orderProduct = new OrderProduct;
                 $orderProduct->quantity = 0 - $chosenOrderProduct['refundQuantity'];
                 $orderProduct->product_id = $chosenOrderProduct['product_id'];
                 $orderProduct->name = $chosenOrderProduct['name'];
@@ -1002,7 +1002,7 @@ class Order extends Model
         }
 
         if ($extraOrderLineName || $extraOrderLinePrice > 0) {
-            $orderProduct = new OrderProduct();
+            $orderProduct = new OrderProduct;
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->name = $extraOrderLineName ?: 'Extra';
@@ -1025,7 +1025,7 @@ class Order extends Model
 
             $newOrder->btw += $taxPrice;
 
-            $vatRate = 21; //Hardcoded BTW percentage
+            $vatRate = 21; // Hardcoded BTW percentage
             if (! isset($vatPercentagesForOrder[$vatRate])) {
                 $vatPercentagesForOrder[$vatRate] = 0;
             }
@@ -1086,21 +1086,21 @@ class Order extends Model
                 //                    Mail::to($this->email)->send(new OrderCancelledMail($newOrder));
                 //                }
                 $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send' : 'order.cancelled.mail.send';
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send.failed' : 'order.cancelled.mail.send.failed';
-                $error = 'Error: ' . $e->getMessage();
+                $error = 'Error: '.$e->getMessage();
             }
             OrderLog::createLog(orderId: $newOrder->id, tag: $tag, note: $error ?? null);
             $newOrder->invoice_send_to_customer = 1;
             $newOrder->save();
         }
 
-        //Always send the invoice to admins
+        // Always send the invoice to admins
         try {
             //                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
             AdminNotifier::send(new AdminOrderCancelledMail($newOrder), Mails::getAdminNotificationEmails());
             //                }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
 
         if ($restock) {
@@ -1169,13 +1169,13 @@ class Order extends Model
 
     public function downloadPackingslipUrl(): ?string
     {
-        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
+        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf')) {
             return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         }
 
         $this->createPackingSlip();
 
-        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf')) {
+        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf')) {
             return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         }
 
@@ -1184,19 +1184,19 @@ class Order extends Model
 
     public function invoicePath(): ?string
     {
-        return '/dashed/invoices/invoice-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf';
+        return '/dashed/invoices/invoice-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf';
     }
 
     public function packingSlipPath(): ?string
     {
-        return 'dashed/packing-slips/packing-slip-' . ($this->invoice_id ?: $this->id) . '-' . $this->hash . '.pdf';
+        return 'dashed/packing-slips/packing-slip-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf';
     }
 
     public function getUrl()
     {
         $completeUrl = ShoppingCart::getCompleteUrl();
 
-        return $completeUrl . '?orderId=' . $this->hash . '&paymentId=' . ($this->orderPayments()->count() ? $this->orderPayments()->latest()->first()->hash : '');
+        return $completeUrl.'?orderId='.$this->hash.'&paymentId='.($this->orderPayments()->count() ? $this->orderPayments()->latest()->first()->hash : '');
     }
 
     public function fulfillmentStatus()
@@ -1288,7 +1288,7 @@ class Order extends Model
 
     public function eligibleForFulfillmentProvider(string $provider): bool
     {
-        return (bool)$this->orderProducts()->whereHas('product', function ($query) use ($provider) {
+        return (bool) $this->orderProducts()->whereHas('product', function ($query) use ($provider) {
             $query->where('fulfillment_provider', $provider);
         })->count();
     }
@@ -1296,13 +1296,13 @@ class Order extends Model
     public function printReceipt($isCopy = false)
     {
         $store_name = Customsetting::get('site_name');
-        $store_address = Customsetting::get('company_street') . ' ' . Customsetting::get('company_street_number') . ', ' . Customsetting::get('company_postal_code') . ' ' . Customsetting::get('company_city');
+        $store_address = Customsetting::get('company_street').' '.Customsetting::get('company_street_number').', '.Customsetting::get('company_postal_code').' '.Customsetting::get('company_city');
         $store_phone = Customsetting::get('company_phone_number');
         $store_email = Customsetting::get('site_to_email');
         $store_website = url('/');
 
         // Init printer
-        $printer = new ReceiptPrinter();
+        $printer = new ReceiptPrinter;
         $printer->init(
             Customsetting::get('receipt_printer_connector_type'),
             Customsetting::get('receipt_printer_connector_descriptor')
@@ -1310,7 +1310,7 @@ class Order extends Model
 
         $printer->setStore($store_name, $store_address, $store_phone, $store_email, $store_website);
         $printer->setOrder($this);
-        $printer->setQRcode('order-' . $this->id);
+        $printer->setQRcode('order-'.$this->id);
         $printer->setLogo(public_path('/receipts/logo/logo.png'));
         $printer->printReceipt($isCopy);
     }
@@ -1395,7 +1395,7 @@ class Order extends Model
         if ($printerName) {
             $this->createInvoice();
 
-            $pdfPath = 'files-to-download/' . time() . rand(10000, 100000) . '.pdf';
+            $pdfPath = 'files-to-download/'.time().rand(10000, 100000).'.pdf';
 
             $content = Storage::disk('dashed')->get($this->invoicePath());
             Storage::disk('public')->put($pdfPath, $content);
@@ -1414,7 +1414,7 @@ class Order extends Model
         if ($printerName) {
             $this->createPackingSlip();
 
-            $pdfPath = 'files-to-download/' . time() . rand(10000, 100000) . '.pdf';
+            $pdfPath = 'files-to-download/'.time().rand(10000, 100000).'.pdf';
 
             $content = Storage::disk('dashed')->get($this->packingSlipPath());
             Storage::disk('public')->put($pdfPath, $content);

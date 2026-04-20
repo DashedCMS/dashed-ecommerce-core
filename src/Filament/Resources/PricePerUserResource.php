@@ -2,30 +2,30 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use UnitEnum;
-use BackedEnum;
 use App\Models\User;
-use Filament\Tables\Table;
-use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
-use STS\FilamentImpersonate\Actions\Impersonate;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use BackedEnum;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\EditPricePerUser;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\ListPricePerUser;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use STS\FilamentImpersonate\Actions\Impersonate;
+use UnitEnum;
 
 class PricePerUserResource extends Resource
 {
@@ -35,11 +35,16 @@ class PricePerUserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
-    protected static string | UnitEnum | null $navigationGroup = 'Gebruikers';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Gebruikers';
+
     protected static ?string $navigationLabel = 'Prijs per gebruiker';
+
     protected static ?string $label = 'Prijs per gebruiker';
+
     protected static ?string $pluralLabel = 'Prijs per gebruiker';
+
     protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
@@ -61,20 +66,20 @@ class PricePerUserResource extends Resource
         foreach ($productCategories as $productCategory) {
             $productCategorySchema[] = Section::make($productCategory->name)->columnSpanFull()
                 ->schema([
-                    TextInput::make($productCategory->id . '_category_discount_price')
+                    TextInput::make($productCategory->id.'_category_discount_price')
                         ->label('Korting bedrag')
                         ->prefix('€')
-                        ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
+                        ->required(fn (Get $get) => $get($productCategory->id.'_category_discount_percentage') === null)
                         ->minValue(1)
                         ->reactive()
                         ->numeric(),
-                    TextInput::make($productCategory->id . '_category_discount_percentage')
+                    TextInput::make($productCategory->id.'_category_discount_percentage')
                         ->label('Korting percentage')
                         ->suffix('%')
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
-                        ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_price') === null)
+                        ->required(fn (Get $get) => $get($productCategory->id.'_category_discount_price') === null)
                         ->reactive()
                         ->numeric(),
                 ])
@@ -193,7 +198,7 @@ class PricePerUserResource extends Resource
     {
         return [
             'index' => ListPricePerUser::route('/'),
-//            'create' => CreateProductTab::route('/create'),
+            //            'create' => CreateProductTab::route('/create'),
             'edit' => EditPricePerUser::route('/{record}/edit'),
         ];
     }

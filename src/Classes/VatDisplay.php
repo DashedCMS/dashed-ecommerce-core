@@ -32,13 +32,13 @@ class VatDisplay
     {
         $ex = self::exFromIncl($inclAmount, $vatRate);
 
-        $formatInclPrice = \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($inclAmount);
-        $formatExPrice = \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($ex);
+        $formatInclPrice = CurrencyHelper::formatPrice($inclAmount);
+        $formatExPrice = CurrencyHelper::formatPrice($ex);
 
         if ($mode === 'ex') {
             return [
                 'primary' => $formatExPrice,
-                'secondary' => $formatInclPrice . ' incl',
+                'secondary' => $formatInclPrice.' incl',
                 'ex' => $ex,
                 'incl' => $inclAmount,
             ];
@@ -46,7 +46,7 @@ class VatDisplay
 
         return [
             'primary' => $formatInclPrice,
-            'secondary' => $formatExPrice . ' ex',
+            'secondary' => $formatExPrice.' ex',
             'ex' => $ex,
             'incl' => $inclAmount,
         ];
