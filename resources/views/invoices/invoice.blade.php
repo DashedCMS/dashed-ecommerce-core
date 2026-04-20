@@ -1,5 +1,6 @@
 @php
     $isConcept = $order->isConcept();
+    $isExVat = (bool) ($order->prices_ex_vat ?? false) && ! ($order->vat_reverse_charge ?? false);
     $pdfTitle = $isConcept
         ? Translation::get('order-confirmation-for', 'invoice', 'Orderbevestiging voor :siteName:', 'text', [
             'siteName' => Customsetting::get('site_name'),
@@ -170,7 +171,11 @@
                     </td>
 
                     <td class="numeric">
-                        {{ CurrencyHelper::formatPriceForPDF($orderProduct->price, 'EUR', true) }}
+                        @if ($isExVat)
+                            {{ CurrencyHelper::formatPriceForPDF(\Dashed\DashedEcommerceCore\Classes\VatDisplay::exFromIncl((float) $orderProduct->price, $orderProduct->vat_rate ?? 21), 'EUR', true) }}
+                        @else
+                            {{ CurrencyHelper::formatPriceForPDF($orderProduct->price, 'EUR', true) }}
+                        @endif
                     </td>
                 </tr>
             @endforeach
@@ -220,13 +225,21 @@
             </p>
         @endif
 
-        <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPriceForPDF($order->subtotal, 'EUR', true) }}</p>
+        @if ($isExVat)
+            <p class="total">{{ Translation::get('subtotal-ex-vat', 'invoice', 'Subtotaal ex BTW') . ': ' . CurrencyHelper::formatPriceForPDF($order->subtotal - $order->btw, 'EUR', true) }}</p>
+        @else
+            <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotal') . ': ' . CurrencyHelper::formatPriceForPDF($order->subtotal, 'EUR', true) }}</p>
+        @endif
 
         @if($order->discount != 0.00)
             <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPriceForPDF($order->discount, 'EUR', true) }}</p>
         @endif
 
-        <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPriceForPDF($order->total, 'EUR', true) }}</p>
+        @if ($isExVat)
+            <p class="total"><b>{{ Translation::get('total-incl-vat', 'invoice', 'Totaal incl. BTW') . ': ' . CurrencyHelper::formatPriceForPDF($order->total, 'EUR', true) }}</b></p>
+        @else
+            <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPriceForPDF($order->total, 'EUR', true) }}</p>
+        @endif
     </div>
 
     @if ($order->note || $order->vat_reverse_charge)
