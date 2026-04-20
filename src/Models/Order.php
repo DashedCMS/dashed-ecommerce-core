@@ -53,6 +53,7 @@ class Order extends Model
 
     protected $casts = [
         'vat_percentages' => 'array',
+        'prices_ex_vat' => 'boolean',
     ];
 
     protected $appends = [

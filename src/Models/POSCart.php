@@ -17,6 +17,7 @@ class POSCart extends Model
     protected $casts = [
         'products' => 'array',
         'custom_fields' => 'array',
+        'prices_ex_vat' => 'boolean',
     ];
 
     public function getActivitylogOptions(): LogOptions

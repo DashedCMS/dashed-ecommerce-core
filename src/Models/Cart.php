@@ -28,6 +28,7 @@ class Cart extends Model
 
     protected $casts = [
         'meta' => 'array',
+        'prices_ex_vat' => 'boolean',
     ];
 
     protected static function booted(): void
