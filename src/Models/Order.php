@@ -490,6 +490,15 @@ class Order extends Model
         //        }
     }
 
+    public function deleteInvoice(): void
+    {
+        $path = $this->invoicePath();
+
+        if ($path && Storage::disk('dashed')->exists($path)) {
+            Storage::disk('dashed')->delete($path);
+        }
+    }
+
     public function createConceptConfirmation(): void
     {
         $order = $this;
@@ -777,6 +786,9 @@ class Order extends Model
 
             OrderLog::createLog(orderId: $this->id, note: 'Creating invoice', isDebugLog: true);
 
+            // Drop any previously generated document (e.g. concept confirmation) so the paid invoice is rendered fresh.
+            $this->deleteInvoice();
+
             try {
                 $this->createInvoice();
             } catch (\Exception $e) {
@@ -823,6 +835,7 @@ class Order extends Model
 
         OrderLog::createLog(orderId: $this->id, tag: 'order.partially_paid');
 
+        $this->deleteInvoice();
         $this->createInvoice();
 
         SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
