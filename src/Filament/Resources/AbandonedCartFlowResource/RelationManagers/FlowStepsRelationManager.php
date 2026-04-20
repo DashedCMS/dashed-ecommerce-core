@@ -54,6 +54,21 @@ class FlowStepsRelationManager extends RelationManager
                     ->label('Onderwerp')
                     ->limit(50)
                     ->weight('bold'),
+                TextColumn::make('pending_count')
+                    ->label('In wacht')
+                    ->state(fn ($record) => $record->emails()->whereNull('sent_at')->whereNull('cancelled_at')->count())
+                    ->badge()
+                    ->color('warning'),
+                TextColumn::make('sent_count')
+                    ->label('Verzonden')
+                    ->state(fn ($record) => $record->emails()->whereNotNull('sent_at')->count())
+                    ->badge()
+                    ->color('info'),
+                TextColumn::make('converted_count')
+                    ->label('Geconverteerd')
+                    ->state(fn ($record) => $record->emails()->whereNotNull('converted_at')->count())
+                    ->badge()
+                    ->color('success'),
                 IconColumn::make('incentive_enabled')->label('Korting')->boolean(),
                 IconColumn::make('enabled')->label('Actief')->boolean(),
             ])
