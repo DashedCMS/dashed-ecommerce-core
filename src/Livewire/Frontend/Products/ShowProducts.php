@@ -27,7 +27,7 @@ class ShowProducts extends Component
     public ?string $sortBy = null;
 
     #[Url(except: '')]
-    public $search = '';
+    public string $search = '';
 
     public array $priceSlider = [];
     public array $defaultSliderOptions = [];
@@ -60,11 +60,19 @@ class ShowProducts extends Component
         $this->pagination = request()->get('pagination', Customsetting::get('product_default_amount_of_products', null, 12));
         $this->sortBy = request()->get('sort-by', request()->get('sortBy', Customsetting::get('product_default_order_type', null, 'price')));
         $this->order = request()->get('order', Customsetting::get('product_default_order_sort', null, 'DESC'));
-        $this->search = request()->get('search');
+        $searchInput = request()->get('search');
+        $this->search = is_scalar($searchInput) ? (string) $searchInput : '';
         $this->enableFilters = $enableFilters;
 
         $activeFilters = request()->get('activeFilters', []);
+        if (! is_array($activeFilters)) {
+            $activeFilters = [];
+        }
         foreach ($activeFilters as $filterKey => $activeFilter) {
+            if (! is_array($activeFilter)) {
+                unset($activeFilters[$filterKey]);
+                continue;
+            }
             foreach ($activeFilter as $optionKey => $value) {
                 if (! $value || $value === 'false') {
                     unset($activeFilters[$filterKey][$optionKey]);
@@ -99,6 +107,9 @@ class ShowProducts extends Component
     {
         $activeFilterQuery = [];
         foreach ($this->activeFilters as $filterKey => $filterValues) {
+            if (! is_array($filterValues)) {
+                continue;
+            }
             foreach ($filterValues as $valueKey => $valueActivated) {
                 if ($valueActivated) {
                     $activeFilterQuery['activeFilters'][$valueKey] = ['except' => ''];
