@@ -27,6 +27,7 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CreateOrderLog;
 use Dashed\DashedEcommerceCore\Commands\SendAbandonedCartEmails;
+use Dashed\DashedEcommerceCore\Commands\PruneCartLogs;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Account\Orders;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\AddToCart;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartCount;
@@ -1322,6 +1323,9 @@ MARKDOWN,
             $schedule->command(ClearOldCarts::class)
                 ->hourly()
                 ->withoutOverlapping();
+            $schedule->command(PruneCartLogs::class)
+                ->dailyAt('03:15')
+                ->withoutOverlapping();
             $schedule->command(SendAbandonedCartEmails::class)
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
@@ -1678,6 +1682,7 @@ MARKDOWN,
                 UpdateExpiredGlobalDiscountCodes::class,
                 ClearOldCarts::class,
                 SendAbandonedCartEmails::class,
+                PruneCartLogs::class,
             ]);
 
     }

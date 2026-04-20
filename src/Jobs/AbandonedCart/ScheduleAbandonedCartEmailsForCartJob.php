@@ -56,5 +56,7 @@ class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
                 'send_at' => now()->addHours($cumulativeHours),
             ]);
         }
+
+        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::abandonedEmailsScheduled($cart, $flow, $steps->count());
     }
 }

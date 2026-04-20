@@ -49,6 +49,11 @@ class AbandonedCartFlowStep extends Model
         return $this->belongsTo(AbandonedCartFlow::class, 'flow_id');
     }
 
+    public function emails(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AbandonedCartEmail::class, 'flow_step_id');
+    }
+
     public function getDelayInHoursAttribute(): int
     {
         return match ($this->delay_unit) {

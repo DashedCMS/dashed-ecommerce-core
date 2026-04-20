@@ -66,12 +66,27 @@ class AbandonedCartFlowResource extends Resource
                     ->counts('steps')
                     ->badge()
                     ->color('info'),
+                TextColumn::make('pending_count')
+                    ->label('In wacht')
+                    ->state(fn ($record) => $record->emails()->whereNull('sent_at')->whereNull('cancelled_at')->count())
+                    ->badge()
+                    ->color('warning'),
+                TextColumn::make('sent_count')
+                    ->label('Verzonden')
+                    ->state(fn ($record) => $record->emails()->whereNotNull('sent_at')->count())
+                    ->badge()
+                    ->color('info'),
+                TextColumn::make('converted_count')
+                    ->label('Geconverteerd')
+                    ->state(fn ($record) => $record->emails()->whereNotNull('converted_at')->count())
+                    ->badge()
+                    ->color('success'),
                 IconColumn::make('is_active')
                     ->label('Actief')
                     ->boolean(),
                 TextColumn::make('updated_at')
                     ->label('Bijgewerkt')
-                    ->dateTime('d-m-Y H:i')
+                    ->dateTime('d-m-Y H:i', 'Europe/Amsterdam')
                     ->sortable(),
             ])
             ->recordActions([

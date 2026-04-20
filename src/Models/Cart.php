@@ -42,6 +42,11 @@ class Cart extends Model
         });
     }
 
+    public function logs(): HasMany
+    {
+        return $this->hasMany(CartLog::class)->orderBy('created_at');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class, 'cart_id');

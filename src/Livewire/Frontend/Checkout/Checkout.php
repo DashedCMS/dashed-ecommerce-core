@@ -852,6 +852,10 @@ class Checkout extends Component
 
         $order->save();
 
+        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::orderConverted($order->cart_id, $order->id);
+
+        $this->writeAbandonedCartSummaryLog($order);
+
         // Link abandoned cart email to conversion
         $abandonedCartEmailId = session()->pull('abandoned_cart_email_id');
         if ($abandonedCartEmailId) {
@@ -1256,5 +1260,42 @@ class Checkout extends Component
     public function render()
     {
         return view(config('dashed-core.site_theme', 'dashed') . '.checkout.checkout');
+    }
+
+    protected function writeAbandonedCartSummaryLog(Order $order): void
+    {
+        if (! $order->cart_id) {
+            return;
+        }
+
+        $logs = \Dashed\DashedEcommerceCore\Models\CartLog::query()
+            ->where('cart_id', $order->cart_id)
+            ->whereIn('event', ['cart.abandoned-email.scheduled', 'cart.abandoned-email.sent'])
+            ->orderBy('created_at')
+            ->get();
+
+        if ($logs->isEmpty()) {
+            return;
+        }
+
+        $sent = $logs->where('event', 'cart.abandoned-email.sent');
+        $scheduled = $logs->firstWhere('event', 'cart.abandoned-email.scheduled');
+        $flowName = $scheduled?->data['flow_name'] ?? null;
+        $discountCode = $sent->pluck('data.discount_code')->filter()->last();
+
+        $parts = [];
+        if ($flowName) {
+            $parts[] = sprintf('flow "%s"', $flowName);
+        }
+        $parts[] = sprintf('%d mail(s) verzonden', $sent->count());
+        if ($discountCode) {
+            $parts[] = sprintf('kortingscode %s', $discountCode);
+        }
+
+        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+            orderId: $order->id,
+            note: 'Order volgt uit abandoned cart flow — ' . implode(', ', $parts),
+            tag: 'abandoned-cart.converted',
+        );
     }
 }

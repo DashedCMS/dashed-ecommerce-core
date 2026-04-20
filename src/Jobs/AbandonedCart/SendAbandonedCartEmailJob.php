@@ -60,6 +60,8 @@ class SendAbandonedCartEmailJob implements ShouldQueue
         Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode, $cart->locale));
 
         $record->update(['sent_at' => now()]);
+
+        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::abandonedEmailSent($cart, $step, $discountCode);
     }
 
     private function generateDiscountCode($step, string $email): DiscountCode

@@ -24,6 +24,18 @@ class AbandonedCartFlow extends Model
         return $this->hasMany(AbandonedCartFlowStep::class, 'flow_id')->orderBy('sort_order');
     }
 
+    public function emails(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            AbandonedCartEmail::class,
+            AbandonedCartFlowStep::class,
+            'flow_id',
+            'flow_step_id',
+            'id',
+            'id',
+        );
+    }
+
     public static function getActive(): ?self
     {
         return static::where('is_active', true)->first();

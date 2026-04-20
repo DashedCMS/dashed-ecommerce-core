@@ -1001,8 +1001,14 @@ class CartHelper
         static::$shippingMethod = $shippingMethod;
 
         $cart = $this->getOrCreateCart();
+        $changed = $cart->shipping_method_id !== $shippingMethod;
         $cart->shipping_method_id = $shippingMethod;
         $cart->save();
+
+        if ($changed) {
+            $methodName = $shippingMethod ? optional(ShippingMethod::find($shippingMethod))->name : null;
+            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::shippingMethodChanged($cart, $shippingMethod, $methodName);
+        }
 
         static::$shippingCostsInitialized = false;
         static::$taxInitialized = false;
@@ -1033,8 +1039,14 @@ class CartHelper
         static::$paymentMethod = $paymentMethod;
 
         $cart = $this->getOrCreateCart();
+        $changed = $cart->payment_method_id !== $paymentMethod;
         $cart->payment_method_id = $paymentMethod;
         $cart->save();
+
+        if ($changed) {
+            $methodName = $paymentMethod ? optional(PaymentMethod::find($paymentMethod))->name : null;
+            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::paymentMethodChanged($cart, $paymentMethod, $methodName);
+        }
 
         static::$paymentCostsInitialized = false;
         static::$isPostPayMethod = false;
@@ -1355,11 +1367,16 @@ class CartHelper
     public function addToCart(string|int $productId, int $quantity = 1, array $options = []): array
     {
         $quantity = max(1, (int) $quantity);
+        $loggedCart = null;
+        $loggedProduct = null;
+        $loggedOptions = [];
 
-        DB::transaction(function () use ($productId, $quantity, $options) {
+        DB::transaction(function () use ($productId, $quantity, $options, &$loggedCart, &$loggedProduct, &$loggedOptions) {
             $cart = $this->getOrCreateCart(lockForUpdate: true);
+            $loggedCart = $cart;
 
             $options = $this->normalizeOptions($options);
+            $loggedOptions = $options;
             $hash = $this->optionsHash($options);
 
             $existing = CartItemModel::query()
@@ -1372,8 +1389,10 @@ class CartHelper
             if ($existing) {
                 $existing->quantity += $quantity;
                 $existing->save();
+                $loggedProduct = $existing;
             } else {
                 $product = Product::find($productId);
+                $loggedProduct = $product;
 
                 CartItemModel::create([
                     'cart_id' => $cart->id,
@@ -1386,6 +1405,8 @@ class CartHelper
                 ]);
             }
         });
+
+        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::productAdded($loggedCart, $loggedProduct, $quantity, $loggedOptions);
 
         $this->updateData();
 
@@ -1424,6 +1445,8 @@ class CartHelper
             $product = $cartItem->product_id ? Product::find($cartItem->product_id) : null;
 
             EcommerceActionLog::createLog('remove_from_cart', $cartItem->quantity, productId: $product?->id);
+
+            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::productRemoved($cart, (string) $cartItem->id, $product?->name ?? $cartItem->name);
 
             $cartItem->delete();
 
@@ -1475,6 +1498,7 @@ class CartHelper
 
         // logging add/remove delta
         $product = $cartItem->product_id ? Product::find($cartItem->product_id) : null;
+        $oldQuantity = (int) $cartItem->quantity;
 
         if ($cartItem->quantity > $quantity) {
             EcommerceActionLog::createLog('remove_from_cart', ($cartItem->quantity - $quantity), productId: $product?->id);
@@ -1484,6 +1508,14 @@ class CartHelper
 
         $cartItem->quantity = (int) $quantity;
         $cartItem->save();
+
+        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::quantityChanged(
+            $cart,
+            (string) $cartItem->id,
+            $oldQuantity,
+            (int) $quantity,
+            $product?->name ?? $cartItem->name,
+        );
 
         $this->updateData();
 
@@ -1556,11 +1588,15 @@ class CartHelper
         $this->updateData();
 
         if (! static::$discountCode) {
+            \Dashed\DashedEcommerceCore\Services\CartActivityLogger::discountApplied($cart, $code, 'danger');
+
             return [
                 'status' => 'danger',
                 'message' => Translation::get('discount-code-not-valid', static::$cartType, 'The discount code is not valid'),
             ];
         }
+
+        \Dashed\DashedEcommerceCore\Services\CartActivityLogger::discountApplied($cart, $code, 'success');
 
         return [
             'status' => 'success',
