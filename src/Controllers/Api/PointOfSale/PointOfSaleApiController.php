@@ -27,6 +27,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
@@ -58,6 +59,9 @@ class PointOfSaleApiController extends Controller
             $posCart->save();
         }
 
+        $isExVatInit = (bool) ($posCart->prices_ex_vat ?? false);
+        $modeInit = $isExVatInit ? 'ex' : 'incl';
+
         foreach ($products ?? [] as $productKey => &$product) {
             if (! isset($product['customProduct']) || $product['customProduct'] == false) {
                 $dbProduct = Product::find($product['id'] ?? 0);
@@ -72,8 +76,18 @@ class PointOfSaleApiController extends Controller
                 $product['singlePrice'] = (float) ($product['singlePrice'] ?? $dbProduct->currentPrice);
                 $product['price'] = (float) ($product['price'] ?? ($product['singlePrice'] * (int) ($product['quantity'] ?? 1)));
                 $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
+                $product['vat_rate'] = $product['vat_rate'] ?? (float) ($dbProduct->vat_rate ?? $dbProduct->tax_rate ?? 21);
             }
+
+            $lineDisplayInit = VatDisplay::formatLinePrice(
+                (float) ($product['price'] ?? 0),
+                $product['vat_rate'] ?? 21,
+                $modeInit,
+            );
+            $product['priceFormattedPrimary'] = $lineDisplayInit['primary'];
+            $product['priceFormattedSecondary'] = $lineDisplayInit['secondary'];
         }
+        unset($product);
 
         $shippingMethods = ShippingMethod::all();
         foreach ($shippingMethods as $shippingMethod) {
@@ -94,6 +108,7 @@ class PointOfSaleApiController extends Controller
 
         return response()->json([
             'posIdentifier' => $posIdentifier ?? null,
+            'isExVat' => $isExVatInit,
             'products' => array_reverse(array_values($products ?? [])),
             'shippingMethods' => $shippingMethods,
             'shippingMethodId' => $chosenShippingMethod->id ?? null,
@@ -175,10 +190,29 @@ class PointOfSaleApiController extends Controller
 
         $totalUnformatted = (float) $totals['subtotal'] + (float) $shippingCosts;
 
+        $isExVat = (bool) ($posCart->prices_ex_vat ?? false);
+        $mode = $isExVat ? 'ex' : 'incl';
+
         $vatPercentages = $totals['vatPercentages'] ?? [];
         foreach ($vatPercentages as $key => $value) {
             $vatPercentages[$key] = CurrencyHelper::formatPrice((float) $value);
         }
+
+        $subtotalIncl = (float) ($totals['subtotal'] ?? 0);
+        $vatTotal = (float) ($totals['vat'] ?? 0);
+        $subtotalEx = $subtotalIncl - $vatTotal;
+
+        $products = $posCart->products ?? [];
+        foreach ($products as &$product) {
+            $lineDisplay = VatDisplay::formatLinePrice(
+                (float) ($product['price'] ?? 0),
+                $product['vat_rate'] ?? 21,
+                $mode,
+            );
+            $product['priceFormattedPrimary'] = $lineDisplay['primary'];
+            $product['priceFormattedSecondary'] = $lineDisplay['secondary'];
+        }
+        unset($product);
 
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
         foreach ($paymentMethods as &$paymentMethod) {
@@ -203,7 +237,7 @@ class PointOfSaleApiController extends Controller
         }
 
         return [
-            'products' => array_reverse(array_values($posCart->products ?? [])),
+            'products' => array_reverse(array_values($products)),
             'discountCode' => $discountCodeString ?: null,
             'activeDiscountCode' => $discountCodeString ?: null,
 
@@ -211,7 +245,12 @@ class PointOfSaleApiController extends Controller
             'vat' => CurrencyHelper::formatPrice((float) ($totals['vat'] ?? 0)),
             'vatPercentages' => $vatPercentages,
 
-            'subTotal' => CurrencyHelper::formatPrice((float) ($totals['subtotal'] ?? 0)),
+            'isExVat' => $isExVat,
+            'subTotal' => $isExVat
+                ? CurrencyHelper::formatPrice($subtotalEx)
+                : CurrencyHelper::formatPrice($subtotalIncl),
+            'subTotalIncl' => CurrencyHelper::formatPrice($subtotalIncl),
+            'subTotalEx' => CurrencyHelper::formatPrice($subtotalEx),
             'total' => CurrencyHelper::formatPrice($totalUnformatted),
             'totalUnformatted' => $totalUnformatted,
 
@@ -432,6 +471,7 @@ class PointOfSaleApiController extends Controller
                 'singlePrice' => $unitPrice,
                 'price' => $unitPrice,
                 'priceFormatted' => CurrencyHelper::formatPrice($unitPrice),
+                'vat_rate' => (float) ($selectedProduct->vat_rate ?? $selectedProduct->tax_rate ?? 21),
                 'extra' => [],
             ];
         }
@@ -1434,7 +1474,7 @@ class PointOfSaleApiController extends Controller
         return $gross - ($gross / $divider);
     }
 
-    private function calculatePosCartTotals(POSCart $posCart, ?DiscountCode $discountCodeModel = null): array
+    public function calculatePosCartTotals(POSCart $posCart, ?DiscountCode $discountCodeModel = null): array
     {
         $products = $posCart->products ?? [];
         $customerUser = $posCart->customer_user_id ? User::find($posCart->customer_user_id) : null;

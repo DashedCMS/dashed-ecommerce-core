@@ -365,7 +365,10 @@
                             </div>
                             <div class="flex flex-col flex-wrap gap-1 flex-1">
                                 <span class="word-wrap text-sm" x-html="product.name"></span>
-                                <span class="font-bold text-md word-wrap" x-html="product.priceFormatted"></span>
+                                <div class="flex flex-col leading-tight">
+                                    <span class="font-bold text-md word-wrap" x-html="product.priceFormattedPrimary ?? product.priceFormatted"></span>
+                                    <span class="text-xs text-gray-400" x-html="product.priceFormattedSecondary" x-show="product.priceFormattedSecondary"></span>
+                                </div>
                                 <div class="flex flex-wrap gap-2">
                                     <button
                                         @click="changeQuantity(product.identifier, product.quantity + 1)"
@@ -427,7 +430,7 @@
                         <div class="text-xl font-bold grid gap-2">
                             <div class="flex items-center justify-between">
                                 <div class="flex flex-col">
-                                    <span>Subtotaal</span>
+                                    <span x-text="isExVat ? 'Subtotaal ex BTW' : 'Subtotaal'"></span>
                                     <span class="text-sm font-normal"
                                           x-html="totalQuantity() + ' artikelen'">0 artikelen</span>
                                 </div>
@@ -448,11 +451,6 @@
                                 </div>
                                 <hr>
                             </div>
-                            {{--                        <hr/>--}}
-                            {{--                        <span class="text-sm font-bold flex justify-between items-center">--}}
-                            {{--                        <span>Subtotaal</span>--}}
-                            {{--                    <span class="font-bold">{{ $subTotal }}</span>--}}
-                            {{--                </span>--}}
                             <template x-for="value,percentage in vatPercentages" x-show="vatPercentages.length">
                                 <div class="text-sm font-bold flex justify-between items-center">
                                     <span x-html="'BTW ' + percentage + '%'"></span>
@@ -470,6 +468,12 @@
                                 <span>BTW</span>
                                 <span class="font-bold">0</span>
                             </div>
+                            <template x-if="isExVat">
+                                <div class="flex items-center justify-between border-t pt-2">
+                                    <span>Totaal incl BTW</span>
+                                    <span class="font-bold" x-html="subTotalIncl"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <button @click="toggle('checkoutPopup')"
@@ -1791,7 +1795,10 @@
         discount: null,
         vat: null,
         vatPercentages: [],
+        isExVat: false,
         subTotal: null,
+        subTotalIncl: null,
+        subTotalEx: null,
         total: null,
         totalUnformatted: null,
         activeDiscountCode: null,
@@ -2061,7 +2068,10 @@
                     this.discount = data.discount;
                     this.vat = data.vat;
                     this.vatPercentages = data.vatPercentages;
+                    this.isExVat = data.isExVat ?? false;
                     this.subTotal = data.subTotal;
+                    this.subTotalIncl = data.subTotalIncl ?? data.subTotal;
+                    this.subTotalEx = data.subTotalEx ?? data.subTotal;
                     this.total = data.total;
                     this.totalUnformatted = data.totalUnformatted;
                     this.shippingMethods = data.shippingMethods;
