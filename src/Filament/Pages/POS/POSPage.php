@@ -105,6 +105,8 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public $cashPaymentAmount = null;
 
+    public bool $priceModeOverridden = false;
+
     protected $listeners = [
         'fullscreenValue',
         'notify',
@@ -222,6 +224,35 @@ class POSPage extends Component implements HasActions, HasSchemas
         ];
 
         $this->changeProductForm->fill($this->productToChange);
+    }
+
+    public function getHeaderActions(): array
+    {
+        $posCart = $this->getActivePosCart();
+        $exMode = (bool) ($posCart->prices_ex_vat ?? false);
+
+        return [
+            \Filament\Actions\Action::make('togglePriceMode')
+                ->label($exMode ? 'Prijzen: ex BTW' : 'Prijzen: incl BTW')
+                ->icon($exMode ? 'heroicon-o-receipt-percent' : 'heroicon-o-currency-euro')
+                ->color($exMode ? 'warning' : 'gray')
+                ->button()
+                ->action('togglePriceMode'),
+        ];
+    }
+
+    public function togglePriceMode(): void
+    {
+        $posCart = $this->getActivePosCart();
+        $posCart->prices_ex_vat = ! (bool) $posCart->prices_ex_vat;
+        $posCart->save();
+
+        $this->priceModeOverridden = true;
+
+        \Filament\Notifications\Notification::make()
+            ->title($posCart->prices_ex_vat ? __('Prijzen tonen ex BTW') : __('Prijzen tonen incl BTW'))
+            ->success()
+            ->send();
     }
 
     public function submitChangeProductForm()
