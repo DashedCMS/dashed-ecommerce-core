@@ -19,7 +19,7 @@
                         <button type="button"
                                 wire:click="togglePriceMode"
                                 x-bind:disabled="loading"
-                                x-bind:class="[isExVat ? 'bg-amber-500 hover:bg-amber-600' : 'bg-primary-500 hover:bg-primary-700', loading ? 'opacity-60' : '']"
+                                x-bind:class="['bg-primary-500 hover:bg-primary-700', loading ? 'opacity-60' : '']"
                                 x-bind:title="isExVat ? 'Prijzen tonen: ex BTW (klik voor incl)' : 'Prijzen tonen: incl BTW (klik voor ex)'"
                                 class="h-12 px-4 text-white transition-all duration-300 ease-in-out rounded-full flex items-center justify-center gap-2 text-sm font-semibold">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
