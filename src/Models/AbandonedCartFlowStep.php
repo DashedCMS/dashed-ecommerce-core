@@ -54,6 +54,44 @@ class AbandonedCartFlowStep extends Model
         return $this->hasMany(AbandonedCartEmail::class, 'flow_step_id');
     }
 
+    public function revenueSum(): float
+    {
+        return (float) $this->emails()
+            ->whereNotNull('converted_at')
+            ->whereNotNull('order_id')
+            ->join('dashed__orders', 'dashed__orders.id', '=', 'dashed__abandoned_cart_emails.order_id')
+            ->sum('dashed__orders.total');
+    }
+
+    public function conversionRateFromSent(): float
+    {
+        $sent = $this->emails()->whereNotNull('sent_at')->count();
+
+        if ($sent === 0) {
+            return 0.0;
+        }
+
+        $converted = $this->emails()->whereNotNull('converted_at')->count();
+
+        return round(($converted / $sent) * 100, 1);
+    }
+
+    public function averageConversionHours(): ?float
+    {
+        $rows = $this->emails()
+            ->whereNotNull('sent_at')
+            ->whereNotNull('converted_at')
+            ->get(['sent_at', 'converted_at']);
+
+        if ($rows->isEmpty()) {
+            return null;
+        }
+
+        $hours = $rows->map(fn ($row) => $row->sent_at->floatDiffInHours($row->converted_at));
+
+        return round($hours->avg(), 1);
+    }
+
     public function getDelayInHoursAttribute(): int
     {
         return match ($this->delay_unit) {

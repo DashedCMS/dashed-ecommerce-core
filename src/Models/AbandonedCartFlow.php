@@ -36,6 +36,70 @@ class AbandonedCartFlow extends Model
         );
     }
 
+    public function recoveryRate(): float
+    {
+        $stepIds = $this->steps()->pluck('id');
+
+        if ($stepIds->isEmpty()) {
+            return 0.0;
+        }
+
+        $sent = AbandonedCartEmail::query()
+            ->whereIn('flow_step_id', $stepIds)
+            ->whereNotNull('sent_at')
+            ->count();
+
+        if ($sent === 0) {
+            return 0.0;
+        }
+
+        $converted = AbandonedCartEmail::query()
+            ->whereIn('flow_step_id', $stepIds)
+            ->whereNotNull('converted_at')
+            ->count();
+
+        return round(($converted / $sent) * 100, 1);
+    }
+
+    public function revenueSum(): float
+    {
+        $stepIds = $this->steps()->pluck('id');
+
+        if ($stepIds->isEmpty()) {
+            return 0.0;
+        }
+
+        return (float) AbandonedCartEmail::query()
+            ->whereIn('flow_step_id', $stepIds)
+            ->whereNotNull('converted_at')
+            ->whereNotNull('order_id')
+            ->join('dashed__orders', 'dashed__orders.id', '=', 'dashed__abandoned_cart_emails.order_id')
+            ->sum('dashed__orders.total');
+    }
+
+    public function averageConversionHours(): ?float
+    {
+        $stepIds = $this->steps()->pluck('id');
+
+        if ($stepIds->isEmpty()) {
+            return null;
+        }
+
+        $rows = AbandonedCartEmail::query()
+            ->whereIn('flow_step_id', $stepIds)
+            ->whereNotNull('sent_at')
+            ->whereNotNull('converted_at')
+            ->get(['sent_at', 'converted_at']);
+
+        if ($rows->isEmpty()) {
+            return null;
+        }
+
+        $hours = $rows->map(fn ($row) => $row->sent_at->floatDiffInHours($row->converted_at));
+
+        return round($hours->avg(), 1);
+    }
+
     public static function getActive(): ?self
     {
         return static::where('is_active', true)->first();
