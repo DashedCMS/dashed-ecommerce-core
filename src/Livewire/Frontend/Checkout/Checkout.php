@@ -848,7 +848,9 @@ class Checkout extends Component
             $order->user_id = auth()->user()->id;
         }
 
-        $order->cart_id = cartHelper()->getCart()->id;
+        $cartForVatMode = cartHelper()->getCart();
+        $order->cart_id = $cartForVatMode->id;
+        $order->prices_ex_vat = (bool) ($cartForVatMode->prices_ex_vat ?? false);
 
         $order->save();
 
