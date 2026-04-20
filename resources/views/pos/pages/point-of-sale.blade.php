@@ -1,5 +1,6 @@
 <div class="relative w-full h-full"
-     x-data="POSData()">
+     x-data="POSData()"
+     @price-mode-toggled.window="retrieveCart()">
     <style>
         .scrollbar-wide::-webkit-scrollbar {
             width: 16px;

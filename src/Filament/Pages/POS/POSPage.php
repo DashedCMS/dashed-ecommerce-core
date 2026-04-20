@@ -253,6 +253,8 @@ class POSPage extends Component implements HasActions, HasSchemas
             ->title($posCart->prices_ex_vat ? __('Prijzen tonen ex BTW') : __('Prijzen tonen incl BTW'))
             ->success()
             ->send();
+
+        $this->dispatch('price-mode-toggled');
     }
 
     public function submitChangeProductForm()
