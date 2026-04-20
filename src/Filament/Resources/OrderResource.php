@@ -385,6 +385,7 @@ class OrderResource extends Resource
                                 'partially_paid' => 'Gedeeltelijk betaald',
                                 'waiting_for_confirmation' => 'Wachten op bevestiging',
                                 'pending' => 'Lopende aankoop',
+                                'concept' => 'Concept',
                                 'cancelled' => 'Geannuleerd',
                                 'return ' => 'Retour',
                             ])

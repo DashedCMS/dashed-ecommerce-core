@@ -24,14 +24,33 @@ class ConceptOrderService
 
             if ($existingConcept && $existingConcept->isConcept()) {
                 $order = $existingConcept;
-                $order->orderProducts()->delete();
+                // Hard-delete any existing items (including soft-deleted ghosts) so the concept
+                // is fully rewritten instead of accumulating stale rows.
+                $order->orderProducts()->withTrashed()->forceDelete();
             } else {
                 $order = new Order();
             }
 
             $order->status = Order::STATUS_CONCEPT;
             $order->order_origin = 'pos';
-            $order->user_id = $cashier->id;
+            $order->user_id = $posCart->customer_user_id ?: $cashier->id;
+            $order->first_name = $posCart->first_name;
+            $order->last_name = $posCart->last_name;
+            $order->email = $posCart->email;
+            $order->phone_number = $posCart->phone_number;
+            $order->street = $posCart->street;
+            $order->house_nr = $posCart->house_nr;
+            $order->zip_code = $posCart->zip_code;
+            $order->city = $posCart->city;
+            $order->country = $posCart->country;
+            $order->company_name = $posCart->company;
+            $order->btw_id = $posCart->btw_id;
+            $order->invoice_street = $posCart->invoice_street;
+            $order->invoice_house_nr = $posCart->invoice_house_nr;
+            $order->invoice_zip_code = $posCart->invoice_zip_code;
+            $order->invoice_city = $posCart->invoice_city;
+            $order->invoice_country = $posCart->invoice_country;
+            $order->note = $posCart->note;
             $order->total = $subtotal;
             $order->subtotal = $subtotal;
             $order->btw = 0;

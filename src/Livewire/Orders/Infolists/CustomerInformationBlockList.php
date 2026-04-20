@@ -6,18 +6,21 @@ use Livewire\Component;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Helper;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-class CustomerInformationBlockList extends Component implements HasSchemas
+class CustomerInformationBlockList extends Component implements HasActions, HasSchemas
 {
+    use InteractsWithActions;
     use InteractsWithSchemas;
 
     public Order $order;

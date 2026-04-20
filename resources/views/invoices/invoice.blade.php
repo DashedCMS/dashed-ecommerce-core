@@ -1,12 +1,23 @@
-<x-dashed-ecommerce-core::invoices.master :title="Translation::get('invoice-for', 'invoice', 'Factuur voor :siteName:', 'text', [
-            'siteName' => Customsetting::get('site_name')
-        ])">
+@php
+    $isConcept = $order->isConcept();
+    $pdfTitle = $isConcept
+        ? Translation::get('order-confirmation-for', 'invoice', 'Orderbevestiging voor :siteName:', 'text', [
+            'siteName' => Customsetting::get('site_name'),
+        ])
+        : Translation::get('invoice-for', 'invoice', 'Factuur voor :siteName:', 'text', [
+            'siteName' => Customsetting::get('site_name'),
+        ]);
+@endphp
+
+<x-dashed-ecommerce-core::invoices.master :title="$pdfTitle">
     @php
-        $remainderQr = \Dashed\DashedEcommerceCore\Classes\InvoiceQrCodeGenerator::for($order);
-        $remainderOutstanding = $order->outstandingAmount();
+        $remainderQr = $isConcept ? null : \Dashed\DashedEcommerceCore\Classes\InvoiceQrCodeGenerator::for($order);
+        $remainderOutstanding = $isConcept ? 0 : $order->outstandingAmount();
     @endphp
 
-    @if ($order->status == 'return')
+    @if ($isConcept)
+        <h1>{{ Translation::get('order-confirmation', 'invoice', 'Orderbevestiging') }}</h1>
+    @elseif ($order->status == 'return')
         <h1>{{ Translation::get('credit-invoice', 'invoice', 'Creditfactuur') }}</h1>
     @else
         <h1>{{ Translation::get('invoice', 'invoice', 'Factuur') }}</h1>
@@ -76,14 +87,26 @@
 
     <table class="table-dates">
         <tr>
-            <th>{{ Translation::get('invoice-number', 'invoice', 'Factuur nummer') }}</th>
-            <th>{{ Translation::get('invoice-date', 'invoice', 'Factuur datum') }}</th>
+            <th>
+                @if ($isConcept)
+                    {{ Translation::get('order-number', 'invoice', 'Ordernummer') }}
+                @else
+                    {{ Translation::get('invoice-number', 'invoice', 'Factuur nummer') }}
+                @endif
+            </th>
+            <th>
+                @if ($isConcept)
+                    {{ Translation::get('order-date', 'invoice', 'Orderdatum') }}
+                @else
+                    {{ Translation::get('invoice-date', 'invoice', 'Factuur datum') }}
+                @endif
+            </th>
             <th>{{ Translation::get('payment-method', 'invoice', 'Betaal methode') }}</th>
             <th>{{ Translation::get('shipping-method', 'invoice', 'Verzend methode') }}</th>
         </tr>
 
         <tr>
-            <td>{{ $order->invoice_id }}</td>
+            <td>{{ $order->invoice_id ?: ($isConcept ? ('#' . $order->id) : '') }}</td>
             <td>{{ $order->created_at->format('d-m-Y') }}</td>
             <td>{{ $order->paymentMethod ?: Translation::get('payment-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
             <td>{{ $order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'invoice', 'niet gekozen') }}</td>

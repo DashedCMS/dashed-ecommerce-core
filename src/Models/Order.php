@@ -472,6 +472,8 @@ class Order extends Model
     public function createInvoice()
     {
         if ($this->isConcept()) {
+            $this->createConceptConfirmation();
+
             return;
         }
 
@@ -486,6 +488,23 @@ class Order extends Model
             //                OrderLog::createLog(orderId: $this->id, note: 'Creating no invoice, WRONG', isDebugLog: true);
         }
         //        }
+    }
+
+    public function createConceptConfirmation(): void
+    {
+        $order = $this;
+        $invoicePath = $this->invoicePath();
+        if (Storage::disk('dashed')->exists($invoicePath)) {
+            return;
+        }
+
+        $view = View::make('dashed-ecommerce-core::invoices.invoice', compact('order'));
+        $contents = $view->render();
+        $pdf = App::make('dompdf.wrapper');
+        $pdf->loadHTML($contents);
+        $output = $pdf->output();
+
+        Storage::disk('dashed')->put($invoicePath, $output);
     }
 
     public function createNormalInvoice()
