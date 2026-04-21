@@ -463,7 +463,9 @@ trait CreateManualOrderActions2
         if ($this->orderOrigin === 'pos' && $loadedConceptId) {
             $order = \Dashed\DashedEcommerceCore\Models\Order::concept()->find($loadedConceptId);
             if ($order) {
-                $order->orderProducts()->delete();
+                // Hard-delete including soft-deleted rows so the withTrashed() relation doesn't
+                // leave concept lines visible next to the new pending ones.
+                $order->orderProducts()->withTrashed()->forceDelete();
                 $order->status = 'pending';
                 session()->forget('pos.loaded_concept_order_id');
             }

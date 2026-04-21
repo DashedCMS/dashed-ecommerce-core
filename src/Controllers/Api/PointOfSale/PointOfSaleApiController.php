@@ -756,7 +756,11 @@ class PointOfSaleApiController extends Controller
         if ($orderOrigin === 'pos' && $loadedConceptId) {
             $order = Order::concept()->find($loadedConceptId);
             if ($order) {
-                $order->orderProducts()->delete();
+                // Hard-delete the concept's order products (including soft-deleted ghosts). The
+                // orderProducts() relation uses withTrashed(), so a regular ->delete() would leave
+                // soft-deleted rows visible alongside the new ones and duplicate every line on the
+                // finalised order/invoice.
+                $order->orderProducts()->withTrashed()->forceDelete();
                 $posCart->loaded_concept_order_id = null;
                 $posCart->save();
             }
