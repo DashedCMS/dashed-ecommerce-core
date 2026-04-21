@@ -62,6 +62,75 @@ it('restores the prices_ex_vat flag to the POS cart when hydrating from a concep
     expect($posCart->fresh()->prices_ex_vat)->toBeTrue();
 });
 
+it('restores the POS cart from the concept snapshot verbatim (totals, vat_rate, extras)', function () {
+    $cashier = makeCashier();
+    $products = [
+        [
+            'id' => null,
+            'identifier' => 'first',
+            'name' => 'Custom 9%',
+            'quantity' => 2,
+            'singlePrice' => 10.90,
+            'price' => 21.80,
+            'vat_rate' => 9,
+            'extra' => [],
+            'customProduct' => true,
+            'isCustomPrice' => true,
+        ],
+        [
+            'id' => null,
+            'identifier' => 'second',
+            'name' => 'Custom 21%',
+            'quantity' => 1,
+            'singlePrice' => 50.00,
+            'price' => 50.00,
+            'vat_rate' => 21,
+            'extra' => ['engraving' => 'Happy bday'],
+            'customProduct' => true,
+            'isCustomPrice' => true,
+        ],
+    ];
+
+    $posCart = POSCart::create([
+        'user_id' => $cashier->id,
+        'identifier' => 'test-'.uniqid(),
+        'products' => $products,
+        'prices_ex_vat' => true,
+    ]);
+
+    $order = ConceptOrderService::saveAsConcept($posCart, $cashier);
+
+    expect((float) $order->subtotal)->toEqualWithDelta(71.80, 0.001);
+    expect((float) $order->btw)->toEqualWithDelta(1.80 + 8.68, 0.02); // 9% of €20 ex + 21% of €41.32 ex
+    expect($order->concept_cart_snapshot)->toBeArray();
+    expect(count($order->concept_cart_snapshot))->toBe(2);
+
+    $freshPos = POSCart::create([
+        'user_id' => $cashier->id,
+        'identifier' => 'fresh-'.uniqid(),
+        'products' => [],
+    ]);
+
+    ConceptOrderService::hydrate($freshPos, Order::find($order->id));
+
+    $restored = $freshPos->fresh()->products;
+    expect($restored)->toHaveCount(2);
+
+    // Quantities, unit prices, and vat rates survive the round-trip.
+    expect($restored[0]['quantity'])->toBe(2);
+    expect((float) $restored[0]['price'])->toEqualWithDelta(21.80, 0.001);
+    expect((float) $restored[0]['singlePrice'])->toEqualWithDelta(10.90, 0.001);
+    expect((float) $restored[0]['vat_rate'])->toBe(9.0);
+
+    expect((float) $restored[1]['price'])->toEqualWithDelta(50.00, 0.001);
+    expect((float) $restored[1]['vat_rate'])->toBe(21.0);
+    expect($restored[1]['extra'])->toBe(['engraving' => 'Happy bday']);
+
+    // prices_ex_vat and identifiers are preserved as expected.
+    expect($freshPos->fresh()->prices_ex_vat)->toBeTrue();
+    expect($restored[0]['identifier'])->not->toBe('first');
+});
+
 it('copies prices_ex_vat from POSCart to the order created via PointOfSaleApiController::createOrder', function () {
     $cashier = User::create([
         'first_name' => 'Cash',

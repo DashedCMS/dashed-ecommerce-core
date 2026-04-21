@@ -17,9 +17,12 @@ class ConceptOrderService
             $products = $posCart->products ?? [];
 
             $subtotal = 0.0;
+            $totalBtw = 0.0;
             foreach ($products as $row) {
-                // $row['price'] is already the line total (singlePrice * quantity).
-                $subtotal += (float) ($row['price'] ?? 0);
+                $lineTotal = (float) ($row['price'] ?? 0);
+                $vatRate = (float) ($row['vat_rate'] ?? 21);
+                $subtotal += $lineTotal;
+                $totalBtw += $vatRate > 0 ? $lineTotal - ($lineTotal / (1 + $vatRate / 100)) : 0.0;
             }
 
             if ($existingConcept && $existingConcept->isConcept()) {
@@ -52,9 +55,13 @@ class ConceptOrderService
             $order->invoice_country = $posCart->invoice_country;
             $order->note = $posCart->note;
             $order->prices_ex_vat = (bool) ($posCart->prices_ex_vat ?? false);
+            $order->shipping_method_id = $posCart->shipping_method_id ?? null;
+            $order->concept_discount_code = $posCart->discount_code ?? null;
+            // Full-fidelity snapshot so hydrate() can restore the cart exactly as it was saved.
+            $order->concept_cart_snapshot = array_values($products);
             $order->total = $subtotal;
             $order->subtotal = $subtotal;
-            $order->btw = 0;
+            $order->btw = round($totalBtw, 2);
             $order->discount = 0;
             $order->invoice_id = null;
             $order->save();
@@ -62,11 +69,14 @@ class ConceptOrderService
             foreach ($products as $row) {
                 $quantity = max(1, (int) ($row['quantity'] ?? 1));
                 $lineTotal = (float) ($row['price'] ?? 0);
+                $vatRate = (float) ($row['vat_rate'] ?? 21);
 
                 $order->orderProducts()->create([
                     'product_id' => $row['id'] ?? null,
                     'quantity' => $quantity,
                     'price' => $lineTotal,
+                    'vat_rate' => $vatRate,
+                    'product_extras' => $row['extra'] ?? [],
                     'name' => $row['name'] ?? (isset($row['id']) ? (Product::find($row['id'])?->name ?? 'Product') : 'Product'),
                 ]);
             }
@@ -85,35 +95,51 @@ class ConceptOrderService
             throw new \LogicException('Cannot hydrate POS cart from a non-concept order.');
         }
 
-        $products = [];
-        foreach ($order->orderProducts as $op) {
-            $quantity = max(1, (int) $op->quantity);
-            // OrderProduct.price stores the line total, not the unit price.
-            $lineTotal = (float) $op->price;
-            $unitPrice = $quantity > 0 ? $lineTotal / $quantity : $lineTotal;
+        $snapshot = $order->concept_cart_snapshot;
 
-            $product = $op->product_id ? Product::find($op->product_id) : null;
-            $image = '';
-            if ($product && $product->firstImage) {
-                $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
+        if (is_array($snapshot) && count($snapshot) > 0) {
+            // Verbatim restore — every field (vat_rate, extras, custom flags, formatted prices)
+            // is preserved exactly as it was when the cashier saved the concept.
+            $products = array_map(function (array $row): array {
+                // Refresh identifier so hydrated rows don't collide with anything in memory.
+                $row['identifier'] = (string) Str::random();
+
+                return $row;
+            }, $snapshot);
+        } else {
+            // Fallback for concepts that predate the snapshot column — reconstruct from orderProducts.
+            $products = [];
+            foreach ($order->orderProducts as $op) {
+                $quantity = max(1, (int) $op->quantity);
+                $lineTotal = (float) $op->price;
+                $unitPrice = $quantity > 0 ? $lineTotal / $quantity : $lineTotal;
+
+                $product = $op->product_id ? Product::find($op->product_id) : null;
+                $image = '';
+                if ($product && $product->firstImage) {
+                    $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
+                }
+
+                $products[] = [
+                    'id' => $op->product_id,
+                    'identifier' => (string) Str::random(),
+                    'name' => $op->name ?: ($product?->name ?? 'Product'),
+                    'image' => $image,
+                    'quantity' => $quantity,
+                    'singlePrice' => $unitPrice,
+                    'price' => $lineTotal,
+                    'priceFormatted' => CurrencyHelper::formatPrice($lineTotal),
+                    'vat_rate' => (float) ($op->vat_rate ?? 21),
+                    'extra' => is_array($op->product_extras) ? $op->product_extras : [],
+                    'customProduct' => ! $op->product_id,
+                ];
             }
-
-            $products[] = [
-                'id' => $op->product_id,
-                'identifier' => (string) Str::random(),
-                'name' => $op->name ?: ($product?->name ?? 'Product'),
-                'image' => $image,
-                'quantity' => $quantity,
-                'singlePrice' => $unitPrice,
-                'price' => $lineTotal,
-                'priceFormatted' => CurrencyHelper::formatPrice($lineTotal),
-                'extra' => [],
-                'customProduct' => ! $op->product_id,
-            ];
         }
 
         $posCart->products = $products;
         $posCart->prices_ex_vat = (bool) ($order->prices_ex_vat ?? false);
+        $posCart->shipping_method_id = $order->shipping_method_id ?? null;
+        $posCart->discount_code = $order->concept_discount_code ?? null;
         $posCart->save();
     }
 

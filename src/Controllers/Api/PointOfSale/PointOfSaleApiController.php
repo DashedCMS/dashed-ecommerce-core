@@ -805,6 +805,9 @@ class PointOfSaleApiController extends Controller
 
         $order->shipping_method_id = $shippingMethod->id ?? null;
         $order->prices_ex_vat = (bool) ($posCart->prices_ex_vat ?? false);
+        // Clear concept-only snapshot data now that the order is being finalised.
+        $order->concept_cart_snapshot = null;
+        $order->concept_discount_code = null;
         $order->save();
 
         $extraOptionCache = [];
