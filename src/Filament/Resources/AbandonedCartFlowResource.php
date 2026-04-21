@@ -16,6 +16,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Pages\EditAbandonedCartFlow;
@@ -50,6 +51,20 @@ class AbandonedCartFlowResource extends Resource
             Toggle::make('is_active')
                 ->label('Actieve flow')
                 ->helperText('Slechts één flow kan actief zijn tegelijk.'),
+
+            CheckboxList::make('triggers')
+                ->label('Triggers')
+                ->options([
+                    'cart_with_email' => 'Verlaten winkelwagen (met email)',
+                    'cancelled_order' => 'Geannuleerde bestelling (niet betaald)',
+                ])
+                ->descriptions([
+                    'cart_with_email' => 'Start flow wanneer een cart een emailadres krijgt en niet wordt afgerond.',
+                    'cancelled_order' => 'Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.',
+                ])
+                ->default(['cart_with_email'])
+                ->minItems(1)
+                ->required(),
         ]);
     }
 
@@ -66,19 +81,57 @@ class AbandonedCartFlowResource extends Resource
                     ->counts('steps')
                     ->badge()
                     ->color('info'),
+                TextColumn::make('triggers')
+                    ->label('Triggers')
+                    ->badge()
+                    ->separator(',')
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'cart_with_email' => 'Cart',
+                        'cancelled_order' => 'Geannuleerde order',
+                        default => (string) $state,
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        'cart_with_email' => 'success',
+                        'cancelled_order' => 'info',
+                        default => 'gray',
+                    }),
                 TextColumn::make('pending_count')
-                    ->label('In wacht')
-                    ->state(fn ($record) => $record->emails()->whereNull('sent_at')->whereNull('cancelled_at')->count())
+                    ->label('In wacht (cart / order)')
+                    ->state(function ($record) {
+                        $cart = $record->emails()
+                            ->where('dashed__abandoned_cart_emails.trigger_type', 'cart_with_email')
+                            ->whereNull('sent_at')->whereNull('cancelled_at')->count();
+                        $order = $record->emails()
+                            ->where('dashed__abandoned_cart_emails.trigger_type', 'cancelled_order')
+                            ->whereNull('sent_at')->whereNull('cancelled_at')->count();
+                        return "{$cart} / {$order}";
+                    })
                     ->badge()
                     ->color('warning'),
                 TextColumn::make('sent_count')
-                    ->label('Verzonden')
-                    ->state(fn ($record) => $record->emails()->whereNotNull('sent_at')->count())
+                    ->label('Verzonden (cart / order)')
+                    ->state(function ($record) {
+                        $cart = $record->emails()
+                            ->where('dashed__abandoned_cart_emails.trigger_type', 'cart_with_email')
+                            ->whereNotNull('sent_at')->count();
+                        $order = $record->emails()
+                            ->where('dashed__abandoned_cart_emails.trigger_type', 'cancelled_order')
+                            ->whereNotNull('sent_at')->count();
+                        return "{$cart} / {$order}";
+                    })
                     ->badge()
                     ->color('info'),
                 TextColumn::make('converted_count')
-                    ->label('Geconverteerd')
-                    ->state(fn ($record) => $record->emails()->whereNotNull('converted_at')->count())
+                    ->label('Geconverteerd (cart / order)')
+                    ->state(function ($record) {
+                        $cart = $record->emails()
+                            ->where('dashed__abandoned_cart_emails.trigger_type', 'cart_with_email')
+                            ->whereNotNull('converted_at')->count();
+                        $order = $record->emails()
+                            ->where('dashed__abandoned_cart_emails.trigger_type', 'cancelled_order')
+                            ->whereNotNull('converted_at')->count();
+                        return "{$cart} / {$order}";
+                    })
                     ->badge()
                     ->color('success'),
                 IconColumn::make('is_active')
