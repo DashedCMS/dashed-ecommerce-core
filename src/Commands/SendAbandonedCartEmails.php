@@ -6,10 +6,10 @@ use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
-use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartSourceResolver;
 
 class SendAbandonedCartEmails extends Command
 {
@@ -30,15 +30,19 @@ class SendAbandonedCartEmails extends Command
             $step = $record->flowStep;
 
             if (! $step || ! $step->enabled) {
-                $record->update(['cancelled_at' => now()]);
+                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'step_disabled']);
 
                 continue;
             }
 
-            $cart = Cart::with(['items', 'items.product', 'items.product.productGroup'])->find($record->cart_id);
+            if (! $this->sourceIsValid($record)) {
+                continue;
+            }
 
-            if (! $cart || $cart->items->isEmpty()) {
-                $record->update(['cancelled_at' => now()]);
+            $source = AbandonedCartSourceResolver::for($record);
+
+            if ($source->items()->isEmpty()) {
+                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_empty']);
 
                 continue;
             }
@@ -50,7 +54,7 @@ class SendAbandonedCartEmails extends Command
                 $record->update(['discount_code_id' => $discountCode->id]);
             }
 
-            Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode, $cart->locale, $record->id));
+            Mail::to($record->email)->send(new AbandonedCartMail($record, $step, $discountCode, $source->locale(), $record->id));
 
             $record->update(['sent_at' => now()]);
 
@@ -58,6 +62,38 @@ class SendAbandonedCartEmails extends Command
         }
 
         $this->info("Done. {$emails->count()} email(s) processed.");
+    }
+
+    private function sourceIsValid(AbandonedCartEmail $record): bool
+    {
+        if ($record->trigger_type === 'cancelled_order') {
+            $order = $record->cancelledOrder;
+
+            if (! $order) {
+                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_empty']);
+
+                return false;
+            }
+
+            $orderWasPaid = $order->orderPayments()->where('status', 'paid')->exists();
+            if ($orderWasPaid || $order->status !== 'cancelled') {
+                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_recovered']);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        $cart = $record->cart;
+
+        if (! $cart) {
+            $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_empty']);
+
+            return false;
+        }
+
+        return true;
     }
 
     private function generateDiscountCode($step, string $email): DiscountCode
