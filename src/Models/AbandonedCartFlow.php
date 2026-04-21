@@ -13,11 +13,18 @@ class AbandonedCartFlow extends Model
         'name',
         'is_active',
         'discount_prefix',
+        'triggers',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'triggers' => 'array',
     ];
+
+    public function hasTrigger(string $trigger): bool
+    {
+        return in_array($trigger, $this->triggers ?? [], true);
+    }
 
     public function steps(): HasMany
     {
