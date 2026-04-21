@@ -3,11 +3,13 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Dashed\DashedEcommerceCore\Listeners\ClearProductCache;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Listeners\UpdateOrderReservedStock;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Listeners\PrintDocumentsAfterPaidOrder;
+use Dashed\DashedEcommerceCore\Listeners\AbandonedCart\QueueAbandonedCartEmailsForOrderListener;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
@@ -26,6 +28,9 @@ class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
         ],
         OrderCreatedEvent::class => [
           UpdateOrderReservedStock::class,
+        ],
+        OrderCancelledEvent::class => [
+            QueueAbandonedCartEmailsForOrderListener::class,
         ],
     ];
 
