@@ -13,6 +13,7 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Classes\Printing;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
@@ -921,6 +922,8 @@ class Order extends Model
                 }
             }
         }
+
+        OrderCancelledEvent::dispatch($this);
 
         $this->updateOrderProductsProductInformation();
     }
