@@ -137,14 +137,22 @@ class AdminPreOrderConfirmationMail extends Mailable implements RegistersEmailTe
 
     public function telegramSummary(): TelegramSummary
     {
+        $orderProducts = ($this->order->orderProducts ?? collect())->filter(fn ($op) => ! empty($op->product_id));
+        $productList = $orderProducts
+            ->map(fn ($op) => '• ' . (int) $op->quantity . 'x ' . ($op->name ?? '-'))
+            ->implode("\n");
+
         return new TelegramSummary(
-            title: 'Pre-order #' . $this->order->invoice_id,
+            title: 'Nieuwe bestelling #' . $this->order->invoice_id . "\nPre-order",
             fields: [
                 'Klant' => trim(($this->order->first_name ?? '') . ' ' . ($this->order->last_name ?? '')) ?: ($this->order->email ?? '-'),
                 'Bedrag' => '€' . number_format((float) $this->order->total, 2, ',', '.'),
+                'Items' => (string) ((int) $orderProducts->sum('quantity')) . ' producten',
+                'Producten' => $productList ?: null,
+                'Betaalmethode' => $this->order->payment_method ?? null,
             ],
             adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
-            emoji: '📅',
+            emoji: '🛒',
         );
     }
 }
