@@ -467,6 +467,8 @@ trait CreateManualOrderActions2
                 // leave concept lines visible next to the new pending ones.
                 $order->orderProducts()->withTrashed()->forceDelete();
                 $order->status = 'pending';
+                // Reset created_at so this is tracked as placed now, not at concept time.
+                $order->created_at = now();
                 session()->forget('pos.loaded_concept_order_id');
             }
         }

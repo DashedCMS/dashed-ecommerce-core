@@ -761,6 +761,9 @@ class PointOfSaleApiController extends Controller
                 // soft-deleted rows visible alongside the new ones and duplicate every line on the
                 // finalised order/invoice.
                 $order->orderProducts()->withTrashed()->forceDelete();
+                // Finalising a concept means the order is being placed now — reset the
+                // created_at so reports and the invoice show the real order moment.
+                $order->created_at = now();
                 $posCart->loaded_concept_order_id = null;
                 $posCart->save();
             }
