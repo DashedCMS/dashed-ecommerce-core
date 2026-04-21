@@ -12,6 +12,8 @@ class AbandonedCartEmail extends Model
 
     protected $fillable = [
         'cart_id',
+        'trigger_type',
+        'cancelled_order_id',
         'email',
         'email_number',
         'flow_step_id',
@@ -19,6 +21,7 @@ class AbandonedCartEmail extends Model
         'sent_at',
         'clicked_at',
         'cancelled_at',
+        'cancelled_reason',
         'discount_code_id',
         'order_id',
         'converted_at',
@@ -57,12 +60,38 @@ class AbandonedCartEmail extends Model
         return $this->hasMany(AbandonedCartClick::class, 'abandoned_cart_email_id');
     }
 
+    public function cancelledOrder(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'cancelled_order_id');
+    }
+
+    public function source(): ?\Illuminate\Database\Eloquent\Model
+    {
+        return match ($this->trigger_type) {
+            'cancelled_order' => $this->cancelledOrder,
+            'cart_with_email' => $this->cart,
+            default => null,
+        };
+    }
+
     public static function cancelAllForCart(int $cartId): void
     {
         static::where('cart_id', $cartId)
             ->whereNull('cancelled_at')
             ->whereNull('sent_at')
             ->update(['cancelled_at' => now()]);
+    }
+
+    public static function cancelPendingForEmail(string $email, string $reason = 'converted'): int
+    {
+        return static::query()
+            ->where('email', $email)
+            ->whereNull('sent_at')
+            ->whereNull('cancelled_at')
+            ->update([
+                'cancelled_at' => now(),
+                'cancelled_reason' => $reason,
+            ]);
     }
 
     public function isPending(): bool
