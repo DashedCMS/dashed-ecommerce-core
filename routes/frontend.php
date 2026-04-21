@@ -74,3 +74,7 @@ Route::middleware(['web', AdminMiddleware::class])->group(function () {
         return view('dashed-ecommerce-core::pos.pages.customer-point-of-sale-wrapper');
     })->name('dashed.ecommerce.customer-point-of-sale');
 });
+
+Route::get('/recover-order/{order}', [\Dashed\DashedEcommerceCore\Controllers\OrderRecoveryController::class, 'resume'])
+    ->name('dashed.frontend.recover-order')
+    ->middleware('signed');

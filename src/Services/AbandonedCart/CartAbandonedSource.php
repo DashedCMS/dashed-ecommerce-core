@@ -33,7 +33,7 @@ class CartAbandonedSource implements AbandonedCartSource
             'name' => $item->name ?? $item->product?->name ?? '',
             'quantity' => (int) $item->quantity,
             'price' => (int) round(((float) ($item->unit_price ?? 0)) * 100),
-            'image' => $item->product?->firstImage()?->url ?? null,
+            'image_id' => $item->product?->firstImage ?? $item->product?->productGroup?->firstImage ?? null,
             'product_url' => $item->product?->getUrl(),
         ]);
     }

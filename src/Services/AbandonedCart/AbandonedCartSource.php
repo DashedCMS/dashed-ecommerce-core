@@ -14,7 +14,7 @@ interface AbandonedCartSource
 
     /**
      * Each element: ['name' => string, 'quantity' => int, 'price' => int (cents),
-     *                'image' => ?string, 'product_url' => ?string].
+     *                'image_id' => ?int, 'product_url' => ?string].
      */
     public function items(): Collection;
 

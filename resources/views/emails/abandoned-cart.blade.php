@@ -61,16 +61,15 @@
 
                             {{-- Hero product image --}}
                             @php
-                                $firstItem = $cart->items->first();
-                                $firstProduct = $firstItem?->product;
-                                $heroImageId = $firstProduct?->firstImage ?? $firstProduct?->productGroup?->firstImage ?? null;
+                                $firstItem = $items->first();
+                                $heroImageId = $firstItem['image_id'] ?? null;
                                 $heroImageUrl = $heroImageId ? (mediaHelper()->getSingleMedia($heroImageId, ['fit' => [560, 320]])->url ?? null) : null;
                             @endphp
                             @if($heroImageUrl)
                                 <tr>
                                     <td>
                                         <a href="{{ $productUrl }}" style="display: block;">
-                                            <img src="{{ $heroImageUrl }}" width="560" alt="{{ $firstProduct?->name ?? '' }}" style="width: 100%; max-width: 560px; height: auto; object-fit: cover;">
+                                            <img src="{{ $heroImageUrl }}" width="560" alt="{{ $firstItem['name'] ?? '' }}" style="width: 100%; max-width: 560px; height: auto; object-fit: cover;">
                                         </a>
                                     </td>
                                 </tr>
@@ -91,12 +90,11 @@
                                 {{-- Single product block --}}
                                 @if($block['type'] === 'product')
                                     @php
-                                        $prodItem = $cart->items->first();
-                                        $prod = $prodItem?->product;
-                                        $prodImgId = $prod?->firstImage ?? $prod?->productGroup?->firstImage ?? null;
+                                        $prodItem = $items->first();
+                                        $prodImgId = $prodItem['image_id'] ?? null;
                                         $prodImgUrl = $prodImgId ? (mediaHelper()->getSingleMedia($prodImgId, ['fit' => [80, 80]])->url ?? null) : null;
                                     @endphp
-                                    @if($prod)
+                                    @if($prodItem)
                                         <tr>
                                             <td class="mobile-padding" style="padding: 12px 40px;">
                                                 <a href="{{ $productUrl }}" style="text-decoration: none; color: inherit; display: block;">
@@ -104,15 +102,15 @@
                                                         <tr>
                                                             @if($prodImgUrl)
                                                                 <td width="72" style="padding: 16px;">
-                                                                    <img src="{{ $prodImgUrl }}" class="product-img" width="64" height="64" alt="{{ $prod->name }}" style="border-radius: 8px; object-fit: cover; width: 64px; height: 64px;">
+                                                                    <img src="{{ $prodImgUrl }}" class="product-img" width="64" height="64" alt="{{ $prodItem['name'] }}" style="border-radius: 8px; object-fit: cover; width: 64px; height: 64px;">
                                                                 </td>
                                                             @endif
                                                             <td style="padding: 16px 16px 16px {{ $prodImgUrl ? '0' : '16px' }};">
-                                                                <p style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #0f172a;">{{ $prod->name }}</p>
-                                                                <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $prodItem->quantity }}</p>
+                                                                <p style="margin: 0 0 4px; font-size: 15px; font-weight: 600; color: #0f172a;">{{ $prodItem['name'] }}</p>
+                                                                <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $prodItem['quantity'] }}</p>
                                                             </td>
                                                             <td align="right" style="padding: 16px; font-size: 15px; font-weight: 700; color: #0f172a; white-space: nowrap;">
-                                                                &euro; {{ number_format($prodItem->unit_price * $prodItem->quantity, 2, ',', '.') }}
+                                                                &euro; {{ number_format(($prodItem['price'] * $prodItem['quantity']) / 100, 2, ',', '.') }}
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -124,10 +122,9 @@
 
                                 {{-- All products block --}}
                                 @if($block['type'] === 'products')
-                                    @foreach($cart->items->take(4) as $item)
+                                    @foreach($items->take(4) as $item)
                                         @php
-                                            $product = $item->product;
-                                            $imgId = $product?->firstImage ?? $product?->productGroup?->firstImage ?? null;
+                                            $imgId = $item['image_id'] ?? null;
                                             $imgUrl = $imgId ? (mediaHelper()->getSingleMedia($imgId, ['fit' => [80, 80]])->url ?? null) : null;
                                         @endphp
                                         <tr>
@@ -137,15 +134,15 @@
                                                         <tr>
                                                             @if($imgUrl)
                                                                 <td width="72" style="padding: 12px;">
-                                                                    <img src="{{ $imgUrl }}" class="product-img" width="56" height="56" alt="{{ $product?->name }}" style="border-radius: 8px; object-fit: cover; width: 56px; height: 56px;">
+                                                                    <img src="{{ $imgUrl }}" class="product-img" width="56" height="56" alt="{{ $item['name'] }}" style="border-radius: 8px; object-fit: cover; width: 56px; height: 56px;">
                                                                 </td>
                                                             @endif
                                                             <td style="padding: 12px 12px 12px {{ $imgUrl ? '0' : '12px' }};">
-                                                                <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #0f172a;">{{ $product?->name ?? 'Product' }}</p>
-                                                                <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $item->quantity }}</p>
+                                                                <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #0f172a;">{{ $item['name'] ?: 'Product' }}</p>
+                                                                <p style="margin: 0; font-size: 13px; color: #64748b;">Aantal: {{ $item['quantity'] }}</p>
                                                             </td>
                                                             <td align="right" style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap;">
-                                                                &euro; {{ number_format($item->unit_price * $item->quantity, 2, ',', '.') }}
+                                                                &euro; {{ number_format(($item['price'] * $item['quantity']) / 100, 2, ',', '.') }}
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -153,10 +150,10 @@
                                             </td>
                                         </tr>
                                     @endforeach
-                                    @if($cart->items->count() > 4)
+                                    @if($items->count() > 4)
                                         <tr>
                                             <td class="mobile-padding" style="padding: 4px 40px 8px; font-size: 13px; color: #94a3b8; text-align: center;">
-                                                + {{ $cart->items->count() - 4 }} ander(e) product(en)
+                                                + {{ $items->count() - 4 }} ander(e) product(en)
                                             </td>
                                         </tr>
                                     @endif

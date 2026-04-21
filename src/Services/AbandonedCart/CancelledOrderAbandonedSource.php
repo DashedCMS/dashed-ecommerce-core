@@ -33,7 +33,7 @@ class CancelledOrderAbandonedSource implements AbandonedCartSource
             'name' => $op->name,
             'quantity' => (int) $op->quantity,
             'price' => (int) round(((float) ($op->price ?? 0)) * 100),
-            'image' => $op->product?->firstImage()?->url ?? null,
+            'image_id' => $op->product?->firstImage ?? $op->product?->productGroup?->firstImage ?? null,
             'product_url' => $op->product?->getUrl(),
         ])->values();
     }
