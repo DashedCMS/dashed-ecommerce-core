@@ -477,32 +477,42 @@ class POSPage extends Component implements HasActions, HasSchemas
                                     return;
                                 }
 
-                                $lastOrder = $user->lastOrderFromAllOrders();
-                                if (! $lastOrder) {
-                                    Notification::make()->title('Geen eerdere bestelling gevonden voor deze gebruiker')->warning()->send();
+                                $lastOrder = method_exists($user, 'lastOrderFromAllOrders')
+                                    ? $user->lastOrderFromAllOrders()
+                                    : null;
 
-                                    return;
-                                }
+                                // Per-field fallback: prefer the last order's value, fall back to
+                                // the user's own account fields when there is no order (or the
+                                // order has the value empty). User column naming matches except
+                                // `company`/`tax_id` which map to the order's `company_name`/`btw_id`.
+                                $pick = fn (?string $orderValue, mixed $userValue) => $orderValue !== null && $orderValue !== ''
+                                    ? $orderValue
+                                    : ($userValue ?: null);
 
-                                $this->firstName = $lastOrder->first_name;
-                                $this->lastName = $lastOrder->last_name;
-                                $this->email = $user->email;
-                                $this->phoneNumber = $lastOrder->phone_number;
-                                $this->street = $lastOrder->street;
-                                $this->houseNr = $lastOrder->house_nr;
-                                $this->zipCode = $lastOrder->zip_code;
-                                $this->city = $lastOrder->city;
-                                $this->country = $lastOrder->country;
-                                $this->company = $lastOrder->company_name;
-                                $this->btwId = $lastOrder->btw_id;
+                                $this->firstName = $pick($lastOrder?->first_name, $user->first_name);
+                                $this->lastName = $pick($lastOrder?->last_name, $user->last_name);
+                                $this->email = $pick($lastOrder?->email, $user->email);
+                                $this->phoneNumber = $pick($lastOrder?->phone_number, $user->phone_number);
+                                $this->street = $pick($lastOrder?->street, $user->street);
+                                $this->houseNr = $pick($lastOrder?->house_nr, $user->house_nr);
+                                $this->zipCode = $pick($lastOrder?->zip_code, $user->zip_code);
+                                $this->city = $pick($lastOrder?->city, $user->city);
+                                $this->country = $pick($lastOrder?->country, $user->country);
+                                $this->company = $pick($lastOrder?->company_name, $user->company);
+                                $this->btwId = $pick($lastOrder?->btw_id, $user->tax_id);
 
-                                $this->invoiceStreet = $lastOrder->invoice_street;
-                                $this->invoiceHouseNr = $lastOrder->invoice_house_nr;
-                                $this->invoiceZipCode = $lastOrder->invoice_zip_code;
-                                $this->invoiceCity = $lastOrder->invoice_city;
-                                $this->invoiceCountry = $lastOrder->invoice_country;
+                                $this->invoiceStreet = $pick($lastOrder?->invoice_street, $user->invoice_street);
+                                $this->invoiceHouseNr = $pick($lastOrder?->invoice_house_nr, $user->invoice_house_nr);
+                                $this->invoiceZipCode = $pick($lastOrder?->invoice_zip_code, $user->invoice_zip_code);
+                                $this->invoiceCity = $pick($lastOrder?->invoice_city, $user->invoice_city);
+                                $this->invoiceCountry = $pick($lastOrder?->invoice_country, $user->invoice_country);
 
-                                Notification::make()->title('Gegevens van laatste bestelling geladen')->success()->send();
+                                Notification::make()
+                                    ->title($lastOrder
+                                        ? 'Gegevens van laatste bestelling geladen'
+                                        : 'Gegevens uit accountprofiel geladen (geen eerdere bestelling gevonden)')
+                                    ->success()
+                                    ->send();
                             })
                     )
                     ->helperText('Selecteer een account om de bestelling aan te koppelen'),
