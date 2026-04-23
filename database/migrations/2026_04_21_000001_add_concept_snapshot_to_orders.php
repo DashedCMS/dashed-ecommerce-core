@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('dashed__orders', function (Blueprint $table) {
-            $table->json('concept_cart_snapshot')->nullable()->after('prices_ex_vat');
-            $table->string('concept_discount_code')->nullable()->after('concept_cart_snapshot');
+            $table->json('concept_cart_snapshot')->nullable();
+            $table->string('concept_discount_code')->nullable();
         });
     }
 
