@@ -18,24 +18,10 @@
     @endforeach
 @endif
 
-{{-- BreadcrumbList schema (product) --}}
 @if(isset($product) && $product && method_exists($product, 'breadcrumbs'))
-    @php $__crumbs = $product->breadcrumbs(); @endphp
-    @if(! empty($__crumbs))
-        <script type="application/ld+json">{!! json_encode([
-            '@context' => 'https://schema.org',
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => collect($__crumbs)->values()->map(fn ($c, $i) => [
-                '@type' => 'ListItem',
-                'position' => $i + 1,
-                'name' => (string) ($c['name'] ?? ''),
-                'item' => (string) ($c['url'] ?? ''),
-            ])->toArray(),
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
-    @endif
+    <x-dashed-core::frontend.breadcrumbs.schema :breadcrumbs="$product->breadcrumbs()" />
 @endif
 
-{{-- BreadcrumbList schema (productCategory) via parent chain --}}
 @if(isset($productCategory) && $productCategory)
     @php
         $__pcCrumbs = [];
@@ -53,18 +39,7 @@
         }
         $__pcCrumbs = array_reverse($__pcCrumbs);
     @endphp
-    @if(! empty($__pcCrumbs))
-        <script type="application/ld+json">{!! json_encode([
-            '@context' => 'https://schema.org',
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => collect($__pcCrumbs)->values()->map(fn ($c, $i) => [
-                '@type' => 'ListItem',
-                'position' => $i + 1,
-                'name' => $c['name'],
-                'item' => $c['url'],
-            ])->toArray(),
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
-    @endif
+    <x-dashed-core::frontend.breadcrumbs.schema :breadcrumbs="$__pcCrumbs" />
 @endif
 
 @php
