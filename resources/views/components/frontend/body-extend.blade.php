@@ -18,10 +18,6 @@
     @endforeach
 @endif
 
-@if(isset($product) && $product && method_exists($product, 'breadcrumbs'))
-    <x-dashed-core::frontend.breadcrumbs.schema :breadcrumbs="$product->breadcrumbs()" />
-@endif
-
 @if(isset($productCategory) && $productCategory)
     @php
         $__pcCrumbs = [];
@@ -39,7 +35,6 @@
         }
         $__pcCrumbs = array_reverse($__pcCrumbs);
     @endphp
-    <x-dashed-core::frontend.breadcrumbs.schema :breadcrumbs="$__pcCrumbs" />
 @endif
 
 @php
