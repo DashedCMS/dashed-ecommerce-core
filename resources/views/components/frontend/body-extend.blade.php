@@ -8,19 +8,14 @@
     @endforeach
 @endif
 
-{{-- Product category schema (CollectionPage) --}}
 @if(isset($productCategory) && $productCategory)
-    @php
-        $__pcName = is_array($productCategory->name) ? reset($productCategory->name) : (string) $productCategory->name;
-        $__pcDescription = (string) ($productCategory->description ?? $productCategory->summary ?? '');
-    @endphp
-    <script type="application/ld+json">{!! json_encode(array_filter([
-        '@context' => 'https://schema.org',
-        '@type' => 'CollectionPage',
-        'name' => $__pcName,
-        'url' => $productCategory->getUrl(),
-        'description' => $__pcDescription !== '' ? $__pcDescription : null,
-    ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <x-dashed-ecommerce-core::frontend.product-categories.schema :productCategory="$productCategory" />
+@endif
+
+@if(isset($productCategories))
+    @foreach($productCategories as $productCategory)
+        <x-dashed-ecommerce-core::frontend.product-categories.schema :productCategory="$productCategory" />
+    @endforeach
 @endif
 
 {{-- BreadcrumbList schema (product) --}}
