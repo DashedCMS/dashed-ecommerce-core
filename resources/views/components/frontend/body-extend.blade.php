@@ -8,6 +8,70 @@
     @endforeach
 @endif
 
+{{-- Product category schema (CollectionPage) --}}
+@if(isset($productCategory) && $productCategory)
+    @php
+        $__pcName = is_array($productCategory->name) ? reset($productCategory->name) : (string) $productCategory->name;
+        $__pcDescription = (string) ($productCategory->description ?? $productCategory->summary ?? '');
+    @endphp
+    <script type="application/ld+json">{!! json_encode(array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'CollectionPage',
+        'name' => $__pcName,
+        'url' => $productCategory->getUrl(),
+        'description' => $__pcDescription !== '' ? $__pcDescription : null,
+    ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+@endif
+
+{{-- BreadcrumbList schema (product) --}}
+@if(isset($product) && $product && method_exists($product, 'breadcrumbs'))
+    @php $__crumbs = $product->breadcrumbs(); @endphp
+    @if(! empty($__crumbs))
+        <script type="application/ld+json">{!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => collect($__crumbs)->values()->map(fn ($c, $i) => [
+                '@type' => 'ListItem',
+                'position' => $i + 1,
+                'name' => (string) ($c['name'] ?? ''),
+                'item' => (string) ($c['url'] ?? ''),
+            ])->toArray(),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    @endif
+@endif
+
+{{-- BreadcrumbList schema (productCategory) via parent chain --}}
+@if(isset($productCategory) && $productCategory)
+    @php
+        $__pcCrumbs = [];
+        $__pcCursor = $productCategory;
+        $__pcGuard = 0;
+        while ($__pcCursor && $__pcGuard < 20) {
+            $__pcCrumbs[] = [
+                'name' => is_array($__pcCursor->name) ? reset($__pcCursor->name) : (string) $__pcCursor->name,
+                'url' => $__pcCursor->getUrl(),
+            ];
+            $__pcCursor = $__pcCursor->parent_id
+                ? \Dashed\DashedEcommerceCore\Models\ProductCategory::find($__pcCursor->parent_id)
+                : null;
+            $__pcGuard++;
+        }
+        $__pcCrumbs = array_reverse($__pcCrumbs);
+    @endphp
+    @if(! empty($__pcCrumbs))
+        <script type="application/ld+json">{!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => collect($__pcCrumbs)->values()->map(fn ($c, $i) => [
+                '@type' => 'ListItem',
+                'position' => $i + 1,
+                'name' => $c['name'],
+                'item' => $c['url'],
+            ])->toArray(),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    @endif
+@endif
+
 @php
     // Tracking settings uit middleware-cache
     $tracking = $trackingSettings ?? [];
