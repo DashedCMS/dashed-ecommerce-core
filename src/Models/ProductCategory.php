@@ -210,6 +210,8 @@ class ProductCategory extends Model
                 }
 
                 View::share('model', $productCategory);
+                app()->instance('dashed.current_visitable', $productCategory);
+                request()->attributes->set('dashed.current_visitable', $productCategory);
                 View::share('productCategory', $productCategory);
 
                 return view(config('dashed-core.site_theme', 'dashed') . '.categories.show');
@@ -252,6 +254,8 @@ class ProductCategory extends Model
                         }
 
                         View::share('model', $productCategory);
+                        app()->instance('dashed.current_visitable', $productCategory);
+                        request()->attributes->set('dashed.current_visitable', $productCategory);
                         View::share('productCategory', $productCategory);
                         $childProductCategories = $productCategory->getFirstChilds();
                         View::share('childProductCategories', $childProductCategories);
