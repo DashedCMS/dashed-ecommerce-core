@@ -136,6 +136,12 @@ class OrderLog extends Model
             $string = 'heeft de fulfillment status update voor Verzonden niet laten versturen.';
         } elseif ($this->tag == 'order.marked_as_paid_event.dispatched') {
             $string = 'heeft een signaal afgegeven dat de order is betaald.';
+        } elseif ($this->tag == 'order.system.cancelled.mail.send') {
+            $string = 'heeft de annulerings mail automatisch verstuurd.';
+        } elseif ($this->tag == 'order.system.cancelled.mail.send.failed') {
+            $string = 'heeft de annulerings mail automatisch niet kunnen versturen vanwege een fout.';
+        } elseif ($this->tag == 'abandoned-cart.converted') {
+            $string = 'heeft de bestelling alsnog afgerond na een verlaten-winkelmand-flow.';
         } elseif ($this->message) {
             return $this->message;
         } else {
