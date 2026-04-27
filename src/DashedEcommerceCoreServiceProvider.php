@@ -94,6 +94,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        cms()->registerNavigationGroup('E-commerce', 30);
+        cms()->registerNavigationGroup('Producten', 40);
+        cms()->registerNavigationGroup('Statistics', 110);
+        cms()->registerNavigationGroup('Export', 120);
+
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('own', 'Webshop', true);
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('pos', 'POS', false);
 

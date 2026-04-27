@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.5.6 - 2026-04-27
+
+### Added
+- `DashedEcommerceCoreServiceProvider::bootingPackage()` registreert de eigen Filament navigatiegroepen via de nieuwe dashed-core registry: E-commerce (sort 30), Producten (40), Statistics (110), Export (120). Vereist dashed-core v4.2.0+.
+
 ## v4.5.5 - 2026-04-26
 
 ### Fixed
