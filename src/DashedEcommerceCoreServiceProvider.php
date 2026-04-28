@@ -76,6 +76,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerMatchSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
@@ -98,6 +99,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->registerNavigationGroup('Producten', 40);
         cms()->registerNavigationGroup('Statistics', 110);
         cms()->registerNavigationGroup('Export', 120);
+
+        \Illuminate\Support\Facades\RateLimiter::for('google-ads-customer-match', function (\Illuminate\Http\Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->ip() ?? 'unknown');
+        });
 
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('own', 'Webshop', true);
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('pos', 'POS', false);
@@ -1665,12 +1670,14 @@ MARKDOWN,
         cms()->registerSettingsPage(ShippingZoneResource::class, 'Verzendzones', 'truck', 'Bepaal waar je allemaal naartoe verstuurd');
         cms()->registerSettingsPage(ShippingMethodResource::class, 'Verzendmethodes', 'truck', 'Maak verzendmethodes aan');
         cms()->registerSettingsPage(POSSettingsPage::class, 'Point of Sale', 'banknotes', 'Bewerk je POS');
+        cms()->registerSettingsPage(CustomerMatchSettingsPage::class, 'Google Ads Customer Match', 'megaphone', 'HTTPS-feed met gehashte klantdata voor Google Ads Customer Match');
 
         $package
             ->name('dashed-ecommerce-core')
             ->hasRoutes([
                 'frontend',
                 'point-of-sale',
+                'google-ads',
             ])
             ->hasConfigFile([
                 'dashed-ecommerce-core',

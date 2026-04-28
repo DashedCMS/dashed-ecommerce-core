@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.6.0 - 2026-04-28
+
+### Added
+- Google Ads Customer Match HTTPS-feed met SHA-256 hashing van PII volgens Google's spec.
+  - Singleton settings page op `Instellingen → Google Ads Customer Match` (basic-auth credentials, slug-rotatie, dry-run preview, 30-dagen activity stats).
+  - Endpoint: `GET /google-ads/customer-match/{slug}.csv` met `GoogleAdsBasicAuth` middleware (`Hash::check` + constant-time compare, HTTPS-force in production, 401 met realm header).
+  - `CustomerMatchHasher` normaliseert email/telefoon (E.164 voor NL/BE/DE/FR/etc.) en namen voor het hashen; country (ISO-2) en zip blijven plaintext zoals Google verwacht.
+  - `CustomerMatchExporter` aggregeert `Order::isPaid()` op email-dedup met filters: `min_orders`, `since`, `until`, `countries`.
+  - Toegangslog in nieuwe tabel `customer_match_access_logs` (status, IP, user-agent, row count, failure reason).
+  - Rate limit 10 requests/min per IP via named RateLimiter `google-ads-customer-match`.
+  - Documentatie: `docs/google-ads-customer-match.md` met Google Ads-stappenplan.
+
 ## v4.5.6 - 2026-04-27
 
 ### Added
