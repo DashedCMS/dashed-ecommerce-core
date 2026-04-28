@@ -43,6 +43,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerMatchSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
@@ -85,6 +86,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ActionsStatisticsPage::class,
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
+                CustomerMatchSettingsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,

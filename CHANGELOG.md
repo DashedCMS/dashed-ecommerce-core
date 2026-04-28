@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.6.1 - 2026-04-28
+
+### Fixed
+- `CustomerMatchSettingsPage` was niet geregistreerd in `DashedEcommerceCorePlugin::register()`, waardoor de Filament-route `filament.dashed.pages.customer-match-settings-page` niet bestond en de instellingenlijst crashte met "Route not defined".
+
 ## v4.6.0 - 2026-04-28
 
 ### Added
