@@ -8,7 +8,9 @@ use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Generator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CustomerMatchExporter
 {
@@ -26,9 +28,9 @@ class CustomerMatchExporter
 
     public function count(CustomerMatchEndpoint $endpoint): int
     {
-        return $this->buildBaseQuery($endpoint)
-            ->distinct()
-            ->count('email');
+        return DB::query()
+            ->fromSub($this->matchingIdsQuery($endpoint), 'matches')
+            ->count();
     }
 
     /**
@@ -36,46 +38,25 @@ class CustomerMatchExporter
      */
     public function rows(CustomerMatchEndpoint $endpoint, ?int $limit = null): Generator
     {
-        $minOrders = (int) ($endpoint->customer_filter['min_orders'] ?? 1);
-        $minOrders = max(1, $minOrders);
-
-        $aggregateQuery = $this->buildBaseQuery($endpoint)
-            ->select([
-                'email',
-                'first_name',
-                'last_name',
-                'phone_number',
-                'country',
-                'invoice_country',
-                'invoice_zip_code',
-                'zip_code',
-                'invoice_first_name',
-                'invoice_last_name',
-            ])
-            ->selectRaw('MAX(created_at) as last_order_at')
-            ->selectRaw('COUNT(*) as orders_count')
-            ->groupBy('email')
-            ->orderByDesc('last_order_at');
-
-        if ($minOrders > 1) {
-            $aggregateQuery->havingRaw('COUNT(*) >= ?', [$minOrders]);
-        }
+        $query = Order::query()
+            ->whereIn('id', $this->matchingIdsQuery($endpoint))
+            ->orderByDesc('created_at');
 
         if ($limit !== null) {
-            $aggregateQuery->limit($limit);
+            $query->limit($limit);
         }
 
         $emitted = 0;
 
-        foreach ($aggregateQuery->cursor() as $row) {
-            $firstName = $row->invoice_first_name ?: $row->first_name;
-            $lastName = $row->invoice_last_name ?: $row->last_name;
-            $country = $row->invoice_country ?: $row->country;
-            $zip = $row->invoice_zip_code ?: $row->zip_code;
+        foreach ($query->cursor() as $order) {
+            $firstName = $order->invoice_first_name ?: $order->first_name;
+            $lastName = $order->invoice_last_name ?: $order->last_name;
+            $country = $order->invoice_country ?: $order->country;
+            $zip = $order->invoice_zip_code ?: $order->zip_code;
 
             yield $this->hasher->formatRow([
-                'email' => $row->email,
-                'phone' => $row->phone_number,
+                'email' => $order->email,
+                'phone' => $order->phone_number,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'country' => $country,
@@ -88,6 +69,28 @@ class CustomerMatchExporter
                 return;
             }
         }
+    }
+
+    /**
+     * Build a subquery that returns one `id` per unique email — the most recent
+     * paid order for that customer. GROUP BY only contains `email`; the SELECT
+     * uses MAX() aggregates so it satisfies MySQL's `only_full_group_by`.
+     */
+    private function matchingIdsQuery(CustomerMatchEndpoint $endpoint): QueryBuilder
+    {
+        $minOrders = max(1, (int) ($endpoint->customer_filter['min_orders'] ?? 1));
+
+        $base = $this->buildBaseQuery($endpoint)->getQuery();
+
+        $base
+            ->select([DB::raw('MAX(id) as id')])
+            ->groupBy('email');
+
+        if ($minOrders > 1) {
+            $base->havingRaw('COUNT(*) >= ?', [$minOrders]);
+        }
+
+        return $base;
     }
 
     private function buildBaseQuery(CustomerMatchEndpoint $endpoint): Builder
