@@ -3,10 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 class AddedToCart extends Component
 {
@@ -40,14 +39,10 @@ class AddedToCart extends Component
             $this->crossSellProducts = $product->getCrossSellProducts(true, true);
         }
         $this->cartTotal = cartHelper()->getTotal();
-        $freeShippingMethod = ShippingMethod::where('sort', 'free_delivery')->first();
-        $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
-        $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;
-        if ($isUnderThreshold) {
-            $this->freeShippingPercentage = ($this->cartTotal / $this->freeShippingThreshold) * 100;
-        } else {
-            $this->freeShippingPercentage = 100;
-        }
+        $helper = app(FreeShippingHelper::class);
+        $progress = $helper->progress((float) $this->cartTotal);
+        $this->freeShippingThreshold = $helper->threshold();
+        $this->freeShippingPercentage = $progress['percentage'];
     }
 
     public function render()

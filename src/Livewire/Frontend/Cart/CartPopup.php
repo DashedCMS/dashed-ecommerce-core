@@ -4,9 +4,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
 class CartPopup extends Component
@@ -52,14 +50,10 @@ class CartPopup extends Component
             $this->cartTotal = cartHelper()->getTotal();
             $this->cartSubtotal = cartHelper()->getSubtotal();
             $this->cartTax = cartHelper()->getTax();
-            $freeShippingMethod = Cache::remember('free-shipping-method', 3600, fn () => ShippingMethod::where('sort', 'free_delivery')->first());
-            $this->freeShippingThreshold = $freeShippingMethod ? $freeShippingMethod->minimum_order_value : Translation::get('free-shipping-treshold', 'cart-popup', 100, 'numeric');
-            $isUnderThreshold = $this->cartTotal < $this->freeShippingThreshold;
-            if ($isUnderThreshold) {
-                $this->freeShippingPercentage = number_format(($this->cartTotal / $this->freeShippingThreshold) * 100, 0);
-            } else {
-                $this->freeShippingPercentage = 100;
-            }
+            $helper = app(FreeShippingHelper::class);
+            $progress = $helper->progress((float) $this->cartTotal);
+            $this->freeShippingThreshold = $helper->threshold();
+            $this->freeShippingPercentage = $progress['percentage'];
             $this->initialized = true;
         }
     }
