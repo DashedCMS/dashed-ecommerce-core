@@ -14,6 +14,10 @@
                             <div class="px-4">
                                 <x-cart.cart-items :items="$this->cartItems"/>
                             </div>
+
+                            <div class="px-4 pb-6">
+                                <livewire:cart.cart-suggestions view="cart" />
+                            </div>
                         </section>
 
                         <section aria-labelledby="summary-heading"
