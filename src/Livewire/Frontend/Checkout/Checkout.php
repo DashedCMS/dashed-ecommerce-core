@@ -501,7 +501,7 @@ class Checkout extends Component
         cartHelper()->setVatReverseCharge($vatReverseCharge);
 
         $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
-        cartHelper()->setDepositPaymentMethod($this->depositPaymentMethod);
+        cartHelper()->setDepositPaymentMethod(is_numeric($this->depositPaymentMethod) ? (int) $this->depositPaymentMethod : null);
 
         cartHelper()->updateData();
 

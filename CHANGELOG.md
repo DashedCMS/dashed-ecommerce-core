@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.6.4 - 2026-05-01
+
+### Fixed
+- `Checkout::fillPrices()` gaf `$this->depositPaymentMethod` ongetypeerd door aan `CartHelper::setDepositPaymentMethod(?int)`. Een Livewire-payload met een array op die untyped property crashte daardoor met een TypeError tijdens checkout. Coercion (numeric → int, anders null) toegevoegd op de call-site.
+
 ## v4.6.3 - 2026-04-28
 
 ### Fixed
