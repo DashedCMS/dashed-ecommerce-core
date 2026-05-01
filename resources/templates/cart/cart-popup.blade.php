@@ -36,22 +36,7 @@
                         <p class="text-lg font-medium">{{ Translation::get('cart', 'cart-popup', 'Winkelwagen') }}</p>
                     </div>
 
-                    <div class="grid gap-2">
-                        @if($cartTotal < $freeShippingThreshold)
-                            <p class="font-medium text-center">
-                            {!! Translation::get('almost-free-shipping-info', 'cart-popup', 'Bestel nog voor <b>:amountLeft:</b> voor <b>gratis</b> verzending', 'editor', [
-                                'amountLeft' => CurrencyHelper::formatPrice($freeShippingThreshold - $cartTotal)
-                            ]) !!}
-                        @else
-                            <p class="font-bold text-center">{{ Translation::get('free-shipping-info', 'cart-popup', 'Je bestelling wordt gratis verzonden') }}</p>
-                        @endif
-
-                        <div x-data="{ progress: {{ $freeShippingPercentage }} }">
-                            <div class="w-full bg-gray-200 rounded-full h-4 border-2 border-gray-200">
-                                <div class="bg-primary-600 h-full rounded-full" :style="`width: ${progress}%;`"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <livewire:cart.cart-suggestions view="popup" />
                 </div>
                 <button type="button"
                         x-on:click="showCartPopup = !showCartPopup"
