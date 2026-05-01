@@ -76,6 +76,16 @@ class OrderSettingsPage extends Page
                     $formData[$formKey] = $origin['default_notify'];
                 }
             }
+
+            $formData["cart_suggestions_enabled_{$site['id']}"] = filter_var(Customsetting::get('cart_suggestions_enabled', $site['id'], '1'), FILTER_VALIDATE_BOOLEAN);
+            $formData["cart_suggestions_limit_cart_{$site['id']}"] = (int) Customsetting::get('cart_suggestions_limit_cart', $site['id'], '6');
+            $formData["cart_suggestions_limit_checkout_{$site['id']}"] = (int) Customsetting::get('cart_suggestions_limit_checkout', $site['id'], '4');
+            $formData["cart_suggestions_limit_popup_{$site['id']}"] = (int) Customsetting::get('cart_suggestions_limit_popup', $site['id'], '3');
+            $formData["cart_suggestions_boost_slots_{$site['id']}"] = (int) Customsetting::get('cart_suggestions_boost_slots', $site['id'], '3');
+            $formData["cart_suggestions_gap_min_factor_{$site['id']}"] = (float) Customsetting::get('cart_suggestions_gap_min_factor', $site['id'], '0.8');
+            $formData["cart_suggestions_gap_max_factor_{$site['id']}"] = (float) Customsetting::get('cart_suggestions_gap_max_factor', $site['id'], '1.5');
+            $formData["cart_suggestions_require_in_stock_{$site['id']}"] = filter_var(Customsetting::get('cart_suggestions_require_in_stock', $site['id'], '1'), FILTER_VALIDATE_BOOLEAN);
+            $formData["cart_suggestions_fallback_random_{$site['id']}"] = filter_var(Customsetting::get('cart_suggestions_fallback_random', $site['id'], '1'), FILTER_VALIDATE_BOOLEAN);
         }
 
         $formData["apis"] = Customsetting::get('apis', null, []);
@@ -280,6 +290,47 @@ class OrderSettingsPage extends Page
         $tabGroups[] = Tabs::make('Sites')
             ->tabs($tabs);
 
+        $tabs = [];
+        foreach ($sites as $site) {
+            $tabs[] = Tab::make("suggestions-{$site['id']}")
+                ->label('Suggesties — '.ucfirst($site['name']))
+                ->schema([
+                    Toggle::make("cart_suggestions_enabled_{$site['id']}")
+                        ->label('Cart-suggesties aan')
+                        ->helperText('Master kill-switch voor alle voorgestelde producten in cart, checkout en popup.')
+                        ->columnSpanFull(),
+                    TextInput::make("cart_suggestions_limit_cart_{$site['id']}")
+                        ->label('Aantal kaarten — cart-pagina')
+                        ->numeric()->minValue(1)->maxValue(20)->default(6),
+                    TextInput::make("cart_suggestions_limit_checkout_{$site['id']}")
+                        ->label('Aantal kaarten — checkout')
+                        ->numeric()->minValue(1)->maxValue(20)->default(4),
+                    TextInput::make("cart_suggestions_limit_popup_{$site['id']}")
+                        ->label('Aantal kaarten — cart popup')
+                        ->numeric()->minValue(1)->maxValue(10)->default(3),
+                    TextInput::make("cart_suggestions_boost_slots_{$site['id']}")
+                        ->label('Gegarandeerde slots voor gap-closers')
+                        ->helperText('Aantal posities dat gereserveerd is voor producten die gratis verzending overbruggen.')
+                        ->numeric()->minValue(0)->maxValue(10)->default(3),
+                    TextInput::make("cart_suggestions_gap_min_factor_{$site['id']}")
+                        ->label('Gap-factor min')
+                        ->helperText('Sweet-spot ondergrens als factor van het gap (default 0.8 = 80%).')
+                        ->numeric()->step(0.1)->default(0.8),
+                    TextInput::make("cart_suggestions_gap_max_factor_{$site['id']}")
+                        ->label('Gap-factor max')
+                        ->helperText('Sweet-spot bovengrens als factor van het gap (default 1.5 = 150%).')
+                        ->numeric()->step(0.1)->default(1.5),
+                    Toggle::make("cart_suggestions_require_in_stock_{$site['id']}")
+                        ->label('Alleen producten met voorraad'),
+                    Toggle::make("cart_suggestions_fallback_random_{$site['id']}")
+                        ->label('Random fallback aan')
+                        ->helperText('Vult op met willekeurige producten als cross-sell + categorie-match niet genoeg geeft.'),
+                ])
+                ->columns(['default' => 1, 'lg' => 2]);
+        }
+        $tabGroups[] = Tabs::make('Suggesties')
+            ->tabs($tabs);
+
         return $schema->schema($tabGroups)
             ->statePath('data');
     }
@@ -329,6 +380,16 @@ class OrderSettingsPage extends Page
                 $overrides[$origin['key']] = $channelValues;
             }
             Customsetting::set('admin_notify_per_order_origin', $overrides, $site['id']);
+
+            Customsetting::set('cart_suggestions_enabled', $this->form->getState()["cart_suggestions_enabled_{$site['id']}"] ? '1' : '0', $site['id']);
+            Customsetting::set('cart_suggestions_limit_cart', (string) ($this->form->getState()["cart_suggestions_limit_cart_{$site['id']}"] ?? 6), $site['id']);
+            Customsetting::set('cart_suggestions_limit_checkout', (string) ($this->form->getState()["cart_suggestions_limit_checkout_{$site['id']}"] ?? 4), $site['id']);
+            Customsetting::set('cart_suggestions_limit_popup', (string) ($this->form->getState()["cart_suggestions_limit_popup_{$site['id']}"] ?? 3), $site['id']);
+            Customsetting::set('cart_suggestions_boost_slots', (string) ($this->form->getState()["cart_suggestions_boost_slots_{$site['id']}"] ?? 3), $site['id']);
+            Customsetting::set('cart_suggestions_gap_min_factor', (string) ($this->form->getState()["cart_suggestions_gap_min_factor_{$site['id']}"] ?? 0.8), $site['id']);
+            Customsetting::set('cart_suggestions_gap_max_factor', (string) ($this->form->getState()["cart_suggestions_gap_max_factor_{$site['id']}"] ?? 1.5), $site['id']);
+            Customsetting::set('cart_suggestions_require_in_stock', $this->form->getState()["cart_suggestions_require_in_stock_{$site['id']}"] ? '1' : '0', $site['id']);
+            Customsetting::set('cart_suggestions_fallback_random', $this->form->getState()["cart_suggestions_fallback_random_{$site['id']}"] ? '1' : '0', $site['id']);
         }
 
         Customsetting::set('apis', $this->form->getState()["apis"] ?? []);
