@@ -76,9 +76,9 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerMatchSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerMatchSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
@@ -1380,6 +1380,7 @@ MARKDOWN,
         Livewire::component('cart.add-to-cart', AddToCart::class);
         Livewire::component('cart.added-to-cart-popup', AddedToCart::class);
         Livewire::component('cart.cart-popup', CartPopup::class);
+        Livewire::component('cart.cart-suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartSuggestions::class);
         Livewire::component('checkout.checkout', Checkout::class);
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
