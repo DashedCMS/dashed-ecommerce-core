@@ -251,6 +251,10 @@
                                             />
                                         @endif
 
+                                        <div class="lg:col-span-2">
+                                            <livewire:cart.cart-suggestions view="checkout" />
+                                        </div>
+
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('payment-method', 'checkout', 'Betaalmethode') }}
                                         </h2>
