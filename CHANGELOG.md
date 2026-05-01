@@ -2,6 +2,22 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.0 - 2026-05-01
+
+### Added
+- **Cart product suggestions** met free-shipping threshold boost.
+  - Nieuwe `FreeShippingHelper` centraliseert drempel- en progress-berekening (1u-cache op de free-delivery shipping method, fallback op translation).
+  - Nieuwe `CartProductSuggester` service met hybride bron-keten (expliciete cross-sell van cart-items + ProductGroup → categorie-match → random fallback) en gap-boost (sweet-spot prijs ∈ [`gap × min_factor`, `gap × max_factor`]) zodat producten die gratis verzending dichten naar voren komen. Pure functie, accepteert `cartProductIds` + `cartTotal` als input.
+  - Nieuwe `CartSuggestions` Livewire component (`cart.cart-suggestions`) met 3 templates: cart-pagina (variant A: horizontale strip met threshold-bar), checkout (variant C: strip altijd zichtbaar, banner schakelt onder/boven drempel) en cart popup (variant B: mini-strip in groene threshold-banner). Component leest cart-state via `cartHelper()` en delegeert naar de pure suggester.
+  - Herbruikbare `partials/free-shipping-bar.blade.php` partial.
+  - 9 nieuwe Customsettings per site in `OrderSettingsPage` tab "Suggesties": master kill-switch, limits per view (cart/checkout/popup), boost-slots, gap-factors, in-stock filter, random fallback.
+  - 21 nieuwe Pest tests (7 helper + 8 suggester + 6 livewire feature).
+
+### Changed
+- `CartPopup` en `AddedToCart` Livewires gebruiken nu `FreeShippingHelper` ipv inline drempel-berekening. Publieke properties (`freeShippingThreshold`, `freeShippingPercentage`) onveranderd, geen breaking change.
+- `cart-popup.blade.php` vervangt zijn inline threshold-banner door `<livewire:cart.cart-suggestions view="popup" />` — de popup-template rendert die nu samen met de suggesties.
+- `cart.blade.php` en `checkout.blade.php` krijgen elk een `<livewire:cart.cart-suggestions ...>` op de relevante plek.
+
 ## v4.6.4 - 2026-05-01
 
 ### Fixed
