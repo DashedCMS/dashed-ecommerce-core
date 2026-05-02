@@ -1,3 +1,15 @@
+@props([
+    'product' => null,
+    'filters' => [],
+    'productExtras' => [],
+    'extras' => [],
+    'quantity' => 1,
+    'volumeDiscounts' => null,
+    'price' => 0,
+    'discountPrice' => null,
+    'paymentMethods' => [],
+])
+
 <form wire:submit="addToCart" class="grid gap-4">
     @foreach($filters ?? [] as $filterKey => $filter)
         @if(count($filter['options']))

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.10 - 2026-05-02
+
+### Fixed
+- `<x-cart.add-to-cart>` component-template gebruikt nu `@props` met defaults voor alle verwachte velden (`product`, `filters`, `productExtras`, `extras`, `quantity`, `volumeDiscounts`, `price`, `discountPrice`, `paymentMethods`). Voorheen crashte het component met `Undefined variable $extras` of `$volumeDiscounts` als de wrapper-view (bv. `dashed.cart.add-to-cart`) ze niet expliciet doorgaf — wat normaal in nested-Livewire setups gebeurt zoals de quick-add modal in cart-suggestions.
+
 ## v4.7.9 - 2026-05-02
 
 ### Fixed
