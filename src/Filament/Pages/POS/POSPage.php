@@ -3,32 +3,32 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use DashedDEV\FilamentNumpadField\NumpadField;
+use Livewire\Component;
 use Filament\Actions\Action;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Schema;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Contracts\HasSchemas;
-use Filament\Schemas\Schema;
 use LaraZeus\Quantity\Components\Quantity;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use DashedDEV\FilamentNumpadField\NumpadField;
+use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.
 // Ik trek ‘m gelijk met jullie core.
-use Livewire\Component;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 
 class POSPage extends Component implements HasActions, HasSchemas
 {
@@ -139,7 +139,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                 ->first();
 
             if (! $posCart) {
-                $posCart = new POSCart;
+                $posCart = new POSCart();
                 $posCart->user_id = $userId;
                 $posCart->status = 'active';
                 $posCart->identifier = uniqid();
@@ -388,7 +388,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         if (($this->createDiscountData['type'] ?? '') === 'discountCode') {
             $discountCode = DiscountCode::find($this->createDiscountData['discountCode'] ?? null);
         } else {
-            $discountCode = new DiscountCode;
+            $discountCode = new DiscountCode();
             $discountCode->site_ids = [Sites::getActive()];
             $discountCode->name = 'Point of Sale discount';
             $discountCode->note = $this->createDiscountData['note'] ?? '';

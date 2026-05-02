@@ -2,33 +2,33 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
 use Carbon\Carbon;
+use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Classes\PinTerminal;
-use Dashed\DashedEcommerceCore\Classes\POSHelper;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Classes\VatDisplay;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedTranslations\Models\Translation;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
+use Dashed\DashedEcommerceCore\Classes\PinTerminal;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
 {
@@ -52,7 +52,7 @@ class PointOfSaleApiController extends Controller
             $products = $posCart->products ?? [];
         } else {
             $posIdentifier = uniqid();
-            $posCart = new POSCart;
+            $posCart = new POSCart();
             $posCart->identifier = $posIdentifier;
             $posCart->user_id = $userId;
             $posCart->status = 'active';
@@ -769,7 +769,7 @@ class PointOfSaleApiController extends Controller
             }
         }
         if (! $order) {
-            $order = new Order;
+            $order = new Order();
         }
         $order->order_origin = $orderOrigin;
 
@@ -821,7 +821,7 @@ class PointOfSaleApiController extends Controller
         $extraCache = [];
 
         foreach (($totals['lines'] ?? []) as $line) {
-            $orderProduct = new OrderProduct;
+            $orderProduct = new OrderProduct();
             $orderProduct->quantity = (int) $line['quantity'];
             $orderProduct->product_id = $line['product_id'] ? (int) $line['product_id'] : null;
             $orderProduct->order_id = $order->id;
@@ -863,7 +863,7 @@ class PointOfSaleApiController extends Controller
         }
 
         if ($shippingCosts > 0) {
-            $shippingLine = new OrderProduct;
+            $shippingLine = new OrderProduct();
             $shippingLine->quantity = 1;
             $shippingLine->product_id = null;
             $shippingLine->order_id = $order->id;
@@ -877,7 +877,7 @@ class PointOfSaleApiController extends Controller
             $shippingLine->save();
         }
 
-        $orderLog = new OrderLog;
+        $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
         $orderLog->user_id = $userId;
         $orderLog->tag = 'order.created.by.admin';
@@ -973,7 +973,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        $orderPayment = new OrderPayment;
+        $orderPayment = new OrderPayment();
         $orderPayment->amount = $cashPaymentAmount ?: $order->total;
         $orderPayment->order_id = $order->id;
         $orderPayment->payment_method_id = $paymentMethod->id;
@@ -985,7 +985,7 @@ class PointOfSaleApiController extends Controller
         if ($orderPayment->amount > $order->total) {
             $difference = $order->total - $orderPayment->amount;
 
-            $refundOrderPayment = new OrderPayment;
+            $refundOrderPayment = new OrderPayment();
             $refundOrderPayment->amount = $difference;
             $refundOrderPayment->order_id = $order->id;
             $refundOrderPayment->payment_method_id = $paymentMethod->id;

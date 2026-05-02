@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners\AbandonedCart;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 
 class QueueAbandonedCartEmailsForOrderListener
 {

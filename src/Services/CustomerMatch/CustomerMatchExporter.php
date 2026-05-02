@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Services\CustomerMatch;
 
-use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Generator;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
 
 class CustomerMatchExporter
 {
     public function __construct(
         private readonly CustomerMatchHasher $hasher = new CustomerMatchHasher(),
-    ) {}
+    ) {
+    }
 
     /**
      * @return list<string>

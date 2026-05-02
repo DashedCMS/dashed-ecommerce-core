@@ -2,36 +2,36 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
-use Carbon\Carbon;
-use Dashed\DashedCore\Classes\AccountHelper;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CartHelper;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
-use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
-use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Models\CartLog;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
-use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
-use Dashed\DashedTranslations\Models\Translation;
 use Exception;
-use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Collection;
+use Carbon\Carbon;
+use Livewire\Component;
+use Illuminate\Validation\Rule;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-use Livewire\Component;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Classes\AccountHelper;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
+use Dashed\DashedEcommerceCore\Models\CartLog;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\CartHelper;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
 
 class Checkout extends Component
 {
@@ -827,7 +827,7 @@ class Checkout extends Component
                 return $this->dispatch('showAlert', 'error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
             }
 
-            $user = new User;
+            $user = new User();
             $user->first_name = $this->firstName;
             $user->last_name = $this->lastName;
             $user->email = $this->email;
@@ -837,7 +837,7 @@ class Checkout extends Component
             Auth::login($user, 1);
         }
 
-        $order = new Order;
+        $order = new Order();
         $order->first_name = $this->firstName;
         $order->gender = $this->gender;
         $order->date_of_birth = $this->dateOfBirth ? Carbon::parse($this->dateOfBirth) : null;
@@ -919,7 +919,7 @@ class Checkout extends Component
                 continue;
             }
 
-            $orderProduct = new OrderProduct;
+            $orderProduct = new OrderProduct();
             $orderProduct->quantity = $cartItem->qty;
             $orderProduct->product_id = $cartItem->model->id;
             $orderProduct->order_id = $order->id;
@@ -971,7 +971,7 @@ class Checkout extends Component
             $orderProduct->save();
 
             foreach ($cartItem->model->bundleProducts as $bundleProduct) {
-                $bundleOrderProduct = new OrderProduct;
+                $bundleOrderProduct = new OrderProduct();
                 $bundleOrderProduct->quantity = $cartItem->qty;
                 $bundleOrderProduct->product_id = $bundleProduct->id;
                 $bundleOrderProduct->order_id = $order->id;
@@ -991,7 +991,7 @@ class Checkout extends Component
         }
 
         if ($paymentCosts) {
-            $orderProduct = new OrderProduct;
+            $orderProduct = new OrderProduct();
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->order_id = $order->id;
@@ -1010,7 +1010,7 @@ class Checkout extends Component
         }
 
         if ($shippingCosts) {
-            $orderProduct = new OrderProduct;
+            $orderProduct = new OrderProduct();
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->order_id = $order->id;
@@ -1029,7 +1029,7 @@ class Checkout extends Component
             $order->save();
         }
 
-        $orderPayment = new OrderPayment;
+        $orderPayment = new OrderPayment();
         $orderPayment->amount = $order->total;
         $orderPayment->order_id = $order->id;
 
@@ -1077,7 +1077,7 @@ class Checkout extends Component
         $orderPayment->save();
         $orderPayment->refresh();
 
-        $orderLog = new OrderLog;
+        $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
         $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
         $orderLog->tag = 'order.created';
@@ -1105,7 +1105,7 @@ class Checkout extends Component
                 throw new Exception('Cannot start payment: '.$exception->getMessage());
             }
 
-            $orderLog = new OrderLog;
+            $orderLog = new OrderLog();
             $orderLog->order_id = $order->id;
             $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
             $orderLog->tag = 'order.note.created';

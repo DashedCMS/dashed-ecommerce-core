@@ -1,10 +1,10 @@
 <?php
 
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 
 it('renders items from cancelled order via resolver', function () {
     $order = Order::create([

@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
+use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class ConceptOrderService
 {
@@ -31,7 +31,7 @@ class ConceptOrderService
                 // is fully rewritten instead of accumulating stale rows.
                 $order->orderProducts()->withTrashed()->forceDelete();
             } else {
-                $order = new Order;
+                $order = new Order();
             }
 
             $order->status = Order::STATUS_CONCEPT;

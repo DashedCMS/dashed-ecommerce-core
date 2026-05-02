@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Controllers\CustomerMatchController;
-use Dashed\DashedEcommerceCore\Middleware\GoogleAdsBasicAuth;
 use Illuminate\Support\Facades\Route;
+use Dashed\DashedEcommerceCore\Middleware\GoogleAdsBasicAuth;
+use Dashed\DashedEcommerceCore\Controllers\CustomerMatchController;
 
 Route::middleware(['throttle:google-ads-customer-match', GoogleAdsBasicAuth::class])
     ->group(function () {

@@ -1,11 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
-use Illuminate\Support\Facades\Mail;
 
 it('cancelling an unpaid order schedules emails and sends them when due', function () {
     Mail::fake();

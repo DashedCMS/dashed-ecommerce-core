@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Middleware;
 
 use Closure;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class GoogleAdsBasicAuth

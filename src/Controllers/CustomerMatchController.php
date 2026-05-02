@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Controllers;
 
-use App\Http\Controllers\Controller;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
-use Dashed\DashedEcommerceCore\Services\CustomerMatch\CustomerMatchExporter;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
+use Dashed\DashedEcommerceCore\Services\CustomerMatch\CustomerMatchExporter;
 
 class CustomerMatchController extends Controller
 {
     public function __construct(
         private readonly CustomerMatchExporter $exporter,
-    ) {}
+    ) {
+    }
 
     public function export(Request $request): StreamedResponse
     {

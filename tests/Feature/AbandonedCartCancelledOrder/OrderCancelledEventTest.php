@@ -1,7 +1,7 @@
 <?php
 
-use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Support\Facades\Event;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 
 it('dispatches OrderCancelledEvent when order is cancelled', function () {

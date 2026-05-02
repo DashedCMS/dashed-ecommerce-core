@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners\AbandonedCart;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 class CancelPendingAbandonedEmailsListener
 {

@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
+use Illuminate\Queue\SerializesModels;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
 class OrderCancelledEvent
 {

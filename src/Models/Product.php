@@ -2,40 +2,40 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use App\Models\User;
-use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
-use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedEcommerceCore\Classes\VatDisplay;
-use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use Dashed\DashedPages\Models\Page;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Exception;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
+use Carbon\Carbon;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Dashed\DashedPages\Models\Page;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Gloudemans\Shoppingcart\CartItem;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use LaraZeus\Quantity\Components\Quantity;
+use Dashed\DashedCore\Models\Customsetting;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Gloudemans\Shoppingcart\CartItem;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Concerns\IsVisitable;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use LaraZeus\Quantity\Components\Quantity;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class Product extends Model
 {
@@ -329,7 +329,9 @@ class Product extends Model
         return $query;
     }
 
-    public function scopeHandOrderShowable($query) {}
+    public function scopeHandOrderShowable($query)
+    {
+    }
 
     public function scopeAvailableForShoppingFeed($query)
     {
@@ -1175,7 +1177,7 @@ class Product extends Model
         $remaining = $limit - count($suggestedProductIds);
 
         if ($remaining > 0) {
-            $categoryModel = new ProductCategory;
+            $categoryModel = new ProductCategory();
             $categoryTable = $categoryModel->getTable();
 
             $categoryIds = $this->productCategories()

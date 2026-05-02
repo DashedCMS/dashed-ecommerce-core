@@ -4,8 +4,8 @@ use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Services\AbandonedCart\CartAbandonedSource;
-use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartSourceResolver;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 
 it('returns cart source for cart_with_email trigger', function () {
     $cart = Cart::create(['token' => 'tok-resolver']);

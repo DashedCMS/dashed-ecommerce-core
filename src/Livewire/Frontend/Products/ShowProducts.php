@@ -71,6 +71,7 @@ class ShowProducts extends Component
         foreach ($activeFilters as $filterKey => $activeFilter) {
             if (! is_array($activeFilter)) {
                 unset($activeFilters[$filterKey]);
+
                 continue;
             }
             foreach ($activeFilter as $optionKey => $value) {

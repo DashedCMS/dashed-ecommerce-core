@@ -2,43 +2,43 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Exception;
+use Illuminate\Support\Str;
+use Dashed\DashedCore\Models\User;
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
+use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedCore\Notifications\AdminNotifier;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedEcommerceCore\Classes\Countries;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedEcommerceCore\Classes\Printing;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Notifications\AdminNotifier;
+use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
+use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
-use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
-use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
-use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
-use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Exception;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Str;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
@@ -964,7 +964,7 @@ class Order extends Model
 
         foreach ($chosenOrderProducts as $chosenOrderProduct) {
             if ($chosenOrderProduct['refundQuantity'] > 0) {
-                $orderProduct = new OrderProduct;
+                $orderProduct = new OrderProduct();
                 $orderProduct->quantity = 0 - $chosenOrderProduct['refundQuantity'];
                 $orderProduct->product_id = $chosenOrderProduct['product_id'];
                 $orderProduct->name = $chosenOrderProduct['name'];
@@ -1006,7 +1006,7 @@ class Order extends Model
         }
 
         if ($extraOrderLineName || $extraOrderLinePrice > 0) {
-            $orderProduct = new OrderProduct;
+            $orderProduct = new OrderProduct();
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->name = $extraOrderLineName ?: 'Extra';
@@ -1306,7 +1306,7 @@ class Order extends Model
         $store_website = url('/');
 
         // Init printer
-        $printer = new ReceiptPrinter;
+        $printer = new ReceiptPrinter();
         $printer->init(
             Customsetting::get('receipt_printer_connector_type'),
             Customsetting::get('receipt_printer_connector_descriptor')

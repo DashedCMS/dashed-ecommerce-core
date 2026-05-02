@@ -1,10 +1,10 @@
 <?php
 
 use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
-use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 function makeCashier(): User
 {

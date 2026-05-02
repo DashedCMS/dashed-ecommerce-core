@@ -16,8 +16,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\CheckboxList;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Pages\EditAbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Pages\ListAbandonedCartFlows;
@@ -104,6 +104,7 @@ class AbandonedCartFlowResource extends Resource
                         $order = $record->emails()
                             ->where('dashed__abandoned_cart_emails.trigger_type', 'cancelled_order')
                             ->whereNull('sent_at')->whereNull('cancelled_at')->count();
+
                         return "{$cart} / {$order}";
                     })
                     ->badge()
@@ -117,6 +118,7 @@ class AbandonedCartFlowResource extends Resource
                         $order = $record->emails()
                             ->where('dashed__abandoned_cart_emails.trigger_type', 'cancelled_order')
                             ->whereNotNull('sent_at')->count();
+
                         return "{$cart} / {$order}";
                     })
                     ->badge()
@@ -130,6 +132,7 @@ class AbandonedCartFlowResource extends Resource
                         $order = $record->emails()
                             ->where('dashed__abandoned_cart_emails.trigger_type', 'cancelled_order')
                             ->whereNotNull('converted_at')->count();
+
                         return "{$cart} / {$order}";
                     })
                     ->badge()

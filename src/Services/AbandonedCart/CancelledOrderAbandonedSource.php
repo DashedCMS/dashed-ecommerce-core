@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Services\AbandonedCart;
 
-use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 class CancelledOrderAbandonedSource implements AbandonedCartSource
 {

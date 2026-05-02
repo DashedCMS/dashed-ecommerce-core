@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Services\AbandonedCart;
 
-use Dashed\DashedEcommerceCore\Models\Cart;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Dashed\DashedEcommerceCore\Models\Cart;
 
 class CartAbandonedSource implements AbandonedCartSource
 {

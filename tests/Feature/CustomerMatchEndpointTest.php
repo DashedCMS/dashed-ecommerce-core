@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
 
 function makeEndpoint(array $overrides = []): array
 {
