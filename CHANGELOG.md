@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.7 - 2026-05-02
+
+### Changed
+- Quick-add modal toont nu een product-hero (image + groupnaam + "vanaf" prijs + link naar productpagina) en herbruikt vervolgens de bestaande `<livewire:cart.add-to-cart>` component voor de filter-pickers en toevoegen-knop. Dat geeft de bezoeker dezelfde variant-keuze UX (kleur/maat/etc) als op de productpagina, in plaats van een grid van alle 88 variant-kaartjes.
+- Modal teleporteert via Alpine `<template x-teleport="body">` naar `<body>` zodat-ie altijd full-screen rendert, ook vanuit de cart-popup-overlay (die `transform` heeft en anders fixed-positionering breekt).
+- `productAddedToCart` event sluit de quick-add modal automatisch.
+
+### Removed
+- De variant-grid en bijbehorende `quickAddVariants` / `quickAddTotalVariants` properties — vervangen door de nested AddToCart component.
+
 ## v4.7.6 - 2026-05-02
 
 ### Fixed

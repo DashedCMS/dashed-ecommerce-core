@@ -55,50 +55,35 @@
     </div>
   @endif
 
-  @if ($quickAddGroup && ! empty($quickAddVariants))
-    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4" wire:key="cart-quick-add-modal">
-      <div class="absolute inset-0 bg-black/40" wire:click="closeQuickAdd"></div>
-      <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-          <p class="font-semibold text-gray-900">
-            {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.quick_add_title', 'cart', 'Kies een variant') }}: {{ $quickAddGroup['name'] }}
-          </p>
-          <button type="button" wire:click="closeQuickAdd" class="text-gray-500 hover:text-gray-900 text-2xl leading-none">&times;</button>
-        </div>
-        <div class="p-4 grid grid-cols-2 gap-3">
-          @foreach ($quickAddVariants as $variant)
-            <div class="border border-gray-200 rounded-md p-2 hover:border-black transition-colors">
-              <div class="aspect-square bg-gray-100 rounded mb-2 overflow-hidden">
-                @if ($variant['image'])
-                  <x-dashed-files::image :mediaId="$variant['image']" :alt="$variant['name']" class="w-full h-full object-cover" />
-                @endif
+  @if ($quickAddGroup && $quickAddProductId)
+    <template x-teleport="body">
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4" wire:key="cart-quick-add-modal-{{ $quickAddProductId }}">
+      <div class="absolute inset-0 bg-black/50" wire:click="closeQuickAdd"></div>
+      <div class="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <button type="button" wire:click="closeQuickAdd" class="absolute top-3 right-3 text-gray-500 hover:text-gray-900 text-3xl leading-none z-10">&times;</button>
+        <div class="p-6">
+          <div class="flex gap-4 mb-4">
+            @if ($quickAddGroup['image'])
+              <div class="w-24 h-24 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                <x-dashed-files::image :mediaId="$quickAddGroup['image']" :alt="$quickAddGroup['name']" class="w-full h-full object-cover" />
               </div>
-              <div class="text-xs text-gray-800 leading-tight mb-1 line-clamp-2">{{ $variant['name'] }}</div>
-              @if (! empty($variant['filters']))
-                <div class="text-[10px] text-gray-500 mb-1">
-                  @foreach ($variant['filters'] as $f)
-                    <span>{{ $f['name'] }}: <strong>{{ $f['value'] }}</strong></span>
-                    @if (! $loop->last) <span>·</span> @endif
-                  @endforeach
-                </div>
+            @endif
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-gray-900 mb-1">{{ $quickAddGroup['name'] }}</h3>
+              @if ($quickAddPriceFrom)
+                <p class="text-sm text-gray-600">{{ $quickAddPriceFrom }}</p>
               @endif
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-sm font-bold">{{ $variant['price'] }}</span>
-                <button type="button" wire:click="addToCart({{ $variant['id'] }})" wire:loading.attr="disabled" class="bg-black text-white text-xs font-semibold px-3 py-1 rounded hover:bg-gray-800">
-                  {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.add', 'cart', 'Toevoegen') }}
-                </button>
-              </div>
+              <a href="{{ $quickAddGroupUrl }}" class="text-xs text-gray-500 underline mt-1 inline-block">
+                {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.go_to_product', 'cart', 'Naar productpagina') }}
+              </a>
             </div>
-          @endforeach
-        </div>
-        @if ($quickAddTotalVariants > count($quickAddVariants))
-          <div class="px-4 pb-4 text-center">
-            <a href="{{ $quickAddGroupUrl }}" class="text-xs text-gray-600 underline">
-              {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.show_all_variants', 'cart', 'Bekijk alle :count: varianten', 'text', ['count' => $quickAddTotalVariants]) }}
-            </a>
           </div>
-        @endif
+          <div class="border-t border-gray-200 pt-4">
+            <livewire:cart.add-to-cart :product="\Dashed\DashedEcommerceCore\Models\Product::find($quickAddProductId)" :key="'quick-add-'.$quickAddProductId" />
+          </div>
+        </div>
       </div>
     </div>
+    </template>
   @endif
 </div>
