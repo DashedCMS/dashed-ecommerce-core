@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.4 - 2026-05-02
+
+### Changed
+- Suggestion-kaarten zijn nu volledig klikbaar — linkt naar de productGroup-pagina (of product-pagina voor single-product groups). Eindgebruiker kan daar variant-filters / opties kiezen voordat-ie toevoegt aan cart. De inline "+" knop is verwijderd zodat producten met variants niet zonder optie-keuze in de cart belanden.
+- Dedupe-by-product-group kiest nu de **goedkoopste in-range variant** per group (was: best-seller). Drempel-respecterend: voor gap > 0 alleen de cheapest variant binnen [gap × 0.8, gap × 1.5]; gap = 0 → cheapest variant overall.
+- Templates tonen `productGroup->fromPrice()` ("Vanaf €X") wanneer de group meerdere variants heeft, anders de exact-prijs van het product. Naam is `productGroup->name` als de group meerdere variants heeft (anders product-naam).
+
 ## v4.7.3 - 2026-05-02
 
 ### Added

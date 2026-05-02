@@ -59,7 +59,7 @@ class CartProductSuggester
             return collect();
         }
 
-        $deduped = $this->dedupeByProductGroup($pool);
+        $deduped = $this->dedupeByProductGroup($pool, $priceRange);
 
         $ranked = $priceRange !== null
             ? $this->boostInRangeBestSellers($deduped, $gap, $priceRange, $boostSlots)
@@ -230,22 +230,34 @@ class CartProductSuggester
     }
 
     /**
-     * Per ProductGroup: kies de variant met de hoogste total_purchases (best-seller).
+     * Per ProductGroup: kies de goedkoopste variant die in de gap-range valt.
+     * Wanneer geen range actief is (gap = 0): kies simpelweg de goedkoopste variant.
      * Producten zonder ProductGroup blijven 1-op-1 behouden.
+     *
+     * @param  array{low: float, high: float}|null  $priceRange
      */
-    private function dedupeByProductGroup(Collection $pool): Collection
+    private function dedupeByProductGroup(Collection $pool, ?array $priceRange = null): Collection
     {
         $byGroup = $pool->groupBy(fn (Product $p) => $p->product_group_id ?? 'product:'.$p->id);
 
         return $byGroup
-            ->map(function (Collection $variants) {
+            ->map(function (Collection $variants) use ($priceRange) {
                 if ($variants->count() === 1) {
                     return $variants->first();
                 }
 
-                return $variants
-                    ->sortByDesc(fn (Product $p) => (int) ($p->total_purchases ?? 0))
-                    ->first();
+                if ($priceRange !== null) {
+                    $inRange = $variants->filter(
+                        fn (Product $p) => (float) $p->current_price >= $priceRange['low']
+                            && (float) $p->current_price <= $priceRange['high']
+                    );
+
+                    if ($inRange->isNotEmpty()) {
+                        return $inRange->sortBy(fn (Product $p) => (float) $p->current_price)->first();
+                    }
+                }
+
+                return $variants->sortBy(fn (Product $p) => (float) $p->current_price)->first();
             })
             ->values();
     }

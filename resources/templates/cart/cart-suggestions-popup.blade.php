@@ -7,24 +7,30 @@
 
       <div class="flex gap-2 overflow-x-auto pb-1">
         @foreach ($suggestions as $product)
-          <div class="flex-shrink-0 w-24 bg-white border border-gray-200 rounded p-2 relative" wire:key="popup-suggestion-{{ $product->id }}">
+          @php
+            $group = $product->productGroup;
+            $suggestionImage = $product->firstImage ?? $group?->firstImage;
+            $displayName = $group && ! $group->showSingleProduct() ? $group->name : $product->name;
+            $href = $group ? $group->getUrl() : ($product->getUrl() ?? '#');
+          @endphp
+          <a href="{{ $href }}" class="flex-shrink-0 w-24 bg-white border border-gray-200 rounded p-2 relative no-underline text-inherit hover:border-gray-400 transition-colors" wire:key="popup-suggestion-{{ $product->id }}">
             <div class="aspect-square bg-gray-100 rounded mb-1 relative overflow-hidden">
-              @php
-                $suggestionImage = $product->firstImage ?? $product->productGroup?->firstImage;
-              @endphp
               @if ($suggestionImage)
-                <x-dashed-files::image :mediaId="$suggestionImage" :alt="$product->name" class="w-full h-full object-cover" />
+                <x-dashed-files::image :mediaId="$suggestionImage" :alt="$displayName" class="w-full h-full object-cover" />
               @endif
               @if ($product->is_gap_closer ?? false)
                 <span class="absolute top-0 right-0 bg-green-600 text-white text-[8px] font-bold px-1 rounded-bl">FREE</span>
               @endif
             </div>
-            <div class="text-[11px] text-gray-800 leading-tight line-clamp-1">{{ $product->name }}</div>
-            <div class="flex items-center justify-between mt-1">
-              <span class="text-[11px] font-bold">€{{ number_format((float) $product->current_price, 2, ',', '.') }}</span>
-              <button type="button" wire:click="addToCart({{ $product->id }})" wire:loading.attr="disabled" class="bg-black text-white w-5 h-5 rounded-full inline-flex items-center justify-center text-xs leading-none">+</button>
+            <div class="text-[11px] text-gray-800 leading-tight line-clamp-1">{{ $displayName }}</div>
+            <div class="text-[11px] font-bold mt-1">
+              @if ($group && ! $group->showSingleProduct())
+                {{ $group->fromPrice() }}
+              @else
+                €{{ number_format((float) $product->current_price, 2, ',', '.') }}
+              @endif
             </div>
-          </div>
+          </a>
         @endforeach
       </div>
     </div>
