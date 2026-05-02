@@ -20,7 +20,9 @@
                   <x-dashed-files::image :mediaId="$suggestionImage" :alt="$displayName" class="w-full h-full object-cover" />
                 @endif
                 @if ($product->is_gap_closer ?? false)
-                  <span class="absolute top-0 left-0 bg-green-600 text-white text-[8px] font-bold px-1 rounded-br">FREE</span>
+                  <span class="absolute top-0 left-0 bg-green-600 text-white text-[8px] font-bold px-1 rounded-br uppercase">
+                    {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.gap_closer_badge_short', 'cart', 'Gratis verz.') }}
+                  </span>
                 @endif
               </div>
               <div class="text-[11px] text-gray-800 leading-tight line-clamp-1">{{ $displayName }}</div>
@@ -78,6 +80,13 @@
             </div>
           @endforeach
         </div>
+        @if ($quickAddTotalVariants > count($quickAddVariants))
+          <div class="px-4 pb-4 text-center">
+            <a href="{{ $quickAddGroupUrl }}" class="text-xs text-gray-600 underline">
+              {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.show_all_variants', 'cart', 'Bekijk alle :count: varianten', 'text', ['count' => $quickAddTotalVariants]) }}
+            </a>
+          </div>
+        @endif
       </div>
     </div>
   @endif

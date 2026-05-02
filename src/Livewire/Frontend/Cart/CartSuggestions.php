@@ -28,6 +28,12 @@ class CartSuggestions extends Component
     /** @var array<int, array{id:int,name:string,price:string,image:?int,filters:array}> */
     public array $quickAddVariants = [];
 
+    public int $quickAddTotalVariants = 0;
+
+    public ?string $quickAddGroupUrl = null;
+
+    private const MAX_QUICK_ADD_VARIANTS = 12;
+
     protected $listeners = ['refreshCart' => '$refresh'];
 
     public function mount(string $view = 'cart', ?int $limit = null, ?int $boostSlots = null): void
@@ -48,42 +54,38 @@ class CartSuggestions extends Component
 
         $group = $product->productGroup;
 
-        if (! $group || $group->showSingleProduct()) {
+        if (! $group) {
             $this->addToCart($productId);
 
             return;
         }
 
-        $variants = $group->products()
+        $allVariants = $group->products()
             ->publicShowable()
-            ->with(['productFilters.productFilterOptions'])
+            ->orderBy('current_price')
             ->get()
             ->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock)
-            ->map(function (Product $variant) {
-                $filters = [];
-                foreach ($variant->productFilters ?? [] as $filter) {
-                    $filters[] = [
-                        'name' => $filter->name,
-                        'value' => $variant->productFilterOptions->firstWhere('product_filter_id', $filter->id)?->name ?? '',
-                    ];
-                }
+            ->values();
 
+        if ($allVariants->count() <= 1) {
+            $this->addToCart($productId);
+
+            return;
+        }
+
+        $variants = $allVariants
+            ->take(self::MAX_QUICK_ADD_VARIANTS)
+            ->map(function (Product $variant) {
                 return [
                     'id' => $variant->id,
                     'name' => $variant->name,
                     'price' => '€'.number_format((float) $variant->current_price, 2, ',', '.'),
                     'image' => $variant->firstImage,
-                    'filters' => $filters,
+                    'filters' => [],
                 ];
             })
             ->values()
             ->all();
-
-        if ($variants === []) {
-            $this->addToCart($productId);
-
-            return;
-        }
 
         $this->quickAddGroupId = $group->id;
         $this->quickAddGroup = [
@@ -91,6 +93,8 @@ class CartSuggestions extends Component
             'image' => $group->firstImage,
         ];
         $this->quickAddVariants = $variants;
+        $this->quickAddTotalVariants = $allVariants->count();
+        $this->quickAddGroupUrl = $group->getUrl();
     }
 
     public function closeQuickAdd(): void
@@ -98,6 +102,8 @@ class CartSuggestions extends Component
         $this->quickAddGroupId = null;
         $this->quickAddGroup = null;
         $this->quickAddVariants = [];
+        $this->quickAddTotalVariants = 0;
+        $this->quickAddGroupUrl = null;
     }
 
     public function addToCart(int $productId): void
@@ -172,6 +178,8 @@ class CartSuggestions extends Component
             'progress' => $this->progress,
             'quickAddGroup' => $this->quickAddGroup,
             'quickAddVariants' => $this->quickAddVariants,
+            'quickAddTotalVariants' => $this->quickAddTotalVariants,
+            'quickAddGroupUrl' => $this->quickAddGroupUrl,
         ];
 
         if (view()->exists($themeView)) {

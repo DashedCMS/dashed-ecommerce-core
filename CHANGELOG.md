@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.6 - 2026-05-02
+
+### Fixed
+- Quick-add popup opende niet voor productgroups waarvoor `showSingleProduct()` true gaf, ondanks dat er meerdere variants beschikbaar zijn (de flag is een UX-keuze, geen variant-count). Quick-add controleert nu het werkelijke aantal in-stock variants — bij 2+ opent de modal, bij 1 of 0 gebeurt direct add-to-cart.
+- Badges in checkout en popup templates zeiden "FREE" wat verwarrend kon overkomen alsof het product gratis is. Vervangen door `Translation::get('cart.suggestions.gap_closer_badge_short', 'cart', 'Gratis verz.')` met Nederlandse fallback. Cart-template badge default ook `Gratis verzending` ipv `GRATIS VERZ`.
+
+### Added
+- Quick-add modal toont maximaal 12 variants in een grid; voor groups met meer wordt een "Bekijk alle :count: varianten"-link naar de productGroup-pagina toegevoegd onderaan de modal.
+
 ## v4.7.5 - 2026-05-02
 
 ### Added

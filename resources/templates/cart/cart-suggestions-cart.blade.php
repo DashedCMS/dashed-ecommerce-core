@@ -32,7 +32,7 @@
                 @endif
                 @if ($product->is_gap_closer ?? false)
                   <span class="absolute top-1 left-1 bg-green-600 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full">
-                    {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.gap_closer_badge', 'cart', 'GRATIS VERZ') }}
+                    {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.gap_closer_badge', 'cart', 'Gratis verzending') }}
                   </span>
                 @endif
               </div>
@@ -91,6 +91,13 @@
             </div>
           @endforeach
         </div>
+        @if ($quickAddTotalVariants > count($quickAddVariants))
+          <div class="px-4 pb-4 text-center">
+            <a href="{{ $quickAddGroupUrl }}" class="text-xs text-gray-600 underline">
+              {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.show_all_variants', 'cart', 'Bekijk alle :count: varianten', 'text', ['count' => $quickAddTotalVariants]) }}
+            </a>
+          </div>
+        @endif
       </div>
     </div>
   @endif
