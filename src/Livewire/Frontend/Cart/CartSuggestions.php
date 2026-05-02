@@ -6,6 +6,8 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
 use Illuminate\Support\Collection;
 use Livewire\Component;
@@ -19,6 +21,13 @@ class CartSuggestions extends Component
     public Collection $suggestions;
     public array $progress = ['gap' => 0.0, 'percentage' => 100, 'reached' => true];
 
+    public ?int $quickAddGroupId = null;
+
+    public ?array $quickAddGroup = null;
+
+    /** @var array<int, array{id:int,name:string,price:string,image:?int,filters:array}> */
+    public array $quickAddVariants = [];
+
     protected $listeners = ['refreshCart' => '$refresh'];
 
     public function mount(string $view = 'cart', ?int $limit = null, ?int $boostSlots = null): void
@@ -29,9 +38,71 @@ class CartSuggestions extends Component
         $this->suggestions = collect();
     }
 
+    public function openQuickAdd(int $productId): void
+    {
+        $product = Product::find($productId);
+
+        if (! $product) {
+            return;
+        }
+
+        $group = $product->productGroup;
+
+        if (! $group || $group->showSingleProduct()) {
+            $this->addToCart($productId);
+
+            return;
+        }
+
+        $variants = $group->products()
+            ->publicShowable()
+            ->with(['productFilters.productFilterOptions'])
+            ->get()
+            ->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock)
+            ->map(function (Product $variant) {
+                $filters = [];
+                foreach ($variant->productFilters ?? [] as $filter) {
+                    $filters[] = [
+                        'name' => $filter->name,
+                        'value' => $variant->productFilterOptions->firstWhere('product_filter_id', $filter->id)?->name ?? '',
+                    ];
+                }
+
+                return [
+                    'id' => $variant->id,
+                    'name' => $variant->name,
+                    'price' => '€'.number_format((float) $variant->current_price, 2, ',', '.'),
+                    'image' => $variant->firstImage,
+                    'filters' => $filters,
+                ];
+            })
+            ->values()
+            ->all();
+
+        if ($variants === []) {
+            $this->addToCart($productId);
+
+            return;
+        }
+
+        $this->quickAddGroupId = $group->id;
+        $this->quickAddGroup = [
+            'name' => $group->name,
+            'image' => $group->firstImage,
+        ];
+        $this->quickAddVariants = $variants;
+    }
+
+    public function closeQuickAdd(): void
+    {
+        $this->quickAddGroupId = null;
+        $this->quickAddGroup = null;
+        $this->quickAddVariants = [];
+    }
+
     public function addToCart(int $productId): void
     {
-        $product = \Dashed\DashedEcommerceCore\Models\Product::find($productId);
+        $product = Product::find($productId);
 
         if (! $product) {
             return;
@@ -49,6 +120,7 @@ class CartSuggestions extends Component
 
         cartHelper()->addToCart($productId, 1, $attributes);
 
+        $this->closeQuickAdd();
         $this->dispatch('refreshCart');
         $this->dispatch('productAddedToCart', product: $product);
     }
@@ -95,7 +167,12 @@ class CartSuggestions extends Component
     private function resolveView()
     {
         $themeView = config('dashed-core.site_theme', 'dashed').'.cart.cart-suggestions-'.$this->view;
-        $data = ['suggestions' => $this->suggestions, 'progress' => $this->progress];
+        $data = [
+            'suggestions' => $this->suggestions,
+            'progress' => $this->progress,
+            'quickAddGroup' => $this->quickAddGroup,
+            'quickAddVariants' => $this->quickAddVariants,
+        ];
 
         if (view()->exists($themeView)) {
             return view($themeView, $data);

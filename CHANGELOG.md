@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.5 - 2026-05-02
+
+### Added
+- Suggestion-kaarten hebben hun "+"-knop terug. Klik op de kaart navigeert nog steeds naar de productGroup-pagina; klik op de "+" opent een quick-add modal binnen het component met een grid van alle in-stock varianten van die group (image + naam + filter-waarden zoals kleur/maat + prijs + Toevoegen-knop).
+- Voor productGroups met `showSingleProduct()=true` (1 variant of `only_show_parent_product`) doet "+" direct add-to-cart zonder modal.
+- Modal sluit automatisch nadat een variant is toegevoegd; achtergrond-klik en `&times;`-knop sluiten ook.
+
+### Changed
+- `CartSuggestions::openQuickAdd($productId)` → opent modal of doet quick-add. `closeQuickAdd()` resets state. Component bewaart `quickAddGroupId`, `quickAddGroup` en `quickAddVariants` als publieke properties zodat ze in de blade gebruikt kunnen worden.
+
 ## v4.7.4 - 2026-05-02
 
 ### Changed
