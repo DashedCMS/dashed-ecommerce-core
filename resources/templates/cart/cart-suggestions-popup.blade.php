@@ -55,7 +55,7 @@
 
   @if ($quickAddGroup && $quickAddProductId)
     <template x-teleport="body">
-      <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4" wire:key="popup-quick-add-modal-{{ $quickAddProductId }}">
+      <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 2147483647;" wire:key="popup-quick-add-modal-{{ $quickAddProductId }}">
         <div class="absolute inset-0 bg-black/50" wire:click="closeQuickAdd"></div>
         <div class="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <button type="button" wire:click="closeQuickAdd" class="absolute top-3 right-3 text-gray-500 hover:text-gray-900 text-3xl leading-none z-10">&times;</button>

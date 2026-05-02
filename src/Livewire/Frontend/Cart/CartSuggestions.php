@@ -70,10 +70,14 @@ class CartSuggestions extends Component
             return;
         }
 
-        $cheapestVariant = $availableVariants->first();
+        // Open de modal op de variant waar de bezoeker op klikte; valt terug op
+        // de goedkoopste in-stock variant als het geklikte product niet (meer)
+        // beschikbaar is.
+        $clickedIsAvailable = $availableVariants->contains(fn (Product $p) => $p->id === $productId);
+        $defaultProductId = $clickedIsAvailable ? $productId : $availableVariants->first()->id;
 
         $this->quickAddGroupId = $group->id;
-        $this->quickAddProductId = $cheapestVariant->id;
+        $this->quickAddProductId = $defaultProductId;
         $this->quickAddGroup = [
             'name' => $group->name,
             'image' => $group->firstImage,

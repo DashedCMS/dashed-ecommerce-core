@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.8 - 2026-05-02
+
+### Fixed
+- Quick-add modal opent nu op de variant waarop de bezoeker klikte ipv de goedkoopste variant (valt terug op cheapest als de geklikte variant niet meer in stock is). Voorheen kreeg de bezoeker willekeurig de cheapest variant te zien als startpunt.
+- Modal z-index op `2147483647` (max 32-bit int) gezet via inline style om er zeker van te zijn dat-ie boven alle andere overlays staat — `z-[1000]` was niet hoog genoeg in alle theme-contexten.
+
 ## v4.7.7 - 2026-05-02
 
 ### Changed
