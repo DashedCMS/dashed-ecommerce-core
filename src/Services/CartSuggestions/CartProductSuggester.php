@@ -123,7 +123,7 @@ class CartProductSuggester
         }
 
         if ($requireInStock) {
-            $pool = $pool->filter(fn (Product $p) => ! $p->use_stock || $p->stock > 0);
+            $pool = $pool->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock);
         }
 
         return $pool->unique('id')->values();

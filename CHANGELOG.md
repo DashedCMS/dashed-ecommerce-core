@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.1 - 2026-05-02
+
+### Fixed
+- `CartProductSuggester` voorraad-filter checkte `stock > 0` (rauw aantal) terwijl shops met externe voorraad-sync `stock=0` houden maar `in_stock=true` zetten. Filter aangepast naar `! use_stock || in_stock` zodat suggesties verschijnen op shops die hun voorraad via een sync regelen. Voorheen gaf de suggester een lege Collection als alle publicShowable producten `stock=0` hadden.
+
 ## v4.7.0 - 2026-05-01
 
 ### Added
