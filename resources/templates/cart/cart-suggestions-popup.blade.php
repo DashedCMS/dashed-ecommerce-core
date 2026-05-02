@@ -17,8 +17,11 @@
           @foreach ($suggestions as $product)
             <div class="flex-shrink-0 w-20 bg-white border border-gray-200 rounded p-1.5 relative" wire:key="popup-suggestion-{{ $product->id }}">
               <div class="aspect-square bg-gray-100 rounded mb-1 relative overflow-hidden">
-                @if (method_exists($product, 'firstImage') ? $product->firstImage : null)
-                  <img src="{{ mediaHelper()->getSingleMedia($product->firstImage, 'small') }}" alt="{{ $product->name }}" class="w-full h-full object-cover" loading="lazy">
+                @php
+                  $suggestionImage = $product->firstImage ?? $product->productGroup?->firstImage;
+                @endphp
+                @if ($suggestionImage)
+                  <x-dashed-files::image :mediaId="$suggestionImage" :alt="$product->name" class="w-full h-full object-cover" />
                 @endif
                 @if ($product->is_gap_closer ?? false)
                   <span class="absolute top-0 right-0 bg-green-600 text-white text-[8px] font-bold px-1 rounded-bl">FREE</span>

@@ -21,8 +21,10 @@ function makeSuggesterProductGroup(): ProductGroup
     ]);
 }
 
-function makeSuggesterProduct(string $name, float $price, ProductGroup $group, array $overrides = []): Product
+function makeSuggesterProduct(string $name, float $price, ?ProductGroup $group = null, array $overrides = []): Product
 {
+    $group = $group ?? makeSuggesterProductGroup();
+
     return Product::withoutEvents(function () use ($name, $price, $group, $overrides) {
         return Product::create(array_merge([
             'name' => ['en' => $name],
@@ -79,11 +81,10 @@ it('returns empty collection when cart is empty', function () {
 });
 
 it('aggregates explicit cross-sell from all cart items', function () {
-    $group = makeSuggesterProductGroup();
-    $a = makeSuggesterProduct('A', 10, $group);
-    $b = makeSuggesterProduct('B', 12, $group);
-    $crossA = makeSuggesterProduct('CrossA', 20, $group);
-    $crossB = makeSuggesterProduct('CrossB', 25, $group);
+    $a = makeSuggesterProduct('A', 10);
+    $b = makeSuggesterProduct('B', 12);
+    $crossA = makeSuggesterProduct('CrossA', 20);
+    $crossB = makeSuggesterProduct('CrossB', 25);
 
     $a->crossSellProducts()->attach($crossA->id);
     $b->crossSellProducts()->attach($crossB->id);
@@ -134,10 +135,9 @@ it('excludes out-of-stock products when require_in_stock', function () {
 });
 
 it('honors limit setting', function () {
-    $group = makeSuggesterProductGroup();
-    $a = makeSuggesterProduct('A', 10, $group);
+    $a = makeSuggesterProduct('A', 10);
     for ($i = 0; $i < 10; $i++) {
-        $cs = makeSuggesterProduct('CS'.$i, 20 + $i, $group);
+        $cs = makeSuggesterProduct('CS'.$i, 20 + $i);
         $a->crossSellProducts()->attach($cs->id);
     }
 
@@ -154,12 +154,11 @@ it('honors limit setting', function () {
 it('boosts gap-closers to first slots when gap > 0', function () {
     setFreeShippingThreshold(100.00);
 
-    $group = makeSuggesterProductGroup();
-    $a = makeSuggesterProduct('A', 80, $group);
+    $a = makeSuggesterProduct('A', 80);
 
-    $tooSmall = makeSuggesterProduct('Small', 5, $group);
-    $sweetSpot = makeSuggesterProduct('Sweet', 22, $group);
-    $tooBig = makeSuggesterProduct('Big', 100, $group);
+    $tooSmall = makeSuggesterProduct('Small', 5);
+    $sweetSpot = makeSuggesterProduct('Sweet', 22);
+    $tooBig = makeSuggesterProduct('Big', 100);
 
     $a->crossSellProducts()->attach([$tooSmall->id, $sweetSpot->id, $tooBig->id]);
 

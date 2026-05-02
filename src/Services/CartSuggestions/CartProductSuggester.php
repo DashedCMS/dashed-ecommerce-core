@@ -126,7 +126,28 @@ class CartProductSuggester
             $pool = $pool->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock);
         }
 
-        return $pool->unique('id')->values();
+        return $this->dedupeByProductGroup($pool->unique('id'));
+    }
+
+    /**
+     * Per ProductGroup: kies de variant met de hoogste total_purchases (best-seller).
+     * Producten zonder ProductGroup blijven 1-op-1 behouden.
+     */
+    private function dedupeByProductGroup(Collection $pool): Collection
+    {
+        $byGroup = $pool->groupBy(fn (Product $p) => $p->product_group_id ?? 'product:'.$p->id);
+
+        return $byGroup
+            ->map(function (Collection $variants) {
+                if ($variants->count() === 1) {
+                    return $variants->first();
+                }
+
+                return $variants
+                    ->sortByDesc(fn (Product $p) => (int) ($p->total_purchases ?? 0))
+                    ->first();
+            })
+            ->values();
     }
 
     private function boostGapClosers(

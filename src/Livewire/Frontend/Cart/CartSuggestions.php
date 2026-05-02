@@ -31,9 +31,26 @@ class CartSuggestions extends Component
 
     public function addToCart(int $productId): void
     {
-        cartHelper()->addToCart($productId, 1);
+        $product = \Dashed\DashedEcommerceCore\Models\Product::find($productId);
+
+        if (! $product) {
+            return;
+        }
+
+        $price = (float) $product->currentPrice;
+        $discount = (float) ($product->discountPrice ?? $price);
+
+        $attributes = [
+            'discountPrice' => $discount,
+            'originalPrice' => $price,
+            'options' => [],
+            'hiddenOptions' => [],
+        ];
+
+        cartHelper()->addToCart($productId, 1, $attributes);
+
         $this->dispatch('refreshCart');
-        $this->dispatch('productAddedToCart', productId: $productId);
+        $this->dispatch('productAddedToCart', product: $product);
     }
 
     public function render()

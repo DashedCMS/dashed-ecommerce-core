@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.2 - 2026-05-02
+
+### Added
+- `CartProductSuggester` dedupliceert nu op `product_group_id` en kiest per groep de variant met de hoogste `total_purchases` (best-seller). Voorkomt dat meerdere varianten van dezelfde productgroep tegelijk in de suggesties verschijnen.
+
+### Fixed
+- `CartSuggestions::addToCart()` gaf voorheen alleen `productId + quantity` mee — het cart-item miste daardoor de keys `discountPrice`, `originalPrice`, `options` en `hiddenOptions` die de cart-row blade verwacht. Component bouwt nu hetzelfde `$attributes`-payload als `ProductCartActions::addToCart`.
+- Afbeeldingen in alle 3 suggestion-templates (cart, checkout, popup) renderden niet door een verkeerde `method_exists`-check. Vervangen door `<x-dashed-files::image>` met fallback op `productGroup->firstImage`.
+- Event-payload `productAddedToCart` geeft nu het Product-model door (zoals andere Livewires doen) ipv alleen `productId`.
+
 ## v4.7.1 - 2026-05-02
 
 ### Fixed
