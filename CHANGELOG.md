@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.9 - 2026-05-02
+
+### Fixed
+- `Products::getAll()` crashte met `Unknown column 'orderByProductGroups'` als de Customsetting `product_default_order_type` op die PHP-only sort-mode stond. De code ging eerst door de `canFilterOnShortOrColumn` filter (waar `'orderByProductGroups'` niet in zit, dus orderBy werd `''`), maar viel daarna terug op de Customsetting-waarde die zonder validatie naar `->orderBy()` SQL ging. Nu skippen we de SQL `orderBy()` voor PHP-only modes; de bestaande PHP-side `sortBy(productGroup.order)` afhandeling blijft werken.
+- Quick-add modal-content stopt nu de click-event-propagatie via Alpine `@click.stop`. Voorheen sloot de cart-popup zichzelf wanneer je in de geteleporteerde quick-add modal klikte, omdat het cart-popup-paneel een `@click.away`-listener heeft die elke klik buiten het paneel detecteert (en de teleport plaatst de modal als `<body>`-kind, dus technisch buiten het paneel).
+
 ## v4.7.8 - 2026-05-02
 
 ### Fixed

@@ -194,23 +194,33 @@ class Products
             $order = Customsetting::get('product_default_order_sort', null, 'DESC');
         }
 
+        // Sommige orderBy-modes zijn PHP-side (collection sortBy) ipv SQL-kolommen.
+        // Skip de SQL orderBy() voor die modes — ze worden later in deze functie afgehandeld.
+        $sqlOrderBy = $orderBy;
+        $phpOnlyOrderModes = ['orderByProductGroups'];
+        if (in_array($orderBy, $phpOnlyOrderModes, true)) {
+            $sqlOrderBy = null;
+        }
+
         if (! $products) {
             if ($categoryId) {
                 $productCategory = ProductCategory::with(['products'])
                     ->findOrFail($categoryId);
-                $products = $productCategory->products()
+                $query = $productCategory->products()
                     ->search($search)
                     ->publicShowable()
-                    ->orderBy($orderBy, $order)
-                    ->with(['productFilters', 'productCategories', 'productGroup'])
-                    ->get();
+                    ->with(['productFilters', 'productCategories', 'productGroup']);
             } else {
-                $products = Product::search($search)
+                $query = Product::search($search)
                     ->publicShowable()
-                    ->orderBy($orderBy, $order)
-                    ->with(['productFilters', 'productCategories', 'productGroup'])
-                    ->get();
+                    ->with(['productFilters', 'productCategories', 'productGroup']);
             }
+
+            if ($sqlOrderBy) {
+                $query->orderBy($sqlOrderBy, $order);
+            }
+
+            $products = $query->get();
         }
 
         $productFilters = DB::table('dashed__product_filter')
