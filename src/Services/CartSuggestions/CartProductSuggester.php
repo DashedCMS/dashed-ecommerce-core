@@ -6,6 +6,7 @@ namespace Dashed\DashedEcommerceCore\Services\CartSuggestions;
 
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class CartProductSuggester
@@ -15,10 +16,7 @@ class CartProductSuggester
     ) {}
 
     /**
-     * Build suggestions for the given cart state.
-     *
-     * @param  array<int>  $cartProductIds  Product ids currently in cart
-     * @param  float  $cartTotal  Cart total used for gap-detection
+     * @param  array<int>  $cartProductIds
      */
     public function suggest(
         array $cartProductIds,
@@ -36,97 +34,199 @@ class CartProductSuggester
             return collect();
         }
 
-        $pool = $this->buildCandidatePool(
-            $cartProductIds,
-            $limit,
-            $requireInStock,
-            $fallbackRandom,
+        $progress = $this->freeShippingHelper->progress($cartTotal);
+        $gap = (float) $progress['gap'];
+
+        $priceRange = $gap > 0
+            ? ['low' => $gap * $gapMinFactor, 'high' => $gap * $gapMaxFactor]
+            : null;
+
+        $cartProducts = Product::query()
+            ->whereIn('id', $cartProductIds)
+            ->with(['crossSellProducts', 'suggestedProducts', 'productGroup.crossSellProducts', 'productGroup.suggestedProducts', 'productCategories'])
+            ->get();
+
+        $pool = $this->buildPool(
+            cartProducts: $cartProducts,
+            cartProductIds: $cartProductIds,
+            limit: $limit,
+            requireInStock: $requireInStock,
+            fallbackRandom: $fallbackRandom,
+            priceRange: $priceRange,
         );
 
         if ($pool->isEmpty()) {
             return collect();
         }
 
-        $progress = $this->freeShippingHelper->progress($cartTotal);
-        $gap = (float) $progress['gap'];
+        $deduped = $this->dedupeByProductGroup($pool);
 
-        $ranked = $gap > 0
-            ? $this->boostGapClosers($pool, $gap, $gapMinFactor, $gapMaxFactor, $boostSlots)
-            : $pool->each(fn (Product $p) => $p->is_gap_closer = false);
+        $ranked = $priceRange !== null
+            ? $this->boostInRangeBestSellers($deduped, $gap, $priceRange, $boostSlots)
+            : $deduped->each(fn (Product $p) => $p->is_gap_closer = false);
 
         return $ranked->take($limit)->values();
     }
 
     /**
+     * Build candidate pool. When a price-range is active, every step prefers
+     * in-range products first; if those don't fill the limit, out-of-range is
+     * added as filler.
+     *
      * @param  array<int>  $cartProductIds
+     * @param  array{low: float, high: float}|null  $priceRange
      */
-    private function buildCandidatePool(
+    private function buildPool(
+        Collection $cartProducts,
         array $cartProductIds,
         int $limit,
         bool $requireInStock,
         bool $fallbackRandom,
+        ?array $priceRange,
     ): Collection {
-        $cartProducts = Product::query()
-            ->whereIn('id', $cartProductIds)
-            ->with(['crossSellProducts', 'suggestedProducts', 'productGroup.crossSellProducts', 'productGroup.suggestedProducts', 'productCategories'])
-            ->get();
-
-        $pool = collect();
-
+        $explicit = collect();
         foreach ($cartProducts as $product) {
-            $pool = $pool
+            $explicit = $explicit
                 ->concat($product->crossSellProducts)
                 ->concat($product->suggestedProducts)
                 ->concat($product->productGroup?->crossSellProducts ?? [])
                 ->concat($product->productGroup?->suggestedProducts ?? []);
         }
 
-        $pool = $pool->unique('id')->reject(fn (Product $p) => in_array($p->id, $cartProductIds, true));
+        $explicit = $explicit
+            ->unique('id')
+            ->reject(fn (Product $p) => in_array($p->id, $cartProductIds, true));
 
-        if ($pool->count() < $limit) {
-            $needed = $limit - $pool->count();
-            $excluded = $pool->pluck('id')->concat($cartProductIds)->all();
-
-            $categoryIds = $cartProducts
-                ->flatMap(fn (Product $p) => $p->productCategories->pluck('id'))
-                ->unique()
-                ->values()
-                ->all();
-
-            if (! empty($categoryIds)) {
-                $catProducts = Product::query()
-                    ->thisSite()
-                    ->publicShowable()
-                    ->whereNotIn('id', $excluded)
-                    ->whereHas('productCategories', fn ($q) => $q->whereIn('dashed__product_categories.id', $categoryIds))
-                    ->inRandomOrder()
-                    ->limit($needed)
-                    ->get();
-
-                $pool = $pool->concat($catProducts);
-            }
+        if ($requireInStock) {
+            $explicit = $explicit->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock);
         }
 
-        if ($fallbackRandom && $pool->count() < $limit) {
-            $needed = $limit - $pool->count();
-            $excluded = $pool->pluck('id')->concat($cartProductIds)->all();
+        if ($priceRange !== null) {
+            [$inRange, $outOfRange] = $this->partitionByRange($explicit, $priceRange);
+            $pool = $inRange;
+        } else {
+            $pool = $explicit;
+            $outOfRange = collect();
+        }
 
-            $randomProducts = Product::query()
-                ->thisSite()
-                ->publicShowable()
-                ->whereNotIn('id', $excluded)
-                ->inRandomOrder()
-                ->limit($needed)
+        $categoryIds = $cartProducts
+            ->flatMap(fn (Product $p) => $p->productCategories->pluck('id'))
+            ->unique()
+            ->values()
+            ->all();
+
+        $distinctGroups = fn (Collection $coll): int => $coll
+            ->pluck('product_group_id')
+            ->filter()
+            ->unique()
+            ->count() + $coll->whereNull('product_group_id')->count();
+
+        if ($distinctGroups($pool) < $limit && ! empty($categoryIds)) {
+            $excluded = $pool->pluck('id')->concat($outOfRange->pluck('id'))->concat($cartProductIds)->all();
+
+            $catProducts = $this->categoryQuery($categoryIds, $excluded, $requireInStock, $priceRange)
+                ->limit(max($limit * 10, 50))
                 ->get();
 
-            $pool = $pool->concat($randomProducts);
+            $pool = $pool->concat($catProducts)->unique('id')->values();
+        }
+
+        if ($fallbackRandom && $distinctGroups($pool) < $limit) {
+            $excluded = $pool->pluck('id')->concat($outOfRange->pluck('id'))->concat($cartProductIds)->all();
+
+            $randomProducts = $this->randomQuery($excluded, $requireInStock, $priceRange)
+                ->limit(max($limit * 10, 50))
+                ->get();
+
+            $pool = $pool->concat($randomProducts)->unique('id')->values();
+        }
+
+        if ($priceRange !== null && $distinctGroups($pool) < $limit) {
+            $excluded = $pool->pluck('id')->concat($cartProductIds)->all();
+
+            $filler = collect()->concat($outOfRange);
+
+            if ($distinctGroups($filler) < $limit) {
+                $extraExcluded = $filler->pluck('id')->concat($excluded)->all();
+                $extra = Product::query()
+                    ->thisSite()
+                    ->publicShowable()
+                    ->whereNotIn('id', $extraExcluded)
+                    ->orderByDesc('total_purchases')
+                    ->limit(max($limit * 10, 50))
+                    ->get();
+                if ($requireInStock) {
+                    $extra = $extra->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock);
+                }
+                $filler = $filler->concat($extra);
+            }
+
+            $pool = $pool->concat($filler)->unique('id')->values();
+        }
+
+        return $pool;
+    }
+
+    /**
+     * @param  array{low: float, high: float}  $priceRange
+     * @return array{0: Collection, 1: Collection}
+     */
+    private function partitionByRange(Collection $products, array $priceRange): array
+    {
+        [$in, $out] = $products->partition(
+            fn (Product $p) => (float) $p->current_price >= $priceRange['low']
+                && (float) $p->current_price <= $priceRange['high']
+        );
+
+        return [$in->values(), $out->values()];
+    }
+
+    /**
+     * @param  array<int>  $categoryIds
+     * @param  array<int>  $excluded
+     * @param  array{low: float, high: float}|null  $priceRange
+     */
+    private function categoryQuery(array $categoryIds, array $excluded, bool $requireInStock, ?array $priceRange): Builder
+    {
+        $query = Product::query()
+            ->thisSite()
+            ->publicShowable()
+            ->whereNotIn('id', $excluded)
+            ->whereHas('productCategories', fn ($q) => $q->whereIn('dashed__product_categories.id', $categoryIds))
+            ->orderByDesc('total_purchases');
+
+        if ($priceRange !== null) {
+            $query->whereBetween('current_price', [$priceRange['low'], $priceRange['high']]);
         }
 
         if ($requireInStock) {
-            $pool = $pool->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock);
+            $query->where(fn ($q) => $q->where('use_stock', false)->orWhere('in_stock', true));
         }
 
-        return $this->dedupeByProductGroup($pool->unique('id'));
+        return $query;
+    }
+
+    /**
+     * @param  array<int>  $excluded
+     * @param  array{low: float, high: float}|null  $priceRange
+     */
+    private function randomQuery(array $excluded, bool $requireInStock, ?array $priceRange): Builder
+    {
+        $query = Product::query()
+            ->thisSite()
+            ->publicShowable()
+            ->whereNotIn('id', $excluded)
+            ->orderByDesc('total_purchases');
+
+        if ($priceRange !== null) {
+            $query->whereBetween('current_price', [$priceRange['low'], $priceRange['high']]);
+        }
+
+        if ($requireInStock) {
+            $query->where(fn ($q) => $q->where('use_stock', false)->orWhere('in_stock', true));
+        }
+
+        return $query;
     }
 
     /**
@@ -150,26 +250,30 @@ class CartProductSuggester
             ->values();
     }
 
-    private function boostGapClosers(
+    /**
+     * Sorteer in-range best-sellers naar voren (eerste $boostSlots posities),
+     * markeer ze als gap-closer voor de UI badge.
+     *
+     * @param  array{low: float, high: float}  $priceRange
+     */
+    private function boostInRangeBestSellers(
         Collection $pool,
         float $gap,
-        float $minFactor,
-        float $maxFactor,
+        array $priceRange,
         int $boostSlots,
     ): Collection {
-        $low = $gap * $minFactor;
-        $high = $gap * $maxFactor;
+        [$inRange, $outOfRange] = $this->partitionByRange($pool, $priceRange);
 
-        [$gapClosers, $rest] = $pool->partition(
-            fn (Product $p) => (float) $p->current_price >= $low && (float) $p->current_price <= $high
-        );
+        $inRange = $inRange
+            ->sortByDesc(fn (Product $p) => (int) ($p->total_purchases ?? 0))
+            ->values();
 
-        $gapClosers = $gapClosers->sortBy(fn (Product $p) => abs((float) $p->current_price - $gap))->values();
-        $gapClosers->each(fn (Product $p) => $p->is_gap_closer = true);
-        $rest->each(fn (Product $p) => $p->is_gap_closer = false);
+        $inRange->each(fn (Product $p) => $p->is_gap_closer = true);
+        $outOfRange->each(fn (Product $p) => $p->is_gap_closer = false);
 
-        $taken = $gapClosers->take($boostSlots);
+        $taken = $inRange->take($boostSlots);
+        $rest = $inRange->slice($boostSlots);
 
-        return $taken->concat($rest)->concat($gapClosers->slice($boostSlots))->unique('id')->values();
+        return $taken->concat($outOfRange)->concat($rest)->values();
     }
 }

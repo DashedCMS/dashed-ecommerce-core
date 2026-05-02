@@ -2,6 +2,17 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.3 - 2026-05-02
+
+### Added
+- `CartProductSuggester` filtert nu in elke bron-stap (cross-sell, categorie-fallback, random fallback) op de gap-closing prijsrange. Voorheen kwam er via random fallback een €100 product door bij een gap van €23. Nu pakt de query `whereBetween('current_price', [gap × 0.8, gap × 1.5])` zodat alleen producten in het sweet-spot bereik door de pipeline komen. Sortering binnen range op `total_purchases` (best-sellers eerst). Out-of-range producten alleen als laatste filler als de range onvoldoende verschillende groups oplevert.
+- DB-fetches over-fetchen nu (10× limit, min 50) om voldoende verschillende product-groups te dekken — voorkomt dat alle resultaten variants van 1 best-seller group zijn.
+- Pool-completion check kijkt naar aantal distinct product-groups in plaats van aantal products. Zo fetches we door tot we genoeg unieke groups hebben voor de eindlimit.
+
+### Changed
+- Cart-popup template (`cart-suggestions-popup.blade.php`) toont geen threshold-banner meer — alleen de suggesties strip. De threshold-bar blijft in de cart-popup theme view zelf staan, suggesties komen onder de cart-items zoals gebruikelijk.
+- `cart-suggestions-cart.blade.php` heeft de threshold-banner inline (geen `@include` van een partial die in consumer-themes mag ontbreken).
+
 ## v4.7.2 - 2026-05-02
 
 ### Added

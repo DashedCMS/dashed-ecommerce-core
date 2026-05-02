@@ -1,7 +1,12 @@
 <div>
   @if (($progress['gap'] ?? 0) > 0)
-    <div class="mb-4">
-      @include(config('dashed-core.site_theme', 'dashed').'.cart.partials.free-shipping-bar', ['progress' => $progress])
+    <div class="mb-4 rounded-md p-3 bg-amber-50 border border-amber-200">
+      <div class="text-sm text-gray-700">
+        {!! str_replace(':amount:', '<strong class="text-green-700">€'.number_format($progress['gap'], 2, ',', '.').'</strong>', \Dashed\DashedTranslations\Models\Translation::get('free-shipping.under', 'cart', 'Nog :amount: voor gratis verzending')) !!}
+      </div>
+      <div class="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden">
+        <div class="h-full bg-green-600 transition-all" style="width: {{ $progress['percentage'] }}%"></div>
+      </div>
     </div>
   @endif
 
