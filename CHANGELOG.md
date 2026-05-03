@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.15 - 2026-05-03
+
+### Changed
+- Quick-add modal: nieuwe self-contained `QuickAddProduct` Livewire-component (eigen view in `resources/views/livewire/quick-add-product.blade.php`) die hero (image + naam + prijs) én filter-UI én toevoegen-knop in 1 component combineert. Modal templates embedden nu deze component. Voorheen werden hero (in CartSuggestions's render) en filters (in AddToCart Livewire) door cross-component events gesynchroniseerd, wat in combinatie met Alpine `x-teleport` morphing-issues opleverde — tweede en volgende filter-clicks updateten de hero niet.
+- `CartSuggestions` is opgeschoond: geen `cartSuggestionsVariantChanged` listener of `syncQuickAddVariant` meer; de modal wordt niet meer ge-re-rendered op variant-changes.
+- `AddToCart::updated()` dispatcht geen `cartSuggestionsVariantChanged` event meer (was alleen voor de oude cross-component sync).
+
 ## v4.7.14 - 2026-05-03
 
 ### Fixed

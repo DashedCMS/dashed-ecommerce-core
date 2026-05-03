@@ -60,25 +60,7 @@
         <div x-data @click.stop class="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <button type="button" wire:click="closeQuickAdd" class="absolute top-3 right-3 text-gray-500 hover:text-gray-900 text-3xl leading-none z-10">&times;</button>
           <div class="p-6">
-            <div class="flex gap-4 mb-4">
-              @if ($quickAddGroup['image'])
-                <div class="w-24 h-24 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                  <x-dashed-files::image :mediaId="$quickAddGroup['image']" :alt="$quickAddGroup['name']" class="w-full h-full object-cover" />
-                </div>
-              @endif
-              <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-gray-900 mb-1">{{ $quickAddGroup['name'] }}</h3>
-                @if ($quickAddPriceFrom)
-                  <p class="text-sm text-gray-600">{{ $quickAddPriceFrom }}</p>
-                @endif
-                <a href="{{ $quickAddGroupUrl }}" class="text-xs text-gray-500 underline mt-1 inline-block">
-                  {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.go_to_product', 'cart', 'Naar productpagina') }}
-                </a>
-              </div>
-            </div>
-            <div class="border-t border-gray-200 pt-4">
-              <livewire:cart.add-to-cart :product="\Dashed\DashedEcommerceCore\Models\Product::find($quickAddProductId)" :key="'quick-add-popup-group-'.$quickAddGroupId" />
-            </div>
+            <livewire:cart.quick-add-product :product="\Dashed\DashedEcommerceCore\Models\Product::find($quickAddProductId)" :key="'quick-add-popup-group-'.$quickAddGroupId" />
           </div>
         </div>
       </div>

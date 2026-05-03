@@ -33,27 +33,7 @@ class CartSuggestions extends Component
     protected $listeners = [
         'refreshCart' => '$refresh',
         'productAddedToCart' => 'closeQuickAdd',
-        'cartSuggestionsVariantChanged' => 'syncQuickAddVariant',
     ];
-
-    public function syncQuickAddVariant(int $productId): void
-    {
-        if (! $this->quickAddGroupId) {
-            return;
-        }
-
-        $product = Product::find($productId);
-
-        if (! $product || $product->product_group_id !== $this->quickAddGroupId) {
-            return;
-        }
-
-        $this->quickAddProductId = $productId;
-        $this->quickAddGroup = [
-            'name' => $product->name,
-            'image' => $product->firstImage ?? $product->productGroup?->firstImage,
-        ];
-    }
 
     public function mount(string $view = 'cart', ?int $limit = null, ?int $boostSlots = null): void
     {
