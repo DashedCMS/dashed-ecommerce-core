@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.0 - 2026-05-03
+
+### Added
+- `PaymentLinkMail` (betaallink naar klant) bevat nu standaard ook het `order-summary` block met productlijst + totalen, niet alleen `order-details`. De klant ziet wat er besteld is + welke prijs, niet alleen factuurnummer.
+- Nieuwe `Services\Address\AddressLookup` static service met `lookup($zipCode, $houseNr)` — gedeelde implementatie van PostNL + postcode.tech adres-lookup. Probeert PostNL API eerst (als `checkout_postnl_api_key` is ingesteld), valt terug op postcode.tech (`checkout_postcode_api_key`).
+- POS klantgegevens form heeft nu auto-fill voor straat + stad zodra de bezoeker postcode + huisnummer invult (zelfde gedrag als checkout). Werkt voor zowel verzendadres als factuuradres. Live-update via `afterStateUpdated` op zip + huisnummer fields.
+
+### Changed
+- POS klantgegevens veld-volgorde: postcode + huisnummer staan nu **vóór** straat + stad (was: straat eerst). Sneller invullen omdat de auto-fill nu direct na postcode + nummer triggered. Idem voor factuur-adres velden.
+- AdminOrderConfirmationMail Telegram notification heeft een extra `Kortingscode`-veld dat wordt ingevuld met de gebruikte code + percentage (bij percentage-codes) + bedrag. Wordt overgeslagen als de bestelling geen kortingscode of geen korting heeft.
+- `order-summary` email block toont nu de gebruikte kortingscode én percentage in het discount-label (bv. "Korting (TERUG-ABCD1234 — 10%)") naast het bedrag. Geldt voor alle emails die dit block gebruiken (admin order confirmation, payment link, cancelled order, etc.).
+
 ## v4.7.15 - 2026-05-03
 
 ### Changed

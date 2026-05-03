@@ -529,23 +529,41 @@ class POSPage extends Component implements HasActions, HasSchemas
 
                 TextInput::make('phoneNumber')->label('Telefoon nummer')->maxLength(255),
 
+                TextInput::make('zipCode')
+                    ->label('Postcode')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, $set, $get) {
+                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($state, $get('houseNr'));
+                        if (! empty($address['street'])) {
+                            $set('street', $address['street']);
+                        }
+                        if (! empty($address['city'])) {
+                            $set('city', $address['city']);
+                        }
+                    }),
+
+                TextInput::make('houseNr')
+                    ->label('Huisnummer')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, $set, $get) {
+                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($get('zipCode'), $state);
+                        if (! empty($address['street'])) {
+                            $set('street', $address['street']);
+                        }
+                        if (! empty($address['city'])) {
+                            $set('city', $address['city']);
+                        }
+                    }),
+
                 TextInput::make('street')
                     ->label('Straat')
                     ->maxLength(255)
                     ->lazy()
                     ->reactive(),
-
-                TextInput::make('houseNr')
-                    ->label('Huisnummer')
-                    ->nullable()
-                    ->required(fn (Get $get) => (bool) $get('street'))
-                    ->maxLength(255),
-
-                TextInput::make('zipCode')
-                    ->label('Postcode')
-                    ->required(fn (Get $get) => (bool) $get('street'))
-                    ->nullable()
-                    ->maxLength(255),
 
                 TextInput::make('city')
                     ->label('Stad')
@@ -572,24 +590,41 @@ class POSPage extends Component implements HasActions, HasSchemas
                 TextInput::make('company')->label('Bedrijfsnaam')->maxLength(255),
                 TextInput::make('btwId')->label('BTW id')->maxLength(255),
 
+                TextInput::make('invoiceZipCode')
+                    ->label('Factuur postcode')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, $set, $get) {
+                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($state, $get('invoiceHouseNr'));
+                        if (! empty($address['street'])) {
+                            $set('invoiceStreet', $address['street']);
+                        }
+                        if (! empty($address['city'])) {
+                            $set('invoiceCity', $address['city']);
+                        }
+                    }),
+
+                TextInput::make('invoiceHouseNr')
+                    ->label('Factuur huisnummer')
+                    ->nullable()
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, $set, $get) {
+                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($get('invoiceZipCode'), $state);
+                        if (! empty($address['street'])) {
+                            $set('invoiceStreet', $address['street']);
+                        }
+                        if (! empty($address['city'])) {
+                            $set('invoiceCity', $address['city']);
+                        }
+                    }),
+
                 TextInput::make('invoiceStreet')
                     ->label('Factuur straat')
                     ->nullable()
                     ->maxLength(255)
                     ->reactive(),
-
-                // ✅ FIX: required check gebruikt nu invoiceStreet (niet invoice_street)
-                TextInput::make('invoiceHouseNr')
-                    ->label('Factuur huisnummer')
-                    ->required(fn (Get $get) => (bool) $get('invoiceStreet'))
-                    ->nullable()
-                    ->maxLength(255),
-
-                TextInput::make('invoiceZipCode')
-                    ->label('Factuur postcode')
-                    ->required(fn (Get $get) => (bool) $get('invoiceStreet'))
-                    ->nullable()
-                    ->maxLength(255),
 
                 TextInput::make('invoiceCity')
                     ->label('Factuur stad')

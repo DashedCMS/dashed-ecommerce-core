@@ -61,6 +61,8 @@ class PaymentLinkMail extends Mailable implements RegistersEmailTemplate
             ['type' => 'divider', 'data' => []],
             ['type' => 'order-details', 'data' => []],
             ['type' => 'divider', 'data' => []],
+            ['type' => 'order-summary', 'data' => ['show_totals' => true]],
+            ['type' => 'divider', 'data' => []],
             ['type' => 'text', 'data' => ['body' => '<p>Heb je vragen over deze betaling? Neem gerust contact met ons op.</p><p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
     }

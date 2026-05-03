@@ -149,6 +149,16 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
             ->map(fn ($op) => '• ' . (int) $op->quantity . 'x ' . ($op->name ?? '-'))
             ->implode("\n");
 
+        $discountInfo = null;
+        $discountCode = $this->order->discountCode;
+        if ($discountCode && (float) ($this->order->discount ?? 0) > 0.01) {
+            $discountInfo = $discountCode->code;
+            if ($discountCode->type === 'percentage' && $discountCode->discount_percentage) {
+                $discountInfo .= ' (' . (int) $discountCode->discount_percentage . '%)';
+            }
+            $discountInfo .= ' — €' . number_format((float) $this->order->discount, 2, ',', '.');
+        }
+
         return new TelegramSummary(
             title: 'Nieuwe bestelling #' . $this->order->invoice_id,
             fields: [
@@ -157,6 +167,7 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
                 'Items' => (string) ((int) $orderProducts->sum('quantity')) . ' producten',
                 'Producten' => $productList ?: null,
                 'Betaalmethode' => $this->order->payment_method ?? null,
+                'Kortingscode' => $discountInfo,
             ],
             adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
             emoji: '🛒',
