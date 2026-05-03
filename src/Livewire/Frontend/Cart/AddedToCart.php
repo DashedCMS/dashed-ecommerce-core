@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
-use Dashed\DashedEcommerceCore\Models\Product;
 
 class AddedToCart extends Component
 {

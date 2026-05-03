@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Services\CartSuggestions;
 
-use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 
 class CartProductSuggester
 {
     public function __construct(
         private readonly FreeShippingHelper $freeShippingHelper = new FreeShippingHelper(),
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array<int>  $cartProductIds

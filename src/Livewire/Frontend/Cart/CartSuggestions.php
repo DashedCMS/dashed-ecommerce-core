@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
-use Illuminate\Support\Collection;
 use Livewire\Component;
+use Illuminate\Support\Collection;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
+use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
 
 class CartSuggestions extends Component
 {

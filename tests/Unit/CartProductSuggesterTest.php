@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 function makeSuggesterProductGroup(): ProductGroup
 {

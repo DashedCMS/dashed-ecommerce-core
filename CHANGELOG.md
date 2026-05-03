@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.12 - 2026-05-03
+
+### Added
+- **Backfill-knop op AbandonedCartFlow.** Op de bewerk-pagina van een flow staat nu de actie "Toepassen op bestaande" die de stappen van de flow alsnog plant voor verlaten winkelwagens (trigger `cart_with_email`) en/of geannuleerde bestellingen (trigger `cancelled_order`) die binnen de afgelopen X dagen vallen (default 30, instelbaar 1–365). Records die voor deze flow al gepland staan worden overgeslagen — handig wanneer je een nieuwe flow aanmaakt of een bestaande aanpast.
+- Nieuwe service `Services\AbandonedCart\BackfillFlowService` die de scheduling doet en een statistics-array teruggeeft (`carts_scheduled`, `carts_skipped_existing`, `orders_scheduled`, `orders_skipped_existing`).
+
 ## v4.7.11 - 2026-05-03
 
 ### Changed

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartSuggestions;
-use Dashed\DashedEcommerceCore\Models\Cart;
-use Dashed\DashedEcommerceCore\Models\CartItem;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Cart;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\CartItem;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartSuggestions;
 
 function makeLivewireProductGroup(): ProductGroup
 {
