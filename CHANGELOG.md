@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.1 - 2026-05-03
+
+### Changed
+- `RemainderPaymentController` rapporteert nu PSP-exceptions via `report($e)` voordat de generieke "geen betaalprovider"-pagina wordt getoond, zodat fouten in `startTransaction()` zichtbaar worden in de error-log/Sentry in plaats van stilzwijgend verborgen achter een statische pagina.
+
 ## v4.8.0 - 2026-05-03
 
 ### Added

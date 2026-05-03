@@ -44,6 +44,8 @@ class RemainderPaymentController
         try {
             $transaction = $providerClass::startTransaction($orderPayment);
         } catch (\Throwable $e) {
+            report($e);
+
             return response()->view('dashed-ecommerce-core::remainder-payment.no-provider');
         }
 
