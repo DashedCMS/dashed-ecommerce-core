@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.13 - 2026-05-03
+
+### Fixed
+- Quick-add modal opent nu met de naam + afbeelding van de geklikte variant ipv de groupnaam + group-firstImage.
+- Hero in de modal updatet nu ook bij **partiële** filter-keuzes (bezoeker heeft niet alle filters gezet). `AddToCart::updated()` zoekt het eerste publicShowable product in de group dat de huidige (deel-)selectie matcht en dispatcht dat als preview. Voorheen dispatchte alleen bij volledige match — bij groups met meerdere filters bleef de hero stale tot ALLE filters waren ingevuld.
+
 ## v4.7.12 - 2026-05-03
 
 ### Added

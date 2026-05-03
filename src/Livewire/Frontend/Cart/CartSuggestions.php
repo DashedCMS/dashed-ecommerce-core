@@ -98,11 +98,13 @@ class CartSuggestions extends Component
         $clickedIsAvailable = $availableVariants->contains(fn (Product $p) => $p->id === $productId);
         $defaultProductId = $clickedIsAvailable ? $productId : $availableVariants->first()->id;
 
+        $defaultVariant = $availableVariants->firstWhere('id', $defaultProductId) ?? $availableVariants->first();
+
         $this->quickAddGroupId = $group->id;
         $this->quickAddProductId = $defaultProductId;
         $this->quickAddGroup = [
-            'name' => $group->name,
-            'image' => $group->firstImage,
+            'name' => $defaultVariant->name,
+            'image' => $defaultVariant->firstImage ?? $group->firstImage,
         ];
         $this->quickAddGroupUrl = $group->getUrl();
         $this->quickAddPriceFrom = $group->fromPrice();
