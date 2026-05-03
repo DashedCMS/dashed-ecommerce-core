@@ -25,6 +25,10 @@ class AddToCart extends Component
     public function updated()
     {
         $this->fillInformation();
+
+        if ($this->product) {
+            $this->dispatch('cartSuggestionsVariantChanged', productId: $this->product->id);
+        }
     }
 
     public function rules()

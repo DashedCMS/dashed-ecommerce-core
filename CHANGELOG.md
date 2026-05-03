@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.11 - 2026-05-03
+
+### Changed
+- Quick-add modal hero (image + naam) wisselt nu mee als de bezoeker in de modal een andere variant kiest. `AddToCart::updated()` dispatcht een `cartSuggestionsVariantChanged` Livewire-event met de huidige `$product->id`; `CartSuggestions` luistert en herlaadt zijn `quickAddGroup`-state met de naam en eerste afbeelding van de geselecteerde variant. Voorheen toonde de hero altijd het oorspronkelijk-aangeklikte product.
+
 ## v4.7.10 - 2026-05-02
 
 ### Fixed
