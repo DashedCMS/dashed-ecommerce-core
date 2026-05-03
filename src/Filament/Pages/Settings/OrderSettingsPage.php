@@ -293,20 +293,20 @@ class OrderSettingsPage extends Page
         $tabs = [];
         foreach ($sites as $site) {
             $tabs[] = Tab::make("suggestions-{$site['id']}")
-                ->label('Suggesties — '.ucfirst($site['name']))
+                ->label('Suggesties - '.ucfirst($site['name']))
                 ->schema([
                     Toggle::make("cart_suggestions_enabled_{$site['id']}")
                         ->label('Cart-suggesties aan')
                         ->helperText('Master kill-switch voor alle voorgestelde producten in cart, checkout en popup.')
                         ->columnSpanFull(),
                     TextInput::make("cart_suggestions_limit_cart_{$site['id']}")
-                        ->label('Aantal kaarten — cart-pagina')
+                        ->label('Aantal kaarten - cart-pagina')
                         ->numeric()->minValue(1)->maxValue(20)->default(6),
                     TextInput::make("cart_suggestions_limit_checkout_{$site['id']}")
-                        ->label('Aantal kaarten — checkout')
+                        ->label('Aantal kaarten - checkout')
                         ->numeric()->minValue(1)->maxValue(20)->default(4),
                     TextInput::make("cart_suggestions_limit_popup_{$site['id']}")
-                        ->label('Aantal kaarten — cart popup')
+                        ->label('Aantal kaarten - cart popup')
                         ->numeric()->minValue(1)->maxValue(10)->default(3),
                     TextInput::make("cart_suggestions_boost_slots_{$site['id']}")
                         ->label('Gegarandeerde slots voor gap-closers')

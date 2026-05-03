@@ -34,7 +34,7 @@ it('renders ex-BTW subtotal and bold totaal incl when prices_ex_vat is true', fu
 
     expect($html)->toContain('Subtotaal ex BTW');
     expect($html)->toContain('Totaal incl');
-    expect($html)->toContain('100,'); // 100,- or 100,00 — ex amount for 121 incl @ 21%
+    expect($html)->toContain('100,'); // 100,- or 100,00 - ex amount for 121 incl @ 21%
 });
 
 it('renders the incl-BTW layout when prices_ex_vat is false', function () {

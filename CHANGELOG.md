@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.2 - 2026-05-03
+
+### Changed
+- `dashed__discount_codes.discount_percentage` kolom-type omgezet van `integer` naar `decimal(5,2)` zodat decimale kortingspercentages (bijv. 12.5%) ondersteund worden. `DiscountCode::$casts` heeft `'discount_percentage' => 'decimal:2'` gekregen. Migration: `2026_05_03_150000_change_discount_code_percentage_to_decimal.php`. Bestaande integer-waarden blijven werken (12 wordt 12.00).
+- Em-dashes (U+2014) verwijderd uit alle source-bestanden, blade-templates en CHANGELOG-entries van deze package.
+
 ## v4.8.1 - 2026-05-03
 
 ### Changed
@@ -11,18 +17,18 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Added
 - `PaymentLinkMail` (betaallink naar klant) bevat nu standaard ook het `order-summary` block met productlijst + totalen, niet alleen `order-details`. De klant ziet wat er besteld is + welke prijs, niet alleen factuurnummer.
-- Nieuwe `Services\Address\AddressLookup` static service met `lookup($zipCode, $houseNr)` — gedeelde implementatie van PostNL + postcode.tech adres-lookup. Probeert PostNL API eerst (als `checkout_postnl_api_key` is ingesteld), valt terug op postcode.tech (`checkout_postcode_api_key`).
+- Nieuwe `Services\Address\AddressLookup` static service met `lookup($zipCode, $houseNr)` - gedeelde implementatie van PostNL + postcode.tech adres-lookup. Probeert PostNL API eerst (als `checkout_postnl_api_key` is ingesteld), valt terug op postcode.tech (`checkout_postcode_api_key`).
 - POS klantgegevens form heeft nu auto-fill voor straat + stad zodra de bezoeker postcode + huisnummer invult (zelfde gedrag als checkout). Werkt voor zowel verzendadres als factuuradres. Live-update via `afterStateUpdated` op zip + huisnummer fields.
 
 ### Changed
 - POS klantgegevens veld-volgorde: postcode + huisnummer staan nu **vóór** straat + stad (was: straat eerst). Sneller invullen omdat de auto-fill nu direct na postcode + nummer triggered. Idem voor factuur-adres velden.
 - AdminOrderConfirmationMail Telegram notification heeft een extra `Kortingscode`-veld dat wordt ingevuld met de gebruikte code + percentage (bij percentage-codes) + bedrag. Wordt overgeslagen als de bestelling geen kortingscode of geen korting heeft.
-- `order-summary` email block toont nu de gebruikte kortingscode én percentage in het discount-label (bv. "Korting (TERUG-ABCD1234 — 10%)") naast het bedrag. Geldt voor alle emails die dit block gebruiken (admin order confirmation, payment link, cancelled order, etc.).
+- `order-summary` email block toont nu de gebruikte kortingscode én percentage in het discount-label (bv. "Korting (TERUG-ABCD1234 - 10%)") naast het bedrag. Geldt voor alle emails die dit block gebruiken (admin order confirmation, payment link, cancelled order, etc.).
 
 ## v4.7.15 - 2026-05-03
 
 ### Changed
-- Quick-add modal: nieuwe self-contained `QuickAddProduct` Livewire-component (eigen view in `resources/views/livewire/quick-add-product.blade.php`) die hero (image + naam + prijs) én filter-UI én toevoegen-knop in 1 component combineert. Modal templates embedden nu deze component. Voorheen werden hero (in CartSuggestions's render) en filters (in AddToCart Livewire) door cross-component events gesynchroniseerd, wat in combinatie met Alpine `x-teleport` morphing-issues opleverde — tweede en volgende filter-clicks updateten de hero niet.
+- Quick-add modal: nieuwe self-contained `QuickAddProduct` Livewire-component (eigen view in `resources/views/livewire/quick-add-product.blade.php`) die hero (image + naam + prijs) én filter-UI én toevoegen-knop in 1 component combineert. Modal templates embedden nu deze component. Voorheen werden hero (in CartSuggestions's render) en filters (in AddToCart Livewire) door cross-component events gesynchroniseerd, wat in combinatie met Alpine `x-teleport` morphing-issues opleverde - tweede en volgende filter-clicks updateten de hero niet.
 - `CartSuggestions` is opgeschoond: geen `cartSuggestionsVariantChanged` listener of `syncQuickAddVariant` meer; de modal wordt niet meer ge-re-rendered op variant-changes.
 - `AddToCart::updated()` dispatcht geen `cartSuggestionsVariantChanged` event meer (was alleen voor de oude cross-component sync).
 
@@ -35,12 +41,12 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Fixed
 - Quick-add modal opent nu met de naam + afbeelding van de geklikte variant ipv de groupnaam + group-firstImage.
-- Hero in de modal updatet nu ook bij **partiële** filter-keuzes (bezoeker heeft niet alle filters gezet). `AddToCart::updated()` zoekt het eerste publicShowable product in de group dat de huidige (deel-)selectie matcht en dispatcht dat als preview. Voorheen dispatchte alleen bij volledige match — bij groups met meerdere filters bleef de hero stale tot ALLE filters waren ingevuld.
+- Hero in de modal updatet nu ook bij **partiële** filter-keuzes (bezoeker heeft niet alle filters gezet). `AddToCart::updated()` zoekt het eerste publicShowable product in de group dat de huidige (deel-)selectie matcht en dispatcht dat als preview. Voorheen dispatchte alleen bij volledige match - bij groups met meerdere filters bleef de hero stale tot ALLE filters waren ingevuld.
 
 ## v4.7.12 - 2026-05-03
 
 ### Added
-- **Backfill-knop op AbandonedCartFlow.** Op de bewerk-pagina van een flow staat nu de actie "Toepassen op bestaande" die de stappen van de flow alsnog plant voor verlaten winkelwagens (trigger `cart_with_email`) en/of geannuleerde bestellingen (trigger `cancelled_order`) die binnen de afgelopen X dagen vallen (default 30, instelbaar 1–365). Records die voor deze flow al gepland staan worden overgeslagen — handig wanneer je een nieuwe flow aanmaakt of een bestaande aanpast.
+- **Backfill-knop op AbandonedCartFlow.** Op de bewerk-pagina van een flow staat nu de actie "Toepassen op bestaande" die de stappen van de flow alsnog plant voor verlaten winkelwagens (trigger `cart_with_email`) en/of geannuleerde bestellingen (trigger `cancelled_order`) die binnen de afgelopen X dagen vallen (default 30, instelbaar 1–365). Records die voor deze flow al gepland staan worden overgeslagen - handig wanneer je een nieuwe flow aanmaakt of een bestaande aanpast.
 - Nieuwe service `Services\AbandonedCart\BackfillFlowService` die de scheduling doet en een statistics-array teruggeeft (`carts_scheduled`, `carts_skipped_existing`, `orders_scheduled`, `orders_skipped_existing`).
 
 ## v4.7.11 - 2026-05-03
@@ -51,7 +57,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ## v4.7.10 - 2026-05-02
 
 ### Fixed
-- `<x-cart.add-to-cart>` component-template gebruikt nu `@props` met defaults voor alle verwachte velden (`product`, `filters`, `productExtras`, `extras`, `quantity`, `volumeDiscounts`, `price`, `discountPrice`, `paymentMethods`). Voorheen crashte het component met `Undefined variable $extras` of `$volumeDiscounts` als de wrapper-view (bv. `dashed.cart.add-to-cart`) ze niet expliciet doorgaf — wat normaal in nested-Livewire setups gebeurt zoals de quick-add modal in cart-suggestions.
+- `<x-cart.add-to-cart>` component-template gebruikt nu `@props` met defaults voor alle verwachte velden (`product`, `filters`, `productExtras`, `extras`, `quantity`, `volumeDiscounts`, `price`, `discountPrice`, `paymentMethods`). Voorheen crashte het component met `Undefined variable $extras` of `$volumeDiscounts` als de wrapper-view (bv. `dashed.cart.add-to-cart`) ze niet expliciet doorgaf - wat normaal in nested-Livewire setups gebeurt zoals de quick-add modal in cart-suggestions.
 
 ## v4.7.9 - 2026-05-02
 
@@ -63,7 +69,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Fixed
 - Quick-add modal opent nu op de variant waarop de bezoeker klikte ipv de goedkoopste variant (valt terug op cheapest als de geklikte variant niet meer in stock is). Voorheen kreeg de bezoeker willekeurig de cheapest variant te zien als startpunt.
-- Modal z-index op `2147483647` (max 32-bit int) gezet via inline style om er zeker van te zijn dat-ie boven alle andere overlays staat — `z-[1000]` was niet hoog genoeg in alle theme-contexten.
+- Modal z-index op `2147483647` (max 32-bit int) gezet via inline style om er zeker van te zijn dat-ie boven alle andere overlays staat - `z-[1000]` was niet hoog genoeg in alle theme-contexten.
 
 ## v4.7.7 - 2026-05-02
 
@@ -73,12 +79,12 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - `productAddedToCart` event sluit de quick-add modal automatisch.
 
 ### Removed
-- De variant-grid en bijbehorende `quickAddVariants` / `quickAddTotalVariants` properties — vervangen door de nested AddToCart component.
+- De variant-grid en bijbehorende `quickAddVariants` / `quickAddTotalVariants` properties - vervangen door de nested AddToCart component.
 
 ## v4.7.6 - 2026-05-02
 
 ### Fixed
-- Quick-add popup opende niet voor productgroups waarvoor `showSingleProduct()` true gaf, ondanks dat er meerdere variants beschikbaar zijn (de flag is een UX-keuze, geen variant-count). Quick-add controleert nu het werkelijke aantal in-stock variants — bij 2+ opent de modal, bij 1 of 0 gebeurt direct add-to-cart.
+- Quick-add popup opende niet voor productgroups waarvoor `showSingleProduct()` true gaf, ondanks dat er meerdere variants beschikbaar zijn (de flag is een UX-keuze, geen variant-count). Quick-add controleert nu het werkelijke aantal in-stock variants - bij 2+ opent de modal, bij 1 of 0 gebeurt direct add-to-cart.
 - Badges in checkout en popup templates zeiden "FREE" wat verwarrend kon overkomen alsof het product gratis is. Vervangen door `Translation::get('cart.suggestions.gap_closer_badge_short', 'cart', 'Gratis verz.')` met Nederlandse fallback. Cart-template badge default ook `Gratis verzending` ipv `GRATIS VERZ`.
 
 ### Added
@@ -97,7 +103,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ## v4.7.4 - 2026-05-02
 
 ### Changed
-- Suggestion-kaarten zijn nu volledig klikbaar — linkt naar de productGroup-pagina (of product-pagina voor single-product groups). Eindgebruiker kan daar variant-filters / opties kiezen voordat-ie toevoegt aan cart. De inline "+" knop is verwijderd zodat producten met variants niet zonder optie-keuze in de cart belanden.
+- Suggestion-kaarten zijn nu volledig klikbaar - linkt naar de productGroup-pagina (of product-pagina voor single-product groups). Eindgebruiker kan daar variant-filters / opties kiezen voordat-ie toevoegt aan cart. De inline "+" knop is verwijderd zodat producten met variants niet zonder optie-keuze in de cart belanden.
 - Dedupe-by-product-group kiest nu de **goedkoopste in-range variant** per group (was: best-seller). Drempel-respecterend: voor gap > 0 alleen de cheapest variant binnen [gap × 0.8, gap × 1.5]; gap = 0 → cheapest variant overall.
 - Templates tonen `productGroup->fromPrice()` ("Vanaf €X") wanneer de group meerdere variants heeft, anders de exact-prijs van het product. Naam is `productGroup->name` als de group meerdere variants heeft (anders product-naam).
 
@@ -105,11 +111,11 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Added
 - `CartProductSuggester` filtert nu in elke bron-stap (cross-sell, categorie-fallback, random fallback) op de gap-closing prijsrange. Voorheen kwam er via random fallback een €100 product door bij een gap van €23. Nu pakt de query `whereBetween('current_price', [gap × 0.8, gap × 1.5])` zodat alleen producten in het sweet-spot bereik door de pipeline komen. Sortering binnen range op `total_purchases` (best-sellers eerst). Out-of-range producten alleen als laatste filler als de range onvoldoende verschillende groups oplevert.
-- DB-fetches over-fetchen nu (10× limit, min 50) om voldoende verschillende product-groups te dekken — voorkomt dat alle resultaten variants van 1 best-seller group zijn.
+- DB-fetches over-fetchen nu (10× limit, min 50) om voldoende verschillende product-groups te dekken - voorkomt dat alle resultaten variants van 1 best-seller group zijn.
 - Pool-completion check kijkt naar aantal distinct product-groups in plaats van aantal products. Zo fetches we door tot we genoeg unieke groups hebben voor de eindlimit.
 
 ### Changed
-- Cart-popup template (`cart-suggestions-popup.blade.php`) toont geen threshold-banner meer — alleen de suggesties strip. De threshold-bar blijft in de cart-popup theme view zelf staan, suggesties komen onder de cart-items zoals gebruikelijk.
+- Cart-popup template (`cart-suggestions-popup.blade.php`) toont geen threshold-banner meer - alleen de suggesties strip. De threshold-bar blijft in de cart-popup theme view zelf staan, suggesties komen onder de cart-items zoals gebruikelijk.
 - `cart-suggestions-cart.blade.php` heeft de threshold-banner inline (geen `@include` van een partial die in consumer-themes mag ontbreken).
 
 ## v4.7.2 - 2026-05-02
@@ -118,7 +124,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - `CartProductSuggester` dedupliceert nu op `product_group_id` en kiest per groep de variant met de hoogste `total_purchases` (best-seller). Voorkomt dat meerdere varianten van dezelfde productgroep tegelijk in de suggesties verschijnen.
 
 ### Fixed
-- `CartSuggestions::addToCart()` gaf voorheen alleen `productId + quantity` mee — het cart-item miste daardoor de keys `discountPrice`, `originalPrice`, `options` en `hiddenOptions` die de cart-row blade verwacht. Component bouwt nu hetzelfde `$attributes`-payload als `ProductCartActions::addToCart`.
+- `CartSuggestions::addToCart()` gaf voorheen alleen `productId + quantity` mee - het cart-item miste daardoor de keys `discountPrice`, `originalPrice`, `options` en `hiddenOptions` die de cart-row blade verwacht. Component bouwt nu hetzelfde `$attributes`-payload als `ProductCartActions::addToCart`.
 - Afbeeldingen in alle 3 suggestion-templates (cart, checkout, popup) renderden niet door een verkeerde `method_exists`-check. Vervangen door `<x-dashed-files::image>` met fallback op `productGroup->firstImage`.
 - Event-payload `productAddedToCart` geeft nu het Product-model door (zoals andere Livewires doen) ipv alleen `productId`.
 
@@ -140,7 +146,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Changed
 - `CartPopup` en `AddedToCart` Livewires gebruiken nu `FreeShippingHelper` ipv inline drempel-berekening. Publieke properties (`freeShippingThreshold`, `freeShippingPercentage`) onveranderd, geen breaking change.
-- `cart-popup.blade.php` vervangt zijn inline threshold-banner door `<livewire:cart.cart-suggestions view="popup" />` — de popup-template rendert die nu samen met de suggesties.
+- `cart-popup.blade.php` vervangt zijn inline threshold-banner door `<livewire:cart.cart-suggestions view="popup" />` - de popup-template rendert die nu samen met de suggesties.
 - `cart.blade.php` en `checkout.blade.php` krijgen elk een `<livewire:cart.cart-suggestions ...>` op de relevante plek.
 
 ## v4.6.4 - 2026-05-01

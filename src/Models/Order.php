@@ -322,7 +322,7 @@ class Order extends Model
             }
 
             if (! $applied) {
-                // Anchor has no identifiers we can match on — return empty set.
+                // Anchor has no identifiers we can match on - return empty set.
                 $q->whereRaw('1 = 0');
             }
         });

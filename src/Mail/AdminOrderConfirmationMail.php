@@ -156,7 +156,7 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
             if ($discountCode->type === 'percentage' && $discountCode->discount_percentage) {
                 $discountInfo .= ' (' . (int) $discountCode->discount_percentage . '%)';
             }
-            $discountInfo .= ' — €' . number_format((float) $this->order->discount, 2, ',', '.');
+            $discountInfo .= ' - €' . number_format((float) $this->order->discount, 2, ',', '.');
         }
 
         return new TelegramSummary(

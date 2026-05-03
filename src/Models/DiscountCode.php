@@ -49,6 +49,7 @@ class DiscountCode extends Model
     protected $casts = [
         'site_ids' => 'array',
         'valid_customers' => 'array',
+        'discount_percentage' => 'decimal:2',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'created_at' => 'datetime',

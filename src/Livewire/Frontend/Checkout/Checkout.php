@@ -1341,7 +1341,7 @@ class Checkout extends Component
 
         OrderLog::createLog(
             orderId: $order->id,
-            note: 'Order volgt uit abandoned cart flow — '.implode(', ', $parts),
+            note: 'Order volgt uit abandoned cart flow - '.implode(', ', $parts),
             tag: 'abandoned-cart.converted',
         );
     }

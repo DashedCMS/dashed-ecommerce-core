@@ -98,7 +98,7 @@ class ConceptOrderService
         $snapshot = $order->concept_cart_snapshot;
 
         if (is_array($snapshot) && count($snapshot) > 0) {
-            // Verbatim restore — every field (vat_rate, extras, custom flags, formatted prices)
+            // Verbatim restore - every field (vat_rate, extras, custom flags, formatted prices)
             // is preserved exactly as it was when the cashier saved the concept.
             $products = array_map(function (array $row): array {
                 // Refresh identifier so hydrated rows don't collide with anything in memory.
@@ -107,7 +107,7 @@ class ConceptOrderService
                 return $row;
             }, $snapshot);
         } else {
-            // Fallback for concepts that predate the snapshot column — reconstruct from orderProducts.
+            // Fallback for concepts that predate the snapshot column - reconstruct from orderProducts.
             $products = [];
             foreach ($order->orderProducts as $op) {
                 $quantity = max(1, (int) $op->quantity);

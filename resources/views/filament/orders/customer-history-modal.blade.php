@@ -6,15 +6,15 @@
         'Totaal besteed' => CurrencyHelper::formatPrice($history->lifetimeSpent()),
         'Gemiddelde orderwaarde' => $history->paidCount() > 0
             ? CurrencyHelper::formatPrice($history->averageOrderValue())
-            : '—',
-        'Eerste bestelling' => $history->firstOrderAt()?->format('d-m-Y') ?? '—',
-        'Laatste bestelling' => $history->lastOrderAt()?->format('d-m-Y') ?? '—',
+            : '-',
+        'Eerste bestelling' => $history->firstOrderAt()?->format('d-m-Y') ?? '-',
+        'Laatste bestelling' => $history->lastOrderAt()?->format('d-m-Y') ?? '-',
         'Dagen sinds laatste' => match (true) {
-            $history->daysSinceLastOrder() === null => '—',
+            $history->daysSinceLastOrder() === null => '-',
             $history->daysSinceLastOrder() === 0 => 'Vandaag',
             default => $history->daysSinceLastOrder() . ' dag(en) geleden',
         },
-        'Favoriete betaalmethode' => $history->favoritePaymentMethod() ?? '—',
+        'Favoriete betaalmethode' => $history->favoritePaymentMethod() ?? '-',
         'Klant-type' => $history->customerType(),
     ];
     $recent = $history->recentOrders(10);
@@ -61,7 +61,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">{{ ucfirst(str_replace('_', ' ', $row->status ?? '')) }}</td>
-                                <td class="px-3 py-2 whitespace-nowrap">{{ $row->payment_method ?? '—' }}</td>
+                                <td class="px-3 py-2 whitespace-nowrap">{{ $row->payment_method ?? '-' }}</td>
                                 <td class="px-3 py-2 whitespace-nowrap text-right">{{ CurrencyHelper::formatPrice((float) $row->total) }}</td>
                                 <td class="px-3 py-2 whitespace-nowrap text-right">
                                     @if ($row->id !== $anchorId)

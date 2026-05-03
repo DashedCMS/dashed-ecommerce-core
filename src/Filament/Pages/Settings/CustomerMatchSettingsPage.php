@@ -156,7 +156,7 @@ class CustomerMatchSettingsPage extends Page
 
                     Notification::make()
                         ->title('Nieuw wachtwoord')
-                        ->body('Wachtwoord: '.$plain.' — kopieer nu, wordt niet opnieuw getoond.')
+                        ->body('Wachtwoord: '.$plain.' - kopieer nu, wordt niet opnieuw getoond.')
                         ->persistent()
                         ->success()
                         ->send();
@@ -225,7 +225,7 @@ class CustomerMatchSettingsPage extends Page
         if ($plain) {
             session()->forget('customer_match_plaintext_password');
 
-            return $plain.' (1x getoond — kopieer nu)';
+            return $plain.' (1x getoond - kopieer nu)';
         }
 
         return '••••••••••••  (gebruik "Genereer nieuw wachtwoord" om te roteren)';

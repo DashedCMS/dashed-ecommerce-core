@@ -73,7 +73,7 @@ class CustomerMatchExporter
     }
 
     /**
-     * Build a subquery that returns one `id` per unique email — the most recent
+     * Build a subquery that returns one `id` per unique email - the most recent
      * paid order for that customer. GROUP BY only contains `email`; the SELECT
      * uses MAX() aggregates so it satisfies MySQL's `only_full_group_by`.
      */

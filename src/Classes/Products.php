@@ -195,7 +195,7 @@ class Products
         }
 
         // Sommige orderBy-modes zijn PHP-side (collection sortBy) ipv SQL-kolommen.
-        // Skip de SQL orderBy() voor die modes — ze worden later in deze functie afgehandeld.
+        // Skip de SQL orderBy() voor die modes - ze worden later in deze functie afgehandeld.
         $sqlOrderBy = $orderBy;
         $phpOnlyOrderModes = ['orderByProductGroups'];
         if (in_array($orderBy, $phpOnlyOrderModes, true)) {
