@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.7.14 - 2026-05-03
+
+### Fixed
+- Quick-add modal: tweede filter-keuze (bv. kleur na maat) updatete de hero niet omdat de `wire:key` op de nested `<livewire:cart.add-to-cart>` `$quickAddProductId` bevatte. Bij elke variant-update dispatchte CartSuggestions een nieuwe productId → key veranderde → AddToCart re-mount → filter-state verloren → tweede klik werkte op een vers gemounte component zonder geheugen van de eerste filter. Nu gebaseerd op `$quickAddGroupId` (stabiel binnen één modal-sessie) zodat AddToCart in leven blijft tijdens het schakelen tussen varianten.
+
 ## v4.7.13 - 2026-05-03
 
 ### Fixed

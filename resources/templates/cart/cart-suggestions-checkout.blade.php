@@ -72,7 +72,7 @@
             </div>
           </div>
           <div class="border-t border-gray-200 pt-4">
-            <livewire:cart.add-to-cart :product="\Dashed\DashedEcommerceCore\Models\Product::find($quickAddProductId)" :key="'quick-add-checkout-'.$quickAddProductId" />
+            <livewire:cart.add-to-cart :product="\Dashed\DashedEcommerceCore\Models\Product::find($quickAddProductId)" :key="'quick-add-checkout-group-'.$quickAddGroupId" />
           </div>
         </div>
       </div>
