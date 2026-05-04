@@ -82,6 +82,14 @@ class AbandonedCartMail extends Mailable
             ? config('dashed-core.site_theme', 'dashed') . '.emails.abandoned-cart'
             : 'dashed-ecommerce-core::emails.abandoned-cart';
 
+        $unsubscribeUrl = null;
+        if ($this->record->id ?? null) {
+            $unsubscribeUrl = \Illuminate\Support\Facades\URL::signedRoute(
+                'dashed.frontend.abandoned-cart.unsubscribe',
+                ['record' => $this->record->id],
+            );
+        }
+
         return $this
             ->view($view)
             ->from($fromEmail, $siteName)
@@ -99,6 +107,8 @@ class AbandonedCartMail extends Mailable
                 'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
                 'discountCode' => $this->discountCode,
                 'review' => $review,
+                'unsubscribeUrl' => $unsubscribeUrl,
+                'unsubscribeLabel' => 'Afmelden voor verlaten-winkelwagen-mails',
             ]);
     }
 }

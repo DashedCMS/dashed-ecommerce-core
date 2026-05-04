@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 class OrderRecoveryController extends Controller
 {
@@ -26,13 +27,26 @@ class OrderRecoveryController extends Controller
                 continue;
             }
 
-            cartHelper()->addToCart($op->product_id, (int) $op->quantity);
+            $options = [];
+            if (is_array($op->product_extras ?? null)) {
+                $options['product_extras'] = $op->product_extras;
+            }
+            if (is_array($op->hidden_options ?? null)) {
+                $options['hidden_options'] = $op->hidden_options;
+            }
+
+            cartHelper()->addToCart($op->product_id, (int) $op->quantity, $options);
         }
 
         if ($skipped > 0) {
             session()->flash('cart_recovery_skipped', $skipped);
         }
 
-        return redirect('/checkout');
+        $checkoutUrl = ShoppingCart::getCheckoutUrl();
+        if (! $checkoutUrl || $checkoutUrl === '#') {
+            $checkoutUrl = ShoppingCart::getCartUrl() ?: '/';
+        }
+
+        return redirect($checkoutUrl);
     }
 }

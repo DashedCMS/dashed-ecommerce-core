@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.5 - 2026-05-04
+
+### Added
+- **Afmeld-link onderaan elke abandoned-cart-mail**. Nieuwe signed route `dashed.frontend.abandoned-cart.unsubscribe` op `/abandoned-cart/unsubscribe/{record}` met `AbandonedCartUnsubscribeController`: roept `AbandonedCartEmail::cancelPendingForEmail()` aan met reason `unsubscribed_via_link` zodat alle nog niet verzonden mails voor dat e-mailadres gecanceld worden, en toont een bevestigingspagina. `AbandonedCartMail::build()` levert nu een `$unsubscribeUrl` (signed) en `$unsubscribeLabel` aan de view; de abandoned-cart blade rendert die als kleine onderlijnde link onderin de footer.
+
+### Fixed
+- **Abandoned-cart recover-URL voor cancelled-order trigger** (`OrderRecoveryController::resume()`) redirectte naar hardcoded `/checkout` ipv de configured checkout-page. Nu wordt `ShoppingCart::getCheckoutUrl()` gebruikt met fallback naar `getCartUrl()` -> `/`. Daarnaast worden `product_extras` en `hidden_options` van OrderProduct nu meegenomen naar `cartHelper()->addToCart()` zodat producten met extras correct in de cart belanden.
+- `CartController::restoreCart()` (cart-with-email trigger) gebruikt nu dezelfde fallback-keten voor de redirect-URL zodat een ontbrekende `checkout_page_id`-customsetting niet meer leidt tot een redirect naar `#`.
+
 ## v4.8.4 - 2026-05-04
 
 ### Added

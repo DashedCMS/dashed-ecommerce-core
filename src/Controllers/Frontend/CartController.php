@@ -278,7 +278,12 @@ class CartController extends Controller
             session(['discountCode' => $discount]);
         }
 
-        return redirect(ShoppingCart::getCheckoutUrl());
+        $checkoutUrl = ShoppingCart::getCheckoutUrl();
+        if (! $checkoutUrl || $checkoutUrl === '#') {
+            $checkoutUrl = ShoppingCart::getCartUrl() ?: '/';
+        }
+
+        return redirect($checkoutUrl);
     }
 
     public function downloadInvoice(Request $request, $orderHash)

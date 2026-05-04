@@ -78,3 +78,7 @@ Route::middleware(['web', AdminMiddleware::class])->group(function () {
 Route::get('/recover-order/{order}', [\Dashed\DashedEcommerceCore\Controllers\OrderRecoveryController::class, 'resume'])
     ->name('dashed.frontend.recover-order')
     ->middleware('signed');
+
+Route::get('/abandoned-cart/unsubscribe/{record}', [\Dashed\DashedEcommerceCore\Controllers\AbandonedCartUnsubscribeController::class, 'unsubscribe'])
+    ->name('dashed.frontend.abandoned-cart.unsubscribe')
+    ->middleware('signed');
