@@ -160,7 +160,15 @@ class ShoppingCart
                     });
                 }
 
-                $total = cartHelper()->getTotal();
+                // Use the cart total WITHOUT shipping costs so the
+                // minimum/maximum-order-value check on each shipping method
+                // is independent of whichever shipping method is currently
+                // selected. Otherwise a paid shipping method that crosses
+                // the free-shipping threshold would mark itself as unavailable:
+                // its own shipping costs push the running total above the
+                // free-shipping threshold while the merchant configured the
+                // threshold against the cart subtotal.
+                $total = cartHelper()->getTotal() - cartHelper()->getShippingCosts();
                 $shippingMethods = $shippingZone->shippingMethods()
                     ->where('minimum_order_value', '<=', $total)
                     ->where('maximum_order_value', '>=', $total);

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.3 - 2026-05-04
+
+### Fixed
+- **Verzendmethodes worden niet meer ten onrechte als "niet geldig" weergegeven** wanneer de verzendkosten van de geselecteerde methode het cart-totaal over de free-shipping drempel duwen. `ShoppingCart::getAvailableShippingMethods()` filtert nu op `cartHelper()->getTotal() - cartHelper()->getShippingCosts()` ipv kale `getTotal()`. Voorheen veroorzaakte de inclusie van shipping in de drempel-check een circulaire afhankelijkheid: als product=EUR 30 en betaalde verzending=EUR 5 met free-shipping vanaf EUR 50, en de admin had ook een free-delivery methode met `minimum_order_value=50` ingesteld, dan voldeed het cart-total `30+5=35` niet aan de minimum-check van 50 totdat de gebruiker eerst free-delivery selecteerde - maar die was niet beschikbaar zolang `getTotal()` shipping mee-tellt. Nu is de drempel-check independent van de huidige selectie.
+
 ## v4.8.2 - 2026-05-03
 
 ### Changed
