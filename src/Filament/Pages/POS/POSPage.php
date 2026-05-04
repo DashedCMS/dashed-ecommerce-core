@@ -44,6 +44,8 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public $customerUserId = '';
 
+    public $loadFromOrderId = '';
+
     public $firstName = '';
 
     public $lastName = '';
@@ -516,6 +518,97 @@ class POSPage extends Component implements HasActions, HasSchemas
                             })
                     )
                     ->helperText('Selecteer een account om de bestelling aan te koppelen'),
+
+                Select::make('loadFromOrderId')
+                    ->label('Gegevens uit bestelling kopiëren')
+                    ->columnSpanFull()
+                    ->searchable()
+                    ->placeholder('Zoek een bestelling op naam, e-mail of factuurnummer')
+                    ->getSearchResultsUsing(function (string $search) {
+                        return Order::query()
+                            ->where(function ($q) use ($search) {
+                                $q->where('first_name', 'like', "%{$search}%")
+                                    ->orWhere('last_name', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%")
+                                    ->orWhere('invoice_id', 'like', "%{$search}%")
+                                    ->orWhere('company_name', 'like', "%{$search}%")
+                                    ->orWhere('phone_number', 'like', "%{$search}%");
+                            })
+                            ->orderByDesc('created_at')
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(function ($order) {
+                                $name = trim(($order->first_name ?: '').' '.($order->last_name ?: ''));
+                                $label = '#'.($order->invoice_id ?: $order->id);
+                                if ($name !== '') {
+                                    $label .= ' - '.$name;
+                                }
+                                if ($order->email) {
+                                    $label .= ' ('.$order->email.')';
+                                }
+
+                                return [$order->id => $label];
+                            })
+                            ->toArray();
+                    })
+                    ->getOptionLabelUsing(function ($value) {
+                        $order = Order::find($value);
+                        if (! $order) {
+                            return null;
+                        }
+                        $name = trim(($order->first_name ?: '').' '.($order->last_name ?: ''));
+                        $label = '#'.($order->invoice_id ?: $order->id);
+
+                        return $name !== '' ? $label.' - '.$name : $label;
+                    })
+                    ->suffixAction(
+                        Action::make('loadFromOrder')
+                            ->label('Gegevens invoeren')
+                            ->icon('heroicon-m-clipboard-document-list')
+                            ->action(function (Get $get) {
+                                $state = $get('loadFromOrderId');
+                                if (! $state) {
+                                    Notification::make()->title('Selecteer eerst een bestelling')->danger()->send();
+
+                                    return;
+                                }
+
+                                $order = Order::find($state);
+                                if (! $order) {
+                                    Notification::make()->title('Bestelling niet gevonden')->danger()->send();
+
+                                    return;
+                                }
+
+                                $pick = fn (?string $value, mixed $current) => $value !== null && $value !== ''
+                                    ? $value
+                                    : ($current ?: null);
+
+                                $this->firstName = $pick($order->first_name, $this->firstName);
+                                $this->lastName = $pick($order->last_name, $this->lastName);
+                                $this->email = $pick($order->email, $this->email);
+                                $this->phoneNumber = $pick($order->phone_number, $this->phoneNumber);
+                                $this->street = $pick($order->street, $this->street);
+                                $this->houseNr = $pick($order->house_nr, $this->houseNr);
+                                $this->zipCode = $pick($order->zip_code, $this->zipCode);
+                                $this->city = $pick($order->city, $this->city);
+                                $this->country = $pick($order->country, $this->country);
+                                $this->company = $pick($order->company_name, $this->company);
+                                $this->btwId = $pick($order->btw_id, $this->btwId);
+
+                                $this->invoiceStreet = $pick($order->invoice_street, $this->invoiceStreet);
+                                $this->invoiceHouseNr = $pick($order->invoice_house_nr, $this->invoiceHouseNr);
+                                $this->invoiceZipCode = $pick($order->invoice_zip_code, $this->invoiceZipCode);
+                                $this->invoiceCity = $pick($order->invoice_city, $this->invoiceCity);
+                                $this->invoiceCountry = $pick($order->invoice_country, $this->invoiceCountry);
+
+                                Notification::make()
+                                    ->title('Gegevens van bestelling #'.($order->invoice_id ?: $order->id).' geladen')
+                                    ->success()
+                                    ->send();
+                            })
+                    )
+                    ->helperText('Zoek een eerdere bestelling om alle klantgegevens snel te kopiëren. Koppelt de bestelling niet aan een account.'),
 
                 TextInput::make('firstName')->label('Voornaam')->maxLength(255),
                 TextInput::make('lastName')->label('Achternaam')->maxLength(255),

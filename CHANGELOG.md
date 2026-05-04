@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.4 - 2026-05-04
+
+### Added
+- **Knop "Gegevens uit bestelling kopiëren" op de POS klantgegevens-form** naast de bestaande Account-Select. Een tweede searchable Select staat eronder die zoekt over `Order` op `first_name`, `last_name`, `email`, `invoice_id`, `company_name` en `phone_number` (max 50 resultaten, sorted op meest recent). Suffix-action "Gegevens invoeren" haalt alle klant- + adres- + factuuradres-velden uit de geselecteerde bestelling en vult ze in de form (huidige niet-lege waarden blijven behouden via een per-veld `pick`-fallback). De selectie koppelt de bestelling niet aan een account; het is puur een snelle copy-helper.
+- Nieuwe public Livewire-property `POSPage::$loadFromOrderId` als state-binding voor het zoekveld.
+
 ## v4.8.3 - 2026-05-04
 
 ### Fixed
