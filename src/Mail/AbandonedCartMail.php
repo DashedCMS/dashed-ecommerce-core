@@ -108,7 +108,7 @@ class AbandonedCartMail extends Mailable
                 'discountCode' => $this->discountCode,
                 'review' => $review,
                 'unsubscribeUrl' => $unsubscribeUrl,
-                'unsubscribeLabel' => 'Afmelden voor verlaten-winkelwagen-mails',
+                'unsubscribeLabel' => 'Afmelden',
             ]);
     }
 }

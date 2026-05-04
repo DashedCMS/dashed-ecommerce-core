@@ -275,7 +275,7 @@
                         </p>
                         @if(! empty($unsubscribeUrl))
                             <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">
-                                <a href="{{ $unsubscribeUrl }}" style="color:#94a3b8; text-decoration: underline;">{{ $unsubscribeLabel ?? 'Afmelden voor deze automatische e-mails' }}</a>
+                                <a href="{{ $unsubscribeUrl }}" style="color:#94a3b8; text-decoration: underline;">{{ $unsubscribeLabel ?? 'Afmelden' }}</a>
                             </p>
                         @endif
                     </td>

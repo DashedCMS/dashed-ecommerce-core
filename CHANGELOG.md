@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.7 - 2026-05-04
+
+### Changed
+- Afmeld-link onderaan abandoned-cart-mails toont nu simpel **"Afmelden"** ipv "Afmelden voor verlaten-winkelwagen-mails". Geldt voor zowel de unified layout-fallback als de aparte `abandoned-cart.blade.php` view.
+
 ## v4.8.6 - 2026-05-04
 
 ### Added
