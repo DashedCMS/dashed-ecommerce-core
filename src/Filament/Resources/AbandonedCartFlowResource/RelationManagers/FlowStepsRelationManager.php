@@ -140,7 +140,15 @@ class FlowStepsRelationManager extends RelationManager
                         }
 
                         try {
-                            Mail::to($data['test_email'])->send(new AbandonedCartMail($cart, $record, $discountCode));
+                            $previewRecord = new \Dashed\DashedEcommerceCore\Models\AbandonedCartEmail([
+                                'cart_id' => $cart->id,
+                                'flow_step_id' => $record->id,
+                                'email' => $data['test_email'],
+                                'trigger_type' => 'cart_with_email',
+                            ]);
+                            $previewRecord->cart_id = $cart->id;
+
+                            Mail::to($data['test_email'])->send(new AbandonedCartMail($previewRecord, $record, $discountCode));
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Fout bij versturen: '.$e->getMessage())

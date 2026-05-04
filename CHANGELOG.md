@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.6 - 2026-05-04
+
+### Added
+- **Cooldown-check voor verlaten-winkelwagen-mails**: nieuwe kolom `dashed__abandoned_cart_flows.skip_if_paid_within_days` (smallint unsigned, default 30, nullable). `SendAbandonedCartEmailJob::handle()` checkt vlak voor het versturen of de ontvanger in de afgelopen N dagen een betaalde bestelling heeft (`Order::isPaid()` scope: `paid` / `partially_paid` / `waiting_for_confirmation`). Zo ja: alle nog niet verzonden mails voor dat e-mailadres worden gecanceld via `cancelPendingForEmail($email, 'recent_paid_order')` en de huidige send wordt overgeslagen. `null`/`0` zet de check uit.
+
+### Fixed
+- `SendAbandonedCartEmailJob` riep `new AbandonedCartMail($cart, $step, ...)` aan terwijl de constructor `AbandonedCartEmail $record` als eerste argument verwacht (TypeError). Doorgeven van `$record` ipv `$cart`.
+- `FlowStepsRelationManager` test-send-actie had hetzelfde probleem (TypeError: "Argument #1 (\$record) must be of type AbandonedCartEmail, Cart given"). Bouwt nu een transient `AbandonedCartEmail` op met `cart_id` + `flow_step_id` + `email` + `trigger_type='cart_with_email'` zodat `AbandonedCartSourceResolver::for()` correct resolved naar `CartAbandonedSource`.
+
 ## v4.8.5 - 2026-05-04
 
 ### Added

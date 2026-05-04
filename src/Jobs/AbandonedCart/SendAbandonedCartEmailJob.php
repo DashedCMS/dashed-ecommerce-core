@@ -8,6 +8,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\InteractsWithQueue;
 use Dashed\DashedEcommerceCore\Models\Cart;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -50,6 +51,27 @@ class SendAbandonedCartEmailJob implements ShouldQueue
             return;
         }
 
+        // If the recipient has a paid order within the configured cooldown
+        // window, do not send the next reminder. The flow stores the cooldown
+        // in days; null/0 disables the check.
+        $cooldownDays = (int) ($step->flow?->skip_if_paid_within_days ?? 0);
+        if ($cooldownDays > 0 && ! blank($record->email)) {
+            $hasRecentPaid = Order::query()
+                ->where('email', $record->email)
+                ->isPaid()
+                ->where('created_at', '>=', now()->subDays($cooldownDays))
+                ->exists();
+
+            if ($hasRecentPaid) {
+                AbandonedCartEmail::cancelPendingForEmail(
+                    $record->email,
+                    'recent_paid_order',
+                );
+
+                return;
+            }
+        }
+
         $discountCode = null;
 
         if ($step->incentive_enabled && $step->incentive_value > 0) {
@@ -57,7 +79,7 @@ class SendAbandonedCartEmailJob implements ShouldQueue
             $record->update(['discount_code_id' => $discountCode->id]);
         }
 
-        Mail::to($record->email)->send(new AbandonedCartMail($cart, $step, $discountCode, $cart->locale));
+        Mail::to($record->email)->send(new AbandonedCartMail($record, $step, $discountCode, $cart->locale));
 
         $record->update(['sent_at' => now()]);
 

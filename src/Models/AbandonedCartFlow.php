@@ -14,11 +14,13 @@ class AbandonedCartFlow extends Model
         'is_active',
         'discount_prefix',
         'triggers',
+        'skip_if_paid_within_days',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'triggers' => 'array',
+        'skip_if_paid_within_days' => 'integer',
     ];
 
     public function hasTrigger(string $trigger): bool
