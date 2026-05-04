@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.8.8 - 2026-05-04
+
+### Changed
+- **Verlaten-winkelwagen-mails tonen nu alleen items met een geldige `product_id`**. `CartAbandonedSource::items()` en `CancelledOrderAbandonedSource::items()` filteren custom-line-items / verwijderde producten uit de mail-content (en uit de threshold-totalen). Items zonder gekoppeld product zijn niet via een product-URL terug te vinden in de webshop, dus ze in de mail tonen levert alleen broken images en dode links op.
+- **Recover-button kopieert nu de items uit de abandoned cart naar de actieve cart van de bezoeker** ipv de cookie te swappen naar de oude cart. `CartController::restoreCart()` doet `cartHelper()->emptyCart()` op de huidige cart en voegt vervolgens elk item van de abandoned cart toe via `cartHelper()->addToCart($product_id, $quantity, $options)`. Items zonder `product_id` of zonder bestaand product worden overgeslagen (consistent met de mail-filter). De gebruiker behoudt zijn eigen cart-context; alleen de inhoud wordt gerestaureerd.
+
 ## v4.8.7 - 2026-05-04
 
 ### Changed

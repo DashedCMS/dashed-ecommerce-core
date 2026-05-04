@@ -29,13 +29,15 @@ class CancelledOrderAbandonedSource implements AbandonedCartSource
 
     public function items(): Collection
     {
-        return $this->order->orderProducts->map(fn ($op) => [
-            'name' => $op->name,
-            'quantity' => (int) $op->quantity,
-            'price' => (int) round(((float) ($op->price ?? 0)) * 100),
-            'image_id' => $op->product?->firstImage ?? $op->product?->productGroup?->firstImage ?? null,
-            'product_url' => $op->product?->getUrl(),
-        ])->values();
+        return $this->order->orderProducts
+            ->filter(fn ($op) => ! empty($op->product_id) && $op->product)
+            ->map(fn ($op) => [
+                'name' => $op->name,
+                'quantity' => (int) $op->quantity,
+                'price' => (int) round(((float) ($op->price ?? 0)) * 100),
+                'image_id' => $op->product?->firstImage ?? $op->product?->productGroup?->firstImage ?? null,
+                'product_url' => $op->product?->getUrl(),
+            ])->values();
     }
 
     public function total(): int

@@ -29,13 +29,16 @@ class CartAbandonedSource implements AbandonedCartSource
 
     public function items(): Collection
     {
-        return $this->cart->items->map(fn ($item) => [
-            'name' => $item->name ?? $item->product?->name ?? '',
-            'quantity' => (int) $item->quantity,
-            'price' => (int) round(((float) ($item->unit_price ?? 0)) * 100),
-            'image_id' => $item->product?->firstImage ?? $item->product?->productGroup?->firstImage ?? null,
-            'product_url' => $item->product?->getUrl(),
-        ]);
+        return $this->cart->items
+            ->filter(fn ($item) => ! empty($item->product_id) && $item->product)
+            ->map(fn ($item) => [
+                'name' => $item->name ?? $item->product?->name ?? '',
+                'quantity' => (int) $item->quantity,
+                'price' => (int) round(((float) ($item->unit_price ?? 0)) * 100),
+                'image_id' => $item->product?->firstImage ?? $item->product?->productGroup?->firstImage ?? null,
+                'product_url' => $item->product?->getUrl(),
+            ])
+            ->values();
     }
 
     public function total(): int

@@ -241,23 +241,34 @@ class CartController extends Controller
             return redirect('/');
         }
 
-        $cart = CartModel::where('token', $cartToken)->first();
+        $abandonedCart = CartModel::with('items')->where('token', $cartToken)->first();
 
-        if (! $cart || $cart->items()->count() === 0) {
+        if (! $abandonedCart || $abandonedCart->items->isEmpty()) {
             return redirect('/');
         }
 
-        $cookieName = config('dashed-ecommerce.cart_cookie', 'cart_token');
-        $cookie = cookie($cookieName, $cart->token, 60 * 24 * 90);
-        Cookie::queue($cookie);
-        session(['restored_cart_token' => $cart->token]);
+        // Leeg de huidige cart (van de browser-cookie) en kopieer de
+        // items uit de abandoned cart erin. We swappen NIET de cookie
+        // zodat de gebruiker zijn eigen cart-context houdt; alleen de
+        // inhoud wordt gerestaureerd. Items zonder product_id (custom
+        // line-items) worden overgeslagen omdat de mail die ook al
+        // niet liet zien.
+        cartHelper()->emptyCart();
+
+        foreach ($abandonedCart->items as $item) {
+            if (empty($item->product_id) || ! $item->product) {
+                continue;
+            }
+            $options = is_array($item->options) ? $item->options : [];
+            cartHelper()->addToCart($item->product_id, (int) $item->quantity, $options);
+        }
 
         $linkType = $request->query('type', 'button');
         $emailId = $request->query('email_id');
 
         if ($emailId) {
             $abandonedEmail = AbandonedCartEmail::find($emailId);
-            if ($abandonedEmail && $abandonedEmail->cart_id === $cart->id) {
+            if ($abandonedEmail && $abandonedEmail->cart_id === $abandonedCart->id) {
                 if (! $abandonedEmail->clicked_at) {
                     $abandonedEmail->update(['clicked_at' => now()]);
                 }
