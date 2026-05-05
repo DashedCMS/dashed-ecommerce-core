@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.10.0 - 2026-05-05
+
+### Changed
+- **Backfill verwerkt e-mails nu per-job in plaats van in 1 grote loop**. Nieuwe `Jobs\SyncEmailToApiJob` doet 1 API-call per (email, api)-combi en released zichzelf bij rate-limit. `BackfillApiSubscriptionsJob` is nu puur een dispatcher: verzamelt unieke tuples uit alle bronnen en dispatcht 1 `SyncEmailToApiJob` per (email × api). Voordeel: een rate-limit op 1 e-mail vertraagt alleen die specifieke job, andere jobs in de queue lopen door. Faillure-isolation per e-mail. Jobs worden 100ms per-stap gestaggered om een thundering herd richting de API te voorkomen wanneer de queue meerdere workers heeft.
+
 ## v4.9.3 - 2026-05-05
 
 ### Added

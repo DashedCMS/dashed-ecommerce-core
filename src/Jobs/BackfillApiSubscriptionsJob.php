@@ -77,93 +77,47 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
             }
         }
 
-        $totalProcessed = 0;
-        $totalSuccess = 0;
-        $totalFailed = 0;
-        $totalSkipped = 0;
+        // Dispatch 1 SyncEmailToApiJob per (email, api). Elke individuele
+        // job hanteert zijn eigen rate-limit retry via release(), zodat
+        // een rate-limit slechts die specifieke combi vertraagt en niet
+        // de hele backfill blokkeert. De jobs worden licht gestaggered
+        // via een cumulatieve delay om een thundering herd richting de
+        // API te voorkomen wanneer de queue meerdere workers heeft.
+        $totalDispatched = 0;
+        $staggerMs = 0;
 
-        foreach (array_chunk($tuples, $this->batchSize, true) as $chunk) {
-            foreach ($chunk as $email => $tuple) {
-                foreach ($configuredApis as $api) {
-                    /** @var class-string $apiClass */
-                    $apiClass = $api['class'];
+        foreach ($tuples as $email => $tuple) {
+            foreach ($configuredApis as $api) {
+                $apiClass = $api['class'];
 
-                    $totalProcessed++;
+                $alreadyLogged = ApiSubscriptionLog::query()
+                    ->where('email', $email)
+                    ->where('api_class', $apiClass)
+                    ->whereIn('status', [ApiSubscriptionLog::STATUS_SUCCESS, ApiSubscriptionLog::STATUS_SKIPPED])
+                    ->exists();
 
-                    if (! is_subclass_of($apiClass, SupportsEmailBackfill::class) && ! method_exists($apiClass, 'syncEmail')) {
-                        ApiSubscriptionLog::record($email, $apiClass, ApiSubscriptionLog::SOURCE_BACKFILL, ApiSubscriptionLog::STATUS_SKIPPED, 'API class ondersteunt geen syncEmail');
-                        $totalSkipped++;
-
-                        continue;
-                    }
-
-                    $alreadyLogged = ApiSubscriptionLog::query()
-                        ->where('email', $email)
-                        ->where('api_class', $apiClass)
-                        ->whereIn('status', [ApiSubscriptionLog::STATUS_SUCCESS, ApiSubscriptionLog::STATUS_SKIPPED])
-                        ->exists();
-
-                    if ($alreadyLogged) {
-                        $totalSkipped++;
-
-                        continue;
-                    }
-
-                    try {
-                        $result = $apiClass::syncEmail(
-                            $email,
-                            $tuple['first_name'] ?? null,
-                            $tuple['last_name'] ?? null,
-                            $api,
-                        );
-
-                        // Rate-limit signaal: zonder log te schrijven released
-                        // de job zichzelf naar de queue zodat hij opnieuw
-                        // gestart wordt na de retry-after delay. Bij de
-                        // volgende run worden reeds verwerkte e-mails
-                        // overgeslagen via de alreadyLogged-check, en gaan
-                        // we verder waar we gebleven waren.
-                        if (($result['status'] ?? null) === 'rate_limited') {
-                            $delay = max(30, (int) ($result['retry_after'] ?? 60) + 5);
-                            Log::info('BackfillApiSubscriptionsJob: rate-limit, release naar queue', [
-                                'api_class' => $apiClass,
-                                'email' => $email,
-                                'retry_after_seconds' => $delay,
-                                'message' => $result['error'] ?? null,
-                            ]);
-                            $this->release($delay);
-
-                            return;
-                        }
-
-                        $status = $result['status'] ?? ApiSubscriptionLog::STATUS_FAILED;
-                        $error = $result['error'] ?? null;
-
-                        ApiSubscriptionLog::record($email, $apiClass, ApiSubscriptionLog::SOURCE_BACKFILL, $status, $error);
-
-                        if ($status === ApiSubscriptionLog::STATUS_SUCCESS) {
-                            $totalSuccess++;
-                        } elseif ($status === ApiSubscriptionLog::STATUS_SKIPPED) {
-                            $totalSkipped++;
-                        } else {
-                            $totalFailed++;
-                        }
-                    } catch (Throwable $e) {
-                        report($e);
-                        ApiSubscriptionLog::record($email, $apiClass, ApiSubscriptionLog::SOURCE_BACKFILL, ApiSubscriptionLog::STATUS_FAILED, mb_substr($e->getMessage(), 0, 1000));
-                        $totalFailed++;
-                    }
+                if ($alreadyLogged) {
+                    continue;
                 }
+
+                SyncEmailToApiJob::dispatch(
+                    $email,
+                    $tuple['first_name'] ?? null,
+                    $tuple['last_name'] ?? null,
+                    $apiClass,
+                    $api,
+                    ApiSubscriptionLog::SOURCE_BACKFILL,
+                )->delay(now()->addMilliseconds($staggerMs));
+
+                $staggerMs += 100;
+                $totalDispatched++;
             }
         }
 
-        Log::info('BackfillApiSubscriptionsJob klaar', [
+        Log::info('BackfillApiSubscriptionsJob klaar met dispatchen', [
             'unique_emails' => count($tuples),
             'apis' => count($configuredApis),
-            'processed' => $totalProcessed,
-            'success' => $totalSuccess,
-            'failed' => $totalFailed,
-            'skipped' => $totalSkipped,
+            'jobs_dispatched' => $totalDispatched,
         ]);
     }
 
