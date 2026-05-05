@@ -25,6 +25,13 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
     public int $timeout = 3600;
 
     /**
+     * Ruim aantal retries zodat de job zichzelf via $this->release()
+     * meerdere keren kan terugleggen op de queue als een API een
+     * rate-limit signaleert. Elke release telt als 1 attempt.
+     */
+    public int $tries = 200;
+
+    /**
      * @param  array<int, string>  $apiClasses  Subset of fully-qualified class names uit Customsetting('apis')['class'] om mee te nemen. Leeg = alles.
      * @param  array<int, string>  $sources     Subset uit ['orders','carts','popup_views','form_inputs','users']. Leeg = alles.
      */
@@ -107,6 +114,25 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
                             $tuple['last_name'] ?? null,
                             $api,
                         );
+
+                        // Rate-limit signaal: zonder log te schrijven released
+                        // de job zichzelf naar de queue zodat hij opnieuw
+                        // gestart wordt na de retry-after delay. Bij de
+                        // volgende run worden reeds verwerkte e-mails
+                        // overgeslagen via de alreadyLogged-check, en gaan
+                        // we verder waar we gebleven waren.
+                        if (($result['status'] ?? null) === 'rate_limited') {
+                            $delay = max(30, (int) ($result['retry_after'] ?? 60) + 5);
+                            Log::info('BackfillApiSubscriptionsJob: rate-limit, release naar queue', [
+                                'api_class' => $apiClass,
+                                'email' => $email,
+                                'retry_after_seconds' => $delay,
+                                'message' => $result['error'] ?? null,
+                            ]);
+                            $this->release($delay);
+
+                            return;
+                        }
 
                         $status = $result['status'] ?? ApiSubscriptionLog::STATUS_FAILED;
                         $error = $result['error'] ?? null;

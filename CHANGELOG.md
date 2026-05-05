@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.9.2 - 2026-05-05
+
+### Added
+- `BackfillApiSubscriptionsJob` honoreert nu rate-limit signalen van een API. Als `syncEmail()` `['status' => 'rate_limited', 'retry_after' => N]` returnt, doet de job `release(N + 5)` zonder de huidige attempt te loggen, zodat hij na de delay opnieuw start en via de bestaande `alreadyLogged`-check verdergaat waar hij gebleven was. `tries` is verhoogd naar 200 om voldoende releases toe te staan voor grote backfills.
+
 ## v4.9.1 - 2026-05-05
 
 ### Fixed
