@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.9.3 - 2026-05-05
+
+### Added
+- Backfill-modal heeft nieuwe `CheckboxList` "Order-origins" met opties uit distinct `dashed__orders.order_origin`. Default: alle behalve `Bol` (Bol-bestellingen worden standaard uitgesloten omdat marktplaats-emails zelden marketing-consent hebben). `BackfillApiSubscriptionsJob` constructor heeft nieuwe `array $orderOrigins = []` param; `collectFromOrders()` doet `whereIn('order_origin', $orderOrigins)` als de array gevuld is en de kolom bestaat. Andere bronnen (carts, popup_views, form_inputs, users) zijn niet beïnvloed.
+
 ## v4.9.2 - 2026-05-05
 
 ### Added

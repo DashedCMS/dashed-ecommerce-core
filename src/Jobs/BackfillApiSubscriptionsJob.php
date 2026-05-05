@@ -32,14 +32,16 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
     public int $tries = 200;
 
     /**
-     * @param  array<int, string>  $apiClasses  Subset of fully-qualified class names uit Customsetting('apis')['class'] om mee te nemen. Leeg = alles.
-     * @param  array<int, string>  $sources     Subset uit ['orders','carts','popup_views','form_inputs','users']. Leeg = alles.
+     * @param  array<int, string>  $apiClasses    Subset of fully-qualified class names uit Customsetting('apis')['class'] om mee te nemen. Leeg = alles.
+     * @param  array<int, string>  $sources       Subset uit ['orders','carts','popup_views','form_inputs','users']. Leeg = alles.
+     * @param  array<int, string>  $orderOrigins  Subset uit `dashed__orders.order_origin`-waardes om mee te nemen. Leeg = alle origins. Alleen relevant voor de orders-bron.
      */
     public function __construct(
         public array $apiClasses = [],
         public array $sources = [],
         public bool $onlyMarketing = false,
         public int $batchSize = 50,
+        public array $orderOrigins = [],
     ) {
         $this->batchSize = max(1, min(500, $this->batchSize));
     }
@@ -195,6 +197,10 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
 
         if ($this->onlyMarketing && Schema::hasColumn('dashed__orders', 'marketing')) {
             $query->where('marketing', true);
+        }
+
+        if (! empty($this->orderOrigins) && Schema::hasColumn('dashed__orders', 'order_origin')) {
+            $query->whereIn('order_origin', $this->orderOrigins);
         }
 
         $columns = ['email'];

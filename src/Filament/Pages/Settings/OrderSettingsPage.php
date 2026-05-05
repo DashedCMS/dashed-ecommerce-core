@@ -478,6 +478,19 @@ class OrderSettingsPage extends Page
                         $sourceOptions['users'] = 'Klantaccounts (users)';
                     }
 
+                    $orderOriginOptions = [];
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('dashed__orders', 'order_origin')) {
+                        $orderOriginOptions = \Illuminate\Support\Facades\DB::table('dashed__orders')
+                            ->select('order_origin')
+                            ->whereNotNull('order_origin')
+                            ->where('order_origin', '!=', '')
+                            ->groupBy('order_origin')
+                            ->orderBy('order_origin')
+                            ->pluck('order_origin', 'order_origin')
+                            ->toArray();
+                    }
+                    $defaultOrigins = array_values(array_diff(array_keys($orderOriginOptions), ['Bol']));
+
                     return [
                         CheckboxList::make('api_classes')
                             ->label('APIs')
@@ -493,6 +506,13 @@ class OrderSettingsPage extends Page
                             ->default(array_keys($sourceOptions))
                             ->columns(1)
                             ->required(),
+                        CheckboxList::make('order_origins')
+                            ->label('Order-origins (alleen voor bron "orders")')
+                            ->helperText('Kies welke order-origins meegenomen worden uit de orders-bron. Bol-bestellingen staan standaard uit.')
+                            ->options($orderOriginOptions)
+                            ->default($defaultOrigins)
+                            ->columns(1)
+                            ->visible(! empty($orderOriginOptions)),
                         Toggle::make('only_marketing')
                             ->label('Alleen waar marketing-toestemming aanwezig is')
                             ->helperText('Filtert bestellingen + klantaccounts op marketing = true. Bronnen zonder marketing-kolom worden volledig meegenomen.')
@@ -513,6 +533,7 @@ class OrderSettingsPage extends Page
                         sources: array_values($data['sources'] ?? []),
                         onlyMarketing: (bool) ($data['only_marketing'] ?? false),
                         batchSize: (int) ($data['batch_size'] ?? 50),
+                        orderOrigins: array_values($data['order_origins'] ?? []),
                     );
 
                     Notification::make()
