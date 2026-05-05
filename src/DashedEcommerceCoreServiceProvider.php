@@ -157,6 +157,29 @@ MARKDOWN,
         );
 
         cms()->registerResourceDocs(
+            resource: \Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource::class,
+            title: 'Afgehandelde-bestelling flows',
+            intro: 'Hier beheer je geautomatiseerde opvolg-mails voor bestellingen die op fulfillment_status = handled (afgehandeld) zijn gezet, bijvoorbeeld een review-verzoek 14 dagen na verzending.',
+            sections: [
+                [
+                    'heading' => 'Wat kun je hier doen?',
+                    'body' => <<<MARKDOWN
+- Een flow aanmaken met meerdere opvolg-stappen, elk met een eigen wachttijd in minuten.
+- Per stap een onderwerp en blokken (heading, paragraaf, knop, afbeelding, scheidingslijn, USPs, kortingscode) instellen.
+- Een test-mail per stap naar je eigen adres sturen om de inhoud te controleren.
+- Een actieve flow op bestaande afgehandelde bestellingen toepassen via de knop **Toepassen op bestaande**.
+- Per flow instellen of een klik op een knop of afbeelding-link de rest van de flow voor die bestelling annuleert.
+MARKDOWN,
+                ],
+            ],
+            tips: [
+                'Slechts één flow kan tegelijk actief zijn. Activeer je een nieuwe flow, dan wordt de vorige automatisch uitgezet.',
+                'Gebruik :firstName: of :customerName: in onderwerp en tekst om de mail persoonlijker te maken.',
+                'Met de cooldown sla je de mail over wanneer dezelfde klant net een nieuwe bestelling heeft geplaatst, zo voorkom je dat een review-verzoek vlak na een nieuwe aankoop binnenkomt.',
+            ],
+        );
+
+        cms()->registerResourceDocs(
             resource: \Dashed\DashedEcommerceCore\Filament\Resources\CartResource::class,
             title: 'Winkelwagens',
             intro: 'Hier krijg je inzicht in alle actieve winkelwagens in je webshop, kassa, hand-orders en klant-POS sessies.',
@@ -1680,6 +1703,7 @@ MARKDOWN,
                 'frontend',
                 'point-of-sale',
                 'google-ads',
+                'order-handled-frontend',
             ])
             ->hasConfigFile([
                 'dashed-ecommerce-core',

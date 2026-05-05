@@ -7,6 +7,7 @@ use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Schema as DBSchema;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
@@ -16,6 +17,7 @@ use Dashed\DashedCore\Classes\Locales;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -26,6 +28,7 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
+use Dashed\DashedEcommerceCore\Jobs\BackfillApiSubscriptionsJob;
 use Dashed\DashedCore\Notifications\NotificationChannels;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
@@ -136,6 +139,11 @@ class OrderSettingsPage extends Page
                         ->preload()
                         ->required()
                         ->reactive(),
+                    Toggle::make('sync_always')
+                        ->label('Altijd synchroniseren (ook zonder marketing-toestemming)')
+                        ->helperText('Standaard wordt deze API alleen aangeroepen als de klant in de checkout marketing-toestemming heeft gegeven. Zet aan om altijd te syncen.')
+                        ->default(false)
+                        ->columnSpanFull(),
                 ], $apiFields))
                 ->columnSpanFull()
                 ->addActionLabel('API toevoegen')
@@ -415,6 +423,104 @@ class OrderSettingsPage extends Page
             ->title('De bestellings instellingen zijn opgeslagen')
             ->success()
             ->send();
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('backfillApiSubscriptions')
+                ->label('Bestaande e-mails synchroniseren')
+                ->icon('heroicon-o-arrow-path')
+                ->color('primary')
+                ->visible(count(forms()->builder('orderApiClasses')) > 0)
+                ->modalHeading('Bestaande e-mails synchroniseren naar APIs')
+                ->modalDescription('Stuurt eerder verzamelde e-mailadressen alsnog naar de geselecteerde APIs. Reeds gesynchroniseerde combinaties van e-mail + API worden overgeslagen op basis van het log.')
+                ->modalSubmitActionLabel('Backfill starten')
+                ->form(function () {
+                    $apiOptions = [];
+                    foreach (Customsetting::get('apis', null, []) ?? [] as $configuredApi) {
+                        if (! is_array($configuredApi) || empty($configuredApi['class'])) {
+                            continue;
+                        }
+                        $class = $configuredApi['class'];
+                        $label = $class;
+                        if (class_exists($class)) {
+                            $registry = collect(forms()->builder('orderApiClasses'));
+                            $match = $registry->firstWhere('class', $class);
+                            if ($match && ! empty($match['name'])) {
+                                $label = $match['name'];
+                                if (! empty($configuredApi['list_id'])) {
+                                    $label .= ' (lijst: ' . $configuredApi['list_id'] . ')';
+                                }
+                            } else {
+                                $label = class_basename($class);
+                            }
+                        }
+                        $apiOptions[$class] = $label;
+                    }
+
+                    $sourceOptions = [];
+                    if (DBSchema::hasTable('dashed__orders') && DBSchema::hasColumn('dashed__orders', 'email')) {
+                        $sourceOptions['orders'] = 'Bestellingen (dashed__orders)';
+                    }
+                    if (DBSchema::hasTable('dashed__carts')) {
+                        if (DBSchema::hasColumn('dashed__carts', 'email') || DBSchema::hasColumn('dashed__carts', 'abandoned_email')) {
+                            $sourceOptions['carts'] = 'Winkelwagens (dashed__carts)';
+                        }
+                    }
+                    if (DBSchema::hasTable('dashed__popup_views') && DBSchema::hasColumn('dashed__popup_views', 'email')) {
+                        $sourceOptions['popup_views'] = 'Popup-inzendingen (dashed__popup_views)';
+                    }
+                    if (DBSchema::hasTable('dashed__form_input_fields') && DBSchema::hasTable('dashed__form_fields')) {
+                        $sourceOptions['form_inputs'] = 'Formulier-inzendingen (dashed__form_inputs)';
+                    }
+                    if (DBSchema::hasTable('users') && DBSchema::hasColumn('users', 'email')) {
+                        $sourceOptions['users'] = 'Klantaccounts (users)';
+                    }
+
+                    return [
+                        CheckboxList::make('api_classes')
+                            ->label('APIs')
+                            ->helperText('Kies de APIs waar e-mails naartoe gestuurd moeten worden.')
+                            ->options($apiOptions)
+                            ->default(array_keys($apiOptions))
+                            ->columns(1)
+                            ->required(),
+                        CheckboxList::make('sources')
+                            ->label('Bronnen')
+                            ->helperText('Kies waar de e-mailadressen vandaan moeten komen.')
+                            ->options($sourceOptions)
+                            ->default(array_keys($sourceOptions))
+                            ->columns(1)
+                            ->required(),
+                        Toggle::make('only_marketing')
+                            ->label('Alleen waar marketing-toestemming aanwezig is')
+                            ->helperText('Filtert bestellingen + klantaccounts op marketing = true. Bronnen zonder marketing-kolom worden volledig meegenomen.')
+                            ->default(false),
+                        TextInput::make('batch_size')
+                            ->label('Batchgrootte')
+                            ->helperText('Aantal records per batch om rate-limits van externe APIs te respecteren.')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(500)
+                            ->default(50)
+                            ->required(),
+                    ];
+                })
+                ->action(function (array $data): void {
+                    BackfillApiSubscriptionsJob::dispatch(
+                        apiClasses: array_values($data['api_classes'] ?? []),
+                        sources: array_values($data['sources'] ?? []),
+                        onlyMarketing: (bool) ($data['only_marketing'] ?? false),
+                        batchSize: (int) ($data['batch_size'] ?? 50),
+                    );
+
+                    Notification::make()
+                        ->title('Backfill gestart - resultaten verschijnen in het log')
+                        ->success()
+                        ->send();
+                }),
+        ];
     }
 
     protected function getActions(): array

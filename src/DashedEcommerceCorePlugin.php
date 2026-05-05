@@ -38,6 +38,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
@@ -122,6 +123,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 GiftcardResource::class,
                 CartResource::class,
                 AbandonedCartFlowResource::class,
+                OrderHandledFlowResource::class,
             ]);
     }
 

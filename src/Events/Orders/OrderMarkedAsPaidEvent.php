@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
+use Throwable;
 use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -9,6 +10,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Dashed\DashedEcommerceCore\Models\ApiSubscriptionLog;
 
 class OrderMarkedAsPaidEvent
 {
@@ -38,10 +40,41 @@ class OrderMarkedAsPaidEvent
             $this->order->printReceipt();
         }
 
-        if ($order->marketing) {
-            $apis = Customsetting::get('apis', null, []);
-            foreach ($apis as $api) {
+        $apis = Customsetting::get('apis', null, []) ?? [];
+        foreach ($apis as $api) {
+            if (! is_array($api) || empty($api['class']) || ! class_exists($api['class'])) {
+                continue;
+            }
+
+            $shouldDispatch = $order->marketing || ! empty($api['sync_always']);
+            if (! $shouldDispatch) {
+                continue;
+            }
+
+            $email = mb_strtolower(trim((string) ($order->email ?? '')));
+
+            try {
                 $api['class']::dispatch($order, $api);
+
+                if ($email !== '') {
+                    ApiSubscriptionLog::record(
+                        email: $email,
+                        apiClass: $api['class'],
+                        source: ApiSubscriptionLog::SOURCE_ORDER,
+                        status: ApiSubscriptionLog::STATUS_SUCCESS,
+                    );
+                }
+            } catch (Throwable $e) {
+                report($e);
+                if ($email !== '') {
+                    ApiSubscriptionLog::record(
+                        email: $email,
+                        apiClass: $api['class'],
+                        source: ApiSubscriptionLog::SOURCE_ORDER,
+                        status: ApiSubscriptionLog::STATUS_FAILED,
+                        error: mb_substr($e->getMessage(), 0, 1000),
+                    );
+                }
             }
         }
     }

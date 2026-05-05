@@ -1379,7 +1379,7 @@ class PointOfSaleApiController extends Controller
             'totalProducts' => $order->orderProducts()->sum('quantity'),
             'status' => $order->status,
             'orderOrigin' => $order->order_origin,
-            'fulfillmenStatus' => Orders::getFulfillmentStatusses()[$order->fulfillment_status] ?? Orders::getReturnStatusses()[$order->fulfillment_status],
+            'fulfillmenStatus' => Orders::getFulfillmentStatusses()[$order->fulfillment_status] ?? Orders::getReturnStatusses()[$order->fulfillment_status] ?? $order->fulfillment_status,
             'time' => $order->created_at->format('H:i'),
             'shippingMethod' => $order->shippingMethod ? $order->shippingMethod->name : 'niet gekozen',
             'email' => $order->email,

@@ -754,6 +754,15 @@ class Order extends Model
 
         $this->fulfillment_status = $newStatus;
         $this->save();
+
+        // Trigger handled-flow zodra een bestelling als afgehandeld wordt
+        // gemarkeerd. De listener bepaalt zelf of er een actieve flow is en
+        // plant de stappen in. handled_flow_started_at wordt gezet door de
+        // listener om dubbele inschrijvingen te voorkomen.
+        if ($newStatus === 'handled' && $this->handled_flow_started_at === null) {
+            \Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsHandledEvent::dispatch($this);
+        }
+
         if ($this->isPaidFor()) {
             foreach (Orders::getFulfillmentStatusses() as $key => $fulfillmentStatus) {
                 if ($this->fulfillment_status == $key && Customsetting::get("fulfillment_status_{$key}_enabled", null, false, $this->locale)) {
