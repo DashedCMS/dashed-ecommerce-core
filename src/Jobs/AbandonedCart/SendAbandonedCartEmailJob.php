@@ -79,7 +79,27 @@ class SendAbandonedCartEmailJob implements ShouldQueue
             $record->update(['discount_code_id' => $discountCode->id]);
         }
 
-        Mail::to($record->email)->send(new AbandonedCartMail($record, $step, $discountCode, $cart->locale));
+        try {
+            Mail::to($record->email)->send(new AbandonedCartMail($record, $step, $discountCode, $cart->locale));
+        } catch (\Throwable $e) {
+            report($e);
+            \Illuminate\Support\Facades\Log::warning('abandoned-cart: mail kon niet verstuurd worden', [
+                'abandoned_cart_email_id' => $record->id,
+                'cart_id' => $cart->id,
+                'flow_step_id' => $step->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Postmark levert bv. een 406 als het adres als inactive
+            // is gemarkeerd (hard bounce / spam complaint). Verdere
+            // stappen voor dezelfde ontvanger cancellen we via
+            // cancelPendingForEmail zodat ze niet opnieuw worden
+            // geprobeerd, en de job slaagt zodat hij niet eindeloos
+            // retried wordt.
+            \Dashed\DashedEcommerceCore\Models\AbandonedCartEmail::cancelPendingForEmail($record->email, 'mail_send_failed');
+
+            return;
+        }
 
         $record->update(['sent_at' => now()]);
 

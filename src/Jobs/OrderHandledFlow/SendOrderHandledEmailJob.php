@@ -110,7 +110,12 @@ class SendOrderHandledEmailJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
 
-            throw $e;
+            // Postmark levert bv. een 406 als het adres als inactive
+            // is gemarkeerd (hard bounce / spam complaint). Verdere
+            // stappen voor dezelfde ontvanger zouden ook falen, dus
+            // we cancellen de flow en laten de job slagen zodat hij
+            // niet eindeloos retried wordt.
+            $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
         }
     }
 }

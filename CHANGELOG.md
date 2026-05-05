@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.9.1 - 2026-05-05
+
+### Fixed
+- `SendOrderHandledEmailJob` en `SendAbandonedCartEmailJob` falen niet meer als de mail-transport een hard error geeft (bijv. Postmark `406 Inactive recipient` voor adressen met hard bounce of spam complaint). De error wordt gerapporteerd via `report()` + `Log::warning`, de flow wordt voor die ontvanger gecanceld (`handled_flow_cancelled_at` resp. `AbandonedCartEmail::cancelPendingForEmail()`) zodat vervolgstappen niet opnieuw geprobeerd worden, en de job zelf rondt succesvol af zodat hij niet eindeloos door de queue retried wordt.
+
 ## v4.9.0 - 2026-05-05
 
 ### Added
