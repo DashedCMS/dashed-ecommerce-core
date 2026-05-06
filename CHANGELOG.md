@@ -2,6 +2,23 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.16.0 - 2026-05-06
+
+### Added
+- **A/B-test van review-URLs op order-opvolg flows.** Per flow kunnen nu meerdere review-URLs ingericht worden (bv. Google, KiyOh, WebwinkelKeur) met een per-URL gewicht. Bij elke nieuwe inschrijving kiest de flow gewogen willekeurig 1 URL en legt die vast op de inschrijving (`chosen_review_url_label`, `chosen_review_url`). Alle stappen van de flow voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat conversies per platform telbaar zijn.
+- Migratie `2026_05_06_140000_add_review_urls_to_order_handled_flows` voegt JSON-kolom `review_urls` (nullable) toe aan `dashed__order_handled_flows`. Vorm: `[{label, url, weight}, ...]`.
+- Migratie `2026_05_06_140100_add_chosen_review_url_to_order_flow_enrollments` voegt `chosen_review_url_label` (string nullable, geïndexeerd) en `chosen_review_url` (string nullable, 2048 tekens) toe aan `dashed__order_flow_enrollments`.
+- Nieuwe model-helper `OrderHandledFlow::pickReviewUrl()` doet de gewogen willekeurige trekking en valt terug op de globale Customsetting `order_handled_flow_review_url` als geen URLs zijn geconfigureerd. Returnt `['label' => ?string, 'url' => string]` of `null`.
+- Filament-resource `OrderHandledFlowResource` heeft een nieuwe sectie "Review-URLs (A/B test)" met een `Repeater` voor `[label, url, weight]`. Reorderable + collapsible. Helpertekst legt uit dat leeglaten = fallback op de Customsetting.
+- Stats-widget `OrderHandledFlowStats` toont per platform een extra kaart (max 5, sortering op aantal inschrijvingen) met per-platform aantal inschrijvingen, aantal vervolg-betalers en vervolg-omzet. Het platform met de hoogste conversieratio krijgt de groene `success`-kleur, de rest blijft grijs (bij 1 platform geen kleur-highlight).
+- Inschrijvingen-tabel `OrderHandledFlowEnrollments` heeft een nieuwe kolom "Platform" (badge, hash-gebaseerde stabiele kleur per label) en een SelectFilter op platform-label, dynamisch gevuld met de daadwerkelijk gekozen labels op deze flow.
+- Bestelling-instellingen-pagina (`OrderSettingsPage`) heeft een nieuwe sectie "Order opvolg flow" met veld "Standaard review-URL" dat naar `Customsetting('order_handled_flow_review_url')` schrijft, zodat admins de globale fallback via de UI kunnen beheren.
+
+### Changed
+- `OrderHandledMail` leest de `:reviewUrl:`-variabele nu primair uit de actieve `OrderFlowEnrollment` voor de combinatie (order, flow). Valt terug op `flow->pickReviewUrl()` (en die helper valt op zijn beurt terug op de globale Customsetting), zodat bestaande sites zonder per-flow URLs blijven werken.
+- `QueueOrderFlowEmailsListener` roept `pickReviewUrl()` aan op het moment van inschrijving en bewaart de gekozen URL + label op de enrollment-rij. Zo blijft de gekozen URL stabiel over alle vervolg-stappen voor dezelfde klant.
+- `OrderHandledFlowResource::VARIABLES_HELP` vermeldt nu expliciet dat `:reviewUrl:` per inschrijving A/B-getest wordt wanneer er meerdere URLs zijn ingesteld.
+
 ## v4.15.0 - 2026-05-06
 
 ### Added

@@ -74,7 +74,7 @@ class OrderHandledFlowStats extends StatsOverviewWidget
             ? collect($reasonBreakdown)->map(fn ($n, $r) => "{$n}× {$r}")->implode(', ')
             : 'Niemand geannuleerd';
 
-        return [
+        $stats = [
             Stat::make('Inschrijvingen', $total)
                 ->description('Totaal aantal orders dat ooit in deze flow zat')
                 ->icon('heroicon-o-user-group'),
@@ -99,5 +99,85 @@ class OrderHandledFlowStats extends StatsOverviewWidget
                 ->icon('heroicon-o-banknotes')
                 ->color('success'),
         ];
+
+        // Per-platform-stats: alleen tonen wanneer er review-URLs ingesteld zijn
+        // op de flow. We groeperen op chosen_review_url_label en berekenen per
+        // platform de conversie (klanten die opnieuw besteld hebben + omzet).
+        $reviewUrls = $this->record->review_urls ?? [];
+        if (is_array($reviewUrls) && count($reviewUrls) > 0) {
+            $byLabel = (clone $enrollmentsBase)
+                ->selectRaw('COALESCE(chosen_review_url_label, "Onbekend") as label, COUNT(*) as count')
+                ->groupBy('label')
+                ->orderByDesc('count')
+                ->limit(5)
+                ->get();
+
+            $platformConversions = [];
+            foreach ($byLabel as $row) {
+                $labelKey = $row->label;
+                $platformEnrollments = (clone $enrollmentsBase)
+                    ->when($labelKey === 'Onbekend',
+                        fn ($q) => $q->whereNull('chosen_review_url_label'),
+                        fn ($q) => $q->where('chosen_review_url_label', $labelKey),
+                    )
+                    ->with('order:id,email')
+                    ->get(['id', 'order_id', 'started_at']);
+
+                $pCount = 0;
+                $pRevenue = 0.0;
+                foreach ($platformEnrollments as $enrollment) {
+                    if (! $enrollment->order || blank($enrollment->order->email)) {
+                        continue;
+                    }
+                    $followUp = Order::query()
+                        ->where('email', $enrollment->order->email)
+                        ->where('id', '!=', $enrollment->order_id)
+                        ->isPaid()
+                        ->where('created_at', '>=', $enrollment->started_at)
+                        ->first(['id', 'total']);
+
+                    if ($followUp) {
+                        $pCount++;
+                        $pRevenue += (float) $followUp->total;
+                    }
+                }
+
+                $platformConversions[$labelKey] = [
+                    'enrollments' => (int) $row->count,
+                    'converted' => $pCount,
+                    'revenue' => $pRevenue,
+                    'rate' => $row->count > 0 ? ($pCount / $row->count) : 0.0,
+                ];
+            }
+
+            // Bepaal het platform met de hoogste conversieratio voor highlight.
+            $bestLabel = null;
+            if (count($platformConversions) > 1) {
+                $bestRate = -1.0;
+                foreach ($platformConversions as $label => $info) {
+                    if ($info['rate'] > $bestRate) {
+                        $bestRate = $info['rate'];
+                        $bestLabel = $label;
+                    }
+                }
+            }
+
+            foreach ($platformConversions as $label => $info) {
+                $description = $info['converted'] . ' klanten hebben opnieuw besteld - € '
+                    . number_format($info['revenue'], 2, ',', '.');
+
+                $stat = Stat::make($label, $info['enrollments'])
+                    ->description($description)
+                    ->icon('heroicon-o-star');
+
+                if (count($platformConversions) > 1) {
+                    $stat = $stat->color($label === $bestLabel ? 'success' : 'gray');
+                }
+
+                $stats[] = $stat;
+            }
+        }
+
+        return $stats;
     }
 }

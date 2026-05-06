@@ -35,7 +35,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Pages
 
 class OrderHandledFlowResource extends Resource
 {
-    public const VARIABLES_HELP = 'Variabelen: :siteName: :siteUrl: :orderNumber: :customerName: :firstName: :discountCode: :discountValue: :reviewUrl:';
+    public const VARIABLES_HELP = 'Variabelen: :siteName: :siteUrl: :orderNumber: :customerName: :firstName: :discountCode: :discountValue: :reviewUrl: (A/B-getest per inschrijving als meerdere URLs zijn ingesteld)';
 
     protected static ?string $model = OrderHandledFlow::class;
 
@@ -97,6 +97,40 @@ class OrderHandledFlowResource extends Resource
                 ])
                 ->columns(2)
                 ->columnSpanFull(),
+
+            Section::make('Review-URLs (A/B test)')
+                ->description('Zodra een inschrijving start, wordt 1 van deze URLs gewogen willekeurig gekozen en op de inschrijving vastgelegd. Alle stappen van de flow voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat conversies per platform telbaar zijn.')
+                ->helperText('Laat leeg om de globale Customsetting "order_handled_flow_review_url" te gebruiken. Vul meerdere rijen in om A/B te testen tussen review-platformen. De gekozen URL wordt per inschrijving vastgelegd zodat conversies per platform telbaar zijn.')
+                ->columnSpanFull()
+                ->schema([
+                    Repeater::make('review_urls')
+                        ->label('Review-URLs')
+                        ->addActionLabel('Review-URL toevoegen')
+                        ->reorderable()
+                        ->collapsible()
+                        ->itemLabel(fn ($state) => trim(((string) ($state['label'] ?? '')) . ' - ' . ((string) ($state['url'] ?? ''))) ?: 'Nieuwe review-URL')
+                        ->defaultItems(0)
+                        ->schema([
+                            TextInput::make('label')
+                                ->label('Label')
+                                ->helperText('Bv. Google, KiyOh, WebwinkelKeur. Wordt alleen voor statistieken gebruikt.')
+                                ->maxLength(50),
+                            TextInput::make('url')
+                                ->label('URL')
+                                ->required()
+                                ->url()
+                                ->maxLength(2048),
+                            TextInput::make('weight')
+                                ->label('Gewicht')
+                                ->numeric()
+                                ->minValue(0.1)
+                                ->maxValue(100)
+                                ->default(1)
+                                ->helperText('Hoger = vaker gekozen. Default 1 = gelijk verdeeld.'),
+                        ])
+                        ->columns(3)
+                        ->columnSpanFull(),
+                ]),
 
             Section::make('Opvolg-stappen')
                 ->description('Voeg de mails toe die in volgorde verstuurd worden nadat een bestelling de geconfigureerde fulfillment-status krijgt.')

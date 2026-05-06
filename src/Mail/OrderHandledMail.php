@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\URL;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlowStep;
 
 /**
@@ -44,7 +45,25 @@ class OrderHandledMail extends Mailable
         $firstName = (string) ($this->order->first_name ?: '');
         $customerName = trim($firstName.' '.(string) ($this->order->last_name ?: ''));
         $orderNumber = (string) ($this->order->invoice_id ?: $this->order->id);
-        $reviewUrl = (string) ($this->customsettingGet('order_handled_flow_review_url') ?: '');
+        // Lees de review-URL bij voorkeur uit de inschrijving zodat alle stappen
+        // van de flow voor dezelfde klant dezelfde (gewogen-gekozen) URL gebruiken.
+        // Valt terug op een verse weighted draw - die kent zelf weer een fallback
+        // op de globale Customsetting 'order_handled_flow_review_url'.
+        $reviewUrl = '';
+        if ($this->order->id && $this->flowStep->flow_id) {
+            $enrollment = OrderFlowEnrollment::query()
+                ->where('order_id', $this->order->id)
+                ->where('flow_id', $this->flowStep->flow_id)
+                ->whereNull('cancelled_at')
+                ->latest('id')
+                ->first();
+            $reviewUrl = (string) ($enrollment?->chosen_review_url ?? '');
+        }
+
+        if ($reviewUrl === '') {
+            $picked = $this->flowStep->flow?->pickReviewUrl();
+            $reviewUrl = (string) ($picked['url'] ?? '');
+        }
 
         $discountCode = $this->previewDiscountCode ?? '';
         $discountValue = $this->previewDiscountValue ?? '';

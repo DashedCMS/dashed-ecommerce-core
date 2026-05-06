@@ -52,6 +52,12 @@ class QueueOrderFlowEmailsListener
                 continue;
             }
 
+            // Per inschrijving 1 review-URL kiezen (gewogen willekeurig). Zo
+            // ziet de klant in elke vervolg-mail dezelfde review-link en kunnen
+            // we conversie per platform meten. Null = geen URLs ingesteld en
+            // ook geen fallback in Customsetting; mailer regelt dat verder.
+            $picked = $flow->pickReviewUrl();
+
             try {
                 OrderFlowEnrollment::create([
                     'order_id' => $order->id,
@@ -59,6 +65,8 @@ class QueueOrderFlowEmailsListener
                     'started_at' => now(),
                     'cancelled_at' => null,
                     'cancelled_reason' => null,
+                    'chosen_review_url_label' => $picked['label'] ?? null,
+                    'chosen_review_url' => $picked['url'] ?? null,
                 ]);
             } catch (\Throwable $e) {
                 // Race-condition: unique-constraint kan klappen als 2 status-wisselingen

@@ -56,6 +56,12 @@ class OrderHandledFlowEnrollments extends TableWidget
                 TextColumn::make('order.name')
                     ->label('Klant')
                     ->wrap(),
+                TextColumn::make('chosen_review_url_label')
+                    ->label('Platform')
+                    ->placeholder('-')
+                    ->badge()
+                    ->color(fn (?string $state): string => self::platformBadgeColor($state))
+                    ->toggleable(),
                 TextColumn::make('order.email')
                     ->label('E-mail')
                     ->copyable()
@@ -113,7 +119,37 @@ class OrderHandledFlowEnrollments extends TableWidget
                         'mail_failed' => 'Mail mislukt',
                         'migrated' => 'Gemigreerd',
                     ]),
+                SelectFilter::make('chosen_review_url_label')
+                    ->label('Platform')
+                    ->options(function (): array {
+                        if (! $this->record?->id) {
+                            return [];
+                        }
+
+                        return OrderFlowEnrollment::query()
+                            ->where('flow_id', $this->record->id)
+                            ->whereNotNull('chosen_review_url_label')
+                            ->distinct()
+                            ->pluck('chosen_review_url_label', 'chosen_review_url_label')
+                            ->toArray();
+                    }),
             ])
             ->defaultSort('started_at', 'desc');
+    }
+
+    /**
+     * Stabiele hash-gebaseerde kleur per platform-label, zodat Google/KiyOh/etc.
+     * altijd dezelfde badge-kleur krijgen.
+     */
+    protected static function platformBadgeColor(?string $state): string
+    {
+        if ($state === null || $state === '') {
+            return 'gray';
+        }
+
+        $palette = ['primary', 'success', 'warning', 'info', 'danger'];
+        $index = abs(crc32($state)) % count($palette);
+
+        return $palette[$index];
     }
 }

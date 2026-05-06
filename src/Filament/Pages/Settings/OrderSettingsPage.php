@@ -94,6 +94,7 @@ class OrderSettingsPage extends Page
         $formData["apis"] = Customsetting::get('apis', null, []);
         $formData["attribution_tracking_enabled"] = (bool) Customsetting::get('attribution_tracking_enabled', null, true);
         $formData["attribution_show_on_invoice"] = (bool) Customsetting::get('attribution_show_on_invoice', null, false);
+        $formData["order_handled_flow_review_url"] = (string) Customsetting::get('order_handled_flow_review_url', null, '');
         $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
         $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
         $formData["packing_slip_printer_connector_type"] = Customsetting::get('packing_slip_printer_connector_type', null, '');
@@ -180,6 +181,18 @@ class OrderSettingsPage extends Page
                         ->default(false),
                 ])
                 ->columns(2),
+            Section::make('Order opvolg flow')
+                ->description('Globale fallback voor de :reviewUrl: variabele in de order-opvolg-mails. Wordt alleen gebruikt wanneer een flow geen eigen review-URLs heeft staan.')
+                ->columnSpanFull()
+                ->schema([
+                    TextInput::make('order_handled_flow_review_url')
+                        ->label('Standaard review-URL')
+                        ->helperText('Wordt als :reviewUrl: in opvolg-mails ingevuld wanneer de flow zelf geen review-URLs heeft staan. Vul per flow meerdere URLs in om A/B-testen tussen platformen mogelijk te maken.')
+                        ->url()
+                        ->maxLength(2048)
+                        ->columnSpanFull(),
+                ])
+                ->columns(1),
             Section::make('Facturen printer')->columnSpanFull()
                 ->schema([
                     Select::make("invoice_printer_connector_type")
@@ -419,6 +432,7 @@ class OrderSettingsPage extends Page
         Customsetting::set('apis', $this->form->getState()["apis"] ?? []);
         Customsetting::set('attribution_tracking_enabled', (bool) ($this->form->getState()['attribution_tracking_enabled'] ?? true));
         Customsetting::set('attribution_show_on_invoice', (bool) ($this->form->getState()['attribution_show_on_invoice'] ?? false));
+        Customsetting::set('order_handled_flow_review_url', (string) ($this->form->getState()['order_handled_flow_review_url'] ?? ''));
 
         foreach ($locales as $locale) {
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {

@@ -17,6 +17,7 @@ class OrderHandledFlow extends Model
         'discount_prefix',
         'skip_if_recently_ordered_within_days',
         'cancel_on_link_click',
+        'review_urls',
     ];
 
     protected $casts = [
@@ -24,6 +25,7 @@ class OrderHandledFlow extends Model
         'is_active' => 'boolean',
         'cancel_on_link_click' => 'boolean',
         'skip_if_recently_ordered_within_days' => 'integer',
+        'review_urls' => 'array',
     ];
 
     protected static function booted(): void
@@ -84,6 +86,53 @@ class OrderHandledFlow extends Model
     public function enrollments()
     {
         return $this->hasMany(OrderFlowEnrollment::class, 'flow_id');
+    }
+
+    /**
+     * Kiest een van de geconfigureerde review-URLs via een gewogen
+     * willekeurige trekking. Valt terug op de globale Customsetting
+     * 'order_handled_flow_review_url' wanneer geen URLs zijn ingesteld.
+     *
+     * @return array{label: ?string, url: string}|null
+     */
+    public function pickReviewUrl(): ?array
+    {
+        $urls = collect($this->review_urls ?? [])
+            ->filter(fn ($entry) => is_array($entry) && ! empty($entry['url']))
+            ->values();
+
+        if ($urls->isEmpty()) {
+            $fallback = (string) (\Dashed\DashedCore\Models\Customsetting::get('order_handled_flow_review_url') ?: '');
+            if ($fallback === '') {
+                return null;
+            }
+
+            return ['label' => null, 'url' => $fallback];
+        }
+
+        // Gewogen willekeurige trekking. Default-gewicht = 1.
+        $weights = $urls->map(fn ($u) => max(0.0, (float) ($u['weight'] ?? 1)))->toArray();
+        $total = array_sum($weights);
+
+        if ($total <= 0) {
+            $picked = $urls->random();
+        } else {
+            $rand = mt_rand() / mt_getrandmax() * $total;
+            $cum = 0.0;
+            $picked = $urls->first();
+            foreach ($urls as $i => $entry) {
+                $cum += $weights[$i];
+                if ($rand <= $cum) {
+                    $picked = $entry;
+                    break;
+                }
+            }
+        }
+
+        return [
+            'label' => isset($picked['label']) && $picked['label'] !== '' ? (string) $picked['label'] : null,
+            'url' => (string) $picked['url'],
+        ];
     }
 
     /**

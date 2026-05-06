@@ -15,6 +15,8 @@ class OrderFlowEnrollment extends Model
         'started_at',
         'cancelled_at',
         'cancelled_reason',
+        'chosen_review_url_label',
+        'chosen_review_url',
     ];
 
     protected $casts = [
