@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.14.1 - 2026-05-06
+
+### Changed
+- **Backfill-knop "Toepassen op bestaande bestellingen" op de OrderHandledFlow edit-pagina is nu altijd zichtbaar** (was: alleen wanneer flow `is_active`). Modal-titel en beschrijving zijn nu dynamisch op basis van `flow->trigger_status`, dus voor een `shipped`-flow staat er "fulfillment-status 'Verzonden'" ipv hardgecodeerde "afgehandeld". Als de flow op het moment van uitvoeren niet actief is wordt een waarschuwings-notificatie getoond ipv stilzwijgend over te slaan.
+- `EditOrderHandledFlow::afterSave()` deactiveert nu alleen andere flows met dezelfde `trigger_status` ipv alle flows. Daardoor kunnen meerdere actieve flows tegelijk bestaan (bv. één voor `shipped` en één voor `handled`) zonder elkaar uit te zetten. Mirrort het bestaande `booted()`-gedrag op het model.
+
 ## v4.14.0 - 2026-05-06
 
 ### Added

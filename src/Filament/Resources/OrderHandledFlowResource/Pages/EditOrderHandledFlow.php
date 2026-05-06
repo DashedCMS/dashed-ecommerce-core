@@ -7,6 +7,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Services\OrderHandledFlow\BackfillOrderHandledFlowService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource;
@@ -19,25 +20,47 @@ class EditOrderHandledFlow extends EditRecord
     {
         return [
             Action::make('backfillExisting')
-                ->label('Toepassen op bestaande')
+                ->label('Toepassen op bestaande bestellingen')
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
-                ->visible(fn (): bool => (bool) $this->record?->is_active)
-                ->modalHeading('Flow toepassen op bestaande afgehandelde bestellingen')
-                ->modalDescription('Plant alsnog de stappen van deze flow voor bestellingen die binnen het opgegeven aantal dagen op fulfillment_status = handled zijn gezet maar nog niet in de flow zitten. Records die al gestart of geannuleerd zijn worden overgeslagen.')
+                ->modalHeading(function (): string {
+                    /** @var OrderHandledFlow|null $flow */
+                    $flow = $this->record;
+                    $label = $flow ? (Orders::getFulfillmentStatusses()[$flow->trigger_status ?? 'handled'] ?? $flow->trigger_status) : 'gekozen status';
+
+                    return 'Flow met terugwerkende kracht toepassen (' . $label . ')';
+                })
+                ->modalDescription(function (): string {
+                    /** @var OrderHandledFlow|null $flow */
+                    $flow = $this->record;
+                    $triggerStatus = $flow->trigger_status ?? 'handled';
+                    $label = Orders::getFulfillmentStatusses()[$triggerStatus] ?? $triggerStatus;
+
+                    return 'Plant alsnog de stappen van deze flow voor bestellingen die binnen het opgegeven aantal dagen op fulfillment-status "' . $label . '" zijn gezet en nog niet in deze flow zitten. Records die al ingeschreven of geannuleerd zijn worden overgeslagen.';
+                })
                 ->form([
                     TextInput::make('since_days')
                         ->label('Aantal dagen terug')
                         ->helperText('Backfill geldt voor orders waarvan updated_at binnen de afgelopen X dagen valt.')
                         ->numeric()
                         ->minValue(1)
-                        ->maxValue(365)
+                        ->maxValue(3650)
                         ->default(30)
                         ->required(),
                 ])
                 ->action(function (array $data): void {
                     /** @var OrderHandledFlow $flow */
                     $flow = $this->record;
+
+                    if (! $flow->is_active) {
+                        Notification::make()
+                            ->title('Flow is niet actief')
+                            ->body('Activeer de flow eerst voordat je hem op bestaande bestellingen toepast.')
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
 
                     $stats = app(BackfillOrderHandledFlowService::class)->run(
                         flow: $flow,
@@ -63,9 +86,13 @@ class EditOrderHandledFlow extends EditRecord
 
     protected function afterSave(): void
     {
+        // Met meerdere trigger-statussen kunnen verschillende flows naast
+        // elkaar bestaan. Alleen flows met dezelfde trigger_status mogen
+        // niet allebei tegelijk actief zijn (single-active per status).
         if ($this->record->is_active) {
             OrderHandledFlow::query()
                 ->where('id', '!=', $this->record->id)
+                ->where('trigger_status', $this->record->trigger_status)
                 ->update(['is_active' => false]);
         }
     }
