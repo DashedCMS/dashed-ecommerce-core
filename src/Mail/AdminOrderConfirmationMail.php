@@ -146,7 +146,22 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
     {
         $orderProducts = ($this->order->orderProducts ?? collect())->filter(fn ($op) => ! empty($op->product_id));
         $productList = $orderProducts
-            ->map(fn ($op) => '• ' . (int) $op->quantity . 'x ' . ($op->name ?? '-'))
+            ->map(function ($op) {
+                $line = '• ' . (int) $op->quantity . 'x ' . ($op->name ?? '-');
+
+                // Custom product-options als sub-bulletjes onder de productregel.
+                $extras = is_array($op->product_extras ?? null) ? $op->product_extras : [];
+                foreach ($extras as $extra) {
+                    $name = is_array($extra) ? ($extra['name'] ?? null) : null;
+                    $value = is_array($extra) ? ($extra['value'] ?? null) : null;
+                    if ($name === null || $name === '' || $value === null || $value === '') {
+                        continue;
+                    }
+                    $line .= "\n   - " . $name . ': ' . $value;
+                }
+
+                return $line;
+            })
             ->implode("\n");
 
         $discountInfo = null;
@@ -159,6 +174,20 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
             $discountInfo .= ' - €' . number_format((float) $this->order->discount, 2, ',', '.');
         }
 
+        // Attributie / herkomst van de bestelling. Alleen tonen als er minimaal
+        // een utm_source bekend is, anders blijft het veld leeg.
+        $attributionInfo = null;
+        if (! empty($this->order->utm_source)) {
+            $parts = [$this->order->utm_source];
+            if (! empty($this->order->utm_medium)) {
+                $parts[] = $this->order->utm_medium;
+            }
+            if (! empty($this->order->utm_campaign)) {
+                $parts[] = $this->order->utm_campaign;
+            }
+            $attributionInfo = implode(' / ', $parts);
+        }
+
         return new TelegramSummary(
             title: 'Nieuwe bestelling #' . $this->order->invoice_id,
             fields: [
@@ -168,6 +197,7 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
                 'Producten' => $productList ?: null,
                 'Betaalmethode' => $this->order->payment_method ?? null,
                 'Kortingscode' => $discountInfo,
+                'Bron' => $attributionInfo,
             ],
             adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
             emoji: '🛒',

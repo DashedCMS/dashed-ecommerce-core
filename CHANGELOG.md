@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.11.2 - 2026-05-06
+
+### Changed
+- `AdminOrderConfirmationMail::telegramSummary()` toont nu twee extra zaken in de Telegram-notificatie:
+  - **Custom product-options** als sub-bulletjes onder elke productregel. Elke key/value uit `OrderProduct::$product_extras` wordt gerenderd als `   - <name>: <value>` zodat opties als "Waterdicht maken: Ja" direct zichtbaar zijn voor de admin.
+  - **Bron**-veld met de attributie uit de UTM-kolommen op de order (`utm_source / utm_medium / utm_campaign`, `/`-gescheiden). Wordt overgeslagen als `utm_source` leeg is, zodat organische / direct-traffic-orders geen kale "Bron"-regel krijgen.
+
 ## v4.11.1 - 2026-05-06
 
 ### Fixed
