@@ -284,8 +284,12 @@ class CartController extends Controller
 
         session(['abandoned_cart_recovery' => true]);
 
-        $discount = $request->query('discount');
-        if ($discount) {
+        // Alleen accepteren wat er als kortingscode uitziet. Google Ads en andere
+        // tracker-rewrites hebben in productie soms een hele URL in de discount
+        // querystring gezet; die rommel willen we niet in de sessie hebben en
+        // ook niet als "geweigerde code" loggen.
+        $discount = (string) $request->query('discount', '');
+        if ($discount !== '' && preg_match('/^[A-Za-z0-9_\-]{1,64}$/', $discount)) {
             session(['discountCode' => $discount]);
         }
 

@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.11.1 - 2026-05-06
+
+### Fixed
+- Productie-crash `SQLSTATE[22001]: String data, right truncated: 1406 Data too long for column 'message' at row 1` op `dashed__cart_logs`. De `cart.discount.applied`-log gebruikte `sprintf('Kortingscode "%s" toegepast', $code)` zonder de input te truncaten. Een Google Ads tracker-rewrite stopte een hele product-URL met `gclid` / `gad_source` / `gbraid`-parameters in de discount-querystring van de abandoned-cart recover-link, waardoor die URL als kortingscode werd toegepast (en geweigerd, en gelogd) terwijl de logregel niet meer in de VARCHAR(255) `message`-kolom paste.
+- Drie defensieve fixes:
+  - `CartActivityLogger::discountApplied()` truncate de code nu naar 60 chars met `mb_strimwidth(..., '...')` voor de message; volledige code blijft in de json `data`-kolom.
+  - `CartController::restoreCart()` accepteert alleen nog `?discount=`-waardes die voldoen aan `^[A-Za-z0-9_\-]{1,64}$`; bagger uit query-string-rewrites belandt niet meer in de sessie.
+  - Migratie `2026_05_06_090000_widen_cart_logs_message_to_text` zet `message` van VARCHAR(255) naar TEXT als safety-net voor toekomstige verbose log-events.
+
 ## v4.11.0 - 2026-05-05
 
 ### Added

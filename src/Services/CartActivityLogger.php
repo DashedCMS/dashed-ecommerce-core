@@ -68,10 +68,16 @@ class CartActivityLogger
 
     public static function discountApplied(Cart|int|null $cart, string $code, ?string $status = null, ?string $message = null): void
     {
+        // Truncate vrije-tekst-input naar een sane lengte voor de message-kolom.
+        // Een URL of andere bagger kan via querystring-injectie of tracker-rewrites
+        // in $code belanden; een MySQL VARCHAR(255) liep daardoor over ("Data too
+        // long for column 'message'"). De volledige code blijft in de json data.
+        $shortCode = mb_strimwidth((string) $code, 0, 60, '...');
+
         self::log(
             $cart,
             'cart.discount.applied',
-            $status === 'success' ? sprintf('Kortingscode "%s" toegepast', $code) : sprintf('Kortingscode "%s" geweigerd', $code),
+            $status === 'success' ? sprintf('Kortingscode "%s" toegepast', $shortCode) : sprintf('Kortingscode "%s" geweigerd', $shortCode),
             array_filter(['code' => $code, 'status' => $status, 'message' => $message])
         );
     }
