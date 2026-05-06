@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.13.1 - 2026-05-06
+
+### Fixed
+- Productie-crash op het admin-dashboard bij de `OrderAttributionStatsWidget`: zowel `SQLSTATE[42S22] Unknown column 'dashed__orders.deleted_at' in 'where clause'` als `Unknown column 'dashed__orders.id' in 'order clause'`. De widget bouwt zijn data via `Order::query()->fromSub(unionAll(...))`, maar (a) de SoftDeletes-scope voegt `WHERE dashed__orders.deleted_at IS NULL` toe en (b) Filament's table-tiebreaker voegt `ORDER BY dashed__orders.id` toe; beide kolommen bestaan niet in de derived `attribution_stats`-tabel. Drie fixes:
+  - `withoutGlobalScopes()` op de buitenste Order-query om SoftDeletes te skippen.
+  - `getModel()->setTable('attribution_stats')` zodat `qualifyColumn('id')` resolved naar de derived alias ipv `dashed__orders.id`.
+  - Dummy `0 as id`-alias in beide unions als veilige fallback.
+
 ## v4.13.0 - 2026-05-06
 
 ### Added

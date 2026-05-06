@@ -58,8 +58,15 @@ class OrderAttributionStatsWidget extends TableWidget
 
         $start = Carbon::now()->subDays(30);
 
+        // De buitenste Order-query draait `withoutGlobalScopes` zodat de
+        // SoftDeletes-scope niet `dashed__orders.deleted_at` op de
+        // derived `attribution_stats`-tabel probeert toe te passen
+        // (Order's $table blijft hardcoded `dashed__orders` ook na
+        // fromSub, dus `qualifyColumn('deleted_at')` valt buiten de
+        // beschikbare kolommen). De `id`-alias dient als fallback voor
+        // Filament's tiebreaker `order by id`.
         $sourceRows = DB::table('dashed__orders')
-            ->selectRaw("'Bron' as type, utm_source as value, COUNT(*) as order_count, COALESCE(SUM(total), 0) as revenue")
+            ->selectRaw("0 as id, 'Bron' as type, utm_source as value, COUNT(*) as order_count, COALESCE(SUM(total), 0) as revenue")
             ->whereNull('deleted_at')
             ->where('created_at', '>=', $start)
             ->whereNotNull('utm_source')
@@ -69,7 +76,7 @@ class OrderAttributionStatsWidget extends TableWidget
             ->limit(5);
 
         $campaignRows = DB::table('dashed__orders')
-            ->selectRaw("'Campagne' as type, utm_campaign as value, COUNT(*) as order_count, COALESCE(SUM(total), 0) as revenue")
+            ->selectRaw("0 as id, 'Campagne' as type, utm_campaign as value, COUNT(*) as order_count, COALESCE(SUM(total), 0) as revenue")
             ->whereNull('deleted_at')
             ->where('created_at', '>=', $start)
             ->whereNotNull('utm_campaign')
@@ -82,9 +89,19 @@ class OrderAttributionStatsWidget extends TableWidget
 
         // Een Eloquent-builder maken die paginatie ondersteunt door de
         // sub-query als FROM te gebruiken op een dummy-model (Order).
-        return Order::query()
+        // withoutGlobalScopes() voorkomt dat SoftDeletes
+        // `dashed__orders.deleted_at` op de derived tabel probeert.
+        // setTable() naar de subquery-alias zorgt dat Filament's
+        // tiebreaker `order by id` als `attribution_stats.id` resolved
+        // ipv `dashed__orders.id` (die kolom bestaat niet meer in de
+        // derived FROM).
+        $query = Order::query()
+            ->withoutGlobalScopes()
             ->fromSub($unionSql, 'attribution_stats')
-            ->select(['type', 'value', 'order_count', 'revenue'])
             ->orderByDesc('order_count');
+
+        $query->getModel()->setTable('attribution_stats');
+
+        return $query;
     }
 }
