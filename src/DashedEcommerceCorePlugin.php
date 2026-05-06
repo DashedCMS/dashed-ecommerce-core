@@ -48,6 +48,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\DiscountStatisticsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\AttributionStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerMatchSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\CartActionsPieChartWidget;
@@ -86,6 +87,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 POSCustomerPageRedirect::class,
                 ProductGroupStatisticsPage::class,
                 ActionsStatisticsPage::class,
+                AttributionStatisticsPage::class,
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
                 CustomerMatchSettingsPage::class,

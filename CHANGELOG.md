@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.12.0 - 2026-05-06
+
+### Added
+- Nieuwe Filament-pagina `Pages\Statistics\AttributionStatisticsPage` (navigatie: Statistics > Herkomst statistieken). Toont voor de gekozen periode 4 KPI-kaarten (orders, omzet, met-UTM, zonder-UTM) plus drie naast-elkaar-tabellen met top-bronnen, top-mediums en top-campagnes (orders + omzet + aandeel + gemiddelde order-waarde). Periode-selector identiek aan de bestaande `RevenueStatisticsPage`. Filters op `utm_source`, `utm_medium` en `utm_campaign` met dynamisch geladen options uit de DB. Top-N selector (10/25/50/100). Permission-gated via `view_statistics`.
+
+### Changed
+- `Herkomst`-blok op de bestel-detailpagina is nu altijd zichtbaar (was: alleen bij orders met attributie-data). Lege velden tonen "Niet ingesteld" in de Filament infolist zodat admins de feature ontdekken zonder dat ze een UTM-order moeten openen.
+
 ## v4.11.2 - 2026-05-06
 
 ### Changed
