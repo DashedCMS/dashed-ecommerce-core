@@ -73,9 +73,13 @@ class OpenOrderProductsTable
                     ->label('Fulfillment status')
                     ->options(Orders::getFulfillmentStatusses())
                     ->default('unhandled')
-                    ->query(fn (Builder $q, array $data) => ! empty($data['value'])
-                        ? $q->whereHas('order', fn ($s) => $s->where('fulfillment_status', $data['value']))
-                        : $q),
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('order', fn ($s) => $s->where('fulfillment_status', $data['value']));
+                    }),
 
                 SelectFilter::make('order_origin')
                     ->label('Order origin')
@@ -87,9 +91,13 @@ class OpenOrderProductsTable
                         ->pluck('order_origin', 'order_origin')
                         ->map(fn ($v) => ucfirst((string) $v))
                         ->toArray())
-                    ->query(fn (Builder $q, array $data) => ! empty($data['values'])
-                        ? $q->whereHas('order', fn ($s) => $s->whereIn('order_origin', $data['values']))
-                        : $q),
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('order', fn ($s) => $s->whereIn('order_origin', $data['values']));
+                    }),
             ])
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();

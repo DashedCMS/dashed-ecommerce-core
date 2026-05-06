@@ -61,7 +61,7 @@ class ListOpenOrderProducts extends ListRecords
                 ->icon('heroicon-o-document-arrow-down')
                 ->action(function () {
                     $grouped = ($this->activeTab ?? 'all') === 'grouped';
-                    $base = 'Openstaande orderproducten - '
+                    $base = 'Openstaande bestellingen - '
                         . (Customsetting::get('site_name') ?: 'Webshop')
                         . ' - ' . now()->format('Y-m-d');
                     $name = $grouped ? $base . ' (gegroepeerd)' : $base;
@@ -78,7 +78,7 @@ class ListOpenOrderProducts extends ListRecords
                 ->icon('heroicon-o-document-text')
                 ->action(function () {
                     $grouped = ($this->activeTab ?? 'all') === 'grouped';
-                    $base = 'Openstaande orderproducten - '
+                    $base = 'Openstaande bestellingen - '
                         . (Customsetting::get('site_name') ?: 'Webshop')
                         . ' - ' . now()->format('Y-m-d');
                     $name = $grouped ? $base . ' (gegroepeerd)' : $base;

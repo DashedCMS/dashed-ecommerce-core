@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.13.2 - 2026-05-06
+
+### Fixed
+- `Call to a member function order() on null` op de "Openstaande bestellingen"-lijst. De `SelectFilter::query()`-callbacks gebruikten parameter-namen `$q` en `$dir`, terwijl Filament v4 de injectie via parameter-NAAM doet (`query`, `data`, `state`). De callbacks kregen daardoor `null` ipv de Builder en het ternary-statement riep `null->whereHas('order', ...)` aan. Beide filters herschreven met de juiste parameter-namen `$query, $data` en een expliciete early-return bij lege filter-waardes.
+
+### Changed
+- Resource-naam **"Openstaande orderproducten" hernoemd naar "Openstaande bestellingen"** (model-label, navigatie-label en plural-label). Bestandsnamen van Excel/CSV-exports volgen mee: `Openstaande bestellingen - {site_name} - {datum}[.xlsx|.csv]`.
+- **Footer-widget op de bewerk-pagina van een product**: nieuwe `Filament\Widgets\Product\ProductOpenOrdersWidget` toont een tabel met alle order-regels van bestellingen die nog niet zijn afgehandeld waarin dit product voorkomt. Heading bevat een telling (`X regels, Y stuks`). Lege staat met vriendelijke tekst.
+- **Footer-widget op de bewerk-pagina van een product-groep**: zelfde concept (`ProductGroupOpenOrdersWidget`) maar bundelt orderregels van alle producten in de groep, met een extra kolom "Product variant" zodat zichtbaar is welke variant gekocht is.
+
 ## v4.13.1 - 2026-05-06
 
 ### Fixed

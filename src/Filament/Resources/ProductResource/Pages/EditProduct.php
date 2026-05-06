@@ -20,6 +20,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductOpenOrdersWidget;
 
 class EditProduct extends EditRecord
 {
@@ -28,6 +29,18 @@ class EditProduct extends EditRecord
     protected static string $resource = ProductResource::class;
 
     protected static ?string $title = 'Bewerk product';
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            ProductOpenOrdersWidget::class,
+        ];
+    }
+
+    protected function getFooterWidgetsColumns(): int|string|array
+    {
+        return 1;
+    }
 
     public function mount($record): void
     {

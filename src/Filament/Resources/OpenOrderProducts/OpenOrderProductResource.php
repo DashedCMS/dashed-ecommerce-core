@@ -19,13 +19,13 @@ class OpenOrderProductResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'E-commerce';
 
-    protected static ?string $label = 'Openstaand orderproduct';
+    protected static ?string $label = 'Openstaande bestelling';
 
-    protected static ?string $pluralLabel = 'Openstaande orderproducten';
+    protected static ?string $pluralLabel = 'Openstaande bestellingen';
 
     public static function getNavigationLabel(): string
     {
-        return 'Openstaande orderproducten';
+        return 'Openstaande bestellingen';
     }
 
     public static function table(Table $table): Table
