@@ -6,6 +6,7 @@ use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
@@ -119,6 +120,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductFilterOptionResource::class,
                 ProductCharacteristicResource::class,
                 OrderResource::class,
+                OpenOrderProductResource::class,
                 ProductTabResource::class,
                 ProductExtraResource::class,
                 ProductGroupResource::class,

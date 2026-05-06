@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.13.0 - 2026-05-06
+
+### Added
+- Nieuwe Filament-resource `OpenOrderProductResource` onder E-commerce > "Openstaande orderproducten". Toont order-regels van bestellingen waarvan `fulfillment_status = 'unhandled'` is (verzendkosten/payment_costs zijn uitgesloten). Read-only (geen create/edit). Twee tabs: **"Per orderregel"** (default, 1 rij per OrderProduct) en **"Gegroepeerd per product"** (MIN/SUM-aggregatie via een `fromSub`-wrapper zodat MySQL `ONLY_FULL_GROUP_BY` en SoftDeletes-derived-select beide werken). Kolommen: bestelling, product_id, productnaam, sku, aantal, order_origin (badge, sorteerbaar via leftJoin), fulfillment-status, klant, besteld op. Filters: `fulfillment_status` (default `unhandled`) en `order_origin` (multi-select).
+- Twee header-actions op de lijst-pagina: **"Exporteer Excel"** (.xlsx) en **"Exporteer CSV"** (.csv) via `maatwebsite/excel`. Bestandsnaam volgens patroon `Openstaande orderproducten - {site_name} - YYYY-MM-DD[.xlsx|.csv]`, met `(gegroepeerd)`-suffix wanneer het gegroepeerde tabblad actief is. De export herbruikt `OpenOrderProductResource::getEloquentQuery()` zodat dezelfde filters gelden.
+
 ## v4.12.0 - 2026-05-06
 
 ### Added
