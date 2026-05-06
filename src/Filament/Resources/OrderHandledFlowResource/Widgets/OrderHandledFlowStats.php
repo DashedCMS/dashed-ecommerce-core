@@ -2,12 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets;
 
+use Illuminate\Database\Eloquent\Model;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderHandledClick;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
-use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 
 /**
  * Stats-cards onderaan de flow edit-pagina. Telt inschrijvingen, klikken,
@@ -16,7 +16,7 @@ use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
  */
 class OrderHandledFlowStats extends StatsOverviewWidget
 {
-    public ?OrderHandledFlow $record = null;
+    public ?Model $record = null;
 
     protected function getStats(): array
     {

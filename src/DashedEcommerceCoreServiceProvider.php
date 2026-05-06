@@ -1425,6 +1425,14 @@ MARKDOWN,
             'dashed.dashed-ecommerce-core.filament.resources.abandoned-cart-flow-resource.widgets.abandoned-cart-flow-stats',
             AbandonedCartFlowStats::class,
         );
+        Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.resources.order-handled-flow-resource.widgets.order-handled-flow-stats',
+            \Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets\OrderHandledFlowStats::class,
+        );
+        Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.resources.order-handled-flow-resource.widgets.order-handled-flow-enrollments',
+            \Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets\OrderHandledFlowEnrollments::class,
+        );
 
         //POS components
         Livewire::component('point-of-sale', POSPage::class);

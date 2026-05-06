@@ -153,10 +153,15 @@ class OrderHandledFlow extends Model
 
         $locale = app()->getLocale();
 
+        // Prefix de UUID-keys met een 0-padded index zodat MySQL JSON
+        // (dat object-keys alfabetisch sorteert) de blokken altijd in
+        // exact deze volgorde teruggeeft. Filament Builder accepteert
+        // willekeurige stringkeys, dus de prefix is enkel cosmetisch.
         $buildBlocks = function (array $items): array {
             $blocks = [];
-            foreach ($items as $item) {
-                $blocks[(string) Str::uuid()] = $item;
+            foreach ($items as $i => $item) {
+                $key = sprintf('%04d-%s', $i, (string) Str::uuid());
+                $blocks[$key] = $item;
             }
 
             return $blocks;

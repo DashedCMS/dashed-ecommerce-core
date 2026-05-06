@@ -8,8 +8,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 
 /**
@@ -22,7 +22,7 @@ class OrderHandledFlowEnrollments extends TableWidget
 
     protected static ?string $heading = 'Inschrijvingen';
 
-    public ?OrderHandledFlow $record = null;
+    public ?Model $record = null;
 
     public function table(Table $table): Table
     {
