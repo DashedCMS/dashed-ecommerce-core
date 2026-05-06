@@ -56,6 +56,10 @@ $dashed-ecommerce-core = new Dashed\DashedEcommerceCore();
 echo $dashed-ecommerce-core->echoPhrase('Hello, Dashed!');
 ```
 
+### UTM- en herkomst-tracking
+
+UTM-parameters (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`) en click-IDs (`gclid`, `fbclid`, `msclkid`) worden automatisch uit de querystring opgevangen door de `CaptureAttributionMiddleware` zodra een bezoeker op de webshop landt. De waardes worden in de sessie bewaard, gekoppeld aan de winkelwagen op het moment dat deze wordt aangemaakt, en bij het plaatsen van een bestelling overgenomen op de order. Op de bestel-detailpagina in het admin verschijnt het "Herkomst"-blok, en de orders-lijstweergave heeft filters op bron, medium en campagne. Op het dashboard staat de widget "Herkomst-statistieken (30 dagen)" die top-bronnen en top-campagnes per omzet en aantal toont. Tracking is uit te zetten via Bestellingen-instellingen, "UTM-tracking inschakelen".
+
 ## Testing
 
 ```bash

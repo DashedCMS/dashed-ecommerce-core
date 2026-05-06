@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.11.0 - 2026-05-05
+
+### Added
+- **UTM- en attributie-tracking voor carts en orders.** Nieuwe migratie `2026_05_05_180000_add_attribution_to_carts_and_orders` voegt aan zowel `dashed__carts` als `dashed__orders` de kolommen `utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `gclid`, `fbclid`, `msclkid`, `landing_page`, `landing_page_referrer`, `attribution_first_touch_at`, `attribution_last_touch_at` en `attribution_extra` (json) toe. Indexen op `(utm_source, utm_medium)` en `utm_campaign` voor filtering.
+- Nieuwe middleware `Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware` (geregistreerd via `cms()->builder('frontendMiddlewares')`) leest UTM-parameters en click-IDs uit de querystring, slaat deze op in de sessie als `dashed_attribution.first_touch` / `last_touch`, en bewaart ook bij organisch / direct verkeer minimaal de landingspagina.
+- Nieuwe service `Services\Attribution\AttributionTracker` met `captureFromRequest`, `pullFromSession`, `attachToCart`, `attachToOrder` en `clearSession`. Cart-model heeft een `created`-listener die de service aanroept; Order-model heeft een vangnet in `creating()` dat de attributie via cart of sessie alsnog vult als de aanroepende code dit niet zelf doet. De Checkout-livewire-component roept `attachToOrder` expliciet aan na `Order::save()` zodat de waardes voor `OrderMarkedAsPaidEvent` op de order staan.
+- Filament-admin: nieuwe sectie "Herkomst" op de bestel-detailpagina (livewire-component `AttributionInformationList`), nieuwe `SelectFilter`s voor `utm_source`, `utm_medium` en `utm_campaign` op de orders-lijstweergave, en drie toggleable kolommen "Bron", "Medium", "Campagne". Sectie wordt verborgen op orders zonder attributie-data.
+- Nieuwe widget `Filament\Widgets\Statistics\OrderAttributionStatsWidget` toont top-bronnen en top-campagnes van de afgelopen 30 dagen op het dashboard (gecombineerde tabel met type-badge, aantal bestellingen en omzet).
+- `OrderListExport` voegt 11 nieuwe kolommen toe (UTM-velden, click-IDs, landingspagina, first/last-touch).
+- `OrderSettingsPage` heeft een nieuwe sectie "UTM- / herkomst-tracking" met toggles `attribution_tracking_enabled` (default ON, master kill-switch voor de middleware) en `attribution_show_on_invoice` (default OFF, customsetting opgeslagen voor toekomstige invoice-template integratie).
+- Tests: `tests/Unit/Services/Attribution/AttributionTrackerTest.php` en `tests/Feature/Middleware/CaptureAttributionMiddlewareTest.php`.
+
 ## v4.10.0 - 2026-05-05
 
 ### Changed

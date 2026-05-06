@@ -26,11 +26,27 @@ class Cart extends Model
         'deposit_payment_method_id',
         'meta',
         'abandoned_email',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_term',
+        'utm_content',
+        'gclid',
+        'fbclid',
+        'msclkid',
+        'landing_page',
+        'landing_page_referrer',
+        'attribution_first_touch_at',
+        'attribution_last_touch_at',
+        'attribution_extra',
     ];
 
     protected $casts = [
         'meta' => 'array',
         'prices_ex_vat' => 'boolean',
+        'attribution_extra' => 'array',
+        'attribution_first_touch_at' => 'datetime',
+        'attribution_last_touch_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -41,6 +57,15 @@ class Cart extends Model
             }
             if (! $cart->type) {
                 $cart->type = 'default';
+            }
+        });
+
+        static::created(function (Cart $cart) {
+            // Vang attributie op zodra de cart wordt aangemaakt.
+            try {
+                \Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker::attachToCart($cart);
+            } catch (\Throwable $e) {
+                report($e);
             }
         });
     }

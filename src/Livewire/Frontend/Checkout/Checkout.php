@@ -29,6 +29,7 @@ use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
@@ -898,6 +899,14 @@ class Checkout extends Component
         $order->prices_ex_vat = (bool) ($cartForVatMode->prices_ex_vat ?? false);
 
         $order->save();
+
+        try {
+            // Zorg dat de attributie-data uit cart of sessie ook na de save
+            // op de order staat (idempotent: bestaande waardes blijven).
+            AttributionTracker::attachToOrder($order, $cartForVatMode ?? null);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         CartActivityLogger::orderConverted($order->cart_id, $order->id);
 

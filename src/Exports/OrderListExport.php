@@ -51,6 +51,17 @@ class OrderListExport implements FromArray
                 'Bestellings herkomst',
                 'Aangekocht op',
                 'Gekochte producten',
+                'UTM bron',
+                'UTM medium',
+                'UTM campagne',
+                'UTM term',
+                'UTM content',
+                'Google Click ID',
+                'Facebook Click ID',
+                'Microsoft Click ID',
+                'Landingspagina',
+                'First-touch',
+                'Last-touch',
             ],
         ];
 
@@ -109,6 +120,17 @@ class OrderListExport implements FromArray
                 $order->order_origin,
                 $order->created_at,
                 $products,
+                $order->utm_source,
+                $order->utm_medium,
+                $order->utm_campaign,
+                $order->utm_term,
+                $order->utm_content,
+                $order->gclid,
+                $order->fbclid,
+                $order->msclkid,
+                $order->landing_page,
+                optional($order->attribution_first_touch_at)->toIso8601String(),
+                optional($order->attribution_last_touch_at)->toIso8601String(),
             ];
         }
 

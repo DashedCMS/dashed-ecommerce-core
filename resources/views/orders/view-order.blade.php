@@ -22,6 +22,21 @@
                 <div>
                     @livewire('order-payments-list', ['order' => $record])
                 </div>
+                @php
+                    $attributionFields = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid','fbclid','msclkid','landing_page','landing_page_referrer','attribution_first_touch_at','attribution_last_touch_at'];
+                    $hasAttribution = false;
+                    foreach ($attributionFields as $field) {
+                        if (! empty($record->{$field})) { $hasAttribution = true; break; }
+                    }
+                    if (! $hasAttribution && is_array($record->attribution_extra) && ! empty($record->attribution_extra)) {
+                        $hasAttribution = true;
+                    }
+                @endphp
+                @if($hasAttribution)
+                    <div>
+                        @livewire('order-attribution-information-list', ['order' => $record], key('order-attribution-'.$record->id))
+                    </div>
+                @endif
             </div>
         </div>
         <div class="md:col-span-2 flex flex-col gap-2">

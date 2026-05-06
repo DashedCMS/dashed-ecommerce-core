@@ -56,6 +56,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsP
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\OrderAttributionStatsWidget;
 
 class DashedEcommerceCorePlugin implements Plugin
 {
@@ -100,6 +101,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 DashboardFunLineChartStats::class,
                 SoldoutCount::class,
                 CartStatistics::class,
+                OrderAttributionStatsWidget::class,
             ])
             ->resources([
                 PaymentMethodResource::class,

@@ -371,6 +371,18 @@ class OrderResource extends Resource
                     ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('utm_source')
+                    ->label('Bron')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
+                TextColumn::make('utm_medium')
+                    ->label('Medium')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
+                TextColumn::make('utm_campaign')
+                    ->label('Campagne')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -424,6 +436,39 @@ class OrderResource extends Resource
                                 fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
+                SelectFilter::make('utm_source')
+                    ->label('Bron (UTM)')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => Order::query()
+                        ->whereNotNull('utm_source')
+                        ->where('utm_source', '!=', '')
+                        ->groupBy('utm_source')
+                        ->orderBy('utm_source')
+                        ->pluck('utm_source', 'utm_source')
+                        ->toArray()),
+                SelectFilter::make('utm_medium')
+                    ->label('Medium (UTM)')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => Order::query()
+                        ->whereNotNull('utm_medium')
+                        ->where('utm_medium', '!=', '')
+                        ->groupBy('utm_medium')
+                        ->orderBy('utm_medium')
+                        ->pluck('utm_medium', 'utm_medium')
+                        ->toArray()),
+                SelectFilter::make('utm_campaign')
+                    ->label('Campagne (UTM)')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => Order::query()
+                        ->whereNotNull('utm_campaign')
+                        ->where('utm_campaign', '!=', '')
+                        ->groupBy('utm_campaign')
+                        ->orderBy('utm_campaign')
+                        ->pluck('utm_campaign', 'utm_campaign')
+                        ->toArray()),
                 Filter::make('customer_match')
                     ->schema([
                         TextInput::make('value')

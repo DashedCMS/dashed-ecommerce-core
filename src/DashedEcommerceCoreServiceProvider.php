@@ -45,6 +45,7 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentsList;
 use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
+use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
@@ -85,6 +86,8 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\OrderAttributionStatsWidget;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
@@ -1394,6 +1397,7 @@ MARKDOWN,
         Livewire::component('order-payments-list', PaymentsList::class);
         Livewire::component('order-logs-list', LogsList::class);
         Livewire::component('order-customer-information-block-list', CustomerInformationBlockList::class);
+        Livewire::component('order-attribution-information-list', AttributionInformationList::class);
         Livewire::component('order-view-statusses', ViewStatusses::class);
         Livewire::component('order-create-track-and-trace', CreateTrackAndTrace::class);
 
@@ -1675,6 +1679,7 @@ MARKDOWN,
             'frontendMiddlewares',
             [
                 EcommerceFrontendMiddleware::class,
+                CaptureAttributionMiddleware::class,
             ]
         );
 

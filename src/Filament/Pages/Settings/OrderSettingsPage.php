@@ -92,6 +92,8 @@ class OrderSettingsPage extends Page
         }
 
         $formData["apis"] = Customsetting::get('apis', null, []);
+        $formData["attribution_tracking_enabled"] = (bool) Customsetting::get('attribution_tracking_enabled', null, true);
+        $formData["attribution_show_on_invoice"] = (bool) Customsetting::get('attribution_show_on_invoice', null, false);
         $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
         $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
         $formData["packing_slip_printer_connector_type"] = Customsetting::get('packing_slip_printer_connector_type', null, '');
@@ -164,6 +166,20 @@ class OrderSettingsPage extends Page
         $newSchema = [
             TextEntry::make('label')
                 ->state("Algemene instelling voor bestellingen"),
+            Section::make('UTM- / herkomst-tracking')
+                ->description('Vangt UTM-parameters (utm_source, utm_medium, ...) en click-IDs (gclid, fbclid, msclkid) automatisch op uit de querystring zodra een bezoeker op de webshop landt. Deze waardes worden bewaard op de winkelwagen en bij plaatsing op de bestelling, zodat je per bestelling kunt zien via welk kanaal of welke campagne een klant binnenkwam.')
+                ->columnSpanFull()
+                ->schema([
+                    Toggle::make('attribution_tracking_enabled')
+                        ->label('UTM-tracking inschakelen')
+                        ->helperText('Als dit uitstaat, slaat de middleware geen UTM-parameters meer op. Bestaande data op orders blijft bewaard.')
+                        ->default(true),
+                    Toggle::make('attribution_show_on_invoice')
+                        ->label('Toon UTM-velden in factuur-PDF')
+                        ->helperText('Voegt een klein blok met de bron-, medium- en campagne-waardes onderaan de factuur toe. Standaard uit, want klanten hoeven dit normaal niet te zien.')
+                        ->default(false),
+                ])
+                ->columns(2),
             Section::make('Facturen printer')->columnSpanFull()
                 ->schema([
                     Select::make("invoice_printer_connector_type")
@@ -401,6 +417,8 @@ class OrderSettingsPage extends Page
         }
 
         Customsetting::set('apis', $this->form->getState()["apis"] ?? []);
+        Customsetting::set('attribution_tracking_enabled', (bool) ($this->form->getState()['attribution_tracking_enabled'] ?? true));
+        Customsetting::set('attribution_show_on_invoice', (bool) ($this->form->getState()['attribution_show_on_invoice'] ?? false));
 
         foreach ($locales as $locale) {
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
