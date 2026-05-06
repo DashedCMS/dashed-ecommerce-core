@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.15.0 - 2026-05-06
+
+### Added
+- **Statistieken-widget onderaan de OrderHandledFlow edit-pagina** (`OrderHandledFlowStats`). 6 stats-cards: aantal inschrijvingen, actief in flow, geannuleerd (met breakdown per `cancelled_reason` als description), klikken (totaal + uniek + ratio), geconverteerde klanten (klanten die na inschrijving alsnog opnieuw betaalden) en bijbehorende vervolg-omzet.
+- **Inschrijvingen-tabel onderaan de edit-pagina** (`OrderHandledFlowEnrollments`). Lijst met alle orders die in de flow zitten of zaten: bestelling-nummer (klikt door naar order-edit), klant + e-mail, ingeschreven op, actief-icon (check / kruis), reden-badge (`Klik op link`, `Afgemeld via link`, `Recent betaalde order`, `Mail mislukt`, `Gemigreerd`), geannuleerd-op kolom (toggleable). Filter "Alleen actieve" + filter op annuleer-reden. Default sort: meest recente inschrijving bovenaan.
+
 ## v4.14.1 - 2026-05-06
 
 ### Changed

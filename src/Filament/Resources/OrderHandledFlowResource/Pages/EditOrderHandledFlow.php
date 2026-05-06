@@ -11,10 +11,25 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Services\OrderHandledFlow\BackfillOrderHandledFlowService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets\OrderHandledFlowStats;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets\OrderHandledFlowEnrollments;
 
 class EditOrderHandledFlow extends EditRecord
 {
     protected static string $resource = OrderHandledFlowResource::class;
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            OrderHandledFlowStats::class,
+            OrderHandledFlowEnrollments::class,
+        ];
+    }
+
+    public function getFooterWidgetsColumns(): int|array
+    {
+        return 1;
+    }
 
     protected function getHeaderActions(): array
     {
