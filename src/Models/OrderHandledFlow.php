@@ -163,8 +163,11 @@ class OrderHandledFlow extends Model
         };
 
         $blocks = $buildBlocks([
-            ['type' => 'heading', 'data' => ['content' => 'Hoi :firstName:, hoe vond je je bestelling?']],
-            ['type' => 'paragraph', 'data' => ['content' => '<p>Bedankt dat je bij <strong>:siteName:</strong> hebt besteld (bestelnummer :orderNumber:). We zijn benieuwd hoe je je bestelling vond! Een review helpt ons enorm en helpt ook andere klanten een goede keuze maken.</p>']],
+            // Blok 1: korte begroeting als koptekst.
+            ['type' => 'heading', 'data' => ['content' => 'Hoi :firstName:']],
+            // Blok 2: hoofdtekst van de mail met de vraag om een review.
+            ['type' => 'paragraph', 'data' => ['content' => '<p>Bedankt dat je bij <strong>:siteName:</strong> hebt besteld (bestelnummer :orderNumber:). We zijn benieuwd hoe je je bestelling vond! Een review helpt ons enorm en helpt andere klanten een goede keuze maken.</p>']],
+            // Blok 3: call-to-action knop naar de review-URL.
             ['type' => 'button', 'data' => ['label' => 'Schrijf een review', 'url' => ':reviewUrl:']],
         ]);
 
