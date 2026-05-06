@@ -99,8 +99,7 @@ class OrderHandledFlowResource extends Resource
                 ->columnSpanFull(),
 
             Section::make('Review-URLs (A/B test)')
-                ->description('Zodra een inschrijving start, wordt 1 van deze URLs gewogen willekeurig gekozen en op de inschrijving vastgelegd. Alle stappen van de flow voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat conversies per platform telbaar zijn.')
-                ->helperText('Laat leeg om de globale Customsetting "order_handled_flow_review_url" te gebruiken. Vul meerdere rijen in om A/B te testen tussen review-platformen. De gekozen URL wordt per inschrijving vastgelegd zodat conversies per platform telbaar zijn.')
+                ->description('Zodra een inschrijving start, wordt 1 van deze URLs gewogen willekeurig gekozen en op de inschrijving vastgelegd. Alle stappen van de flow voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat conversies per platform telbaar zijn. Laat leeg om de globale Customsetting "order_handled_flow_review_url" te gebruiken; vul meerdere rijen in om A/B te testen tussen review-platformen.')
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('review_urls')
