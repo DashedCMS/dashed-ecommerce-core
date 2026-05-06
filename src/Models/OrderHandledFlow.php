@@ -12,6 +12,7 @@ class OrderHandledFlow extends Model
 
     protected $fillable = [
         'name',
+        'trigger_status',
         'is_active',
         'discount_prefix',
         'skip_if_recently_ordered_within_days',
@@ -19,6 +20,7 @@ class OrderHandledFlow extends Model
     ];
 
     protected $casts = [
+        'trigger_status' => 'string',
         'is_active' => 'boolean',
         'cancel_on_link_click' => 'boolean',
         'skip_if_recently_ordered_within_days' => 'integer',
@@ -27,10 +29,12 @@ class OrderHandledFlow extends Model
     protected static function booted(): void
     {
         static::saved(function (OrderHandledFlow $flow) {
-            // Maximaal 1 actieve flow tegelijk - in lijn met AbandonedCartFlow.
-            if ($flow->is_active && $flow->wasChanged('is_active')) {
+            // Maximaal 1 actieve flow per trigger_status. Verschillende statussen
+            // (handled / shipped / packed / ...) mogen los van elkaar actief zijn.
+            if ($flow->is_active && ($flow->wasChanged('is_active') || $flow->wasChanged('trigger_status'))) {
                 static::query()
                     ->where('id', '!=', $flow->id)
+                    ->where('trigger_status', $flow->trigger_status)
                     ->where('is_active', true)
                     ->update(['is_active' => false]);
             }
@@ -49,15 +53,37 @@ class OrderHandledFlow extends Model
             ->orderBy('sort_order');
     }
 
+    /**
+     * Backwards-compat: geeft de eerste actieve flow voor de "handled"-status terug.
+     * Nieuwe code gebruikt {@see getActiveForStatus()}.
+     */
     public static function getActive(): ?self
     {
-        return static::query()->where('is_active', true)->first();
+        return static::getActiveForStatus('handled');
+    }
+
+    public static function getActiveForStatus(string $status): ?self
+    {
+        return static::query()
+            ->where('is_active', true)
+            ->where('trigger_status', $status)
+            ->first();
     }
 
     public function activate(): void
     {
-        static::query()->where('id', '!=', $this->id)->update(['is_active' => false]);
+        // Alleen flows met dezelfde trigger_status uitschakelen, andere statussen
+        // mogen tegelijk actief blijven.
+        static::query()
+            ->where('id', '!=', $this->id)
+            ->where('trigger_status', $this->trigger_status)
+            ->update(['is_active' => false]);
         $this->update(['is_active' => true]);
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(OrderFlowEnrollment::class, 'flow_id');
     }
 
     /**
@@ -69,6 +95,7 @@ class OrderHandledFlow extends Model
     {
         $flow = static::create([
             'name' => 'Standaard flow',
+            'trigger_status' => 'handled',
             'is_active' => true,
             'discount_prefix' => null,
             'skip_if_recently_ordered_within_days' => 30,

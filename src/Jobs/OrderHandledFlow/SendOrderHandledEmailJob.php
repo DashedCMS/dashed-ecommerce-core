@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Mail\OrderHandledMail;
+use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlowStep;
 
 class SendOrderHandledEmailJob implements ShouldQueue
@@ -36,7 +37,7 @@ class SendOrderHandledEmailJob implements ShouldQueue
         $step = OrderHandledFlowStep::with('flow')->find($this->flowStepId);
 
         if (! $order || ! $step) {
-            Log::info('order-handled-flow: order of stap niet meer aanwezig - skip', [
+            Log::info('order-flow: order of stap niet meer aanwezig - skip', [
                 'order_id' => $this->orderId,
                 'flow_step_id' => $this->flowStepId,
             ]);
@@ -44,19 +45,59 @@ class SendOrderHandledEmailJob implements ShouldQueue
             return;
         }
 
-        // 1. Order moet nog steeds afgehandeld zijn.
-        if ($order->fulfillment_status !== 'handled') {
-            Log::info('order-handled-flow: fulfillment_status niet langer handled - skip', [
+        $flow = $step->flow;
+        if (! $flow) {
+            Log::info('order-flow: flow niet meer aanwezig - skip', [
                 'order_id' => $order->id,
-                'fulfillment_status' => $order->fulfillment_status,
+                'flow_step_id' => $step->id,
             ]);
 
             return;
         }
 
-        // 2. Flow geannuleerd via klik of unsubscribe.
-        if ($order->handled_flow_cancelled_at !== null) {
-            Log::info('order-handled-flow: flow geannuleerd voor deze order - skip', [
+        $triggerStatus = (string) ($flow->trigger_status ?: 'handled');
+
+        // 1. Order moet nog steeds in de status staan waarop de flow getriggerd is.
+        if ($order->fulfillment_status !== $triggerStatus) {
+            Log::info('order-flow: fulfillment_status niet langer gelijk aan trigger - skip', [
+                'order_id' => $order->id,
+                'fulfillment_status' => $order->fulfillment_status,
+                'trigger_status' => $triggerStatus,
+            ]);
+
+            return;
+        }
+
+        // 2. Inschrijving moet bestaan en niet geannuleerd zijn (klik / unsubscribe / cooldown).
+        $enrollment = OrderFlowEnrollment::query()
+            ->where('order_id', $order->id)
+            ->where('flow_id', $flow->id)
+            ->first();
+
+        if (! $enrollment) {
+            Log::info('order-flow: geen enrollment voor (order, flow) - skip', [
+                'order_id' => $order->id,
+                'flow_id' => $flow->id,
+            ]);
+
+            return;
+        }
+
+        if ($enrollment->cancelled_at !== null) {
+            Log::info('order-flow: enrollment geannuleerd - skip', [
+                'order_id' => $order->id,
+                'flow_id' => $flow->id,
+                'cancelled_at' => $enrollment->cancelled_at,
+                'cancelled_reason' => $enrollment->cancelled_reason,
+            ]);
+
+            return;
+        }
+
+        // Backwards-compat fallback: legacy "handled"-flows zonder enrollment-rij
+        // (oude migratie zonder backfill) keken naar deze kolom op de order.
+        if ($triggerStatus === 'handled' && $order->handled_flow_cancelled_at !== null) {
+            Log::info('order-flow: legacy handled_flow_cancelled_at gezet - skip', [
                 'order_id' => $order->id,
                 'cancelled_at' => $order->handled_flow_cancelled_at,
             ]);
@@ -64,20 +105,19 @@ class SendOrderHandledEmailJob implements ShouldQueue
             return;
         }
 
-        // 4. Flow of stap mag niet langer inactief zijn.
-        $flow = $step->flow;
-        if (! $flow || ! $flow->is_active || ! $step->is_active) {
-            Log::info('order-handled-flow: flow of stap niet meer actief - skip', [
+        // 3. Flow of stap mag niet langer inactief zijn.
+        if (! $flow->is_active || ! $step->is_active) {
+            Log::info('order-flow: flow of stap niet meer actief - skip', [
                 'order_id' => $order->id,
                 'flow_step_id' => $step->id,
-                'flow_active' => $flow?->is_active,
+                'flow_active' => $flow->is_active,
                 'step_active' => $step->is_active,
             ]);
 
             return;
         }
 
-        // 3. Klant heeft recent een nieuwe betaalde bestelling geplaatst.
+        // 4. Cooldown: klant heeft recent een nieuwe betaalde bestelling geplaatst.
         $cooldownDays = (int) ($flow->skip_if_recently_ordered_within_days ?? 0);
         if ($cooldownDays > 0 && ! blank($order->email)) {
             $hasRecentPaid = Order::query()
@@ -88,12 +128,20 @@ class SendOrderHandledEmailJob implements ShouldQueue
                 ->exists();
 
             if ($hasRecentPaid) {
-                Log::info('order-handled-flow: recente betaalde bestelling gevonden - cancel + skip', [
+                Log::info('order-flow: recente betaalde bestelling gevonden - cancel + skip', [
                     'order_id' => $order->id,
+                    'flow_id' => $flow->id,
                     'cooldown_days' => $cooldownDays,
                 ]);
 
-                $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
+                $enrollment->forceFill([
+                    'cancelled_at' => now(),
+                    'cancelled_reason' => 'recent_paid_order',
+                ])->save();
+
+                if ($triggerStatus === 'handled') {
+                    $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
+                }
 
                 return;
             }
@@ -104,18 +152,26 @@ class SendOrderHandledEmailJob implements ShouldQueue
             Mail::to($order->email)->send(new OrderHandledMail($order, $step, $locale));
         } catch (\Throwable $e) {
             report($e);
-            Log::warning('order-handled-flow: mail kon niet verstuurd worden', [
+            Log::warning('order-flow: mail kon niet verstuurd worden', [
                 'order_id' => $order->id,
+                'flow_id' => $flow->id,
                 'flow_step_id' => $step->id,
                 'error' => $e->getMessage(),
             ]);
 
-            // Postmark levert bv. een 406 als het adres als inactive
-            // is gemarkeerd (hard bounce / spam complaint). Verdere
-            // stappen voor dezelfde ontvanger zouden ook falen, dus
-            // we cancellen de flow en laten de job slagen zodat hij
-            // niet eindeloos retried wordt.
-            $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
+            // Postmark levert bv. een 406 als het adres als inactive is
+            // gemarkeerd (hard bounce / spam complaint). Verdere stappen voor
+            // dezelfde ontvanger zouden ook falen, dus we cancellen de
+            // inschrijving en laten de job slagen zodat hij niet eindeloos
+            // retried wordt.
+            $enrollment->forceFill([
+                'cancelled_at' => now(),
+                'cancelled_reason' => 'mail_failed',
+            ])->save();
+
+            if ($triggerStatus === 'handled') {
+                $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
+            }
         }
     }
 }

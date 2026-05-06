@@ -8,12 +8,12 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Listeners\UpdateOrderReservedStock;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsHandledEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 use Dashed\DashedEcommerceCore\Listeners\PrintDocumentsAfterPaidOrder;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Dashed\DashedEcommerceCore\Listeners\AbandonedCart\CancelPendingAbandonedEmailsListener;
 use Dashed\DashedEcommerceCore\Listeners\AbandonedCart\QueueAbandonedCartEmailsForOrderListener;
-use Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow\QueueOrderHandledEmailsListener;
+use Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow\QueueOrderFlowEmailsListener;
 
 class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
 {
@@ -36,8 +36,8 @@ class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
         OrderCancelledEvent::class => [
             QueueAbandonedCartEmailsForOrderListener::class,
         ],
-        OrderMarkedAsHandledEvent::class => [
-            QueueOrderHandledEmailsListener::class,
+        OrderFulfillmentStatusChangedEvent::class => [
+            QueueOrderFlowEmailsListener::class,
         ],
     ];
 

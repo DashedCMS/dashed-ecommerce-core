@@ -7,13 +7,15 @@ namespace Dashed\DashedEcommerceCore\Services\OrderHandledFlow;
 use Illuminate\Support\Carbon;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
+use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Jobs\OrderHandledFlow\SendOrderHandledEmailJob;
 
 /**
- * Backfill: voor een actieve order-handled flow plant alsnog de stappen voor
- * bestaande orders die binnen het opgegeven aantal dagen op fulfillment_status
- * = handled zijn gezet maar nog niet in de flow zitten. Records met
- * handled_flow_started_at of handled_flow_cancelled_at worden overgeslagen.
+ * Backfill: voor een actieve order-opvolg flow plant alsnog de stappen voor
+ * bestaande orders die binnen het opgegeven aantal dagen op de geconfigureerde
+ * fulfillment-status (trigger_status) van de flow zijn gezet maar nog niet in
+ * de flow zitten. Records met een bestaande enrollment (gecanceld of niet)
+ * worden overgeslagen zodat we niet dubbel inschrijven.
  */
 class BackfillOrderHandledFlowService
 {
@@ -36,7 +38,7 @@ class BackfillOrderHandledFlowService
             'emails_dispatched' => 0,
         ];
 
-        $flow = $flow ?? OrderHandledFlow::getActive();
+        $flow = $flow ?? OrderHandledFlow::getActiveForStatus('handled');
         if (! $flow || ! $flow->is_active) {
             return $stats;
         }
@@ -46,12 +48,12 @@ class BackfillOrderHandledFlowService
             return $stats;
         }
 
+        $triggerStatus = (string) ($flow->trigger_status ?: 'handled');
         $since = Carbon::now()->subDays(max(1, $sinceDays))->startOfDay();
 
         $orders = Order::query()
-            ->where('fulfillment_status', 'handled')
+            ->where('fulfillment_status', $triggerStatus)
             ->where('updated_at', '>=', $since)
-            ->whereNull('handled_flow_started_at')
             ->get();
 
         foreach ($orders as $order) {
@@ -61,19 +63,40 @@ class BackfillOrderHandledFlowService
                 continue;
             }
 
-            if ($order->handled_flow_cancelled_at !== null) {
-                $stats['orders_skipped_cancelled']++;
+            $existingEnrollment = OrderFlowEnrollment::query()
+                ->where('order_id', $order->id)
+                ->where('flow_id', $flow->id)
+                ->first();
+
+            if ($existingEnrollment) {
+                if ($existingEnrollment->cancelled_at !== null) {
+                    $stats['orders_skipped_cancelled']++;
+                } else {
+                    $stats['orders_skipped_already_started']++;
+                }
 
                 continue;
             }
 
-            if ($order->handled_flow_started_at !== null) {
+            try {
+                OrderFlowEnrollment::create([
+                    'order_id' => $order->id,
+                    'flow_id' => $flow->id,
+                    'started_at' => now(),
+                    'cancelled_at' => null,
+                    'cancelled_reason' => null,
+                ]);
+            } catch (\Throwable $e) {
+                // Race-condition op de unique-index, gewoon overslaan.
                 $stats['orders_skipped_already_started']++;
 
                 continue;
             }
 
-            $order->forceFill(['handled_flow_started_at' => now()])->save();
+            // Backwards-compat: hou de legacy-kolom in sync voor "handled"-flows.
+            if ($triggerStatus === 'handled' && $order->handled_flow_started_at === null) {
+                $order->forceFill(['handled_flow_started_at' => now()])->save();
+            }
 
             foreach ($steps as $step) {
                 SendOrderHandledEmailJob::dispatch($order->id, $step->id)

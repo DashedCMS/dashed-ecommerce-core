@@ -2,6 +2,28 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.14.0 - 2026-05-06
+
+### Added
+- **Order opvolg flows op elke fulfillment-status.** De bestaande "Order handled flow" is doorontwikkeld naar een generieke order-opvolg flow die op elke fulfillment-status getriggerd kan worden (`unhandled`, `handled`, `in_treatment`, `packed`, `ready_for_pickup`, `shipped`). De Filament-resource heeft een nieuwe verplichte `Trigger status`-select (default `handled`) zodat per status een aparte flow ingericht kan worden.
+- Per `(order, flow)`-combinatie kan nu maximaal 1 inschrijving bestaan, opgeslagen in nieuwe tabel `dashed__order_flow_enrollments` (`order_id`, `flow_id`, `started_at`, `cancelled_at`, `cancelled_reason`). Zo kunnen meerdere flows tegelijk lopen voor dezelfde order zonder elkaar te dwarsbomen.
+- Migratie `2026_05_06_120000_add_trigger_status_to_order_handled_flows` voegt de `trigger_status`-kolom toe aan `dashed__order_handled_flows` (default `'handled'`, geïndexeerd).
+- Migratie `2026_05_06_120100_create_dashed__order_flow_enrollments_table` maakt de nieuwe enrollments-tabel inclusief unique-index op `(order_id, flow_id)` en index op `cancelled_at`. Backfill-stap koppelt bestaande orders met `handled_flow_started_at IS NOT NULL` aan de (best-effort) actieve flow zodat lopende flows niet stuk gaan na de upgrade.
+- Nieuw Eloquent-model `OrderFlowEnrollment` met `belongsTo` naar order en flow. Order-model heeft een nieuwe `enrollments()`-relatie; OrderHandledFlow heeft een omgekeerde `enrollments()` plus een nieuwe statische `getActiveForStatus(string $status)`-helper.
+
+### Changed
+- **Event `OrderMarkedAsHandledEvent` is vervangen door `OrderFulfillmentStatusChangedEvent($order, $oldStatus, $newStatus)`**. De event wordt nu gedispatched op elke fulfillment-status-wijziging, niet alleen bij `handled`. Listeners filteren zelf op de juiste `newStatus`. Geen externe consumers gevonden in de monorepo, dus volledig vervangen zonder alias.
+- Listener hernoemd van `QueueOrderHandledEmailsListener` naar `QueueOrderFlowEmailsListener` en herschreven om alle actieve flows op te halen die op de nieuwe fulfillment-status getriggerd zijn. Per flow wordt een enrollment-rij aangemaakt en de stappen ingepland; bestaande inschrijvingen worden overgeslagen.
+- `SendOrderHandledEmailJob` pre-flight-checks gebruiken nu de enrollment-rij als bron-van-waarheid: gecancelde inschrijvingen breken de stap af, en de fulfillment-status moet nog overeenkomen met de `trigger_status` van de flow (was hardcoded `'handled'`). Cooldown-cancel zet `enrollment.cancelled_at = now()` met `cancelled_reason = 'recent_paid_order'`; mail-failure zet `cancelled_reason = 'mail_failed'`.
+- `OrderHandledClickController` cancelt bij klik nu de specifieke `(order, flow)`-enrollment ipv de globale `order.handled_flow_cancelled_at`. De legacy-kolom wordt voor backwards-compat ook nog gezet wanneer de flow met `cancel_on_link_click = true` getriggerd wordt.
+- `OrderHandledUnsubscribeController` cancelt nu alle openstaande inschrijvingen voor de order (over alle flows heen) en zet daarnaast nog steeds `order.handled_flow_cancelled_at` voor backwards-compat.
+- `BackfillOrderHandledFlowService::run()` werkt nu op `flow->trigger_status` ipv hardcoded `'handled'` en gebruikt de enrollments-tabel als check op dubbele inschrijving.
+- `OrderHandledFlow::getActive()` blijft als backwards-compat alias voor `getActiveForStatus('handled')`. De `booted()`-saved-hook deactiveert nog steeds andere actieve flows, maar nu alleen binnen dezelfde `trigger_status`-bucket zodat verschillende statussen los van elkaar actief kunnen zijn.
+- Filament-resource `OrderHandledFlowResource`: navigatie-label / model-label hernoemd naar "Order opvolg flows" / "Order opvolg flow", nieuwe `trigger_status`-kolom in de lijsttabel (badge met Dutch label).
+
+### Notes
+- De kolommen `dashed__orders.handled_flow_started_at` / `handled_flow_cancelled_at` blijven bestaan voor backwards-compatibele reads. Nieuwe logica gebruikt uitsluitend `dashed__order_flow_enrollments`.
+
 ## v4.13.2 - 2026-05-06
 
 ### Fixed

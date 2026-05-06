@@ -11,6 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Builder;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\RichEditor;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Mail\OrderHandledMail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
@@ -43,15 +45,17 @@ class OrderHandledFlowResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'E-commerce';
 
-    protected static ?string $label = 'Afgehandelde-bestelling flow';
+    protected static ?string $label = 'Order opvolg flow';
 
-    protected static ?string $pluralLabel = 'Afgehandelde-bestelling flows';
+    protected static ?string $pluralLabel = 'Order opvolg flows';
+
+    protected static ?string $navigationLabel = 'Order opvolg flows';
 
     protected static ?int $navigationSort = 56;
 
     public static function getNavigationLabel(): string
     {
-        return 'Order opvolg-emails';
+        return static::$navigationLabel ?? 'Order opvolg flows';
     }
 
     public static function form(Schema $schema): Schema
@@ -64,10 +68,17 @@ class OrderHandledFlowResource extends Resource
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
+                    Select::make('trigger_status')
+                        ->label('Trigger status')
+                        ->helperText('De flow start zodra de bestelling deze fulfillment-status krijgt.')
+                        ->options(Orders::getFulfillmentStatusses())
+                        ->default('handled')
+                        ->required()
+                        ->native(false),
                     Toggle::make('is_active')
                         ->label('Actieve flow')
                         ->default(true)
-                        ->helperText('Slechts één flow kan actief zijn tegelijk. Een nieuwe actieve flow zet de vorige automatisch op inactive.'),
+                        ->helperText('Per trigger-status kan maximaal 1 flow actief zijn. Een nieuwe actieve flow op dezelfde trigger-status zet de vorige automatisch op inactive.'),
                     Toggle::make('cancel_on_link_click')
                         ->label('Annuleer flow bij klik')
                         ->default(true)
@@ -88,7 +99,7 @@ class OrderHandledFlowResource extends Resource
                 ->columnSpanFull(),
 
             Section::make('Opvolg-stappen')
-                ->description('Voeg de mails toe die in volgorde verstuurd worden nadat een bestelling op fulfillment_status = handled wordt gezet.')
+                ->description('Voeg de mails toe die in volgorde verstuurd worden nadat een bestelling de geconfigureerde fulfillment-status krijgt.')
                 ->schema([
                     Repeater::make('steps')
                         ->relationship()
@@ -308,6 +319,10 @@ class OrderHandledFlowResource extends Resource
                     ->label('Naam')
                     ->searchable()
                     ->weight('bold'),
+                TextColumn::make('trigger_status')
+                    ->label('Trigger status')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => Orders::getFulfillmentStatusses()[$state] ?? $state),
                 TextColumn::make('steps_count')
                     ->label('Stappen')
                     ->counts('steps')

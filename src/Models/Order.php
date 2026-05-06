@@ -245,6 +245,11 @@ class Order extends Model
         return $this->hasMany(OrderTrackAndTrace::class);
     }
 
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(OrderFlowEnrollment::class, 'order_id');
+    }
+
     public function publicLogs(): HasMany
     {
         return $this->hasMany(OrderLog::class)
@@ -766,20 +771,21 @@ class Order extends Model
 
     public function changeFulfillmentStatus($newStatus)
     {
-        if ($this->fulfillment_status == $newStatus) {
+        $oldStatus = $this->fulfillment_status;
+
+        if ($oldStatus == $newStatus) {
             return;
         }
 
         $this->fulfillment_status = $newStatus;
         $this->save();
 
-        // Trigger handled-flow zodra een bestelling als afgehandeld wordt
-        // gemarkeerd. De listener bepaalt zelf of er een actieve flow is en
-        // plant de stappen in. handled_flow_started_at wordt gezet door de
-        // listener om dubbele inschrijvingen te voorkomen.
-        if ($newStatus === 'handled' && $this->handled_flow_started_at === null) {
-            \Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsHandledEvent::dispatch($this);
-        }
+        // Trigger order-opvolg-flows op elke fulfillment-status-wijziging. De
+        // listener filtert op flows die expliciet voor deze nieuwe status
+        // geconfigureerd zijn (trigger_status). Inschrijvingen worden
+        // bijgehouden in dashed__order_flow_enrollments zodat meerdere flows
+        // tegelijk voor dezelfde order kunnen lopen.
+        \Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent::dispatch($this, $oldStatus, $newStatus);
 
         if ($this->isPaidFor()) {
             foreach (Orders::getFulfillmentStatusses() as $key => $fulfillmentStatus) {

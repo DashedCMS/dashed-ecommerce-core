@@ -39,7 +39,7 @@ class EditProductGroup extends EditRecord
         ];
     }
 
-    protected function getFooterWidgetsColumns(): int|string|array
+    public function getFooterWidgetsColumns(): int|array
     {
         return 1;
     }
