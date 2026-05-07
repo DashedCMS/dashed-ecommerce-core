@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.19.0 - 2026-05-07
+
+### Added
+- "Sorteren"-header-action op `ListProductCategory` via `Dashed\DashedCore\Filament\Concerns\HasNestableSortingAction`. Productcategorieën kunnen via slepen genested en geordend worden. Vereist `dashed-core` v4.6.0+.
+
 ## v4.18.3 - 2026-05-07
 
 ### Added
