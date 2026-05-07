@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.17.1 - 2026-05-07
+
+### Fixed
+- `ProductOpenOrdersWidget` en `ProductGroupOpenOrdersWidget` (open orders footer-widgets op de Product- en ProductGroup-edit-pagina) crashten met `Unable to find component: [dashed.dashed-ecommerce-core.filament.widgets.product.product-{group-,}open-orders-widget]`. Beide zijn nu expliciet als Livewire-component geregistreerd in `DashedEcommerceCoreServiceProvider`, zelfde patroon als de OrderHandledFlow-widgets uit v4.16.3.
+
 ## v4.17.0 - 2026-05-07
 
 ### Added

@@ -1433,6 +1433,14 @@ MARKDOWN,
             'dashed.dashed-ecommerce-core.filament.resources.order-handled-flow-resource.widgets.order-handled-flow-enrollments',
             \Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets\OrderHandledFlowEnrollments::class,
         );
+        Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.widgets.product.product-open-orders-widget',
+            \Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductOpenOrdersWidget::class,
+        );
+        Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.widgets.product.product-group-open-orders-widget',
+            \Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductGroupOpenOrdersWidget::class,
+        );
 
         //POS components
         Livewire::component('point-of-sale', POSPage::class);
