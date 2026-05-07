@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.18.3 - 2026-05-07
+
+### Added
+- **Bijhouden + tonen welke flow-stap-mails al verstuurd zijn per inschrijving.** Nieuwe migratie `2026_05_07_140000_add_sent_steps_to_order_flow_enrollments` voegt een JSON-kolom `sent_steps` toe aan `dashed__order_flow_enrollments`. `OrderFlowEnrollment::markStepSent($stepId)` schrijft idempotent een entry `{ "step_id": "iso-timestamp" }`. `SendOrderHandledEmailJob` roept dit aan na een succesvolle `Mail::send` zodat we per (order, flow) zien welke stappen al de deur uit zijn.
+- **Kolom "Verzonden"** op de Inschrijvingen-tabel (`OrderHandledFlowEnrollments` widget) als badge `verzonden / totaal-actieve-stappen`. Groen wanneer alle stappen verstuurd, blauw bij gedeeltelijk, grijs bij nul. Tooltip toont per stap-id de verzend-timestamp.
+- **Kaart "Mails verzonden"** op de Stats-widget (`OrderHandledFlowStats`). Telt `JSON_LENGTH(sent_steps)` over alle inschrijvingen van de flow en toont het gemiddelde per inschrijving als description.
+
 ## v4.18.2 - 2026-05-07
 
 ### Changed

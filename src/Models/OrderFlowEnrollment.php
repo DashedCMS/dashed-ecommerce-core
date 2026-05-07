@@ -17,12 +17,37 @@ class OrderFlowEnrollment extends Model
         'cancelled_reason',
         'chosen_review_url_label',
         'chosen_review_url',
+        'sent_steps',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'sent_steps' => 'array',
     ];
+
+    /**
+     * Markeer een stap als verstuurd voor deze inschrijving. Idempotent:
+     * dubbele aanroepen overschrijven de eerste timestamp niet.
+     */
+    public function markStepSent(int $flowStepId): void
+    {
+        $sent = is_array($this->sent_steps) ? $this->sent_steps : [];
+        $key = (string) $flowStepId;
+
+        if (isset($sent[$key])) {
+            return;
+        }
+
+        $sent[$key] = now()->toIso8601String();
+
+        $this->forceFill(['sent_steps' => $sent])->save();
+    }
+
+    public function sentStepCount(): int
+    {
+        return is_array($this->sent_steps) ? count($this->sent_steps) : 0;
+    }
 
     public function order(): BelongsTo
     {

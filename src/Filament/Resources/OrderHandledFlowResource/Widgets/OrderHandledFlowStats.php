@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource
 
 use Illuminate\Database\Eloquent\Model;
 use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 use Dashed\DashedEcommerceCore\Models\OrderHandledClick;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 
@@ -90,6 +90,22 @@ class OrderHandledFlowStats extends StatsOverviewWidget
                 ->description($uniqueClickers . ' unieke klikkers - ' . $clickRate . '% van inschrijvingen')
                 ->icon('heroicon-o-cursor-arrow-rays')
                 ->color('info'),
+            (function () use ($enrollmentsBase, $total): Stat {
+                // Tel het totaal aantal verzonden mails over alle inschrijvingen.
+                // sent_steps is een JSON-array met { step_id => iso-timestamp }, dus
+                // we gebruiken JSON_LENGTH op DB-niveau om N+1 te voorkomen.
+                $sentMails = (int) (clone $enrollmentsBase)
+                    ->whereNotNull('sent_steps')
+                    ->selectRaw('COALESCE(SUM(JSON_LENGTH(sent_steps)), 0) as total')
+                    ->value('total');
+
+                $avg = $total > 0 ? round($sentMails / $total, 2) : 0;
+
+                return Stat::make('Mails verzonden', $sentMails)
+                    ->description($avg.' gemiddeld per inschrijving')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color($sentMails > 0 ? 'success' : 'gray');
+            })(),
             Stat::make('Geconverteerd', $convertedCount)
                 ->description($conversionRate . '% conversieratio')
                 ->icon('heroicon-o-shopping-cart')
@@ -116,7 +132,8 @@ class OrderHandledFlowStats extends StatsOverviewWidget
             foreach ($byLabel as $row) {
                 $labelKey = $row->label;
                 $platformEnrollments = (clone $enrollmentsBase)
-                    ->when($labelKey === 'Onbekend',
+                    ->when(
+                        $labelKey === 'Onbekend',
                         fn ($q) => $q->whereNull('chosen_review_url_label'),
                         fn ($q) => $q->where('chosen_review_url_label', $labelKey),
                     )

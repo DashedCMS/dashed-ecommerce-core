@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Mail\OrderHandledMail;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlowStep;
@@ -150,6 +150,11 @@ class SendOrderHandledEmailJob implements ShouldQueue
         try {
             $locale = $order->locale ?: app()->getLocale();
             Mail::to($order->email)->send(new OrderHandledMail($order, $step, $locale));
+
+            // Markeer de stap als verzonden op de inschrijving zodat de
+            // Filament-tabel + stats-widget kunnen tonen welke stappen al
+            // de deur uit zijn voor deze klant.
+            $enrollment->markStepSent((int) $step->id);
         } catch (\Throwable $e) {
             report($e);
             Log::warning('order-flow: mail kon niet verstuurd worden', [

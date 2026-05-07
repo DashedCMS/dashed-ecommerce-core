@@ -5,10 +5,10 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 
@@ -70,6 +70,39 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->label('Ingeschreven op')
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
+                TextColumn::make('sent_steps_count')
+                    ->label('Verzonden')
+                    ->badge()
+                    ->getStateUsing(function (OrderFlowEnrollment $record): string {
+                        $sent = is_array($record->sent_steps) ? count($record->sent_steps) : 0;
+                        $total = $record->flow?->steps()->where('is_active', true)->count() ?? 0;
+
+                        return $total > 0 ? sprintf('%d / %d', $sent, $total) : (string) $sent;
+                    })
+                    ->color(function (OrderFlowEnrollment $record): string {
+                        $sent = is_array($record->sent_steps) ? count($record->sent_steps) : 0;
+                        $total = $record->flow?->steps()->where('is_active', true)->count() ?? 0;
+                        if ($total === 0) {
+                            return 'gray';
+                        }
+                        if ($sent >= $total) {
+                            return 'success';
+                        }
+
+                        return $sent > 0 ? 'info' : 'gray';
+                    })
+                    ->tooltip(function (OrderFlowEnrollment $record): ?string {
+                        if (! is_array($record->sent_steps) || empty($record->sent_steps)) {
+                            return 'Nog geen mails verzonden voor deze inschrijving.';
+                        }
+
+                        $items = [];
+                        foreach ($record->sent_steps as $stepId => $iso) {
+                            $items[] = 'stap '.$stepId.': '.\Illuminate\Support\Carbon::parse($iso)->format('d-m-Y H:i');
+                        }
+
+                        return implode("\n", $items);
+                    }),
                 IconColumn::make('cancelled_at')
                     ->label('Actief')
                     ->boolean()
