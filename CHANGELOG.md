@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.16.4 - 2026-05-07
+
+### Added
+- Kolom "In flow / wacht" op de OrderHandledFlow-overzichtstabel (Filament). Toont per flow het aantal actieve inschrijvingen (`cancelled_at IS NULL`) als badge: oranje wanneer er nog mensen in de flow zitten, grijs wanneer er niemand wacht. Sorteerbaar.
+- `OrderHandledFlow::activeEnrollments()` relatie (HasMany op `OrderFlowEnrollment` met `cancelled_at IS NULL`) zodat de tabel via `withCount` één query gebruikt en geen N+1 veroorzaakt.
+
 ## v4.16.0 - 2026-05-06
 
 ### Added

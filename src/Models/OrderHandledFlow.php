@@ -88,6 +88,11 @@ class OrderHandledFlow extends Model
         return $this->hasMany(OrderFlowEnrollment::class, 'flow_id');
     }
 
+    public function activeEnrollments()
+    {
+        return $this->hasMany(OrderFlowEnrollment::class, 'flow_id')->whereNull('cancelled_at');
+    }
+
     /**
      * Kiest een van de geconfigureerde review-URLs via een gewogen
      * willekeurige trekking. Valt terug op de globale Customsetting

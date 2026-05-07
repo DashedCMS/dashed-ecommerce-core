@@ -361,6 +361,12 @@ class OrderHandledFlowResource extends Resource
                     ->counts('steps')
                     ->badge()
                     ->color('info'),
+                TextColumn::make('active_enrollments_count')
+                    ->label('In flow / wacht')
+                    ->counts('activeEnrollments')
+                    ->badge()
+                    ->color(fn ($state) => $state > 0 ? 'warning' : 'gray')
+                    ->sortable(),
                 IconColumn::make('is_active')
                     ->label('Actief')
                     ->boolean()
