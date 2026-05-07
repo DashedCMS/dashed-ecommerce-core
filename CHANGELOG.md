@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.18.2 - 2026-05-07
+
+### Changed
+- `order_products`-blok in `OrderHandledMail` rendert nu een card-layout per product zoals de verlaten-winkelwagen-mail: thumbnail (`firstImage` van Product, fallback op ProductGroup, via `mediaHelper()->getSingleMedia($id, ['fit' => [80, 80]])`), productnaam, aantal en regelbedrag (`€ X,XX`). Iedere kaart linkt door naar `product->getUrl()` (door `wrapTrackedUrl()` zodat klikken in de stats-widget meegeteld worden). Default 4 zichtbaar; daarboven een "+ N ander(e) product(en)"-regel.
+- Builder-blok "Bestelde producten (samenvatting)" heeft een nieuw veld "Max. aantal producten in de mail" (numeriek, 1–50, default 4) zodat admins de afkapgrens per stap kunnen instellen.
+
 ## v4.18.1 - 2026-05-07
 
 ### Fixed

@@ -359,6 +359,13 @@ class OrderHandledFlowResource extends Resource
                                                 ->label('Kop boven de lijst')
                                                 ->helperText('Optioneel. '.self::VARIABLES_HELP)
                                                 ->default('Wat je hebt besteld:'),
+                                            TextInput::make('max_items')
+                                                ->label('Max. aantal producten in de mail')
+                                                ->helperText('Daarboven verschijnt "+ N ander(e) product(en)" als samenvattingsregel.')
+                                                ->numeric()
+                                                ->minValue(1)
+                                                ->maxValue(50)
+                                                ->default(4),
                                         ]),
                                 ])
                                 ->columnSpanFull()

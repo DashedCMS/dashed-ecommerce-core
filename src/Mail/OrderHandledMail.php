@@ -274,9 +274,11 @@ class OrderHandledMail extends Mailable
 
             case 'order_products':
                 $heading = trim((string) $sub($data['heading'] ?? 'Wat je hebt besteld:'));
+                $maxItems = max(1, (int) ($data['max_items'] ?? 4));
                 $orderProducts = $this->order
                     ->orderProducts()
                     ->whereNotNull('product_id')
+                    ->with(['product', 'product.productGroup'])
                     ->orderBy('id')
                     ->get();
 
@@ -284,26 +286,63 @@ class OrderHandledMail extends Mailable
                     return null;
                 }
 
+                $items = $orderProducts->map(fn ($op) => [
+                    'name' => (string) ($op->name ?? '#'.$op->product_id),
+                    'quantity' => (int) ($op->quantity ?? 1),
+                    'price' => (int) round(((float) ($op->price ?? 0)) * 100),
+                    'image_id' => $op->product?->firstImage ?? $op->product?->productGroup?->firstImage ?? null,
+                    'product_url' => $op->product?->getUrl() ?? null,
+                ]);
+
                 $rows = '';
-                foreach ($orderProducts as $orderProduct) {
-                    $productId = (int) $orderProduct->product_id;
-                    $quantity = (int) ($orderProduct->quantity ?? 1);
-                    $rows .= '<li style="margin:0 0 4px 0;">'
-                        .'<strong>#'.$productId.'</strong>'
-                        .' &times;&nbsp;'.htmlspecialchars((string) $quantity, ENT_QUOTES, 'UTF-8')
-                        .'</li>';
+                foreach ($items->take($maxItems) as $item) {
+                    $imgUrl = null;
+                    if (! empty($item['image_id']) && function_exists('mediaHelper')) {
+                        $media = mediaHelper()->getSingleMedia($item['image_id'], ['fit' => [80, 80]]);
+                        $imgUrl = $media->url ?? null;
+                    }
+                    $name = htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8');
+                    $qty = htmlspecialchars((string) $item['quantity'], ENT_QUOTES, 'UTF-8');
+                    $lineTotal = '&euro; '.number_format(($item['price'] * $item['quantity']) / 100, 2, ',', '.');
+                    $rawProductUrl = (string) ($item['product_url'] ?? '');
+                    $productUrl = $rawProductUrl !== '' ? $this->wrapTrackedUrl($rawProductUrl, 'order_products') : '';
+
+                    $imgCell = $imgUrl
+                        ? '<td width="72" style="padding: 12px;"><img src="'.htmlspecialchars($imgUrl, ENT_QUOTES, 'UTF-8').'" width="56" height="56" alt="'.$name.'" style="border-radius: 8px; object-fit: cover; width: 56px; height: 56px;"></td>'
+                        : '';
+                    $textCellPadding = $imgUrl ? '12px 12px 12px 0' : '12px';
+
+                    $card = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">'
+                        .'<tr>'
+                        .$imgCell
+                        .'<td style="padding: '.$textCellPadding.';">'
+                        .'<p style="margin: 0 0 2px; font-family: Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0f172a;">'.$name.'</p>'
+                        .'<p style="margin: 0; font-family: Arial, sans-serif; font-size: 13px; color: #64748b;">Aantal: '.$qty.'</p>'
+                        .'</td>'
+                        .'<td align="right" style="padding: 12px 16px; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap;">'
+                        .$lineTotal
+                        .'</td>'
+                        .'</tr>'
+                        .'</table>';
+
+                    if ($productUrl !== '') {
+                        $card = '<a href="'.htmlspecialchars($productUrl, ENT_QUOTES, 'UTF-8').'" style="text-decoration: none; color: inherit; display: block;">'.$card.'</a>';
+                    }
+
+                    $rows .= '<tr><td style="padding: 6px 24px;">'.$card.'</td></tr>';
+                }
+
+                if ($items->count() > $maxItems) {
+                    $rows .= '<tr><td style="padding: 4px 24px 8px; font-family: Arial, sans-serif; font-size: 13px; color: #94a3b8; text-align: center;">+ '
+                        .htmlspecialchars((string) ($items->count() - $maxItems), ENT_QUOTES, 'UTF-8')
+                        .' ander(e) product(en)</td></tr>';
                 }
 
                 $headingHtml = $heading !== ''
-                    ? '<div style="font-family: Arial, sans-serif; font-size:14px; font-weight:bold; color:#111827; margin-bottom:8px;">'.htmlspecialchars($heading, ENT_QUOTES, 'UTF-8').'</div>'
+                    ? '<tr><td style="padding: 8px 24px 0;"><div style="font-family: Arial, sans-serif; font-size:14px; font-weight:bold; color:#111827;">'.htmlspecialchars($heading, ENT_QUOTES, 'UTF-8').'</div></td></tr>'
                     : '';
 
-                return '<tr><td style="padding: 8px 24px;">'
-                    .$headingHtml
-                    .'<ul style="margin:0; padding-left:20px; font-family: Arial, sans-serif; font-size:14px; line-height:1.6; color:#374151;">'
-                    .$rows
-                    .'</ul>'
-                    .'</td></tr>';
+                return $headingHtml.$rows;
         }
 
         $registry = function_exists('cms') ? cms()->emailBlocks() : [];
