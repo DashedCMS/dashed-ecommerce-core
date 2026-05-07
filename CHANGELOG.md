@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.20.0 - 2026-05-07
+
+### Added
+- Derde tab "Gegroepeerd per productgroep" op `OpenOrderProducts` resource. Aggregeert openstaande orderregels per `dashed__products.product_group_id` met SUM(quantity); een `LEFT JOIN` op `dashed__products` + `dashed__product_groups` levert de groep-id en naam (translatable, current-locale via JSON_UNQUOTE met fallback naar `nl`). Lege `product_group_id`'s vallen onder "Geen productgroep". Excel-/CSV-export ondersteunt dezelfde modus via `OpenOrderProducts('grouped_product_group')`.
+
+### Changed
+- `OpenOrderProductResource::getEloquentQuery()` SKU-where-clause is nu gekwalificeerd als `dashed__order_products.sku` zodat de scope correct werkt wanneer een tab joint met `dashed__products` (welke ook een `sku`-kolom heeft).
+
 ## v4.19.0 - 2026-05-07
 
 ### Added

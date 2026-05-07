@@ -2,23 +2,38 @@
 
 namespace Dashed\DashedEcommerceCore\Exports;
 
+use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 
 class OpenOrderProducts implements FromArray
 {
-    public function __construct(public bool $grouped = false)
+    /**
+     * @param  string|bool  $mode  Backwards-compatible: legacy bool treats true as 'grouped',
+     *                             false as 'all'. New string values: 'all', 'grouped',
+     *                             'grouped_product_group'.
+     */
+    public function __construct(public string|bool $mode = 'all')
     {
+        if (is_bool($mode)) {
+            $this->mode = $mode ? 'grouped' : 'all';
+        }
     }
 
     public function array(): array
     {
-        $rows = $this->grouped ? $this->groupedRows() : $this->detailedRows();
+        $rows = match ($this->mode) {
+            'grouped' => $this->groupedRows(),
+            'grouped_product_group' => $this->groupedByProductGroupRows(),
+            default => $this->detailedRows(),
+        };
 
-        $header = $this->grouped
-            ? ['Product ID', 'Productnaam', 'SKU', 'Totaal aantal']
-            : ['Bestelling', 'Product ID', 'Productnaam', 'SKU', 'Aantal', 'Order origin', 'Klant', 'Besteld op'];
+        $header = match ($this->mode) {
+            'grouped' => ['Product ID', 'Productnaam', 'SKU', 'Totaal aantal'],
+            'grouped_product_group' => ['Productgroep ID', 'Productgroep', 'Totaal aantal'],
+            default => ['Bestelling', 'Product ID', 'Productnaam', 'SKU', 'Aantal', 'Order origin', 'Klant', 'Besteld op'],
+        };
 
         return array_merge([$header], $rows);
     }
@@ -60,6 +75,38 @@ class OpenOrderProducts implements FromArray
                 $r->product_id,
                 $r->name,
                 $r->sku,
+                (int) $r->quantity,
+            ])
+            ->toArray();
+    }
+
+    private function groupedByProductGroupRows(): array
+    {
+        $base = OpenOrderProductResource::getEloquentQuery()->getQuery();
+        $base->orders = null;
+        $base->leftJoin(
+            'dashed__products',
+            'dashed__products.id',
+            '=',
+            'dashed__order_products.product_id'
+        );
+        $base->select([
+            DB::raw('dashed__products.product_group_id as product_group_id'),
+            DB::raw('SUM(dashed__order_products.quantity) as quantity'),
+        ])->groupBy('dashed__products.product_group_id');
+
+        $rows = collect($base->get());
+        $groupIds = $rows->pluck('product_group_id')->filter()->all();
+        $groupNames = ProductGroup::query()
+            ->whereIn('id', $groupIds)
+            ->get(['id', 'name'])
+            ->mapWithKeys(fn ($g) => [$g->id => $g->name])
+            ->all();
+
+        return $rows
+            ->map(fn ($r) => [
+                $r->product_group_id ?? '',
+                $r->product_group_id ? ($groupNames[$r->product_group_id] ?? '#'.$r->product_group_id) : 'Geen productgroep',
                 (int) $r->quantity,
             ])
             ->toArray();
