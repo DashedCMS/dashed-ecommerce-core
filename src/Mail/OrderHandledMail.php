@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Queue\SerializesModels;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlowStep;
@@ -256,6 +256,39 @@ class OrderHandledMail extends Mailable
                     .'<div style="font-family: Arial, sans-serif; font-size:14px; color:#374151; margin-bottom:8px;">'.htmlspecialchars($label, ENT_QUOTES, 'UTF-8').'</div>'
                     .'<div style="display:inline-block; padding:12px 24px; background:'.$primaryColor.'; color:'.$textColor.'; font-family: Arial, sans-serif; font-size:18px; font-weight:bold; letter-spacing:1px; border-radius:6px;">'.htmlspecialchars($code, ENT_QUOTES, 'UTF-8').'</div>'
                     .$valueRow
+                    .'</td></tr>';
+
+            case 'order_products':
+                $heading = trim((string) $sub($data['heading'] ?? 'Wat je hebt besteld:'));
+                $orderProducts = $this->order
+                    ->orderProducts()
+                    ->whereNotNull('product_id')
+                    ->orderBy('id')
+                    ->get();
+
+                if ($orderProducts->isEmpty()) {
+                    return null;
+                }
+
+                $rows = '';
+                foreach ($orderProducts as $orderProduct) {
+                    $productId = (int) $orderProduct->product_id;
+                    $quantity = (int) ($orderProduct->quantity ?? 1);
+                    $rows .= '<li style="margin:0 0 4px 0;">'
+                        .'<strong>#'.$productId.'</strong>'
+                        .' &times;&nbsp;'.htmlspecialchars((string) $quantity, ENT_QUOTES, 'UTF-8')
+                        .'</li>';
+                }
+
+                $headingHtml = $heading !== ''
+                    ? '<div style="font-family: Arial, sans-serif; font-size:14px; font-weight:bold; color:#111827; margin-bottom:8px;">'.htmlspecialchars($heading, ENT_QUOTES, 'UTF-8').'</div>'
+                    : '';
+
+                return '<tr><td style="padding: 8px 24px;">'
+                    .$headingHtml
+                    .'<ul style="margin:0; padding-left:20px; font-family: Arial, sans-serif; font-size:14px; line-height:1.6; color:#374151;">'
+                    .$rows
+                    .'</ul>'
                     .'</td></tr>';
         }
 

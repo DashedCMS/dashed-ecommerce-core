@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.18.0 - 2026-05-07
+
+### Added
+- Nieuw e-mail-blok `order_products` voor de OrderHandledFlow-stappen. Toont een samenvatting van de bestelde producten in de mail, alleen op basis van `product_id` (`#123 ×2`). Gebaseerd op `order->orderProducts()->whereNotNull('product_id')`. Het blok rendert niets wanneer de bestelling geen orderProducts met `product_id` heeft. Optionele kop-tekst (default "Wat je hebt besteld:") ondersteunt `:variables:`.
+- Builder-blok `Bestelde producten (samenvatting)` (icon `heroicon-o-shopping-bag`, `maxItems(1)`) in de stap-builder van `OrderHandledFlowResource`, met één veld "Kop boven de lijst".
+
 ## v4.17.1 - 2026-05-07
 
 ### Fixed

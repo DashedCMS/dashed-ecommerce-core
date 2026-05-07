@@ -4,12 +4,13 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use UnitEnum;
 use BackedEnum;
-use Filament\Actions\Action;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
+use Illuminate\Support\Facades\Mail;
 use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -17,16 +18,15 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
-use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\RichEditor;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Mail\OrderHandledMail;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlowStep;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Pages\EditOrderHandledFlow;
@@ -331,6 +331,16 @@ class OrderHandledFlowResource extends Resource
                                             TextInput::make('code')
                                                 ->label('Code')
                                                 ->helperText('Vul een specifieke code in. Optionele '.self::VARIABLES_HELP),
+                                        ]),
+                                    Builder\Block::make('order_products')
+                                        ->label('Bestelde producten (samenvatting)')
+                                        ->icon('heroicon-o-shopping-bag')
+                                        ->maxItems(1)
+                                        ->schema([
+                                            TextInput::make('heading')
+                                                ->label('Kop boven de lijst')
+                                                ->helperText('Optioneel. '.self::VARIABLES_HELP)
+                                                ->default('Wat je hebt besteld:'),
                                         ]),
                                 ])
                                 ->columnSpanFull()
