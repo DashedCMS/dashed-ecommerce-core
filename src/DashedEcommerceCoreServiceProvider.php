@@ -1490,6 +1490,16 @@ MARKDOWN,
             new DashedEcommerceCorePlugin(),
         ]);
 
+        // Samenvatting-mails: registreer de e-commerce contributors
+        // bij de centrale registry uit dashed-core. De builder-API
+        // mergt automatisch met eerder geregistreerde contributors.
+        cms()->builder('summaryContributors', [
+            \Dashed\DashedEcommerceCore\Services\Summary\RevenueSummaryContributor::class,
+            \Dashed\DashedEcommerceCore\Services\Summary\AbandonedCartSummaryContributor::class,
+            \Dashed\DashedEcommerceCore\Services\Summary\OrderFlowSummaryContributor::class,
+            \Dashed\DashedEcommerceCore\Services\Summary\CustomerMatchSummaryContributor::class,
+        ]);
+
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\DiscountCode::class, \Dashed\DashedEcommerceCore\Policies\DiscountCodePolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\FulfillmentCompany::class, \Dashed\DashedEcommerceCore\Policies\FulfillmentCompanyPolicy::class);

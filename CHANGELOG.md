@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.17.0 - 2026-05-07
+
+### Added
+- **Bijdragen aan de admin samenvatting-mails (framework uit dashed-core v4.5.0).** Vier nieuwe `SummaryContributor`-classes onder `Services\Summary\`, die zich automatisch registreren via `cms()->builder('summaryContributors', ...)` in de boot van de package. Elke contributor levert een sectie aan voor de periodieke samenvatting-mail (dagelijks / wekelijks / maandelijks). Secties worden automatisch overgeslagen wanneer er voor de periode geen relevante data is, zodat admins geen muur van nullen ontvangen.
+- `RevenueSummaryContributor` (key `omzet`, default `daily`): aantal betaalde bestellingen, totale omzet en gemiddelde orderwaarde in de periode, plus een tabel met de top 5 best verkochte producten (kolommen Product, Aantal, Omzet). Telt op `Order::isPaid()` met `whereBetween('created_at', ...)` en joint `dashed__order_products` voor de top 5.
+- `AbandonedCartSummaryContributor` (key `verlaten_winkelwagens`, default `weekly`): nieuwe inschrijvingen, verzonden mails, klikken op mail-link, gerecoverde bestellingen en gerecoverde omzet uit verlaten-winkelwagen-flows. Gebruikt `whereBetween` op respectievelijk `created_at`, `sent_at`, `clicked_at` en `converted_at` op `dashed__abandoned_cart_emails`.
+- `OrderFlowSummaryContributor` (key `order_opvolg_flows`, default `weekly`): totale nieuwe inschrijvingen, geannuleerde inschrijvingen en klikken op review-links in de periode, plus een tabel met per actieve flow (`OrderHandledFlow::is_active = true`) het aantal inschrijvingen en geannuleerden. Telt op `started_at` / `cancelled_at` / `clicked_at`.
+- `CustomerMatchSummaryContributor` (key `customer_match`, default `monthly`): nieuwe betaalde orders met e-mail en met telefoon in de periode plus het aantal keer dat Google Ads de feed in de periode heeft opgehaald. Toont alleen aantallen, nooit ruwe e-mailadressen of telefoonnummers (GDPR). Levert geen sectie wanneer het Customer Match-endpoint niet actief is.
+
 ## v4.16.5 - 2026-05-07
 
 ### Fixed
