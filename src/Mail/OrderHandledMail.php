@@ -50,6 +50,7 @@ class OrderHandledMail extends Mailable
         // Valt terug op een verse weighted draw - die kent zelf weer een fallback
         // op de globale Customsetting 'order_handled_flow_review_url'.
         $reviewUrl = '';
+        $enrollment = null;
         if ($this->order->id && $this->flowStep->flow_id) {
             $enrollment = OrderFlowEnrollment::query()
                 ->where('order_id', $this->order->id)
@@ -63,6 +64,19 @@ class OrderHandledMail extends Mailable
         if ($reviewUrl === '') {
             $picked = $this->flowStep->flow?->pickReviewUrl();
             $reviewUrl = (string) ($picked['url'] ?? '');
+
+            // Backfill: enrollment bestond maar had nog geen chosen_review_url
+            // (typisch voor inschrijvingen aangemaakt vóór v4.16.0, of als de
+            // flow op dat moment nog geen review_urls had). Persisten zodra we
+            // er via de weighted draw alsnog een vinden, zodat alle volgende
+            // stappen van deze flow voor dezelfde klant op dezelfde URL
+            // landen (consistent A/B-meten).
+            if ($reviewUrl !== '' && $enrollment) {
+                $enrollment->forceFill([
+                    'chosen_review_url' => $reviewUrl,
+                    'chosen_review_url_label' => $picked['label'] ?? null,
+                ])->save();
+            }
         }
 
         // Laatste vangnet: als er nergens een review-URL bekend is (geen

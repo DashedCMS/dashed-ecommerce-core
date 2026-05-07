@@ -175,7 +175,7 @@ class OrderHandledFlowResource extends Resource
                                         ->required()
                                         ->default(fn () => auth()->user()?->email),
                                 ])
-                                ->action(function (array $arguments, array $data, Repeater $component): void {
+                                ->action(function (array $arguments, array $data, Repeater $component, $livewire): void {
                                     $itemState = $component->getRawItemState($arguments['item']);
                                     $locale = app()->getLocale();
                                     $recipient = (string) ($data['recipient'] ?? '');
@@ -186,7 +186,25 @@ class OrderHandledFlowResource extends Resource
                                     }
                                     $blocks = array_values($blocks);
 
+                                    // Reconstrueer de flow-context (saved record OF in-memory uit de form-state)
+                                    // zodat pickReviewUrl() de actuele review_urls kent en de step weet aan
+                                    // welke flow hij hoort. Zonder dit pad valt :reviewUrl: in de mail terug
+                                    // op siteUrl omdat flowStep->flow null is.
+                                    $formState = method_exists($livewire, 'form') ? $livewire->form->getState() : [];
+                                    $flow = method_exists($livewire, 'getRecord') ? $livewire->getRecord() : null;
+                                    if (! $flow instanceof OrderHandledFlow) {
+                                        $flow = new OrderHandledFlow();
+                                    }
+                                    $flow->forceFill([
+                                        'review_urls' => $formState['review_urls'] ?? $flow->review_urls,
+                                        'discount_prefix' => $formState['discount_prefix'] ?? $flow->discount_prefix,
+                                    ]);
+
                                     $step = new OrderHandledFlowStep();
+                                    if ($flow->id) {
+                                        $step->flow_id = $flow->id;
+                                    }
+                                    $step->setRelation('flow', $flow);
                                     $step->send_after_minutes = (int) ($itemState['send_after_minutes'] ?? 20160);
                                     $step->is_active = (bool) ($itemState['is_active'] ?? true);
                                     $step->setTranslation('subject', $locale, (string) ($itemState['subject'] ?? 'Test mail'));

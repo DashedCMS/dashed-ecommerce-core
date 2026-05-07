@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.18.1 - 2026-05-07
+
+### Fixed
+- Test-mail-action op `OrderHandledFlowResource` (de "Test mail naar mij sturen"-knop) toonde altijd de homepage-URL voor `:reviewUrl:` omdat de in-memory `OrderHandledFlowStep` geen `flow_id` of `flow`-relatie meekreeg, waardoor `pickReviewUrl()` nooit werd aangeroepen. De action haalt nu het flow-record (saved OF in-memory uit de live form-state) op via `$livewire->getRecord()`/`$livewire->form->getState()`, hangt 'm via `setRelation('flow', $flow)` aan de step, en vult zo nodig `flow_id` zodat de mail dezelfde resolutie-keten doorloopt als een echte verzending.
+- `OrderHandledMail::build()` schrijft de gekozen review-URL nu terug op de `OrderFlowEnrollment` wanneer die rij wel bestond maar `chosen_review_url` leeg was. Dat dekt enrollments aangemaakt vóór v4.16.0 én enrollments waarvan de flow op het moment van inschrijving nog geen `review_urls` had. Volgende stappen voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat het A/B-label per platform consistent blijft.
+
+### Added
+- Artisan-command `dashed:backfill-order-flow-enrollment-review-urls` dat alle bestaande enrollments met lege `chosen_review_url` doorloopt en via `flow->pickReviewUrl()` alsnog vult (gewogen draw + Customsetting-fallback). Idempotent — rijen met een gevulde URL blijven onaangeroerd. Geregistreerd in `hasCommands`.
+- Migratie `2026_05_07_090000_backfill_chosen_review_url_on_order_flow_enrollments` voert dezelfde backfill éénmalig uit op deploy zodat admins de command niet handmatig hoeven te draaien. `down()` is een no-op.
+
 ## v4.18.0 - 2026-05-07
 
 ### Added

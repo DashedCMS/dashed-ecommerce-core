@@ -20,6 +20,7 @@ use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Commands\ClearOldCarts;
 use Dashed\DashedEcommerceCore\Commands\PruneCartLogs;
+use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentReviewUrls;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
@@ -45,7 +46,6 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentsList;
 use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
-use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
@@ -71,6 +71,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
+use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
@@ -85,9 +86,8 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
-use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\OrderAttributionStatsWidget;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
@@ -1752,6 +1752,7 @@ MARKDOWN,
                 ClearOldCarts::class,
                 SendAbandonedCartEmails::class,
                 PruneCartLogs::class,
+                BackfillOrderFlowEnrollmentReviewUrls::class,
             ]);
 
     }
