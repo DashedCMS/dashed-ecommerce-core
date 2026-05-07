@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.16.5 - 2026-05-07
+
+### Fixed
+- `:reviewUrl:`-variabele in `OrderHandledMail` werd leeg gerenderd wanneer er geen flow `review_urls`, geen Customsetting `order_handled_flow_review_url` EN geen enrollment-record was (typisch bij test-mails of de eerste live runs). De knop in de mail kreeg dan een lege `href` en wees nergens naartoe. Toegevoegd: laatste vangnet dat naar `$siteUrl` (Customsetting `site_url` of `config('app.url')`) terugvalt zodat de knop nooit broken is.
+
 ## v4.16.4 - 2026-05-07
 
 ### Added

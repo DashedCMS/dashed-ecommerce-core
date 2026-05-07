@@ -65,6 +65,13 @@ class OrderHandledMail extends Mailable
             $reviewUrl = (string) ($picked['url'] ?? '');
         }
 
+        // Laatste vangnet: als er nergens een review-URL bekend is (geen
+        // flow review_urls + geen Customsetting + geen enrollment) val
+        // terug op de site-URL zodat de knop in de mail nooit leeg blijft.
+        if ($reviewUrl === '') {
+            $reviewUrl = $siteUrl;
+        }
+
         $discountCode = $this->previewDiscountCode ?? '';
         $discountValue = $this->previewDiscountValue ?? '';
 
