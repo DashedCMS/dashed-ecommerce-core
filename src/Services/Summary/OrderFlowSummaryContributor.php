@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Services\Summary;
 
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
-use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Models\OrderHandledClick;
 use Dashed\DashedCore\Services\Summary\DTOs\SummaryPeriod;
+use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedCore\Services\Summary\DTOs\SummarySection;
 use Dashed\DashedCore\Services\Summary\Contracts\SummaryContributorInterface;
 

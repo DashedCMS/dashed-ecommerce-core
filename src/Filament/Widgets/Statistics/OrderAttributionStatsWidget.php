@@ -5,10 +5,10 @@ namespace Dashed\DashedEcommerceCore\Filament\Widgets\Statistics;
 use Carbon\Carbon;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 

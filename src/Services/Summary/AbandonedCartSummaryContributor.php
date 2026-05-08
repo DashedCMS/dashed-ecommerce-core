@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Services\Summary;
 
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedCore\Services\Summary\DTOs\SummaryPeriod;
 use Dashed\DashedCore\Services\Summary\DTOs\SummarySection;
 use Dashed\DashedCore\Services\Summary\Contracts\SummaryContributorInterface;

@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;

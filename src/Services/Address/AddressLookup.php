@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Services\Address;
 
-use Dashed\DashedCore\Models\Customsetting;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Dashed\DashedCore\Models\Customsetting;
 
 /**
  * Adres-lookup via postcode + huisnummer. Probeert eerst PostNL (als API key

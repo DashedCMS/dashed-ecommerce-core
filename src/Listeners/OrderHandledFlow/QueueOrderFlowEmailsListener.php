@@ -5,8 +5,8 @@ namespace Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow;
 use Illuminate\Support\Facades\Log;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 use Dashed\DashedEcommerceCore\Jobs\OrderHandledFlow\SendOrderHandledEmailJob;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
 class QueueOrderFlowEmailsListener
 {

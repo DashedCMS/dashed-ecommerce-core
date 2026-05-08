@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Illuminate\Session\ArraySessionHandler;
 use Illuminate\Session\Store;
+use Illuminate\Session\ArraySessionHandler;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 
 beforeEach(function () {

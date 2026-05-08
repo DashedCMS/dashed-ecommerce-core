@@ -189,6 +189,7 @@ class AttributionTracker
         foreach (self::TRACKED_PARAMS as $key) {
             if (! empty($cart->{$key})) {
                 $hasAny = true;
+
                 break;
             }
         }
@@ -315,6 +316,7 @@ class AttributionTracker
         if (! $value) {
             return null;
         }
+
         try {
             return Carbon::parse($value);
         } catch (\Throwable $e) {

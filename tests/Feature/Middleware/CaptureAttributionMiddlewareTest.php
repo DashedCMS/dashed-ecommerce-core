@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Http\Request;
-use Illuminate\Session\ArraySessionHandler;
 use Illuminate\Session\Store;
-use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
+use Illuminate\Session\ArraySessionHandler;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
+use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 
 beforeEach(function () {
     $store = new Store('attribution-mw', new ArraySessionHandler(120));

@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
-use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Livewire\Component;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Livewire\Concerns\ProductCartActions;
 
 /**
  * Self-contained Livewire-component voor de quick-add modal:

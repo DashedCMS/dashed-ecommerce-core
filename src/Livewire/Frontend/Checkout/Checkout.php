@@ -29,9 +29,9 @@ use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
-use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
 
 class Checkout extends Component

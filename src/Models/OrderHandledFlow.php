@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderHandledFlow extends Model
@@ -129,6 +129,7 @@ class OrderHandledFlow extends Model
                 $cum += $weights[$i];
                 if ($rand <= $cum) {
                     $picked = $entry;
+
                     break;
                 }
             }

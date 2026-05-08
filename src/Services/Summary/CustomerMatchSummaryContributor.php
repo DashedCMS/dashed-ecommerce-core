@@ -6,10 +6,10 @@ namespace Dashed\DashedEcommerceCore\Services\Summary;
 
 use Throwable;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
-use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
 use Dashed\DashedCore\Services\Summary\DTOs\SummaryPeriod;
 use Dashed\DashedCore\Services\Summary\DTOs\SummarySection;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchEndpoint;
+use Dashed\DashedEcommerceCore\Models\CustomerMatchAccessLog;
 use Dashed\DashedCore\Services\Summary\Contracts\SummaryContributorInterface;
 
 /**
@@ -81,6 +81,7 @@ class CustomerMatchSummaryContributor implements SummaryContributorInterface
 
         // Aantal keer dat Google Ads de feed in de periode ophaalde.
         $accessCount = 0;
+
         try {
             $accessCount = CustomerMatchAccessLog::query()
                 ->where('customer_match_endpoint_id', $endpoint->id)
