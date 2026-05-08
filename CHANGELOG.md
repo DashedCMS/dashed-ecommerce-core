@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.20.2 - 2026-05-08
+
+### Fixed
+- `body-extend.blade.php` registreert Livewire-event listeners (`productAddedToCart`, `viewProduct`, `cartInitiated`, `checkoutSubmitted`, `orderPaid`) nu defensief: als `window.Livewire` al bestaat bind direct, anders luister op `livewire:init`. Voorheen liep registratie altijd via `addEventListener('livewire:init', ...)` waardoor de callback nooit kwam wanneer `@livewireScripts` vóór deze tag stond. Daardoor werden Facebook Pixel events (AddToCart, ViewContent, AddPaymentInfo, Purchase, InitiateCheckout) en de bijbehorende GA4 / TikTok-tracking calls niet afgevuurd.
+
 ## v4.20.0 - 2026-05-07
 
 ### Added
