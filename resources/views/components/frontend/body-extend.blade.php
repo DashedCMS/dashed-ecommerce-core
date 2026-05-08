@@ -61,9 +61,6 @@
 
 <script>
     (function () {
-        // Registreer idempotent: bij hot reloads of layouts waar
-        // @livewireScripts vóór deze tag staat is livewire:init al gevuurd
-        // en moeten we direct binden. Anders wacht op livewire:init.
         const register = () => {
         const tracking = {
             gtm: @json($googleTagmanagerEnabled),
