@@ -85,14 +85,11 @@ class Order extends Model
             $order->initials = $order->first_name ? strtoupper($order->first_name[0]).'.' : '';
             $order->site_id = Sites::getActive();
 
-            // Vangnet: als de aanroepende code geen attributie heeft gezet,
-            // proberen we deze alsnog uit de cart of sessie te halen voordat
-            // de order wordt opgeslagen.
+            // Vangnet: altijd attributie proberen mee te schrijven. attachToOrder
+            // is idempotent (empty()-check per kolom) en merget cart + sessie,
+            // zodat ook gedeeltelijke UTM-sets correct worden aangevuld.
             try {
-                if (\Illuminate\Support\Facades\Schema::hasColumn($order->getTable(), 'utm_source')
-                    && empty($order->utm_source)
-                    && empty($order->utm_medium)
-                    && empty($order->utm_campaign)) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn($order->getTable(), 'utm_source')) {
                     $cart = $order->cart_id ? $order->cart : null;
                     \Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker::attachToOrder($order, $cart);
                 }

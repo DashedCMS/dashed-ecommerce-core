@@ -21,13 +21,36 @@ class CaptureAttributionMiddleware
         }
 
         try {
-            AttributionTracker::captureFromRequest($request);
+            $touch = AttributionTracker::captureFromRequest($request);
+
+            // Wanneer er nieuwe UTM- of click-id-data is opgevangen, ook
+            // direct doorzetten naar een eventueel bestaande cart. Anders
+            // staan de UTM's wel in de sessie maar niet op de cart, en
+            // raken ze kwijt zodra de cart in een latere request via de
+            // cookie wordt geladen.
+            if (is_array($touch) && $this->touchHasTrackedParams($touch)) {
+                AttributionTracker::maybeAttachToExistingCart($request);
+            }
         } catch (\Throwable $e) {
             // Attribution-tracking mag de request nooit breken.
             report($e);
         }
 
         return $next($request);
+    }
+
+    /**
+     * @param  array<string,mixed>  $touch
+     */
+    protected function touchHasTrackedParams(array $touch): bool
+    {
+        foreach (AttributionTracker::TRACKED_PARAMS as $key) {
+            if (! empty($touch[$key])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function shouldCapture(Request $request): bool

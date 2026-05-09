@@ -154,8 +154,10 @@ class AttributionTracker
     }
 
     /**
-     * Kopieert attributie naar een Order. Voorkeur: data die al op de Cart
-     * staat. Anders valt het terug op de sessie.
+     * Kopieert attributie naar een Order. Past zowel de cart-data als de
+     * sessie-data toe; bestaande waardes blijven dankzij de empty()-check
+     * in applyTouches. Cart wint waar gevuld; sessie vult de gaten als de
+     * cart bv. alleen landing_page had maar de sessie nog UTMs vasthoudt.
      */
     public static function attachToOrder(Order $order, ?Cart $cart = null): void
     {
@@ -165,12 +167,41 @@ class AttributionTracker
 
         $cart = $cart ?: ($order->cart_id ? $order->cart : null);
 
-        $touches = self::touchesFromCart($cart);
-        if ($touches === null) {
-            $touches = self::pullFromSession();
+        $cartTouches = self::touchesFromCart($cart);
+        if ($cartTouches !== null) {
+            self::applyTouches($order, $cartTouches);
         }
 
-        self::applyTouches($order, $touches);
+        $sessionTouches = self::pullFromSession();
+        if (! empty($sessionTouches['first_touch']) || ! empty($sessionTouches['last_touch'])) {
+            self::applyTouches($order, $sessionTouches);
+        }
+    }
+
+    /**
+     * Synchroniseert de huidige sessie-attributie naar de bestaande cart die
+     * via cookie gekoppeld is aan de bezoeker. Zo blijven cart-kolommen up-to-date
+     * wanneer een visitor pas later op een UTM-link klikt nadat de cart al bestond.
+     */
+    public static function maybeAttachToExistingCart(Request $request): void
+    {
+        try {
+            $cookieName = config('dashed-ecommerce.cart_cookie', 'cart_token');
+            $token = $request->cookie($cookieName);
+
+            if (! is_string($token) || ! \Illuminate\Support\Str::isUuid($token)) {
+                return;
+            }
+
+            $cart = Cart::query()->where('token', $token)->first();
+            if (! $cart) {
+                return;
+            }
+
+            self::attachToCart($cart);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -243,7 +274,7 @@ class AttributionTracker
         $dirty = false;
         $extra = is_array($model->attribution_extra ?? null) ? $model->attribution_extra : [];
 
-        // Last-touch wint voor de gestructureerde kolommen.
+        // Last-touch wint voor de UTM-kolommen (last-touch attribution).
         if ($lastTouch) {
             foreach (self::TRACKED_PARAMS as $key) {
                 if (empty($model->{$key}) && ! empty($lastTouch[$key])) {
@@ -252,17 +283,27 @@ class AttributionTracker
                 }
             }
 
-            if (empty($model->landing_page) && ! empty($lastTouch['landing_page'])) {
-                $model->landing_page = mb_substr((string) $lastTouch['landing_page'], 0, 2048);
-                $dirty = true;
-            }
-            if (empty($model->landing_page_referrer) && ! empty($lastTouch['referrer'])) {
-                $model->landing_page_referrer = mb_substr((string) $lastTouch['referrer'], 0, 2048);
-                $dirty = true;
-            }
-
             if (empty($model->attribution_last_touch_at) && ! empty($lastTouch['at'])) {
                 $model->attribution_last_touch_at = self::parseDate($lastTouch['at']);
+                $dirty = true;
+            }
+        }
+
+        // Landing-page en referrer komen van de eerste touch: dat is letterlijk
+        // de URL waar de bezoeker binnenkwam en de externe verwijzer. Met
+        // fallback naar de laatste touch voor het zeldzame geval dat de
+        // first-touch kant leeg is.
+        $landingSource = (! empty($firstTouch['landing_page']) || ! empty($firstTouch['referrer']))
+            ? $firstTouch
+            : $lastTouch;
+
+        if ($landingSource) {
+            if (empty($model->landing_page) && ! empty($landingSource['landing_page'])) {
+                $model->landing_page = mb_substr((string) $landingSource['landing_page'], 0, 2048);
+                $dirty = true;
+            }
+            if (empty($model->landing_page_referrer) && ! empty($landingSource['referrer'])) {
+                $model->landing_page_referrer = mb_substr((string) $landingSource['referrer'], 0, 2048);
                 $dirty = true;
             }
         }
