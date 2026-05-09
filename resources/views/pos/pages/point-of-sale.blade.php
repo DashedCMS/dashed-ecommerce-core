@@ -16,17 +16,6 @@
                         <p class="font-bold text-5xl" x-html="time"></p>
                     </div>
                     <div class="flex flex-wrap gap-4">
-                        <button type="button"
-                                wire:click="togglePriceMode"
-                                x-bind:disabled="loading"
-                                x-bind:class="['bg-primary-500 hover:bg-primary-700', loading ? 'opacity-60' : '']"
-                                x-bind:title="isExVat ? 'Prijzen tonen: ex BTW (klik voor incl)' : 'Prijzen tonen: incl BTW (klik voor ex)'"
-                                class="h-12 px-4 text-white transition-all duration-300 ease-in-out rounded-full flex items-center justify-center gap-2 text-sm font-semibold">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 6h.008v.008h-.008V15zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                            </svg>
-                            <span x-text="isExVat ? 'Ex BTW' : 'Incl BTW'"></span>
-                        </button>
                         <button type="button" x-cloak x-show="products.length"
                                 wire:click="mountAction('saveAsConceptAction')"
                                 x-bind:disabled="loading"
@@ -337,6 +326,18 @@
 
                         <p>Voorraadbeheer</p>
                     </button>
+                    <button type="button"
+                            wire:click="togglePriceMode"
+                            x-bind:disabled="loading"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:title="isExVat ? 'Klik om incl BTW te tonen' : 'Klik om ex BTW te tonen'"
+                            class="focus-search-order text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 6h.008v.008h-.008V15zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+
+                        <p x-text="isExVat ? 'Toon prijzen incl BTW' : 'Toon prijzen ex BTW'"></p>
+                    </button>
                     @php($conceptCount = \Dashed\DashedEcommerceCore\Models\Order::concept()->count())
                     @if ($conceptCount > 0)
                         <button type="button"
@@ -453,6 +454,30 @@
                                 <div class="text-sm font-bold flex justify-between items-center mb-2">
                                     <span>Korting</span>
                                     <span class="font-bold" x-html="discount"></span>
+                                </div>
+                                <hr>
+                            </div>
+                            <div x-show="giftCards.length > 0" x-cloak>
+                                <template x-for="card in giftCards" :key="card.code">
+                                    <div class="text-sm font-bold flex justify-between items-center gap-2 mb-2">
+                                        <span class="flex items-center gap-2 truncate">
+                                            <button type="button"
+                                                    @click="$wire.removeGiftCardCode(card.code)"
+                                                    class="text-danger-500 hover:text-danger-700 shrink-0"
+                                                    title="Cadeaubon verwijderen">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                            <span class="truncate">Cadeaubon <span x-text="card.code" class="font-mono"></span></span>
+                                        </span>
+                                        <span class="font-bold whitespace-nowrap">- <span x-html="card.redeemedFormatted"></span></span>
+                                    </div>
+                                </template>
+                                <div class="text-sm font-bold flex justify-between items-center mb-2"
+                                     x-show="giftCards.length > 1">
+                                    <span>Cadeaubonnen totaal</span>
+                                    <span class="font-bold">- <span x-html="giftCardsTotal"></span></span>
                                 </div>
                                 <hr>
                             </div>
@@ -1814,6 +1839,9 @@
         total: null,
         totalUnformatted: null,
         activeDiscountCode: null,
+        giftCards: [],
+        giftCardsTotal: null,
+        giftCardsTotalUnformatted: 0,
         searchedProducts: [],
         paymentMethods: [],
         order: null,
@@ -2090,6 +2118,9 @@
                     this.shippingMethodId = data.shippingMethodId;
                     this.shippingMethodCosts = data.shippingCosts;
                     this.shippingMethodCostsUnformatted = data.shippingCostsUnformatted;
+                    this.giftCards = data.giftCards || [];
+                    this.giftCardsTotal = data.giftCardsTotal;
+                    this.giftCardsTotalUnformatted = data.giftCardsTotalUnformatted ?? 0;
                     this.paymentMethods = data.paymentMethods;
                 }
 
@@ -3610,6 +3641,16 @@
             $wire.on('discountCodeCreated', (variable) => {
                 this.discountCode = variable[0].discountCode;
                 this.createDiscountPopup = false;
+                this.focus();
+                this.retrieveCart();
+            })
+
+            $wire.on('giftCardApplied', () => {
+                this.focus();
+                this.retrieveCart();
+            })
+
+            $wire.on('giftCardRemoved', () => {
                 this.focus();
                 this.retrieveCart();
             })
