@@ -167,20 +167,20 @@ class PointOfSaleApiController extends Controller
             ];
         }
 
-        $discountCodeString = $discountCode !== null ? (string) $discountCode : (string) ($posCart->discount_code ?? '');
-
-        $discountCodeModel = null;
-        if ($discountCodeString !== '') {
-            $discountCodeModel = DiscountCode::usable()->where('code', $discountCodeString)->first();
-            if (! $discountCodeModel) {
-                $discountCodeString = '';
-            }
+        // Een nieuw aangeboden kortingscode (vanuit de query-string of de
+        // search-as-code-flow) wordt via applyDiscountCode toegevoegd aan de
+        // applied_discount_codes lijst. Cumulatieregel (max 1 procentueel +
+        // meerdere vast) en duplicaat-check zit daarin. Mislukt het, dan val
+        // we terug op alleen de bestaande applied codes.
+        if ($discountCode !== null && trim((string) $discountCode) !== '') {
+            $posCart->applyDiscountCode((string) $discountCode);
+            $posCart->refresh();
         }
 
-        $posCart->discount_code = $discountCodeString ?: null;
-        $posCart->save();
+        $discountCodeRecords = $posCart->appliedDiscountCodeRecords();
+        $discountCodeString = (string) ($posCart->discount_code ?? ($discountCodeRecords->first()->code ?? ''));
 
-        $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
+        $totals = $this->calculatePosCartTotals($posCart, $discountCodeRecords);
 
         $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
         $shippingZone = $posCart->country ? ShoppingCart::getShippingZoneByCountry($posCart->country) : null;
@@ -188,7 +188,8 @@ class PointOfSaleApiController extends Controller
             ? (float) $chosenShippingMethod->costsForCart($shippingZone->id ?? null)
             : 0.0;
 
-        $totalUnformatted = (float) $totals['subtotal'] + (float) $shippingCosts;
+        $giftCardsTotal = (float) ($totals['giftCardsTotal'] ?? 0);
+        $totalUnformatted = round(max(0, (float) $totals['subtotal'] + (float) $shippingCosts - $giftCardsTotal), 2);
 
         $isExVat = (bool) ($posCart->prices_ex_vat ?? false);
         $mode = $isExVat ? 'ex' : 'incl';
@@ -259,6 +260,37 @@ class PointOfSaleApiController extends Controller
             'shippingMethodId' => $chosenShippingMethod->id ?? null,
             'shippingCosts' => CurrencyHelper::formatPrice($shippingCosts),
             'shippingCostsUnformatted' => $shippingCosts,
+
+            'discountCodes' => array_map(function ($line) {
+                $type = (string) ($line['type'] ?? 'amount');
+                $value = $type === 'percentage'
+                    ? rtrim(rtrim(number_format((float) ($line['discount_percentage'] ?? 0), 2, ',', '.'), '0'), ',').'%'
+                    : '€'.number_format((float) ($line['discount_amount'] ?? 0), 2, ',', '.');
+
+                return [
+                    'code' => $line['code'] ?? '',
+                    'discount_code_id' => $line['discount_code_id'] ?? 0,
+                    'type' => $type,
+                    'discount_percentage' => $line['discount_percentage'] ?? 0,
+                    'discount_amount' => $line['discount_amount'] ?? 0,
+                    'applied_amount' => $line['applied_amount'] ?? 0,
+                    'appliedAmountFormatted' => CurrencyHelper::formatPrice((float) ($line['applied_amount'] ?? 0)),
+                    'valueLabel' => $value,
+                ];
+            }, $totals['discountCodes'] ?? []),
+
+            'giftCards' => array_map(function ($line) {
+                return [
+                    'code' => $line['code'] ?? '',
+                    'discount_code_id' => $line['discount_code_id'] ?? 0,
+                    'balance' => $line['balance'] ?? 0,
+                    'balanceFormatted' => CurrencyHelper::formatPrice((float) ($line['balance'] ?? 0)),
+                    'redeemed' => $line['redeemed'] ?? 0,
+                    'redeemedFormatted' => CurrencyHelper::formatPrice((float) ($line['redeemed'] ?? 0)),
+                ];
+            }, $totals['giftCards'] ?? []),
+            'giftCardsTotal' => CurrencyHelper::formatPrice((float) ($totals['giftCardsTotal'] ?? 0)),
+            'giftCardsTotalUnformatted' => (float) ($totals['giftCardsTotal'] ?? 0),
 
             'success' => true,
         ];
@@ -1551,8 +1583,22 @@ class PointOfSaleApiController extends Controller
         return $gross - ($gross / $divider);
     }
 
-    public function calculatePosCartTotals(POSCart $posCart, ?DiscountCode $discountCodeModel = null): array
+    public function calculatePosCartTotals(POSCart $posCart, $discountCodes = null): array
     {
+        // Normaliseer naar Collection<DiscountCode>. Backwards-compat: een
+        // enkele `DiscountCode` blijft werken; bij `null` worden de codes uit
+        // POSCart->appliedDiscountCodeRecords() gebruikt (incl. legacy single).
+        if ($discountCodes instanceof DiscountCode) {
+            $discountCodes = collect([$discountCodes]);
+        } elseif (is_array($discountCodes)) {
+            $discountCodes = collect($discountCodes);
+        } elseif (! ($discountCodes instanceof \Illuminate\Support\Collection)) {
+            $discountCodes = $posCart->appliedDiscountCodeRecords();
+        }
+
+        $percentageDiscount = $discountCodes->first(fn ($d) => ($d->type ?? null) === 'percentage');
+        $amountDiscounts = $discountCodes->filter(fn ($d) => ($d->type ?? null) === 'amount')->values();
+
         $products = $posCart->products ?? [];
         $customerUser = $posCart->customer_user_id ? User::find($posCart->customer_user_id) : null;
 
@@ -1586,8 +1632,8 @@ class PointOfSaleApiController extends Controller
             $lineWithoutDiscount = (float) Product::getShoppingCartItemPrice($item, null);
             $lineWithDiscount = $lineWithoutDiscount;
 
-            if ($discountCodeModel && ($discountCodeModel->type ?? null) === 'percentage') {
-                $lineWithDiscount = (float) Product::getShoppingCartItemPrice($item, $discountCodeModel);
+            if ($percentageDiscount) {
+                $lineWithDiscount = (float) Product::getShoppingCartItemPrice($item, $percentageDiscount);
             }
 
             $subtotal += $lineWithDiscount;
@@ -1613,9 +1659,30 @@ class PointOfSaleApiController extends Controller
         }
 
         $discount = max(0, $subtotalWithoutDiscount - $subtotal);
+        $discountCodeBreakdown = [];
 
-        if ($discountCodeModel && ($discountCodeModel->type ?? null) === 'amount') {
-            $fixedDiscount = min($subtotal, (float) ($discountCodeModel->discount_amount ?? 0));
+        if ($percentageDiscount) {
+            $discountCodeBreakdown[] = [
+                'code' => (string) $percentageDiscount->code,
+                'discount_code_id' => (int) $percentageDiscount->id,
+                'type' => 'percentage',
+                'discount_percentage' => (float) ($percentageDiscount->discount_percentage ?? 0),
+                'discount_amount' => 0.0,
+                'applied_amount' => round($discount, 2),
+            ];
+        }
+
+        foreach ($amountDiscounts as $amountDiscount) {
+            $fixedDiscount = min($subtotal, (float) ($amountDiscount->discount_amount ?? 0));
+
+            $discountCodeBreakdown[] = [
+                'code' => (string) $amountDiscount->code,
+                'discount_code_id' => (int) $amountDiscount->id,
+                'type' => 'amount',
+                'discount_percentage' => 0.0,
+                'discount_amount' => (float) ($amountDiscount->discount_amount ?? 0),
+                'applied_amount' => round($fixedDiscount, 2),
+            ];
 
             if ($fixedDiscount > 0 && $subtotal > 0 && count($lines)) {
                 $baseSubtotalForDistribution = $subtotal;
@@ -1695,6 +1762,7 @@ class PointOfSaleApiController extends Controller
             'subtotal' => round(max(0, $subtotal), 2),
             'subtotalWithoutDiscount' => round(max(0, $subtotalWithoutDiscount), 2),
             'discount' => round(max(0, $discount), 2),
+            'discountCodes' => $discountCodeBreakdown,
             'vat' => round(max(0, $vatTotal), 2),
             'vatPercentages' => $vatPercentages,
             'giftCards' => $giftCardLines,

@@ -19,6 +19,7 @@ class POSCart extends Model
         'custom_fields' => 'array',
         'prices_ex_vat' => 'boolean',
         'applied_gift_cards' => 'array',
+        'applied_discount_codes' => 'array',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -113,5 +114,140 @@ class POSCart extends Model
             fn ($entry) => (float) ($entry['balance'] ?? 0),
             $applied
         )), 2);
+    }
+
+    /**
+     * Pas een kortingscode toe op deze POS-winkelwagen. Cumulatieregel:
+     * maximaal één procentuele code (`type === 'percentage'`) tegelijk,
+     * vaste-bedrag-codes mogen onbeperkt stapelen. Returnt
+     * `['success' => bool, 'message' => string]`.
+     */
+    public function applyDiscountCode(string $code): array
+    {
+        $code = trim(strtoupper($code));
+        if ($code === '') {
+            return ['success' => false, 'message' => 'Geen code ingevoerd.'];
+        }
+
+        $applied = is_array($this->applied_discount_codes) ? $this->applied_discount_codes : [];
+        foreach ($applied as $existing) {
+            if (strtoupper((string) ($existing['code'] ?? '')) === $code) {
+                return ['success' => false, 'message' => 'Kortingscode is al toegepast op deze bestelling.'];
+            }
+        }
+
+        $discount = DiscountCode::usable()
+            ->where('code', $code)
+            ->where(function ($q) {
+                $q->where('is_giftcard', 0)->orWhereNull('is_giftcard');
+            })
+            ->first();
+
+        if (! $discount) {
+            return ['success' => false, 'message' => 'Kortingscode niet gevonden of niet geldig.'];
+        }
+
+        $type = (string) ($discount->type ?? 'amount');
+
+        if ($type === 'percentage') {
+            foreach ($applied as $existing) {
+                if (($existing['type'] ?? null) === 'percentage') {
+                    return ['success' => false, 'message' => 'Er kan maar één procentuele kortingscode tegelijk worden toegepast.'];
+                }
+            }
+        }
+
+        $applied[] = [
+            'code' => $discount->code,
+            'discount_code_id' => $discount->id,
+            'type' => $type,
+            'discount_percentage' => $type === 'percentage' ? (float) ($discount->discount_percentage ?? 0) : 0.0,
+            'discount_amount' => $type === 'amount' ? (float) ($discount->discount_amount ?? 0) : 0.0,
+        ];
+
+        $this->applied_discount_codes = array_values($applied);
+
+        if (! $this->discount_code) {
+            $this->discount_code = $discount->code;
+        }
+
+        $this->save();
+
+        $label = $type === 'percentage'
+            ? rtrim(rtrim(number_format((float) ($discount->discount_percentage ?? 0), 2, ',', '.'), '0'), ',').'%'
+            : '€'.number_format((float) ($discount->discount_amount ?? 0), 2, ',', '.');
+
+        return ['success' => true, 'message' => 'Kortingscode toegevoegd ('.$label.').'];
+    }
+
+    public function removeDiscountCode(string $code): bool
+    {
+        $code = trim(strtoupper($code));
+        $applied = is_array($this->applied_discount_codes) ? $this->applied_discount_codes : [];
+        $filtered = array_values(array_filter(
+            $applied,
+            fn ($entry) => strtoupper((string) ($entry['code'] ?? '')) !== $code
+        ));
+
+        if (count($filtered) === count($applied)) {
+            if (strtoupper((string) ($this->discount_code ?? '')) === $code) {
+                $this->discount_code = null;
+                $this->save();
+
+                return true;
+            }
+
+            return false;
+        }
+
+        $this->applied_discount_codes = $filtered;
+
+        if (strtoupper((string) ($this->discount_code ?? '')) === $code) {
+            $this->discount_code = $filtered[0]['code'] ?? null;
+        }
+
+        $this->save();
+
+        return true;
+    }
+
+    /**
+     * Eén lijst met toegepaste kortingscode-records. Combineert de nieuwe
+     * `applied_discount_codes` JSON-kolom en de legacy single-string
+     * `discount_code`-kolom (bestellingen die nog vóór de multi-code feature
+     * gemaakt zijn). Dedupt op id.
+     */
+    public function appliedDiscountCodeRecords(): \Illuminate\Support\Collection
+    {
+        $records = collect();
+
+        $applied = is_array($this->applied_discount_codes) ? $this->applied_discount_codes : [];
+        $appliedIds = [];
+        foreach ($applied as $entry) {
+            $id = (int) ($entry['discount_code_id'] ?? 0);
+            if (! $id) {
+                continue;
+            }
+            $model = DiscountCode::usable()->find($id);
+            if ($model && ! $model->is_giftcard) {
+                $records->push($model);
+                $appliedIds[] = $model->id;
+            }
+        }
+
+        if ($this->discount_code) {
+            $legacy = DiscountCode::usable()
+                ->where('code', $this->discount_code)
+                ->where(function ($q) {
+                    $q->where('is_giftcard', 0)->orWhereNull('is_giftcard');
+                })
+                ->first();
+
+            if ($legacy && ! in_array($legacy->id, $appliedIds, true)) {
+                $records->push($legacy);
+            }
+        }
+
+        return $records;
     }
 }
