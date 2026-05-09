@@ -2,7 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## v4.20.2 - 2026-05-08
+## v4.21.0 - 2026-05-09
+
+### Added
+- **Meerdere cadeaubonnen tegelijk inleveren in de POS.** Nieuwe `applied_gift_cards` JSON-kolom op `dashed__pos_carts` en `dashed__orders` houdt per POSCart een lijst van toegepaste cadeaubonnen bij. `POSCart::applyGiftcard($code)` valideert en voegt toe (controleert bestaan, `is_giftcard=1`, geldigheidsperiode, saldo > 0, geen duplicate). `POSCart::removeGiftcard($code)` haalt 'm weer eraf. `POSCart::appliedGiftCardsTotal()` retourneert het samengevoegde saldo.
+- Nieuwe header-action **"Cadeaubon inleveren"** op `POSPage` (icoon `heroicon-o-gift`). Modal met code-input, helpertekst toont al-toegepaste bonnen, submit roept `applyGiftCardCode()` aan en geeft een notification met succes of fout.
+- `PointOfSaleApiController::calculatePosCartTotals()` retourneert nu ook `giftCards` (lijst met `code`, `discount_code_id`, `balance`, `redeemed`), `giftCardsTotal` en `totalAfterGiftCards`. Per cadeaubon `min(saldo, resterend totaal)` zodat eerstvolgorde-eerst-uitgeput werkt.
+- Order finalisatie in POS: `Order.applied_gift_cards` wordt opgeslagen, per cadeaubon wordt het saldo van de `DiscountCode` afgeboekt + `DiscountCodeLog::createLog(tag: 'giftcard.redeemed')` + losse `OrderPayment` (`psp='giftcard'`, `payment_method='Cadeaubon <code>'`, `status='paid'`) per kaart aangemaakt. Op de POSCart wordt `applied_gift_cards` daarna geleegd.
+
+
 
 ### Fixed
 - `body-extend.blade.php` registreert Livewire-event listeners (`productAddedToCart`, `viewProduct`, `cartInitiated`, `checkoutSubmitted`, `orderPaid`) nu defensief: als `window.Livewire` al bestaat bind direct, anders luister op `livewire:init`. Voorheen liep registratie altijd via `addEventListener('livewire:init', ...)` waardoor de callback nooit kwam wanneer `@livewireScripts` vóór deze tag stond. Daardoor werden Facebook Pixel events (AddToCart, ViewContent, AddPaymentInfo, Purchase, InitiateCheckout) en de bijbehorende GA4 / TikTok-tracking calls niet afgevuurd.

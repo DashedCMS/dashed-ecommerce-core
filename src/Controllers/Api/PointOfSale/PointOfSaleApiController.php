@@ -751,6 +751,30 @@ class PointOfSaleApiController extends Controller
 
         $total = (float) ($totals['subtotal'] ?? 0) + $shippingCosts;
 
+        // Trek toegepaste cadeaubonnen af van het totaal. We rekenen 'm tegen
+        // het ná-discount subtotaal + verzendkosten zodat de gift card
+        // werkelijk het uit-te-betalen bedrag verlaagt. Per cadeaubon gebruiken
+        // we min(saldo, resterend totaal) zodat eerstvolgorde-eerst-uitgeput.
+        $appliedGiftCards = is_array($posCart->applied_gift_cards) ? $posCart->applied_gift_cards : [];
+        $giftCardRedemptions = [];
+        $remainingForGiftCards = round($total, 2);
+        $giftCardsTotalRedeemed = 0.0;
+        foreach ($appliedGiftCards as $entry) {
+            $balance = round((float) ($entry['balance'] ?? 0), 2);
+            if ($balance <= 0 || $remainingForGiftCards <= 0) {
+                continue;
+            }
+            $redeem = round(min($balance, $remainingForGiftCards), 2);
+            $remainingForGiftCards = round($remainingForGiftCards - $redeem, 2);
+            $giftCardsTotalRedeemed = round($giftCardsTotalRedeemed + $redeem, 2);
+            $giftCardRedemptions[] = [
+                'code' => (string) ($entry['code'] ?? ''),
+                'discount_code_id' => (int) ($entry['discount_code_id'] ?? 0),
+                'redeemed' => $redeem,
+            ];
+        }
+        $total = round(max(0, $total - $giftCardsTotalRedeemed), 2);
+
         $loadedConceptId = $posCart->loaded_concept_order_id ?? null;
         $order = null;
         if ($orderOrigin === 'pos' && $loadedConceptId) {
@@ -810,12 +834,50 @@ class PointOfSaleApiController extends Controller
             $order->discount_code_id = $discountCodeModel->id;
         }
 
+        $order->applied_gift_cards = $giftCardRedemptions ?: null;
+
         $order->shipping_method_id = $shippingMethod->id ?? null;
         $order->prices_ex_vat = (bool) ($posCart->prices_ex_vat ?? false);
         // Clear concept-only snapshot data now that the order is being finalised.
         $order->concept_cart_snapshot = null;
         $order->concept_discount_code = null;
         $order->save();
+
+        // Cadeaubonnen verzilveren: per kaart saldo afboeken + log + betaling
+        // toevoegen. Wordt alleen op definitieve order (niet concept) gedaan.
+        if ($orderOrigin === 'pos' && ! empty($giftCardRedemptions)) {
+            foreach ($giftCardRedemptions as $redemption) {
+                $card = DiscountCode::find($redemption['discount_code_id'] ?? 0);
+                if (! $card || ! $card->is_giftcard) {
+                    continue;
+                }
+                $oldAmount = (float) ($card->discount_amount ?? 0);
+                $card->discount_amount = max(0, round($oldAmount - (float) $redemption['redeemed'], 2));
+                $card->save();
+                if (method_exists($card, 'createLog')) {
+                    $card->createLog(
+                        tag: 'giftcard.redeemed',
+                        userId: auth()->id(),
+                        oldAmount: $oldAmount,
+                        newAmount: (float) $card->discount_amount,
+                    );
+                }
+
+                $payment = new OrderPayment();
+                $payment->order_id = $order->id;
+                $payment->psp = 'giftcard';
+                $payment->payment_method = 'Cadeaubon '.$card->code;
+                $payment->status = 'paid';
+                $payment->amount = (float) $redemption['redeemed'];
+                $payment->save();
+            }
+
+            // Cadeaubonnen geconsumeerd; leeg ze op de POS-cart zodat een
+            // volgende bestelling met dezelfde cart-identifier ze niet opnieuw
+            // toepast.
+            $posCart->applied_gift_cards = null;
+            $posCart->save();
+        }
 
         $extraOptionCache = [];
         $extraCache = [];
@@ -1595,6 +1657,39 @@ class PointOfSaleApiController extends Controller
             ->map(fn ($value) => round((float) $value, 2))
             ->toArray();
 
+        // Cadeaubonnen worden NA discount-code-toepassing afgetrokken van het
+        // totaal en als losse 'gift_card_redemption' regel teruggegeven. Per
+        // cadeaubon gebruiken we min(saldo, resterend totaal) zodat de
+        // volgorde-eerst-toegevoegd-eerst-uitgeput logica werkt.
+        $appliedGiftCards = is_array($posCart->applied_gift_cards) ? $posCart->applied_gift_cards : [];
+        $giftCardLines = [];
+        $giftCardRedemptionTotal = 0.0;
+        $remaining = round((float) $subtotal, 2);
+
+        foreach ($appliedGiftCards as $entry) {
+            $balance = round((float) ($entry['balance'] ?? 0), 2);
+            if ($balance <= 0 || $remaining <= 0) {
+                $giftCardLines[] = [
+                    'code' => (string) ($entry['code'] ?? ''),
+                    'discount_code_id' => (int) ($entry['discount_code_id'] ?? 0),
+                    'balance' => $balance,
+                    'redeemed' => 0.0,
+                ];
+
+                continue;
+            }
+            $redeem = round(min($balance, $remaining), 2);
+            $remaining = round($remaining - $redeem, 2);
+            $giftCardRedemptionTotal = round($giftCardRedemptionTotal + $redeem, 2);
+
+            $giftCardLines[] = [
+                'code' => (string) ($entry['code'] ?? ''),
+                'discount_code_id' => (int) ($entry['discount_code_id'] ?? 0),
+                'balance' => $balance,
+                'redeemed' => $redeem,
+            ];
+        }
+
         return [
             'lines' => $lines,
             'subtotal' => round(max(0, $subtotal), 2),
@@ -1602,6 +1697,9 @@ class PointOfSaleApiController extends Controller
             'discount' => round(max(0, $discount), 2),
             'vat' => round(max(0, $vatTotal), 2),
             'vatPercentages' => $vatPercentages,
+            'giftCards' => $giftCardLines,
+            'giftCardsTotal' => $giftCardRedemptionTotal,
+            'totalAfterGiftCards' => round(max(0, $subtotal - $giftCardRedemptionTotal), 2),
         ];
     }
 }

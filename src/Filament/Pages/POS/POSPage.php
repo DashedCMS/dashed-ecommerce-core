@@ -241,6 +241,7 @@ class POSPage extends Component implements HasActions, HasSchemas
     {
         $posCart = $this->getActivePosCart();
         $exMode = (bool) ($posCart->prices_ex_vat ?? false);
+        $applied = is_array($posCart->applied_gift_cards) ? $posCart->applied_gift_cards : [];
 
         return [
             Action::make('togglePriceMode')
@@ -249,7 +250,73 @@ class POSPage extends Component implements HasActions, HasSchemas
                 ->color($exMode ? 'warning' : 'gray')
                 ->button()
                 ->action('togglePriceMode'),
+            Action::make('redeemGiftCard')
+                ->label(empty($applied)
+                    ? 'Cadeaubon inleveren'
+                    : 'Cadeaubonnen ('.count($applied).')')
+                ->icon('heroicon-o-gift')
+                ->color('success')
+                ->button()
+                ->modalHeading('Cadeaubonnen inleveren')
+                ->modalSubmitActionLabel('Toepassen')
+                ->modalCancelActionLabel('Sluiten')
+                ->fillForm(['code' => ''])
+                ->schema([
+                    TextInput::make('code')
+                        ->label('Cadeaubon-code')
+                        ->placeholder('Bijv. WELKOM-ABC123')
+                        ->autofocus()
+                        ->maxLength(255)
+                        ->helperText(empty($applied)
+                            ? 'Voer een cadeaubon-code in om toe te passen op deze bestelling.'
+                            : 'Toegepast: '.collect($applied)->map(
+                                fn ($entry) => $entry['code'].' (€'.number_format((float) ($entry['balance'] ?? 0), 2, ',', '.').')'
+                            )->implode(', ').'. Voer een nieuwe code in om er nog een toe te voegen.'
+                        ),
+                ])
+                ->action(function (array $data) {
+                    $code = (string) ($data['code'] ?? '');
+                    if (trim($code) === '') {
+                        return;
+                    }
+                    $this->applyGiftCardCode($code);
+                }),
         ];
+    }
+
+    public function applyGiftCardCode(string $code): void
+    {
+        $posCart = $this->getActivePosCart();
+        $result = $posCart->applyGiftcard($code);
+
+        if (! $result['success']) {
+            Notification::make()
+                ->title($result['message'])
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title($result['message'])
+            ->success()
+            ->send();
+
+        $this->dispatch('giftCardApplied', ['code' => trim(strtoupper($code))]);
+    }
+
+    public function removeGiftCardCode(string $code): void
+    {
+        $posCart = $this->getActivePosCart();
+        if ($posCart->removeGiftcard($code)) {
+            Notification::make()
+                ->title('Cadeaubon verwijderd uit de bestelling.')
+                ->success()
+                ->send();
+
+            $this->dispatch('giftCardRemoved', ['code' => trim(strtoupper($code))]);
+        }
     }
 
     public function togglePriceMode(): void
