@@ -2,6 +2,23 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.23.0 - 2026-05-09
+
+### Added
+- **Meerdere kortingscodes tegelijk in de POS.** Nieuwe `applied_discount_codes` JSON-kolom op `dashed__pos_carts` en `dashed__orders` (migratie `2026_05_09_120000`). Cumulatie-regel: maximaal één procentuele code (`type=percentage`) tegelijk, vaste-bedrag-codes mogen onbeperkt stapelen. `POSCart::applyDiscountCode($code)` valideert (bestaat, niet-cadeaubon, niet duplicate, percentage-uniek) en voegt toe; `POSCart::removeDiscountCode($code)` haalt 'm weer eraf, zelfde patroon als `applyGiftcard`/`removeGiftcard` uit v4.21.0.
+- **`PointOfSaleApiController::calculatePosCartTotals` accepteert nu meerdere kortingscodes.** Signatuur naar `?Collection<DiscountCode>|DiscountCode|array|null`; backwards-compat blijft. Levert per toegepaste code een breakdown-regel (`code`, `discount_code_id`, `type`, `applied_amount`).
+- **`updateCart`-respons levert nu cadeaubon-data.** Per kaart een lijst (`code`, `discount_code_id`, `balance(Formatted)`, `redeemed(Formatted)`) + `giftCardsTotal` zodat de POS-cart-totalen elk verzilverde cadeaubon afzonderlijk kunnen tonen met verwijderknop. `totalUnformatted` trekt het cadeaubon-totaal af zodat het cart-totaalbedrag klopt.
+- **POS-blade toont cadeaubon-overzicht in het cart-totalenpaneel.** Per toegepaste cadeaubon een regel met code + verzilverd bedrag en een verwijderknop (roept `removeGiftCardCode` op `POSPage` aan). Bij twee of meer bonnen verschijnt een "Cadeaubonnen totaal"-regel.
+
+### Changed
+- **"Ex/Incl BTW"-knop verplaatst van pill bovenin naar grote kaart-knop in het actie-grid** (naast Voorraadbeheer, zelfde stijl). Label past zich aan: "Toon prijzen incl BTW" / "Toon prijzen ex BTW".
+
+### Fixed
+- **Attributie wordt voortaan altijd doorgezet naar de Order, ook bij gedeeltelijke UTM-sets.** `Order::saving` roept `AttributionTracker::attachToOrder` nu altijd aan zodra de `utm_source`-kolom bestaat (idempotent dankzij per-kolom `empty()`-check). Voorheen werd de aanroep overgeslagen wanneer er ook maar één UTM-veld al gevuld was, waardoor cart-UTMs niet meer aangevuld werden uit sessie en omgekeerd.
+- **`AttributionTracker::attachToOrder` merget cart-touches én sessie-touches.** Cart wint waar gevuld; sessie vult de gaten. Voorheen werd één bron gekozen en de andere genegeerd, dus een cart met alleen `landing_page` overschreef de UTMs uit de sessie niet meer.
+- **`landing_page` en `landing_page_referrer` komen voortaan uit de first-touch** (met fallback naar last-touch). Dat is letterlijk de URL waar de bezoeker binnenkwam; de oude logica overschreef die met de last-touch-URL.
+- **`CaptureAttributionMiddleware` synchroniseert nieuwe UTM-/click-id-touches direct naar de cart die via cookie aan de visitor hangt.** Voorheen stonden nieuwe UTMs wel in de sessie maar niet op de cart, en raakten ze kwijt zodra de cart in een latere request via de cookie geladen werd.
+
 ## v4.22.1 - 2026-05-09
 
 ### Changed
