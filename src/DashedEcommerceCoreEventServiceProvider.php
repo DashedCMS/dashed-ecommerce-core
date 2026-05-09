@@ -9,7 +9,6 @@ use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Listeners\UpdateOrderReservedStock;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Listeners\PrintDocumentsAfterPaidOrder;
-use Dashed\DashedEcommerceCore\Listeners\SendLatePaidAdminNotification;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow\QueueOrderFlowEmailsListener;
@@ -30,7 +29,6 @@ class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
         OrderMarkedAsPaidEvent::class => [
           PrintDocumentsAfterPaidOrder::class,
           CancelPendingAbandonedEmailsListener::class,
-          SendLatePaidAdminNotification::class,
         ],
         OrderCreatedEvent::class => [
           UpdateOrderReservedStock::class,

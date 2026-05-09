@@ -110,6 +110,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('own', 'Webshop', true);
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('pos', 'POS', false);
 
+        \Dashed\DashedEcommerceCore\Models\Order::observe(
+            \Dashed\DashedEcommerceCore\Listeners\SendLatePaidAdminNotification::class
+        );
+
         $this->registerPopupTemplates();
 
         cms()

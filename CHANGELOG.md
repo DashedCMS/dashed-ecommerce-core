@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.22.1 - 2026-05-09
+
+### Changed
+- **`SendLatePaidAdminNotification` is nu een Eloquent observer i.p.v. `OrderMarkedAsPaidEvent`-listener.** Dekking uitgebreid naar ALLE transities naar `paid`: pending/concept → paid, partially_paid → paid, en waiting_for_confirmation → paid. Voor de twee laatste dispatcht `Order::markAsPaid()` (eerste branch) géén `OrderMarkedAsPaidEvent`, waardoor die transities voorheen niet gevangen werden. De observer hookt op `Order::saved` en gebruikt `wasChanged('status')` + `getOriginal('status')` om de transitie te detecteren. Geregistreerd via `Order::observe(...)` in `DashedEcommerceCoreServiceProvider::bootingPackage()`.
+- **5-minuten "late payment" threshold verwijderd.** De observer vuurt nu direct bij elke transitie naar paid; voor de pending/concept → paid transitie wordt nog steeds dedup gedaan tegen `OrderOrigins::shouldNotifyAdmin($origin, 'telegram')` zodat de standaard SendInvoiceJob admin Telegram-melding voor 'own'/'Bol' enz. niet verdubbelt.
+- **Telegram-titel context-bewust.** `AdminOrderPaidLaterMail` accepteert nu een tweede constructor-param `$previousStatus`. Titel: "Bestelling betaald #X" (default), "Restant betaald op bestelling #X" (vanuit partially_paid), "Bestelling bevestigd & betaald #X" (vanuit waiting_for_confirmation). Veld "Onbetaald gebleven" wordt verborgen wanneer < 1 min.
+
 ## v4.22.0 - 2026-05-09
 
 ### Added

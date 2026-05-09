@@ -2,66 +2,71 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners;
 
+use Throwable;
 use Dashed\DashedCore\Classes\Mails;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderPaidLaterMail;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Throwable;
 
+/**
+ * Eloquent observer voor Order. Vuurt een Telegram melding wanneer een order
+ * naar `paid` overgaat:
+ *  - pending/concept → paid (mits SendInvoiceJob's standaard admin-notify niet
+ *    al voor dezelfde origin/channel actief is, om dubbele meldingen te
+ *    voorkomen voor 'own'/'Bol' enz.)
+ *  - partially_paid → paid (Order::markAsPaid()'s eerste branch dispatcht
+ *    geen `OrderMarkedAsPaidEvent`, dus zonder deze observer zou er niets
+ *    afgaan)
+ *  - waiting_for_confirmation → paid (idem)
+ */
 class SendLatePaidAdminNotification
 {
-    /**
-     * Threshold in minutes — only orders that stayed unpaid longer than this
-     * are considered "later paid" (typical: POS order paid via betaallink).
-     */
-    private const LATE_PAYMENT_THRESHOLD_MINUTES = 5;
-
-    public function handle(OrderMarkedAsPaidEvent $event): void
+    public function saved(Order $order): void
     {
-        $order = $event->order;
+        if (! $order->wasChanged('status')) {
+            return;
+        }
 
-        // Het event vuurt ook bij partially_paid en waiting_for_confirmation;
-        // we willen alleen melden bij volledig betaalde orders.
         if ($order->status !== 'paid') {
             return;
         }
 
-        if (! $order->created_at) {
+        $previousStatus = $order->getOriginal('status');
+        if ($previousStatus === 'paid') {
             return;
         }
 
-        $minutesSinceCreated = (int) abs(round($order->created_at->diffInMinutes(now())));
-        if ($minutesSinceCreated < self::LATE_PAYMENT_THRESHOLD_MINUTES) {
-            return;
-        }
-
-        // If the regular admin-notify path already covers Telegram for this
-        // order origin, SendInvoiceJob already fired the standard "new order"
-        // Telegram message — skip to avoid duplicates.
-        if (OrderOrigins::shouldNotifyAdmin($order->order_origin, 'telegram', $order->site_id)) {
+        // Voor de pending/concept → paid transitie verzorgt SendInvoiceJob
+        // (vanuit Order::markAsPaid()'s else-branch) al de admin Telegram-
+        // melding wanneer de origin op Telegram-notify staat. In dat geval
+        // hier overslaan om dubbele meldingen te voorkomen.
+        if (in_array($previousStatus, ['pending', 'concept', null], true)
+            && OrderOrigins::shouldNotifyAdmin($order->order_origin, 'telegram', $order->site_id)) {
             return;
         }
 
         try {
             $recipients = Mails::getAdminNotificationEmails();
             $recipients = is_array($recipients) ? $recipients : [];
-
-            // Telegram-only: pass a recipient address so the Mailable is
-            // technically sendable, but restrict channels to telegram.
             $to = $recipients !== [] ? $recipients : null;
 
-            AdminNotifier::send(new AdminOrderPaidLaterMail($order), $to, ['telegram']);
+            AdminNotifier::send(
+                new AdminOrderPaidLaterMail($order, (string) $previousStatus),
+                $to,
+                ['telegram'],
+            );
 
             OrderLog::createLog(
                 orderId: $order->id,
-                tag: 'order.paid-later.telegram-notification.sent',
+                tag: 'order.paid.telegram-notification.sent',
+                note: 'Vorige status: ' . ($previousStatus ?? 'null'),
             );
         } catch (Throwable $e) {
             OrderLog::createLog(
                 orderId: $order->id,
-                tag: 'order.paid-later.telegram-notification.failed',
+                tag: 'order.paid.telegram-notification.failed',
                 note: 'Error: ' . $e->getMessage(),
             );
         }
