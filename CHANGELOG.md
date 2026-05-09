@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.22.0 - 2026-05-09
+
+### Added
+- **Telegram melding bij later-betaalde orders.** Nieuwe `AdminOrderPaidLaterMail` (Telegram-only) en `SendLatePaidAdminNotification`-listener op `OrderMarkedAsPaidEvent` voor het scenario waarin een POS- of concept-order pas later betaald wordt (typisch via "Stuur betaallink"). Vuurt alleen wanneer (a) `status === 'paid'`, (b) `created_at` meer dan 5 minuten geleden is, en (c) de order-origin geen Telegram admin-notify aan heeft staan via `OrderOrigins::shouldNotifyAdmin($origin, 'telegram')` — daarmee voorkomen we dubbele meldingen voor origins zoals 'own' of 'Bol' waar `SendInvoiceJob` al de standaard "Nieuwe bestelling" Telegram stuurt. De Telegram-titel toont "Bestelling alsnog betaald #INV-X" en bevat een extra veld "Onbetaald gebleven" met de duur (min/uur/dagen). Loggt `order.paid-later.telegram-notification.sent` op succes en `…failed` bij exceptions.
+- **Voorraad-kolom op de OpenOrderProducts-tabel.** Naast "Aantal" (= openstaande aantal te leveren) toont de tabel nu een "Voorraad"-badge per regel: groen wanneer voorraad ≥ aantal, geel wanneer voorraad < aantal (deels leverbaar), rood bij ≤ 0. Producten zonder voorraadbeheer (`use_stock=false`) tonen ∞ wanneer `stock_status='in_stock'`, anders 0. Sortable via `LEFT JOIN dashed__products.stock`. `product` was al eager-loaded in `OpenOrderProductResource::getEloquentQuery`, dus geen N+1.
+
 ## v4.21.0 - 2026-05-09
 
 ### Added

@@ -36,6 +36,45 @@ class OpenOrderProductsTable
                 TextColumn::make('quantity')
                     ->label('Aantal')
                     ->sortable(),
+                TextColumn::make('product.stock')
+                    ->label('Voorraad')
+                    ->getStateUsing(function ($record) {
+                        $product = $record->product;
+                        if (! $product) {
+                            return '-';
+                        }
+                        if (! $product->use_stock) {
+                            return $product->stock_status === 'in_stock' ? '∞' : '0';
+                        }
+
+                        return (int) $product->stock;
+                    })
+                    ->badge()
+                    ->color(function ($record) {
+                        $product = $record->product;
+                        if (! $product || ! $product->use_stock) {
+                            return 'gray';
+                        }
+                        $stock = (int) $product->stock;
+                        $needed = (int) $record->quantity;
+                        if ($stock <= 0) {
+                            return 'danger';
+                        }
+                        if ($stock < $needed) {
+                            return 'warning';
+                        }
+
+                        return 'success';
+                    })
+                    ->sortable(query: fn (Builder $q, string $dir) => $q
+                        ->leftJoin(
+                            'dashed__products as voorraad_join',
+                            'voorraad_join.id',
+                            '=',
+                            'dashed__order_products.product_id'
+                        )
+                        ->orderBy('voorraad_join.stock', $dir)
+                        ->select('dashed__order_products.*')),
                 TextColumn::make('order.order_origin')
                     ->label('Order origin')
                     ->badge()
