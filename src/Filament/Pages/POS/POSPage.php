@@ -267,7 +267,8 @@ class POSPage extends Component implements HasActions, HasSchemas
                         ->placeholder('Bijv. WELKOM-ABC123')
                         ->autofocus()
                         ->maxLength(255)
-                        ->helperText(empty($applied)
+                        ->helperText(
+                            empty($applied)
                             ? 'Voer een cadeaubon-code in om toe te passen op deze bestelling.'
                             : 'Toegepast: '.collect($applied)->map(
                                 fn ($entry) => $entry['code'].' (€'.number_format((float) ($entry['balance'] ?? 0), 2, ',', '.').')'
