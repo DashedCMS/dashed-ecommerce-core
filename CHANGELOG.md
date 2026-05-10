@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.4 - 2026-05-10
+
+### Added
+- **Kolom 'Geannuleerd op' in de opvolg-mail enrollments-widget is nu sorteerbaar.** Standaard verborgen via toggle; aanzetten via de kolom-toggle bovenin de tabel.
+
 ## v4.24.3 - 2026-05-10
 
 ### Changed

@@ -177,6 +177,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->label('Geannuleerd op')
                     ->dateTime('d-m-Y H:i')
                     ->placeholder('-')
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
