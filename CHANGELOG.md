@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.2 - 2026-05-10
+
+### Changed
+- **Migratie `2026_05_10_180000_add_next_mail_at_to_order_flow_enrollments` doet nu zelf de backfill.** Direct na de schema-wijziging itereert hij over enrollments waarvoor `next_mail_at` nog leeg is en roept `recomputeNextMailAt()` aan. Per-rij errors worden gerapporteerd maar blokkeren de migratie niet. De `dashed:backfill-order-flow-enrollment-next-mail-at` command blijft beschikbaar voor handmatige hercomputaties (bv. na flow-edits met `--all`).
+
 ## v4.24.1 - 2026-05-10
 
 ### Fixed
