@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.3 - 2026-05-10
+
+### Changed
+- **Bestaande opvolg-mail-inschrijvingen voor PROFORMA / RETURN / concept / cancelled orders worden nu eenmalig gecanceld** via migratie `2026_05_10_181500`. Vóór v4.24.0 vuurde de fulfillment-status-listener ook op concept-bewerkingen, dus die orders kregen ten onrechte enrollments. Cancel-reden = `proforma_order` (Filament-widget toont 'Proforma / concept-order' in oranje); rijen blijven bestaan voor audit, `next_mail_at` wordt geleegd zodat ze uit het sortering-overzicht verdwijnen.
+
 ## v4.24.2 - 2026-05-10
 
 ### Changed

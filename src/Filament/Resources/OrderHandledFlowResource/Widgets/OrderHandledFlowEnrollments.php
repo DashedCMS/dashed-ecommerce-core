@@ -161,6 +161,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                         'recent_paid_order' => 'Recent betaalde order',
                         'mail_failed' => 'Mail mislukt',
                         'migrated' => 'Gemigreerd',
+                        'proforma_order' => 'Proforma / concept-order',
                         null, '' => '-',
                         default => $state,
                     })
@@ -169,6 +170,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                         'link_click', 'unsubscribed_via_link' => 'info',
                         'recent_paid_order' => 'success',
                         'mail_failed' => 'danger',
+                        'proforma_order' => 'warning',
                         default => 'gray',
                     }),
                 TextColumn::make('cancelled_at')
@@ -189,6 +191,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                         'recent_paid_order' => 'Recent betaalde order',
                         'mail_failed' => 'Mail mislukt',
                         'migrated' => 'Gemigreerd',
+                        'proforma_order' => 'Proforma / concept-order',
                     ]),
                 SelectFilter::make('chosen_review_url_label')
                     ->label('Platform')
