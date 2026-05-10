@@ -9,6 +9,7 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderPaidLaterMail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 /**
  * Eloquent observer voor Order. Vuurt een Telegram melding wanneer een order
@@ -23,6 +24,20 @@ use Dashed\DashedEcommerceCore\Mail\AdminOrderPaidLaterMail;
  */
 class SendLatePaidAdminNotification
 {
+    /**
+     * Backwards-compat: in v4.22.0 was deze klasse een event-listener op
+     * `OrderMarkedAsPaidEvent`. Vanaf v4.22.1 is het een Order-observer.
+     * Wie nog een gecachete `bootstrap/cache/events.php` (of legacy
+     * EventServiceProvider-mapping) heeft, dispatcht 'm alsnog als
+     * listener — Laravel zoekt dan eerst `handle()`, anders `__invoke()`.
+     * Dit shim-method routeert door naar de observer-logica zonder dubbele
+     * meldingen, omdat `saved()` zelf controleert op `wasChanged('status')`.
+     */
+    public function handle(OrderMarkedAsPaidEvent $event): void
+    {
+        $this->saved($event->order);
+    }
+
     public function saved(Order $order): void
     {
         if (! $order->wasChanged('status')) {

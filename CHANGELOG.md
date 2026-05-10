@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.1 - 2026-05-10
+
+### Fixed
+- **`SendLatePaidAdminNotification` crashte met "Call to undefined method __invoke()"** op installaties met een gecachete `bootstrap/cache/events.php` van vóór v4.22.1 (toen de klasse nog event-listener voor `OrderMarkedAsPaidEvent` was). Backwards-compat `handle(OrderMarkedAsPaidEvent $event)` shim toegevoegd die doorroutet naar de bestaande observer-logica; `saved()` blijft idempotent door `wasChanged('status')`-check zodat geen dubbele Telegram-meldingen.
+
 ## v4.24.0 - 2026-05-10
 
 ### Added
