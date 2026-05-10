@@ -4,22 +4,21 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Volgt op `2026_05_10_181500_cancel_order_flow_enrollments_for_proforma_orders`.
+ * In de eerste iteratie van die migratie (v4.24.3) werden proforma/concept-
+ * enrollments alleen geannuleerd. We willen ze nu volledig verwijderen, ook
+ * op installaties waar de eerste variant al gedraaid heeft. Op fresh envs
+ * (waar 181500 al direct deletet) is dit een no-op.
+ */
 return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('dashed__order_flow_enrollments') || ! Schema::hasTable('dashed__orders')) {
+        if (! Schema::hasTable('dashed__order_flow_enrollments')) {
             return;
         }
 
-        // Eénmalige opschoning: bestaande inschrijvingen op opvolg-mails die
-        // bij een PROFORMA / RETURN / concept / cancelled order horen
-        // verwijderen. Vóór v4.24.0 vuurde de fulfillment-status-listener
-        // ook op concept-bewerkingen, dus die orders kregen ten onrechte
-        // enrollments. Volledig deleten zodat ze nergens meer in de UI
-        // verschijnen. Voor envs waar deze migratie eerder al de 'cancel'-
-        // variant draaide (cancelled_reason='proforma_order') ruimen we
-        // ook die rijen op zodat overal hetzelfde eindbeeld ontstaat.
         DB::table('dashed__order_flow_enrollments')
             ->where(function ($w) {
                 $w->where('cancelled_reason', 'proforma_order')
@@ -38,9 +37,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Niet-omkeerbaar: we hebben de oorspronkelijke cancelled_at niet
-        // bewaard. Een rollback zou alle 'proforma_order'-cancellaties weer
-        // actief maken — dat willen we juist niet (de fix-listener weert ze
-        // sowieso, dus ze zouden nooit een mail krijgen).
+        // Niet-omkeerbaar: rijen zijn weg. Bewust geen restore.
     }
 };

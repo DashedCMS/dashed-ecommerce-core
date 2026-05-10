@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.5 - 2026-05-10
+
+### Changed
+- **Proforma/concept-enrollments worden nu eenmalig volledig verwijderd i.p.v. gecanceld.** Migratie `2026_05_10_181500` deleted op fresh envs direct alle enrollments waarvan de bijbehorende order `invoice_id IN (PROFORMA, RETURN)` of `status IN (concept, cancelled)` heeft. Nieuwe follow-up migratie `2026_05_10_182500` ruimt op envs die de v4.24.3-versie al draaiden óók de eerder gecanceld-met-`proforma_order`-rijen op zodat overal hetzelfde eindbeeld ontstaat.
+
 ## v4.24.4 - 2026-05-10
 
 ### Added
