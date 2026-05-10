@@ -1439,6 +1439,10 @@ MARKDOWN,
             \Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Widgets\OrderHandledFlowEnrollments::class,
         );
         Livewire::component(
+            'dashed.dashed-ecommerce-core.filament.resources.giftcard-resource.widgets.giftcard-stats',
+            \Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Widgets\GiftcardStats::class,
+        );
+        Livewire::component(
             'dashed.dashed-ecommerce-core.filament.widgets.product.product-open-orders-widget',
             \Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductOpenOrdersWidget::class,
         );

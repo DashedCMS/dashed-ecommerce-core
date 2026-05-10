@@ -6,6 +6,7 @@ use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Widgets\GiftcardStats;
 
 class ListGiftcards extends ListRecords
 {
@@ -17,6 +18,13 @@ class ListGiftcards extends ListRecords
     {
         return [
             CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            GiftcardStats::class,
         ];
     }
 }

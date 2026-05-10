@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.25.0 - 2026-05-10
+
+### Added
+- **Cadeaukaarten-overzicht: stats-widget bovenaan met drie KPI's.** `GiftcardStats` (`StatsOverviewWidget`) toont:
+  - **Cadeaukaarten met saldo** — aantal niet-verlopen kaarten met `discount_amount > 0`.
+  - **Waarde nog te besteden** — som `discount_amount` over actieve (niet-verlopen) kaarten.
+  - **Totaal uitgegeven** — som `used_amount` over alle kaarten.
+  Geregistreerd als header-widget op `ListGiftcards` en als Livewire-component in de service provider.
+
 ## v4.24.6 - 2026-05-10
 
 ### Fixed
