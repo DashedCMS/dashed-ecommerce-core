@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.6 - 2026-05-10
+
+### Fixed
+- **`next_mail_at`-backfill werkte niet op envs die v4.24.0/v4.24.1 al gedraaid hadden.** Migratie `2026_05_10_180000` kreeg in v4.24.2 inline-backfill, maar op installaties waar 180000 al in de migrations-tabel stond (van v4.24.0/v4.24.1, alleen schema, geen backfill) bleef die update dead code. Nieuwe migratie `2026_05_10_183000` dwingt de backfill alsnog af voor alle actieve enrollments waar `next_mail_at` nog NULL is. Op fresh envs is dit een no-op.
+
 ## v4.24.5 - 2026-05-10
 
 ### Changed
