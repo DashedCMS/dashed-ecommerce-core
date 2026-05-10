@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.23.1 - 2026-05-10
+
+### Fixed
+- **Facebook Pixel events sturen nu `content_ids` mee.** `AddToCart`, `ViewContent`, `InitiateCheckout`, `AddPaymentInfo` en `Purchase` voegen voortaan `content_type: 'product'`, `content_ids` (product->id als string, matcht het catalog feed), `contents` (per item id+quantity+item_price), `value` en `currency` toe. Daarvoor vuurden de events zonder enige product-data, waardoor Meta Events Manager "No content IDs received in last 7 days" meldde en dynamic retargeting ads niets hadden om op te matchen. Voor `InitiateCheckout` en `Purchase` ook `num_items` toegevoegd.
+- **`Checkout::submit()` dispatcht `checkoutSubmitted` nu met payload.** Bouwt een `items`-array (zelfde shape als `checkoutInitiated`) en geeft `cartTotal` mee, zodat `AddPaymentInfo` `content_ids` kan vullen. Voorheen werd het event leeg gedispatcht.
+
 ## v4.23.0 - 2026-05-09
 
 ### Added

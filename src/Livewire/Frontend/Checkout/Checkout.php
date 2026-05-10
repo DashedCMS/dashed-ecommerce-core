@@ -630,7 +630,30 @@ class Checkout extends Component
         cartHelper()->initialize($this->cartType);
         cartHelper()->setCartType($this->cartType);
 
-        $this->dispatch('checkoutSubmitted');
+        $checkoutSubmittedItems = [];
+        $checkoutSubmittedLoop = 0;
+        foreach ($this->cartItems as $cartItem) {
+            $model = $cartItem->model ?? null;
+            if (! $model) {
+                continue;
+            }
+
+            $checkoutSubmittedItems[] = [
+                'item_id' => $model->id,
+                'item_name' => $model->name,
+                'index' => $checkoutSubmittedLoop,
+                'item_category' => $model->productCategories->first()?->name ?? null,
+                'price' => number_format((float) ($cartItem->price ?? 0), 2, '.', ''),
+                'quantity' => (int) ($cartItem->qty ?? 0),
+            ];
+
+            $checkoutSubmittedLoop++;
+        }
+
+        $this->dispatch('checkoutSubmitted', [
+            'cartTotal' => number_format(cartHelper()->getTotal(), 2, '.', ''),
+            'items' => $checkoutSubmittedItems,
+        ]);
 
         $this->fillPrices();
         $this->checkCart();

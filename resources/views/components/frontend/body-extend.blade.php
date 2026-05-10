@@ -97,7 +97,18 @@
             }
 
             if (tracking.facebook && typeof fbq !== 'undefined') {
-                fbq('track', 'AddToCart');
+                const productId = payload.product && payload.product.id ? String(payload.product.id) : null;
+                const unitPrice = parseFloat(payload.price) || 0;
+                const qty = parseInt(payload.quantity) || 1;
+                fbq('track', 'AddToCart', {
+                    content_type: 'product',
+                    content_ids: productId ? [productId] : [],
+                    content_name: payload.productName,
+                    content_category: payload.category,
+                    contents: productId ? [{id: productId, quantity: qty, item_price: unitPrice}] : [],
+                    value: unitPrice * qty,
+                    currency: 'EUR',
+                });
             }
         });
 
@@ -128,7 +139,20 @@
 
             setTimeout(() => {
                 if (tracking.facebook && typeof fbq !== 'undefined') {
-                    fbq('track', 'InitiateCheckout');
+                    const items = Array.isArray(payload.items) ? payload.items : [];
+                    const fbContents = items.map(i => ({
+                        id: String(i.item_id ?? i.id ?? ''),
+                        quantity: parseInt(i.quantity) || 1,
+                        item_price: parseFloat(i.price) || 0,
+                    })).filter(i => i.id);
+                    fbq('track', 'InitiateCheckout', {
+                        content_type: 'product',
+                        content_ids: fbContents.map(i => i.id),
+                        contents: fbContents,
+                        num_items: fbContents.reduce((n, i) => n + i.quantity, 0),
+                        value: parseFloat(payload.cartTotal) || 0,
+                        currency: 'EUR',
+                    });
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
@@ -168,7 +192,17 @@
 
             setTimeout(() => {
                 if (tracking.facebook && typeof fbq !== 'undefined') {
-                    fbq('track', 'ViewContent');
+                    const productId = payload.product && payload.product.id ? String(payload.product.id) : null;
+                    const unitPrice = parseFloat(payload.price) || 0;
+                    fbq('track', 'ViewContent', {
+                        content_type: 'product',
+                        content_ids: productId ? [productId] : [],
+                        content_name: payload.productName,
+                        content_category: payload.category,
+                        contents: productId ? [{id: productId, quantity: 1, item_price: unitPrice}] : [],
+                        value: unitPrice,
+                        currency: 'EUR',
+                    });
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
@@ -199,7 +233,19 @@
             const payload = event[0];
 
             if (tracking.facebook && typeof fbq !== 'undefined') {
-                fbq('track', 'AddPaymentInfo');
+                const items = payload && Array.isArray(payload.items) ? payload.items : [];
+                const fbContents = items.map(i => ({
+                    id: String(i.item_id ?? i.id ?? ''),
+                    quantity: parseInt(i.quantity) || 1,
+                    item_price: parseFloat(i.price) || 0,
+                })).filter(i => i.id);
+                fbq('track', 'AddPaymentInfo', {
+                    content_type: 'product',
+                    content_ids: fbContents.map(i => i.id),
+                    contents: fbContents,
+                    value: payload && payload.cartTotal ? parseFloat(payload.cartTotal) : 0,
+                    currency: 'EUR',
+                });
             }
 
             if (tracking.tiktok && typeof ttq !== 'undefined') {
@@ -212,7 +258,20 @@
 
             setTimeout(() => {
                 if (tracking.facebook && typeof fbq !== 'undefined') {
-                    fbq('track', 'Purchase', {currency: 'EUR', value: payload.total});
+                    const items = Array.isArray(payload.items) ? payload.items : [];
+                    const fbContents = items.map(i => ({
+                        id: String(i.item_id ?? i.id ?? ''),
+                        quantity: parseInt(i.quantity) || 1,
+                        item_price: parseFloat(i.price) || 0,
+                    })).filter(i => i.id);
+                    fbq('track', 'Purchase', {
+                        content_type: 'product',
+                        content_ids: fbContents.map(i => i.id),
+                        contents: fbContents,
+                        num_items: fbContents.reduce((n, i) => n + i.quantity, 0),
+                        value: parseFloat(payload.total) || 0,
+                        currency: 'EUR',
+                    });
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
