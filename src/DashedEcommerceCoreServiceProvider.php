@@ -76,6 +76,7 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
+use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentNextMailAt;
 use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentReviewUrls;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
@@ -1757,6 +1758,7 @@ MARKDOWN,
                 SendAbandonedCartEmails::class,
                 PruneCartLogs::class,
                 BackfillOrderFlowEnrollmentReviewUrls::class,
+                BackfillOrderFlowEnrollmentNextMailAt::class,
             ]);
 
     }

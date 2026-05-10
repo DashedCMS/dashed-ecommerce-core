@@ -137,6 +137,7 @@ class SendOrderHandledEmailJob implements ShouldQueue
                 $enrollment->forceFill([
                     'cancelled_at' => now(),
                     'cancelled_reason' => 'recent_paid_order',
+                    'next_mail_at' => null,
                 ])->save();
 
                 if ($triggerStatus === 'handled') {
@@ -172,6 +173,7 @@ class SendOrderHandledEmailJob implements ShouldQueue
             $enrollment->forceFill([
                 'cancelled_at' => now(),
                 'cancelled_reason' => 'mail_failed',
+                'next_mail_at' => null,
             ])->save();
 
             if ($triggerStatus === 'handled') {

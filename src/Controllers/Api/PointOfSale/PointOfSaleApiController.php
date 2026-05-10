@@ -2,33 +2,34 @@
 
 namespace Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale;
 
-use Carbon\Carbon;
-use App\Models\User;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Cache;
+use App\Models\User;
+use Carbon\Carbon;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Classes\POSHelper;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Classes\VatDisplay;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Classes\PinTerminal;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedTranslations\Models\Translation;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class PointOfSaleApiController extends Controller
 {
@@ -52,7 +53,7 @@ class PointOfSaleApiController extends Controller
             $products = $posCart->products ?? [];
         } else {
             $posIdentifier = uniqid();
-            $posCart = new POSCart();
+            $posCart = new POSCart;
             $posCart->identifier = $posIdentifier;
             $posCart->user_id = $userId;
             $posCart->status = 'active';
@@ -538,14 +539,13 @@ class PointOfSaleApiController extends Controller
             $discountCode = DiscountCode::usable()->where('code', $productSearchQuery)->first();
 
             if ($discountCode) {
-                $posCart->discount_code = $discountCode->code;
-                $posCart->save();
+                $result = $posCart->applyDiscountCode($discountCode->code);
 
                 return response()->json([
                     'products' => array_reverse($posCart->products ?? []),
-                    'message' => 'Korting toegepast',
-                    'discountCode' => $discountCode->code,
-                    'success' => true,
+                    'message' => $result['message'] ?? ($result['success'] ? 'Korting toegepast' : 'Korting niet toegepast'),
+                    'discountCode' => $result['success'] ? $discountCode->code : null,
+                    'success' => (bool) ($result['success'] ?? false),
                 ]);
             }
 
@@ -633,10 +633,17 @@ class PointOfSaleApiController extends Controller
     {
         $data = $request->all();
         $posIdentifier = $data['posIdentifier'] ?? null;
+        $code = $data['code'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
-        $posCart->discount_code = '';
-        $posCart->save();
+
+        if ($code) {
+            $posCart->removeDiscountCode((string) $code);
+        } else {
+            $posCart->discount_code = '';
+            $posCart->applied_discount_codes = null;
+            $posCart->save();
+        }
 
         return response()->json(['success' => true]);
     }
@@ -674,7 +681,13 @@ class PointOfSaleApiController extends Controller
             $isPinTerminalPayment = (bool) ($paymentMethod?->pinTerminal);
             $postPay = (bool) ($paymentMethod?->postpay);
 
-            if ($postPay) {
+            // Cadeaubon-only / zero-total: createOrder heeft de bestelling al
+            // op 'paid' gezet via POSHelper::finishPaidOrder. We sturen
+            // dezelfde response-shape terug, zonder paymentMethod-block,
+            // zodat de frontend gelijk de bevestiging-popup kan tonen.
+            $alreadyPaid = $order->status === 'paid';
+
+            if ($postPay && ! $alreadyPaid) {
                 POSHelper::finishPaidOrder($order, $posCart, 'waiting_for_confirmation', 'unhandled');
             }
 
@@ -682,14 +695,15 @@ class PointOfSaleApiController extends Controller
                 'success' => true,
                 'order' => $order,
                 'suggestedCashPaymentAmounts' => $suggestedCashPaymentAmounts,
-                'paymentMethod' => [
+                'paymentMethod' => $paymentMethod ? [
                     'id' => $paymentMethod->id,
                     'name' => $paymentMethod->getTranslation('name', app()->getLocale()),
                     'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
                     'isCashPayment' => $paymentMethod->is_cash_payment,
-                ],
+                ] : null,
                 'isPinTerminalPayment' => $isPinTerminalPayment,
                 'postPay' => $postPay,
+                'alreadyPaid' => $alreadyPaid,
                 'orderUrl' => route('filament.dashed.resources.orders.view', ['record' => $order->id]),
             ]);
         }
@@ -765,17 +779,10 @@ class PointOfSaleApiController extends Controller
 
         $shippingMethod = ShippingMethod::find($posCart->shipping_method_id);
 
-        $discountCodeModel = null;
-        if ($posCart->discount_code) {
-            $discountCodeModel = DiscountCode::usable()->where('code', $posCart->discount_code)->first();
+        $discountCodeRecords = $posCart->appliedDiscountCodeRecords();
+        $discountCodeModel = $discountCodeRecords->first();
 
-            if (! $discountCodeModel) {
-                $posCart->discount_code = '';
-                $posCart->save();
-            }
-        }
-
-        $totals = $this->calculatePosCartTotals($posCart, $discountCodeModel);
+        $totals = $this->calculatePosCartTotals($posCart, $discountCodeRecords);
 
         $shippingCosts = (float) ($shippingMethod ? $shippingMethod->costsForCart(
             optional(ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0]))->id
@@ -788,6 +795,64 @@ class PointOfSaleApiController extends Controller
         // werkelijk het uit-te-betalen bedrag verlaagt. Per cadeaubon gebruiken
         // we min(saldo, resterend totaal) zodat eerstvolgorde-eerst-uitgeput.
         $appliedGiftCards = is_array($posCart->applied_gift_cards) ? $posCart->applied_gift_cards : [];
+
+        // Bij meerdere cadeaubonnen: vóór het afrekenen al het saldo
+        // verschuiven naar de éérste cadeaubon, en alleen die ene aan de
+        // bestelling koppelen. Op die manier draagt één fysieke kaart het
+        // restsaldo, en hoef je later niet meerdere bonnen los na te lopen.
+        // Per overgeplaatste bon: log van/naar zodat de audit-trail klopt.
+        if ($orderOrigin === 'pos' && count($appliedGiftCards) > 1) {
+            $primaryEntry = $appliedGiftCards[0];
+            $primaryCard = DiscountCode::find((int) ($primaryEntry['discount_code_id'] ?? 0));
+            if ($primaryCard && $primaryCard->is_giftcard) {
+                $primaryOldBalance = round((float) ($primaryCard->discount_amount ?? 0), 2);
+                $consolidatedBalance = $primaryOldBalance;
+
+                foreach (array_slice($appliedGiftCards, 1) as $entry) {
+                    $secondary = DiscountCode::find((int) ($entry['discount_code_id'] ?? 0));
+                    if (! $secondary || ! $secondary->is_giftcard) {
+                        continue;
+                    }
+                    $secondaryOld = round((float) ($secondary->discount_amount ?? 0), 2);
+                    if ($secondaryOld <= 0) {
+                        continue;
+                    }
+                    // Saldo overzetten: secondary → 0, primary += secondary.
+                    $secondary->discount_amount = 0.0;
+                    $secondary->save();
+                    if (method_exists($secondary, 'createLog')) {
+                        $secondary->createLog(
+                            tag: 'giftcard.merged_to_primary',
+                            userId: auth()->id(),
+                            oldAmount: $secondaryOld,
+                            newAmount: 0.0,
+                        );
+                    }
+                    $consolidatedBalance = round($consolidatedBalance + $secondaryOld, 2);
+                }
+
+                $primaryCard->discount_amount = $consolidatedBalance;
+                $primaryCard->save();
+                if (method_exists($primaryCard, 'createLog') && $consolidatedBalance !== $primaryOldBalance) {
+                    $primaryCard->createLog(
+                        tag: 'giftcard.merged_from_secondary',
+                        userId: auth()->id(),
+                        oldAmount: $primaryOldBalance,
+                        newAmount: $consolidatedBalance,
+                    );
+                }
+
+                // Cart aanpassen: alleen primary kaart met gebundeld saldo.
+                $appliedGiftCards = [[
+                    'code' => $primaryCard->code,
+                    'discount_code_id' => $primaryCard->id,
+                    'balance' => $consolidatedBalance,
+                ]];
+                $posCart->applied_gift_cards = $appliedGiftCards;
+                $posCart->save();
+            }
+        }
+
         $giftCardRedemptions = [];
         $remainingForGiftCards = round($total, 2);
         $giftCardsTotalRedeemed = 0.0;
@@ -825,7 +890,7 @@ class PointOfSaleApiController extends Controller
             }
         }
         if (! $order) {
-            $order = new Order();
+            $order = new Order;
         }
         $order->order_origin = $orderOrigin;
 
@@ -862,10 +927,26 @@ class PointOfSaleApiController extends Controller
         $order->status = 'pending';
         $order->ga_user_id = null;
 
-        if ($discountCodeModel) {
+        $hasDiscountCode = $discountCodeModel !== null;
+        $hasGiftCards = ! empty($giftCardRedemptions);
+        $giftCardOnlyDiscount = $hasGiftCards && ! $hasDiscountCode;
+
+        if ($hasDiscountCode) {
             $order->discount_code_id = $discountCodeModel->id;
+        } elseif ($giftCardOnlyDiscount) {
+            // Cadeaubon koppelen via legacy discount_code_id-FK zodat
+            // Order::created en Order::deductDiscount het saldo afboeken,
+            // reserved/used_amount bijhouden en de juiste 'started' /
+            // 'transaction.completed' log-events schrijven. Dat gedrag is
+            // hetzelfde als bij de oude single-giftcard flow.
+            $primaryRedemption = $giftCardRedemptions[0];
+            $order->discount_code_id = (int) ($primaryRedemption['discount_code_id'] ?? 0);
+            // discount-veld vertegenwoordigt het verzilverde cadeaubon-bedrag,
+            // zodat het Order::created event exact dit van het saldo aftrekt.
+            $order->discount = round((float) ($primaryRedemption['redeemed'] ?? 0), 2);
         }
 
+        $order->applied_discount_codes = ($totals['discountCodes'] ?? []) ?: null;
         $order->applied_gift_cards = $giftCardRedemptions ?: null;
 
         $order->shipping_method_id = $shippingMethod->id ?? null;
@@ -875,9 +956,40 @@ class PointOfSaleApiController extends Controller
         $order->concept_discount_code = null;
         $order->save();
 
-        // Cadeaubonnen verzilveren: per kaart saldo afboeken + log + betaling
-        // toevoegen. Wordt alleen op definitieve order (niet concept) gedaan.
-        if ($orderOrigin === 'pos' && ! empty($giftCardRedemptions)) {
+        // Kortingscodes loggen + POSCart-kolommen leegmaken zodat een volgende
+        // bestelling met dezelfde cart-identifier de codes niet opnieuw
+        // toepast. Dit gebeurt alleen op definitieve POS-bestellingen.
+        if ($orderOrigin === 'pos' && ! empty($totals['discountCodes'] ?? [])) {
+            foreach ($totals['discountCodes'] as $applied) {
+                $code = DiscountCode::find($applied['discount_code_id'] ?? 0);
+                if (! $code) {
+                    continue;
+                }
+                if (method_exists($code, 'createLog')) {
+                    $code->createLog(
+                        tag: 'discountcode.applied',
+                        userId: auth()->id(),
+                        oldAmount: (float) ($applied['applied_amount'] ?? 0),
+                        newAmount: (float) ($applied['applied_amount'] ?? 0),
+                    );
+                }
+            }
+
+            $posCart->applied_discount_codes = null;
+            $posCart->discount_code = null;
+            $posCart->save();
+        }
+
+        // Cadeaubonnen-afboeking. Twee paden:
+        //   1) giftCardOnlyDiscount: cadeaubon is via discount_code_id
+        //      gekoppeld. Order::created event heeft het saldo al afgeboekt en
+        //      'giftcard.order.transaction.started' gelogd. Niets te doen.
+        //   2) Combo (discount-code + cadeaubon): discount_code_id wijst naar
+        //      de kortingscode, dus moeten we de cadeaubonnen handmatig
+        //      afboeken (saldo + log). Geen OrderPayment per cadeaubon: de
+        //      cadeaubon vermindert al order->total, dus paid-amount-check
+        //      werkt zonder extra payment-regel.
+        if ($orderOrigin === 'pos' && $hasGiftCards && ! $giftCardOnlyDiscount) {
             foreach ($giftCardRedemptions as $redemption) {
                 $card = DiscountCode::find($redemption['discount_code_id'] ?? 0);
                 if (! $card || ! $card->is_giftcard) {
@@ -892,30 +1004,30 @@ class PointOfSaleApiController extends Controller
                         userId: auth()->id(),
                         oldAmount: $oldAmount,
                         newAmount: (float) $card->discount_amount,
+                        orderId: $order->id,
                     );
                 }
-
-                $payment = new OrderPayment();
-                $payment->order_id = $order->id;
-                $payment->psp = 'giftcard';
-                $payment->payment_method = 'Cadeaubon '.$card->code;
-                $payment->status = 'paid';
-                $payment->amount = (float) $redemption['redeemed'];
-                $payment->save();
             }
+        }
 
-            // Cadeaubonnen geconsumeerd; leeg ze op de POS-cart zodat een
-            // volgende bestelling met dezelfde cart-identifier ze niet opnieuw
-            // toepast.
+        if ($orderOrigin === 'pos' && $hasGiftCards) {
+            // Cadeaubonnen geconsumeerd; cart legen zodat een volgende
+            // bestelling met dezelfde cart-identifier ze niet opnieuw toepast.
             $posCart->applied_gift_cards = null;
             $posCart->save();
+        }
+
+        // Zero-total kort-circuit: als de cadeaubonnen het hele bedrag dekken,
+        // geen betaalmethode-keuze meer nodig — direct als betaald markeren.
+        if ($orderOrigin === 'pos' && round((float) $order->total, 2) <= 0 && $hasGiftCards) {
+            POSHelper::finishPaidOrder($order, $posCart, 'paid', 'handled');
         }
 
         $extraOptionCache = [];
         $extraCache = [];
 
         foreach (($totals['lines'] ?? []) as $line) {
-            $orderProduct = new OrderProduct();
+            $orderProduct = new OrderProduct;
             $orderProduct->quantity = (int) $line['quantity'];
             $orderProduct->product_id = $line['product_id'] ? (int) $line['product_id'] : null;
             $orderProduct->order_id = $order->id;
@@ -957,7 +1069,7 @@ class PointOfSaleApiController extends Controller
         }
 
         if ($shippingCosts > 0) {
-            $shippingLine = new OrderProduct();
+            $shippingLine = new OrderProduct;
             $shippingLine->quantity = 1;
             $shippingLine->product_id = null;
             $shippingLine->order_id = $order->id;
@@ -971,7 +1083,7 @@ class PointOfSaleApiController extends Controller
             $shippingLine->save();
         }
 
-        $orderLog = new OrderLog();
+        $orderLog = new OrderLog;
         $orderLog->order_id = $order->id;
         $orderLog->user_id = $userId;
         $orderLog->tag = 'order.created.by.admin';
@@ -1067,7 +1179,7 @@ class PointOfSaleApiController extends Controller
             }
         }
 
-        $orderPayment = new OrderPayment();
+        $orderPayment = new OrderPayment;
         $orderPayment->amount = $cashPaymentAmount ?: $order->total;
         $orderPayment->order_id = $order->id;
         $orderPayment->payment_method_id = $paymentMethod->id;
@@ -1079,7 +1191,7 @@ class PointOfSaleApiController extends Controller
         if ($orderPayment->amount > $order->total) {
             $difference = $order->total - $orderPayment->amount;
 
-            $refundOrderPayment = new OrderPayment();
+            $refundOrderPayment = new OrderPayment;
             $refundOrderPayment->amount = $difference;
             $refundOrderPayment->order_id = $order->id;
             $refundOrderPayment->payment_method_id = $paymentMethod->id;
@@ -1592,7 +1704,7 @@ class PointOfSaleApiController extends Controller
             $discountCodes = collect([$discountCodes]);
         } elseif (is_array($discountCodes)) {
             $discountCodes = collect($discountCodes);
-        } elseif (! ($discountCodes instanceof \Illuminate\Support\Collection)) {
+        } elseif (! ($discountCodes instanceof Collection)) {
             $discountCodes = $posCart->appliedDiscountCodeRecords();
         }
 

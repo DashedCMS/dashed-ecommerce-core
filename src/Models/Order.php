@@ -59,6 +59,8 @@ class Order extends Model
         'attribution_extra' => 'array',
         'attribution_first_touch_at' => 'datetime',
         'attribution_last_touch_at' => 'datetime',
+        'applied_discount_codes' => 'array',
+        'applied_gift_cards' => 'array',
     ];
 
     protected $appends = [

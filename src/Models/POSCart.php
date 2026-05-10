@@ -2,8 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class POSCart extends Model
@@ -136,6 +137,25 @@ class POSCart extends Model
             }
         }
 
+        // Eerst raw lookup zodat we precies kunnen zeggen waarom een code
+        // wordt geweigerd (giftcard / verlopen / voorraad op / verkeerde site).
+        $raw = DiscountCode::where('code', $code)->first();
+        if (! $raw) {
+            return ['success' => false, 'message' => 'Kortingscode niet gevonden.'];
+        }
+        if ((int) ($raw->is_giftcard ?? 0) === 1) {
+            return ['success' => false, 'message' => 'Dit is een cadeaubon. Gebruik de knop "Cadeaubon toepassen".'];
+        }
+        if ($raw->start_date && $raw->start_date->isFuture()) {
+            return ['success' => false, 'message' => 'Kortingscode is nog niet geldig.'];
+        }
+        if ($raw->end_date && $raw->end_date->isPast()) {
+            return ['success' => false, 'message' => 'Kortingscode is verlopen.'];
+        }
+        if ((int) ($raw->use_stock ?? 0) === 1 && (int) ($raw->stock ?? 0) <= 0) {
+            return ['success' => false, 'message' => 'Kortingscode is op (geen voorraad meer).'];
+        }
+
         $discount = DiscountCode::usable()
             ->where('code', $code)
             ->where(function ($q) {
@@ -144,7 +164,7 @@ class POSCart extends Model
             ->first();
 
         if (! $discount) {
-            return ['success' => false, 'message' => 'Kortingscode niet gevonden of niet geldig.'];
+            return ['success' => false, 'message' => 'Kortingscode niet geldig voor deze winkel.'];
         }
 
         $type = (string) ($discount->type ?? 'amount');
@@ -217,7 +237,7 @@ class POSCart extends Model
      * `discount_code`-kolom (bestellingen die nog vóór de multi-code feature
      * gemaakt zijn). Dedupt op id.
      */
-    public function appliedDiscountCodeRecords(): \Illuminate\Support\Collection
+    public function appliedDiscountCodeRecords(): Collection
     {
         $records = collect();
 

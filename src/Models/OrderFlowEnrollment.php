@@ -18,12 +18,14 @@ class OrderFlowEnrollment extends Model
         'chosen_review_url_label',
         'chosen_review_url',
         'sent_steps',
+        'next_mail_at',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'sent_steps' => 'array',
+        'next_mail_at' => 'datetime',
     ];
 
     /**
@@ -42,6 +44,46 @@ class OrderFlowEnrollment extends Model
         $sent[$key] = now()->toIso8601String();
 
         $this->forceFill(['sent_steps' => $sent])->save();
+
+        // Direct herrekenen welke mail nu de volgende is voor deze
+        // inschrijving, zodat de Filament-tabel kan sorteren op
+        // verzendmoment zonder zelf de stappen te traversen.
+        $this->recomputeNextMailAt();
+    }
+
+    /**
+     * Bereken `next_mail_at` op basis van de eerstvolgende actieve stap die
+     * nog niet in `sent_steps` staat. Stap-tijdstip = `started_at +
+     * send_after_minutes`. Geannuleerde inschrijvingen krijgen NULL. Zonder
+     * onverzonden stap idem.
+     */
+    public function recomputeNextMailAt(): void
+    {
+        $next = null;
+
+        if (! $this->cancelled_at && $this->flow) {
+            $sent = is_array($this->sent_steps) ? $this->sent_steps : [];
+            $sentIds = array_map('strval', array_keys($sent));
+
+            $startedAt = $this->started_at ?: $this->created_at ?? now();
+
+            $nextStep = $this->flow
+                ->steps()
+                ->where('is_active', true)
+                ->whereNotIn('id', $sentIds ?: [0])
+                ->orderBy('send_after_minutes')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->first();
+
+            if ($nextStep) {
+                $next = $startedAt->copy()->addMinutes((int) $nextStep->send_after_minutes);
+            }
+        }
+
+        if (($this->next_mail_at?->toIso8601String()) !== $next?->toIso8601String()) {
+            $this->forceFill(['next_mail_at' => $next])->save();
+        }
     }
 
     public function sentStepCount(): int

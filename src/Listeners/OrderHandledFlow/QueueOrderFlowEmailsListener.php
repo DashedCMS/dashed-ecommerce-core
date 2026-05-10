@@ -19,6 +19,17 @@ class QueueOrderFlowEmailsListener
             return;
         }
 
+        // Concept-/proforma-bestellingen mogen géén opvolg-mails triggeren.
+        // De fulfillment-status kan ook tijdens concept-bewerken muteren,
+        // maar pas na daadwerkelijke betaling (invoice_id != PROFORMA en
+        // niet in concept/cancelled-status) is de flow van toepassing.
+        if (in_array((string) $order->invoice_id, ['PROFORMA', 'RETURN'], true)) {
+            return;
+        }
+        if (in_array((string) $order->status, ['concept', 'cancelled'], true)) {
+            return;
+        }
+
         $flows = OrderHandledFlow::query()
             ->where('is_active', true)
             ->where('trigger_status', $newStatus)
@@ -59,7 +70,7 @@ class QueueOrderFlowEmailsListener
             $picked = $flow->pickReviewUrl();
 
             try {
-                OrderFlowEnrollment::create([
+                $enrollment = OrderFlowEnrollment::create([
                     'order_id' => $order->id,
                     'flow_id' => $flow->id,
                     'started_at' => now(),
@@ -68,6 +79,10 @@ class QueueOrderFlowEmailsListener
                     'chosen_review_url_label' => $picked['label'] ?? null,
                     'chosen_review_url' => $picked['url'] ?? null,
                 ]);
+
+                // Eerstvolgende mail-tijdstip alvast vastleggen zodat de
+                // Filament-tabel hierop kan sorteren / filteren.
+                $enrollment->recomputeNextMailAt();
             } catch (\Throwable $e) {
                 // Race-condition: unique-constraint kan klappen als 2 status-wisselingen
                 // tegelijk verwerkt worden. Niet fataal, gewoon doorgaan en de jobs

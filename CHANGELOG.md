@@ -2,6 +2,26 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.24.0 - 2026-05-10
+
+### Added
+- **POS: meerdere cadeaubonnen stapelen via eigen knop in het actie-grid.** "Korting toepassen" en nieuwe knop "Cadeaubon toepassen" delen één grid-cel (elk halve breedte) zodat de overige actieknoppen op dezelfde hoogte blijven staan. Knop-tellers tonen het aantal toegepaste codes / bonnen. Nieuwe Filament-popup `redeemGiftCardForm` met dezelfde input-styling als `createDiscountForm` toont reeds toegepaste bonnen + saldo + verwijder-knop, en accepteert opeenvolgende codes (tot het cadeaubon-totaal het ordertotaal dekt).
+- **Cadeaubon-saldo wordt vóór afrekenen geconsolideerd op de eerste bon.** Bij ≥2 toegepaste cadeaubonnen verschuift `PointOfSaleApiController::createOrder` het saldo van bonnen 2..N naar bon 1 (per stuk een `giftcard.merged_to_primary` / `giftcard.merged_from_secondary`-log met oud/nieuw saldo). De cart wordt herschreven naar één entry zodat klanten één fysieke kaart kunnen meenemen voor het restsaldo.
+- **Zero-total shortcut.** Wanneer cadeaubonnen het volledige ordertotaal dekken slaat de POS de betaalmethode-popup over: "Betaal X" wordt "Afronden", `selectPaymentMethod(null)` finaliseert via `POSHelper::finishPaidOrder('paid', 'handled')` en de bevestigings-popup verschijnt direct (response bevat `alreadyPaid: true`).
+- **Order-flow enrollments: `next_mail_at`-kolom + sortering.** Nieuwe `next_mail_at` timestamp op `dashed__order_flow_enrollments` (migratie `2026_05_10_180000`, met index). `OrderFlowEnrollment::recomputeNextMailAt()` herberekent het tijdstip op basis van eerstvolgende onverzonden actieve stap (`started_at + send_after_minutes`). Wordt automatisch gezet bij enrollment-creatie (`QueueOrderFlowEmailsListener`), na elke verzonden stap (`markStepSent`), en geleegd bij annulering (`recent_paid_order` / `mail_failed`). Filament-widget `OrderHandledFlowEnrollments` toont de kolom met description ("staat klaar" / "over X" / "alle mails verstuurd" / "flow gestopt") en is sorteerbaar; ook **Klant** (JOIN op `dashed__orders.last_name + first_name`), **Platform** (`chosen_review_url_label`) en **Verzonden** (`JSON_LENGTH(sent_steps)`) zijn nu sorteerbaar.
+- **Backfill-command `dashed:backfill-order-flow-enrollment-next-mail-at`** vult `next_mail_at` voor bestaande enrollments. Optie `--all` forceert een herrekening over alles (gebruik na flow-edits).
+- **`DiscountCodeLog::tag()` rendert nu `giftcard.redeemed`, `giftcard.merged_to_primary`, `giftcard.merged_from_secondary` en `discountcode.applied`** met leesbare zinnen i.p.v. "ERROR tag niet gevonden". Inclusief order-label (factuurnummer of id).
+
+### Changed
+- **Cadeaubon-only orders koppelen weer via legacy `discount_code_id`-FK.** `PointOfSaleApiController::createOrder` zet `discount_code_id = primaryGiftCard->id` en `order->discount = redeemed` zodat het bestaande `Order::created`-event het saldo afboekt en `giftcard.order.transaction.started` logt. Bij combo (kortingscode + cadeaubon) blijft `discount_code_id` op de kortingscode; cadeaubonnen worden dan handmatig afgeboekt zoals voorheen. Per-cadeaubon `OrderPayment`-regels worden niet meer aangemaakt — het saldo verlaagt al `order->total`, dus de paid-amount-check blijft kloppen zonder extra payment-regel.
+- **Kortingscode-dropdown in de POS filtert cadeaubonnen weg.** `Select::make('discountCode')` op `POSPage` gebruikt nu `DiscountCode::usable()->where('is_giftcard', 0|null)`. Voorheen kon je een cadeaubon kiezen en kreeg je daarna "Kortingscode niet geldig" omdat `applyDiscountCode()` giftcards alsnog weigerde.
+- **`POSCart::applyDiscountCode()` geeft specifieke foutmeldingen** in plaats van één generiek "niet gevonden of niet geldig": "is een cadeaubon", "nog niet geldig", "verlopen", "voorraad op", "niet geldig voor deze winkel", "niet gevonden".
+- **`Order` casts `applied_discount_codes` en `applied_gift_cards` als array** zodat insert-statements de JSON-kolommen niet meer als ruwe array proberen weg te schrijven (Array to string conversion bij afrekenen).
+
+### Fixed
+- **`POSHelper::finishPaidOrder()` crashte bij cadeaubon-betaalde orders.** `$orderPayment->paymentMethod->is_cash_payment` benaderd zonder null-check; cadeaubon-OrderPayments hebben geen `payment_method_id` (psp='giftcard'). Null-safe gemaakt met `?->`.
+- **Concept- en proforma-orders triggeren geen opvolg-mails meer.** `QueueOrderFlowEmailsListener` slaat orders met `invoice_id IN (PROFORMA, RETURN)` of `status IN (concept, cancelled)` over voordat de fulfillment-status-flow start.
+
 ## v4.23.1 - 2026-05-10
 
 ### Fixed

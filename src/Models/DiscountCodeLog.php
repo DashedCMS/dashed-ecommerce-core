@@ -34,16 +34,33 @@ class DiscountCodeLog extends Model
 
     public function tag()
     {
+        $userLabel = $this->user ? $this->user->name : 'Systeem';
+        $orderLabel = $this->order
+            ? (($this->order->name ?: 'POS') . ' (' . ($this->order->invoice_id ?: $this->order->id) . ')')
+            : null;
+
         if ($this->tag == 'giftcard.created') {
-            $string = ($this->user ? $this->user->name : 'Systeem') . ' heeft een cadeaubon aangemaakt met een waarde van ' . CurrencyHelper::formatPrice($this->new_amount) . '.';
+            $string = $userLabel . ' heeft een cadeaubon aangemaakt met een waarde van ' . CurrencyHelper::formatPrice($this->new_amount) . '.';
         } elseif ($this->tag == 'giftcard.amount.changed.by.admin') {
-            $string = ($this->user ? $this->user->name : 'Systeem') . ' heeft de waarde van ' . CurrencyHelper::formatPrice($this->old_amount) . ' naar ' . CurrencyHelper::formatPrice($this->new_amount) . ' veranderd.';
+            $string = $userLabel . ' heeft de waarde van ' . CurrencyHelper::formatPrice($this->old_amount) . ' naar ' . CurrencyHelper::formatPrice($this->new_amount) . ' veranderd.';
         } elseif ($this->tag == 'giftcard.order.transaction.started') {
             $string = $this->order->name . ' is een bestelling gestart (' . ($this->order->invoice_id ?: $this->order->id) . ') met ' . CurrencyHelper::formatPrice($this->order->discount) . ' korting.';
         } elseif ($this->tag == 'giftcard.order.transaction.completed') {
             $string = $this->order->name . ' heeft bestelling (' . ($this->order->invoice_id ?: $this->order->id) . ') betaald.';
         } elseif ($this->tag == 'giftcard.order.transaction.cancelled') {
             $string = $this->order->name . ' heeft bestelling (' . ($this->order->invoice_id ?: $this->order->id) . ') geannuleerd.';
+        } elseif ($this->tag == 'giftcard.redeemed') {
+            $string = $userLabel . ' heeft ' . CurrencyHelper::formatPrice($this->old_amount - $this->new_amount) . ' van deze cadeaubon ingewisseld'
+                . ($orderLabel ? ' op bestelling ' . $orderLabel : '')
+                . ' (saldo: ' . CurrencyHelper::formatPrice($this->old_amount) . ' → ' . CurrencyHelper::formatPrice($this->new_amount) . ').';
+        } elseif ($this->tag == 'giftcard.merged_to_primary') {
+            $string = $userLabel . ' heeft het saldo van deze cadeaubon (' . CurrencyHelper::formatPrice($this->old_amount) . ') overgezet naar een andere cadeaubon bij het bundelen voor afrekenen.';
+        } elseif ($this->tag == 'giftcard.merged_from_secondary') {
+            $string = $userLabel . ' heeft saldo van andere cadeaubonnen op deze cadeaubon bijgeschreven (' . CurrencyHelper::formatPrice($this->old_amount) . ' → ' . CurrencyHelper::formatPrice($this->new_amount) . ') bij het bundelen voor afrekenen.';
+        } elseif ($this->tag == 'discountcode.applied') {
+            $string = $userLabel . ' heeft deze kortingscode toegepast'
+                . ($orderLabel ? ' op bestelling ' . $orderLabel : '')
+                . ($this->new_amount > 0 ? ' (korting: ' . CurrencyHelper::formatPrice($this->new_amount) . ')' : '') . '.';
         } else {
             return 'ERROR tag niet gevonden: ' . $this->tag;
         }

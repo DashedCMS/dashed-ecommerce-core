@@ -33,7 +33,9 @@ class POSHelper
 
         $hasCashPayment = false;
         foreach ($order->orderPayments as $orderPayment) {
-            if ($orderPayment->paymentMethod->is_cash_payment) {
+            // Cadeaubon-betalingen hebben geen payment_method_id (psp='giftcard');
+            // null-safe nodig zodat finalisatie niet crasht bij giftcard-betaling.
+            if ($orderPayment->paymentMethod?->is_cash_payment) {
                 $hasCashPayment = true;
             }
         }

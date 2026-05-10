@@ -3,32 +3,34 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\POS;
 
 use Carbon\Carbon;
-use Livewire\Component;
-use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Services\Address\AddressLookup;
+use DashedDEV\FilamentNumpadField\NumpadField;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Schemas\Contracts\HasSchemas;
-use LaraZeus\Quantity\Components\Quantity;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\POSCart;
-use DashedDEV\FilamentNumpadField\NumpadField;
 use Filament\Schemas\Components\Utilities\Get;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Filament\Schemas\Contracts\HasSchemas;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.
 // Ik trek ‘m gelijk met jullie core.
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Filament\Schemas\Schema;
+use LaraZeus\Quantity\Components\Quantity;
+use Livewire\Component;
 
 class POSPage extends Component implements HasActions, HasSchemas
 {
@@ -101,6 +103,10 @@ class POSPage extends Component implements HasActions, HasSchemas
         'discountCode' => '',
     ];
 
+    public ?array $redeemGiftCardData = [
+        'code' => '',
+    ];
+
     public ?array $cancelOrderData = [];
 
     public ?array $customerData = [];
@@ -141,7 +147,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                 ->first();
 
             if (! $posCart) {
-                $posCart = new POSCart();
+                $posCart = new POSCart;
                 $posCart->user_id = $userId;
                 $posCart->status = 'active';
                 $posCart->identifier = uniqid();
@@ -223,7 +229,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         $vatRate = (float) ($product['vat_rate'] ?? 21);
 
         $displaySingle = $posCart->prices_ex_vat
-            ? \Dashed\DashedEcommerceCore\Classes\VatDisplay::exFromIncl($storedSingleIncl, $vatRate)
+            ? VatDisplay::exFromIncl($storedSingleIncl, $vatRate)
             : $storedSingleIncl;
 
         $this->productToChange = [
@@ -242,6 +248,10 @@ class POSPage extends Component implements HasActions, HasSchemas
         $posCart = $this->getActivePosCart();
         $exMode = (bool) ($posCart->prices_ex_vat ?? false);
         $applied = is_array($posCart->applied_gift_cards) ? $posCart->applied_gift_cards : [];
+        $appliedDiscounts = is_array($posCart->applied_discount_codes) ? $posCart->applied_discount_codes : [];
+        if (empty($appliedDiscounts) && $posCart->discount_code) {
+            $appliedDiscounts = [['code' => $posCart->discount_code]];
+        }
 
         return [
             Action::make('togglePriceMode')
@@ -250,6 +260,36 @@ class POSPage extends Component implements HasActions, HasSchemas
                 ->color($exMode ? 'warning' : 'gray')
                 ->button()
                 ->action('togglePriceMode'),
+            Action::make('addDiscountCode')
+                ->label(empty($appliedDiscounts)
+                    ? 'Kortingscode toevoegen'
+                    : 'Kortingscodes ('.count($appliedDiscounts).')')
+                ->icon('heroicon-o-tag')
+                ->color('warning')
+                ->button()
+                ->modalHeading('Kortingscode toevoegen')
+                ->modalSubmitActionLabel('Toepassen')
+                ->modalCancelActionLabel('Sluiten')
+                ->fillForm(['code' => ''])
+                ->schema([
+                    TextInput::make('code')
+                        ->label('Kortingscode')
+                        ->placeholder('Bijv. ZOMER10')
+                        ->autofocus()
+                        ->maxLength(255)
+                        ->helperText(
+                            empty($appliedDiscounts)
+                                ? 'Voer een kortingscode in om toe te passen op deze bestelling. Maximaal 1 procentuele code, vaste-bedrag-codes mogen stapelen.'
+                                : 'Toegepast: '.collect($appliedDiscounts)->map(fn ($entry) => $entry['code'] ?? '')->filter()->implode(', ').'. Voer een nieuwe code in om er nog een toe te voegen.'
+                        ),
+                ])
+                ->action(function (array $data) {
+                    $code = (string) ($data['code'] ?? '');
+                    if (trim($code) === '') {
+                        return;
+                    }
+                    $this->applyDiscountCode($code);
+                }),
             Action::make('redeemGiftCard')
                 ->label(empty($applied)
                     ? 'Cadeaubon inleveren'
@@ -419,7 +459,15 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->preload()
                     ->searchable()
                     ->options(function () {
-                        $discountCodes = DiscountCode::usable()->get();
+                        // Cadeaubonnen filteren we hier uit: die horen via de
+                        // cadeaubon-flow ingewisseld te worden, niet als
+                        // korting. Anders krijg je "niet geldig" omdat
+                        // applyDiscountCode() giftcards alsnog weigert.
+                        $discountCodes = DiscountCode::usable()
+                            ->where(function ($q) {
+                                $q->where('is_giftcard', 0)->orWhereNull('is_giftcard');
+                            })
+                            ->get();
                         $options = [];
 
                         foreach ($discountCodes as $discountCode) {
@@ -458,7 +506,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         if (($this->createDiscountData['type'] ?? '') === 'discountCode') {
             $discountCode = DiscountCode::find($this->createDiscountData['discountCode'] ?? null);
         } else {
-            $discountCode = new DiscountCode();
+            $discountCode = new DiscountCode;
             $discountCode->site_ids = [Sites::getActive()];
             $discountCode->name = 'Point of Sale discount';
             $discountCode->note = $this->createDiscountData['note'] ?? '';
@@ -485,8 +533,16 @@ class POSPage extends Component implements HasActions, HasSchemas
             return;
         }
 
-        $posCart->discount_code = $discountCode->code;
-        $posCart->save();
+        $result = $posCart->applyDiscountCode($discountCode->code);
+
+        if (! ($result['success'] ?? false)) {
+            Notification::make()
+                ->title($result['message'] ?? 'Kortingscode niet toegepast')
+                ->danger()
+                ->send();
+
+            return;
+        }
 
         $this->createDiscountData = [
             'type' => 'percentage',
@@ -501,6 +557,70 @@ class POSPage extends Component implements HasActions, HasSchemas
         ]);
 
         $this->dispatch('resetNumpad');
+    }
+
+    public function redeemGiftCardForm(Schema $schema): Schema
+    {
+        return $schema
+            ->schema([
+                TextInput::make('code')
+                    ->label('Cadeaubon-code')
+                    ->placeholder('Bijv. WELKOM-ABC123')
+                    ->autofocus()
+                    ->required()
+                    ->maxLength(255)
+                    ->extraInputAttributes(['style' => 'text-transform: uppercase;']),
+            ])
+            ->statePath('redeemGiftCardData');
+    }
+
+    public function submitRedeemGiftCardForm(): void
+    {
+        $this->redeemGiftCardForm->validate();
+
+        $code = (string) ($this->redeemGiftCardData['code'] ?? '');
+        if (trim($code) === '') {
+            return;
+        }
+
+        $this->applyGiftCardCode($code);
+
+        $this->redeemGiftCardData = ['code' => ''];
+    }
+
+    public function applyDiscountCode(string $code): void
+    {
+        $posCart = $this->getActivePosCart();
+        $result = $posCart->applyDiscountCode($code);
+
+        if (! $result['success']) {
+            Notification::make()
+                ->title($result['message'])
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title($result['message'])
+            ->success()
+            ->send();
+
+        $this->dispatch('discountCodeApplied', ['code' => trim(strtoupper($code))]);
+    }
+
+    public function removeDiscountCode(string $code): void
+    {
+        $posCart = $this->getActivePosCart();
+        if ($posCart->removeDiscountCode($code)) {
+            Notification::make()
+                ->title('Kortingscode verwijderd uit de bestelling.')
+                ->success()
+                ->send();
+
+            $this->dispatch('discountCodeRemoved', ['code' => trim(strtoupper($code))]);
+        }
     }
 
     public function customerDataForm(Schema $schema): Schema
@@ -696,7 +816,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($state, $get('houseNr'));
+                        $address = AddressLookup::lookup($state, $get('houseNr'));
                         if (! empty($address['street'])) {
                             $set('street', $address['street']);
                         }
@@ -711,7 +831,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($get('zipCode'), $state);
+                        $address = AddressLookup::lookup($get('zipCode'), $state);
                         if (! empty($address['street'])) {
                             $set('street', $address['street']);
                         }
@@ -757,7 +877,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($state, $get('invoiceHouseNr'));
+                        $address = AddressLookup::lookup($state, $get('invoiceHouseNr'));
                         if (! empty($address['street'])) {
                             $set('invoiceStreet', $address['street']);
                         }
@@ -772,7 +892,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = \Dashed\DashedEcommerceCore\Services\Address\AddressLookup::lookup($get('invoiceZipCode'), $state);
+                        $address = AddressLookup::lookup($get('invoiceZipCode'), $state);
                         if (! empty($address['street'])) {
                             $set('invoiceStreet', $address['street']);
                         }

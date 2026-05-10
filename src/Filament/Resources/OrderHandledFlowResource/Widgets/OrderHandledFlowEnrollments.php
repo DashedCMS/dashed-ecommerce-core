@@ -53,14 +53,26 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->openUrlInNewTab()
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('order.name')
+                TextColumn::make('order.first_name')
                     ->label('Klant')
-                    ->wrap(),
+                    ->wrap()
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        // Sorteren op klantnaam via JOIN op de orders-tabel
+                        // (first_name + last_name) — Filament's relation-sort
+                        // werkt niet uniform met spatie's translatable kolommen.
+                        return $query
+                            ->leftJoin('dashed__orders', 'dashed__order_flow_enrollments.order_id', '=', 'dashed__orders.id')
+                            ->orderBy('dashed__orders.last_name', $direction)
+                            ->orderBy('dashed__orders.first_name', $direction)
+                            ->select('dashed__order_flow_enrollments.*');
+                    })
+                    ->getStateUsing(fn (OrderFlowEnrollment $record): string => $record->order?->name ?: '-'),
                 TextColumn::make('chosen_review_url_label')
                     ->label('Platform')
                     ->placeholder('-')
                     ->badge()
                     ->color(fn (?string $state): string => self::platformBadgeColor($state))
+                    ->sortable()
                     ->toggleable(),
                 TextColumn::make('order.email')
                     ->label('E-mail')
@@ -70,9 +82,35 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->label('Ingeschreven op')
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
+                TextColumn::make('next_mail_at')
+                    ->label('Volgende mail')
+                    ->dateTime('d-m-Y H:i')
+                    ->placeholder('-')
+                    ->sortable()
+                    ->description(function (OrderFlowEnrollment $record): ?string {
+                        if (! $record->next_mail_at) {
+                            return $record->cancelled_at ? 'flow gestopt' : 'alle mails verstuurd';
+                        }
+
+                        return $record->next_mail_at->isPast()
+                            ? 'staat klaar om te versturen'
+                            : 'over '.$record->next_mail_at->diffForHumans(now(), true);
+                    }),
                 TextColumn::make('sent_steps_count')
                     ->label('Verzonden')
                     ->badge()
+                    ->sortable(query: function (Builder $query, string $direction): Builder {
+                        // sent_steps is een JSON-object {step_id: timestamp}.
+                        // Sorteren op aantal verstuurde stappen via JSON_LENGTH
+                        // (MySQL/MariaDB). Op test-SQLite valt dit terug op
+                        // string-lengte; in productie krijg je echte counts.
+                        $driver = $query->getModel()->getConnection()->getDriverName();
+                        if (in_array($driver, ['mysql', 'mariadb'])) {
+                            return $query->orderByRaw("COALESCE(JSON_LENGTH(sent_steps), 0) {$direction}");
+                        }
+
+                        return $query->orderByRaw("LENGTH(COALESCE(sent_steps, '')) {$direction}");
+                    })
                     ->getStateUsing(function (OrderFlowEnrollment $record): string {
                         $sent = is_array($record->sent_steps) ? count($record->sent_steps) : 0;
                         $total = $record->flow?->steps()->where('is_active', true)->count() ?? 0;

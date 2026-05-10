@@ -200,7 +200,7 @@
                     </button>
                     <button @click="removeDiscount"
                             x-bind:disabled="loading"
-                            x-cloak x-show="activeDiscountCode"
+                            x-cloak x-show="activeDiscountCode && !appliedDiscountCodes.length"
                             x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
                             class="text-left rounded-lg  transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
                                             <span>
@@ -214,22 +214,33 @@
                                             </span>
                         <p>Korting verwijderen</p>
                     </button>
-                    <button @click="toggle('createDiscountPopup')"
-                            x-bind:disabled="loading"
-                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                            x-cloak x-show="!activeDiscountCode"
-                            class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-4 font-medium text-xl">
-                                            <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-percent"><line
-                            x1="19" x2="5"
-                            y1="5"
-                            y2="19"/><circle
-                            cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-                                            </span>
-                        <p>Korting toepassen</p>
-                    </button>
+                    {{-- Korting + Cadeaubon: twee half-zo-brede knoppen die samen één
+                         grid-cel vullen, zodat de overige actieknoppen op dezelfde
+                         hoogte blijven staan. --}}
+                    <div class="grid grid-cols-2 gap-2">
+                        <button @click="toggle('createDiscountPopup')"
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="text-left rounded-lg transition-all duration-300 ease-in-out gap-4 flex flex-col justify-between p-4 font-medium text-base">
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                     class="lucide lucide-percent"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                            </span>
+                            <p x-text="appliedDiscountCodes.length ? 'Korting (' + appliedDiscountCodes.length + ')' : 'Korting toepassen'">Korting toepassen</p>
+                        </button>
+                        <button @click="toggle('redeemGiftCardPopup')"
+                                x-bind:disabled="loading"
+                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                                class="text-left rounded-lg transition-all duration-300 ease-in-out gap-4 flex flex-col justify-between p-4 font-medium text-base">
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                     class="lucide lucide-gift"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
+                            </span>
+                            <p x-text="giftCards.length ? 'Cadeaubon (' + giftCards.length + ')' : 'Cadeaubon toepassen'">Cadeaubon toepassen</p>
+                        </button>
+                    </div>
                     <button
                         @click="toggle('customerDataPopup')"
                         x-bind:disabled="loading"
@@ -450,7 +461,31 @@
                                 <span class="font-bold" x-html="subTotal"></span>
                             </div>
                             <hr/>
-                            <div x-show="activeDiscountCode" x-cloak>
+                            <div x-show="appliedDiscountCodes.length > 0" x-cloak>
+                                <template x-for="code in appliedDiscountCodes" :key="code.code">
+                                    <div class="text-sm font-bold flex justify-between items-center gap-2 mb-2">
+                                        <span class="flex items-center gap-2 truncate">
+                                            <button type="button"
+                                                    @click="$wire.removeDiscountCode(code.code)"
+                                                    class="text-danger-500 hover:text-danger-700 shrink-0"
+                                                    title="Kortingscode verwijderen">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                            <span class="truncate">Korting <span x-text="code.code" class="font-mono"></span> (<span x-text="code.valueLabel"></span>)</span>
+                                        </span>
+                                        <span class="font-bold whitespace-nowrap">- <span x-html="code.appliedAmountFormatted"></span></span>
+                                    </div>
+                                </template>
+                                <div class="text-sm font-bold flex justify-between items-center mb-2"
+                                     x-show="appliedDiscountCodes.length > 1">
+                                    <span>Kortingen totaal</span>
+                                    <span class="font-bold" x-html="discount"></span>
+                                </div>
+                                <hr>
+                            </div>
+                            <div x-show="activeDiscountCode && appliedDiscountCodes.length === 0" x-cloak>
                                 <div class="text-sm font-bold flex justify-between items-center mb-2">
                                     <span>Korting</span>
                                     <span class="font-bold" x-html="discount"></span>
@@ -513,11 +548,11 @@
                             </template>
                         </div>
                     </div>
-                    <button @click="toggle('checkoutPopup')"
+                    <button @click="(totalUnformatted !== null && totalUnformatted <= 0) ? selectPaymentMethod(null) : toggle('checkoutPopup')"
                             x-bind:disabled="loading || products.length === 0"
                             x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             class="px-4 py-2 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full">
-                        Betaal <span x-html="total">€0,-</span>
+                        <span x-text="(totalUnformatted !== null && totalUnformatted <= 0) ? 'Afronden' : 'Betaal'">Betaal</span> <span x-html="total">€0,-</span>
                     </button>
                 </div>
             </div>
@@ -607,6 +642,65 @@
                             <button type="submit"
                                     class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
                                 Toevoegen
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {{-- Cadeaubon-popup: meerdere bonnen kunnen worden gestapeld; bij submit
+         dispatcht $wire.applyGiftCardCode() naar POSPage. Bij succes vuurt
+         die een 'giftCardApplied' event af waarmee deze popup gesloten wordt
+         en de cart-totalen ververst worden (zie init() in deze blade). --}}
+    <div
+        x-show="redeemGiftCardPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="toggle('redeemGiftCardPopup')"></div>
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative sm:min-w-[480px]">
+            <div class="bg-white rounded-lg p-2 grid gap-4">
+                <div class="absolute top-2 right-2 text-black cursor-pointer"
+                     @click="toggle('redeemGiftCardPopup')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="size-10">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+                <p class="text-3xl font-bold">Cadeaubon inleveren</p>
+                <p class="text-sm text-gray-600" x-show="!giftCards.length">
+                    Voer een cadeaubon-code in. Je kan meerdere bonnen na elkaar toevoegen.
+                </p>
+                <div x-show="giftCards.length" x-cloak class="grid gap-2">
+                    <p class="text-sm font-semibold">Reeds toegepast:</p>
+                    <div class="grid gap-1">
+                        <template x-for="card in giftCards" :key="card.code">
+                            <div class="flex items-center justify-between gap-2 bg-gray-50 rounded p-2 text-sm">
+                                <span class="flex items-center gap-2">
+                                    <span class="font-mono" x-text="card.code"></span>
+                                    <span class="text-gray-500">(saldo <span x-html="card.balanceFormatted"></span>)</span>
+                                </span>
+                                <button type="button"
+                                        @click="$wire.removeGiftCardCode(card.code)"
+                                        class="text-red-500 hover:text-red-700"
+                                        title="Cadeaubon verwijderen">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <form wire:submit.prevent="submitRedeemGiftCardForm">
+                    <div class="grid gap-4">
+                        {{ $this->redeemGiftCardForm }}
+                        <div>
+                            <button type="submit"
+                                    class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                Cadeaubon toevoegen
                             </button>
                         </div>
                     </div>
@@ -1839,6 +1933,7 @@
         total: null,
         totalUnformatted: null,
         activeDiscountCode: null,
+        appliedDiscountCodes: [],
         giftCards: [],
         giftCardsTotal: null,
         giftCardsTotalUnformatted: 0,
@@ -1869,6 +1964,7 @@
 
         customProductPopup: false,
         createDiscountPopup: false,
+        redeemGiftCardPopup: false,
         customerDataPopup: false,
         checkoutPopup: false,
         paymentPopup: false,
@@ -2118,6 +2214,7 @@
                     this.shippingMethodId = data.shippingMethodId;
                     this.shippingMethodCosts = data.shippingCosts;
                     this.shippingMethodCostsUnformatted = data.shippingCostsUnformatted;
+                    this.appliedDiscountCodes = data.discountCodes || [];
                     this.giftCards = data.giftCards || [];
                     this.giftCardsTotal = data.giftCardsTotal;
                     this.giftCardsTotalUnformatted = data.giftCardsTotalUnformatted ?? 0;
@@ -2767,6 +2864,22 @@
                 this.order = data.order;
                 this.postPay = data.postPay;
                 this.orderUrl = data.orderUrl;
+
+                // Bestelling al volledig betaald via cadeaubon(nen) — backend
+                // heeft 'm op 'paid' gezet. Skip betaalmethode + pinpopup en
+                // toon direct de bevestigingspopup.
+                if (data.alreadyPaid) {
+                    this.products = [];
+                    this.discountCode = '';
+                    this.cashPaymentAmount = null;
+                    this.orderPayments = [];
+                    this.firstPaymentMethod = { name: 'Cadeaubon', is_cash_payment: false };
+                    this.disable('checkoutPopup');
+                    this.enable('orderConfirmationPopup');
+                    $wire.$refresh();
+                    this.loading = false;
+                    return;
+                }
 
                 this.disable('checkoutPopup');
                 this.enable('paymentPopup');
@@ -3646,11 +3759,22 @@
             })
 
             $wire.on('giftCardApplied', () => {
+                this.redeemGiftCardPopup = false;
                 this.focus();
                 this.retrieveCart();
             })
 
             $wire.on('giftCardRemoved', () => {
+                this.focus();
+                this.retrieveCart();
+            })
+
+            $wire.on('discountCodeApplied', () => {
+                this.focus();
+                this.retrieveCart();
+            })
+
+            $wire.on('discountCodeRemoved', () => {
                 this.focus();
                 this.retrieveCart();
             })
