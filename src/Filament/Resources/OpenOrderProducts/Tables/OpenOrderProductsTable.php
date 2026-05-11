@@ -26,6 +26,15 @@ class OpenOrderProductsTable
                 TextColumn::make('name')
                     ->label('Productnaam')
                     ->wrap()
+                    ->description(function ($record) {
+                        if (! is_array($record->product_extras) || ! $record->product_extras) {
+                            return null;
+                        }
+
+                        return collect($record->product_extras)
+                            ->map(fn ($option) => ($option['name'] ?? '') . ': ' . ($option['value'] ?? ''))
+                            ->implode(' | ');
+                    })
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('sku')

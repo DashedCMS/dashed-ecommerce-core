@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.26.1 - 2026-05-11
+
+### Added
+- **Openstaande Bestellingen-tabel: gekozen product-opties onder de productnaam.** `OpenOrderProductsTable` rendert `OrderProduct.product_extras` als description onder de `name`-kolom (`Naam: Waarde | Naam: Waarde`), zodat picker direct ziet welke variant/optie er gekozen is zonder de bestelling te hoeven openen.
+
 ## v4.26.0 - 2026-05-11
 
 ### Added
