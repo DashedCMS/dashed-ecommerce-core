@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.27.0 - 2026-05-11
+
+### Added
+- **Gekoppelde-bestellingen-tabel op cadeaukaart- en kortingscode-edit.** Nieuwe `OrdersRelationManager` (gedeeld tussen `GiftcardResource` en `DiscountCodeResource`, beide draaien op het `DiscountCode`-model met `hasMany orders()`) toont onder elke kaart/code een tabel met factuurnummer, klantnaam (`Order::getNameAttribute()`), status- en fulfillment-badges, kortingsbedrag, totaal en besteldatum. View/Edit-actions linken door naar `OrderResource::edit`. Paginated 10/25/50, sortable op alle kolommen, default gesorteerd op `created_at desc`.
+
 ## v4.26.1 - 2026-05-11
 
 ### Added

@@ -265,7 +265,7 @@ class DiscountCodeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            DiscountCodeResource\RelationManagers\OrdersRelationManager::class,
         ];
     }
 

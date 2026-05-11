@@ -330,7 +330,7 @@ class GiftcardResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\RelationManagers\OrdersRelationManager::class,
         ];
     }
 
