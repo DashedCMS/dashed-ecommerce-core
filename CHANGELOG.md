@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.26.0 - 2026-05-11
+
+### Added
+- **Checkout-livewire voedt globale e-mail-captura.** `Checkout::updatedEmail()` roept `Dashed\DashedCore\Classes\EmailCapture::capture()` aan zodra er een geldig adres ingevuld wordt, met `source='checkout'`.
+- **`Order::creating`-vangnet voor e-mail-captura.** Bestellingen die niet via de browser-checkout binnenkomen (Bol, marketplaces, manueel-aangemaakt) voeden óók de captura met `source='order:{order_origin}'`. Captura mag de order-save niet blokkeren — uitzonderingen worden via `report()` afgevangen. Vereist dashed-core ≥ v4.7.0.
+
 ## v4.25.0 - 2026-05-10
 
 ### Added

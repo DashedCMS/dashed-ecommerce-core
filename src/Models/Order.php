@@ -87,6 +87,22 @@ class Order extends Model
             $order->initials = $order->first_name ? strtoupper($order->first_name[0]).'.' : '';
             $order->site_id = Sites::getActive();
 
+            // Sluitstuk voor de e-mail-captura: orders gemaakt via Bol,
+            // marketplaces of POS hebben geen browser-flow gehad, maar bij
+            // online checkouts is dit een extra-safety voor het geval de
+            // Checkout-livewire-event niet gevuurd heeft.
+            if (! empty($order->email)) {
+                try {
+                    \Dashed\DashedCore\Classes\EmailCapture::capture(
+                        (string) $order->email,
+                        'order:'.($order->order_origin ?? 'own')
+                    );
+                } catch (\Throwable $e) {
+                    // Captura mag een order-save nooit blokkeren.
+                    report($e);
+                }
+            }
+
             // Vangnet: altijd attributie proberen mee te schrijven. attachToOrder
             // is idempotent (empty()-check per kolom) en merget cart + sessie,
             // zodat ook gedeeltelijke UTM-sets correct worden aangevuld.

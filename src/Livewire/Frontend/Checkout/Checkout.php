@@ -315,6 +315,9 @@ class Checkout extends Component
             return;
         }
 
+        // Captura voor cross-page reuse (popups, forms, andere checkouts).
+        \Dashed\DashedCore\Classes\EmailCapture::capture($value, 'checkout');
+
         $cart = cartHelper()->getCart();
 
         if (! $cart) {
