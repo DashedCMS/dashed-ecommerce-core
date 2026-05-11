@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Rel
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
@@ -74,10 +73,9 @@ class OrdersRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn ($record) => OrderResource::getUrl('edit', ['record' => $record])),
-                EditAction::make()
-                    ->url(fn ($record) => OrderResource::getUrl('edit', ['record' => $record])),
+                    ->url(fn ($record) => OrderResource::getUrl('view', ['record' => $record])),
             ])
+            ->recordUrl(fn ($record) => OrderResource::getUrl('view', ['record' => $record]))
             ->headerActions([])
             ->paginated([10, 25, 50]);
     }

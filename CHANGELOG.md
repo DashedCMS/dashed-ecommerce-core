@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.27.1 - 2026-05-11
+
+### Changed
+- `OrdersRelationManager` op cadeaukaart/kortingscode-edit linkt nu naar de **view**-pagina van de order in plaats van de edit-pagina. `EditAction` is verwijderd, `ViewAction` en `recordUrl()` wijzen beide naar `OrderResource::getUrl('view', ['record' => $record])` zodat zowel de actie-knop als een klik op de rij in de view-modus opent.
+
 ## v4.27.0 - 2026-05-11
 
 ### Added
