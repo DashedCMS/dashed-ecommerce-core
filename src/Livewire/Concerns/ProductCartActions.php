@@ -343,6 +343,20 @@ trait ProductCartActions
             ? $this->product->allProductFaqs()
             : $this->productGroup->allProductFaqs();
 
+        // Push FAQPage JSON-LD into the head via the existing
+        // `seo()->metaData('customStructuredData', …)` channel (consumed by
+        // packages/dashed/dashed-core/resources/views/components/frontend/head.blade.php:181).
+        // Skipping when there are no FAQs keeps the head clean.
+        if ($this->product) {
+            $faqJsonLd = $this->product->buildFaqJsonLd();
+            if ($faqJsonLd) {
+                seo()->metaData('customStructuredData', array_merge(
+                    (array) seo()->metaData('customStructuredData'),
+                    [$faqJsonLd]
+                ));
+            }
+        }
+
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
             if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false) && $this->product) {
                 return redirect($this->product->getUrl(forceOwnUrl: true));
