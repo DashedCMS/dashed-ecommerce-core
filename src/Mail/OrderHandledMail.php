@@ -21,6 +21,7 @@ class OrderHandledMail extends Mailable
 {
     use Queueable;
     use SerializesModels;
+    use \Dashed\DashedEcommerceCore\Mail\Concerns\HasRecommendations;
 
     public ?string $previewDiscountCode = null;
 
@@ -235,6 +236,19 @@ class OrderHandledMail extends Mailable
 
             case 'divider':
                 return view('dashed-core::emails.blocks.divider')->render();
+
+            case 'recommendation':
+                $products = $this->recommendationsFor(
+                    \Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement::EmailOrderHandled,
+                    $this->order->orderProducts->pluck('product')->filter()->all(),
+                    4,
+                    $this->order->user,
+                );
+                return view('dashed-ecommerce-core::email.recommendations', [
+                    'products' => $products,
+                    'placement' => 'email_order_handled',
+                    'heading' => (string) ($data['heading'] ?? 'Misschien vind je dit ook leuk'),
+                ])->render();
 
             case 'usp':
                 $items = collect(explode("\n", (string) ($data['items'] ?? '')))
