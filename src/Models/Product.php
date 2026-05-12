@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Exception;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,7 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class Product extends Model
 {
+    use LogsActivity;
     use HasCustomBlocks;
     use HasDynamicRelation;
     use IsVisitable;
@@ -1811,5 +1813,27 @@ class Product extends Model
     public function disabledShippingMethods(): BelongsToMany
     {
         return $this->belongsToMany(ShippingMethod::class, 'dashed__shipping_method_disabled_products', 'product_id', 'shipping_method_id');
+    }
+
+    /**
+     * Activity-log integration: emits a row per edit so the Filament
+     * LastEditedColumn can surface "who changed this when".
+     */
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logOnly(['*'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
+    /**
+     * Latest activity-log entry. Eager-load via
+     * `with('latestActivity.causer')` to avoid N+1 on list pages.
+     */
+    public function latestActivity(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(\Spatie\Activitylog\Models\Activity::class, 'subject')
+            ->latestOfMany('created_at');
     }
 }
