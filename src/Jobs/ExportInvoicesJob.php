@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,6 +27,7 @@ class ExportInvoicesJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use HandlesQueueFailures;
     use CreatesExportRecord;
 
     public $tries = 5;
@@ -80,6 +82,7 @@ class ExportInvoicesJob implements ShouldQueue
     public function failed(Throwable $exception): void
     {
         $this->markExportAsFailed($exception);
+        $this->reportFailure($exception);
     }
 
     protected function runExport(): void
