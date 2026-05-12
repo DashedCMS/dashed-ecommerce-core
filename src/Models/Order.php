@@ -27,6 +27,7 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
@@ -132,6 +133,17 @@ class Order extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
+    }
+
+    /**
+     * Latest activity-log entry for this order. Eager-load in list-table
+     * queries via `with('latestActivity.causer')` to surface the
+     * `LastEditedColumn` without N+1.
+     */
+    public function latestActivity(): MorphOne
+    {
+        return $this->morphOne(\Spatie\Activitylog\Models\Activity::class, 'subject')
+            ->latestOfMany('created_at');
     }
 
     public function getNameAttribute(): string

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -120,6 +121,16 @@ class DiscountCode extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
+    }
+
+    /**
+     * Latest activity-log entry. Used by Filament's LastEditedColumn.
+     * Eager-load via `with('latestActivity.causer')` to avoid N+1.
+     */
+    public function latestActivity(): MorphOne
+    {
+        return $this->morphOne(\Spatie\Activitylog\Models\Activity::class, 'subject')
+            ->latestOfMany('created_at');
     }
 
     public function scopeSearch($query)
