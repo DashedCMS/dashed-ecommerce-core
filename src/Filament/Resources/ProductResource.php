@@ -62,6 +62,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\RelationManage
 
 class ProductResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
+
     use Translatable;
     use HasVisitableTab;
     use HasCustomBlocksTab;
