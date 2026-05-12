@@ -222,7 +222,13 @@ class GiftcardResource extends Resource
             ])
             ->defaultSort('created_at', 'DESC')
             ->filters([
-                //
+                \Filament\Tables\Filters\TernaryFilter::make('has_balance')
+                    ->label('Met restsaldo')
+                    ->queries(
+                        true: fn (\Illuminate\Database\Eloquent\Builder $q) => $q->where('discount_amount', '>', 0),
+                        false: fn (\Illuminate\Database\Eloquent\Builder $q) => $q->where('discount_amount', '<=', 0),
+                        blank: fn (\Illuminate\Database\Eloquent\Builder $q) => $q,
+                    ),
             ])
             ->recordActions([
                 ViewAction::make()
