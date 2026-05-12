@@ -1,0 +1,26 @@
+<?php
+
+namespace Dashed\DashedEcommerceCore\Services\Recommendations;
+
+/**
+ * Where in the funnel a recommendation is being requested. Each placement
+ * has its own strategy-stack weighting (see RecommendationService::PLACEMENT_DEFAULTS).
+ *
+ * The string values are the Customsetting key suffix — `'cart'` reads
+ * `recommendation_stack_cart`. Keep them stable.
+ */
+enum RecommendationPlacement: string
+{
+    case ProductDetail = 'product_detail';
+    case Cart = 'cart';
+    case Checkout = 'checkout';
+    case EmailOrderHandled = 'email_order_handled';
+    case EmailAbandonedCart = 'email_abandoned_cart';
+    case EmailPopupFollowUp = 'email_popup_follow_up';
+    case Popup = 'popup';
+
+    public function isEmail(): bool
+    {
+        return str_starts_with($this->value, 'email_');
+    }
+}
