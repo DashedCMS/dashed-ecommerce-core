@@ -984,6 +984,63 @@ class Product extends Model
             ->get();
     }
 
+    /**
+     * Build a Google-rich-results-ready FAQPage JSON-LD string for this
+     * product in the given locale (or the active locale by default).
+     * Returns null when there are no FAQs — the caller is expected to skip
+     * emitting the <script> tag in that case.
+     */
+    public function buildFaqJsonLd(?string $locale = null): ?string
+    {
+        $locale = $locale ?: app()->getLocale();
+
+        $faqs = $this->allProductFaqs();
+        if ($faqs === null || $faqs->isEmpty()) {
+            return null;
+        }
+
+        $mainEntity = [];
+        foreach ($faqs as $faqGroup) {
+            try {
+                $questions = $faqGroup->getTranslation('questions', $locale, false);
+            } catch (\Throwable) {
+                $questions = $faqGroup->questions;
+            }
+
+            if (! is_array($questions)) {
+                continue;
+            }
+
+            foreach ($questions as $faq) {
+                $question = trim((string) ($faq['question'] ?? ''));
+                $answer = trim(strip_tags(cms()->convertToHtml((string) ($faq['answer'] ?? ''))));
+
+                if ($question === '' || $answer === '') {
+                    continue;
+                }
+
+                $mainEntity[] = [
+                    '@type' => 'Question',
+                    'name' => $question,
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => $answer,
+                    ],
+                ];
+            }
+        }
+
+        if ($mainEntity === []) {
+            return null;
+        }
+
+        return json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => $mainEntity,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     public function productExtras(): HasMany
     {
         return $this->hasMany(ProductExtra::class)
