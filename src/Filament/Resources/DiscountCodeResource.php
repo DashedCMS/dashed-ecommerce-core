@@ -32,6 +32,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\Cre
 
 class DiscountCodeResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
+
     protected static ?string $model = DiscountCode::class;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -246,7 +248,9 @@ class DiscountCodeResource extends Resource
                     }),
                 TextColumn::make('status')
                     ->label('Status'),
+                static::lastEditedColumn(),
             ])
+            ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited($query))
             ->filters([
                 //
             ])

@@ -49,6 +49,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrde
 class OrderResource extends Resource
 {
     use WithFileUploads;
+    use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
 
     protected static ?string $model = Order::class;
 
@@ -776,7 +777,9 @@ class OrderResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
             ])
-            ->modifyQueryUsing(fn ($query) => $query->without('orderProducts')->with('mainPaymentMethod'))
+            ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited(
+                $query->without('orderProducts')->with('mainPaymentMethod')
+            ))
             ->filtersFormColumns(4)
             ->deferFilters(false)
             ->persistColumnSearchesInSession()
