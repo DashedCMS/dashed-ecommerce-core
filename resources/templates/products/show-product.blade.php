@@ -4,9 +4,10 @@
             @if($product)
                 <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
             @endif
-            @if($productFaqs)
-                <x-dashed-ecommerce-core::frontend.products.faq-schema :faqs="$productFaqs"/>
-            @endif
+            {{-- FAQPage JSON-LD is now injected into the head via
+                 seo()->metaData('customStructuredData', …) by ProductCartActions
+                 (Bundle 4 v4.27.x). The component file faq-schema.blade.php
+                 stays for hosts that want a manual body-level fallback. --}}
             <div class="mx-auto max-w-2xl lg:max-w-none">
                 <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
                     <div class="flex flex-col-reverse lg:sticky lg:top-32 bg-pattern rounded-lg">
