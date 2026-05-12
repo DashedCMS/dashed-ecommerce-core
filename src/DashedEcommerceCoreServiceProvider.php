@@ -1370,7 +1370,21 @@ MARKDOWN,
             $schedule->command(SendAbandonedCartEmails::class)
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
+
+            // Recommendation co-purchase precompute. Default 03:00; allow
+            // site-specific override via Customsetting on high-volume stores.
+            $cron = (string) \Dashed\DashedCore\Models\Customsetting::get('recommendation_copurchase_recompute_cron', null, '0 3 * * *');
+            $schedule->command('dashed:recommendations:rebuild')
+                ->cron($cron)
+                ->withoutOverlapping();
         });
+
+        // Register the v1 recommendation strategy stack. Each strategy is
+        // resolved as a singleton from the container so DI just works.
+        cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\FrequentlyBoughtTogetherStrategy::class));
+        cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\CategoryAffinityStrategy::class));
+        cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\CustomManualStrategy::class));
+        cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\GapClosingStrategy::class));
 
         //Stats components
         Livewire::component('revenue-chart', RevenueChart::class);
@@ -1763,6 +1777,7 @@ MARKDOWN,
                 PruneCartLogs::class,
                 BackfillOrderFlowEnrollmentReviewUrls::class,
                 BackfillOrderFlowEnrollmentNextMailAt::class,
+                \Dashed\DashedEcommerceCore\Commands\RebuildRecommendationCoPurchaseCommand::class,
             ]);
 
     }
