@@ -16,6 +16,7 @@ class AbandonedCartMail extends Mailable
 {
     use Queueable;
     use SerializesModels;
+    use \Dashed\DashedEcommerceCore\Mail\Concerns\HasRecommendations;
 
     public function __construct(
         public readonly AbandonedCartEmail $record,
@@ -98,6 +99,11 @@ class AbandonedCartMail extends Mailable
                 'step' => $this->step,
                 'blocks' => $blocks,
                 'items' => $items,
+                'recommendations' => $this->recommendationsFor(
+                    \Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement::EmailAbandonedCart,
+                    collect($items)->pluck('product')->filter()->all(),
+                    4,
+                ),
                 'total' => $totalCents,
                 'totalFormatted' => $cartTotal,
                 'resumeUrl' => $resumeUrl,
