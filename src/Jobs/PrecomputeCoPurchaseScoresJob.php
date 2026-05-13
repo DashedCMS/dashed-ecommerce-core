@@ -6,13 +6,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Carbon;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductCoPurchase;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 /**
  * Materialises product co-purchase pairs (used by FrequentlyBoughtTogetherStrategy).
@@ -36,6 +36,11 @@ final class PrecomputeCoPurchaseScoresJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
     use HandlesQueueFailures;
+
+    public int $tries = 3;
+    public int $timeout = 600;
+    /** @var array<int,int> */
+    public array $backoff = [60, 300, 900];
 
     public function __construct(public string $mode = 'incremental')
     {
