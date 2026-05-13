@@ -1426,7 +1426,11 @@ MARKDOWN,
         Livewire::component('cart.add-to-cart', AddToCart::class);
         Livewire::component('cart.added-to-cart-popup', AddedToCart::class);
         Livewire::component('cart.cart-popup', CartPopup::class);
-        Livewire::component('cart.cart-suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartSuggestions::class);
+        // B5 T29 cutover: legacy `cart.cart-suggestions` alias now resolves
+        // to CartRecommendations so existing themes pick up the new
+        // engine without a template change. The legacy CartSuggestions
+        // class stays on disk for two release cycles as fallback.
+        Livewire::component('cart.cart-suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartRecommendations::class);
         Livewire::component('cart-recommendations', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartRecommendations::class);
         Livewire::component('cart.quick-add-product', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\QuickAddProduct::class);
         Livewire::component('checkout.checkout', Checkout::class);
