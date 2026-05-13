@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Exception;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +17,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Schemas\Components\Utilities\Get;
@@ -1041,8 +1041,24 @@ class Product extends Model
             }
 
             foreach ($questions as $faq) {
-                $question = trim((string) ($faq['question'] ?? ''));
-                $answer = trim(strip_tags(cms()->convertToHtml((string) ($faq['answer'] ?? ''))));
+                if (! is_array($faq)) {
+                    continue;
+                }
+
+                $rawQuestion = $faq['question'] ?? '';
+                $rawAnswer = $faq['answer'] ?? '';
+
+                $question = is_string($rawQuestion) ? trim($rawQuestion) : '';
+
+                if (is_array($rawAnswer)) {
+                    $answerHtml = cms()->convertToHtml($rawAnswer);
+                } elseif (is_string($rawAnswer)) {
+                    $answerHtml = $rawAnswer;
+                } else {
+                    $answerHtml = '';
+                }
+
+                $answer = trim(strip_tags($answerHtml));
 
                 if ($question === '' || $answer === '') {
                     continue;

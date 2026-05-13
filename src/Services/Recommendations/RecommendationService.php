@@ -2,10 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Services\Recommendations;
 
-use Illuminate\Support\Collection;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Aggregation\MarginAwareModifier;
 use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\RecommendationStrategy;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Aggregation\MarginAwareModifier;
 
 /**
  * Aggregates per-strategy ProductScores into a single ranked product
@@ -81,13 +79,16 @@ class RecommendationService
         foreach ($strategies as $strategy) {
             if (! $strategy->appliesTo($context)) {
                 $breakdown[$strategy->key()] = [];
+
                 continue;
             }
             $weight = $weights[$strategy->key()] ?? $strategy->defaultWeight();
+
             try {
                 $candidates = $strategy->candidates($context);
             } catch (\Throwable) {
                 $breakdown[$strategy->key()] = [];
+
                 continue;
             }
             $breakdown[$strategy->key()] = $candidates
@@ -141,6 +142,7 @@ class RecommendationService
                 $candidates = $strategy->candidates($context);
             } catch (\Throwable $e) {
                 report($e);
+
                 continue;
             }
 
@@ -192,12 +194,13 @@ class RecommendationService
                     return false;
                 }
                 $product = $s->product;
-                if (property_exists($product, 'public_show') && $product->public_show === false) {
+                if (isset($product->public) && ! $product->public) {
                     return false;
                 }
                 if (($product->use_stock ?? false) && ! ($product->in_stock ?? true)) {
                     return false;
                 }
+
                 return true;
             })
             ->sortByDesc(fn (ProductScore $s) => $s->score)

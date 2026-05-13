@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Services\Recommendations\Strategies;
 
 use Illuminate\Support\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 use Dashed\DashedEcommerceCore\Services\Recommendations\ProductScore;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 
 /**
  * Recommends products from the same productCategories as the products
@@ -40,7 +40,7 @@ final class CategoryAffinityStrategy implements RecommendationStrategy
             // proxy; a richer signal can land in v1.1 when we have order
             // aggregates wired in).
             $products = Product::query()
-                ->where('public_show', true)
+                ->where('public', 1)
                 ->orderByDesc('created_at')
                 ->limit($context->limit * 3)
                 ->get();
@@ -68,7 +68,7 @@ final class CategoryAffinityStrategy implements RecommendationStrategy
         }
 
         $candidates = Product::query()
-            ->where('public_show', true)
+            ->where('public', 1)
             ->whereNotIn('id', $sourceIds)
             ->whereHas('productCategories', fn ($q) => $q->whereIn('id', $categoryIds))
             ->with(['productCategories:id'])
