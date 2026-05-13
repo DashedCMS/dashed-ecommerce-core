@@ -9,6 +9,10 @@ use Illuminate\Support\Collection;
  * Product instances plus the per-product trace ProductScores that fed
  * the ranking. Callers that only need products use `->products`; the
  * `->explain()` admin debug page reads `->scores`.
+ *
+ * `->heading` is the copy meant to be rendered above the products grid
+ * (e.g. "Vaak samen gekocht"). Resolved from the placement default or
+ * the per-call override on the context.
  */
 final readonly class RecommendationResult
 {
@@ -19,12 +23,13 @@ final readonly class RecommendationResult
     public function __construct(
         public Collection $products,
         public Collection $scores,
+        public ?string $heading = null,
     ) {
     }
 
-    public static function empty(): self
+    public static function empty(?string $heading = null): self
     {
-        return new self(collect(), collect());
+        return new self(collect(), collect(), $heading);
     }
 
     public function isEmpty(): bool

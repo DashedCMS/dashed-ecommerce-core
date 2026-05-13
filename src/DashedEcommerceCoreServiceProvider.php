@@ -91,6 +91,9 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationL
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
+use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets\OrderUnhandledStat;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
 
 class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
@@ -1414,6 +1417,11 @@ MARKDOWN,
         Livewire::component('action-statistics-chart', ActionStatisticsChart::class);
         Livewire::component('action-statistics-cards', ActionStatisticsCards::class);
         Livewire::component('action-statistics-table', ActionStatisticsTable::class);
+
+        // Resource header widgets
+        Livewire::component('dashed.dashed-ecommerce-core.filament.resources.order-resource.widgets.order-unhandled-stat', OrderUnhandledStat::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.resources.cart-resource.widgets.cart-active-stat', CartActiveStat::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.resources.product-resource.widgets.product-out-of-stock-stat', ProductOutOfStockStat::class);
 
         //Backend components
         Livewire::component('change-order-fulfillment-status', ChangeOrderFulfillmentStatus::class);

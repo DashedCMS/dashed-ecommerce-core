@@ -2,11 +2,7 @@
     @if($recommendations->isNotEmpty())
         <div class="mt-6">
             <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                @switch($view)
-                    @case('checkout') Vergeet niet: @break
-                    @case('popup') Misschien ook leuk: @break
-                    @default Anderen kochten ook:
-                @endswitch
+                {{ $heading ?? 'Aanbevolen voor jou' }}
             </h3>
             <div class="grid {{ $view === 'checkout' ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' }} gap-3">
                 @foreach($recommendations as $product)

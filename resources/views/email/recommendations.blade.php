@@ -1,18 +1,21 @@
 @props([
     'products' => collect(),
     'placement' => 'email_order_handled',
-    'heading' => 'Misschien vind je dit ook leuk',
+    'heading' => null,
 ])
 
 @php
+    use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
     $items = collect($products);
+    $resolvedHeading = $heading
+        ?: (RecommendationPlacement::tryFrom((string) $placement)?->heading() ?? 'Aanbevolen voor jou');
 @endphp
 
 @if($items->isNotEmpty())
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:24px;">
     <tr>
         <td style="padding:0 16px 8px 16px;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#111;">
-            {{ $heading }}
+            {{ $resolvedHeading }}
         </td>
     </tr>
     <tr>

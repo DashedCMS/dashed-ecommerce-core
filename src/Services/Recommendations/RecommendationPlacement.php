@@ -23,4 +23,22 @@ enum RecommendationPlacement: string
     {
         return str_starts_with($this->value, 'email_');
     }
+
+    /**
+     * Default heading shown above the products grid for this placement.
+     * Customers should immediately understand WHY these products are here.
+     * Override per-call via RecommendationContextBuilder::withHeading().
+     */
+    public function heading(): string
+    {
+        return match ($this) {
+            self::ProductDetail => 'Vaak samen gekocht',
+            self::Cart => 'Anderen kochten ook',
+            self::Checkout => 'Misschien vergeten?',
+            self::EmailOrderHandled => 'Producten die je mogelijk leuk vindt',
+            self::EmailAbandonedCart => 'Vergeet deze niet',
+            self::EmailPopupFollowUp => 'Onze aanraders',
+            self::Popup => 'Aanbevolen voor jou',
+        };
+    }
 }

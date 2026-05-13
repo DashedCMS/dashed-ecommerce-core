@@ -1,7 +1,7 @@
 @props([
     'product',
     'limit' => 4,
-    'heading' => 'Misschien vind je dit ook leuk',
+    'heading' => null,
 ])
 
 @php
@@ -13,21 +13,24 @@
     $enabled = (string) Customsetting::get('recommendations_product_detail_enabled', null, '1');
     if ($enabled !== '1' || ! $product) {
         $products = collect();
+        $resolvedHeading = $heading ?? RecommendationPlacement::ProductDetail->heading();
     } else {
-        $result = app(RecommendationService::class)->for(
-            RecommendationContext::for(RecommendationPlacement::ProductDetail)
-                ->withCurrentProducts([$product])
-                ->withLimit((int) $limit)
-                ->build()
-        );
+        $builder = RecommendationContext::for(RecommendationPlacement::ProductDetail)
+            ->withCurrentProducts([$product])
+            ->withLimit((int) $limit);
+        if ($heading) {
+            $builder->withHeading($heading);
+        }
+        $result = app(RecommendationService::class)->for($builder->build());
         $products = $result->products;
+        $resolvedHeading = $result->heading ?? RecommendationPlacement::ProductDetail->heading();
     }
 @endphp
 
 @if($products->isNotEmpty())
     <section class="mt-12">
         <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $heading }}</h2>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $resolvedHeading }}</h2>
         </div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             @foreach($products as $rec)

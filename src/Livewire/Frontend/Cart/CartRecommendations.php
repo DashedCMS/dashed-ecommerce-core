@@ -25,6 +25,7 @@ class CartRecommendations extends Component
     public string $view = 'cart';
     public ?int $limit = null;
     public Collection $recommendations;
+    public string $heading = '';
     public array $progress = ['gap' => 0.0, 'percentage' => 100, 'reached' => true];
 
     protected $listeners = [
@@ -67,12 +68,15 @@ class CartRecommendations extends Component
             ->withExtra('shipping_gap', $this->progress['gap'] ?? 0.0)
             ->build();
 
-        $this->recommendations = app(RecommendationService::class)->for($context)->products;
+        $result = app(RecommendationService::class)->for($context);
+        $this->recommendations = $result->products;
+        $this->heading = $result->heading ?? $placement->heading();
 
         return view('dashed-ecommerce-core::livewire.frontend.cart.cart-recommendations', [
             'recommendations' => $this->recommendations,
             'progress' => $this->progress,
             'view' => $this->view,
+            'heading' => $this->heading,
         ]);
     }
 }

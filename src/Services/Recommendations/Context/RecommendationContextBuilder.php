@@ -16,6 +16,7 @@ class RecommendationContextBuilder
     protected array $excludedProductIds = [];
     /** @var array<string, mixed> */
     protected array $extra = [];
+    protected ?string $heading = null;
 
     public function __construct(protected RecommendationPlacement $placement)
     {
@@ -64,6 +65,20 @@ class RecommendationContextBuilder
         return $this;
     }
 
+    /**
+     * Override the default heading shown above the products grid. Pass null
+     * (or skip the call) to use RecommendationPlacement::heading() as the
+     * default copy.
+     */
+    public function withHeading(?string $heading): self
+    {
+        $this->heading = $heading !== null ? trim($heading) : null;
+        if ($this->heading === '') {
+            $this->heading = null;
+        }
+        return $this;
+    }
+
     public function build(): RecommendationContext
     {
         return new RecommendationContext(
@@ -75,6 +90,7 @@ class RecommendationContextBuilder
             limit: $this->limit,
             excludedProductIds: $this->excludedProductIds,
             extra: $this->extra,
+            heading: $this->heading,
         );
     }
 }

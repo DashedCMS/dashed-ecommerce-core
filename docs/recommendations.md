@@ -131,6 +131,35 @@ Set the popup target's `match_type = 'recommendation_strategy'` and store the st
 
 Internally calls `RecommendationService::explain(RecommendationContext)`, which returns the per-strategy breakdown next to the final ranking without changing the public `for()` contract.
 
+## Headings per placement
+
+Each placement carries a default heading via `RecommendationPlacement::heading()`. The frontend, popup, and email partials all read that label and render it above the products grid so shoppers immediately understand what the strip represents:
+
+| Placement              | Default heading                                |
+|------------------------|------------------------------------------------|
+| `ProductDetail`        | Vaak samen gekocht                             |
+| `Cart`                 | Anderen kochten ook                            |
+| `Checkout`             | Misschien vergeten?                            |
+| `EmailOrderHandled`    | Producten die je mogelijk leuk vindt           |
+| `EmailAbandonedCart`   | Vergeet deze niet                              |
+| `EmailPopupFollowUp`   | Onze aanraders                                 |
+| `Popup`                | Aanbevolen voor jou                            |
+
+To override the default for a single surface, pass `withHeading()` on the context builder:
+
+```php
+$result = app(RecommendationService::class)->for(
+    RecommendationContext::for(RecommendationPlacement::Cart)
+        ->withCurrentProducts($cart->items->pluck('product'))
+        ->withHeading('Top picks bij deze cart')
+        ->build()
+);
+
+// $result->heading is now "Top picks bij deze cart"
+```
+
+`RecommendationResult::$heading` is populated on every result, so blade templates can render `{{ $result->heading }}` without re-deriving copy.
+
 ## Co-purchase precompute
 
 The `FrequentlyBoughtTogether` strategy reads from a precomputed pair table. Rebuild it with:

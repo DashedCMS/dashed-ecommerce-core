@@ -122,7 +122,7 @@ class RecommendationService
         $strategies = $this->registry->forPlacement($context->placement);
 
         if (empty($strategies)) {
-            return RecommendationResult::empty();
+            return RecommendationResult::empty($context->resolvedHeading());
         }
 
         $weights = self::PLACEMENT_DEFAULTS[$context->placement->name] ?? [];
@@ -207,6 +207,7 @@ class RecommendationService
         return new RecommendationResult(
             products: $scored->map(fn (ProductScore $s) => $s->product),
             scores: $scored,
+            heading: $context->resolvedHeading(),
         );
     }
 }

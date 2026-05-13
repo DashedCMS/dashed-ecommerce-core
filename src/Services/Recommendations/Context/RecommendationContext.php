@@ -27,11 +27,21 @@ final readonly class RecommendationContext
         public int $limit = 4,
         public array $excludedProductIds = [],
         public array $extra = [],
+        public ?string $heading = null,
     ) {
     }
 
     public static function for(RecommendationPlacement $placement): RecommendationContextBuilder
     {
         return new RecommendationContextBuilder($placement);
+    }
+
+    /**
+     * The heading shown above the products grid — the per-call override if
+     * provided, falling back to the placement's default.
+     */
+    public function resolvedHeading(): string
+    {
+        return $this->heading ?? $this->placement->heading();
     }
 }
