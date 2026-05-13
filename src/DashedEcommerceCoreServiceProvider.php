@@ -88,12 +88,12 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
-use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
-use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
-use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
+use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets\OrderUnhandledStat;
+use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
+use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\RelationManagers\FlowStepsRelationManager;
 
 class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
@@ -1447,11 +1447,13 @@ MARKDOWN,
         Livewire::component('cart.add-to-cart', AddToCart::class);
         Livewire::component('cart.added-to-cart-popup', AddedToCart::class);
         Livewire::component('cart.cart-popup', CartPopup::class);
-        // B5 T29 cutover: legacy `cart.cart-suggestions` alias now resolves
-        // to CartRecommendations so existing themes pick up the new
-        // engine without a template change. The legacy CartSuggestions
-        // class stays on disk for two release cycles as fallback.
-        Livewire::component('cart.cart-suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartRecommendations::class);
+        // B5 T29 cutover REVERTED — legacy CartSuggestions houdt de
+        // "bijna gratis verzending"-progress UI en is snel. De nieuwe
+        // CartRecommendations component vertraagde de checkout en
+        // verloor de layout. `cart.cart-suggestions` wijst weer naar
+        // CartSuggestions; `cart-recommendations` blijft beschikbaar
+        // voor expliciet gebruik maar zit niet meer in cart/checkout.
+        Livewire::component('cart.cart-suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartSuggestions::class);
         Livewire::component('cart-recommendations', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartRecommendations::class);
         Livewire::component('cart.quick-add-product', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\QuickAddProduct::class);
         Livewire::component('checkout.checkout', Checkout::class);
