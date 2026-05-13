@@ -97,6 +97,19 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 {
     public static string $name = 'dashed-ecommerce-core';
 
+    public function registeringPackage()
+    {
+        // RecommendationRegistry must be a singleton so that
+        // `cms()->registerRecommendationStrategy()` and the
+        // RecommendationService share the same instance. Without this
+        // bind every `app(RecommendationRegistry::class)` returns a
+        // fresh empty registry and strategies registered at boot are
+        // lost.
+        $this->app->singleton(
+            \Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationRegistry::class
+        );
+    }
+
     public function bootingPackage()
     {
         cms()->registerNavigationGroup('E-commerce', 30);
