@@ -221,7 +221,9 @@ class GiftcardResource extends Resource
                     ->label('Aangemaakt op')
                     ->dateTime()
                     ->sortable(),
+                static::lastEditedColumn(),
             ])
+            ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited($query))
             ->defaultSort('created_at', 'DESC')
             ->filters([
                 \Filament\Tables\Filters\TernaryFilter::make('has_balance')

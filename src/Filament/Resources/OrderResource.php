@@ -384,6 +384,7 @@ class OrderResource extends Resource
                     ->label('Campagne')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
+                static::lastEditedColumn(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

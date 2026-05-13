@@ -650,10 +650,12 @@ class ProductResource extends Resource
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->sortable(),
+                static::lastEditedColumn(),
             ], static::visitableTableColumns()))
             ->defaultPaginationPageOption(25)
             ->deferLoading()
             ->reorderable('order')
+            ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited($query))
             ->recordActions([
                 EditAction::make()
                     ->button(),
