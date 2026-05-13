@@ -37,7 +37,7 @@ final readonly class RecommendationContext
     }
 
     /**
-     * The heading shown above the products grid — the per-call override if
+     * The heading shown above the products grid - the per-call override if
      * provided, falling back to the placement's default.
      */
     public function resolvedHeading(): string

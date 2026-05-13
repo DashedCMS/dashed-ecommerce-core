@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Migrations\Migration;
 
 /**
  * Volgt op `2026_05_10_181500_cancel_order_flow_enrollments_for_proforma_orders`.
@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * op installaties waar de eerste variant al gedraaid heeft. Op fresh envs
  * (waar 181500 al direct deletet) is dit een no-op.
  */
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         if (! Schema::hasTable('dashed__order_flow_enrollments')) {

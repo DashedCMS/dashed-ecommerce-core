@@ -6,10 +6,10 @@ use Throwable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\SerializesModels;
-use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Models\ApiSubscriptionLog;
 use Dashed\DashedEcommerceCore\Contracts\SupportsEmailBackfill;
 

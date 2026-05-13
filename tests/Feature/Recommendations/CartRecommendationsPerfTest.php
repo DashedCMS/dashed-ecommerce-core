@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Livewire\Livewire;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\Product;

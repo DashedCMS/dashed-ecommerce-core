@@ -5,12 +5,12 @@ namespace Dashed\DashedEcommerceCore\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
-use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 class UpdateProductPricesJob implements ShouldQueue
 {

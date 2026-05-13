@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         if (! Schema::hasTable('dashed__order_flow_enrollments')) {
@@ -35,6 +34,7 @@ return new class extends Migration
                     if (! $enrollment->flow) {
                         continue;
                     }
+
                     try {
                         $enrollment->recomputeNextMailAt();
                     } catch (\Throwable $e) {

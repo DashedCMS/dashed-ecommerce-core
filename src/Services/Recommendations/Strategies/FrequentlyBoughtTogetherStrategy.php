@@ -5,8 +5,8 @@ namespace Dashed\DashedEcommerceCore\Services\Recommendations\Strategies;
 use Illuminate\Support\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductCoPurchase;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 use Dashed\DashedEcommerceCore\Services\Recommendations\ProductScore;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 
 /**
  * Reads from the precomputed `dashed__product_co_purchase` table to
@@ -51,7 +51,7 @@ final class FrequentlyBoughtTogetherStrategy implements RecommendationStrategy
             ->limit($context->limit * 5) // over-fetch so the aggregator has room
             ->get();
 
-        // Reduce to (partner_id => bestScore) — drop the source ids themselves.
+        // Reduce to (partner_id => bestScore) - drop the source ids themselves.
         $partners = [];
         foreach ($rows as $row) {
             $a = (int) $row->product_a_id;

@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Queue\SerializesModels;
-use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,6 +14,7 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail;
 use Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail;
 

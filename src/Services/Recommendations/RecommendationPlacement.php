@@ -6,7 +6,7 @@ namespace Dashed\DashedEcommerceCore\Services\Recommendations;
  * Where in the funnel a recommendation is being requested. Each placement
  * has its own strategy-stack weighting (see RecommendationService::PLACEMENT_DEFAULTS).
  *
- * The string values are the Customsetting key suffix — `'cart'` reads
+ * The string values are the Customsetting key suffix - `'cart'` reads
  * `recommendation_stack_cart`. Keep them stable.
  */
 enum RecommendationPlacement: string

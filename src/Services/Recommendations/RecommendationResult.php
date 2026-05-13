@@ -5,7 +5,7 @@ namespace Dashed\DashedEcommerceCore\Services\Recommendations;
 use Illuminate\Support\Collection;
 
 /**
- * Final output of RecommendationService::for() — a ranked Collection of
+ * Final output of RecommendationService::for() - a ranked Collection of
  * Product instances plus the per-product trace ProductScores that fed
  * the ranking. Callers that only need products use `->products`; the
  * `->explain()` admin debug page reads `->scores`.

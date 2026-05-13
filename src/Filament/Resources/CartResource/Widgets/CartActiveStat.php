@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget;
+use Dashed\DashedEcommerceCore\Models\Cart;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Dashed\DashedCore\Filament\Support\ResourceFilterUrl;
-use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 
 /**

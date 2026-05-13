@@ -20,8 +20,8 @@ use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
 use Dashed\DashedEcommerceCore\Filament\Imports\EANCodesImporter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
 use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
 
 class ListProducts extends ListRecords
 {

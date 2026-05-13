@@ -8,7 +8,7 @@ use Dashed\DashedEcommerceCore\Services\Recommendations\ProductScore;
 /**
  * Score tie-breaker that nudges high-margin products up a touch
  * (0.05 × normalised margin). Applied AFTER all strategies have been
- * weighted and summed — it's a thumb on the scale, not a primary signal.
+ * weighted and summed - it's a thumb on the scale, not a primary signal.
  *
  * Final score is clamped to [0, 1] so weighted-sum aggregation stays
  * deterministic across long runs.

@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Queue\SerializesModels;
-use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Resources\ProductFeedResource;
 use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
 

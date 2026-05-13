@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Migrations\Migration;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 
 /**
@@ -14,8 +14,7 @@ use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
  * Op fresh envs (die 180000 in v4.24.2+ draaien) is dit een no-op omdat
  * `next_mail_at` daar al gevuld is.
  */
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         if (! Schema::hasTable('dashed__order_flow_enrollments')
@@ -32,6 +31,7 @@ return new class extends Migration
                     if (! $enrollment->flow) {
                         continue;
                     }
+
                     try {
                         $enrollment->recomputeNextMailAt();
                     } catch (\Throwable $e) {

@@ -2,15 +2,15 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages;
 
-use BackedEnum;
 use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
-use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
-use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
 use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationService;
+use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 
 /**
  * Admin debug surface for the recommendation engine. Pick a product + a
@@ -38,6 +38,7 @@ class RecommendationsDebugPage extends Page
     public static function canAccess(): bool
     {
         $user = auth()->user();
+
         return $user !== null
             && method_exists($user, 'hasRole')
             && $user->hasRole('super-admin');
@@ -80,12 +81,14 @@ class RecommendationsDebugPage extends Page
     {
         if (! $this->productId) {
             $this->explanation = ['strategies' => [], 'ranking' => []];
+
             return;
         }
 
         $product = Product::find($this->productId);
         if (! $product) {
             $this->explanation = ['strategies' => [], 'ranking' => []];
+
             return;
         }
 

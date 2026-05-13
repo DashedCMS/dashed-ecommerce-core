@@ -20,7 +20,7 @@ class RecommendationService
 {
     /**
      * Per-placement strategy stack: strategy-key => weight.
-     * Hard-coded in v1 — admin override is v1.1.
+     * Hard-coded in v1 - admin override is v1.1.
      */
     public const PLACEMENT_DEFAULTS = [
         'ProductDetail' => [

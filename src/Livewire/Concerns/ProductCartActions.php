@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\Products;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Support\Collection as SupportCollection;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 

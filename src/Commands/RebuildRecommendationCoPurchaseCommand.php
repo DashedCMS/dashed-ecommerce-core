@@ -28,6 +28,7 @@ class RebuildRecommendationCoPurchaseCommand extends Command
         PrecomputeCoPurchaseScoresJob::dispatchSync($mode);
 
         $this->info('Done.');
+
         return self::SUCCESS;
     }
 }

@@ -9,7 +9,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Queue\SerializesModels;
-use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,6 +19,7 @@ use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
+use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 class ExportInvoicesJob implements ShouldQueue
 {

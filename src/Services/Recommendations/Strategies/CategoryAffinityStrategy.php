@@ -11,7 +11,7 @@ use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationCo
  * Recommends products from the same productCategories as the products
  * already in context. Score = 0.6 base + 0.1 per shared category, capped
  * at 1.0. When the context has no products (e.g. a popup with no anchor),
- * falls back to globally hot products in the active site's catalog —
+ * falls back to globally hot products in the active site's catalog -
  * still under the same key so the placement weight applies.
  */
 final class CategoryAffinityStrategy implements RecommendationStrategy

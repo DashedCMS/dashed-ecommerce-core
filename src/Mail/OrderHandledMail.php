@@ -244,6 +244,7 @@ class OrderHandledMail extends Mailable
                     4,
                     $this->order->user,
                 );
+
                 return view('dashed-ecommerce-core::email.recommendations', [
                     'products' => $products,
                     'placement' => 'email_order_handled',

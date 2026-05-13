@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Dashed\DashedCore\Filament\Support\ResourceFilterUrl;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 /**

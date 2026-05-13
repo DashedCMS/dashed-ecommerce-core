@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Services\Recommendations\Strategies;
 
 use Illuminate\Support\Collection;
-use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 use Dashed\DashedEcommerceCore\Services\Recommendations\ProductScore;
+use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
 use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 
 /**
  * Wraps the existing tuned `CartProductSuggester` (free-shipping
@@ -18,7 +18,7 @@ use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
  * NOTE: the underlying `CartProductSuggester::suggest()` is the production
  * implementation today. Until the regression test in T17 confirms output
  * parity, callers in the cart Livewire should keep using the legacy
- * service directly — T29 is the cutover task.
+ * service directly - T29 is the cutover task.
  */
 final class GapClosingStrategy implements RecommendationStrategy
 {
@@ -72,6 +72,7 @@ final class GapClosingStrategy implements RecommendationStrategy
 
         return $suggestions->values()->map(function ($product, $idx) use ($total) {
             $score = 1 - ($idx / max(1, $total));
+
             return new ProductScore(
                 product: $product,
                 score: round($score, 4),

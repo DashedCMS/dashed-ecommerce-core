@@ -7,9 +7,9 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 use Livewire\Component;
 use Illuminate\Support\Collection;
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
-use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
 use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationService;
+use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationPlacement;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 
 /**
  * Renders the recommendations strip below the cart (and optionally on the

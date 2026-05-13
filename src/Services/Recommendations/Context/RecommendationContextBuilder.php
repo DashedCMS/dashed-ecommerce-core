@@ -26,42 +26,49 @@ class RecommendationContextBuilder
     public function withCurrentProducts(iterable $products): self
     {
         $this->currentProducts = collect($products)->filter()->values();
+
         return $this;
     }
 
     public function withCustomer(mixed $customer): self
     {
         $this->customer = $customer;
+
         return $this;
     }
 
     public function withLocale(?string $locale): self
     {
         $this->locale = $locale;
+
         return $this;
     }
 
     public function withSiteId(?string $siteId): self
     {
         $this->siteId = $siteId;
+
         return $this;
     }
 
     public function withLimit(int $limit): self
     {
         $this->limit = max(1, $limit);
+
         return $this;
     }
 
     public function withExcluded(array $productIds): self
     {
         $this->excludedProductIds = array_values(array_unique(array_map('intval', $productIds)));
+
         return $this;
     }
 
     public function withExtra(string $key, mixed $value): self
     {
         $this->extra[$key] = $value;
+
         return $this;
     }
 
@@ -76,6 +83,7 @@ class RecommendationContextBuilder
         if ($this->heading === '') {
             $this->heading = null;
         }
+
         return $this;
     }
 

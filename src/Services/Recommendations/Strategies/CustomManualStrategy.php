@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Services\Recommendations\Strategies;
 
 use Illuminate\Support\Collection;
-use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 use Dashed\DashedEcommerceCore\Services\Recommendations\ProductScore;
+use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationContext;
 
 /**
  * Reads from the admin-curated cross-sell list on each Product
@@ -33,6 +33,7 @@ final class CustomManualStrategy implements RecommendationStrategy
             if (! method_exists($product, 'crossSellProducts')) {
                 continue;
             }
+
             try {
                 $relation = $product->crossSellProducts;
             } catch (\Throwable) {
