@@ -26,7 +26,7 @@ class RecommendationsDebugPage extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';
     protected static ?string $navigationLabel = 'Recommendations debug';
     protected static ?string $title = 'Recommendations debug';
-    protected static string $slug = 'recommendations/debug';
+    protected static ?string $slug = 'recommendations/debug';
 
     protected string $view = 'dashed-ecommerce-core::filament.pages.recommendations-debug';
 
