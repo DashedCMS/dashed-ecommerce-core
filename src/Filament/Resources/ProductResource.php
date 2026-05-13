@@ -821,6 +821,19 @@ class ProductResource extends Resource
 
                         return $query->where('indexable', $data['indexable']);
                     }),
+                \Filament\Tables\Filters\TernaryFilter::make('out_of_stock')
+                    ->label('Niet op voorraad')
+                    ->placeholder('Alle producten')
+                    ->trueLabel('Alleen niet voorradig')
+                    ->falseLabel('Alle producten')
+                    ->queries(
+                        true: fn (\Illuminate\Database\Eloquent\Builder $q) => $q
+                            ->where('use_stock', true)
+                            ->where('stock', '<=', 0)
+                            ->where('out_of_stock_sellable', false),
+                        false: fn (\Illuminate\Database\Eloquent\Builder $q) => $q,
+                        blank: fn (\Illuminate\Database\Eloquent\Builder $q) => $q,
+                    ),
             ])
             ->deferFilters(false);
     }

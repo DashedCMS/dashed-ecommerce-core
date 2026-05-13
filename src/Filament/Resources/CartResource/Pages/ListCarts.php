@@ -8,6 +8,7 @@ use Dashed\DashedEcommerceCore\Models\Cart;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics;
+use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
 
 class ListCarts extends ListRecords
 {
@@ -22,6 +23,7 @@ class ListCarts extends ListRecords
     {
         return [
             CartStatistics::class,
+            CartActiveStat::class,
         ];
     }
 }

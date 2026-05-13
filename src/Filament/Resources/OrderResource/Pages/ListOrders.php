@@ -6,6 +6,7 @@ use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets\OrderUnhandledStat;
 
 class ListOrders extends ListRecords
 {
@@ -18,5 +19,12 @@ class ListOrders extends ListRecords
         return array_merge([
             CreateAction::make(),
         ], ecommerce()->buttonActions('orders'));
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return array_merge(parent::getHeaderWidgets() ?? [], [
+            OrderUnhandledStat::class,
+        ]);
     }
 }

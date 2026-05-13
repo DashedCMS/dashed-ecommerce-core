@@ -101,6 +101,16 @@ class CartResource extends Resource
                         'handorder' => 'handorder',
                         'customer-pos' => 'customer-pos',
                     ]),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Actief')
+                    ->placeholder('Alle winkelmandjes')
+                    ->trueLabel('Alleen actieve')
+                    ->falseLabel('Alleen leeg / inactief')
+                    ->queries(
+                        true: fn (\Illuminate\Database\Eloquent\Builder $q) => $q->whereHas('items'),
+                        false: fn (\Illuminate\Database\Eloquent\Builder $q) => $q->whereDoesntHave('items'),
+                        blank: fn (\Illuminate\Database\Eloquent\Builder $q) => $q,
+                    ),
             ])
             ->toolbarActions([
                 BulkAction::make('bulkEmpty')

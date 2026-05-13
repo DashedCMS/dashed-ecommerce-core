@@ -407,7 +407,29 @@ class OrderResource extends Resource
                     ]),
                 SelectFilter::make('fulfillment_status')
                     ->multiple()
-                    ->options(Orders::getFulfillmentStatusses()),
+                    ->options(Orders::getFulfillmentStatusses() + [
+                        'unhandled_virtual' => 'Onafgehandeld (alles behalve afgehandeld)',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $values = $data['values'] ?? [];
+
+                        // Widget-shortcut: ResourceFilterUrl stuurt
+                        // tableFilters[fulfillment_status][value]=unhandled mee.
+                        // We mappen die op "alles behalve handled/partially_handled".
+                        if (isset($data['value']) && $data['value'] === 'unhandled') {
+                            return $query->whereNotIn('fulfillment_status', ['handled', 'partially_handled']);
+                        }
+
+                        if (! is_array($values) || empty($values)) {
+                            return $query;
+                        }
+
+                        if (in_array('unhandled_virtual', $values, true)) {
+                            return $query->whereNotIn('fulfillment_status', ['handled', 'partially_handled']);
+                        }
+
+                        return $query->whereIn('fulfillment_status', $values);
+                    }),
                 SelectFilter::make('retour_status')
                     ->multiple()
                     ->options(Orders::getReturnStatusses()),
