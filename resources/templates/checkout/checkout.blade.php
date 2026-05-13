@@ -253,6 +253,7 @@
 
                                         <div class="lg:col-span-2">
                                             <livewire:cart.cart-suggestions view="checkout" />
+                                            <livewire:cart-recommendations view="checkout" :limit="2" />
                                         </div>
 
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
