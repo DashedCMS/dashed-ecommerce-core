@@ -384,14 +384,41 @@ class Product extends Model
         return array_reverse($breadcrumbs);
     }
 
+    /**
+     * currentPrice / discountPrice geven ex-BTW terug wanneer de ingelogde
+     * user `show_prices_ex_vat = true` heeft. Berekeningen (cart, checkout,
+     * factuur) moeten daarom NIET via deze accessors lopen maar via
+     * priceForUser() / getRawOriginal('discount_price') zodat ze altijd de
+     * incl-prijs zien.
+     */
     public function getCurrentPriceAttribute()
     {
-        return $this->priceForUser();
+        $incl = $this->priceForUser();
+        if ($incl === null) {
+            return null;
+        }
+
+        $user = auth()->check() ? auth()->user() : null;
+        if (! empty($user?->show_prices_ex_vat)) {
+            return VatDisplay::exFromIncl((float) $incl, (int) ($this->vat_rate ?? 21));
+        }
+
+        return $incl;
     }
 
     public function getDiscountPriceAttribute(): ?float
     {
-        return $this->getRawOriginal('discount_price') > 0 ? $this->getRawOriginal('discount_price') : null;
+        $incl = $this->getRawOriginal('discount_price');
+        if (! ($incl > 0)) {
+            return null;
+        }
+
+        $user = auth()->check() ? auth()->user() : null;
+        if (! empty($user?->show_prices_ex_vat)) {
+            return VatDisplay::exFromIncl((float) $incl, (int) ($this->vat_rate ?? 21));
+        }
+
+        return (float) $incl;
     }
 
     /**
@@ -1358,10 +1385,10 @@ class Product extends Model
 
         // 6) Base unit price bepalen
         // - custom: singlePrice of fallback op cartItem->price
-        // - normaal: model->currentPrice
+        // - normaal: model->priceForUser() (altijd incl, ook bij show_prices_ex_vat).
         $baseUnitPrice = $isCustom
             ? (float) ($rawOptions['singlePrice'] ?? $cartItem->single_price ?? $cartItem->price ?? 0)
-            : (float) ($model->currentPrice ?? 0);
+            : (float) ($model?->priceForUser() ?? 0);
 
         $price = $baseUnitPrice * $itemQty;
 

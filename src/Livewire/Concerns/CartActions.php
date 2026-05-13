@@ -87,8 +87,12 @@ trait CartActions
         }
 
         $cartUpdated = false;
-        $productPrice = $product->currentPrice;
-        $discountedProductPrice = $product->discountPrice;
+        // Cart-math gebruikt altijd incl-prijzen; niet de accessor (die levert ex
+        // op voor users met `show_prices_ex_vat`).
+        $productPrice = (float) $product->priceForUser();
+        $discountedProductPrice = $product->getRawOriginal('discount_price') > 0
+            ? (float) $product->getRawOriginal('discount_price')
+            : 0;
         $options = [];
 
         foreach ($product->allProductExtras() as $extraKey => $productExtra) {

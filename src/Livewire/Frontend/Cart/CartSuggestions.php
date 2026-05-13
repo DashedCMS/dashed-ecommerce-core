@@ -107,8 +107,11 @@ class CartSuggestions extends Component
             return;
         }
 
-        $price = (float) $product->currentPrice;
-        $discount = (float) ($product->discountPrice ?? $price);
+        // Cart-math gebruikt altijd incl-prijzen; niet de accessor (die levert ex
+        // op voor users met `show_prices_ex_vat`).
+        $price = (float) $product->priceForUser();
+        $rawDiscount = $product->getRawOriginal('discount_price');
+        $discount = (float) ($rawDiscount > 0 ? $rawDiscount : $price);
 
         $attributes = [
             'discountPrice' => $discount,

@@ -180,7 +180,9 @@ class DiscountCode extends Model
 
     public function getDiscountedPriceForProduct(Product $product, int $quantity = 0)
     {
-        $discountedPrice = $product->currentPrice * $quantity;
+        // priceForUser() levert altijd de incl-prijs (de currentPrice-accessor
+        // levert ex op wanneer de user `show_prices_ex_vat` aan heeft).
+        $discountedPrice = (float) $product->priceForUser() * $quantity;
         if ($this->type == 'amount') {
             return $discountedPrice;
         }
@@ -311,7 +313,7 @@ class DiscountCode extends Model
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
                 if ($item->model && $this->productCategories()->whereIn('product_category_id', $item->model->productCategories()->pluck('product_category_id'))->exists()) {
-                    $amountOfCart = $amountOfCart + ($item->model->currentPrice * $item->qty);
+                    $amountOfCart = $amountOfCart + ((float) $item->model->priceForUser() * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
             }
@@ -334,7 +336,7 @@ class DiscountCode extends Model
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
                 if ($item->model && $this->products()->where('product_id', $item->model->id)->exists()) {
-                    $amountOfCart = $amountOfCart + ($item->model->currentPrice * $item->qty);
+                    $amountOfCart = $amountOfCart + ((float) $item->model->priceForUser() * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
             }

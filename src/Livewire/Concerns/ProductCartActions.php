@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Support\Collection as SupportCollection;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
@@ -599,7 +600,10 @@ trait ProductCartActions
             return;
         }
 
-        $productPrice = $this->product->currentPrice;
+        // Base prijs altijd incl voor de rekensom in dit blok; aan het einde
+        // converteren we $this->price/$this->discountPrice naar ex zodra de
+        // user `show_prices_ex_vat` aan heeft.
+        $productPrice = $this->product->priceForUser();
 
         if (! $this->productExtras) {
             $this->productExtras = $this->product->allProductExtras();
@@ -663,7 +667,24 @@ trait ProductCartActions
         }
 
         $this->price = $productPrice;
-        $this->discountPrice = $this->product->discountPrice;
+        $this->discountPrice = $this->product->getRawOriginal('discount_price') > 0
+            ? (float) $this->product->getRawOriginal('discount_price')
+            : null;
+
+        // Display-conversie: zet $this->price / $this->discountPrice naar ex-BTW
+        // als de user `show_prices_ex_vat` aan heeft. Cart-acties die de echte
+        // incl-prijs nodig hebben gebruiken het product/Variant rechtstreeks
+        // via priceForUser() of getRawOriginal('discount_price').
+        $user = auth()->check() ? auth()->user() : null;
+        if (! empty($user?->show_prices_ex_vat)) {
+            $vatRate = (int) ($this->product->vat_rate ?? 21);
+            if ($this->price !== null) {
+                $this->price = VatDisplay::exFromIncl((float) $this->price, $vatRate);
+            }
+            if ($this->discountPrice !== null) {
+                $this->discountPrice = VatDisplay::exFromIncl((float) $this->discountPrice, $vatRate);
+            }
+        }
     }
 
     /**
@@ -680,8 +701,12 @@ trait ProductCartActions
         }
 
         $cartUpdated = false;
-        $productPrice = $product->currentPrice;
-        $discountedProductPrice = $product->discountPrice;
+        // Cart-math gebruikt altijd incl-prijzen; niet de accessor (die levert ex
+        // op voor users met `show_prices_ex_vat`).
+        $productPrice = (float) $product->priceForUser();
+        $discountedProductPrice = $product->getRawOriginal('discount_price') > 0
+            ? (float) $product->getRawOriginal('discount_price')
+            : 0;
         $options = [];
 
         $productExtras = $product->allProductExtras();
