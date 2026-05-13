@@ -62,6 +62,61 @@ class RecommendationService
     ) {
     }
 
+    /**
+     * Same input as `for()` but returns the per-strategy breakdown alongside
+     * the final ranking. Read by the admin debug page so an operator can
+     * understand why a given product appears (or doesn't) for a placement.
+     *
+     * @return array{
+     *   strategies: array<string, array<int, array{product_id: int, name: string, raw: float, weighted: float, reasons: array<int, string>}>>,
+     *   ranking: array<int, array{product_id: int, name: string, score: float, reasons: array<int, string>}>
+     * }
+     */
+    public function explain(RecommendationContext $context): array
+    {
+        $strategies = $this->registry->forPlacement($context->placement);
+        $weights = self::PLACEMENT_DEFAULTS[$context->placement->name] ?? [];
+
+        $breakdown = [];
+        foreach ($strategies as $strategy) {
+            if (! $strategy->appliesTo($context)) {
+                $breakdown[$strategy->key()] = [];
+                continue;
+            }
+            $weight = $weights[$strategy->key()] ?? $strategy->defaultWeight();
+            try {
+                $candidates = $strategy->candidates($context);
+            } catch (\Throwable) {
+                $breakdown[$strategy->key()] = [];
+                continue;
+            }
+            $breakdown[$strategy->key()] = $candidates
+                ->filter(fn ($s) => $s instanceof ProductScore)
+                ->map(fn (ProductScore $s) => [
+                    'product_id' => (int) ($s->product->id ?? 0),
+                    'name' => (string) ($s->product->name ?? ''),
+                    'raw' => round($s->score, 4),
+                    'weighted' => round($s->score * $weight, 4),
+                    'reasons' => $s->reasons,
+                ])
+                ->values()
+                ->all();
+        }
+
+        $result = $this->for($context);
+        $ranking = $result->scores->map(fn (ProductScore $s) => [
+            'product_id' => (int) ($s->product->id ?? 0),
+            'name' => (string) ($s->product->name ?? ''),
+            'score' => round($s->score, 4),
+            'reasons' => $s->reasons,
+        ])->values()->all();
+
+        return [
+            'strategies' => $breakdown,
+            'ranking' => $ranking,
+        ];
+    }
+
     public function for(RecommendationContext $context): RecommendationResult
     {
         $strategies = $this->registry->forPlacement($context->placement);

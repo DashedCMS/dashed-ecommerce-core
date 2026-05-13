@@ -92,6 +92,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
                 CustomerMatchSettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,
