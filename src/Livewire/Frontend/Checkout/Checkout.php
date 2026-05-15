@@ -999,7 +999,7 @@ class Checkout extends Component
 
             if ($cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
                 $orderProduct->is_pre_order = true;
-                $orderProduct->pre_order_restocked_date = $cartItem->model->expected_in_stock_date;
+                $orderProduct->pre_order_restocked_date = $cartItem->model->resolvePreOrderRestockedDate();
                 $orderContainsPreOrders = true;
             }
 
@@ -1017,7 +1017,7 @@ class Checkout extends Component
 
                 if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
                     $bundleOrderProduct->is_pre_order = true;
-                    $bundleOrderProduct->pre_order_restocked_date = $bundleProduct->expected_in_stock_date;
+                    $bundleOrderProduct->pre_order_restocked_date = $bundleProduct->resolvePreOrderRestockedDate();
                     $orderContainsPreOrders = true;
                 }
 

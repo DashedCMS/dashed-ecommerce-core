@@ -565,7 +565,7 @@ trait CreateManualOrderActions2
 
             if ($cartItem->model && $cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
                 $orderProduct->is_pre_order = true;
-                $orderProduct->pre_order_restocked_date = $cartItem->model->expected_in_stock_date;
+                $orderProduct->pre_order_restocked_date = $cartItem->model->resolvePreOrderRestockedDate();
                 $orderContainsPreOrders = true;
             }
 

@@ -824,6 +824,26 @@ class Product extends Model
         return $expectedDeliveryInDays;
     }
 
+    /**
+     * Resolves the pre-order ship-by date snapshot to store on the
+     * OrderProduct row at order time. Prefers the absolute
+     * `expected_in_stock_date`; falls back to converting the relative
+     * `expected_delivery_in_days` to `now() + days`. Returns null when
+     * neither is configured.
+     */
+    public function resolvePreOrderRestockedDate(): ?Carbon
+    {
+        if ($this->expected_in_stock_date) {
+            return Carbon::parse($this->expected_in_stock_date);
+        }
+
+        if ($this->expected_delivery_in_days) {
+            return now()->startOfDay()->addDays((int) $this->expected_delivery_in_days);
+        }
+
+        return null;
+    }
+
     public function purchasable()
     {
         if ($this->inStock() || $this->outOfStockSellable()) {
