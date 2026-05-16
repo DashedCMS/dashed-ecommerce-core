@@ -6,22 +6,22 @@
             width: 16px;
         }
     </style>
-    <div class="p-8 border-4 border-primary-500 overflow-hidden bg-black/90 z-10 w-full h-full">
-        <div class="grid grid-cols-10 divide-x divide-primary-500 h-full">
-            <div class="sm:col-span-7 sm:pr-8 flex flex-col gap-8 overflow-y-auto">
-                <div class="flex flex-wrap justify-between items-center">
-                    <div class="flex items-center justify-center gap-4">
-                        <p class="font-bold text-5xl">{{ Customsetting::get('site_name') }}</p>
-                        <p class="font-bold text-xl">|</p>
-                        <p class="font-bold text-5xl" x-html="time"></p>
+    <div x-data="{ cartOpen: false }" class="p-4 md:p-8 border-4 border-primary-500 overflow-hidden bg-black/90 z-10 w-full h-full">
+        <div class="flex flex-col md:grid md:grid-cols-10 md:divide-x divide-primary-500 h-full">
+            <div class="md:col-span-7 md:pr-8 flex flex-col gap-4 md:gap-8 overflow-y-auto pb-24 md:pb-0">
+                <div class="flex flex-wrap justify-between items-center gap-2 md:gap-0">
+                    <div class="flex items-center justify-center gap-2 md:gap-4">
+                        <p class="font-bold text-2xl md:text-5xl">{{ Customsetting::get('site_name') }}</p>
+                        <p class="font-bold text-base md:text-xl">|</p>
+                        <p class="font-bold text-2xl md:text-5xl" x-html="time"></p>
                     </div>
-                    <div class="flex flex-wrap gap-4">
+                    <div class="flex flex-wrap gap-2 md:gap-4">
                         <button type="button" x-cloak x-show="products.length"
                                 wire:click="mountAction('saveAsConceptAction')"
                                 x-bind:disabled="loading"
                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                 title="{{ __('Opslaan als concept') }}"
-                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                class="h-10 w-10 md:h-12 md:w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
@@ -30,7 +30,7 @@
                                 x-bind:disabled="loading"
                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                 @click="printLastOrder"
-                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                class="h-10 w-10 md:h-12 md:w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -42,7 +42,7 @@
                                 x-show="isFullscreen"
                                 x-cloak
                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                class="h-10 w-10 md:h-12 md:w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -53,7 +53,7 @@
                                 x-bind:disabled="loading"
                                 x-show="!isFullscreen"
                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                                class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                class="h-10 w-10 md:h-12 md:w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -63,7 +63,7 @@
                         <button x-cloak x-show="products.length" @click="clearProducts"
                                 x-bind:disabled="loading"
                                 x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
-                                class="h-12 w-12  text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
+                                class="h-10 w-10 md:h-12 md:w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5"
                                  stroke="currentColor" class="size-6">
@@ -77,7 +77,7 @@
                             x-on:click="() => launchEmojis($el)"
                             x-bind:disabled="loading"
                             x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                            class="h-12 w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center"
+                            class="h-10 w-10 md:h-12 md:w-12 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center"
                         >
                             <span>🥳</span>
                         </button>
@@ -133,7 +133,7 @@
                 </form>
                 <div class="z-50 bg-primary-500 rounded-lg shadow-xl grow overflow-y-auto" x-cloak
                      x-show="!loadingSearchedProducts && searchProductQuery && searchedProducts.length">
-                    <div class="grid grid-cols-4 overflow-y-auto bg-primary-500 gap-0.5">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 overflow-y-auto bg-primary-500 gap-0.5">
                         <template x-for="product in searchedProducts">
                             <div class="grid relative items-center gap-6 p-4 text-black bg-white cursor-pointer"
                                  @click="addProduct(product.id)">
@@ -365,7 +365,18 @@
                     @endif
                 </div>
             </div>
-            <div class="sm:col-span-3 sm:pl-8 flex flex-col gap-8 overflow-y-auto">
+            <div x-show="cartOpen" x-cloak @click="cartOpen = false" class="fixed inset-0 bg-black/50 z-30 md:hidden" x-transition.opacity></div>
+            <div
+                class="fixed inset-x-0 bottom-0 z-40 max-h-[85vh] portrait:max-h-[85vh] landscape:max-h-[60vh] md:max-h-none md:static md:col-span-3 md:pl-8 flex flex-col gap-4 md:gap-8 overflow-y-auto transition-transform duration-300 ease-out bg-black/95 md:bg-transparent rounded-t-2xl md:rounded-none border-t border-primary-500 md:border-t-0 px-4 pt-4 pb-6 md:p-0"
+                x-bind:class="cartOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0'">
+                <div class="md:hidden flex items-center justify-between pb-2 border-b border-primary-500">
+                    <p class="font-bold text-xl">{{ __('Winkelwagen') }}</p>
+                    <button type="button" @click="cartOpen = false" class="h-10 w-10 text-white bg-primary-500 hover:bg-primary-700 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
                 <div x-show="products.length > 0"
                      style="
     scrollbar-width: 50px;
@@ -557,6 +568,24 @@
                 </div>
             </div>
         </div>
+        <button type="button"
+                x-cloak
+                x-show="!cartOpen"
+                @click="cartOpen = true"
+                class="md:hidden fixed bottom-4 right-4 z-30 bg-primary-500 hover:bg-primary-700 text-white px-5 py-4 rounded-full shadow-2xl flex items-center gap-3 font-bold text-base active:scale-95 transition-transform">
+            <span class="relative inline-flex">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart">
+                    <circle cx="8" cy="21" r="1"/>
+                    <circle cx="19" cy="21" r="1"/>
+                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                </svg>
+                <span x-show="products.length > 0"
+                      x-cloak
+                      class="absolute -top-2 -right-3 bg-white text-primary-500 text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center border border-primary-500"
+                      x-text="products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0)"></span>
+            </span>
+            <span x-html="total">&euro;0,-</span>
+        </button>
     </div>
     <div
         x-show="customProductPopup"

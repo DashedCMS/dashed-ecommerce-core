@@ -8,7 +8,7 @@
 
 <div class="space-y-3 text-gray-900 dark:text-gray-100">
     @forelse ($concepts as $concept)
-        <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded p-3 bg-white dark:bg-gray-900">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gray-200 dark:border-gray-700 rounded p-3 bg-white dark:bg-gray-900">
             <div>
                 <div class="font-medium text-gray-900 dark:text-gray-100">
                     #{{ $concept->id }} -
