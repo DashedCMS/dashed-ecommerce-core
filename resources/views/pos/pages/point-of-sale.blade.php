@@ -367,7 +367,7 @@
             </div>
             <div x-show="cartOpen" x-cloak @click="cartOpen = false" class="fixed inset-0 bg-black/50 z-30 md:hidden" x-transition.opacity></div>
             <div
-                class="fixed inset-x-0 bottom-0 z-40 max-h-[85vh] portrait:max-h-[85vh] landscape:max-h-[60vh] px-4 pt-4 pb-6 rounded-t-2xl border-t border-primary-500 bg-black/95 overflow-y-auto md:px-0 md:pt-0 md:pb-0 md:max-h-none md:static md:col-span-3 md:pl-8 md:rounded-none md:border-t-0 md:bg-transparent md:h-full flex flex-col gap-4 md:gap-8 transition-transform duration-300 ease-out"
+                class="fixed inset-x-0 bottom-0 z-40 max-h-[85vh] portrait:max-h-[85vh] landscape:max-h-[60vh] px-4 pt-4 pb-6 rounded-t-2xl border-t border-primary-500 bg-black/95 overflow-y-auto md:px-0 md:pt-0 md:pb-0 md:max-h-none md:static md:col-span-3 md:pl-8 md:rounded-none md:border-t-0 md:bg-transparent md:h-full md:overflow-visible flex flex-col gap-4 md:gap-8 transition-transform duration-300 ease-out"
                 x-bind:class="cartOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0'">
                 <div class="md:hidden flex items-center justify-between pb-2 border-b border-primary-500">
                     <p class="font-bold text-xl">{{ __('Winkelwagen') }}</p>
