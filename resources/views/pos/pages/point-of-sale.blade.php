@@ -7,7 +7,7 @@
         }
     </style>
     <div class="p-8 border-4 border-primary-500 overflow-hidden bg-black/90 z-10 w-full h-full">
-        <div class="grid grid-cols-10 divide-x divide-primary-500 h-full">
+        <div class="grid grid-cols-1 sm:grid-cols-10 divide-y sm:divide-y-0 sm:divide-x divide-primary-500 h-full">
             <div class="sm:col-span-7 sm:pr-8 flex flex-col gap-8 overflow-y-auto">
                 <div class="flex flex-wrap justify-between items-center">
                     <div class="flex items-center justify-center gap-4">
