@@ -493,27 +493,17 @@ class OrderResource extends Resource
                         ->orderBy('utm_campaign')
                         ->pluck('utm_campaign', 'utm_campaign')
                         ->toArray()),
-                Filter::make('customer_match')
-                    ->schema([
-                        TextInput::make('value')
-                            ->label('Klant-match (automatisch gevuld vanuit order-detail)')
-                            ->disabled(),
-                    ])
-                    ->query(function (Builder $query, array $data) {
-                        $value = $data['value'] ?? null;
-                        if (! $value || ! str_starts_with($value, 'order:')) {
-                            return $query;
-                        }
-                        $anchor = Order::find((int) substr($value, 6));
-                        if (! $anchor) {
-                            return $query;
-                        }
-
-                        return $query->forCustomerOf($anchor);
-                    })
-                    ->indicateUsing(function (array $data): ?string {
-                        return ! empty($data['value']) ? 'Klant: '.$data['value'] : null;
-                    }),
+                SelectFilter::make('country')
+                    ->label('Land')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => Order::query()
+                        ->whereNotNull('country')
+                        ->where('country', '!=', '')
+                        ->groupBy('country')
+                        ->orderBy('country')
+                        ->pluck('country', 'country')
+                        ->toArray()),
             ])
             ->recordActions([
                 ViewAction::make(),

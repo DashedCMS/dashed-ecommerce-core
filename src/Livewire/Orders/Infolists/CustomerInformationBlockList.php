@@ -16,7 +16,6 @@ use Filament\Infolists\Components\ImageEntry;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class CustomerInformationBlockList extends Component implements HasActions, HasSchemas
 {
@@ -98,19 +97,6 @@ class CustomerInformationBlockList extends Component implements HasActions, HasS
                                     ))
                                     ->modalSubmitAction(false)
                                     ->modalCancelActionLabel('Sluiten')
-                                    ->extraModalFooterActions(fn ($record) => [
-                                        Action::make('view_filtered_orders')
-                                            ->label('Bekijk alle bestellingen →')
-                                            ->color('primary')
-                                            ->url(fn () => OrderResource::getUrl('index', [
-                                                'tableFilters' => [
-                                                    'customer_match' => [
-                                                        'value' => 'order:'.$record->id,
-                                                    ],
-                                                ],
-                                            ]))
-                                            ->openUrlInNewTab(false),
-                                    ])
                                     ->visible(fn () => $this->history()->otherCount() > 0),
                             ),
                     ])
