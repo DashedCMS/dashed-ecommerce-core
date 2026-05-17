@@ -1941,6 +1941,7 @@
         paymentMethods: [],
         order: null,
         suggestedCashPaymentAmounts: [],
+        submittingPayment: false,
         chosenPaymentMethod: null,
         isPinTerminalPayment: false,
         pinTerminalStatus: false,
@@ -3042,13 +3043,15 @@
         },
 
         async setCashPaymentAmount(amount) {
-            this.loading = true;
             this.cashPaymentAmount = amount;
-            this.markAsPaid();
-            this.loading = false;
+            await this.markAsPaid();
         },
 
         async markAsPaid(hasMultiplePayments = false) {
+            if (this.submittingPayment) {
+                return;
+            }
+            this.submittingPayment = true;
             this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.mark-as-paid') }}', {
@@ -3071,7 +3074,6 @@
                 this.focus();
 
                 if (!response.ok) {
-                    this.loading = false;
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -3091,14 +3093,14 @@
                     this.toggle('orderConfirmationPopup')
                     $wire.$refresh();
                 }
-
-                this.loading = false;
             } catch (error) {
-                this.loading = false;
-                return $wire.dispatch('notify', {
+                $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De bestelling kon niet worden gemarkeerd als betaald'
                 })
+            } finally {
+                this.loading = false;
+                this.submittingPayment = false;
             }
         },
 

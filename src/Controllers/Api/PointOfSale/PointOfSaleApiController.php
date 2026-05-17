@@ -1171,6 +1171,32 @@ class PointOfSaleApiController extends Controller
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
+        if ($order->status === 'paid') {
+            $order->totalFormatted = CurrencyHelper::formatPrice($order->total);
+            $order->paidAmountFormatted = CurrencyHelper::formatPrice($order->paidAmount);
+            $order->changeMoney = CurrencyHelper::formatPrice(0);
+            $order->shouldChangeMoney = false;
+
+            $orderPayments = $order->orderPayments;
+            foreach ($orderPayments as $op) {
+                $op->amountFormatted = CurrencyHelper::formatPrice($op->amount);
+                $op->paymentMethodName = $op->paymentMethod->name ?? '';
+            }
+
+            return response()->json([
+                'success' => true,
+                'order' => $order,
+                'orderPayments' => $orderPayments,
+                'startPinTerminalPayment' => false,
+                'firstPaymentMethod' => [
+                    'id' => $paymentMethod->id,
+                    'is_cash_payment' => $paymentMethod->is_cash_payment,
+                    'name' => $paymentMethod->name,
+                    'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
+                ],
+            ]);
+        }
+
         if ($paymentMethod->is_cash_payment) {
             if (! $cashPaymentAmount) {
                 return response()->json(['success' => false, 'message' => 'Geen bedrag ingevoerd'], 400);

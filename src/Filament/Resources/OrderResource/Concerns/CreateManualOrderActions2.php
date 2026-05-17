@@ -1291,6 +1291,14 @@ trait CreateManualOrderActions2
 
     public function markAsPaid(bool $hasMultiplePayments = false): void
     {
+        $order = $this->order;
+
+        if ($order && $order->status === 'paid') {
+            self::finishPaidOrder($order);
+
+            return;
+        }
+
         if ($this->paymentMethod->is_cash_payment) {
             if (! $this->cashPaymentAmount) {
                 Notification::make()
@@ -1308,8 +1316,6 @@ trait CreateManualOrderActions2
                 return;
             }
         }
-
-        $order = $this->order;
 
         $orderPayment = new OrderPayment();
         $orderPayment->amount = $this->cashPaymentAmount ?: $this->totalUnformatted;

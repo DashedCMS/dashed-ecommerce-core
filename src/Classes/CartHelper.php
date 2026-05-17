@@ -145,7 +145,7 @@ class CartHelper
      * Initialiseert de cart helper voor de huidige request.
      * updateData() wordt ALTIJD uitgevoerd.
      */
-    public function initialize(?string $cartType = null): void
+    public function initialize(mixed $cartType = null): void
     {
         $this->setCartType($cartType);
 
@@ -1832,8 +1832,14 @@ class CartHelper
     // Cart type
     // -------------------------------------------------------------------------
 
-    public function setCartType(?string $cartType = null): void
+    public function setCartType(mixed $cartType = null): void
     {
+        // Livewire components expose `$cartType` as an untyped public
+        // property (trait conflict), so untrusted clients can submit
+        // any shape (arrays, ints, etc.). Coerce to a usable string or
+        // null instead of letting a strict type hint throw.
+        $cartType = is_string($cartType) && $cartType !== '' ? $cartType : null;
+
         if ($cartType) {
             static::$cartType = $cartType;
         } elseif (! static::$cartType) {
