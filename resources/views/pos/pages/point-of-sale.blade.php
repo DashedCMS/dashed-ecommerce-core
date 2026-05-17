@@ -7,7 +7,7 @@
         }
     </style>
     <div x-data="{ cartOpen: false }" class="p-4 md:p-8 border-4 border-primary-500 overflow-hidden bg-black/90 z-10 w-full h-full">
-        <div class="flex flex-col md:grid md:grid-cols-10 md:divide-x divide-primary-500 h-full">
+        <div class="grid grid-cols-1 md:grid-cols-10 md:divide-x divide-primary-500 h-full">
             <div class="md:col-span-7 md:pr-8 flex flex-col gap-4 md:gap-8 overflow-y-auto pb-24 md:pb-0">
                 <div class="flex flex-wrap justify-between items-center gap-2 md:gap-0">
                     <div class="flex items-center justify-center gap-2 md:gap-4">
