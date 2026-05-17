@@ -1556,7 +1556,6 @@ MARKDOWN,
             \Dashed\DashedEcommerceCore\Services\Summary\RevenueSummaryContributor::class,
             \Dashed\DashedEcommerceCore\Services\Summary\AbandonedCartSummaryContributor::class,
             \Dashed\DashedEcommerceCore\Services\Summary\OrderFlowSummaryContributor::class,
-            \Dashed\DashedEcommerceCore\Services\Summary\CustomerMatchSummaryContributor::class,
         ]);
 
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);

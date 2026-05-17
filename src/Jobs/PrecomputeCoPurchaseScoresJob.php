@@ -67,7 +67,7 @@ final class PrecomputeCoPurchaseScoresJob implements ShouldQueue
         }
 
         $orders = Order::query()
-            ->paidStatusses()
+            ->isPaid()
             ->where('updated_at', '>=', $cutoff)
             ->select('id')
             ->pluck('id');

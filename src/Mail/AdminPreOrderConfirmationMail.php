@@ -137,7 +137,7 @@ class AdminPreOrderConfirmationMail extends Mailable implements RegistersEmailTe
 
     public function telegramSummary(): TelegramSummary
     {
-        $orderProducts = ($this->order->orderProducts ?? collect())->filter(fn ($op) => ! empty($op->product_id));
+        $orderProducts = ($this->order->orderProducts ?? collect())->filter(fn ($op) => ($op->sku ?? null) !== 'shipping_costs');
         $productList = $orderProducts
             ->map(fn ($op) => '• ' . (int) $op->quantity . 'x ' . ($op->name ?? '-'))
             ->implode("\n");
