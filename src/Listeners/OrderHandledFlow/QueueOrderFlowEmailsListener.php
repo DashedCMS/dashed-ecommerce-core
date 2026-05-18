@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow;
 use Illuminate\Support\Facades\Log;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
-use Dashed\DashedEcommerceCore\Jobs\OrderHandledFlow\SendOrderHandledEmailJob;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
 class QueueOrderFlowEmailsListener
@@ -106,10 +105,10 @@ class QueueOrderFlowEmailsListener
                 ])->save();
             }
 
-            foreach ($steps as $step) {
-                SendOrderHandledEmailJob::dispatch($order->id, $step->id)
-                    ->delay(now()->addMinutes((int) $step->send_after_minutes));
-            }
+            // Verzending zelf wordt afgehandeld door de scheduled command
+            // dashed:send-order-handled-flow-emails (uurlijks). De enrollment
+            // heeft via recomputeNextMailAt() al een next_mail_at; de command
+            // pakt 'm op zodra die tijd verstreken is.
         }
     }
 }

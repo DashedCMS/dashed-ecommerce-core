@@ -33,6 +33,11 @@ class SendOrderHandledEmailJob implements ShouldQueue
 
     public function handle(): void
     {
+        // LEGACY: nieuwe verzendingen lopen via de scheduled command
+        // dashed:send-order-handled-flow-emails. Deze job blijft bestaan
+        // voor in-flight queue items van vóór de migratie naar het poll-
+        // model. Idempotent: als de stap al verstuurd is via de command,
+        // doen we niets.
         $order = Order::find($this->orderId);
         $step = OrderHandledFlowStep::with('flow')->find($this->flowStepId);
 
@@ -57,18 +62,7 @@ class SendOrderHandledEmailJob implements ShouldQueue
 
         $triggerStatus = (string) ($flow->trigger_status ?: 'handled');
 
-        // 1. Order moet nog steeds in de status staan waarop de flow getriggerd is.
-        if ($order->fulfillment_status !== $triggerStatus) {
-            Log::info('order-flow: fulfillment_status niet langer gelijk aan trigger - skip', [
-                'order_id' => $order->id,
-                'fulfillment_status' => $order->fulfillment_status,
-                'trigger_status' => $triggerStatus,
-            ]);
-
-            return;
-        }
-
-        // 2. Inschrijving moet bestaan en niet geannuleerd zijn (klik / unsubscribe / cooldown).
+        // Inschrijving moet bestaan en niet geannuleerd zijn (klik / unsubscribe / cooldown).
         $enrollment = OrderFlowEnrollment::query()
             ->where('order_id', $order->id)
             ->where('flow_id', $flow->id)
@@ -91,6 +85,13 @@ class SendOrderHandledEmailJob implements ShouldQueue
                 'cancelled_reason' => $enrollment->cancelled_reason,
             ]);
 
+            return;
+        }
+
+        // Idempotentie: als de scheduled command deze stap al heeft verzonden
+        // moeten we 'm hier niet nogmaals sturen.
+        $sent = is_array($enrollment->sent_steps) ? $enrollment->sent_steps : [];
+        if (isset($sent[(string) $step->id])) {
             return;
         }
 

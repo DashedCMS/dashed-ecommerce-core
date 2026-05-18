@@ -8,7 +8,6 @@ use Illuminate\Support\Carbon;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
-use Dashed\DashedEcommerceCore\Jobs\OrderHandledFlow\SendOrderHandledEmailJob;
 
 /**
  * Backfill: voor een actieve order-opvolg flow plant alsnog de stappen voor
@@ -79,13 +78,14 @@ class BackfillOrderHandledFlowService
             }
 
             try {
-                OrderFlowEnrollment::create([
+                $enrollment = OrderFlowEnrollment::create([
                     'order_id' => $order->id,
                     'flow_id' => $flow->id,
                     'started_at' => now(),
                     'cancelled_at' => null,
                     'cancelled_reason' => null,
                 ]);
+                $enrollment->recomputeNextMailAt();
             } catch (\Throwable $e) {
                 // Race-condition op de unique-index, gewoon overslaan.
                 $stats['orders_skipped_already_started']++;
@@ -98,12 +98,9 @@ class BackfillOrderHandledFlowService
                 $order->forceFill(['handled_flow_started_at' => now()])->save();
             }
 
-            foreach ($steps as $step) {
-                SendOrderHandledEmailJob::dispatch($order->id, $step->id)
-                    ->delay(now()->addMinutes((int) $step->send_after_minutes));
-                $stats['emails_dispatched']++;
-            }
-
+            // Verzending wordt opgepakt door de scheduled command
+            // dashed:send-order-handled-flow-emails (uurlijks).
+            $stats['emails_dispatched'] += $steps->count();
             $stats['orders_started']++;
         }
 

@@ -1393,6 +1393,10 @@ MARKDOWN,
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
 
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendOrderHandledFlowEmails::class)
+                ->hourly()
+                ->withoutOverlapping();
+
             // Recommendation co-purchase precompute. Default 03:00; allow
             // site-specific override via Customsetting on high-volume stores.
             $cron = (string) \Dashed\DashedCore\Models\Customsetting::get('recommendation_copurchase_recompute_cron', null, '0 3 * * *');
