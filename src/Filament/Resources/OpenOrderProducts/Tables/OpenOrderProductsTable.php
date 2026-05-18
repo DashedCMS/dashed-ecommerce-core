@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
@@ -146,6 +147,23 @@ class OpenOrderProductsTable
 
                         return $query->whereHas('order', fn ($s) => $s->whereIn('order_origin', $data['values']));
                     }),
+
+                TernaryFilter::make('has_product_extras')
+                    ->label('Product opties')
+                    ->placeholder('Alles')
+                    ->trueLabel('Met opties')
+                    ->falseLabel('Zonder opties')
+                    ->queries(
+                        true: fn (Builder $query) => $query
+                            ->whereNotNull('product_extras')
+                            ->whereRaw("JSON_VALID(product_extras) = 1")
+                            ->whereRaw("JSON_LENGTH(product_extras) > 0"),
+                        false: fn (Builder $query) => $query
+                            ->where(fn (Builder $q) => $q
+                                ->whereNull('product_extras')
+                                ->orWhereRaw("JSON_VALID(product_extras) = 1 AND JSON_LENGTH(product_extras) = 0")),
+                        blank: fn (Builder $query) => $query,
+                    ),
             ])
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
