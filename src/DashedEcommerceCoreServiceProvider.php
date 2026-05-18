@@ -1815,6 +1815,7 @@ MARKDOWN,
                 PruneCartLogs::class,
                 BackfillOrderFlowEnrollmentReviewUrls::class,
                 BackfillOrderFlowEnrollmentNextMailAt::class,
+                \Dashed\DashedEcommerceCore\Commands\BackfillAbandonedCartConversions::class,
                 \Dashed\DashedEcommerceCore\Commands\RebuildRecommendationCoPurchaseCommand::class,
             ]);
 
