@@ -74,6 +74,18 @@ class AbandonedCartMail extends Mailable
         }
 
         $resumeUrl = $source->resumeUrl();
+
+        // Voeg het AbandonedCartEmail id toe zodat CartController::restoreCart
+        // / OrderRecoveryController de klik kan registreren (clicked_at) en het
+        // session-veld kan zetten dat in Checkout::placeOrder de mail aan de
+        // order koppelt (order_id + converted_at). Zonder deze parameter klopt
+        // de conversion-funnel niet: orders worden als "abandoned recovery"
+        // gemarkeerd zonder gekoppelde verzending.
+        if ($this->record->id ?? null) {
+            $sep = str_contains($resumeUrl, '?') ? '&' : '?';
+            $resumeUrl .= $sep . 'email_id=' . $this->record->id;
+        }
+
         if ($this->discountCode) {
             $sep = str_contains($resumeUrl, '?') ? '&' : '?';
             $resumeUrl .= $sep . 'discount=' . $this->discountCode->code;
