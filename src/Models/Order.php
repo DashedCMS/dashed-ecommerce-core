@@ -39,7 +39,6 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
-use Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail;
 
 class Order extends Model
 {
@@ -815,14 +814,24 @@ class Order extends Model
         \Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent::dispatch($this, $oldStatus, $newStatus);
 
         if ($this->isPaidFor()) {
-            foreach (Orders::getFulfillmentStatusses() as $key => $fulfillmentStatus) {
-                if ($this->fulfillment_status == $key && Customsetting::get("fulfillment_status_{$key}_enabled", null, false, $this->locale)) {
-                    try {
-                        Mail::to($this->email)->send(new OrderFulfillmentStatusChangedMail($this, Customsetting::get("fulfillment_status_{$key}_email_subject", null, null, $this->locale), cms()->convertToHtml(Customsetting::get("fulfillment_status_{$key}_email_content", null, null, $this->locale))));
-                        OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.send");
-                    } catch (Exception $e) {
-                        OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.not-send");
-                    }
+            $mailableMap = [
+                'unhandled' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusUnhandledMail::class,
+                'handled' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusHandledMail::class,
+                'in_treatment' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusInTreatmentMail::class,
+                'packed' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusPackedMail::class,
+                'ready_for_pickup' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusReadyForPickupMail::class,
+                'shipped' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusShippedMail::class,
+            ];
+
+            $key = $this->fulfillment_status;
+            $mailable = $mailableMap[$key] ?? null;
+
+            if ($mailable && $this->email && Customsetting::get("fulfillment_status_{$key}_enabled", null, false, $this->locale)) {
+                try {
+                    Mail::to($this->email)->send(new $mailable($this));
+                    OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.send");
+                } catch (Exception $e) {
+                    OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.not-send");
                 }
             }
         }

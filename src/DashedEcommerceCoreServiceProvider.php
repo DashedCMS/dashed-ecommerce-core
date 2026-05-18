@@ -137,7 +137,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->emailBlock('order-details', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderDetailsBlock::class)
             ->emailBlock('order-address', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddressBlock::class)
             ->emailBlock('order-methods', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderMethodsBlock::class)
-            ->emailBlock('order-note', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderNoteBlock::class);
+            ->emailBlock('order-note', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderNoteBlock::class)
+            ->emailBlock('order-track-and-trace', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderTrackAndTraceBlock::class);
 
         cms()
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class)
@@ -148,7 +149,12 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail::class)
-            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderFulfillmentStatusChangedMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusUnhandledMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusHandledMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusInTreatmentMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusPackedMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusReadyForPickupMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusShippedMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderNoteMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\TrackandTraceMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail::class)

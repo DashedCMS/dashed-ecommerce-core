@@ -29,7 +29,6 @@ use Illuminate\Support\Facades\Schema as DBSchema;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Classes\OrderOrigins;
 use Dashed\DashedCore\Notifications\NotificationChannels;
-use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 use Dashed\DashedEcommerceCore\Jobs\BackfillApiSubscriptionsJob;
 
 class OrderSettingsPage extends Page
@@ -105,8 +104,6 @@ class OrderSettingsPage extends Page
         foreach ($locales as $locale) {
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 $formData["fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_enabled', null, false, $locale['id']) ? true : false;
-                $formData["fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_email_subject', null, null, $locale['id']);
-                $formData["fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_email_content', null, null, $locale['id']);
             }
         }
 
@@ -294,25 +291,18 @@ class OrderSettingsPage extends Page
             $newSchema = [
                 TextEntry::make('label')
                     ->state("Fulfillment notificaties voor {$locale['name']}")
-                    ->helperText('Je kan de volgende variablen gebruiken in de mails: ' . implode(', ', OrderVariableReplacer::getAvailableVariables())),
+                    ->helperText('Vink hieronder aan welke fulfillment-status wijzigingen een mail naar de klant triggeren. De onderwerp- en inhoud-velden beheer je per status via de E-mail templates.'),
             ];
 
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 $newSchema = array_merge($newSchema, [
                     Toggle::make("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")
-                        ->label('Fulfillment status "' . $name . '" actie')
+                        ->label('Mail klant bij status "' . $name . '"')
                         ->reactive()
                         ->columnSpan([
                             'default' => 1,
                             'lg' => 2,
                         ]),
-                    TextInput::make("fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}")
-                        ->label('Fulfillment status "' . $name . '" mail onderwerp')
-                        ->columnSpanFull()
-                        ->hidden(fn ($get) => ! $get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
-                    cms()->editorField("fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}", 'Fulfillment status "' . $name . '" mail inhoud')
-                        ->columnSpanFull()
-                        ->hidden(fn ($get) => ! $get("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")),
                 ]);
             }
 
@@ -437,8 +427,6 @@ class OrderSettingsPage extends Page
         foreach ($locales as $locale) {
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_enabled', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}"], null, $locale['id']);
-                Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_email_subject', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_email_subject_{$locale['id']}"] ?? '', null, $locale['id']);
-                Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_email_content', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_email_content_{$locale['id']}"] ?? '', null, $locale['id']);
             }
         }
 
