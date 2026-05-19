@@ -199,7 +199,7 @@ class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTempl
                 'Kortingscode' => $discountInfo,
                 'Bron' => $attributionInfo,
             ],
-            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.view', ['record' => $this->order->id]), null, false),
             emoji: '🛒',
         );
     }

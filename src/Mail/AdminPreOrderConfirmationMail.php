@@ -151,7 +151,7 @@ class AdminPreOrderConfirmationMail extends Mailable implements RegistersEmailTe
                 'Producten' => $productList ?: null,
                 'Betaalmethode' => $this->order->payment_method ?? null,
             ],
-            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.edit', ['record' => $this->order->id]), null, false),
+            adminUrl: rescue(fn () => route('filament.dashed.resources.orders.view', ['record' => $this->order->id]), null, false),
             emoji: '🛒',
         );
     }
