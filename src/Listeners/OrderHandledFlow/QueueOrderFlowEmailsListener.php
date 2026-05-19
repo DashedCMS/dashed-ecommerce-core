@@ -2,13 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow;
 
+use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
-class QueueOrderFlowEmailsListener
+class QueueOrderFlowEmailsListener implements ShouldQueue
 {
+    use InteractsWithQueue;
+    use Queueable;
+
     public function handle(OrderFulfillmentStatusChangedEvent $event): void
     {
         $order = $event->order;

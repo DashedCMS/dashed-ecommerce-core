@@ -2,21 +2,16 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners;
 
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 
-class UpdateOrderReservedStock
+class UpdateOrderReservedStock implements ShouldQueue
 {
-    /**
-     * Create the event listener.
-     */
-    public function __construct()
-    {
-        //
-    }
+    use InteractsWithQueue;
+    use Queueable;
 
-    /**
-     * Handle the event.
-     */
     public function handle(OrderCreatedEvent $event): void
     {
         foreach ($event->order->orderProducts as $orderProduct) {
