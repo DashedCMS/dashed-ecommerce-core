@@ -856,17 +856,8 @@ class Order extends Model
                 OrderLog::createLog(orderId: $this->id, tag: 'order.paid');
             }
 
-            OrderLog::createLog(orderId: $this->id, note: 'Creating invoice', isDebugLog: true);
-
-            // Drop any previously generated document (e.g. concept confirmation) so the paid invoice is rendered fresh.
-            $this->deleteInvoice();
-
-            try {
-                $this->createInvoice();
-            } catch (Exception $e) {
-                OrderLog::createLog(orderId: $this->id, note: 'Error creating invoice: '.$e->getMessage(), isDebugLog: true);
-            }
-
+            // Invoice rendering loopt nu binnen SendInvoiceJob zelf; dat
+            // houdt zowel de POS-bezetting als de webshop checkout snel.
             SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
             //            OrderLog::createLog(orderId: $this->id, note: 'Invoice created', isDebugLog: true);
 
@@ -877,7 +868,7 @@ class Order extends Model
             $this->deductDiscount();
             //            OrderLog::createLog(orderId: $this->id, note: 'Deducted discount', isDebugLog: true);
 
-            $this->sendAutomaticFulfillmentProducts();
+            \Dashed\DashedEcommerceCore\Jobs\SendAutomaticFulfillmentProductsJob::dispatch($this);
 
             //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start', isDebugLog: true);
             OrderMarkedAsPaidEvent::dispatch($this);
@@ -890,7 +881,7 @@ class Order extends Model
             }
             cartHelper()->emptyCart();
 
-            $this->sendGAEcommerceHit();
+            \Dashed\DashedEcommerceCore\Jobs\SendGAEcommerceHitJob::dispatch($this);
         }
 
         $this->updateOrderProductsProductInformation();
@@ -907,9 +898,7 @@ class Order extends Model
 
         OrderLog::createLog(orderId: $this->id, tag: 'order.partially_paid');
 
-        $this->deleteInvoice();
-        $this->createInvoice();
-
+        // Invoice rendering loopt nu binnen SendInvoiceJob zelf.
         SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
 
         $this->deductStock();

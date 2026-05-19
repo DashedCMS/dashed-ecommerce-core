@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -18,7 +19,7 @@ use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
  * subklasse stelt zijn eigen fulfillmentStatusKey() in en krijgt automatisch
  * een aparte EmailTemplate-rij (mailable_key = FQN van de subklasse).
  */
-abstract class FulfillmentStatusChangedBaseMail extends Mailable implements RegistersEmailTemplate
+abstract class FulfillmentStatusChangedBaseMail extends Mailable implements RegistersEmailTemplate, ShouldQueue
 {
     use HasEmailTemplate;
     use Queueable;

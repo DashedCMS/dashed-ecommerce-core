@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
@@ -14,7 +15,7 @@ use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
 
-class ProductOnLowStockEmail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
+class ProductOnLowStockEmail extends Mailable implements RegistersEmailTemplate, SendsToTelegram, ShouldQueue
 {
     use HasEmailTemplate;
     use Queueable;

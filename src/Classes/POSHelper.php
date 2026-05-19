@@ -5,6 +5,8 @@ namespace Dashed\DashedEcommerceCore\Classes;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Jobs\PrintReceiptJob;
+use Dashed\DashedEcommerceCore\Jobs\OpenCashRegisterJob;
 
 class POSHelper
 {
@@ -25,10 +27,10 @@ class POSHelper
         $order->changeFulfillmentStatus($fulfillmentStatus);
 
         if (Customsetting::get('pos_auto_print_receipt', null, true)) {
-            try {
-                $order->printReceipt();
-            } catch (\Exception $exception) {
-            }
+            // Geen sync printer-I/O meer: dispatch naar de queue zodat de
+            // POS-request direct terugkomt. Een redis worker print de bon
+            // binnen ~1s.
+            PrintReceiptJob::dispatch($order);
         }
 
         $hasCashPayment = false;
@@ -44,7 +46,7 @@ class POSHelper
         $posCart->save();
 
         if ($hasCashPayment) {
-            PinTerminal::openCashRegister();
+            OpenCashRegisterJob::dispatch();
         }
 
         return [

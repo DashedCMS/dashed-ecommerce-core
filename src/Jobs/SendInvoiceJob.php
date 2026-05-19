@@ -58,6 +58,21 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
      */
     public function handle(): void
     {
+        // Genereer de factuur hier ipv synchroon in Order::markAsPaid().
+        // Bij POS- en webshop-checkouts blokkeerde DOMPDF anders honderden
+        // ms tot enkele seconden per order. De mail-attachments pakken de
+        // PDF van disk dus de invoice moet wel klaar staan vóór de send.
+        try {
+            $this->order->deleteInvoice();
+            $this->order->createInvoice();
+        } catch (\Exception $e) {
+            \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                orderId: $this->order->id,
+                note: 'Error creating invoice in SendInvoiceJob: ' . $e->getMessage(),
+                isDebugLog: true,
+            );
+        }
+
         $canSendCustomer = ! $this->order->invoice_send_to_customer || $this->overrideCurrentStatus;
 
         if ($this->sendToCustomer && $canSendCustomer) {
