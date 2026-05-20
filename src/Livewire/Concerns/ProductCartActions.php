@@ -510,33 +510,38 @@ trait ProductCartActions
                     continue;
                 }
 
-                $validOptionIds = DB::table('dashed__product_filter')
+                $validOptionIdSet = DB::table('dashed__product_filter')
                     ->where('product_filter_id', $filter['id'])
                     ->whereIn('product_id', $candidateProductIds)
                     ->pluck('product_filter_option_id')
+                    ->map(fn ($id) => (int) $id)
                     ->unique()
                     ->all();
 
-                $enabledOptionIds = collect($filter['options'] ?? [])->pluck('id')->all();
-                if (! empty($enabledOptionIds)) {
-                    $validOptionIds = array_values(array_intersect($validOptionIds, $enabledOptionIds));
-                }
+                // Bepaal welke opties geldig zijn in dezelfde volgorde als
+                // waarin ze in de UI staan, zodat we top-down kunnen kiezen.
+                $orderedValidOptionIds = collect($filter['options'] ?? [])
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->filter(fn ($id) => in_array($id, $validOptionIdSet, true))
+                    ->values()
+                    ->all();
 
-                if (empty($validOptionIds)) {
+                if (empty($orderedValidOptionIds)) {
                     continue;
                 }
 
                 $current = $filter['active'];
-                $currentIsValid = $current && in_array((int) $current, array_map('intval', $validOptionIds), true);
+                $currentIsValid = $current && in_array((int) $current, $orderedValidOptionIds, true);
 
                 if ($current && ! $currentIsValid) {
-                    // Bij een incompatibele waarde forceren we altijd een
-                    // geldige optie (eerste), zodat de gebruiker direct op een
-                    // bestaand product landt in plaats van een lege filter.
-                    $this->filters[$key]['active'] = $validOptionIds[0];
+                    // Bij een incompatibele waarde forceren we de eerste
+                    // geldige optie in UI-volgorde, zodat de gebruiker direct
+                    // op een bestaand product landt.
+                    $this->filters[$key]['active'] = $orderedValidOptionIds[0];
                     $iterationChanged = true;
-                } elseif (! $current && count($validOptionIds) === 1) {
-                    $this->filters[$key]['active'] = $validOptionIds[0];
+                } elseif (! $current && count($orderedValidOptionIds) === 1) {
+                    $this->filters[$key]['active'] = $orderedValidOptionIds[0];
                     $iterationChanged = true;
                 }
             }
