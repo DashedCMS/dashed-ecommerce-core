@@ -530,9 +530,10 @@ trait ProductCartActions
                 $currentIsValid = $current && in_array((int) $current, array_map('intval', $validOptionIds), true);
 
                 if ($current && ! $currentIsValid) {
-                    $this->filters[$key]['active'] = count($validOptionIds) === 1
-                        ? $validOptionIds[0]
-                        : null;
+                    // Bij een incompatibele waarde forceren we altijd een
+                    // geldige optie (eerste), zodat de gebruiker direct op een
+                    // bestaand product landt in plaats van een lege filter.
+                    $this->filters[$key]['active'] = $validOptionIds[0];
                     $iterationChanged = true;
                 } elseif (! $current && count($validOptionIds) === 1) {
                     $this->filters[$key]['active'] = $validOptionIds[0];
