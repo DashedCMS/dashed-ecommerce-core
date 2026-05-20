@@ -7,6 +7,9 @@ use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ImportAction;
 use Maatwebsite\Excel\Facades\Excel;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
@@ -18,6 +21,7 @@ use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
 use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
+use Dashed\DashedEcommerceCore\Jobs\BulkUpdateProductPrices;
 use Dashed\DashedEcommerceCore\Filament\Imports\EANCodesImporter;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
@@ -95,6 +99,62 @@ class ListProducts extends ListRecords
 //                ->icon('heroicon-s-qr-code')
 //                ->color('primary')
 //                ->hiddenLabel(),
+            Action::make('bulkUpdatePrices')
+                ->label('Prijzen aanpassen')
+                ->icon('heroicon-s-banknotes')
+                ->color('warning')
+                ->modalHeading('Alle product-prijzen verhogen of verlagen')
+                ->modalDescription('Past de prijs van alle producten aan met een vast euro-bedrag of percentage. Gebruik een negatief getal om te verlagen. De update draait op de achtergrond.')
+                ->modalSubmitActionLabel('Doorvoeren')
+                ->schema([
+                    Radio::make('mode')
+                        ->label('Soort aanpassing')
+                        ->options([
+                            'euro' => 'Vast bedrag in euro',
+                            'percent' => 'Percentage',
+                        ])
+                        ->default('percent')
+                        ->required()
+                        ->inline()
+                        ->reactive(),
+                    TextInput::make('amount')
+                        ->label(fn (callable $get) => $get('mode') === 'euro' ? 'Bedrag in euro (negatief = verlagen)' : 'Percentage (negatief = verlagen)')
+                        ->numeric()
+                        ->step(0.01)
+                        ->required()
+                        ->helperText(fn (callable $get) => $get('mode') === 'euro'
+                            ? 'Voorbeeld: 1.50 telt €1,50 op bij elke prijs, -0.50 trekt €0,50 af.'
+                            : 'Voorbeeld: 10 verhoogt met 10%, -5 verlaagt met 5%.'),
+                    Toggle::make('include_discount_price')
+                        ->label('Pas ook toe op aanbiedingsprijs (new_price)')
+                        ->helperText('Aan: ook de "nieuwe prijs" (discount) wordt mee gewijzigd. Uit: alleen de standaardprijs wordt gewijzigd.')
+                        ->default(true),
+                ])
+                ->action(function (array $data): void {
+                    $mode = $data['mode'] ?? 'percent';
+                    $amount = (float) ($data['amount'] ?? 0);
+                    $includeDiscount = (bool) ($data['include_discount_price'] ?? false);
+
+                    if ($amount === 0.0) {
+                        Notification::make()
+                            ->title('Geen wijziging')
+                            ->body('Vul een bedrag of percentage anders dan 0 in.')
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
+                    BulkUpdateProductPrices::dispatch($mode, $amount, $includeDiscount);
+
+                    Notification::make()
+                        ->title('Prijswijziging gestart')
+                        ->body('De update draait op de achtergrond. Vernieuw deze pagina over enkele minuten om de nieuwe prijzen te zien.')
+                        ->success()
+                        ->send();
+                })
+                ->requiresConfirmation(false),
+
             Action::make('importEANCodes')
                 ->label('Importeer EAN codes')
                 ->icon('heroicon-s-qr-code')
