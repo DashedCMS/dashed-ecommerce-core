@@ -15,6 +15,11 @@ class EditOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('backToView')
+                ->label('Terug naar order')
+                ->icon('heroicon-m-arrow-uturn-left')
+                ->color('gray')
+                ->url(fn () => route('filament.dashed.resources.orders.view', ['record' => $this->record->id])),
             Action::make('stopRecoveryEmails')
                 ->label('Stop herstel-emails')
                 ->icon('heroicon-m-no-symbol')
