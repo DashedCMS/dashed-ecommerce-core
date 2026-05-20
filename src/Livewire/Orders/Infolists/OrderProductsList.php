@@ -90,7 +90,15 @@ class OrderProductsList extends Component implements HasSchemas
                         ->badge()
                         ->color('warning')
                         ->weight('bold')
-                        ->getStateUsing(fn () => 'Is pre-order')
+                        ->getStateUsing(function () use ($orderProduct) {
+                            $date = $orderProduct->pre_order_restocked_date
+                                ? \Illuminate\Support\Carbon::parse($orderProduct->pre_order_restocked_date)->format('d-m-Y')
+                                : null;
+
+                            return $date
+                                ? 'Pre-order · levertijd ' . $date
+                                : 'Is pre-order';
+                        })
                         ->visible($orderProduct->is_pre_order),
                     TextEntry::make('price')
                         ->hiddenLabel()
