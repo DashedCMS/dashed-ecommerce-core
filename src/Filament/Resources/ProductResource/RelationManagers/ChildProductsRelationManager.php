@@ -6,6 +6,7 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\Select;
@@ -193,39 +194,7 @@ class ChildProductsRelationManager extends RelationManager
                 TrashedFilter::make(),
             ])
             ->toolbarActions([
-                BulkAction::make('changePrice')
-                    ->color('primary')
-                    ->label('Verander prijzen')
-                    ->schema([
-                        TextInput::make('price')
-                            ->label('Prijs van het product')
-                            ->helperText('Voorbeeld: 10.25')
-                            ->prefix('€')
-                            ->minValue(1)
-                            ->maxValue(100000)
-                            ->required()
-                            ->numeric(),
-                        TextInput::make('new_price')
-                            ->label('Vorige prijs (de hogere prijs)')
-                            ->helperText('Voorbeeld: 14.25')
-                            ->prefix('€')
-                            ->minValue(1)
-                            ->maxValue(100000)
-                            ->numeric(),
-                    ])
-                    ->action(function (Collection $records, array $data): void {
-                        foreach ($records as $record) {
-                            $record->price = $data['price'];
-                            $record->new_price = $data['new_price'];
-                            $record->save();
-                        }
-
-                        Notification::make()
-                            ->title('Het product is aangepast')
-                            ->success()
-                            ->send();
-                    })
-                    ->deselectRecordsAfterCompletion(),
+                BulkPriceUpdateBulkAction::make(),
                 BulkAction::make('changePublicStatus')
                     ->color('primary')
                     ->label('Verander publieke status')

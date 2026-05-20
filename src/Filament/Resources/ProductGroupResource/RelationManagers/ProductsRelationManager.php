@@ -6,6 +6,7 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\DeleteBulkAction;
@@ -163,41 +164,7 @@ class ProductsRelationManager extends RelationManager
                 TrashedFilter::make(),
             ])
             ->toolbarActions([
-                BulkAction::make('changePrice')
-                    ->color('primary')
-                    ->label('Verander prijzen')
-                    ->schema(function () {
-                        $schema = [];
-
-                        foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
-                            $schema[] = TextInput::make($key)
-                                ->label($priceField['label'])
-                                ->helperText($priceField['helperText'])
-                                ->prefix('€')
-                                ->minValue(0)
-                                ->maxValue(100000)
-                                ->numeric()
-                                ->required($priceField['required'] ?? false);
-                        }
-
-                        return $schema;
-                    })
-                    ->action(function (Collection $records, array $data): void {
-                        foreach ($records as $record) {
-                            foreach (ecommerce()->builder('productPriceFields') as $key => $priceField) {
-                                if (isset($data[$key])) {
-                                    $record->{$key} = $data[$key];
-                                }
-                            }
-                            $record->save();
-                        }
-
-                        Notification::make()
-                            ->title('De producten zijn aangepast')
-                            ->success()
-                            ->send();
-                    })
-                    ->deselectRecordsAfterCompletion(),
+                BulkPriceUpdateBulkAction::make(),
                 BulkAction::make('public')
                     ->color('primary')
                     ->label('Openbaar maken')
