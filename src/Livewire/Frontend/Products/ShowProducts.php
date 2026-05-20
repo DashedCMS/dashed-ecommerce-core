@@ -106,30 +106,15 @@ class ShowProducts extends Component
 
     public function loadProducts(bool $isMount = false)
     {
-        $activeFilterQuery = [];
-        foreach ($this->activeFilters as $filterKey => $filterValues) {
-            if (! is_array($filterValues)) {
-                continue;
-            }
-            foreach ($filterValues as $valueKey => $valueActivated) {
-                if ($valueActivated) {
-                    $activeFilterQuery['activeFilters'][$valueKey] = ['except' => ''];
-                }
-            }
-        }
-
-        $this->activeFilterQuery = $activeFilterQuery;
-
-        request()->replace(array_merge([
-            'search' => $this->search,
-            'sortBy' => $this->sortBy,
-            'page' => request()->get('page'),
-            'activeFilters' => $this->activeFilters,
-        ], []));
+        $this->refreshActiveFilterQuery();
 
         $this->getProducts();
         if ($this->enableFilters) {
             $this->getFilters();
+
+            if ($this->autoSelectSingleOptionFilters()) {
+                $this->refreshActiveFilterQuery();
+            }
         }
 
         $response = Products::getAll(
@@ -231,6 +216,121 @@ class ShowProducts extends Component
         });
 
         $this->filters = $productFilters;
+    }
+
+    protected function refreshActiveFilterQuery(): void
+    {
+        $activeFilterQuery = [];
+        foreach ($this->activeFilters as $filterKey => $filterValues) {
+            if (! is_array($filterValues)) {
+                continue;
+            }
+            foreach ($filterValues as $valueKey => $valueActivated) {
+                if ($valueActivated) {
+                    $activeFilterQuery['activeFilters'][$valueKey] = ['except' => ''];
+                }
+            }
+        }
+
+        $this->activeFilterQuery = $activeFilterQuery;
+
+        request()->replace([
+            'search' => $this->search,
+            'sortBy' => $this->sortBy,
+            'page' => request()->get('page'),
+            'activeFilters' => $this->activeFilters,
+        ]);
+    }
+
+    // Wanneer een actieve filterkeuze een andere filtergroep reduceert tot
+    // exact één nog mogelijke optie en de gebruiker in die groep niets heeft
+    // aangevinkt, vinken we die enige optie automatisch aan. Cascadeert.
+    protected function autoSelectSingleOptionFilters(): bool
+    {
+        $anyChanged = false;
+        $maxIterations = 5;
+
+        for ($i = 0; $i < $maxIterations; $i++) {
+            $matchingIds = $this->productIdsMatchingActiveFilters();
+            if (empty($matchingIds)) {
+                return $anyChanged;
+            }
+
+            $usedOptionIds = DB::table('dashed__product_filter')
+                ->whereIn('product_id', $matchingIds)
+                ->pluck('product_filter_option_id')
+                ->unique()
+                ->all();
+
+            $iterationChanged = false;
+
+            foreach ($this->filters as $filter) {
+                $filterName = $filter->name;
+
+                $hasActiveSelection = collect($this->activeFilters[$filterName] ?? [])
+                    ->contains(fn ($v) => $v === true);
+                if ($hasActiveSelection) {
+                    continue;
+                }
+
+                $available = $filter->productFilterOptions
+                    ->filter(fn ($o) => in_array($o->id, $usedOptionIds, true))
+                    ->values();
+
+                if ($available->count() !== 1) {
+                    continue;
+                }
+
+                $only = $available->first();
+                $this->activeFilters[$filterName][$only->name] = true;
+                $only->checked = true;
+                $iterationChanged = true;
+            }
+
+            if (! $iterationChanged) {
+                return $anyChanged;
+            }
+
+            $anyChanged = true;
+        }
+
+        return $anyChanged;
+    }
+
+    protected function productIdsMatchingActiveFilters(): array
+    {
+        $allIds = $this->allProducts?->pluck('id')->all() ?? [];
+        if (empty($allIds)) {
+            return [];
+        }
+
+        $pivots = DB::table('dashed__product_filter')
+            ->whereIn('product_id', $allIds)
+            ->get()
+            ->groupBy('product_filter_id');
+
+        $validIds = collect($allIds);
+
+        foreach ($this->filters as $filter) {
+            $checkedOptionIds = $filter->productFilterOptions
+                ->filter(fn ($o) => ($this->activeFilters[$filter->name][$o->name] ?? false) === true)
+                ->pluck('id');
+
+            if ($checkedOptionIds->isEmpty()) {
+                continue;
+            }
+
+            $matchingForFilter = ($pivots->get($filter->id) ?? collect())
+                ->whereIn('product_filter_option_id', $checkedOptionIds)
+                ->pluck('product_id');
+
+            $validIds = $validIds->intersect($matchingForFilter);
+            if ($validIds->isEmpty()) {
+                break;
+            }
+        }
+
+        return $validIds->values()->all();
     }
 
     public function getProducts(): void
