@@ -91,8 +91,16 @@ class OrderProductsList extends Component implements HasSchemas
                         ->color('warning')
                         ->weight('bold')
                         ->getStateUsing(function () use ($orderProduct) {
-                            $date = $orderProduct->pre_order_restocked_date
-                                ? \Illuminate\Support\Carbon::parse($orderProduct->pre_order_restocked_date)->format('d-m-Y')
+                            // Voorkeur: snapshot op de order_product zelf. Voor
+                            // orders van vóór de resolver, of als de waarde
+                            // toch leeg blijkt, fallback op het live product
+                            // (dat zowel expected_in_stock_date als
+                            // expected_delivery_in_days afhandelt).
+                            $raw = $orderProduct->pre_order_restocked_date
+                                ?: $orderProduct->product?->resolvePreOrderRestockedDate();
+
+                            $date = $raw
+                                ? \Illuminate\Support\Carbon::parse($raw)->format('d-m-Y')
                                 : null;
 
                             return $date
