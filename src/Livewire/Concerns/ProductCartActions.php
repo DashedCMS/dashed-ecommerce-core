@@ -256,7 +256,7 @@ trait ProductCartActions
         }
     }
 
-    public function fillInformation($isMount = false)
+    public function fillInformation($isMount = false, ?int $lockedFilterKey = null)
     {
         $previousProduct = $this->product;
 
@@ -309,7 +309,7 @@ trait ProductCartActions
         $this->fillFilters($isMount);
 
         if (! $isMount && ! $this->product) {
-            $this->findVariation();
+            $this->findVariation($lockedFilterKey);
         }
 
         $this->enrichFilterOptionPrices();
@@ -453,8 +453,107 @@ trait ProductCartActions
 
     // ------------------- variation + filter methods blijven ongewijzigd -------------------
 
-    public function findVariation(): void
+    // Returns publicProduct IDs that match every filter whose `active` is set,
+    // optionally ignoring one filter (so we can ask "given the other filters,
+    // which products are still candidates for THIS filter?").
+    protected function productIdsMatchingActiveVariantFilters(?int $skipFilterId = null): array
     {
+        $publicProducts = $this->getPublicProducts();
+        $productIds = $publicProducts->keys()->all();
+        if (empty($productIds)) {
+            return [];
+        }
+
+        foreach ($this->filters as $filter) {
+            if ($skipFilterId !== null && (int) $filter['id'] === (int) $skipFilterId) {
+                continue;
+            }
+            if (! $filter['active']) {
+                continue;
+            }
+
+            $idsForFilter = DB::table('dashed__product_filter')
+                ->where('product_filter_id', $filter['id'])
+                ->where('product_filter_option_id', $filter['active'])
+                ->whereIn('product_id', $productIds)
+                ->pluck('product_id')
+                ->toArray();
+
+            $productIds = array_values(array_intersect($productIds, $idsForFilter));
+            if (empty($productIds)) {
+                return [];
+            }
+        }
+
+        return $productIds;
+    }
+
+    // Wanneer een filterwijziging een ander filter incompatibel maakt met de
+    // beschikbare varianten, switchen we automatisch naar de enige nog
+    // mogelijke optie. Zijn er meerdere mogelijk dan clearen we het filter
+    // zodat de gebruiker bewust opnieuw kiest. Cascadeert.
+    protected function autoResolveFilterConflicts(?int $lockedFilterKey = null): bool
+    {
+        $anyChanged = false;
+        $maxIterations = max(count($this->filters) + 1, 1);
+
+        for ($i = 0; $i < $maxIterations; $i++) {
+            $iterationChanged = false;
+
+            foreach ($this->filters as $key => $filter) {
+                if ($lockedFilterKey !== null && $key === $lockedFilterKey) {
+                    continue;
+                }
+
+                $candidateProductIds = $this->productIdsMatchingActiveVariantFilters(skipFilterId: (int) $filter['id']);
+                if (empty($candidateProductIds)) {
+                    continue;
+                }
+
+                $validOptionIds = DB::table('dashed__product_filter')
+                    ->where('product_filter_id', $filter['id'])
+                    ->whereIn('product_id', $candidateProductIds)
+                    ->pluck('product_filter_option_id')
+                    ->unique()
+                    ->all();
+
+                $enabledOptionIds = collect($filter['options'] ?? [])->pluck('id')->all();
+                if (! empty($enabledOptionIds)) {
+                    $validOptionIds = array_values(array_intersect($validOptionIds, $enabledOptionIds));
+                }
+
+                if (empty($validOptionIds)) {
+                    continue;
+                }
+
+                $current = $filter['active'];
+                $currentIsValid = $current && in_array((int) $current, array_map('intval', $validOptionIds), true);
+
+                if ($current && ! $currentIsValid) {
+                    $this->filters[$key]['active'] = count($validOptionIds) === 1
+                        ? $validOptionIds[0]
+                        : null;
+                    $iterationChanged = true;
+                } elseif (! $current && count($validOptionIds) === 1) {
+                    $this->filters[$key]['active'] = $validOptionIds[0];
+                    $iterationChanged = true;
+                }
+            }
+
+            if (! $iterationChanged) {
+                break;
+            }
+
+            $anyChanged = true;
+        }
+
+        return $anyChanged;
+    }
+
+    public function findVariation(?int $lockedFilterKey = null): void
+    {
+        $this->autoResolveFilterConflicts($lockedFilterKey);
+
         $activeFilters = [];
 
         foreach ($this->filters as $filter) {

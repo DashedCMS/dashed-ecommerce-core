@@ -74,7 +74,15 @@ class ShowProduct extends Component
             return;
         }
 
-        $this->fillInformation();
+        // Wanneer de gebruiker zelf een filter wijzigt, beschouwen we die
+        // keuze als leidend. autoResolveFilterConflicts laat dat filter dan
+        // ongemoeid en past alleen de overige filters aan.
+        $lockedFilterKey = null;
+        if (preg_match('/^filters\.(\d+)\.active$/', (string) $name, $m)) {
+            $lockedFilterKey = (int) $m[1];
+        }
+
+        $this->fillInformation(false, $lockedFilterKey);
     }
 
     public function rules()
