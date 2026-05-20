@@ -104,8 +104,8 @@ class OrderProductsList extends Component implements HasSchemas
                                 : null;
 
                             return $date
-                                ? 'Pre-order · levertijd ' . $date
-                                : 'Is pre-order';
+                                ? 'Pre-order ' . $date
+                                : 'Pre-order';
                         })
                         ->visible($orderProduct->is_pre_order),
                     TextEntry::make('price')
