@@ -177,7 +177,7 @@ class OpenOrderProductsTable
                 return $record->order_id
                     ? OrderResource::getUrl('view', ['record' => $record->order_id])
                     : null;
-            })
+            }, shouldOpenInNewTab: true)
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
     }
