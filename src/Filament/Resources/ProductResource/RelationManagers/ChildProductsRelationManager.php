@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
 use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\Select;
@@ -195,6 +196,7 @@ class ChildProductsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkPriceUpdateBulkAction::make(),
+                BulkDeliveryTimeUpdateBulkAction::make(),
                 BulkAction::make('changePublicStatus')
                     ->color('primary')
                     ->label('Verander publieke status')

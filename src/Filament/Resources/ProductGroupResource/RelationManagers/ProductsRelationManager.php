@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
 use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\DeleteBulkAction;
@@ -165,6 +166,7 @@ class ProductsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkPriceUpdateBulkAction::make(),
+                BulkDeliveryTimeUpdateBulkAction::make(),
                 BulkAction::make('public')
                     ->color('primary')
                     ->label('Openbaar maken')

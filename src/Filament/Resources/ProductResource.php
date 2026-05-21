@@ -11,6 +11,7 @@ use Filament\Schemas\Schema;
 use Dashed\DashedAi\Facades\Ai;
 use Filament\Actions\BulkAction;
 use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
@@ -735,6 +736,7 @@ class ProductResource extends Resource
             ])
             ->toolbarActions(ToolbarActions::getActions([
                 BulkPriceUpdateBulkAction::make(),
+                BulkDeliveryTimeUpdateBulkAction::make(),
                 RestoreBulkAction::make(),
                 ForceDeleteBulkAction::make(),
             ]))
