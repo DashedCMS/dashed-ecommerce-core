@@ -9,6 +9,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OpenOrderProductsTable
 {
@@ -165,6 +166,18 @@ class OpenOrderProductsTable
                         blank: fn (Builder $query) => $query,
                     ),
             ])
+            ->recordUrl(function ($record, $livewire) {
+                // In de grouped tabs is order_id een MIN() over meerdere
+                // orders, dus dat zou misleidend zijn — alleen linken op de
+                // per-orderregel-weergave.
+                if (in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)) {
+                    return null;
+                }
+
+                return $record->order_id
+                    ? OrderResource::getUrl('view', ['record' => $record->order_id])
+                    : null;
+            })
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
     }
