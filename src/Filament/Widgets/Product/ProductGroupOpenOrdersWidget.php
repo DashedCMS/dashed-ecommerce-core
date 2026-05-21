@@ -44,6 +44,9 @@ class ProductGroupOpenOrdersWidget extends TableWidget
             ->defaultPaginationPageOption(5)
             ->emptyStateHeading('Geen openstaande bestellingen')
             ->emptyStateDescription('Er zijn op dit moment geen onafgehandelde bestellingen waarin een product uit deze groep voorkomt.')
+            ->recordUrl(fn ($record) => $record->order_id
+                ? route('filament.dashed.resources.orders.view', ['record' => $record->order_id])
+                : null)
             ->columns([
                 TextColumn::make('order.invoice_id')
                     ->label('Bestelling')
@@ -82,7 +85,10 @@ class ProductGroupOpenOrdersWidget extends TableWidget
         $productGroupId = $this->record?->id;
 
         $query = OrderProduct::query()
-            ->whereHas('order', fn ($q) => $q->where('fulfillment_status', 'unhandled'));
+            ->whereHas('order', fn ($q) => $q
+                ->where('fulfillment_status', 'unhandled')
+                ->where('invoice_id', '!=', 'PROFORMA')
+                ->isPaid());
 
         if ($productGroupId) {
             $productIds = $this->record->products()->pluck('id')->all();
