@@ -1787,6 +1787,7 @@ MARKDOWN,
         cms()->registerSettingsPage(ShippingMethodResource::class, 'Verzendmethodes', 'truck', 'Maak verzendmethodes aan');
         cms()->registerSettingsPage(POSSettingsPage::class, 'Point of Sale', 'banknotes', 'Bewerk je POS');
         cms()->registerSettingsPage(CustomerMatchSettingsPage::class, 'Google Ads Customer Match', 'megaphone', 'HTTPS-feed met gehashte klantdata voor Google Ads Customer Match');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage::class, 'GS1 / EAN instellingen', 'qr-code', 'Standaardwaarden voor het GS1-export en EAN-toewijzing');
 
         $package
             ->name('dashed-ecommerce-core')
@@ -1795,6 +1796,7 @@ MARKDOWN,
                 'point-of-sale',
                 'google-ads',
                 'order-handled-frontend',
+                'print-queue-api',
             ])
             ->hasConfigFile([
                 'dashed-ecommerce-core',
