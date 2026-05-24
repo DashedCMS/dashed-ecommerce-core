@@ -1403,6 +1403,11 @@ MARKDOWN,
             $schedule->command('dashed:recommendations:rebuild')
                 ->cron($cron)
                 ->withoutOverlapping();
+
+            $schedule->job(new \Dashed\DashedEcommerceCore\Jobs\PrintQueue\SyncShippingLabelPrintJobsJob())
+                ->everyMinute()
+                ->withoutOverlapping()
+                ->name('print-queue:sync-shipping-labels');
         });
 
         // Register the v1 recommendation strategy stack. Each strategy is
