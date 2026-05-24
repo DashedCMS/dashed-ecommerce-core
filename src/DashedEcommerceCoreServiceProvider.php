@@ -1408,6 +1408,16 @@ MARKDOWN,
                 ->everyMinute()
                 ->withoutOverlapping()
                 ->name('print-queue:sync-shipping-labels');
+
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand::class)
+                ->everyMinute()
+                ->withoutOverlapping();
+
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\CleanupOldPrintJobsCommand::class)
+                ->dailyAt('03:00');
+
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class)
+                ->everyFiveMinutes();
         });
 
         // Register the v1 recommendation strategy stack. Each strategy is
@@ -1824,6 +1834,9 @@ MARKDOWN,
                 BackfillOrderFlowEnrollmentNextMailAt::class,
                 \Dashed\DashedEcommerceCore\Commands\BackfillAbandonedCartConversions::class,
                 \Dashed\DashedEcommerceCore\Commands\RebuildRecommendationCoPurchaseCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\PrintQueue\CleanupOldPrintJobsCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class,
             ]);
 
     }
