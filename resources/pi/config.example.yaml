@@ -1,0 +1,5 @@
+api_url: https://cms.example.com
+token: ":your-sanctum-token:"
+cups_printer: pakbon_brother
+poll_interval_seconds: 5
+log_level: INFO

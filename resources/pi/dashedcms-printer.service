@@ -1,0 +1,16 @@
+[Unit]
+Description=DashedCMS Print Daemon
+After=network.target cups.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/dashedcms-printer/print_daemon.py
+WorkingDirectory=/opt/dashedcms-printer
+Restart=always
+RestartSec=10
+User=pi
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
