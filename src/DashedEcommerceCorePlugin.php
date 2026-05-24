@@ -6,6 +6,10 @@ use Filament\Panel;
 use Filament\Contracts\Plugin;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
@@ -14,6 +18,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
@@ -92,6 +97,8 @@ class DashedEcommerceCorePlugin implements Plugin
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
                 CustomerMatchSettingsPage::class,
+                Gs1SettingsPage::class,
+                PrintQueueSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
             ])
             ->widgets([
@@ -106,6 +113,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 SoldoutCount::class,
                 CartStatistics::class,
                 OrderAttributionStatsWidget::class,
+                PrintQueueWidget::class,
             ])
             ->resources([
                 PaymentMethodResource::class,
@@ -131,6 +139,8 @@ class DashedEcommerceCorePlugin implements Plugin
                 CartResource::class,
                 AbandonedCartFlowResource::class,
                 OrderHandledFlowResource::class,
+                PrinterResource::class,
+                PrintJobResource::class,
             ]);
     }
 

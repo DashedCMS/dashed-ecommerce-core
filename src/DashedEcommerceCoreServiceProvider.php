@@ -1803,6 +1803,7 @@ MARKDOWN,
         cms()->registerSettingsPage(POSSettingsPage::class, 'Point of Sale', 'banknotes', 'Bewerk je POS');
         cms()->registerSettingsPage(CustomerMatchSettingsPage::class, 'Google Ads Customer Match', 'megaphone', 'HTTPS-feed met gehashte klantdata voor Google Ads Customer Match');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage::class, 'GS1 / EAN instellingen', 'qr-code', 'Standaardwaarden voor het GS1-export en EAN-toewijzing');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage::class, 'Print queue', 'printer', 'Instellingen voor de print queue (auto print, health check, retentie)');
 
         $package
             ->name('dashed-ecommerce-core')
