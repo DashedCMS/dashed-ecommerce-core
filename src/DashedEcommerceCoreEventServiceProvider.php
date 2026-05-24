@@ -32,6 +32,7 @@ class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
         ],
         OrderCreatedEvent::class => [
           UpdateOrderReservedStock::class,
+          \Dashed\DashedEcommerceCore\Listeners\PrintQueue\CreatePackingSlipPrintJobListener::class,
         ],
         OrderCancelledEvent::class => [
             QueueAbandonedCartEmailsForOrderListener::class,
