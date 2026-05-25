@@ -51,7 +51,7 @@ class PrintQueueSettingsPage extends Page
     {
         return [
             Action::make('pair_new_pi')
-                ->label('Pair een nieuwe Raspberry Pi')
+                ->label('Pair een nieuw apparaat')
                 ->icon('heroicon-o-plus-circle')
                 ->color('success')
                 ->action(function (): void {
@@ -96,8 +96,8 @@ class PrintQueueSettingsPage extends Page
         $pending = $this->pendingPairings();
 
         return $schema->schema([
-            Section::make('Pair een nieuwe Raspberry Pi')
-                ->description('Klik op "Pair een nieuwe Raspberry Pi" bovenaan deze pagina om een pairing code te genereren. Daarna verschijnt hier het installatie-commando dat je op de Pi draait.')
+            Section::make('Pair een nieuw apparaat (Raspberry Pi of NAS)')
+                ->description('Klik op "Pair een nieuw apparaat" bovenaan deze pagina om een pairing code te genereren. Daarna verschijnt hier het installatie-commando in twee varianten: een voor Pi/Linux en een voor een NAS via Docker.')
                 ->columnSpanFull()
                 ->schema([
                     Placeholder::make('pairing_instructions')
@@ -107,7 +107,7 @@ class PrintQueueSettingsPage extends Page
                             if ($pending->isEmpty()) {
                                 return new HtmlString(
                                     '<div style="background-color: #f3f4f6; border-radius: 0.5rem; padding: 1rem; color: #374151;">'
-                                    . 'Geen openstaande pairing codes. Klik op de groene "Pair een nieuwe Raspberry Pi" knop hierboven om er een aan te maken.'
+                                    . 'Geen openstaande pairing codes. Klik op de groene "Pair een nieuw apparaat" knop hierboven om er een aan te maken.'
                                     . '</div>'
                                 );
                             }

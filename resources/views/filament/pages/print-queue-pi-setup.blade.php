@@ -9,7 +9,7 @@
     <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; border-radius: 0.5rem; padding: 1rem; color: #1e3a8a;">
         <strong>Twee installatie-opties bovenaan deze pagina.</strong>
         <p style="margin-top: 0.5rem;">
-            Klik op "Pair een nieuwe Raspberry Pi" en kies dan bij de pairing-sectie tussen Optie A (Pi/native Linux) of Optie B (NAS/Docker). Beide doen onder water hetzelfde.
+            Klik op "Pair een nieuw apparaat" en kies dan bij de pairing-sectie tussen Optie A (Pi/native Linux) of Optie B (NAS/Docker). Beide doen onder water hetzelfde.
         </p>
     </div>
 

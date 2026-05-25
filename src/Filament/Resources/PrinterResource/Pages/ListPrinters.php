@@ -19,7 +19,7 @@ class ListPrinters extends ListRecords
     {
         return [
             Action::make('pair_new_pi')
-                ->label('Pair een nieuwe Raspberry Pi')
+                ->label('Pair een nieuw apparaat')
                 ->icon('heroicon-o-plus-circle')
                 ->color('success')
                 ->action(function (): void {
