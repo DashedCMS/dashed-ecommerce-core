@@ -12,9 +12,12 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Placeholder;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
+use Filament\Actions\Action;
 
 class PrintQueueSettingsPage extends Page
 {
@@ -29,6 +32,40 @@ class PrintQueueSettingsPage extends Page
     protected string $view = 'dashed-core::settings.pages.default-settings';
 
     public array $data = [];
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('discover_printers')
+                ->label('Auto-import printers van een Pi/NAS')
+                ->icon('heroicon-o-magnifying-glass-plus')
+                ->color('success')
+                ->modalHeading('Auto-import printers van een Pi/NAS')
+                ->modalDescription('Genereert een eenmalig curl-commando. Draai het op je Pi/NAS via SSH; het script detecteert alle CUPS-printers daar en registreert ze automatisch in dit CMS, inclusief tokens en daemon-setup.')
+                ->modalSubmitActionLabel('Genereer commando')
+                ->action(function (): void {
+                    $nonce = Str::random(16);
+                    $url = URL::temporarySignedRoute(
+                        'dashed.print-queue.installer-discover',
+                        now()->addHours(24),
+                        ['nonce' => $nonce],
+                    );
+
+                    $oneLiner = 'curl -fsSL "' . $url . '" | sudo bash';
+
+                    Notification::make()
+                        ->title('Auto-import commando gegenereerd')
+                        ->body(new HtmlString(
+                            '<p style="margin-bottom: 0.5rem;">Plak dit op je Pi/NAS in een SSH-sessie (geldig 24 uur):</p>'
+                            . '<code style="display: block; background-color: #111827; color: #f3f4f6; padding: 0.5rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.75rem; word-break: break-all;">' . e($oneLiner) . '</code>'
+                            . '<button type="button" onclick="navigator.clipboard.writeText(\'' . e($oneLiner) . '\'); this.textContent=\'Gekopieerd\'; setTimeout(()=>this.textContent=\'Kopieer commando\',1500);" style="margin-top: 0.5rem; background-color: #059669; color: #ffffff; border: none; padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 500;">Kopieer commando</button>'
+                        ))
+                        ->persistent()
+                        ->success()
+                        ->send();
+                }),
+        ];
+    }
 
     public function mount(): void
     {

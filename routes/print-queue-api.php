@@ -6,6 +6,69 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\PrintQueueController;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/printer-install-discover/{nonce}', function (string $nonce) {
+    $script = view('dashed-ecommerce-core::print.install-script-discover', [
+        'apiUrl' => rtrim(url('/'), '/'),
+        'discoverUrl' => \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'dashed.print-queue.discover',
+            now()->addHours(24),
+            ['nonce' => $nonce],
+        ),
+    ])->render();
+
+    return response($script, 200, [
+        'Content-Type' => 'text/x-shellscript; charset=utf-8',
+        'Content-Disposition' => 'inline; filename="dashedcms-printer-discover.sh"',
+        'Cache-Control' => 'no-store',
+    ]);
+})->middleware('signed')->name('dashed.print-queue.installer-discover');
+
+Route::post('/api/print/discover/{nonce}', function (string $nonce, \Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'hostname' => ['nullable', 'string', 'max:120'],
+        'discovered_printers' => ['required', 'array', 'min:1'],
+        'discovered_printers.*' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
+    ]);
+
+    $hostname = $data['hostname'] ?? null;
+    $created = [];
+    $skipped = [];
+
+    foreach ($data['discovered_printers'] as $cupsName) {
+        $existing = Printer::where('cups_name', $cupsName)->first();
+
+        if ($existing) {
+            $skipped[] = [
+                'cups_name' => $cupsName,
+                'reason' => 'cups_name bestaat al in CMS als printer "' . $existing->name . '"',
+            ];
+            continue;
+        }
+
+        $printer = Printer::create([
+            'name' => $cupsName . ($hostname ? ' (' . $hostname . ')' : ''),
+            'cups_name' => $cupsName,
+            'hostname' => $hostname,
+            'type' => \Dashed\DashedEcommerceCore\Enums\PrinterType::PackingSlip,
+            'is_active' => true,
+        ]);
+
+        $token = $printer->createToken("printer-{$printer->ulid}")->plainTextToken;
+        $printer->forceFill(['plain_token' => $token])->save();
+
+        $created[] = [
+            'cups_name' => $cupsName,
+            'ulid' => $printer->ulid,
+            'token' => $token,
+        ];
+    }
+
+    return response()->json([
+        'created' => $created,
+        'skipped' => $skipped,
+    ]);
+})->middleware('signed')->name('dashed.print-queue.discover');
+
 Route::get('/printer-install/{ulid}', function (string $ulid) {
     $printer = Printer::where('ulid', $ulid)->firstOrFail();
 
