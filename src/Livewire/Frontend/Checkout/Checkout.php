@@ -170,7 +170,7 @@ class Checkout extends Component
             $this->isCompany = Customsetting::get('checkout_form_company_name') == 'required';
         }
 
-        $this->country = $user?->country ?? 'Nederland';
+        $this->country = filled($user?->country) ? $user->country : 'Nederland';
         $this->dateOfBirth = $user?->date_of_birth ?? '';
         $this->gender = $user?->gender ?? '';
         $this->email = $user?->email ?? cartHelper()->getCart()->abandoned_email ?? '';
@@ -337,6 +337,12 @@ class Checkout extends Component
 
     public function updated($name, $value)
     {
+        // Geen land geselecteerd? Altijd terugvallen op Nederland.
+        if ($name === 'country' && blank($value)) {
+            $this->country = 'Nederland';
+            $value = 'Nederland';
+        }
+
         if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'], true)) {
             $this->updateInvoiceAddressByApi();
 
