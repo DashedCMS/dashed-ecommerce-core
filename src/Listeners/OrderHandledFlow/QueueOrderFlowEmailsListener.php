@@ -24,6 +24,12 @@ class QueueOrderFlowEmailsListener implements ShouldQueue
             return;
         }
 
+        // Bol.com-orders horen nooit in marketing-/nieuwsbrief-flows: die
+        // e-mailadressen zijn van Bol-shoppers, niet van onze shop.
+        if ((string) $order->order_origin === 'Bol') {
+            return;
+        }
+
         // Concept-/proforma-bestellingen mogen géén opvolg-mails triggeren.
         // De fulfillment-status kan ook tijdens concept-bewerken muteren,
         // maar pas na daadwerkelijke betaling (invoice_id != PROFORMA en

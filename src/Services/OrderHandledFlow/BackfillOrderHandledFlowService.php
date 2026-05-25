@@ -50,9 +50,14 @@ class BackfillOrderHandledFlowService
         $triggerStatus = (string) ($flow->trigger_status ?: 'handled');
         $since = Carbon::now()->subDays(max(1, $sinceDays))->startOfDay();
 
+        // Bol.com-orders horen nooit in marketing-/nieuwsbrief-flows: die
+        // e-mailadressen zijn van Bol-shoppers, niet van onze shop.
         $orders = Order::query()
             ->where('fulfillment_status', $triggerStatus)
             ->where('updated_at', '>=', $since)
+            ->where(function ($q) {
+                $q->whereNull('order_origin')->orWhere('order_origin', '!=', 'Bol');
+            })
             ->get();
 
         foreach ($orders as $order) {
