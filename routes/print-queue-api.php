@@ -3,7 +3,30 @@
 declare(strict_types=1);
 
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\PrintQueueController;
+use Dashed\DashedEcommerceCore\Models\Printer;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+
+Route::get('/printer-install/{ulid}', function (string $ulid) {
+    $printer = Printer::where('ulid', $ulid)->firstOrFail();
+
+    if (! $printer->plain_token) {
+        abort(409, 'Deze printer heeft nog geen token. Genereer er eerst een in het admin paneel.');
+    }
+
+    $script = view('dashed-ecommerce-core::print.install-script', [
+        'printerName' => $printer->name,
+        'apiUrl' => rtrim(url('/'), '/'),
+        'token' => $printer->plain_token,
+        'cupsName' => Str::of($printer->name)->slug('_')->lower()->toString(),
+    ])->render();
+
+    return response($script, 200, [
+        'Content-Type' => 'text/x-shellscript; charset=utf-8',
+        'Content-Disposition' => 'inline; filename="install-dashedcms-printer.sh"',
+        'Cache-Control' => 'no-store',
+    ]);
+})->middleware('signed')->name('dashed.print-queue.installer');
 
 Route::get('/vendor/dashed-ecommerce-core/pi/{file}', function (string $file) {
     $allowed = [
