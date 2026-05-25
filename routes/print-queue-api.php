@@ -5,18 +5,19 @@ declare(strict_types=1);
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\PrintQueueController;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
-Route::get('/printer-install/pairing/{code}', function (string $code) {
-    $printer = Printer::findByPairingCode($code);
+Route::get('/printer-install/{ulid}', function (string $ulid) {
+    $printer = Printer::where('ulid', $ulid)->firstOrFail();
 
-    if (! $printer) {
-        abort(404, 'Pairing code ongeldig of verlopen. Genereer een nieuwe in het admin paneel.');
+    if (! $printer->plain_token) {
+        abort(409, 'Deze printer heeft nog geen token. Genereer er eerst een in admin.');
     }
 
     $script = view('dashed-ecommerce-core::print.install-script', [
         'apiUrl' => rtrim(url('/'), '/'),
-        'pairingCode' => $code,
+        'token' => $printer->plain_token,
+        'cupsName' => $printer->cups_name ?: 'CHANGE_ME',
+        'printerName' => $printer->name,
     ])->render();
 
     return response($script, 200, [
@@ -25,100 +26,6 @@ Route::get('/printer-install/pairing/{code}', function (string $code) {
         'Cache-Control' => 'no-store',
     ]);
 })->middleware('signed')->name('dashed.print-queue.installer');
-
-Route::get('/printer-install/pairing-docker/{code}', function (string $code) {
-    $printer = Printer::findByPairingCode($code);
-
-    if (! $printer) {
-        abort(404, 'Pairing code ongeldig of verlopen. Genereer een nieuwe in het admin paneel.');
-    }
-
-    $script = view('dashed-ecommerce-core::print.install-script-docker', [
-        'apiUrl' => rtrim(url('/'), '/'),
-        'pairingCode' => $code,
-    ])->render();
-
-    return response($script, 200, [
-        'Content-Type' => 'text/x-shellscript; charset=utf-8',
-        'Content-Disposition' => 'inline; filename="install-dashedcms-printer-docker.sh"',
-        'Cache-Control' => 'no-store',
-    ]);
-})->middleware('signed')->name('dashed.print-queue.installer-docker');
-
-Route::post('/api/print/pair', function (\Illuminate\Http\Request $request) {
-    $data = $request->validate([
-        'pairing_code' => ['required', 'string', 'max:32'],
-        'hostname' => ['nullable', 'string', 'max:120'],
-        'discovered_printers' => ['array'],
-        'discovered_printers.*.cups_name' => ['required', 'string', 'max:80'],
-        'discovered_printers.*.device_uri' => ['nullable', 'string', 'max:200'],
-        'discovered_printers.*.make_and_model' => ['nullable', 'string', 'max:200'],
-    ]);
-
-    $printer = Printer::findByPairingCode($data['pairing_code']);
-
-    if (! $printer) {
-        $candidate = Printer::where('pairing_code', $data['pairing_code'])->first();
-
-        if (! $candidate) {
-            return response()->json([
-                'message' => 'Pairing code bestaat niet in dit CMS. Mogelijk verkeerd gekopieerd of de printer-record is verwijderd. Genereer een nieuwe code in admin.',
-                'reason' => 'not_found',
-                'pairing_code' => $data['pairing_code'],
-            ], 422);
-        }
-
-        if ($candidate->paired_at) {
-            return response()->json([
-                'message' => 'Deze pairing code is al gebruikt op ' . $candidate->paired_at->toIso8601String() . '. Genereer een nieuwe in admin als je opnieuw wilt installeren.',
-                'reason' => 'already_used',
-                'paired_at' => $candidate->paired_at->toIso8601String(),
-                'printer_ulid' => $candidate->ulid,
-            ], 422);
-        }
-
-        if (! $candidate->pairing_expires_at || $candidate->pairing_expires_at->isPast()) {
-            return response()->json([
-                'message' => 'Pairing code is verlopen op ' . optional($candidate->pairing_expires_at)->toIso8601String() . '. Genereer een nieuwe in admin.',
-                'reason' => 'expired',
-                'expired_at' => optional($candidate->pairing_expires_at)->toIso8601String(),
-                'server_time' => now()->toIso8601String(),
-            ], 422);
-        }
-
-        return response()->json([
-            'message' => 'Pairing code ongeldig (onbekende reden).',
-            'reason' => 'unknown',
-        ], 422);
-    }
-
-    $printer->tokens()->delete();
-    $token = $printer->createToken("printer-{$printer->ulid}")->plainTextToken;
-
-    $discovered = $data['discovered_printers'] ?? [];
-    $firstCupsName = $discovered[0]['cups_name'] ?? null;
-
-    $hostnameLabel = $data['hostname'] ?? $printer->name;
-
-    $printer->forceFill([
-        'name' => $hostnameLabel,
-        'hostname' => $data['hostname'] ?? null,
-        'cups_printers' => $discovered,
-        'cups_name' => $printer->cups_name ?: $firstCupsName,
-        'plain_token' => $token,
-        'is_active' => true,
-        'paired_at' => now(),
-        'pairing_code' => null,
-        'pairing_expires_at' => null,
-    ])->save();
-
-    return response()->json([
-        'token' => $token,
-        'printer_ulid' => $printer->ulid,
-        'cups_name' => $printer->cups_name,
-        'message' => 'Printer succesvol gepaird met ' . count($discovered) . ' CUPS-printer(s).',
-    ]);
-})->name('dashed.print-queue.pair');
 
 Route::get('/vendor/dashed-ecommerce-core/pi/{file}', function (string $file) {
     $allowed = [
@@ -144,27 +51,6 @@ Route::get('/vendor/dashed-ecommerce-core/pi/{file}', function (string $file) {
     ]);
 })->where('file', '[A-Za-z0-9_.-]+')->name('dashed.print-queue.pi-asset');
 
-Route::get('/vendor/dashed-ecommerce-core/pi/docker/{file}', function (string $file) {
-    $allowed = [
-        'Dockerfile' => 'text/plain',
-        'entrypoint.sh' => 'text/x-shellscript',
-    ];
-
-    if (! isset($allowed[$file])) {
-        abort(404);
-    }
-
-    $path = __DIR__ . '/../resources/pi/docker/' . $file;
-    if (! is_file($path)) {
-        abort(404);
-    }
-
-    return response()->file($path, [
-        'Content-Type' => $allowed[$file],
-        'Cache-Control' => 'public, max-age=300',
-    ]);
-})->where('file', '[A-Za-z0-9_.-]+')->name('dashed.print-queue.pi-docker-asset');
-
 Route::middleware(['auth:sanctum', 'ensure.printer'])
     ->prefix('api/print')
     ->name('dashed.print-queue.')
@@ -175,22 +61,4 @@ Route::middleware(['auth:sanctum', 'ensure.printer'])
         Route::post('{ulid}/done', [PrintQueueController::class, 'done'])->name('done');
         Route::post('{ulid}/failed', [PrintQueueController::class, 'failed'])->name('failed');
         Route::get('{ulid}/pdf', [PrintQueueController::class, 'pdf'])->name('pdf');
-        Route::post('sync-printers', function (\Illuminate\Http\Request $request) {
-            $printer = $request->attributes->get('printer');
-
-            $data = $request->validate([
-                'discovered_printers' => ['array'],
-                'discovered_printers.*.cups_name' => ['required', 'string', 'max:80'],
-                'discovered_printers.*.device_uri' => ['nullable', 'string', 'max:200'],
-                'discovered_printers.*.make_and_model' => ['nullable', 'string', 'max:200'],
-                'hostname' => ['nullable', 'string', 'max:120'],
-            ]);
-
-            $printer->forceFill([
-                'cups_printers' => $data['discovered_printers'] ?? [],
-                'hostname' => $data['hostname'] ?? $printer->hostname,
-            ])->save();
-
-            return response()->json(['count' => count($data['discovered_printers'] ?? [])]);
-        })->name('sync-printers');
     });
