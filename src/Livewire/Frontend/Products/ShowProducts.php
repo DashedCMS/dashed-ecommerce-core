@@ -112,7 +112,15 @@ class ShowProducts extends Component
         if ($this->enableFilters) {
             $this->getFilters();
 
-            if ($this->autoSelectSingleOptionFilters()) {
+            // Auto-select alleen wanneer de gebruiker al iets heeft aangevinkt.
+            // Anders zou een filter dat in de hele categorie maar 1 optie heeft
+            // direct aangevinkt worden en kan de gebruiker hem niet uitzetten
+            // (elke uncheck triggert opnieuw de auto-select).
+            $hasActiveSelection = collect($this->activeFilters)
+                ->flatMap(fn ($options) => is_array($options) ? array_values($options) : [])
+                ->contains(true);
+
+            if ($hasActiveSelection && $this->autoSelectSingleOptionFilters()) {
                 $this->refreshActiveFilterQuery();
             }
         }
