@@ -173,13 +173,12 @@ class PrintQueueSettingsPage extends Page
                         ->minValue(30),
                 ])
                 ->columns(2),
-            Section::make('Installatie op een Raspberry Pi')
-                ->description('Stap-voor-stap instructies om een nieuwe Raspberry Pi aan te sluiten op de print queue.')
+            Section::make('Wat doet het install script?')
                 ->columnSpanFull()
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    Placeholder::make('pi_setup_instructions')
+                    Placeholder::make('pi_setup_background')
                         ->hiddenLabel()
                         ->columnSpanFull()
                         ->content(fn () => new HtmlString(
