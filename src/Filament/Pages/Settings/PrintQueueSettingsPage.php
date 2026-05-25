@@ -30,8 +30,8 @@ class PrintQueueSettingsPage extends Page
     public function mount(): void
     {
         $formData = [
-            'auto_print_on_new_order' => (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, true),
-            'auto_print_label_on_generated' => (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, true),
+            'auto_print_on_new_order' => (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, false),
+            'auto_print_label_on_generated' => (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, false),
             'health_check_threshold_seconds' => (int) Customsetting::get('print_queue.health_check_threshold_seconds', null, 60),
             'label_sync_interval_minutes' => (int) Customsetting::get('print_queue.label_sync_interval_minutes', null, 1),
             'job_retention_days' => (int) Customsetting::get('print_queue.job_retention_days', null, 90),
@@ -94,8 +94,8 @@ class PrintQueueSettingsPage extends Page
     {
         $formState = $this->form->getState();
 
-        Customsetting::set('print_queue.auto_print_on_new_order', (bool) ($formState['auto_print_on_new_order'] ?? true));
-        Customsetting::set('print_queue.auto_print_label_on_generated', (bool) ($formState['auto_print_label_on_generated'] ?? true));
+        Customsetting::set('print_queue.auto_print_on_new_order', (bool) ($formState['auto_print_on_new_order'] ?? false));
+        Customsetting::set('print_queue.auto_print_label_on_generated', (bool) ($formState['auto_print_label_on_generated'] ?? false));
         Customsetting::set('print_queue.health_check_threshold_seconds', (int) ($formState['health_check_threshold_seconds'] ?? 60));
         Customsetting::set('print_queue.label_sync_interval_minutes', (int) ($formState['label_sync_interval_minutes'] ?? 1));
         Customsetting::set('print_queue.job_retention_days', (int) ($formState['job_retention_days'] ?? 90));

@@ -21,7 +21,7 @@ class CreatePackingSlipPrintJobListener implements ShouldQueue
 
     public function handle(OrderCreatedEvent $event): void
     {
-        if (! (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, true)) {
+        if (! (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, false)) {
             return;
         }
 
