@@ -9,9 +9,6 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedAi\Facades\Ai;
-use Filament\Actions\BulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
@@ -38,7 +35,6 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\TrashedFilter;
 use Dashed\DashedAi\Jobs\GenerateAiContent;
 use Filament\Actions\ForceDeleteBulkAction;
-use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -57,6 +53,8 @@ use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
@@ -305,11 +303,56 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible();
 
-        //                function getFilters($record){
-        //                    ray()->count('test');
-        //
-        //                    return [];
-        //                }
+        $newSchema[] = Section::make('GS1 / EAN overrides')
+            ->description('Optioneel. Vul alleen in als dit product afwijkt van de shop- of categorie-defaults voor het GS1 export-bestand.')
+            ->columnSpanFull()
+            ->collapsed()
+            ->persistCollapsed()
+            ->collapsible()
+            ->schema([
+                TextInput::make('gs1_classification')
+                    ->label('Productclassificatie (GPC)')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_packaging_type')
+                    ->label('Verpakkingstype')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_brand')
+                    ->label('Merk')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_sub_brand')
+                    ->label('Submerk')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_language')
+                    ->label('Taal')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_country')
+                    ->label('Land')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_quantity')
+                    ->label('Aantal')
+                    ->numeric()
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_unit')
+                    ->label('Eenheid')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                \Filament\Forms\Components\Select::make('gs1_consumer_unit')
+                    ->label('Consumenteneenheid')
+                    ->options([
+                        '1' => 'Ja',
+                        '0' => 'Nee',
+                    ])
+                    ->placeholder('Standaard van shop')
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                TextInput::make('gs1_image_url')
+                    ->label('Afbeelding-URL voor GS1')
+                    ->url()
+                    ->maxLength(500)
+                    ->columnSpanFull(),
+            ])
+            ->columns([
+                'default' => 1,
+                'lg' => 12,
+            ]);
 
         $newSchema[] = Section::make('Filters beheren')
             ->columnSpanFull()

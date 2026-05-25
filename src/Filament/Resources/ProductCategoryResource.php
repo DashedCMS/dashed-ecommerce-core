@@ -76,6 +76,26 @@ class ProductCategoryResource extends Resource
                 Section::make('Meta data')
                     ->columnSpanFull()
                     ->schema(static::metadataTab()),
+                Section::make('GS1 / EAN overrides')
+                    ->description('Optioneel. Producten zonder eigen override krijgen deze waarden voor het GS1 export-bestand.')
+                    ->columnSpanFull()
+                    ->collapsed()
+                    ->collapsible()
+                    ->columns(['default' => 1, 'lg' => 3])
+                    ->schema([
+                        TextInput::make('gs1_classification')->label('Productclassificatie (GPC)'),
+                        TextInput::make('gs1_packaging_type')->label('Verpakkingstype'),
+                        TextInput::make('gs1_brand')->label('Merk'),
+                        TextInput::make('gs1_sub_brand')->label('Submerk'),
+                        TextInput::make('gs1_language')->label('Taal'),
+                        TextInput::make('gs1_country')->label('Land'),
+                        TextInput::make('gs1_quantity')->label('Aantal')->numeric(),
+                        TextInput::make('gs1_unit')->label('Eenheid'),
+                        \Filament\Forms\Components\Select::make('gs1_consumer_unit')
+                            ->label('Consumenteneenheid')
+                            ->options(['1' => 'Ja', '0' => 'Nee'])
+                            ->placeholder('Erven van shop'),
+                    ]),
             ]);
     }
 

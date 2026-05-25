@@ -3,22 +3,24 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
-use Filament\Actions\ImportAction;
+use Dashed\DashedCore\Classes\Sites;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Models\Customsetting;
-use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Jobs\ImportEANCodes;
 use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use Dashed\DashedEcommerceCore\Services\Gs1\Gs1EanSyncer;
+use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FileReader;
+use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FileWriter;
 use Dashed\DashedEcommerceCore\Jobs\ImportProductToEditJob;
-use Dashed\DashedEcommerceCore\Filament\Imports\EANCodesImporter;
+use Dashed\DashedEcommerceCore\Services\Gs1\Gs1ExportBuilder;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
@@ -86,44 +88,77 @@ class ListProducts extends ListRecords
                         ->success()
                         ->send();
                 }),
-//            ImportAction::make()
-//                ->importer(EANCodesImporter::class)
-//                ->label('Importeer EAN codes')
-//                ->modelLabel('EAN codes')
-////                ->getCustomModalHeading('test')
-////                ->help('Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . Product::whereNull('ean')->count() . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
-//                ->icon('heroicon-s-qr-code')
-//                ->color('primary')
-//                ->hiddenLabel(),
-            Action::make('importEANCodes')
-                ->label('Importeer EAN codes')
-                ->icon('heroicon-s-qr-code')
-                ->hiddenLabel()
-                ->schema([
-                    TextEntry::make('placeholder')
-                        ->label('Importeer EAN codes voor producten')
-                        ->label(fn () => 'Gebruik een excel/csv bestand met 1 kolom met de EAN codes. Deze worden toegevoegd aan de producten zonder EAN code. Dit zijn er momenteel ' . cache()->remember('products_without_ean_count', 300, fn () => Product::whereNull('ean')->count()) . '. Maak een bestand met nooit meer dan he lege aantal EANs. De EAN codes dienen uniek te zijn.')
-                        ->columnSpanFull(),
-                    FileUpload::make('file')
-                        ->label('Bestand')
-                        ->disk('local')
-                        ->directory('imports')
-                        ->rules([
-                            'required',
-                            'file',
-                            'mimes:csv,xlsx',
-                        ]),
-                ])
-                ->action(function ($data) {
+            ActionGroup::make([
+                Action::make('exportForGs1')
+                    ->label('Exporteer voor GS1')
+                    ->icon('heroicon-s-arrow-down-tray')
+                    ->requiresConfirmation()
+                    ->modalHeading('Exporteer producten zonder EAN voor GS1')
+                    ->modalDescription(fn () => 'Er worden ' . cache()->remember('products_without_ean_count', 300, fn () => Product::whereNull('ean')->where('public', true)->where('is_bundle', false)->count()) . ' producten geëxporteerd. Standaardwaardes komen uit Instellingen → GS1, eventueel overschreven per categorie of product. Je kunt het bestand aanpassen vóór upload bij mijnGS1.')
+                    ->modalSubmitActionLabel('Download bestand')
+                    ->action(function () {
+                        $siteId = Sites::getActive() ?: (Sites::getFirstSite()['id'] ?? 1);
+                        $tmpPath = tempnam(sys_get_temp_dir(), 'gs1-export-') . '.xlsx';
 
-                    ImportEANCodes::dispatch($data['file']);
+                        $count = (new Gs1ExportBuilder(new Gs1FileWriter()))
+                            ->buildForProductsWithoutEan((int) $siteId, $tmpPath);
 
-                    Notification::make()
-                        ->title('Importeren')
-                        ->body('Het importeren wordt op de achtergrond uitgevoerd.')
-                        ->success()
-                        ->send();
-                }),
+                        if ($count === 0) {
+                            Notification::make()
+                                ->title('Geen producten zonder EAN')
+                                ->warning()
+                                ->send();
+
+                            return null;
+                        }
+
+                        return response()->download($tmpPath, 'gs1-export-' . now()->format('Y-m-d-His') . '.xlsx')->deleteFileAfterSend();
+                    }),
+                Action::make('syncEanFromGs1')
+                    ->label('Sync EAN uit GS1 bestand')
+                    ->icon('heroicon-s-arrow-up-tray')
+                    ->modalHeading('Synchroniseer EAN-codes uit GS1 bestand')
+                    ->modalDescription('Upload het Excel-bestand dat je in mijnGS1 hebt gedownload. Per rij wordt op productnaam gematcht; alleen producten zonder EAN krijgen er één toegekend.')
+                    ->schema([
+                        FileUpload::make('file')
+                            ->label('GS1 bestand')
+                            ->disk('local')
+                            ->directory('gs1-sync')
+                            ->required()
+                            ->acceptedFileTypes([
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-excel',
+                            ]),
+                    ])
+                    ->action(function (array $data) {
+                        $absolute = \Illuminate\Support\Facades\Storage::disk('local')->path($data['file']);
+
+                        $result = (new Gs1EanSyncer(new Gs1FileReader()))->sync($absolute);
+
+                        $body = sprintf(
+                            "%d EANs toegekend\n%d al gesynced\n%d overgeslagen (had al EAN)\n%d niet gevonden\n%d conflicten",
+                            count($result->updated),
+                            $result->alreadyInSync,
+                            count($result->skippedHasEan),
+                            count($result->notFound),
+                            count($result->conflicts),
+                        );
+
+                        Notification::make()
+                            ->title('GS1 sync klaar')
+                            ->body($body)
+                            ->success(count($result->conflicts) === 0)
+                            ->warning(count($result->conflicts) > 0)
+                            ->persistent()
+                            ->send();
+
+                        cache()->forget('products_without_ean_count');
+                    }),
+            ])
+                ->label('GS1')
+                ->icon('heroicon-o-qr-code')
+                ->color('primary')
+                ->button(),
         ];
     }
 }
