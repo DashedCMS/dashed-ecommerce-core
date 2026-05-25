@@ -82,13 +82,23 @@ if [ ! -f "$CONFIG_FILE" ]; then
         echo "    Geen printers gedetecteerd. Container pair't toch zodat je later printers kunt toevoegen via CUPS-UI (port 631)."
     fi
 
+    if [ "${#CUPS_NAMES[@]}" -gt 0 ]; then
+        NAMES_JSON=$(printf '%s\n' "${CUPS_NAMES[@]}" | jq -R . | jq -s .)
+        URIS_JSON=$(printf '%s\n' "${DEVICE_URIS[@]}" | jq -R . | jq -s .)
+    else
+        NAMES_JSON='[]'
+        URIS_JSON='[]'
+    fi
+
+    PRINTERS_JSON=$(jq -n \
+        --argjson names "$NAMES_JSON" \
+        --argjson uris  "$URIS_JSON" \
+        '[range(0; ($names|length)) | {cups_name: $names[.], device_uri: $uris[.]}]')
+
     PAYLOAD=$(jq -n \
         --arg code "$PAIRING_CODE" \
         --arg host "${HOSTNAME_LABEL:-$(hostname)}" \
-        --argjson printers "$(jq -n \
-            --argjson names "$(printf '%s\n' "${CUPS_NAMES[@]+"${CUPS_NAMES[@]}"}" | jq -R . | jq -s .)" \
-            --argjson uris  "$(printf '%s\n' "${DEVICE_URIS[@]+"${DEVICE_URIS[@]}"}" | jq -R . | jq -s .)" \
-            '[range(0; ($names|length)) | {cups_name: $names[.], device_uri: $uris[.]}]')" \
+        --argjson printers "$PRINTERS_JSON" \
         '{pairing_code: $code, hostname: $host, discovered_printers: $printers}')
 
     PAIR_RESPONSE=$(curl -sS -X POST "$API_URL/api/print/pair" \

@@ -61,13 +61,23 @@ curl -fsSL "$API_URL/vendor/dashed-ecommerce-core/pi/dashedcms-printer.service" 
 echo ""
 echo "==> Pairing met CMS..."
 
+if [ "${#CUPS_NAMES[@]}" -gt 0 ]; then
+    NAMES_JSON=$(printf '%s\n' "${CUPS_NAMES[@]}" | jq -R . | jq -s .)
+    URIS_JSON=$(printf '%s\n' "${DEVICE_URIS[@]}" | jq -R . | jq -s .)
+else
+    NAMES_JSON='[]'
+    URIS_JSON='[]'
+fi
+
+PRINTERS_JSON=$(jq -n \
+    --argjson names "$NAMES_JSON" \
+    --argjson uris  "$URIS_JSON" \
+    '[range(0; ($names|length)) | {cups_name: $names[.], device_uri: $uris[.]}]')
+
 PAYLOAD=$(jq -n \
     --arg code "$PAIRING_CODE" \
     --arg host "$HOSTNAME_NAME" \
-    --argjson printers "$(jq -n \
-        --argjson names "$(printf '%s\n' "${CUPS_NAMES[@]+"${CUPS_NAMES[@]}"}" | jq -R . | jq -s .)" \
-        --argjson uris  "$(printf '%s\n' "${DEVICE_URIS[@]+"${DEVICE_URIS[@]}"}" | jq -R . | jq -s .)" \
-        '[range(0; ($names|length)) | {cups_name: $names[.], device_uri: $uris[.]}]')" \
+    --argjson printers "$PRINTERS_JSON" \
     '{pairing_code: $code, hostname: $host, discovered_printers: $printers}')
 
 RESPONSE=$(curl -fsS -X POST "$API_URL/api/print/pair" \
