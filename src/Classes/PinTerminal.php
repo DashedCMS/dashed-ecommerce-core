@@ -9,6 +9,7 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Jobs\CheckPinTerminalPaymentStatusJob;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 
 class PinTerminal
 {
@@ -27,7 +28,7 @@ class PinTerminal
         $orderPayment->save();
 
         try {
-            $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
+            $transaction = PaymentTransactionStarter::start($orderPayment, PaymentTransactionStarter::CONTEXT_POS_PIN_TERMINAL);
             $pinTerminalError = false;
             $pinTerminalErrorMessage = null;
             $pinTerminalStatus = 'pending';

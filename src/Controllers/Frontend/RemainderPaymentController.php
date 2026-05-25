@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 
 class RemainderPaymentController
 {
@@ -42,7 +43,7 @@ class RemainderPaymentController
         $orderPayment->refresh();
 
         try {
-            $transaction = $providerClass::startTransaction($orderPayment);
+            $transaction = PaymentTransactionStarter::start($orderPayment, PaymentTransactionStarter::CONTEXT_REMAINDER_PAYMENT);
         } catch (\Throwable $e) {
             report($e);
 

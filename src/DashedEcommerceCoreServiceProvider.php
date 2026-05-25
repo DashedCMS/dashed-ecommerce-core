@@ -148,6 +148,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderCancelledMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminPaymentStartFailedMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusUnhandledMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusHandledMail::class)

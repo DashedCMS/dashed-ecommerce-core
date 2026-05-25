@@ -17,6 +17,7 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -329,11 +330,9 @@ class TransactionController extends Controller
             return redirect(url(ShoppingCart::getCompleteUrl()) . '?paymentId=' . $orderPayment->hash);
         } else {
             try {
-                $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
-            } catch (\Exception $exception) {
+                $transaction = PaymentTransactionStarter::start($orderPayment, PaymentTransactionStarter::CONTEXT_PAYMENT_LINK_RETRY);
+            } catch (\Throwable $exception) {
                 return redirect()->back()->with('error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))->withInput();
-
-                throw new \Exception('Cannot start payment: ' . $exception->getMessage());
             }
 
             return redirect($transaction['redirectUrl'], 303);

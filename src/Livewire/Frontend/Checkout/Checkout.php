@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\CartLog;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\CartHelper;
@@ -1134,18 +1135,11 @@ class Checkout extends Component
         }
 
         try {
-            $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
+            $transaction = PaymentTransactionStarter::start($orderPayment, PaymentTransactionStarter::CONTEXT_CHECKOUT);
         } catch (Exception $exception) {
             if (app()->isLocal()) {
                 throw new Exception('Cannot start payment: '.$exception->getMessage());
             }
-
-            $orderLog = new OrderLog();
-            $orderLog->order_id = $order->id;
-            $orderLog->user_id = Auth::check() ? auth()->user()->id : null;
-            $orderLog->tag = 'order.note.created';
-            $orderLog->note = Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started:').' '.$exception->getMessage();
-            $orderLog->save();
 
             Notification::make()
                 ->danger()

@@ -20,6 +20,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
@@ -1223,7 +1224,7 @@ trait CreateManualOrderActions2
         $this->orderPayment = $orderPayment;
 
         try {
-            $transaction = ecommerce()->builder('paymentServiceProviders')[$orderPayment->psp]['class']::startTransaction($orderPayment);
+            $transaction = PaymentTransactionStarter::start($orderPayment, PaymentTransactionStarter::CONTEXT_MANUAL_ORDER);
             $this->pinTerminalError = false;
             $this->pinTerminalErrorMessage = null;
             $this->pinTerminalStatus = 'pending';

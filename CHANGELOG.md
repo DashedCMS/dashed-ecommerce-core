@@ -7,6 +7,21 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Added
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
+## v4.36.0 - 2026-05-25
+
+### Added
+- **GS1 / EAN flow vanaf productenlijst.** Eén "GS1"-button-group bovenaan `ListProducts` met twee acties:
+  - **Exporteer voor GS1**: genereert via `Gs1ExportBuilder` een Excel met alle producten zonder EAN (`public=true`, niet-bundel) in het 13-koloms GS1-formaat. GTIN-kolom wordt leeg gelaten zodat de gebruiker `1, 2, 3 ...` placeholders kan invullen of gewoon kan uploaden in mijnGS1. Per-rij waardes komen uit een 3-laagse `Gs1MetaResolver` (shop-default via Customsetting → categorie-override → product-override). Afbeelding-URL valt terug op `$product->firstImage` via `mediaHelper()->getSingleMedia(..., 'original')->url` als er geen `gs1_image_url` override is.
+  - **Sync EAN uit GS1 bestand**: upload het Excel dat je in mijnGS1 hebt gedownload. `Gs1EanSyncer` leest via `Gs1FileReader`, indexeert alle producten op naam (alle translatable locales, genormaliseerd), en wijst per rij een EAN toe alleen als het product nog géén EAN heeft. Notification toont counts voor `updated`, `alreadyInSync`, `skippedHasEan`, `notFound`, `conflicts`. Idempotent.
+- **Hybride GS1-defaults configurabel.** `Gs1SettingsPage` (per site: classificatie, verpakkingstype, merk/submerk, taal, land, aantal, eenheid, consumenteneenheid, contractnummer) + optionele override-secties op `ProductCategoryResource` en `ProductResource` met dezelfde velden. Migraties `add_gs1_fields_to_products` en `add_gs1_fields_to_product_categories`.
+- **Centrale `PaymentTransactionStarter::start($orderPayment, $context)`** vervangt elke directe `paymentServiceProviders[psp]::startTransaction()`-aanroep. Bij elke `Throwable`:
+  - schrijft een `OrderLog` met tag `order.payment-start.failed` en note `[context] ExceptionClass: message (in file.php:line)`,
+  - stuurt `AdminNotifier::send(new AdminPaymentStartFailedMail(...), Mails::getAdminNotificationEmails())` zodat admins per e-mail en (indien geconfigureerd) per Telegram op de hoogte zijn met de exacte foutmelding,
+  - gooit de originele exception opnieuw zodat callers hun eigen UX-respons (back-redirect, terug naar checkout, status-array) ongewijzigd behouden.
+
+  Geïntegreerd in alle 6 PSP-start-callsites: `Livewire/Frontend/Checkout/Checkout.php` (`CONTEXT_CHECKOUT`), `Classes/PinTerminal.php` (`CONTEXT_POS_PIN_TERMINAL`), `Controllers/Frontend/TransactionController.php` (`CONTEXT_PAYMENT_LINK_RETRY`), `Controllers/Frontend/RemainderPaymentController.php` (`CONTEXT_REMAINDER_PAYMENT`), `OrderResource/Concerns/CreateManualOrderActions.php` + `CreateManualOrderActions2.php` (`CONTEXT_MANUAL_ORDER`).
+- **`AdminPaymentStartFailedMail`** implementeert `RegistersEmailTemplate` (verschijnt in CMS als bewerkbare template "Betaling kon niet gestart worden (beheerder)") + `SendsToTelegram` (rendert TelegramSummary met emoji ⚠️, order #, context, PSP, betaalmethode, bedrag, klant, e-mail, foutklasse, foutmelding, locatie, link naar CMS).
+
 ## v4.27.1 - 2026-05-11
 
 ### Changed
