@@ -17,8 +17,8 @@ class CleanupOldPrintJobsCommand extends Command
 
     public function handle(): int
     {
-        $doneRetention = (int) Customsetting::get('print_queue.job_retention_days', null, 90);
-        $failedRetention = (int) Customsetting::get('print_queue.failed_job_retention_days', null, 365);
+        $doneRetention = (int) Customsetting::get('print_queue.job_retention_days', null, '90');
+        $failedRetention = (int) Customsetting::get('print_queue.failed_job_retention_days', null, '365');
 
         $deletedDone = PrintJob::query()
             ->whereIn('status', [PrintJobStatus::Done->value, PrintJobStatus::Cancelled->value])

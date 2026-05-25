@@ -28,7 +28,7 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
 
     public function handle(): void
     {
-        if (! (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, false)) {
+        if (! (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, null)) {
             return;
         }
 

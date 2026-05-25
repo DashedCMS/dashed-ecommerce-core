@@ -97,7 +97,7 @@ class Printer extends Model
             return false;
         }
 
-        $threshold = (int) Customsetting::get('print_queue.health_check_threshold_seconds', null, 60);
+        $threshold = (int) Customsetting::get('print_queue.health_check_threshold_seconds', null, '60');
 
         return $this->last_ping_at->gte(now()->subSeconds($threshold));
     }

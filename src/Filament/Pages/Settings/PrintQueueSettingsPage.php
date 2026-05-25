@@ -36,12 +36,12 @@ class PrintQueueSettingsPage extends Page
     public function mount(): void
     {
         $formData = [
-            'auto_print_on_new_order' => (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, false),
-            'auto_print_label_on_generated' => (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, false),
-            'health_check_threshold_seconds' => (int) Customsetting::get('print_queue.health_check_threshold_seconds', null, 60),
-            'label_sync_interval_minutes' => (int) Customsetting::get('print_queue.label_sync_interval_minutes', null, 1),
-            'job_retention_days' => (int) Customsetting::get('print_queue.job_retention_days', null, 90),
-            'failed_job_retention_days' => (int) Customsetting::get('print_queue.failed_job_retention_days', null, 365),
+            'auto_print_on_new_order' => (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, null),
+            'auto_print_label_on_generated' => (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, null),
+            'health_check_threshold_seconds' => (int) Customsetting::get('print_queue.health_check_threshold_seconds', null, '60'),
+            'label_sync_interval_minutes' => (int) Customsetting::get('print_queue.label_sync_interval_minutes', null, '1'),
+            'job_retention_days' => (int) Customsetting::get('print_queue.job_retention_days', null, '90'),
+            'failed_job_retention_days' => (int) Customsetting::get('print_queue.failed_job_retention_days', null, '365'),
         ];
 
         $this->form->fill($formData);
