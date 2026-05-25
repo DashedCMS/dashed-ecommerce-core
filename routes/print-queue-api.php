@@ -58,7 +58,38 @@ Route::post('/api/print/pair', function (\Illuminate\Http\Request $request) {
     $printer = Printer::findByPairingCode($data['pairing_code']);
 
     if (! $printer) {
-        return response()->json(['message' => 'Pairing code ongeldig of verlopen.'], 422);
+        $candidate = Printer::where('pairing_code', $data['pairing_code'])->first();
+
+        if (! $candidate) {
+            return response()->json([
+                'message' => 'Pairing code bestaat niet in dit CMS. Mogelijk verkeerd gekopieerd of de printer-record is verwijderd. Genereer een nieuwe code in admin.',
+                'reason' => 'not_found',
+                'pairing_code' => $data['pairing_code'],
+            ], 422);
+        }
+
+        if ($candidate->paired_at) {
+            return response()->json([
+                'message' => 'Deze pairing code is al gebruikt op ' . $candidate->paired_at->toIso8601String() . '. Genereer een nieuwe in admin als je opnieuw wilt installeren.',
+                'reason' => 'already_used',
+                'paired_at' => $candidate->paired_at->toIso8601String(),
+                'printer_ulid' => $candidate->ulid,
+            ], 422);
+        }
+
+        if (! $candidate->pairing_expires_at || $candidate->pairing_expires_at->isPast()) {
+            return response()->json([
+                'message' => 'Pairing code is verlopen op ' . optional($candidate->pairing_expires_at)->toIso8601String() . '. Genereer een nieuwe in admin.',
+                'reason' => 'expired',
+                'expired_at' => optional($candidate->pairing_expires_at)->toIso8601String(),
+                'server_time' => now()->toIso8601String(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Pairing code ongeldig (onbekende reden).',
+            'reason' => 'unknown',
+        ], 422);
     }
 
     $printer->tokens()->delete();

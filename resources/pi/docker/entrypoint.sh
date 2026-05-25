@@ -91,13 +91,31 @@ if [ ! -f "$CONFIG_FILE" ]; then
             '[range(0; ($names|length)) | {cups_name: $names[.], device_uri: $uris[.]}]')" \
         '{pairing_code: $code, hostname: $host, discovered_printers: $printers}')
 
-    RESPONSE=$(curl -fsS -X POST "$API_URL/api/print/pair" \
+    PAIR_RESPONSE=$(curl -sS -X POST "$API_URL/api/print/pair" \
         -H 'Accept: application/json' \
         -H 'Content-Type: application/json' \
+        -w '\n___HTTP___%{http_code}' \
         -d "$PAYLOAD") || {
-            echo "Pairing call gefaald. Check API_URL en pairing code." >&2
+            echo "Pairing call gefaald: kon $API_URL niet bereiken." >&2
+            echo "    Check API_URL bereikbaarheid vanaf deze host (curl -v $API_URL)." >&2
             exit 1
         }
+
+    HTTP_CODE=$(echo "$PAIR_RESPONSE" | sed -n 's/^___HTTP___//p')
+    RESPONSE=$(echo "$PAIR_RESPONSE" | sed '/^___HTTP___/d')
+
+    if [ "$HTTP_CODE" != "200" ]; then
+        echo "Pairing afgewezen door CMS (HTTP $HTTP_CODE)." >&2
+        echo "    Response: $RESPONSE" >&2
+        echo "    Pairing code: $PAIRING_CODE" >&2
+        echo "    API URL: $API_URL" >&2
+        echo "    Mogelijke oorzaken:" >&2
+        echo "      - Pairing code is verlopen (codes zijn 24 uur geldig)" >&2
+        echo "      - Pairing code is al gebruikt voor een andere installatie" >&2
+        echo "      - Printer-record is verwijderd in admin" >&2
+        echo "    Genereer een nieuwe pairing code in admin en draai het install-commando opnieuw." >&2
+        exit 1
+    fi
 
     TOKEN=$(echo "$RESPONSE" | jq -r '.token // empty')
     CUPS_NAME=$(echo "$RESPONSE" | jq -r '.cups_name // empty')
