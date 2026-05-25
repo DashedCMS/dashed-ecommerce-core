@@ -40,6 +40,10 @@ class CartResource extends Resource
                     Forms\Components\TextInput::make('user')
                         ->label('Gebruiker')
                         ->disabled(),
+                    Forms\Components\TextInput::make('abandoned_email')
+                        ->label('E-mail (winkelwagen)')
+                        ->disabled()
+                        ->visible(fn ($record) => $record && filled($record->abandoned_email)),
                     Forms\Components\TextInput::make('total')
                         ->label('Totale waarde')
                         ->numeric()
@@ -78,10 +82,15 @@ class CartResource extends Resource
                             default => $state,
                         };
                     }),
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user_or_email')
                     ->label('Gebruiker')
-                    ->default('-')
-                    ->searchable(),
+                    ->state(fn ($record) => $record->user?->name ?: ($record->abandoned_email ?: null))
+                    ->placeholder('-')
+                    ->description(fn ($record) => $record->user_id && $record->abandoned_email ? $record->abandoned_email : null)
+                    ->searchable(query: function ($query, string $search) {
+                        $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                            ->orWhere('abandoned_email', 'like', "%{$search}%");
+                    }),
                 Tables\Columns\TextColumn::make('total')
                     ->label('Totaal')
                     ->money('eur')
