@@ -45,8 +45,41 @@ class PrinterResource extends Resource
                     TextInput::make('name')->required()->maxLength(100),
                     TextInput::make('location')->maxLength(100),
                     Select::make('type')
+                        ->label('Doel')
                         ->options(PrinterType::options())
                         ->required(),
+                    Select::make('cups_name')
+                        ->label('Actieve CUPS-printer op deze Pi')
+                        ->helperText('Kies uit de printers die de Pi heeft ontdekt en aan dit CMS heeft gemeld.')
+                        ->options(function (?Printer $record): array {
+                            if (! $record || ! $record->cups_printers) {
+                                return [];
+                            }
+
+                            $options = [];
+                            foreach ($record->cups_printers as $entry) {
+                                $cupsName = $entry['cups_name'] ?? null;
+                                if (! $cupsName) {
+                                    continue;
+                                }
+                                $label = $cupsName;
+                                if (! empty($entry['make_and_model'])) {
+                                    $label .= ' (' . $entry['make_and_model'] . ')';
+                                } elseif (! empty($entry['device_uri'])) {
+                                    $label .= ' (' . $entry['device_uri'] . ')';
+                                }
+                                $options[$cupsName] = $label;
+                            }
+
+                            return $options;
+                        })
+                        ->visible(fn (?Printer $record): bool => $record !== null && filled($record->cups_printers))
+                        ->placeholder('Kies een ontdekte printer'),
+                    TextInput::make('hostname')
+                        ->label('Pi hostname')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->visible(fn (?Printer $record): bool => $record !== null),
                     TextInput::make('max_retries')->numeric()->minValue(0)->maxValue(10)->default(3),
                     Toggle::make('is_active')->default(true),
                     Placeholder::make('last_ping_status')
@@ -56,40 +89,34 @@ class PrinterResource extends Resource
                             : 'Nog niet gepingd'),
                 ])
                 ->columns(2),
-            Section::make('Sanctum token')
-                ->description('Gegenereerd via de "Genereer token" knop boven op de pagina. Dit token gebruikt de Raspberry Pi om in te loggen.')
+            Section::make('Pairing status')
                 ->columnSpanFull()
                 ->visible(fn (?Printer $record) => $record !== null)
                 ->schema([
-                    Placeholder::make('plain_token_display')
-                        ->label('Huidige token')
-                        ->columnSpanFull()
-                        ->content(fn (?Printer $record): HtmlString => new HtmlString(
-                            $record?->plain_token
-                                ? '<div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">'
-                                    . '<code style="background-color: #111827; color: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.8125rem; word-break: break-all; flex: 1; min-width: 0;">'
-                                    . e($record->plain_token)
-                                    . '</code>'
-                                    . '<button type="button" onclick="navigator.clipboard.writeText(\'' . e($record->plain_token) . '\'); this.textContent = \'Gekopieerd\'; setTimeout(() => this.textContent = \'Kopieer\', 1500);" style="background-color: #4f46e5; color: #ffffff; border: none; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.8125rem; cursor: pointer; font-weight: 500;">Kopieer</button>'
-                                    . '</div>'
-                                : '<em style="color: #6b7280;">Nog geen token gegenereerd. Klik op "Genereer token" hierboven.</em>'
-                        )),
-                ]),
-            Section::make('Installatie op een Raspberry Pi')
-                ->description('Stap-voor-stap instructies, helemaal pre-filled met de gegevens van deze printer.')
-                ->columnSpanFull()
-                ->collapsible()
-                ->collapsed(fn (?Printer $record) => $record === null || ! $record->plain_token)
-                ->visible(fn (?Printer $record) => $record !== null)
-                ->schema([
-                    Placeholder::make('pi_setup_for_printer')
+                    Placeholder::make('pairing_status')
                         ->hiddenLabel()
                         ->columnSpanFull()
-                        ->content(fn (?Printer $record): HtmlString => new HtmlString(
-                            view('dashed-ecommerce-core::filament.pages.print-queue-pi-setup-printer', [
-                                'printer' => $record,
-                            ])->render()
-                        )),
+                        ->content(function (?Printer $record): HtmlString {
+                            if (! $record) {
+                                return new HtmlString('');
+                            }
+
+                            if ($record->isPaired()) {
+                                return new HtmlString(
+                                    '<div style="background-color: #d1fae5; border-left: 4px solid #059669; border-radius: 0.5rem; padding: 1rem; color: #064e3b;">'
+                                    . '<strong>Gepaird</strong> op ' . e($record->paired_at?->format('d-m-Y H:i')) . '. '
+                                    . 'Pi-hostname: <code>' . e($record->hostname ?? '?') . '</code>. '
+                                    . 'Klik op "Opnieuw pairen" bovenaan als je het token wilt vervangen.'
+                                    . '</div>'
+                                );
+                            }
+
+                            return new HtmlString(
+                                '<div style="background-color: #fef3c7; border-left: 4px solid #d97706; border-radius: 0.5rem; padding: 1rem; color: #78350f;">'
+                                . '<strong>Wachten op pairing</strong>. Ga naar Print queue instellingen voor het installatie-commando.'
+                                . '</div>'
+                            );
+                        }),
                 ]),
         ]);
     }
@@ -116,11 +143,15 @@ class PrinterResource extends Resource
             ->defaultSort('name');
     }
 
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListPrinters::route('/'),
-            'create' => Pages\CreatePrinter::route('/create'),
             'edit' => Pages\EditPrinter::route('/{record}/edit'),
         ];
     }

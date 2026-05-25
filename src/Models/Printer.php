@@ -29,11 +29,48 @@ class Printer extends Model
         'max_retries' => 'int',
         'last_ping_at' => 'datetime',
         'plain_token' => 'encrypted',
+        'cups_printers' => 'array',
+        'pairing_expires_at' => 'datetime',
+        'paired_at' => 'datetime',
     ];
 
     protected $hidden = [
         'plain_token',
     ];
+
+    public function isPaired(): bool
+    {
+        return $this->paired_at !== null;
+    }
+
+    public function isPairingPending(): bool
+    {
+        return $this->pairing_code !== null
+            && $this->pairing_expires_at
+            && $this->pairing_expires_at->isFuture()
+            && ! $this->isPaired();
+    }
+
+    public static function startPairing(): self
+    {
+        $code = strtoupper(Str::random(10));
+
+        return self::create([
+            'name' => 'Wacht op pairing (' . substr($code, 0, 4) . ')',
+            'type' => PrinterType::PackingSlip,
+            'is_active' => false,
+            'pairing_code' => $code,
+            'pairing_expires_at' => now()->addHours(24),
+        ]);
+    }
+
+    public static function findByPairingCode(string $code): ?self
+    {
+        return self::where('pairing_code', $code)
+            ->where('pairing_expires_at', '>', now())
+            ->whereNull('paired_at')
+            ->first();
+    }
 
     protected static function booted(): void
     {

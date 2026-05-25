@@ -7,12 +7,14 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource\Pages;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Str;
 
 class EditPrinter extends EditRecord
 {
@@ -21,28 +23,37 @@ class EditPrinter extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('generate_token')
-                ->label('Genereer token')
+            Action::make('repair')
+                ->label('Opnieuw pairen')
+                ->icon('heroicon-o-arrow-path')
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalDescription('Bestaande tokens van deze printer worden ingetrokken en vervangen door een nieuwe.')
+                ->modalDescription('Trekt het huidige token in en maakt een nieuwe pairing code aan. Je moet daarna de oneliner opnieuw op de Pi draaien.')
                 ->action(function (): void {
                     $printer = $this->getRecord();
                     $printer->tokens()->delete();
-                    $token = $printer->createToken("printer-{$printer->ulid}")->plainTextToken;
-                    $printer->forceFill(['plain_token' => $token])->save();
+                    $code = strtoupper(Str::random(10));
 
-                    $this->fillForm();
+                    $printer->forceFill([
+                        'plain_token' => null,
+                        'pairing_code' => $code,
+                        'pairing_expires_at' => now()->addHours(24),
+                        'paired_at' => null,
+                        'is_active' => false,
+                    ])->save();
 
                     Notification::make()
-                        ->title('Token gegenereerd')
-                        ->body('Het token staat in het token-veld hieronder en in de Pi installatie-handleiding.')
+                        ->title('Nieuwe pairing code aangemaakt')
+                        ->body('Open Print queue instellingen voor het installatie-commando.')
                         ->success()
                         ->send();
+
+                    $this->redirect(PrintQueueSettingsPage::getUrl());
                 }),
             Action::make('test_print')
                 ->label('Test print')
                 ->color('info')
+                ->visible(fn (): bool => $this->getRecord()->isPaired())
                 ->action(function (): void {
                     $printer = $this->getRecord();
 
@@ -59,7 +70,7 @@ class EditPrinter extends EditRecord
 
                     Notification::make()
                         ->title('Test job aangemaakt')
-                        ->body('De Pi zou deze binnen 5 sec moeten ophalen.')
+                        ->body('De Pi pakt deze binnen 5 seconden op.')
                         ->success()
                         ->send();
                 }),

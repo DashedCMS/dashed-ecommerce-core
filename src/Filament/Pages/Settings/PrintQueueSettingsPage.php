@@ -12,8 +12,12 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Placeholder;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\URL;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Filament\Actions\Action;
 
 class PrintQueueSettingsPage extends Page
 {
@@ -43,9 +47,89 @@ class PrintQueueSettingsPage extends Page
         $this->form->fill($formData);
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('pair_new_pi')
+                ->label('Pair een nieuwe Raspberry Pi')
+                ->icon('heroicon-o-plus-circle')
+                ->color('success')
+                ->action(function (): void {
+                    $printer = Printer::startPairing();
+
+                    Notification::make()
+                        ->title('Pairing code aangemaakt')
+                        ->body('Ververs deze pagina; de installatie-oneliner staat in de Pi-sectie hieronder.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(static::getUrl());
+                }),
+        ];
+    }
+
+    private function pendingPairings(): \Illuminate\Support\Collection
+    {
+        return Printer::query()
+            ->whereNotNull('pairing_code')
+            ->where('pairing_expires_at', '>', now())
+            ->whereNull('paired_at')
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    private function pairingInstallUrl(Printer $printer): string
+    {
+        return URL::temporarySignedRoute(
+            'dashed.print-queue.installer',
+            $printer->pairing_expires_at ?? now()->addHours(2),
+            ['code' => $printer->pairing_code],
+        );
+    }
+
     public function form(Schema $schema): Schema
     {
+        $pending = $this->pendingPairings();
+
         return $schema->schema([
+            Section::make('Pair een nieuwe Raspberry Pi')
+                ->description('Klik op "Pair een nieuwe Raspberry Pi" bovenaan deze pagina om een pairing code te genereren. Daarna verschijnt hier het installatie-commando dat je op de Pi draait.')
+                ->columnSpanFull()
+                ->schema([
+                    Placeholder::make('pairing_instructions')
+                        ->hiddenLabel()
+                        ->columnSpanFull()
+                        ->content(function () use ($pending): HtmlString {
+                            if ($pending->isEmpty()) {
+                                return new HtmlString(
+                                    '<div style="background-color: #f3f4f6; border-radius: 0.5rem; padding: 1rem; color: #374151;">'
+                                    . 'Geen openstaande pairing codes. Klik op de groene "Pair een nieuwe Raspberry Pi" knop hierboven om er een aan te maken.'
+                                    . '</div>'
+                                );
+                            }
+
+                            $html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+                            foreach ($pending as $printer) {
+                                $url = $this->pairingInstallUrl($printer);
+                                $oneLiner = 'curl -fsSL "' . $url . '" | sudo bash';
+                                $expiresLabel = $printer->pairing_expires_at?->diffForHumans();
+
+                                $html .= '<div style="background-color: #d1fae5; border-left: 4px solid #059669; border-radius: 0.5rem; padding: 1rem; color: #064e3b;">'
+                                    . '<strong>Pairing code: ' . e($printer->pairing_code) . '</strong>'
+                                    . ' <span style="color: #4b5563; font-weight: normal;">(verloopt ' . e($expiresLabel) . ')</span>'
+                                    . '<p style="margin-top: 0.5rem;">SSH in op je Pi (<code>ssh pi@&lt;ip&gt;</code>), plak dit commando, druk Enter:</p>'
+                                    . '<div style="display: flex; gap: 0.5rem; align-items: stretch; flex-wrap: wrap; margin-top: 0.5rem;">'
+                                    . '<code style="background-color: #111827; color: #f3f4f6; padding: 0.75rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.8125rem; word-break: break-all; flex: 1; min-width: 0; line-height: 1.4;">' . e($oneLiner) . '</code>'
+                                    . '<button type="button" onclick="navigator.clipboard.writeText(\'' . e($oneLiner) . '\'); this.textContent=\'Gekopieerd\'; setTimeout(()=>this.textContent=\'Kopieer\',1500);" style="background-color: #059669; color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.8125rem; cursor: pointer; font-weight: 500; white-space: nowrap;">Kopieer</button>'
+                                    . '</div>'
+                                    . '<p style="margin-top: 0.75rem; font-size: 0.8125rem;">Het script detecteert je USB-printers, registreert ze bij CUPS, pair met dit CMS en start de service. Na succes verschijnt de Pi in de <strong>Printers</strong> lijst.</p>'
+                                    . '</div>';
+                            }
+                            $html .= '</div>';
+
+                            return new HtmlString($html);
+                        }),
+                ]),
             Section::make('Automatisch printen')
                 ->columnSpanFull()
                 ->schema([
