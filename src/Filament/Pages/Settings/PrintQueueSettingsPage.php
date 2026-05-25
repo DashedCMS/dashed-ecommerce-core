@@ -68,6 +68,37 @@ class PrintQueueSettingsPage extends Page
         ];
     }
 
+    public function cancelPairing(string $ulid): void
+    {
+        $printer = Printer::query()
+            ->where('ulid', $ulid)
+            ->whereNull('paired_at')
+            ->whereNotNull('pairing_code')
+            ->first();
+
+        if (! $printer) {
+            Notification::make()
+                ->title('Pairing niet gevonden')
+                ->body('Deze pairing is al voltooid of al verwijderd.')
+                ->warning()
+                ->send();
+
+            $this->redirect(static::getUrl());
+
+            return;
+        }
+
+        $printer->delete();
+
+        Notification::make()
+            ->title('Pairing geannuleerd')
+            ->body('De openstaande pairing code is verwijderd.')
+            ->success()
+            ->send();
+
+        $this->redirect(static::getUrl());
+    }
+
     private function pendingPairings(): \Illuminate\Support\Collection
     {
         return Printer::query()
@@ -121,8 +152,13 @@ class PrintQueueSettingsPage extends Page
                                 $expiresLabel = $printer->pairing_expires_at?->diffForHumans();
 
                                 $html .= '<div style="background-color: #d1fae5; border-left: 4px solid #059669; border-radius: 0.5rem; padding: 1rem; color: #064e3b;">'
+                                    . '<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">'
+                                    . '<div>'
                                     . '<strong>Pairing code: ' . e($printer->pairing_code) . '</strong>'
                                     . ' <span style="color: #4b5563; font-weight: normal;">(verloopt ' . e($expiresLabel) . ')</span>'
+                                    . '</div>'
+                                    . '<button type="button" wire:click="cancelPairing(\'' . e($printer->ulid) . '\')" wire:confirm="Weet je zeker dat je deze openstaande pairing wilt verwijderen?" style="background-color: #dc2626; color: #ffffff; border: none; padding: 0.375rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 500;">Annuleer pairing</button>'
+                                    . '</div>'
                                     . '<p style="margin-top: 0.5rem;">Kies de variant die bij je host past en plak het commando in een SSH-sessie naar het apparaat.</p>'
 
                                     . '<div style="margin-top: 1rem;">'

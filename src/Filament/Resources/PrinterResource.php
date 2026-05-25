@@ -12,6 +12,10 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -124,12 +128,15 @@ class PrinterResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->whereNotNull('paired_at'))
             ->columns([
                 TextColumn::make('name')->searchable(),
+                TextColumn::make('hostname')->label('Hostname')->placeholder('-'),
                 TextColumn::make('location'),
                 TextColumn::make('type')
                     ->badge()
                     ->formatStateUsing(fn (PrinterType $state) => $state->label()),
+                TextColumn::make('cups_name')->label('CUPS')->placeholder('-'),
                 IconColumn::make('is_online')
                     ->label('Online')
                     ->getStateUsing(fn (Printer $r) => $r->isOnline())
@@ -139,6 +146,18 @@ class PrinterResource extends Resource
                     ->counts(['printJobs as pending_jobs_count' => fn ($q) => $q->where('status', 'pending')]),
                 ToggleColumn::make('is_active'),
                 TextColumn::make('last_ping_at')->since(),
+            ])
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalDescription('Verwijdert de printer en trekt het token in. De daemon op de Pi/NAS zal vanaf nu 401 krijgen. Print jobs blijven bestaan (printer_id wordt null).'),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->requiresConfirmation(),
+                ]),
             ])
             ->defaultSort('name');
     }

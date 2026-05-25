@@ -79,6 +79,10 @@ class Printer extends Model
                 $printer->ulid = (string) Str::ulid();
             }
         });
+
+        static::deleting(function (self $printer): void {
+            $printer->tokens()->delete();
+        });
     }
 
     public function printJobs(): HasMany
