@@ -28,6 +28,11 @@ class Printer extends Model
         'is_active' => 'bool',
         'max_retries' => 'int',
         'last_ping_at' => 'datetime',
+        'plain_token' => 'encrypted',
+    ];
+
+    protected $hidden = [
+        'plain_token',
     ];
 
     protected static function booted(): void

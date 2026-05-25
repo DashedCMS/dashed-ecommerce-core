@@ -25,16 +25,18 @@ class EditPrinter extends EditRecord
                 ->label('Genereer token')
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalDescription('Bestaande tokens van deze printer worden ingetrokken. Het nieuwe token wordt 1 keer getoond.')
+                ->modalDescription('Bestaande tokens van deze printer worden ingetrokken en vervangen door een nieuwe.')
                 ->action(function (): void {
                     $printer = $this->getRecord();
                     $printer->tokens()->delete();
                     $token = $printer->createToken("printer-{$printer->ulid}")->plainTextToken;
+                    $printer->forceFill(['plain_token' => $token])->save();
+
+                    $this->fillForm();
 
                     Notification::make()
                         ->title('Token gegenereerd')
-                        ->body("Kopieer nu (wordt niet opnieuw getoond):\n\n{$token}")
-                        ->persistent()
+                        ->body('Het token staat in het token-veld hieronder en in de Pi installatie-handleiding.')
                         ->success()
                         ->send();
                 }),
