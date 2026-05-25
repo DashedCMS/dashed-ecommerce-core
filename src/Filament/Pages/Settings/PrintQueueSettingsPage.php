@@ -78,10 +78,14 @@ class PrintQueueSettingsPage extends Page
             ->get();
     }
 
-    private function pairingInstallUrl(Printer $printer): string
+    private function pairingInstallUrl(Printer $printer, string $variant = 'native'): string
     {
+        $route = $variant === 'docker'
+            ? 'dashed.print-queue.installer-docker'
+            : 'dashed.print-queue.installer';
+
         return URL::temporarySignedRoute(
-            'dashed.print-queue.installer',
+            $route,
             $printer->pairing_expires_at ?? now()->addHours(2),
             ['code' => $printer->pairing_code],
         );
@@ -110,19 +114,36 @@ class PrintQueueSettingsPage extends Page
 
                             $html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
                             foreach ($pending as $printer) {
-                                $url = $this->pairingInstallUrl($printer);
-                                $oneLiner = 'curl -fsSL "' . $url . '" | sudo bash';
+                                $nativeUrl = $this->pairingInstallUrl($printer, 'native');
+                                $dockerUrl = $this->pairingInstallUrl($printer, 'docker');
+                                $nativeOneLiner = 'curl -fsSL "' . $nativeUrl . '" | sudo bash';
+                                $dockerOneLiner = 'curl -fsSL "' . $dockerUrl . '" | sudo bash';
                                 $expiresLabel = $printer->pairing_expires_at?->diffForHumans();
 
                                 $html .= '<div style="background-color: #d1fae5; border-left: 4px solid #059669; border-radius: 0.5rem; padding: 1rem; color: #064e3b;">'
                                     . '<strong>Pairing code: ' . e($printer->pairing_code) . '</strong>'
                                     . ' <span style="color: #4b5563; font-weight: normal;">(verloopt ' . e($expiresLabel) . ')</span>'
-                                    . '<p style="margin-top: 0.5rem;">SSH in op je Pi (<code>ssh pi@&lt;ip&gt;</code>), plak dit commando, druk Enter:</p>'
-                                    . '<div style="display: flex; gap: 0.5rem; align-items: stretch; flex-wrap: wrap; margin-top: 0.5rem;">'
-                                    . '<code style="background-color: #111827; color: #f3f4f6; padding: 0.75rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.8125rem; word-break: break-all; flex: 1; min-width: 0; line-height: 1.4;">' . e($oneLiner) . '</code>'
-                                    . '<button type="button" onclick="navigator.clipboard.writeText(\'' . e($oneLiner) . '\'); this.textContent=\'Gekopieerd\'; setTimeout(()=>this.textContent=\'Kopieer\',1500);" style="background-color: #059669; color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.8125rem; cursor: pointer; font-weight: 500; white-space: nowrap;">Kopieer</button>'
+                                    . '<p style="margin-top: 0.5rem;">Kies de variant die bij je host past en plak het commando in een SSH-sessie naar het apparaat.</p>'
+
+                                    . '<div style="margin-top: 1rem;">'
+                                    . '<div style="font-weight: 600; margin-bottom: 0.25rem;">Optie A: Raspberry Pi of Linux server (Debian/Ubuntu, systemd)</div>'
+                                    . '<div style="color: #4b5563; font-size: 0.8125rem; margin-bottom: 0.5rem;">Installeert native via apt + systemd. Snelst en simpelst voor een Pi.</div>'
+                                    . '<div style="display: flex; gap: 0.5rem; align-items: stretch; flex-wrap: wrap;">'
+                                    . '<code style="background-color: #111827; color: #f3f4f6; padding: 0.75rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.8125rem; word-break: break-all; flex: 1; min-width: 0; line-height: 1.4;">' . e($nativeOneLiner) . '</code>'
+                                    . '<button type="button" onclick="navigator.clipboard.writeText(\'' . e($nativeOneLiner) . '\'); this.textContent=\'Gekopieerd\'; setTimeout(()=>this.textContent=\'Kopieer\',1500);" style="background-color: #059669; color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.8125rem; cursor: pointer; font-weight: 500; white-space: nowrap;">Kopieer</button>'
                                     . '</div>'
-                                    . '<p style="margin-top: 0.75rem; font-size: 0.8125rem;">Het script detecteert je USB-printers, registreert ze bij CUPS, pair met dit CMS en start de service. Na succes verschijnt de Pi in de <strong>Printers</strong> lijst.</p>'
+                                    . '</div>'
+
+                                    . '<div style="margin-top: 1rem;">'
+                                    . '<div style="font-weight: 600; margin-bottom: 0.25rem;">Optie B: NAS, server of andere Linux met Docker</div>'
+                                    . '<div style="color: #4b5563; font-size: 0.8125rem; margin-bottom: 0.5rem;">Werkt op Synology, QNAP, UnRAID, TrueNAS Scale, Asustor en elke Docker-host. Container regelt CUPS + Python intern.</div>'
+                                    . '<div style="display: flex; gap: 0.5rem; align-items: stretch; flex-wrap: wrap;">'
+                                    . '<code style="background-color: #111827; color: #f3f4f6; padding: 0.75rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.8125rem; word-break: break-all; flex: 1; min-width: 0; line-height: 1.4;">' . e($dockerOneLiner) . '</code>'
+                                    . '<button type="button" onclick="navigator.clipboard.writeText(\'' . e($dockerOneLiner) . '\'); this.textContent=\'Gekopieerd\'; setTimeout(()=>this.textContent=\'Kopieer\',1500);" style="background-color: #4f46e5; color: #ffffff; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.8125rem; cursor: pointer; font-weight: 500; white-space: nowrap;">Kopieer</button>'
+                                    . '</div>'
+                                    . '</div>'
+
+                                    . '<p style="margin-top: 0.75rem; font-size: 0.8125rem;">Beide varianten detecteren USB-printers automatisch. Voor netwerkprinters: zie de uitleg-sectie onderaan deze pagina.</p>'
                                     . '</div>';
                             }
                             $html .= '</div>';

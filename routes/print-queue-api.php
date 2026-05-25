@@ -26,6 +26,25 @@ Route::get('/printer-install/pairing/{code}', function (string $code) {
     ]);
 })->middleware('signed')->name('dashed.print-queue.installer');
 
+Route::get('/printer-install/pairing-docker/{code}', function (string $code) {
+    $printer = Printer::findByPairingCode($code);
+
+    if (! $printer) {
+        abort(404, 'Pairing code ongeldig of verlopen. Genereer een nieuwe in het admin paneel.');
+    }
+
+    $script = view('dashed-ecommerce-core::print.install-script-docker', [
+        'apiUrl' => rtrim(url('/'), '/'),
+        'pairingCode' => $code,
+    ])->render();
+
+    return response($script, 200, [
+        'Content-Type' => 'text/x-shellscript; charset=utf-8',
+        'Content-Disposition' => 'inline; filename="install-dashedcms-printer-docker.sh"',
+        'Cache-Control' => 'no-store',
+    ]);
+})->middleware('signed')->name('dashed.print-queue.installer-docker');
+
 Route::post('/api/print/pair', function (\Illuminate\Http\Request $request) {
     $data = $request->validate([
         'pairing_code' => ['required', 'string', 'max:32'],
@@ -93,6 +112,27 @@ Route::get('/vendor/dashed-ecommerce-core/pi/{file}', function (string $file) {
         'Cache-Control' => 'public, max-age=300',
     ]);
 })->where('file', '[A-Za-z0-9_.-]+')->name('dashed.print-queue.pi-asset');
+
+Route::get('/vendor/dashed-ecommerce-core/pi/docker/{file}', function (string $file) {
+    $allowed = [
+        'Dockerfile' => 'text/plain',
+        'entrypoint.sh' => 'text/x-shellscript',
+    ];
+
+    if (! isset($allowed[$file])) {
+        abort(404);
+    }
+
+    $path = __DIR__ . '/../resources/pi/docker/' . $file;
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => $allowed[$file],
+        'Cache-Control' => 'public, max-age=300',
+    ]);
+})->where('file', '[A-Za-z0-9_.-]+')->name('dashed.print-queue.pi-docker-asset');
 
 Route::middleware(['auth:sanctum', 'ensure.printer'])
     ->prefix('api/print')
