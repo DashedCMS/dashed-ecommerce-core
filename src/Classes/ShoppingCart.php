@@ -169,6 +169,18 @@ class ShoppingCart
                 // free-shipping threshold while the merchant configured the
                 // threshold against the cart subtotal.
                 $total = cartHelper()->getTotal() - cartHelper()->getShippingCosts();
+
+                // Een cadeaubon is een betaalmiddel, niet een orderwaarde-
+                // reductie: zonder deze correctie zou een mandje van €30
+                // met een cadeaubon van €50 een totaal van €0,01 hebben en
+                // alle shipping methods met een minimum_order_value > €0,01
+                // wegfilteren. We tellen de cadeaubon-portie van getDiscount()
+                // terug op zodat we tegen de echte cart-waarde checken.
+                $activeDiscountCode = cartHelper()->getDiscountCode();
+                if ($activeDiscountCode && $activeDiscountCode->is_giftcard) {
+                    $total += cartHelper()->getDiscount();
+                }
+
                 $shippingMethods = $shippingZone->shippingMethods()
                     ->where('minimum_order_value', '<=', $total)
                     ->where('maximum_order_value', '>=', $total);
