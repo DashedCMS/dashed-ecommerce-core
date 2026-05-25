@@ -5,8 +5,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\TernaryFilter;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;

@@ -6,8 +6,6 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\Select;
@@ -27,6 +25,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Resources\RelationManagers\RelationManager;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 
 class ChildProductsRelationManager extends RelationManager
 {

@@ -5,9 +5,9 @@ namespace Dashed\DashedEcommerceCore\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartClick;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 class OrderRecoveryController extends Controller
 {

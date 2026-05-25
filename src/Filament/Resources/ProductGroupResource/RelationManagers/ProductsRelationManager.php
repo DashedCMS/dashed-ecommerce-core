@@ -6,8 +6,6 @@ use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\DeleteBulkAction;
@@ -25,6 +23,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Filament\Resources\RelationManagers\RelationManager;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 
 class ProductsRelationManager extends RelationManager
 {

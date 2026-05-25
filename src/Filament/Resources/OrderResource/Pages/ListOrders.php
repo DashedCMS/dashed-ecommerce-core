@@ -19,5 +19,4 @@ class ListOrders extends ListRecords
             CreateAction::make(),
         ], ecommerce()->buttonActions('orders'));
     }
-
 }
