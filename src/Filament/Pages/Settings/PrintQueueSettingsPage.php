@@ -10,6 +10,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Placeholder;
+use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 
@@ -87,6 +89,19 @@ class PrintQueueSettingsPage extends Page
                         ->minValue(30),
                 ])
                 ->columns(2),
+            Section::make('Installatie op een Raspberry Pi')
+                ->description('Stap-voor-stap instructies om een nieuwe Raspberry Pi aan te sluiten op de print queue.')
+                ->columnSpanFull()
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    Placeholder::make('pi_setup_instructions')
+                        ->hiddenLabel()
+                        ->columnSpanFull()
+                        ->content(fn () => new HtmlString(
+                            view('dashed-ecommerce-core::filament.pages.print-queue-pi-setup')->render()
+                        )),
+                ]),
         ])->statePath('data');
     }
 
