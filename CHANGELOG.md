@@ -7,7 +7,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Added
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
-## v4.36.1 - 2026-05-26
+## v4.36.7 - 2026-05-26
 
 ### Fixed
 - **POS afrekenen met €0 totaal werkt nu.** Een gratis order (volledige korting / cadeaubon dekt totaal / gratis product) gooide `Trying to access array offset on null` op `PointOfSaleApiController.php:1170` zodra je op "Markeer als betaald" klikte. Root cause: de POS-frontend stuurt bij €0 geen `paymentMethod` payload mee, maar de controller deed `PaymentMethod::find($paymentMethod['id'])` zonder null-check.
