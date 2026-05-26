@@ -471,11 +471,15 @@ trait CreateManualOrderActions
         }
 
         if ($paymentCosts) {
+            $resolvedPaymentMethod = $this->payment_method_id
+                ? PaymentMethod::find($this->payment_method_id)
+                : null;
+
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->order_id = $order->id;
-            $orderProduct->name = $paymentMethod['name'];
+            $orderProduct->name = $resolvedPaymentMethod?->name ?? 'Betaalkosten';
             $orderProduct->price = $paymentCosts;
             if ($order->paymentMethod) {
                 $orderProduct->btw = cartHelper()->getVatForPaymentMethod();
@@ -1144,7 +1148,7 @@ trait CreateManualOrderActions
             return;
         }
 
-        if ($this->paymentMethod->is_cash_payment) {
+        if ($this->paymentMethod->is_cash_payment && $this->totalUnformatted > 0) {
             if (! $this->cashPaymentAmount) {
                 Notification::make()
                     ->title('Geen bedrag ingevoerd')
@@ -1217,7 +1221,7 @@ trait CreateManualOrderActions
         $this->printReceipt($order);
         $hasCashPayment = false;
         foreach ($order->orderPayments as $orderPayment) {
-            if ($orderPayment->paymentMethod->is_cash_payment) {
+            if ($orderPayment->paymentMethod?->is_cash_payment) {
                 $hasCashPayment = true;
             }
         }

@@ -7,6 +7,17 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Added
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
+## v4.36.1 - 2026-05-26
+
+### Fixed
+- **POS afrekenen met €0 totaal werkt nu.** Een gratis order (volledige korting / cadeaubon dekt totaal / gratis product) gooide `Trying to access array offset on null` op `PointOfSaleApiController.php:1170` zodra je op "Markeer als betaald" klikte. Root cause: de POS-frontend stuurt bij €0 geen `paymentMethod` payload mee, maar de controller deed `PaymentMethod::find($paymentMethod['id'])` zonder null-check.
+  - `markAsPaid` + `checkPinTerminalPayment` resolven `order` en `paymentMethod` defensief (`is_array(...) ? $input['id'] : null` voordat `find()` aangeroepen wordt) en returnen 400 als een verplichte parameter ontbreekt.
+  - `paymentMethod` mag nu null zijn als `$order->total <= 0`; cash-validaties ("Geen bedrag ingevoerd" / "Bedrag is te laag") worden overgeslagen.
+  - `OrderPayment` wordt aangemaakt met `payment_method_id = null` en `payment_method = 'Gratis'` als er geen methode is.
+  - Loops over `orderPayments` lezen `paymentMethod?->name` null-safe.
+- **Lege orderbevestigings-popup na een €0 afrekening.** De Alpine `x-if="order && firstPaymentMethod"` bleef false omdat de backend `firstPaymentMethod: null` stuurde bij gratis orders, waardoor de popup blanco rendert. Nieuwe `resolveFirstPaymentMethodPayload()` helper geeft altijd een payload terug (met placeholder `name: 'Gratis'`, `is_cash_payment: false`) zodat de popup blijft renderen.
+- **Filament POS-trait robuust voor €0** in `CreateManualOrderActions`: undefined `$paymentMethod['name']` in `createOrder()` (regel 478) opgelost via `PaymentMethod::find($this->payment_method_id)` met `'Betaalkosten'` fallback. Cash-validaties in `markAsPaid()` worden bij `$this->totalUnformatted == 0` overgeslagen. `finishPaidOrder()` leest `$orderPayment->paymentMethod?->is_cash_payment` null-safe.
+
 ## v4.36.0 - 2026-05-25
 
 ### Added

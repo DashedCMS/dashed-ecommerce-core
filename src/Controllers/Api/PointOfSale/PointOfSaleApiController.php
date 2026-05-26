@@ -1163,11 +1163,29 @@ class PointOfSaleApiController extends Controller
         $hasMultiplePayments = $data['hasMultiplePayments'] ?? false;
         $cashPaymentAmount = $data['cashPaymentAmount'] ?? false;
 
-        $order = $data['order'] ?? null;
-        $order = Order::find($order['id']);
+        $orderInput = $data['order'] ?? null;
+        $orderId = is_array($orderInput) ? ($orderInput['id'] ?? null) : null;
+        $order = $orderId ? Order::find($orderId) : null;
 
-        $paymentMethod = $data['paymentMethod'] ?? null;
-        $paymentMethod = PaymentMethod::find($paymentMethod['id']);
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling niet gevonden',
+            ], 400);
+        }
+
+        $paymentMethodInput = $data['paymentMethod'] ?? null;
+        $paymentMethodId = is_array($paymentMethodInput) ? ($paymentMethodInput['id'] ?? null) : null;
+        $paymentMethod = $paymentMethodId ? PaymentMethod::find($paymentMethodId) : null;
+
+        // Voor €0 orders is een betaalmethode optioneel; voor alles > €0 is
+        // hij verplicht om te kunnen bepalen of het cash/pin/eigen is.
+        if (! $paymentMethod && $order->total > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Geen geldige betaalmethode geselecteerd',
+            ], 400);
+        }
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
@@ -1188,16 +1206,14 @@ class PointOfSaleApiController extends Controller
                 'order' => $order,
                 'orderPayments' => $orderPayments,
                 'startPinTerminalPayment' => false,
-                'firstPaymentMethod' => [
-                    'id' => $paymentMethod->id,
-                    'is_cash_payment' => $paymentMethod->is_cash_payment,
-                    'name' => $paymentMethod->name,
-                    'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
-                ],
+                'firstPaymentMethod' => $this->resolveFirstPaymentMethodPayload($paymentMethod),
             ]);
         }
 
-        if ($paymentMethod->is_cash_payment) {
+        // Cash-validaties zijn alleen zinvol voor orders > €0. Bij gratis
+        // orders (volledige korting, cadeaubon dekt totaal, gratis product)
+        // is geen kasbedrag nodig - de POS-medewerker mag direct afronden.
+        if ($paymentMethod?->is_cash_payment && $order->total > 0) {
             if (! $cashPaymentAmount) {
                 return response()->json(['success' => false, 'message' => 'Geen bedrag ingevoerd'], 400);
             } elseif (! $hasMultiplePayments && $cashPaymentAmount < $order->total) {
@@ -1208,8 +1224,8 @@ class PointOfSaleApiController extends Controller
         $orderPayment = new OrderPayment();
         $orderPayment->amount = $cashPaymentAmount ?: $order->total;
         $orderPayment->order_id = $order->id;
-        $orderPayment->payment_method_id = $paymentMethod->id;
-        $orderPayment->payment_method = $paymentMethod->name;
+        $orderPayment->payment_method_id = $paymentMethod?->id;
+        $orderPayment->payment_method = $paymentMethod?->name ?? 'Gratis';
         $orderPayment->psp = 'own';
         $orderPayment->save();
         $orderPayment->changeStatus('paid');
@@ -1220,8 +1236,8 @@ class PointOfSaleApiController extends Controller
             $refundOrderPayment = new OrderPayment();
             $refundOrderPayment->amount = $difference;
             $refundOrderPayment->order_id = $order->id;
-            $refundOrderPayment->payment_method_id = $paymentMethod->id;
-            $refundOrderPayment->payment_method = $paymentMethod->name;
+            $refundOrderPayment->payment_method_id = $paymentMethod?->id;
+            $refundOrderPayment->payment_method = $paymentMethod?->name ?? 'Gratis';
             $refundOrderPayment->psp = 'own';
             $refundOrderPayment->save();
             $refundOrderPayment->changeStatus('paid');
@@ -1229,7 +1245,7 @@ class PointOfSaleApiController extends Controller
 
         $order->refresh();
 
-        if ($paymentMethod->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
+        if ($paymentMethod?->is_cash_payment && $cashPaymentAmount < $order->total && $hasMultiplePayments) {
             $paymentMethod = PaymentMethod::where('type', 'pos')->whereNotNull('pin_terminal_id')->first();
             if (! $paymentMethod) {
                 return response()->json([
@@ -1261,7 +1277,7 @@ class PointOfSaleApiController extends Controller
         $orderPayments = $order->orderPayments;
         foreach ($orderPayments as $op) {
             $op->amountFormatted = CurrencyHelper::formatPrice($op->amount);
-            $op->paymentMethodName = $op->paymentMethod->name;
+            $op->paymentMethodName = $op->paymentMethod?->name ?? '';
         }
 
         return response()->json([
@@ -1269,13 +1285,37 @@ class PointOfSaleApiController extends Controller
             'order' => $order,
             'orderPayments' => $orderPayments,
             'startPinTerminalPayment' => false,
-            'firstPaymentMethod' => [
-                'id' => $paymentMethod->id,
-                'is_cash_payment' => $paymentMethod->is_cash_payment,
-                'name' => $paymentMethod->name,
-                'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
-            ],
+            'firstPaymentMethod' => $this->resolveFirstPaymentMethodPayload($paymentMethod),
         ]);
+    }
+
+    /**
+     * Bouwt de payload die de POS-frontend gebruikt voor de orderbevestigings-
+     * popup. De template hangt af van `firstPaymentMethod.name` /
+     * `is_cash_payment`, dus we geven bij een gratis order (€0 zonder gekozen
+     * betaalmethode) een placeholder terug zodat de popup niet blanco blijft.
+     *
+     * @return array<string, mixed>
+     */
+    private function resolveFirstPaymentMethodPayload(?PaymentMethod $paymentMethod): array
+    {
+        if (! $paymentMethod) {
+            return [
+                'id' => null,
+                'is_cash_payment' => false,
+                'name' => 'Gratis',
+                'image' => '',
+            ];
+        }
+
+        return [
+            'id' => $paymentMethod->id,
+            'is_cash_payment' => $paymentMethod->is_cash_payment,
+            'name' => $paymentMethod->name,
+            'image' => $paymentMethod->image
+                ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '')
+                : '',
+        ];
     }
 
     public function checkPinTerminalPayment(Request $request): JsonResponse
@@ -1283,8 +1323,16 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
 
         $posIdentifier = $data['posIdentifier'] ?? null;
-        $order = $data['order'] ?? null;
-        $order = Order::find($order['id']);
+        $orderInput = $data['order'] ?? null;
+        $orderId = is_array($orderInput) ? ($orderInput['id'] ?? null) : null;
+        $order = $orderId ? Order::find($orderId) : null;
+
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling niet gevonden',
+            ], 400);
+        }
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
@@ -1307,7 +1355,7 @@ class PointOfSaleApiController extends Controller
             $orderPayments = $order->orderPayments;
             foreach ($orderPayments as $op) {
                 $op->amountFormatted = CurrencyHelper::formatPrice($op->amount);
-                $op->paymentMethodName = $op->paymentMethod->name;
+                $op->paymentMethodName = $op->paymentMethod?->name ?? '';
             }
 
             return response()->json([
@@ -1318,12 +1366,7 @@ class PointOfSaleApiController extends Controller
                 'order' => $order,
                 'orderPayments' => $orderPayments,
                 'startPinTerminalPayment' => false,
-                'firstPaymentMethod' => [
-                    'id' => $paymentMethod->id,
-                    'is_cash_payment' => $paymentMethod->is_cash_payment,
-                    'name' => $paymentMethod->name,
-                    'image' => $paymentMethod->image ? (mediaHelper()->getSingleMedia($paymentMethod->image, ['widen' => 300])->url ?? '') : '',
-                ],
+                'firstPaymentMethod' => $this->resolveFirstPaymentMethodPayload($paymentMethod),
             ]);
         }
 
