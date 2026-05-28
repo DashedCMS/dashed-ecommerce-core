@@ -7,6 +7,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OrderOutstandingStatsWidget extends StatsOverviewWidget
 {
@@ -39,16 +40,35 @@ class OrderOutstandingStatsWidget extends StatsOverviewWidget
 
         return [
             Stat::make('Wachten op betaling', $pendingCount)
-                ->description(CurrencyHelper::formatPrice($pendingTotal) . ' totaal'),
+                ->description(CurrencyHelper::formatPrice($pendingTotal) . ' totaal')
+                ->url($this->filterUrl(['pending']))
+                ->extraAttributes(['class' => 'cursor-pointer']),
 
             Stat::make('Te bevestigen', $wfcCount)
-                ->description(CurrencyHelper::formatPrice($wfcTotal) . ' totaal'),
+                ->description(CurrencyHelper::formatPrice($wfcTotal) . ' totaal')
+                ->url($this->filterUrl(['waiting_for_confirmation']))
+                ->extraAttributes(['class' => 'cursor-pointer']),
 
             Stat::make('Deels betaald', $partiallyPaidCount)
-                ->description(CurrencyHelper::formatPrice($partiallyPaidOutstanding) . ' openstaand'),
+                ->description(CurrencyHelper::formatPrice($partiallyPaidOutstanding) . ' openstaand')
+                ->url($this->filterUrl(['partially_paid']))
+                ->extraAttributes(['class' => 'cursor-pointer']),
 
             Stat::make('Totaal openstaand', CurrencyHelper::formatPrice($totalOutstanding))
-                ->description(($pendingCount + $wfcCount + $partiallyPaidCount) . ' facturen'),
+                ->description(($pendingCount + $wfcCount + $partiallyPaidCount) . ' facturen')
+                ->url($this->filterUrl(['pending', 'waiting_for_confirmation', 'partially_paid']))
+                ->extraAttributes(['class' => 'cursor-pointer']),
         ];
+    }
+
+    protected function filterUrl(array $statuses): string
+    {
+        return OrderResource::getUrl('index', [
+            'tableFilters' => [
+                'status' => [
+                    'values' => $statuses,
+                ],
+            ],
+        ]);
     }
 }
