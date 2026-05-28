@@ -9,6 +9,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
@@ -114,6 +115,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 CartStatistics::class,
                 OrderAttributionStatsWidget::class,
                 PrintQueueWidget::class,
+                OrderOutstandingStatsWidget::class,
             ])
             ->resources([
                 PaymentMethodResource::class,
