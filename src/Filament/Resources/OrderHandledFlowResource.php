@@ -75,6 +75,17 @@ class OrderHandledFlowResource extends Resource
                         ->default('handled')
                         ->required()
                         ->native(false),
+                    Select::make('order_origins')
+                        ->label('Geldt voor order origins')
+                        ->helperText('Laat leeg om alle origins te includeren. Bol.com is om beleidsredenen altijd uitgesloten.')
+                        ->options([
+                            'own' => 'Eigen shop',
+                            'pos' => 'Kassa / POS',
+                            'Etsy' => 'Etsy',
+                            'Channable' => 'Channable',
+                        ])
+                        ->multiple()
+                        ->native(false),
                     Toggle::make('is_active')
                         ->label('Actieve flow')
                         ->default(true)

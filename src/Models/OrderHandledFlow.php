@@ -13,6 +13,7 @@ class OrderHandledFlow extends Model
     protected $fillable = [
         'name',
         'trigger_status',
+        'order_origins',
         'is_active',
         'discount_prefix',
         'skip_if_recently_ordered_within_days',
@@ -22,6 +23,7 @@ class OrderHandledFlow extends Model
 
     protected $casts = [
         'trigger_status' => 'string',
+        'order_origins' => 'array',
         'is_active' => 'boolean',
         'cancel_on_link_click' => 'boolean',
         'skip_if_recently_ordered_within_days' => 'integer',

@@ -56,6 +56,13 @@ class QueueOrderFlowEmailsListener implements ShouldQueue
                 continue;
             }
 
+            // Per-flow filter op order_origin. Leeg = alle origins. Orders zonder
+            // expliciete origin worden behandeld als 'own' (eigen shop).
+            $allowedOrigins = $flow->order_origins ?: [];
+            if (! empty($allowedOrigins) && ! in_array($order->order_origin ?? 'own', $allowedOrigins, true)) {
+                continue;
+            }
+
             // Per (order, flow) maximaal 1 enrollment ooit. Als hij al bestaat
             // (ook als hij gecanceld is), slaan we deze flow over voor deze order
             // zodat we niet dubbel inschrijven.

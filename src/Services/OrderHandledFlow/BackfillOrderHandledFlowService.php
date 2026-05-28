@@ -52,13 +52,26 @@ class BackfillOrderHandledFlowService
 
         // Bol.com-orders horen nooit in marketing-/nieuwsbrief-flows: die
         // e-mailadressen zijn van Bol-shoppers, niet van onze shop.
-        $orders = Order::query()
+        $query = Order::query()
             ->where('fulfillment_status', $triggerStatus)
             ->where('updated_at', '>=', $since)
             ->where(function ($q) {
                 $q->whereNull('order_origin')->orWhere('order_origin', '!=', 'Bol');
-            })
-            ->get();
+            });
+
+        // Per-flow filter op order_origin. Orders zonder expliciete origin
+        // worden behandeld als 'own' (eigen shop).
+        $allowedOrigins = $flow->order_origins ?: [];
+        if (! empty($allowedOrigins)) {
+            $query->where(function ($q) use ($allowedOrigins) {
+                $q->whereIn('order_origin', $allowedOrigins);
+                if (in_array('own', $allowedOrigins, true)) {
+                    $q->orWhereNull('order_origin');
+                }
+            });
+        }
+
+        $orders = $query->get();
 
         foreach ($orders as $order) {
             if (blank($order->email)) {
