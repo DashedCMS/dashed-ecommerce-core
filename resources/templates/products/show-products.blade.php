@@ -291,9 +291,53 @@
                                     @endforeach
                                 </div>
 
-                                <div class="col-span-6 mx-auto overflow-x-scroll mt-12">
-                                    {!! $products->onEachSide(0)->links('dashed.partials.pagination', data: ['scrollTo' => 'body']) !!}
-                                </div>
+                                @if($infiniteScroll ?? false)
+                                    @if($products->hasMorePages())
+                                        <div
+                                            wire:key="infinite-scroll-sentinel"
+                                            x-data="{
+                                                observer: null,
+                                                busy: false,
+                                                init() {
+                                                    this.observer = new IntersectionObserver((entries) => {
+                                                        entries.forEach((entry) => {
+                                                            if (entry.isIntersecting && ! this.busy) {
+                                                                this.busy = true;
+                                                                this.observer.unobserve(this.$el);
+                                                                $wire.loadMore().then(() => {
+                                                                    this.busy = false;
+                                                                    // Sentinel kan na de laatste pagina uit de DOM zijn.
+                                                                    if (document.body.contains(this.$el)) {
+                                                                        this.observer.observe(this.$el);
+                                                                    }
+                                                                });
+                                                            }
+                                                        });
+                                                    }, { rootMargin: '600px' });
+
+                                                    this.observer.observe(this.$el);
+                                                },
+                                                destroy() {
+                                                    this.observer?.disconnect();
+                                                },
+                                            }"
+                                            class="col-span-full mt-12 flex items-center justify-center py-8 text-sm text-gray-500"
+                                        >
+                                            <span wire:loading.remove wire:target="loadMore">Meer producten laden...</span>
+                                            <span wire:loading wire:target="loadMore" class="inline-flex items-center gap-2">
+                                                <svg class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                </svg>
+                                                Meer producten laden...
+                                            </span>
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="col-span-6 mx-auto overflow-x-scroll mt-12">
+                                        {!! $products->onEachSide(0)->links('dashed.partials.pagination', data: ['scrollTo' => 'body']) !!}
+                                    </div>
+                                @endif
 
                             @else
                                 {{-- Empty state --}}

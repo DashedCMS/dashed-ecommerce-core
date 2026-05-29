@@ -104,6 +104,26 @@ class ShowProducts extends Component
         $this->loadProducts();
     }
 
+    public function infiniteScrollEnabled(): bool
+    {
+        return (bool) Customsetting::get('product_list_infinite_scroll', Sites::getActive(), false);
+    }
+
+    public function loadMore(): void
+    {
+        if (! $this->infiniteScrollEnabled()) {
+            return;
+        }
+
+        // Niet verder laden dan er producten zijn.
+        if ($this->products && method_exists($this->products, 'hasMorePages') && ! $this->products->hasMorePages()) {
+            return;
+        }
+
+        $this->page = (int) $this->page + 1;
+        $this->loadProducts();
+    }
+
     public function loadProducts(bool $isMount = false)
     {
         $this->refreshActiveFilterQuery();
@@ -125,9 +145,20 @@ class ShowProducts extends Component
             }
         }
 
+        // Bij infinite scroll laden we cumulatief: altijd vanaf pagina 1 met een
+        // groeiende perPage (pagination * page), zodat alle al-geladen producten
+        // zichtbaar blijven terwijl er onderaan steeds meer bijkomen.
+        $perPage = (int) $this->pagination;
+        $page = (int) $this->page;
+
+        if ($this->infiniteScrollEnabled()) {
+            $perPage = (int) $this->pagination * max(1, (int) $this->page);
+            $page = 1;
+        }
+
         $response = Products::getAll(
-            $this->pagination,
-            $this->page,
+            $perPage,
+            $page,
             $this->sortBy,
             $this->order,
             $this->productCategory->id ?? null,
@@ -415,6 +446,7 @@ class ShowProducts extends Component
             'products' => $this->products,
             'filters' => $this->filters,
             'activeFilters' => $this->activeFilters,
+            'infiniteScroll' => $this->infiniteScrollEnabled(),
         ]);
     }
 }
