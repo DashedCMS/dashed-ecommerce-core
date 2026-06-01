@@ -6,11 +6,12 @@ use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerPriceGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource;
 
 class EditPriceGroup extends EditRecord
 {
+    use PersistsPriceGroupPrices;
+
     protected static string $resource = PriceGroupResource::class;
 
     protected function getHeaderActions(): array
@@ -54,30 +55,6 @@ class EditPriceGroup extends EditRecord
 
     protected function afterSave(): void
     {
-        $data = $this->form->getState();
-
-        foreach ($data as $key => $value) {
-            if (preg_match('/^extra_option_(\d+)_price$/', $key, $m)) {
-                $optionId = (int) $m[1];
-                $price = $value;
-                $percentage = $data['extra_option_' . $optionId . '_discount_percentage'] ?? null;
-
-                if ($price === null && $percentage === null) {
-                    DB::table('dashed__product_extra_option_price_group')
-                        ->where('price_group_id', $this->record->id)
-                        ->where('product_extra_option_id', $optionId)
-                        ->delete();
-
-                    continue;
-                }
-
-                DB::table('dashed__product_extra_option_price_group')->updateOrInsert(
-                    ['price_group_id' => $this->record->id, 'product_extra_option_id' => $optionId],
-                    ['price' => $price, 'discount_percentage' => $percentage]
-                );
-            }
-        }
-
-        ProcessPricesPerPriceGroup::dispatch($this->record->id, $data);
+        $this->persistPriceGroupPrices($this->form->getState());
     }
 }
