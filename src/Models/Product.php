@@ -4,7 +4,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Exception;
 use Carbon\Carbon;
-use App\Models\User;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedPages\Models\Page;
 use Dashed\DashedCore\Classes\Sites;
@@ -1737,13 +1737,53 @@ class Product extends Model
         }
 
         if ($user && $user->has_custom_pricing) {
-            return DB::table('dashed__product_user')
+            $override = DB::table('dashed__product_user')
                 ->where('user_id', $user->id)
                 ->where('product_id', $this->id)
-                ->value('price') ?? ($fillFromProduct ? $this->getRawOriginal('current_price') : null);
+                ->value('price');
+
+            if ($override !== null) {
+                return $override;
+            }
+        }
+
+        if ($user && $user->price_group_id) {
+            $groupPrice = $this->resolveGroupProductPrice((int) $user->price_group_id);
+
+            if ($groupPrice !== null) {
+                return $groupPrice;
+            }
         }
 
         return $fillFromProduct ? $this->getRawOriginal('current_price') : null;
+    }
+
+    protected function resolveGroupProductPrice(int $priceGroupId): ?float
+    {
+        $row = DB::table('dashed__product_price_group')
+            ->where('price_group_id', $priceGroupId)
+            ->where('product_id', $this->id)
+            ->first();
+
+        if (! $row) {
+            return null;
+        }
+
+        if ($row->price !== null) {
+            return (float) $row->price;
+        }
+
+        $base = (float) $this->getRawOriginal('current_price');
+
+        if ($row->discount_price !== null) {
+            return max(0.01, $base - (float) $row->discount_price);
+        }
+
+        if ($row->discount_percentage !== null) {
+            return max(0.01, $base - ($base * ((float) $row->discount_percentage / 100)));
+        }
+
+        return null;
     }
 
     public function displayPriceForUser(?User $user = null, ?float $overrideAmount = null): array
