@@ -95,3 +95,14 @@ it('falls back to current_price when no group row exists', function () {
 
     expect((float) $product->priceForUser($user))->toBe(100.00);
 });
+
+it('uses the group ex-vat flag when the user has none set', function () {
+    $group = PriceGroup::create(['name' => 'B2B', 'show_prices_ex_vat' => true]);
+    $user = User::factory()->create(['price_group_id' => $group->id, 'show_prices_ex_vat' => false]);
+    $product = makeProduct(121.00);
+
+    $display = $product->displayPriceForUser($user);
+
+    // ex mode: secondary line carries the incl price, so it contains "incl"
+    expect($display['secondary'])->toContain('incl');
+});

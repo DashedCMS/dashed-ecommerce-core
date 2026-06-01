@@ -1794,7 +1794,9 @@ class Product extends Model
 
         $inclAmount = (float) ($overrideAmount ?? $this->priceForUser($user));
         $vatRate = (int) ($this->vat_rate ?? 21);
-        $mode = ! empty($user?->show_prices_ex_vat) ? 'ex' : 'incl';
+        $exVat = ! empty($user?->show_prices_ex_vat)
+            || ! empty($user?->priceGroup?->show_prices_ex_vat);
+        $mode = $exVat ? 'ex' : 'incl';
 
         return VatDisplay::formatLinePrice($inclAmount, $vatRate, $mode);
     }
