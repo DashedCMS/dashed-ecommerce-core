@@ -7,10 +7,12 @@ use Illuminate\Database\Migrations\Migration;
 return new class () extends Migration {
     public function up(): void
     {
+        Schema::dropIfExists('dashed__product_extra_option_user');
+
         Schema::create('dashed__product_extra_option_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('product_extra_option_id')->constrained('dashed__product_extra_options')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users', 'id', 'peou_user_fk')->cascadeOnDelete();
+            $table->foreignId('product_extra_option_id')->constrained('dashed__product_extra_options', 'id', 'peou_option_fk')->cascadeOnDelete();
             $table->decimal('price', 10, 2)->nullable();
             $table->integer('discount_percentage')->nullable();
             $table->unique(['user_id', 'product_extra_option_id'], 'peo_user_unique');
