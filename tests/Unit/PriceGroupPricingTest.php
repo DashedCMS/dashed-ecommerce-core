@@ -96,6 +96,60 @@ it('falls back to current_price when no group row exists', function () {
     expect((float) $product->priceForUser($user))->toBe(100.00);
 });
 
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+
+function makeExtraOption(float $price): ProductExtraOption
+{
+    $extra = ProductExtra::create(['name' => ['en' => 'Gravering'], 'type' => 'single']);
+
+    return ProductExtraOption::create([
+        'product_extra_id' => $extra->id,
+        'value' => ['en' => 'Optie'],
+        'price' => $price,
+    ]);
+}
+
+it('returns the default option price when user has no group or override', function () {
+    $user = User::factory()->create();
+    $option = makeExtraOption(5.00);
+    expect((float) $option->priceForUser($user))->toBe(5.00);
+});
+
+it('returns the group extra price', function () {
+    $group = PriceGroup::create(['name' => 'B2B']);
+    $user = User::factory()->create(['price_group_id' => $group->id]);
+    $option = makeExtraOption(5.00);
+    DB::table('dashed__product_extra_option_price_group')->insert([
+        'price_group_id' => $group->id, 'product_extra_option_id' => $option->id, 'price' => 3.00,
+    ]);
+    expect((float) $option->priceForUser($user))->toBe(3.00);
+});
+
+it('lets a per-user extra override win over the group', function () {
+    $group = PriceGroup::create(['name' => 'B2B']);
+    $user = User::factory()->create(['price_group_id' => $group->id]);
+    $option = makeExtraOption(5.00);
+    DB::table('dashed__product_extra_option_price_group')->insert([
+        'price_group_id' => $group->id, 'product_extra_option_id' => $option->id, 'price' => 3.00,
+    ]);
+    DB::table('dashed__product_extra_option_user')->insert([
+        'user_id' => $user->id, 'product_extra_option_id' => $option->id, 'price' => 2.00,
+    ]);
+    expect((float) $option->priceForUser($user))->toBe(2.00);
+});
+
+it('applies an extra discount_percentage on the option price', function () {
+    $group = PriceGroup::create(['name' => 'B2B']);
+    $user = User::factory()->create(['price_group_id' => $group->id]);
+    $option = makeExtraOption(10.00);
+    DB::table('dashed__product_extra_option_price_group')->insert([
+        'price_group_id' => $group->id, 'product_extra_option_id' => $option->id,
+        'price' => null, 'discount_percentage' => 40,
+    ]);
+    expect((float) $option->priceForUser($user))->toBe(6.00);
+});
+
 it('uses the group ex-vat flag when the user has none set', function () {
     $group = PriceGroup::create(['name' => 'B2B', 'show_prices_ex_vat' => true]);
     $user = User::factory()->create(['price_group_id' => $group->id, 'show_prices_ex_vat' => false]);
