@@ -17,6 +17,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\PriceGroup;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use STS\FilamentImpersonate\Actions\Impersonate;
@@ -163,6 +165,23 @@ class PricePerUserResource extends Resource
         //                    ->reactive(),
         //            ], $productSchema));
 
+        $userExtraSections = [];
+        foreach (ProductExtra::with('productExtraOptions')->get() as $extra) {
+            $optionFields = [];
+            foreach ($extra->productExtraOptions as $option) {
+                $optionFields[] = Section::make($option->value)->columns(2)->schema([
+                    TextInput::make('extra_option_' . $option->id . '_user_price')
+                        ->label('Vaste prijs')->prefix('€')->numeric()->nullable()
+                        ->helperText('Standaard: € ' . number_format((float) $option->price, 2, ',', '.')),
+                    TextInput::make('extra_option_' . $option->id . '_user_discount_percentage')
+                        ->label('Korting percentage')->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
+                ]);
+            }
+            if ($optionFields) {
+                $userExtraSections[] = Section::make('Extra: ' . $extra->name)->columnSpanFull()->schema($optionFields);
+            }
+        }
+
         return $schema
             ->schema(array_merge([
                 Toggle::make('has_custom_pricing')
@@ -171,7 +190,13 @@ class PricePerUserResource extends Resource
                     ->label('Toon prijzen ex BTW')
                     ->helperText('Deze gebruiker ziet prijzen ex BTW in de webshop, in e-mails en op de factuur.')
                     ->default(false),
-            ], $newSchema));
+                Select::make('price_group_id')
+                    ->label('Prijsgroep')
+                    ->options(PriceGroup::pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->nullable()
+                    ->helperText('De gebruiker erft de prijzen van deze groep. Persoonlijke prijzen hieronder overschrijven de groep.'),
+            ], $newSchema, $userExtraSections));
     }
 
     public static function table(Table $table): Table
