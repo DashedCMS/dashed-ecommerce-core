@@ -1466,7 +1466,7 @@ class Product extends Model
                 $thisProductExtraOption = $productExtraOptionCache[$optionId];
 
                 if ($thisProductExtraOption) {
-                    $extraPrice = (float) ($thisProductExtraOption->price ?? 0);
+                    $extraPrice = (float) $thisProductExtraOption->priceForUser();
                     $productExtraBasePrice = (float) ($thisProductExtraOption->productExtra->price ?? 0);
 
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
