@@ -2,14 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use BackedEnum;
 use UnitEnum;
+use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
@@ -18,8 +18,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedEcommerceCore\Models\PriceGroup;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource\Pages\EditPriceGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource\Pages\ListPriceGroups;
 use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource\Pages\CreatePriceGroup;

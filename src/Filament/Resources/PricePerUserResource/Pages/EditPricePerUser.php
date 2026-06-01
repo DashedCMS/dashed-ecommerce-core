@@ -183,6 +183,7 @@ class EditPricePerUser extends EditRecord
                         ->where('user_id', $this->record->id)
                         ->where('product_extra_option_id', $optionId)
                         ->delete();
+
                     continue;
                 }
 
