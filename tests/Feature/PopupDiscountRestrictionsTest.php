@@ -70,12 +70,13 @@ it('maps a percentage popup to discount code attributes', function () {
         'discount_type' => 'percentage', 'discount_percentage' => 10,
         'minimal_requirements' => 'amount', 'minimum_amount' => 50, 'valid_for' => null,
     ]);
-    $attrs = $popup->discountCodeAttributes(null, 14);
+    $attrs = $popup->discountCodeAttributes(null);
     expect($attrs['type'])->toBe('percentage')
         ->and((float) $attrs['discount_percentage'])->toBe(10.0)
         ->and($attrs)->not->toHaveKey('discount_amount')
         ->and($attrs['minimal_requirements'])->toBe('amount')
         ->and((float) $attrs['minimum_amount'])->toBe(50.0)
+        ->and($attrs['minimum_products_count'])->toBeNull()
         ->and($attrs['use_stock'])->toBeTrue()
         ->and($attrs['stock'])->toBe(1)
         ->and($attrs['limit_use_per_customer'])->toBeTrue();
@@ -83,7 +84,7 @@ it('maps a percentage popup to discount code attributes', function () {
 
 it('uses the override percentage from a variant when given', function () {
     $popup = makePopup(['discount_type' => 'percentage', 'discount_percentage' => 10]);
-    expect((float) $popup->discountCodeAttributes(25.0, 14)['discount_percentage'])->toBe(25.0);
+    expect((float) $popup->discountCodeAttributes(25.0)['discount_percentage'])->toBe(25.0);
 });
 
 it('maps an amount popup to a fixed-amount discount code', function () {
@@ -91,11 +92,13 @@ it('maps an amount popup to a fixed-amount discount code', function () {
         'discount_type' => 'amount', 'discount_amount' => 15,
         'minimal_requirements' => null, 'valid_for' => 'products',
     ]);
-    $attrs = $popup->discountCodeAttributes(null, 14);
+    $attrs = $popup->discountCodeAttributes(null);
     expect($attrs['type'])->toBe('amount')
         ->and((float) $attrs['discount_amount'])->toBe(15.0)
         ->and($attrs)->not->toHaveKey('discount_percentage')
         ->and($attrs['minimal_requirements'])->toBeNull()
+        ->and($attrs['minimum_amount'])->toBeNull()
+        ->and($attrs['minimum_products_count'])->toBeNull()
         ->and($attrs['valid_for'])->toBe('products');
 });
 
