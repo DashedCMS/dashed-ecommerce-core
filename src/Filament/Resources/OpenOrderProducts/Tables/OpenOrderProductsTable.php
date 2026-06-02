@@ -165,6 +165,22 @@ class OpenOrderProductsTable
                                 ->orWhereRaw("JSON_VALID(product_extras) = 1 AND JSON_LENGTH(product_extras) = 0")),
                         blank: fn (Builder $query) => $query,
                     ),
+
+                TernaryFilter::make('has_product_id')
+                    ->label('Product ID')
+                    ->placeholder('Alles')
+                    ->trueLabel('Met product ID')
+                    ->falseLabel('Zonder product ID')
+                    ->queries(
+                        true: fn (Builder $query) => $query
+                            ->whereNotNull('product_id')
+                            ->where('product_id', '!=', 0),
+                        false: fn (Builder $query) => $query
+                            ->where(fn (Builder $q) => $q
+                                ->whereNull('product_id')
+                                ->orWhere('product_id', 0)),
+                        blank: fn (Builder $query) => $query,
+                    ),
             ])
             ->recordUrl(function ($record, $livewire) {
                 // In de grouped tabs is order_id een MIN() over meerdere
