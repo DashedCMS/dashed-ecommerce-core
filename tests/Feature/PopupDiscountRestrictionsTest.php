@@ -2,9 +2,9 @@
 
 use Dashed\DashedPopups\Models\Popup;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 
 function makePopup(array $attributes = []): Popup
 {
