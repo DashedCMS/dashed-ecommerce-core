@@ -556,25 +556,24 @@ class ProductGroup extends Model
         return null;
     }
 
+    /**
+     * Laagste effectieve prijs over de varianten via de currentPrice-accessor
+     * (priceForUser: prijsgroep-leidend, dan persoonlijk, dan basis; inclusief
+     * ex-BTW-weergave). Zo volgt "Vanaf" de groepsprijs i.p.v. de basisprijs.
+     */
+    public function lowestCurrentPrice(): ?float
+    {
+        $lowestPrice = $this->products
+            ->map(fn ($product) => (float) $product->currentPrice)
+            ->filter(fn ($price) => $price > 0)
+            ->min();
+
+        return $lowestPrice ?: ($this->min_price ?: null);
+    }
+
     public function fromPrice(): string
     {
-        $user = null;
-
-        if (! $user && auth()->check()) {
-            $user = auth()->user();
-        }
-
-        if ($user && $user->has_custom_pricing) {
-            $lowestPrice = DB::table('dashed__product_user')
-                ->where('user_id', $user->id)
-                ->whereIn('product_id', $this->products->pluck('id'))
-                ->orderBy('price', 'asc')
-                ->value('price');
-        }
-
-        if (! isset($lowestPrice) || ! $lowestPrice) {
-            $lowestPrice = $this->min_price;
-        }
+        $lowestPrice = $this->lowestCurrentPrice();
 
         return Translation::get('product-price-from', 'product', 'Vanaf :price:', 'text', [
             'price' => $lowestPrice ? CurrencyHelper::formatPrice($lowestPrice) : '€0,00',
@@ -583,24 +582,12 @@ class ProductGroup extends Model
 
     public function betweenPrice(): string
     {
-        $user = null;
+        $prices = $this->products
+            ->map(fn ($product) => (float) $product->currentPrice)
+            ->filter(fn ($price) => $price > 0);
 
-        if (! $user && auth()->check()) {
-            $user = auth()->user();
-        }
-
-        if ($user && $user->has_custom_pricing) {
-            $lowestPrice = DB::table('dashed__product_user')
-                ->where('user_id', $user->id)
-                ->whereIn('product_id', $this->products->pluck('id'))
-                ->orderBy('price', 'asc')
-                ->value('price');
-            $highestPrice = DB::table('dashed__product_user')
-                ->where('user_id', $user->id)
-                ->whereIn('product_id', $this->products->pluck('id'))
-                ->orderBy('price', 'desc')
-                ->value('price');
-        }
+        $lowestPrice = $prices->min();
+        $highestPrice = $prices->max();
 
         if (! isset($lowestPrice) || ! $lowestPrice) {
             $lowestPrice = $this->min_price;
