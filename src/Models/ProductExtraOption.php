@@ -49,6 +49,21 @@ class ProductExtraOption extends Model
 
         $base = (float) ($this->price ?? 0);
 
+        // De prijsgroep is leidend (zie Product::priceForUser): zit de
+        // gebruiker in een groep, dan geldt de groepsprijs en niet een
+        // achtergebleven persoonlijke prijs.
+        if ($user && $user->price_group_id) {
+            $groupRow = DB::table('dashed__product_extra_option_price_group')
+                ->where('price_group_id', $user->price_group_id)
+                ->where('product_extra_option_id', $this->id)
+                ->first();
+
+            $resolved = $this->resolveExtraRow($groupRow, $base);
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
         if ($user) {
             $userRow = DB::table('dashed__product_extra_option_user')
                 ->where('user_id', $user->id)
@@ -58,18 +73,6 @@ class ProductExtraOption extends Model
             $resolved = $this->resolveExtraRow($userRow, $base);
             if ($resolved !== null) {
                 return $resolved;
-            }
-
-            if ($user->price_group_id) {
-                $groupRow = DB::table('dashed__product_extra_option_price_group')
-                    ->where('price_group_id', $user->price_group_id)
-                    ->where('product_extra_option_id', $this->id)
-                    ->first();
-
-                $resolved = $this->resolveExtraRow($groupRow, $base);
-                if ($resolved !== null) {
-                    return $resolved;
-                }
             }
         }
 

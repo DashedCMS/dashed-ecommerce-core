@@ -122,13 +122,13 @@ trait CartActions
 
                     if ($productExtraOption) {
                         if ($productExtraOption->calculate_only_1_quantity) {
-                            $productPrice += ($productExtraOption->price / $this->quantity);
-                            $productExtraPrice += ($productExtraOption->price / $this->quantity);
-                            $discountedProductPrice += ($productExtraOption->price / $this->quantity);
+                            $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                            $productExtraPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                            $discountedProductPrice += ($productExtraOption->priceForUser() / $this->quantity);
                         } else {
-                            $productPrice += $productExtraOption->price;
-                            $productExtraPrice += $productExtraOption->price;
-                            $discountedProductPrice += $productExtraOption->price;
+                            $productPrice += $productExtraOption->priceForUser();
+                            $productExtraPrice += $productExtraOption->priceForUser();
+                            $discountedProductPrice += $productExtraOption->priceForUser();
                         }
 
                         $options[$productExtraOption->id] = [
@@ -152,13 +152,13 @@ trait CartActions
 
                     if ($productExtraOption) {
                         if ($productExtraOption->calculate_only_1_quantity) {
-                            $productPrice += ($productExtraOption->price / $this->quantity);
-                            $productExtraPrice += ($productExtraOption->price / $this->quantity);
-                            $discountedProductPrice += ($productExtraOption->price / $this->quantity);
+                            $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                            $productExtraPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                            $discountedProductPrice += ($productExtraOption->priceForUser() / $this->quantity);
                         } else {
-                            $productPrice += $productExtraOption->price;
-                            $productExtraPrice += $productExtraOption->price;
-                            $discountedProductPrice += $productExtraOption->price;
+                            $productPrice += $productExtraOption->priceForUser();
+                            $productExtraPrice += $productExtraOption->priceForUser();
+                            $discountedProductPrice += $productExtraOption->priceForUser();
                         }
 
                         $options[$productExtraOption->id] = [
@@ -185,13 +185,13 @@ trait CartActions
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
-                                $productPrice += ($productExtraOption->price / $this->quantity);
-                                $productExtraPrice += ($productExtraOption->price / $this->quantity);
-                                $discountedProductPrice += ($productExtraOption->price / $this->quantity);
+                                $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $productExtraPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $discountedProductPrice += ($productExtraOption->priceForUser() / $this->quantity);
                             } else {
-                                $productPrice += $productExtraOption->price;
-                                $productExtraPrice += $productExtraOption->price;
-                                $discountedProductPrice += $productExtraOption->price;
+                                $productPrice += $productExtraOption->priceForUser();
+                                $productExtraPrice += $productExtraOption->priceForUser();
+                                $discountedProductPrice += $productExtraOption->priceForUser();
                             }
 
                             $options[$productExtraOption->id] = [
