@@ -8,7 +8,6 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class ProcessPricesPerPriceGroup implements ShouldQueue
@@ -30,7 +29,7 @@ class ProcessPricesPerPriceGroup implements ShouldQueue
     public function handle(): void
     {
         $selectedCategoryIds = $this->data['product_category_ids'] ?? [];
-        $productGroupIds = [];
+        $affectedProductIds = [];
 
         foreach (ProductCategory::with('products')->get() as $productCategory) {
             if (in_array($productCategory->id, $selectedCategoryIds)) {
@@ -52,7 +51,7 @@ class ProcessPricesPerPriceGroup implements ShouldQueue
                         ]
                     );
 
-                    $productGroupIds[] = $product->product_group_id;
+                    $affectedProductIds[] = $product->id;
                 }
             } else {
                 DB::table('dashed__product_category_price_group')
@@ -60,16 +59,31 @@ class ProcessPricesPerPriceGroup implements ShouldQueue
                     ->where('product_category_id', $productCategory->id)
                     ->delete();
 
+                // Alleen producten die deze prijsgroep daadwerkelijk via deze
+                // categorie had, hoeven herberekend te worden (prijs valt dan
+                // terug). Niet elk product van elke niet-geselecteerde categorie.
+                $previouslyActivated = DB::table('dashed__product_price_group')
+                    ->whereIn('product_id', $productCategory->products->pluck('id'))
+                    ->where('price_group_id', $this->priceGroupId)
+                    ->where('activated_by_category', true)
+                    ->pluck('product_id')
+                    ->all();
+
                 DB::table('dashed__product_price_group')
                     ->whereIn('product_id', $productCategory->products->pluck('id'))
                     ->where('price_group_id', $this->priceGroupId)
                     ->where('activated_by_category', true)
                     ->delete();
+
+                foreach ($previouslyActivated as $productId) {
+                    $affectedProductIds[] = $productId;
+                }
             }
         }
 
-        foreach (ProductGroup::whereIn('id', array_unique($productGroupIds))->get() as $productGroup) {
-            UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
+        $affectedProductIds = array_values(array_unique($affectedProductIds));
+        if ($affectedProductIds) {
+            RecalculateProductPricesJob::dispatch($affectedProductIds)->onQueue('ecommerce');
         }
     }
 }
