@@ -937,13 +937,13 @@
                        class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         Bestelling bekijken
                     </a>
-                    <button @click="sendInvoice(order)" x-show="postPay && order && order.email"
+                    <button @click="sendInvoice(order)" x-show="order && order.email"
                             x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
                             class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         E-mailbevestiging sturen
                     </button>
-                    <button @click="sendPaymentLink(order)" x-show="postPay && order && order.email"
+                    <button @click="sendPaymentLink(order)" x-show="order && order.email && order.openAmount > 0"
                             x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                             x-bind:disabled="loading"
                             class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
