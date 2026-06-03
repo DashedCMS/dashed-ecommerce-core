@@ -28,7 +28,9 @@ use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
@@ -338,6 +340,43 @@ class PointOfSaleApiController extends Controller
         }
 
         Orders::sendNotification($order, $order->email, auth()->user());
+
+        return response()->json(['success' => true]);
+    }
+
+    public function sendPaymentLink(Request $request)
+    {
+        $data = $request->all();
+        $orderId = $data['orderId'] ?? null;
+
+        $order = Order::find($orderId);
+
+        if (! $order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bestelling niet gevonden',
+            ], 404);
+        }
+
+        if (! $order->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Geen e-mailadres gekoppeld aan de bestelling',
+            ], 404);
+        }
+
+        $outstanding = $order->outstandingAmount();
+
+        if ($outstanding <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Er staat geen bedrag meer open voor deze bestelling',
+            ], 422);
+        }
+
+        $paymentUrl = url('/pay/order/' . $order->hash . '/remainder');
+
+        Mail::to($order->email)->send(new PaymentLinkMail($order, (float) $outstanding, $paymentUrl));
 
         return response()->json(['success' => true]);
     }

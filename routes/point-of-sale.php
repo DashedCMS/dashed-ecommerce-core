@@ -23,6 +23,8 @@ Route::group(
             ->name('api.point-of-sale.print-receipt');
         Route::post('/send-invoice', [PointOfSaleApiController::class, 'sendInvoice'])
             ->name('api.point-of-sale.send-invoice');
+        Route::post('/send-payment-link', [PointOfSaleApiController::class, 'sendPaymentLink'])
+            ->name('api.point-of-sale.send-payment-link');
         Route::post('/search-products', [PointOfSaleApiController::class, 'searchProducts'])
             ->name('api.point-of-sale.search-products');
         Route::post('/add-custom-product', [PointOfSaleApiController::class, 'addCustomProduct'])
