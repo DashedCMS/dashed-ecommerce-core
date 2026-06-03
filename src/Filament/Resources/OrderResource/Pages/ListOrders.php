@@ -16,9 +16,23 @@ class ListOrders extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return array_merge([
-            CreateAction::make(),
-        ], ecommerce()->buttonActions('orders'));
+        $failedCount = collect(ecommerce()->shippingLabelProviders())
+            ->sum(fn ($provider) => count($provider->failedOrders()));
+
+        $actions = [CreateAction::make()];
+
+        if ($failedCount > 0) {
+            $actions[] = \Filament\Actions\Action::make('shippingLabelErrors')
+                ->iconButton()
+                ->color('danger')
+                ->icon('heroicon-o-exclamation-triangle')
+                ->label('Labels met fouten (' . $failedCount . ')')
+                ->tooltip('Labels met fouten (' . $failedCount . ')')
+                ->url(\Dashed\DashedEcommerceCore\Filament\Pages\ShippingLabelErrors::getUrl())
+                ->openUrlInNewTab();
+        }
+
+        return array_merge($actions, ecommerce()->buttonActions('orders'));
     }
 
     protected function getFooterWidgets(): array

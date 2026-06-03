@@ -36,6 +36,8 @@ class EcommerceManager
         'orders' => [],
     ];
 
+    protected static array $shippingLabelProviders = [];
+
     public function builder(string $name, null|string|array $blocks = null): self|array
     {
         if (! $blocks) {
@@ -78,5 +80,20 @@ class EcommerceManager
         static::$buttonActions[$name] = $blocks;
 
         return $this;
+    }
+
+    public function registerShippingLabelProvider(\Dashed\DashedEcommerceCore\Contracts\ShippingLabelProvider $provider): self
+    {
+        static::$shippingLabelProviders[$provider->key()] = $provider;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, \Dashed\DashedEcommerceCore\Contracts\ShippingLabelProvider>
+     */
+    public function shippingLabelProviders(): array
+    {
+        return static::$shippingLabelProviders;
     }
 }
