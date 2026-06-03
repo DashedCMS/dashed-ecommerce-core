@@ -37,4 +37,14 @@ class PriceGroup extends Model
     {
         return $this->hasMany(User::class, 'price_group_id');
     }
+
+    public function syncUsers(array $userIds): void
+    {
+        User::whereIn('id', $userIds)
+            ->update(['price_group_id' => $this->id]);
+
+        User::where('price_group_id', $this->id)
+            ->whereNotIn('id', $userIds)
+            ->update(['price_group_id' => null]);
+    }
 }
