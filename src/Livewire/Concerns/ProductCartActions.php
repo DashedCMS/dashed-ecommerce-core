@@ -699,17 +699,25 @@ trait ProductCartActions
 
     /**
      * Zet op de extra's en hun opties de prijs die voor de ingelogde gebruiker
-     * geldt (priceForUser: prijsgroep-leidend, dan persoonlijk, dan basis). Zo
-     * tonen alle thema's de juiste prijs out of the box en rekent de component
-     * met dezelfde prijzen, zonder dat views priceForUser hoeven aan te roepen.
+     * geldt (priceForUser: prijsgroep-leidend, dan persoonlijk, dan basis) en,
+     * als de user prijzen ex BTW ziet, omgezet naar ex BTW. Dit is puur de
+     * WEERGAVE-prijs zodat alle thema's out of the box de juiste prijs tonen;
+     * de berekening zelf gebruikt priceForUser() (incl) rechtstreeks en zet het
+     * totaal aan het einde om naar ex BTW.
      */
     protected function applyUserPricesToExtras($extras): void
     {
+        $user = auth()->check() ? auth()->user() : null;
+        $exVat = ! empty($user?->show_prices_ex_vat);
+        $vatRate = (int) ($this->product?->vat_rate ?? 21);
+
         foreach ($extras as $extra) {
-            foreach ($extra->productExtraOptions as $option) {
-                $option->price = $option->priceForUser();
+            foreach ($extra->productExtraOptions as $opt) {
+                $price = (float) $opt->priceForUser($user);
+                $opt->price = $exVat ? VatDisplay::exFromIncl($price, $vatRate) : $price;
             }
-            $extra->price = $extra->priceForUser();
+            $price = (float) $extra->priceForUser($user);
+            $extra->price = $exVat ? VatDisplay::exFromIncl($price, $vatRate) : $price;
         }
     }
 
@@ -737,8 +745,8 @@ trait ProductCartActions
         $this->applyUserPricesToExtras($this->productExtras);
 
         foreach ($this->productExtras as $extraKey => $productExtra) {
-            if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->price) {
-                $productPrice += $productExtra->price;
+            if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->priceForUser()) {
+                $productPrice += $productExtra->priceForUser();
             }
 
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
@@ -754,9 +762,9 @@ trait ProductCartActions
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
-                                $productPrice += ($productExtraOption->price / $this->quantity);
+                                $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
                             } else {
-                                $productPrice += $productExtraOption->price;
+                                $productPrice += $productExtraOption->priceForUser();
                             }
                         }
                     }
@@ -772,9 +780,9 @@ trait ProductCartActions
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
-                                $productPrice += ($productExtraOption->price / $this->quantity);
+                                $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
                             } else {
-                                $productPrice += $productExtraOption->price;
+                                $productPrice += $productExtraOption->priceForUser();
                             }
                         }
                     }
@@ -784,9 +792,9 @@ trait ProductCartActions
                     $productOptionValue = $option['value'] ?? null;
                     if ($productOptionValue) {
                         if ($option->calculate_only_1_quantity) {
-                            $productPrice = $productPrice + ($option->price / $this->quantity);
+                            $productPrice = $productPrice + ($option->priceForUser() / $this->quantity);
                         } else {
-                            $productPrice = $productPrice + $option->price;
+                            $productPrice = $productPrice + $option->priceForUser();
                         }
                     }
                 }
@@ -842,10 +850,10 @@ trait ProductCartActions
         foreach ($productExtras as $extraKey => $productExtra) {
             $productExtraPrice = 0;
 
-            if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->price) {
-                $productPrice += $productExtra->price;
-                $productExtraPrice += $productExtra->price;
-                $discountedProductPrice += $productExtra->price;
+            if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->priceForUser()) {
+                $productPrice += $productExtra->priceForUser();
+                $productExtraPrice += $productExtra->priceForUser();
+                $discountedProductPrice += $productExtra->priceForUser();
             }
 
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {
@@ -867,13 +875,13 @@ trait ProductCartActions
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
-                                $productPrice += ($productExtraOption->price / $this->quantity);
-                                $productExtraPrice += ($productExtraOption->price / $this->quantity);
-                                $discountedProductPrice += ($productExtraOption->price / $this->quantity);
+                                $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $productExtraPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $discountedProductPrice += ($productExtraOption->priceForUser() / $this->quantity);
                             } else {
-                                $productPrice += $productExtraOption->price;
-                                $productExtraPrice += $productExtraOption->price;
-                                $discountedProductPrice += $productExtraOption->price;
+                                $productPrice += $productExtraOption->priceForUser();
+                                $productExtraPrice += $productExtraOption->priceForUser();
+                                $discountedProductPrice += $productExtraOption->priceForUser();
                             }
 
                             $options[$productExtraOption->id] = [
@@ -901,13 +909,13 @@ trait ProductCartActions
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
-                                $productPrice += ($productExtraOption->price / $this->quantity);
-                                $productExtraPrice += ($productExtraOption->price / $this->quantity);
-                                $discountedProductPrice += ($productExtraOption->price / $this->quantity);
+                                $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $productExtraPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $discountedProductPrice += ($productExtraOption->priceForUser() / $this->quantity);
                             } else {
-                                $productPrice += $productExtraOption->price;
-                                $productExtraPrice += $productExtraOption->price;
-                                $discountedProductPrice += $productExtraOption->price;
+                                $productPrice += $productExtraOption->priceForUser();
+                                $productExtraPrice += $productExtraOption->priceForUser();
+                                $discountedProductPrice += $productExtraOption->priceForUser();
                             }
 
                             $options[$productExtraOption->id] = [
@@ -935,13 +943,13 @@ trait ProductCartActions
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
-                                $productPrice += ($productExtraOption->price / $this->quantity);
-                                $productExtraPrice += ($productExtraOption->price / $this->quantity);
-                                $discountedProductPrice += ($productExtraOption->price / $this->quantity);
+                                $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $productExtraPrice += ($productExtraOption->priceForUser() / $this->quantity);
+                                $discountedProductPrice += ($productExtraOption->priceForUser() / $this->quantity);
                             } else {
-                                $productPrice += $productExtraOption->price;
-                                $productExtraPrice += $productExtraOption->price;
-                                $discountedProductPrice += $productExtraOption->price;
+                                $productPrice += $productExtraOption->priceForUser();
+                                $productExtraPrice += $productExtraOption->priceForUser();
+                                $discountedProductPrice += $productExtraOption->priceForUser();
                             }
 
                             $options[$productExtraOption->id] = [
@@ -1025,13 +1033,13 @@ trait ProductCartActions
 
                     if ($productOptionValue) {
                         if ($option->calculate_only_1_quantity) {
-                            $productPrice = $productPrice + ($option->price / $this->quantity);
-                            $productExtraPrice = $productPrice + ($option->price / $this->quantity);
-                            $discountedProductPrice = $productPrice + ($option->price / $this->quantity);
+                            $productPrice = $productPrice + ($option->priceForUser() / $this->quantity);
+                            $productExtraPrice = $productPrice + ($option->priceForUser() / $this->quantity);
+                            $discountedProductPrice = $productPrice + ($option->priceForUser() / $this->quantity);
                         } else {
-                            $productPrice = $productPrice + $option->price;
-                            $productExtraPrice = $productPrice + $option->price;
-                            $discountedProductPrice = $productPrice + $option->price;
+                            $productPrice = $productPrice + $option->priceForUser();
+                            $productExtraPrice = $productPrice + $option->priceForUser();
+                            $discountedProductPrice = $productPrice + $option->priceForUser();
                         }
 
                         $options[$option->id] = [
