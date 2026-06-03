@@ -47,7 +47,9 @@ class ProductExtraOption extends Model
             $user = auth()->user();
         }
 
-        $base = (float) ($this->price ?? 0);
+        // getRawOriginal zodat herhaald resolven idempotent is, ook nadat de
+        // component ->price al naar de gebruikersprijs heeft gezet.
+        $base = (float) ($this->getRawOriginal('price') ?? 0);
 
         // De prijsgroep is leidend (zie Product::priceForUser): zit de
         // gebruiker in een groep, dan geldt de groepsprijs en niet een

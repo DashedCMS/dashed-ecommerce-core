@@ -93,7 +93,9 @@ class ProductExtra extends Model
             $user = auth()->user();
         }
 
-        $base = (float) ($this->price ?? 0);
+        // getRawOriginal zodat herhaald resolven idempotent is, ook nadat de
+        // component ->price al naar de gebruikersprijs heeft gezet.
+        $base = (float) ($this->getRawOriginal('price') ?? 0);
 
         if ($user && $user->price_group_id) {
             $groupRow = \Illuminate\Support\Facades\DB::table('dashed__product_extra_price_group')

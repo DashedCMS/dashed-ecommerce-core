@@ -729,8 +729,12 @@ trait ProductCartActions
 
         if (! $this->productExtras) {
             $this->productExtras = $this->product->allProductExtras();
-            $this->applyUserPricesToExtras($this->productExtras);
         }
+
+        // Altijd (idempotent) de gebruikersprijzen toepassen: bij een Livewire
+        // update wordt productExtras gehydrateerd met basisprijzen, dus hier
+        // opnieuw resolven zodat zowel de weergave als de berekening kloppen.
+        $this->applyUserPricesToExtras($this->productExtras);
 
         foreach ($this->productExtras as $extraKey => $productExtra) {
             if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->price) {
