@@ -14,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -198,8 +199,11 @@ class PricePerUserResource extends Resource
                     ->searchable()
                     ->nullable()
                     ->live()
-                    ->helperText('De gebruiker erft custom pricing en de ex BTW-instelling van deze groep. Persoonlijke prijzen hieronder overschrijven de groep.'),
-            ], $newSchema, $userExtraSections));
+                    ->helperText('De gebruiker erft custom pricing, de ex BTW-instelling en alle prijzen van deze groep.'),
+            ], [
+                Group::make(array_merge($newSchema, $userExtraSections))
+                    ->visible(fn (Get $get) => ! $get('price_group_id')),
+            ]));
     }
 
     /**
