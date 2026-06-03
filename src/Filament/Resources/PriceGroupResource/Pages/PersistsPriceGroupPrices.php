@@ -2,11 +2,28 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource\Pages;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedEcommerceCore\Models\PriceGroup;
 use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerPriceGroup;
 
 trait PersistsPriceGroupPrices
 {
+    /**
+     * Beperk de formulierdata tot de echte kolommen van price_groups. De
+     * vorm bevat dynamische, niet-kolom velden (product_category_ids,
+     * extra_option_*_*, *_category_discount_*) die via pivot-tabellen worden
+     * opgeslagen. Omdat models globaal ge-unguard zijn (DashedCoreServiceProvider)
+     * negeert Eloquent $fillable en zou create()/update() deze velden als
+     * kolommen proberen weg te schrijven. Dit strippen voorkomt de
+     * "Unknown column"-fout; de pivot-velden blijven beschikbaar via
+     * $this->form->getState() in afterCreate()/afterSave().
+     */
+    protected function onlyPriceGroupColumns(array $data): array
+    {
+        return Arr::only($data, (new PriceGroup())->getFillable());
+    }
+
     /**
      * Persist the per-extra-option prices entered on the form and dispatch
      * the category-discount cascade. Shared by the create and edit pages so

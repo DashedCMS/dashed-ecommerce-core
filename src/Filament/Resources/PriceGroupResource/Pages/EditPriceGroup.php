@@ -53,6 +53,11 @@ class EditPriceGroup extends EditRecord
         return parent::mutateFormDataBeforeFill($data);
     }
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return $this->onlyPriceGroupColumns($data);
+    }
+
     protected function afterSave(): void
     {
         $this->persistPriceGroupPrices($this->form->getState());
