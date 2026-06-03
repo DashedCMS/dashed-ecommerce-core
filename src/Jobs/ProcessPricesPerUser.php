@@ -34,12 +34,16 @@ class ProcessPricesPerUser implements ShouldQueue
         $data = $this->data;
         $user = $this->user;
 
+        // Bij een gekozen prijsgroep zijn de categorie-velden verborgen, dus
+        // de formulierdata kan 'product_category_ids' missen.
+        $selectedCategoryIds = $data['product_category_ids'] ?? [];
+
         $affectedProductIds = [];
 
         foreach (ProductCategory::with('products')->get() as $productCategory) {
-            if (in_array($productCategory->id, $data['product_category_ids'])) {
-                $price = $data[$productCategory->id . '_category_discount_price'];
-                $discountPercentage = $data[$productCategory->id . '_category_discount_percentage'];
+            if (in_array($productCategory->id, $selectedCategoryIds)) {
+                $price = $data[$productCategory->id . '_category_discount_price'] ?? null;
+                $discountPercentage = $data[$productCategory->id . '_category_discount_percentage'] ?? null;
 
                 DB::table('dashed__product_category_user')
                     ->updateOrInsert(
