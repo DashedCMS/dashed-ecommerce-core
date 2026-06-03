@@ -19,5 +19,6 @@ class CreatePriceGroup extends CreateRecord
     protected function afterCreate(): void
     {
         $this->persistPriceGroupPrices($this->form->getState());
+        $this->record->syncUsers($this->form->getState()['user_ids'] ?? []);
     }
 }

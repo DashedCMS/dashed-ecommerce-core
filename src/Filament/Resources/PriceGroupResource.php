@@ -152,6 +152,24 @@ class PriceGroupResource extends Resource
                 ->label('Toon prijzen ex BTW')
                 ->helperText('Iedereen in deze groep ziet prijzen ex BTW.')
                 ->default(false),
+            Select::make('user_ids')
+                ->label('Gekoppelde gebruikers')
+                ->helperText('Deze gebruikers krijgen de prijzen van deze groep. Een gebruiker kan maar in één groep zitten.')
+                ->multiple()
+                ->searchable()
+                ->dehydrated(false)
+                ->getSearchResultsUsing(fn (string $search) => \Dashed\DashedCore\Models\User::query()
+                    ->where(fn ($q) => $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%"))
+                    ->limit(50)
+                    ->get()
+                    ->mapWithKeys(fn ($user) => [$user->id => $user->name])
+                    ->all())
+                ->getOptionLabelsUsing(fn (array $values) => \Dashed\DashedCore\Models\User::whereIn('id', $values)
+                    ->get()
+                    ->mapWithKeys(fn ($user) => [$user->id => $user->name])
+                    ->all()),
             $categoriesSection,
         ];
 

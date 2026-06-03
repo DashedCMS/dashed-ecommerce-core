@@ -59,6 +59,8 @@ class EditPriceGroup extends EditRecord
             $data['extra_' . $row->product_extra_id . '_discount_percentage'] = $row->discount_percentage ?? null;
         }
 
+        $data['user_ids'] = $this->record->users()->pluck('id')->all();
+
         return parent::mutateFormDataBeforeFill($data);
     }
 
@@ -70,5 +72,6 @@ class EditPriceGroup extends EditRecord
     protected function afterSave(): void
     {
         $this->persistPriceGroupPrices($this->form->getState());
+        $this->record->syncUsers($this->form->getState()['user_ids'] ?? []);
     }
 }
