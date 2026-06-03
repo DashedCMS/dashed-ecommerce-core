@@ -38,6 +38,8 @@ class EcommerceManager
 
     protected static array $shippingLabelProviders = [];
 
+    protected static array $shippingStatusCommands = [];
+
     public function builder(string $name, null|string|array $blocks = null): self|array
     {
         if (! $blocks) {
@@ -95,5 +97,20 @@ class EcommerceManager
     public function shippingLabelProviders(): array
     {
         return static::$shippingLabelProviders;
+    }
+
+    public function registerShippingStatusCommand(string $command): self
+    {
+        if (! in_array($command, static::$shippingStatusCommands, true)) {
+            static::$shippingStatusCommands[] = $command;
+        }
+
+        return $this;
+    }
+
+    /** @return array<int, string> */
+    public function shippingStatusCommands(): array
+    {
+        return static::$shippingStatusCommands;
     }
 }
