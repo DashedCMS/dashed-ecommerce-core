@@ -98,10 +98,11 @@ trait CartActions
         foreach ($product->allProductExtras() as $extraKey => $productExtra) {
             $productExtraPrice = 0;
 
-            if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtra->price) {
-                $productPrice += $productExtra->price;
-                $productExtraPrice += $productExtra->price;
-                $discountedProductPrice += $productExtra->price;
+            $productExtraParentPrice = (float) $productExtra->priceForUser();
+            if ((($this->extras[$extraKey]['value'] ?? false) || ($this->files[$productExtra->id] ?? false)) && $productExtraParentPrice) {
+                $productPrice += $productExtraParentPrice;
+                $productExtraPrice += $productExtraParentPrice;
+                $discountedProductPrice += $productExtraParentPrice;
             }
 
             if ($productExtra->type == 'single' || $productExtra->type == 'imagePicker') {

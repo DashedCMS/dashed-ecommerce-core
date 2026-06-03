@@ -1429,8 +1429,10 @@ class Product extends Model
         $price = $baseUnitPrice * $itemQty;
 
         // 7) Caches om DB hits te beperken
-        static $productExtraOptionCache = []; // [id => ProductExtraOption|null]
-        static $productExtraCache = [];       // [id => ProductExtra|null]
+        // Per-call cache (NIET static): process-static cache lekt stale modellen
+        // tussen losse carts in queue-workers en tussen tests met hergebruikte ids.
+        $productExtraOptionCache = []; // [id => ProductExtraOption|null]
+        $productExtraCache = [];       // [id => ProductExtra|null]
 
         // 8) Extras verwerken
         foreach ($options as $productExtraOptionId => $productExtraOption) {
@@ -1467,7 +1469,7 @@ class Product extends Model
 
                 if ($thisProductExtraOption) {
                     $extraPrice = (float) $thisProductExtraOption->priceForUser();
-                    $productExtraBasePrice = (float) ($thisProductExtraOption->productExtra->price ?? 0);
+                    $productExtraBasePrice = (float) ($thisProductExtraOption->productExtra?->priceForUser() ?? 0);
 
                     if ($thisProductExtraOption->calculate_only_1_quantity) {
                         // 1x op hele cart item

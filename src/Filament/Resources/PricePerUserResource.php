@@ -178,8 +178,18 @@ class PricePerUserResource extends Resource
                         ->label('Korting percentage')->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
                 ]);
             }
-            if ($optionFields) {
-                $userExtraSections[] = Section::make('Extra: ' . $extra->name)->columnSpanFull()->schema($optionFields);
+            $parentFields = [
+                Section::make('Vaste prijs voor deze extra')->columns(2)->schema([
+                    TextInput::make('extra_' . $extra->id . '_user_price')
+                        ->label('Vaste prijs')->prefix('€')->numeric()->nullable()
+                        ->helperText('Standaard: € ' . number_format((float) $extra->price, 2, ',', '.')),
+                    TextInput::make('extra_' . $extra->id . '_user_discount_percentage')
+                        ->label('Korting percentage')->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
+                ]),
+            ];
+
+            if ($optionFields || (float) $extra->price) {
+                $userExtraSections[] = Section::make('Extra: ' . $extra->name)->columnSpanFull()->schema(array_merge($parentFields, $optionFields));
             }
         }
 

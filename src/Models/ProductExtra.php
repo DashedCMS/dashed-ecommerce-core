@@ -82,6 +82,63 @@ class ProductExtra extends Model
             ->orderBy('order');
     }
 
+    /**
+     * Effectieve parent-extraprijs voor een gebruiker. De prijsgroep is
+     * leidend (zie Product::priceForUser), daarna een persoonlijke override,
+     * anders de basisprijs van de extra.
+     */
+    public function priceForUser(?\App\Models\User $user = null): float
+    {
+        if (! $user && auth()->check()) {
+            $user = auth()->user();
+        }
+
+        $base = (float) ($this->price ?? 0);
+
+        if ($user && $user->price_group_id) {
+            $groupRow = \Illuminate\Support\Facades\DB::table('dashed__product_extra_price_group')
+                ->where('price_group_id', $user->price_group_id)
+                ->where('product_extra_id', $this->id)
+                ->first();
+
+            $resolved = $this->resolveExtraRow($groupRow, $base);
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
+        if ($user) {
+            $userRow = \Illuminate\Support\Facades\DB::table('dashed__product_extra_user')
+                ->where('user_id', $user->id)
+                ->where('product_extra_id', $this->id)
+                ->first();
+
+            $resolved = $this->resolveExtraRow($userRow, $base);
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
+        return $base;
+    }
+
+    protected function resolveExtraRow($row, float $base): ?float
+    {
+        if (! $row) {
+            return null;
+        }
+
+        if ($row->price !== null) {
+            return (float) $row->price;
+        }
+
+        if ($row->discount_percentage !== null) {
+            return max(0, $base - ($base * ((float) $row->discount_percentage / 100)));
+        }
+
+        return null;
+    }
+
     public static function getFilamentFields(): array
     {
         return [

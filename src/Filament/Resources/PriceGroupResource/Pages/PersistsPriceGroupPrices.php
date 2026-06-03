@@ -51,6 +51,26 @@ trait PersistsPriceGroupPrices
                     ['price' => $price, 'discount_percentage' => $percentage]
                 );
             }
+
+            if (preg_match('/^extra_(\d+)_price$/', $key, $m)) {
+                $extraId = (int) $m[1];
+                $price = $value;
+                $percentage = $data['extra_' . $extraId . '_discount_percentage'] ?? null;
+
+                if ($price === null && $percentage === null) {
+                    DB::table('dashed__product_extra_price_group')
+                        ->where('price_group_id', $this->record->id)
+                        ->where('product_extra_id', $extraId)
+                        ->delete();
+
+                    continue;
+                }
+
+                DB::table('dashed__product_extra_price_group')->updateOrInsert(
+                    ['price_group_id' => $this->record->id, 'product_extra_id' => $extraId],
+                    ['price' => $price, 'discount_percentage' => $percentage]
+                );
+            }
         }
 
         ProcessPricesPerPriceGroup::dispatch($this->record->id, $data);

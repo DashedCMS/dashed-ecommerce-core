@@ -110,9 +110,25 @@ class PriceGroupResource extends Resource
                     ->columns(2);
             }
 
-            if (! empty($optionSections)) {
+            $parentFields = [
+                TextInput::make('extra_' . $productExtra->id . '_price')
+                    ->label('Vaste prijs voor deze extra')
+                    ->prefix('€')
+                    ->numeric()
+                    ->nullable()
+                    ->helperText('Standaard: € ' . number_format((float) $productExtra->price, 2, ',', '.')),
+                TextInput::make('extra_' . $productExtra->id . '_discount_percentage')
+                    ->label('Korting percentage')
+                    ->suffix('%')
+                    ->minValue(1)
+                    ->maxValue(100)
+                    ->numeric()
+                    ->nullable(),
+            ];
+
+            if (! empty($optionSections) || (float) $productExtra->price) {
                 $extraSchema[] = Section::make('Extra: ' . $productExtra->name)
-                    ->schema($optionSections)
+                    ->schema(array_merge($parentFields, $optionSections))
                     ->columnSpanFull()
                     ->collapsed();
             }

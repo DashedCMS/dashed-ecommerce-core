@@ -50,6 +50,15 @@ class EditPriceGroup extends EditRecord
             $data['extra_option_' . $row->product_extra_option_id . '_discount_percentage'] = $row->discount_percentage ?? null;
         }
 
+        $extraRows = DB::table('dashed__product_extra_price_group')
+            ->where('price_group_id', $this->record->id)
+            ->get();
+
+        foreach ($extraRows as $row) {
+            $data['extra_' . $row->product_extra_id . '_price'] = $row->price ?? null;
+            $data['extra_' . $row->product_extra_id . '_discount_percentage'] = $row->discount_percentage ?? null;
+        }
+
         return parent::mutateFormDataBeforeFill($data);
     }
 
