@@ -185,18 +185,45 @@ class PricePerUserResource extends Resource
         return $schema
             ->schema(array_merge([
                 Toggle::make('has_custom_pricing')
-                    ->label('Custom pricing voor deze gebruiker activeren'),
+                    ->label('Custom pricing voor deze gebruiker activeren')
+                    ->visible(fn (Get $get) => ! $get('price_group_id')),
                 Toggle::make('show_prices_ex_vat')
                     ->label('Toon prijzen ex BTW')
                     ->helperText('Deze gebruiker ziet prijzen ex BTW in de webshop, in e-mails en op de factuur.')
-                    ->default(false),
+                    ->default(false)
+                    ->visible(fn (Get $get) => ! $get('price_group_id')),
                 Select::make('price_group_id')
                     ->label('Prijsgroep')
                     ->options(PriceGroup::pluck('name', 'id')->toArray())
                     ->searchable()
                     ->nullable()
-                    ->helperText('De gebruiker erft de prijzen van deze groep. Persoonlijke prijzen hieronder overschrijven de groep.'),
+                    ->live()
+                    ->helperText('De gebruiker erft custom pricing en de ex BTW-instelling van deze groep. Persoonlijke prijzen hieronder overschrijven de groep.'),
             ], $newSchema, $userExtraSections));
+    }
+
+    /**
+     * Bepaal has_custom_pricing en show_prices_ex_vat voor een gebruiker.
+     * Bij een gekozen prijsgroep staat custom pricing altijd aan en wordt de
+     * ex BTW-instelling van die groep overgenomen; anders gelden de waarden
+     * van de formulier-toggles.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{has_custom_pricing: bool, show_prices_ex_vat: bool}
+     */
+    public static function resolveUserPricing(?PriceGroup $group, array $data): array
+    {
+        if ($group) {
+            return [
+                'has_custom_pricing' => true,
+                'show_prices_ex_vat' => (bool) $group->show_prices_ex_vat,
+            ];
+        }
+
+        return [
+            'has_custom_pricing' => (bool) ($data['has_custom_pricing'] ?? false),
+            'show_prices_ex_vat' => (bool) ($data['show_prices_ex_vat'] ?? false),
+        ];
     }
 
     public static function table(Table $table): Table
@@ -205,6 +232,10 @@ class PricePerUserResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label('Naam')
+                    ->searchable(['first_name', 'last_name'])
+                    ->sortable(['first_name', 'last_name']),
+                TextColumn::make('email')
+                    ->label('E-mail')
                     ->searchable()
                     ->sortable(),
             ])
