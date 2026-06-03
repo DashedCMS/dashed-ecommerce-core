@@ -937,6 +937,18 @@
                        class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
                         Bestelling bekijken
                     </a>
+                    <button @click="sendInvoice(order)" x-show="postPay && order && order.email"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                        E-mailbevestiging sturen
+                    </button>
+                    <button @click="sendPaymentLink(order)" x-show="postPay && order && order.email"
+                            x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
+                            x-bind:disabled="loading"
+                            class="px-4 py-4 text-lg uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                        Betaallink sturen
+                    </button>
                     <button @click="closePayment" x-show="!isPinTerminalPayment && !postPay"
                             x-bind:class="loading ? 'bg-red-900' : 'bg-red-500 hover:bg-red-700'"
                             x-bind:disabled="loading"
@@ -2393,6 +2405,46 @@
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De factuur kon niet worden verstuurd'
+                })
+            }
+        },
+
+        async sendPaymentLink(order) {
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.send-payment-link') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: order.id,
+                    })
+                });
+
+                let data = await response.json();
+
+                this.focus();
+
+                if (!response.ok) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message,
+                    })
+                }
+
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'success',
+                    message: 'Betaallink verstuurd'
+                })
+            } catch (error) {
+                this.loading = false;
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De betaallink kon niet worden verstuurd'
                 })
             }
         },
