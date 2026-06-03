@@ -1736,6 +1736,17 @@ class Product extends Model
             $user = auth()->user();
         }
 
+        // Een prijsgroep is leidend: zit de gebruiker in een groep, dan geldt
+        // de groepsprijs en niet een (eventueel achtergebleven) persoonlijke
+        // product_user-prijs.
+        if ($user && $user->price_group_id) {
+            $groupPrice = $this->resolveGroupProductPrice((int) $user->price_group_id);
+
+            if ($groupPrice !== null) {
+                return $groupPrice;
+            }
+        }
+
         if ($user && $user->has_custom_pricing) {
             $override = DB::table('dashed__product_user')
                 ->where('user_id', $user->id)
@@ -1744,14 +1755,6 @@ class Product extends Model
 
             if ($override !== null) {
                 return $override;
-            }
-        }
-
-        if ($user && $user->price_group_id) {
-            $groupPrice = $this->resolveGroupProductPrice((int) $user->price_group_id);
-
-            if ($groupPrice !== null) {
-                return $groupPrice;
             }
         }
 

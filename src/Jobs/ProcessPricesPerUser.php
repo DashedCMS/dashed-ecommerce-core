@@ -34,6 +34,26 @@ class ProcessPricesPerUser implements ShouldQueue
         $data = $this->data;
         $user = $this->user;
 
+        // Zit de gebruiker in een prijsgroep, dan is die leidend: persoonlijke
+        // prijzen gelden niet meer en worden opgeschoond zodat ze de groepsprijs
+        // niet schaduwen (zie Product::priceForUser).
+        if (! empty($data['price_group_id'])) {
+            $affectedProductIds = DB::table('dashed__product_user')
+                ->where('user_id', $user->id)
+                ->pluck('product_id')
+                ->all();
+
+            DB::table('dashed__product_user')->where('user_id', $user->id)->delete();
+            DB::table('dashed__product_category_user')->where('user_id', $user->id)->delete();
+
+            $affectedProductIds = array_values(array_unique($affectedProductIds));
+            if ($affectedProductIds) {
+                RecalculateProductPricesJob::dispatch($affectedProductIds)->onQueue('ecommerce');
+            }
+
+            return;
+        }
+
         // Bij een gekozen prijsgroep zijn de categorie-velden verborgen, dus
         // de formulierdata kan 'product_category_ids' missen.
         $selectedCategoryIds = $data['product_category_ids'] ?? [];

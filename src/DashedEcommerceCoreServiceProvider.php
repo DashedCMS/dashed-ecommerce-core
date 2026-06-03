@@ -1841,6 +1841,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrintQueue\CleanupOldPrintJobsCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\CleanupPriceGroupUserPricingCommand::class,
             ]);
 
     }
