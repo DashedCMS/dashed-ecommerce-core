@@ -157,7 +157,6 @@ class PriceGroupResource extends Resource
                 ->helperText('Deze gebruikers krijgen de prijzen van deze groep. Een gebruiker kan maar in één groep zitten.')
                 ->multiple()
                 ->searchable()
-                ->dehydrated(false)
                 ->getSearchResultsUsing(fn (string $search) => \Dashed\DashedCore\Models\User::query()
                     ->where(fn ($q) => $q->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
