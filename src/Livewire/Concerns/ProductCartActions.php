@@ -364,6 +364,7 @@ trait ProductCartActions
             }
 
             $extrasCollection = $this->product?->allProductExtras() ?? collect();
+            $this->applyUserPricesToExtras($extrasCollection);
             $this->productExtras = $extrasCollection;
             $this->extras = $extrasCollection->toArray();
         }
@@ -696,6 +697,22 @@ trait ProductCartActions
         $this->filters = $filters;
     }
 
+    /**
+     * Zet op de extra's en hun opties de prijs die voor de ingelogde gebruiker
+     * geldt (priceForUser: prijsgroep-leidend, dan persoonlijk, dan basis). Zo
+     * tonen alle thema's de juiste prijs out of the box en rekent de component
+     * met dezelfde prijzen, zonder dat views priceForUser hoeven aan te roepen.
+     */
+    protected function applyUserPricesToExtras($extras): void
+    {
+        foreach ($extras as $extra) {
+            foreach ($extra->productExtraOptions as $option) {
+                $option->price = $option->priceForUser();
+            }
+            $extra->price = $extra->priceForUser();
+        }
+    }
+
     public function calculateCurrentPrices(): void
     {
         if (! $this->product) {
@@ -712,6 +729,7 @@ trait ProductCartActions
 
         if (! $this->productExtras) {
             $this->productExtras = $this->product->allProductExtras();
+            $this->applyUserPricesToExtras($this->productExtras);
         }
 
         foreach ($this->productExtras as $extraKey => $productExtra) {
@@ -815,6 +833,7 @@ trait ProductCartActions
         $options = [];
 
         $productExtras = $product->allProductExtras();
+        $this->applyUserPricesToExtras($productExtras);
 
         foreach ($productExtras as $extraKey => $productExtra) {
             $productExtraPrice = 0;
