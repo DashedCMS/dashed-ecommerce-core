@@ -86,12 +86,12 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets\OrderUnhandledStat;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
@@ -1676,6 +1676,44 @@ MARKDOWN,
         cms()->registerRolePermissions('Export', [
             'view_exports' => 'Exports bekijken',
         ]);
+
+        if (class_exists(\Dashed\DashedMobileApi\MobileApiRegistry::class)) {
+            /** @var \Dashed\DashedMobileApi\MobileApiRegistry $mobileApi */
+            $mobileApi = $this->app->make(\Dashed\DashedMobileApi\MobileApiRegistry::class);
+
+            $version = \Composer\InstalledVersions::isInstalled('dashed/dashed-ecommerce-core')
+                ? \Composer\InstalledVersions::getPrettyVersion('dashed/dashed-ecommerce-core')
+                : null;
+            $mobileApi->registerCapability('ecommerce', ['version' => $version]);
+
+            $mobileApi->registerAbilities(['products.read', 'products.write', 'orders.read', 'orders.write']);
+            $mobileApi->registerRoleAbilities([
+                'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
+                'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
+                'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
+                'read-only' => ['products.read', 'orders.read'],
+            ]);
+
+            $mobileApi->registerDashboardContributor(function (string $siteId): array {
+                $ordersToday = \Dashed\DashedEcommerceCore\Models\Order::query()
+                    ->where('site_id', $siteId)
+                    ->isPaid()
+                    ->whereDate('created_at', now()->toDateString())
+                    ->get();
+
+                return [
+                    'orders_today_count' => $ordersToday->count(),
+                    'revenue_today' => round((float) $ordersToday->sum('total'), 2),
+                    'open_orders' => \Dashed\DashedEcommerceCore\Models\Order::query()
+                        ->where('site_id', $siteId)
+                        ->where('fulfillment_status', 'unhandled')
+                        ->isPaid()
+                        ->count(),
+                ];
+            });
+
+            $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
+        }
     }
 
     public static function builderBlocks()
