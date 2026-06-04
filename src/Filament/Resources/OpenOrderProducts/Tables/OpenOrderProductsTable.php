@@ -181,6 +181,54 @@ class OpenOrderProductsTable
                                 ->orWhere('product_id', 0)),
                         blank: fn (Builder $query) => $query,
                     ),
+
+                SelectFilter::make('product')
+                    ->label('Product')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => \Dashed\DashedEcommerceCore\Models\Product::query()
+                        ->orderBy('id')
+                        ->get()
+                        ->mapWithKeys(fn ($product) => [$product->id => $product->name])
+                        ->all())
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->whereIn('dashed__order_products.product_id', $data['values']);
+                    }),
+
+                SelectFilter::make('product_group')
+                    ->label('Productgroep')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => \Dashed\DashedEcommerceCore\Models\ProductGroup::query()
+                        ->get()
+                        ->mapWithKeys(fn ($group) => [$group->id => $group->name])
+                        ->all())
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('product', fn ($q) => $q->whereIn('product_group_id', $data['values']));
+                    }),
+
+                SelectFilter::make('product_category')
+                    ->label('Productcategorie')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => \Dashed\DashedEcommerceCore\Models\ProductCategory::all()
+                        ->mapWithKeys(fn ($category) => [$category->id => $category->nameWithParents])
+                        ->all())
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('product.productCategories', fn ($q) => $q->whereIn('dashed__product_categories.id', $data['values']));
+                    }),
             ])
             ->recordUrl(function ($record, $livewire) {
                 // In de grouped tabs is order_id een MIN() over meerdere
