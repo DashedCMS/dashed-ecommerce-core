@@ -1691,6 +1691,7 @@ MARKDOWN,
                 'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
                 'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
                 'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
+                'support-agent' => ['orders.read'],
                 'read-only' => ['products.read', 'orders.read'],
             ]);
 
