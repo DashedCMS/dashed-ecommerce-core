@@ -2,33 +2,37 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
-use UnitEnum;
 use BackedEnum;
 use Carbon\Carbon;
-use Filament\Pages\Page;
-use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\DB;
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Contracts\HasSchemas;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\DB;
+use UnitEnum;
 
 class RevenueStatisticsPage extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-presentation-chart-line';
+
     protected static ?string $navigationLabel = 'Omzet statistieken';
-    protected static string | UnitEnum | null $navigationGroup = 'Statistics';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Statistics';
+
     protected static ?string $title = 'Omzet statistieken';
+
     protected static ?int $navigationSort = 100000;
 
     public static function canAccess(): bool
@@ -225,7 +229,9 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             ->whereBetween('created_at', [$beginDate, $endDate]);
 
         if ($status === 'payment_obligation') {
-            $ordersQuery->isPaid();
+            // Betaalde orders inclusief retouren (negatieve credit-orders), zodat
+            // de omzet netto is en aansluit op de financiele/verzamelfactuur-export.
+            $ordersQuery->isPaidOrReturn();
         } elseif ($status !== 'all') {
             $ordersQuery->where('status', $status);
         }

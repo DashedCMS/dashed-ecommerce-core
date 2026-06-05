@@ -2,23 +2,23 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Storage;
-use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
-use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
-use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Models\CartItem as CartItemModel;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
+use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedTranslations\Models\Translation;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CartHelper
 {
@@ -463,7 +463,7 @@ class CartHelper
      */
     protected function mapDbCartItemToRuntime(CartItemModel $item): object
     {
-        $o = new \stdClass();
+        $o = new \stdClass;
 
         $o->rowId = (string) $item->id;
         $o->id = $item->product_id; // gloudemans: id = product_id
@@ -1218,6 +1218,17 @@ class CartHelper
 
         foreach ($totalVatPerPercentage as $percentage => $value) {
             $totalVatPerPercentage[$percentage] = round($value, 2);
+        }
+
+        // Houd de BTW-uitsplitsing consistent met setTax(): die klemt een negatief
+        // BTW-totaal (bv. bij een korting/cadeaubon groter dan de productwaarde) naar 0.
+        // Zonder deze klem kan vat_percentages negatief blijven terwijl order->btw 0 is,
+        // waardoor de "BTW :percentage:%"-regel en het BTW-totaal op de (verzamel)factuur
+        // niet meer met elkaar overeenkomen.
+        if (array_sum($totalVatPerPercentage) < 0) {
+            foreach ($totalVatPerPercentage as $percentage => $value) {
+                $totalVatPerPercentage[$percentage] = 0.0;
+            }
         }
 
         static::$taxPercentages = $totalVatPerPercentage;

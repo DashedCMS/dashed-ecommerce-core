@@ -2,43 +2,56 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Exception;
-use Illuminate\Support\Str;
-use Dashed\DashedCore\Models\User;
-use Spatie\Activitylog\LogOptions;
-use Illuminate\Support\Facades\App;
+use Dashed\DashedCore\Classes\EmailCapture;
 use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Dashed\ReceiptPrinter\ReceiptPrinter;
-use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Models\Customsetting;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedEcommerceCore\Classes\Printing;
-use Dashed\DashedEcommerceCore\Classes\Countries;
-use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Notifications\AdminNotifier;
-use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\Printing;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
-use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
-use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
-use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Jobs\SendAutomaticFulfillmentProductsJob;
+use Dashed\DashedEcommerceCore\Jobs\SendGAEcommerceHitJob;
+use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
+use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusHandledMail;
+use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusInTreatmentMail;
+use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusPackedMail;
+use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusReadyForPickupMail;
+use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusShippedMail;
+use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusUnhandledMail;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
+use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
+use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
+use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\ReceiptPrinter\ReceiptPrinter;
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Order extends Model
 {
@@ -93,7 +106,7 @@ class Order extends Model
             // Checkout-livewire-event niet gevuurd heeft.
             if (! empty($order->email)) {
                 try {
-                    \Dashed\DashedCore\Classes\EmailCapture::capture(
+                    EmailCapture::capture(
                         (string) $order->email,
                         'order:'.($order->order_origin ?? 'own')
                     );
@@ -107,9 +120,9 @@ class Order extends Model
             // is idempotent (empty()-check per kolom) en merget cart + sessie,
             // zodat ook gedeeltelijke UTM-sets correct worden aangevuld.
             try {
-                if (\Illuminate\Support\Facades\Schema::hasColumn($order->getTable(), 'utm_source')) {
+                if (Schema::hasColumn($order->getTable(), 'utm_source')) {
                     $cart = $order->cart_id ? $order->cart : null;
-                    \Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker::attachToOrder($order, $cart);
+                    AttributionTracker::attachToOrder($order, $cart);
                 }
             } catch (\Throwable $e) {
                 report($e);
@@ -141,7 +154,7 @@ class Order extends Model
      */
     public function latestActivity(): MorphOne
     {
-        return $this->morphOne(\Spatie\Activitylog\Models\Activity::class, 'subject')
+        return $this->morphOne(Activity::class, 'subject')
             ->latestOfMany('created_at');
     }
 
@@ -384,7 +397,8 @@ class Order extends Model
 
     public function scopeCalculatableForStats($query)
     {
-        return $query->whereNotIn('invoice_id', ['PROFORMA', 'RETURN']);
+        return $query->whereNotIn('invoice_id', ['PROFORMA', 'RETURN'])
+            ->where('status', '!=', 'cancelled');
         //        return $query->whereNotIn('invoice_id', ['PROFORMA', 'RETURN'])->whereIn('order_origin', ['own', 'pos']);
     }
 
@@ -811,16 +825,16 @@ class Order extends Model
         // geconfigureerd zijn (trigger_status). Inschrijvingen worden
         // bijgehouden in dashed__order_flow_enrollments zodat meerdere flows
         // tegelijk voor dezelfde order kunnen lopen.
-        \Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent::dispatch($this, $oldStatus, $newStatus);
+        OrderFulfillmentStatusChangedEvent::dispatch($this, $oldStatus, $newStatus);
 
         if ($this->isPaidFor()) {
             $mailableMap = [
-                'unhandled' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusUnhandledMail::class,
-                'handled' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusHandledMail::class,
-                'in_treatment' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusInTreatmentMail::class,
-                'packed' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusPackedMail::class,
-                'ready_for_pickup' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusReadyForPickupMail::class,
-                'shipped' => \Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusShippedMail::class,
+                'unhandled' => FulfillmentStatusUnhandledMail::class,
+                'handled' => FulfillmentStatusHandledMail::class,
+                'in_treatment' => FulfillmentStatusInTreatmentMail::class,
+                'packed' => FulfillmentStatusPackedMail::class,
+                'ready_for_pickup' => FulfillmentStatusReadyForPickupMail::class,
+                'shipped' => FulfillmentStatusShippedMail::class,
             ];
 
             $key = $this->fulfillment_status;
@@ -868,7 +882,7 @@ class Order extends Model
             $this->deductDiscount();
             //            OrderLog::createLog(orderId: $this->id, note: 'Deducted discount', isDebugLog: true);
 
-            \Dashed\DashedEcommerceCore\Jobs\SendAutomaticFulfillmentProductsJob::dispatch($this);
+            SendAutomaticFulfillmentProductsJob::dispatch($this);
 
             //            OrderLog::createLog(orderId: $this->id, note: 'Mark as paid event dispatch start', isDebugLog: true);
             OrderMarkedAsPaidEvent::dispatch($this);
@@ -881,7 +895,7 @@ class Order extends Model
             }
             cartHelper()->emptyCart();
 
-            \Dashed\DashedEcommerceCore\Jobs\SendGAEcommerceHitJob::dispatch($this);
+            SendGAEcommerceHitJob::dispatch($this);
         }
 
         $this->updateOrderProductsProductInformation();
@@ -1022,7 +1036,7 @@ class Order extends Model
 
         foreach ($chosenOrderProducts as $chosenOrderProduct) {
             if ($chosenOrderProduct['refundQuantity'] > 0) {
-                $orderProduct = new OrderProduct();
+                $orderProduct = new OrderProduct;
                 $orderProduct->quantity = 0 - $chosenOrderProduct['refundQuantity'];
                 $orderProduct->product_id = $chosenOrderProduct['product_id'];
                 $orderProduct->name = $chosenOrderProduct['name'];
@@ -1064,7 +1078,7 @@ class Order extends Model
         }
 
         if ($extraOrderLineName || $extraOrderLinePrice > 0) {
-            $orderProduct = new OrderProduct();
+            $orderProduct = new OrderProduct;
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->name = $extraOrderLineName ?: 'Extra';
@@ -1364,7 +1378,7 @@ class Order extends Model
         $store_website = url('/');
 
         // Init printer
-        $printer = new ReceiptPrinter();
+        $printer = new ReceiptPrinter;
         $printer->init(
             Customsetting::get('receipt_printer_connector_type'),
             Customsetting::get('receipt_printer_connector_descriptor')
