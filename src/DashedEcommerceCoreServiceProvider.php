@@ -1695,21 +1695,40 @@ MARKDOWN,
                 'read-only' => ['products.read', 'orders.read'],
             ]);
 
-            $mobileApi->registerDashboardContributor(function (string $siteId): array {
-                $ordersToday = \Dashed\DashedEcommerceCore\Models\Order::query()
+            $mobileApi->registerDashboardContributor(function (string $siteId, $period): array {
+                $orderModel = \Dashed\DashedEcommerceCore\Models\Order::class;
+
+                $paidInRange = $orderModel::query()
                     ->where('site_id', $siteId)
                     ->isPaid()
-                    ->whereDate('created_at', now()->toDateString())
-                    ->get();
+                    ->whereBetween('created_at', [$period->start, $period->end])
+                    ->get(['id', 'total', 'created_at']);
+
+                $revenue = round((float) $paidInRange->sum('total'), 2);
+                $orders = $paidInRange->count();
+
+                $unhandledOrders = $orderModel::query()
+                    ->where('site_id', $siteId)
+                    ->where('fulfillment_status', 'unhandled')
+                    ->isPaid()
+                    ->whereBetween('created_at', [$period->start, $period->end])
+                    ->count();
+
+                $series = [];
+                foreach ($period->buckets() as $bucket) {
+                    $sum = $paidInRange
+                        ->filter(fn ($order) => $order->created_at >= $bucket['start'] && $order->created_at < $bucket['end'])
+                        ->sum('total');
+
+                    $series[] = ['label' => $bucket['label'], 'value' => round((float) $sum, 2)];
+                }
 
                 return [
-                    'orders_today_count' => $ordersToday->count(),
-                    'revenue_today' => round((float) $ordersToday->sum('total'), 2),
-                    'open_orders' => \Dashed\DashedEcommerceCore\Models\Order::query()
-                        ->where('site_id', $siteId)
-                        ->where('fulfillment_status', 'unhandled')
-                        ->isPaid()
-                        ->count(),
+                    'revenue' => $revenue,
+                    'orders' => $orders,
+                    'average_order_value' => $orders > 0 ? round($revenue / $orders, 2) : 0.0,
+                    'unhandled_orders' => $unhandledOrders,
+                    'revenue_series' => $series,
                 ];
             });
 
