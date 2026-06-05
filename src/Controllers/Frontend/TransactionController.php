@@ -17,11 +17,11 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 
 ;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
@@ -403,7 +403,18 @@ class TransactionController extends Controller
         }
 
         if ($order->status == 'cancelled') {
-            return redirect('/')->with('error', Translation::get('order-status-cancelled', 'checkout', 'Your order is cancelled'));
+            // Payment was declined/cancelled by the provider. The cart is still
+            // intact (emptyCart only runs on a successful payment), so send the
+            // customer back to checkout to retry with another payment method
+            // instead of dumping them on the homepage.
+            $message = Translation::get('payment-declined-try-again', 'checkout', 'Je betaling is afgewezen of niet voltooid. Probeer het opnieuw met een andere betaalmethode.');
+            $checkoutUrl = ShoppingCart::getCheckoutUrl();
+
+            if ($checkoutUrl && $checkoutUrl !== '#') {
+                return redirect($checkoutUrl)->with('error', $message);
+            }
+
+            return redirect('/')->with('error', $message);
         }
 
         if (view()->exists('dashed.orders.view-order')) {
