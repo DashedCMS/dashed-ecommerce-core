@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Database\Factories;
 
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PrinterFactory extends Factory

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand;
 
 it('promotes failed job back to pending when attempts < max_retries and cooldown passed', function () {
     $printer = Printer::factory()->create(['max_retries' => 3]);

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Database\Factories;
 
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 
 class PrintJobFactory extends Factory
 {

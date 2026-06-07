@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
 
 class ListPrinters extends ListRecords
 {

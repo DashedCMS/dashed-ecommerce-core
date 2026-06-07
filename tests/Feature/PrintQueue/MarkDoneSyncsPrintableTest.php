@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder;
 
 it('flips label_printed=true on linked MyParcelOrder when shipping_label job is marked done', function () {

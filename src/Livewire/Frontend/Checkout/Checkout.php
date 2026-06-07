@@ -19,7 +19,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\CartLog;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\CartHelper;
@@ -33,6 +32,7 @@ use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
 
 class Checkout extends Component
@@ -989,7 +989,7 @@ class Checkout extends Component
                 $price = 0;
 
                 if (! str($optionId)->contains('product-extra-')) {
-                    $price = optional($productExtraOptions->get($optionId))->price ?? 0;
+                    $price = optional($productExtraOptions->get($optionId))->priceForUser() ?? 0;
                 }
 
                 $productExtras[] = [

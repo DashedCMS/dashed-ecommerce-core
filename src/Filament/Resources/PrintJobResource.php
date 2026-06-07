@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use UnitEnum;
 use BackedEnum;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource\Pages;
-use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
-use UnitEnum;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource\Pages;
 
 class PrintJobResource extends Resource
 {

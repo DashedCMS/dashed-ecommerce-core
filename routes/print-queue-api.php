@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\PrintQueueController;
-use Dashed\DashedEcommerceCore\Models\Printer;
 use Illuminate\Support\Facades\Route;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\PrintQueueController;
 
 Route::get('/printer-install-discover/{nonce}', function (string $nonce) {
     $script = view('dashed-ecommerce-core::print.install-script-discover', [
@@ -42,6 +42,7 @@ Route::post('/api/print/discover/{nonce}', function (string $nonce, \Illuminate\
                 'cups_name' => $cupsName,
                 'reason' => 'cups_name bestaat al in CMS als printer "' . $existing->name . '"',
             ];
+
             continue;
         }
 

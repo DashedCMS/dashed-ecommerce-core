@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Database\Factories\PrinterFactory;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Dashed\DashedEcommerceCore\Database\Factories\PrinterFactory;
 
 class Printer extends Model
 {

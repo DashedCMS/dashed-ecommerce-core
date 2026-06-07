@@ -1,10 +1,10 @@
 <?php
 
 use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Models\PriceGroup;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\PriceGroup;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
 it('creates a price group with defaults', function () {
     $group = PriceGroup::create(['name' => 'B2B Standaard']);

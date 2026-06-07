@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Commands\PrintQueue;
 
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Illuminate\Console\Command;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 
 class RetryFailedPrintJobsCommand extends Command
 {

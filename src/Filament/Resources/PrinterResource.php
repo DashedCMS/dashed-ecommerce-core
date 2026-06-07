@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
+use UnitEnum;
 use BackedEnum;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource\Pages;
-use Dashed\DashedEcommerceCore\Models\Printer;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Resources\Resource;
-use Filament\Schemas\Components\Section;
+use Filament\Tables\Table;
 use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
+use Filament\Resources\Resource;
+use Filament\Actions\DeleteAction;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\URL;
+use Filament\Actions\BulkActionGroup;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\HtmlString;
-use UnitEnum;
+use Filament\Forms\Components\Placeholder;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource\Pages;
 
 class PrinterResource extends Resource
 {

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource;
 use Filament\Resources\Pages\ListRecords;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource;
 
 class ListPrintJobs extends ListRecords
 {

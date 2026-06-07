@@ -3,14 +3,13 @@
 declare(strict_types=1);
 
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Jobs\PrintQueue\SyncShippingLabelPrintJobsJob;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder;
+use Dashed\DashedEcommerceCore\Jobs\PrintQueue\SyncShippingLabelPrintJobsJob;
 
 beforeEach(function () {
     Customsetting::set('print_queue.auto_print_label_on_generated', true);

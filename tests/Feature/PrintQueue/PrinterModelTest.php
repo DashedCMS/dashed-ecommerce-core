@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
 
 it('auto fills ulid on creation', function () {
     $printer = Printer::create([

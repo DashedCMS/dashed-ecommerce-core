@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Dashed\DashedEcommerceCore\Database\Factories\PrintJobFactory;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Dashed\DashedEcommerceCore\Database\Factories\PrintJobFactory;
 
 class PrintJob extends Model
 {

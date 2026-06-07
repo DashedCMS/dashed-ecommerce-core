@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
-use Dashed\DashedEcommerceCore\Listeners\PrintQueue\CreatePackingSlipPrintJobListener;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Listeners\PrintQueue\CreatePackingSlipPrintJobListener;
 
 beforeEach(function () {
     Customsetting::set('print_queue.auto_print_on_new_order', true);

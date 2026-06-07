@@ -6,8 +6,8 @@ use Throwable;
 use Illuminate\Support\Facades\Log;
 use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedCore\Notifications\AdminNotifier;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Mail\AdminPaymentStartFailedMail;
 
 /**
@@ -51,6 +51,7 @@ class PaymentTransactionStarter
         if (! $providerEntry || empty($providerEntry['class'])) {
             $e = new \RuntimeException("Geen payment provider geregistreerd voor PSP '{$orderPayment->psp}'.");
             self::handleFailure($orderPayment, $context, $e);
+
             throw $e;
         }
 
@@ -58,6 +59,7 @@ class PaymentTransactionStarter
             return $providerEntry['class']::startTransaction($orderPayment);
         } catch (Throwable $e) {
             self::handleFailure($orderPayment, $context, $e);
+
             throw $e;
         }
     }

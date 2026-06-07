@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Notifications\PrintQueue;
 
-use Dashed\DashedEcommerceCore\Models\Printer;
-use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Filament\Notifications\Notification as FilamentNotification;
 
 class PrinterOfflineNotification extends Notification
 {

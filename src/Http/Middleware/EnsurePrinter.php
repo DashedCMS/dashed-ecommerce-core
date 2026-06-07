@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Middleware;
 
 use Closure;
-use Dashed\DashedEcommerceCore\Models\Printer;
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Models\Printer;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsurePrinter

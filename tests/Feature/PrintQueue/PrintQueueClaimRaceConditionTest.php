@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 
 it('only one printer wins on parallel claim', function () {
     $printerA = Printer::factory()->create(['is_active' => true]);

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource\Pages;
 
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
-use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource;
 
 class EditPrinter extends EditRecord
 {

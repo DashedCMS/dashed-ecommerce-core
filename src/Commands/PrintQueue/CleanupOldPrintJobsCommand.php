@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Commands\PrintQueue;
 
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Illuminate\Console\Command;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 
 class CleanupOldPrintJobsCommand extends Command
 {

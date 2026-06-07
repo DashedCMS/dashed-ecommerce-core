@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Listeners\PrintQueue;
 
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 
 class CreatePackingSlipPrintJobListener implements ShouldQueue
 {

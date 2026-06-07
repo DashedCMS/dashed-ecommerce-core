@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Commands\PrintQueue;
 
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Models\Printer;
-use Dashed\DashedEcommerceCore\Notifications\PrintQueue\PrinterOfflineNotification;
 use Illuminate\Console\Command;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Notifications\PrintQueue\PrinterOfflineNotification;
 
 class PrinterHealthCheckCommand extends Command
 {
@@ -34,6 +34,7 @@ class PrinterHealthCheckCommand extends Command
             $admins = $this->resolveAdmins();
             if ($admins->isEmpty()) {
                 Cache::put($cacheKey, true, now()->addMinutes(30));
+
                 continue;
             }
 
