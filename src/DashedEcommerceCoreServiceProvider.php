@@ -1586,6 +1586,17 @@ MARKDOWN,
             \Dashed\DashedEcommerceCore\Services\Summary\OrderFlowSummaryContributor::class,
         ]);
 
+        cms()->builder('dashboardWidgets', [
+            'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 2,      'sort' => 10],
+            'ec-revenue'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 2,      'sort' => 15],
+            'ec-alltime-revenue'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class,                  'label' => 'Omzet (totaal)',               'width' => 2,      'sort' => 20],
+            'ec-cart-statistics'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics::class,                     'label' => 'Winkelmand-statistieken',      'width' => 2,      'sort' => 25],
+            'ec-soldout'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount::class,                       'label' => 'Uitverkocht',                  'width' => 2,      'sort' => 30],
+            'ec-print-queue'          => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget::class,                             'label' => 'Printwachtrij',                'width' => 2,      'sort' => 35],
+            'ec-payment-methods'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
+            'ec-revenue-return-chart' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats::class, 'label' => 'Omzet & retouren (grafiek)',  'width' => 'full', 'sort' => 45],
+        ]);
+
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\DiscountCode::class, \Dashed\DashedEcommerceCore\Policies\DiscountCodePolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\FulfillmentCompany::class, \Dashed\DashedEcommerceCore\Policies\FulfillmentCompanyPolicy::class);
@@ -1686,13 +1697,21 @@ MARKDOWN,
                 : null;
             $mobileApi->registerCapability('ecommerce', ['version' => $version]);
 
-            $mobileApi->registerAbilities(['products.read', 'products.write', 'orders.read', 'orders.write']);
+            $mobileApi->registerAbilities(['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use']);
             $mobileApi->registerRoleAbilities([
-                'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
-                'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
-                'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write'],
+                'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use'],
+                'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use'],
+                'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use'],
+                'kassamedewerker' => ['products.read', 'orders.read', 'pos.use'],
                 'support-agent' => ['orders.read'],
                 'read-only' => ['products.read', 'orders.read'],
+            ]);
+
+            // App-notificatietypes waar een gebruiker per stuk voor kan kiezen.
+            $mobileApi->registerNotificationTypes([
+                ['key' => 'order.placed', 'label' => 'Nieuwe bestelling', 'description' => 'Een nieuwe betaalde bestelling komt binnen.', 'group' => 'Bestellingen', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
+                ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => false],
+                ['key' => 'stock.low', 'label' => 'Lage voorraad', 'description' => 'Een product zakt onder de voorraaddrempel.', 'group' => 'Producten', 'sound' => 'default', 'ability' => 'products.read', 'default' => false],
             ]);
 
             $mobileApi->registerDashboardContributor(function (string $siteId, $period): array {
@@ -1707,11 +1726,12 @@ MARKDOWN,
                 $revenue = round((float) $paidInRange->sum('total'), 2);
                 $orders = $paidInRange->count();
 
+                // Onafgehandeld is de huidige achterstand (totaal) en wordt
+                // bewust NIET door de geselecteerde periode beïnvloed.
                 $unhandledOrders = $orderModel::query()
                     ->where('site_id', $siteId)
                     ->where('fulfillment_status', 'unhandled')
                     ->isPaid()
-                    ->whereBetween('created_at', [$period->start, $period->end])
                     ->count();
 
                 $series = [];
