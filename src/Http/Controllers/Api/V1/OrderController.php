@@ -97,9 +97,13 @@ class OrderController extends Controller
 
     public function show(int $order): OrderResource
     {
-        $model = Order::thisSite()->findOrFail($order);
+        return $this->detail(Order::thisSite()->findOrFail($order));
+    }
 
-        return new OrderResource($model->load('orderProducts'));
+    /** Laadt de relaties die de detail-resource nodig heeft. */
+    private function detail(Order $model): OrderResource
+    {
+        return new OrderResource($model->fresh()->load(['orderProducts.product', 'orderPayments', 'trackAndTraces']));
     }
 
     public function update(Request $request, int $order): OrderResource
@@ -118,7 +122,109 @@ class OrderController extends Controller
             ->withProperties($data)
             ->log('mobile-api: orderstatus gewijzigd');
 
-        return new OrderResource($model->fresh()->load('orderProducts'));
+        return $this->detail($model);
+    }
+
+    /** Markeer de bestelling als betaald (zoals Filament "Markeer als betaald"). */
+    public function markAsPaid(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $model->markAsPaid();
+
+        activity()->performedOn($model)->causedBy($request->user())->log('mobile-api: gemarkeerd als betaald');
+
+        return $this->detail($model);
+    }
+
+    /** Wijzig de fulfilment-/verwerkingsstatus. */
+    public function changeFulfillment(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'fulfillment_status' => ['required', 'string', Rule::in(['handled', 'partially_handled', 'unhandled', 'waiting_for_supplier'])],
+        ]);
+
+        $model->changeFulfillmentStatus($data['fulfillment_status']);
+
+        activity()->performedOn($model)->causedBy($request->user())->withProperties($data)->log('mobile-api: fulfilment-status gewijzigd');
+
+        return $this->detail($model);
+    }
+
+    /** Factuur-PDF-URL (genereert 'm indien nodig). */
+    public function invoiceUrl(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        return response()->json(['url' => $model->downloadInvoiceUrl()]);
+    }
+
+    /** Pakbon-PDF-URL (genereert 'm indien nodig). */
+    public function packingSlipUrl(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        return response()->json(['url' => $model->downloadPackingslipUrl()]);
+    }
+
+    /** Voeg een notitie/orderlog toe (optioneel zichtbaar voor de klant). */
+    public function addNote(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'note' => ['required', 'string', 'max:5000'],
+            'public_for_customer' => ['sometimes', 'boolean'],
+        ]);
+
+        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+            orderId: $model->id,
+            tag: 'note.created',
+            note: $data['note'],
+            publicForCustomer: (bool) ($data['public_for_customer'] ?? false),
+        );
+
+        return $this->detail($model);
+    }
+
+    /**
+     * Print de pakbon of het verzendlabel naar de geconfigureerde netwerk-/CUPS-
+     * printer door een PrintJob in de wachtrij te zetten (de printer-worker pakt
+     * 'm op). Vereist een actieve printer van het juiste type.
+     */
+    public function print(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'type' => ['required', Rule::in(['packing_slip', 'shipping_label'])],
+        ]);
+
+        $jobType = $data['type'] === 'shipping_label'
+            ? \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel
+            : \Dashed\DashedEcommerceCore\Enums\PrintJobType::PackingSlip;
+        $printerType = $data['type'] === 'shipping_label'
+            ? \Dashed\DashedEcommerceCore\Enums\PrinterType::ShippingLabel
+            : \Dashed\DashedEcommerceCore\Enums\PrinterType::PackingSlip;
+
+        $hasPrinter = \Dashed\DashedEcommerceCore\Models\Printer::active()
+            ->whereIn('type', [$printerType->value, \Dashed\DashedEcommerceCore\Enums\PrinterType::Both->value])
+            ->exists();
+
+        if (! $hasPrinter) {
+            return response()->json(['success' => false, 'message' => 'Geen actieve ' . strtolower($jobType->label()) . '-printer geconfigureerd.'], 422);
+        }
+
+        \Dashed\DashedEcommerceCore\Models\PrintJob::create([
+            'type' => $jobType,
+            'order_id' => $model->id,
+            'status' => \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending,
+        ]);
+
+        activity()->performedOn($model)->causedBy($request->user())->withProperties($data)->log('mobile-api: ' . strtolower($jobType->label()) . ' geprint');
+
+        return response()->json(['success' => true, 'message' => $jobType->label() . ' naar de printer gestuurd.']);
     }
 
     private function applyArrayFilter(Builder $query, string $column, mixed $value): void

@@ -16,9 +16,23 @@ class OrderProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'product_id' => $this->product_id,
             'name' => $this->name,
+            'sku' => $this->sku,
+            'image' => $this->custom_image
+                ?: ($this->product && $this->product->firstImage
+                    ? (mediaHelper()->getSingleMedia($this->product->firstImage, ['widen' => 200])->url ?? null)
+                    : null),
             'quantity' => (int) $this->quantity,
-            'price' => (float) $this->price,
+            'price' => $this->price !== null ? (float) $this->price : null,
+            'btw' => $this->btw !== null ? (float) $this->btw : null,
+            'vat_rate' => $this->vat_rate !== null ? (float) $this->vat_rate : null,
+            'discount' => $this->discount !== null ? (float) $this->discount : null,
+            'is_pre_order' => (bool) $this->is_pre_order,
+            'pre_order_restocked_date' => $this->pre_order_restocked_date,
+            'fulfillment_provider' => $this->fulfillment_provider,
+            'send_to_fulfiller' => (bool) $this->send_to_fulfiller,
+            'extras' => $this->product_extras ?: [],
         ];
     }
 }

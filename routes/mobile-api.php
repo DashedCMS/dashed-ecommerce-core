@@ -46,6 +46,7 @@ $posActions = [
     'insert-order-in-pos-cart' => 'insertOrderInPOSCart',
     'cancel-order' => 'cancelOrder',
     'update-search-query-input-mode' => 'updateSearchQueryInputmode',
+    'apply-custom-discount' => 'applyCustomDiscount',
 ];
 
 Route::prefix('api/v1')
@@ -76,4 +77,10 @@ Route::prefix('api/v1')
         Route::get('orders/filter-options', [OrderController::class, 'filterOptions'])->middleware('ability:orders.read');
         Route::get('orders/{order}', [OrderController::class, 'show'])->middleware('ability:orders.read');
         Route::patch('orders/{order}', [OrderController::class, 'update'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
+        Route::get('orders/{order}/invoice-url', [OrderController::class, 'invoiceUrl'])->middleware('ability:orders.read');
+        Route::get('orders/{order}/packing-slip-url', [OrderController::class, 'packingSlipUrl'])->middleware('ability:orders.read');
+        Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/print', [OrderController::class, 'print'])->middleware('ability:orders.write');
     });

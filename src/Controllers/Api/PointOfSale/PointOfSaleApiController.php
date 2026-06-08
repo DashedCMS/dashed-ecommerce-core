@@ -687,6 +687,69 @@ class PointOfSaleApiController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Korting toepassen met type-keuze (zoals de CMS-kassa): percentage, vast
+     * bedrag of een bestaande kortingscode. Bij percentage/bedrag wordt — net als
+     * in Filament — een tijdelijke kortingscode (30 min) aangemaakt en toegepast.
+     */
+    public function applyCustomDiscount(Request $request)
+    {
+        $data = $request->validate([
+            'posIdentifier' => ['required', 'string'],
+            'type' => ['required', \Illuminate\Validation\Rule::in(['percentage', 'amount', 'discountCode'])],
+            'value' => ['nullable', 'numeric', 'min:0'],
+            'code' => ['nullable', 'string'],
+            'note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $posCart = POSCart::where('identifier', $data['posIdentifier'])->where('status', 'active')->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Geen actieve kassa gevonden.'], 422);
+        }
+        if (! ($posCart->products ?? [])) {
+            return response()->json(['success' => false, 'message' => 'Geen producten in winkelmand.'], 422);
+        }
+
+        if ($data['type'] === 'discountCode') {
+            $code = $data['code'] ?? null;
+            $discountCode = $code
+                ? DiscountCode::where('code', $code)->orWhere('id', is_numeric($code) ? (int) $code : 0)->first()
+                : null;
+            if (! $discountCode) {
+                return response()->json(['success' => false, 'message' => 'Kortingscode niet gevonden.'], 422);
+            }
+        } else {
+            if (! isset($data['value'])) {
+                return response()->json(['success' => false, 'message' => 'Vul een waarde in.'], 422);
+            }
+            if ($data['type'] === 'percentage' && $data['value'] > 100) {
+                return response()->json(['success' => false, 'message' => 'Percentage mag niet boven 100 liggen.'], 422);
+            }
+
+            $discountCode = new DiscountCode();
+            $discountCode->site_ids = [\Dashed\DashedCore\Classes\Sites::getActive()];
+            $discountCode->name = 'Point of Sale discount';
+            $discountCode->note = $data['note'] ?? '';
+            $discountCode->code = strtoupper(Str::random(5) . '-' . Str::random(5) . '-' . Str::random(5) . '-' . Str::random(5));
+            $discountCode->type = $data['type'];
+            $discountCode->{'discount_' . $data['type']} = $data['value'];
+            $discountCode->start_date = Carbon::now();
+            $discountCode->end_date = Carbon::now()->addMinutes(30);
+            $discountCode->limit_use_per_customer = 1;
+            $discountCode->use_stock = 1;
+            $discountCode->stock = 1;
+            $discountCode->save();
+        }
+
+        $result = $posCart->applyDiscountCode($discountCode->code);
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json(['success' => false, 'message' => $result['message'] ?? 'Korting niet toegepast.'], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => $result['message'] ?? 'Korting toegepast.']);
+    }
+
     public function selectPaymentMethod(Request $request)
     {
         $data = $request->all();
