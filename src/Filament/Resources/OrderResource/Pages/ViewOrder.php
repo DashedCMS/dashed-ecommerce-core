@@ -87,6 +87,24 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-document-text')
                 ->button(),
             ActionGroup::make([
+                Action::make('markCancelledAsPaid')
+                    ->label('Markeer als betaald')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn () => $this->record->status === 'cancelled')
+                    ->requiresConfirmation()
+                    ->modalHeading('Geannuleerde bestelling op betaald zetten?')
+                    ->modalDescription('De bestelling wordt alsnog op betaald gezet (factuur, voorraad en afhandeling worden verwerkt).')
+                    ->action(function () {
+                        $this->record->changeStatus('paid');
+
+                        Notification::make()
+                            ->title('Bestelling op betaald gezet')
+                            ->success()
+                            ->send();
+
+                        $this->redirect(route('filament.dashed.resources.orders.view', ['record' => $this->record->id]));
+                    }),
                 RegisterManualPaymentAction::make($this->record),
                 SendPaymentLinkAction::make($this->record),
             ])
