@@ -1448,6 +1448,7 @@ MARKDOWN,
         // Resource header widgets
         Livewire::component('dashed.dashed-ecommerce-core.filament.resources.order-resource.widgets.order-unhandled-stat', OrderUnhandledStat::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.orders.order-outstanding-stats-widget', OrderOutstandingStatsWidget::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.revenue.alltime-revenue-stats', \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.resources.cart-resource.widgets.cart-active-stat', CartActiveStat::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.resources.product-resource.widgets.product-out-of-stock-stat', ProductOutOfStockStat::class);
 
