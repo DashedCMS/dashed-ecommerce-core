@@ -148,6 +148,13 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
             ->whereNotNull('email')
             ->where('email', '!=', '');
 
+        // Bol.com-bestellingen nooit meenemen in marketing-backfill.
+        if (Schema::hasColumn('dashed__orders', 'order_origin')) {
+            $query->where(function ($q) {
+                $q->whereNull('order_origin')->orWhere('order_origin', '!=', 'Bol');
+            });
+        }
+
         if ($this->onlyMarketing && Schema::hasColumn('dashed__orders', 'marketing')) {
             $query->where('marketing', true);
         }

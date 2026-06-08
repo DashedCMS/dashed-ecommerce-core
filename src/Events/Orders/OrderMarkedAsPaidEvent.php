@@ -41,12 +41,15 @@ class OrderMarkedAsPaidEvent
         }
 
         $apis = Customsetting::get('apis', null, []) ?? [];
+        // Bol.com-bestellingen mogen nooit in marketing-/nieuwsbrief-API's (Laposta
+        // e.d.) belanden, ook niet via sync_always.
+        $isBolOrder = (string) ($order->order_origin ?? '') === 'Bol';
         foreach ($apis as $api) {
             if (! is_array($api) || empty($api['class']) || ! class_exists($api['class'])) {
                 continue;
             }
 
-            $shouldDispatch = $order->marketing || ! empty($api['sync_always']);
+            $shouldDispatch = ! $isBolOrder && ($order->marketing || ! empty($api['sync_always']));
             if (! $shouldDispatch) {
                 continue;
             }
