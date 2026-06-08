@@ -1708,13 +1708,35 @@ MARKDOWN,
             ]);
 
             // App-notificatietypes waar een gebruiker per stuk voor kan kiezen.
-            $mobileApi->registerNotificationTypes([
-                ['key' => 'order.placed', 'label' => 'Nieuwe bestelling', 'description' => 'Een nieuwe betaalde bestelling komt binnen.', 'group' => 'Bestellingen', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
-                ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => false],
-                ['key' => 'stock.low', 'label' => 'Lage voorraad', 'description' => 'Een product zakt onder de voorraaddrempel.', 'group' => 'Producten', 'sound' => 'default', 'ability' => 'products.read', 'default' => false],
-            ]);
+            // method_exists-guard: een oudere mobile-api zonder deze methode mag
+            // geen fatal geven bij een deploy met versie-skew.
+            if (method_exists($mobileApi, 'registerNotificationTypes')) {
+                $mobileApi->registerNotificationTypes([
+                    ['key' => 'order.payment_started', 'label' => 'Betaling gestart', 'description' => 'Een klant is met een betaling begonnen.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => false],
+                    ['key' => 'order.paid', 'label' => 'Bestelling betaald', 'description' => 'Een bestelling is betaald.', 'group' => 'Bestellingen', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
+                    ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => false],
+                    ['key' => 'stock.low', 'label' => 'Lage voorraad', 'description' => 'Een product zakt onder de voorraaddrempel.', 'group' => 'Producten', 'sound' => 'default', 'ability' => 'products.read', 'default' => false],
+                ]);
+            }
 
-            $mobileApi->registerDashboardContributor(function (string $siteId, $period): array {
+            // Order-origins waaruit de gebruiker order-notificaties kan kiezen
+            // (gelijk aan de admin-instelling op de website).
+            if (method_exists($mobileApi, 'registerOrderOrigins')) {
+                $mobileApi->registerOrderOrigins([
+                    ['key' => 'own', 'label' => 'Webshop', 'default' => true],
+                    ['key' => 'pos', 'label' => 'Kassa (POS)', 'default' => false],
+                    ['key' => 'Bol', 'label' => 'Bol.com', 'default' => true],
+                    ['key' => 'etsy', 'label' => 'Etsy', 'default' => true],
+                ]);
+            }
+
+            $mobileApi->registerDashboardContributor(function (string $siteId, $period = null): array {
+                // Oudere mobile-api roept de contributor zonder periode aan; val
+                // dan terug op vandaag zodat er geen ArgumentCountError ontstaat.
+                if (! $period) {
+                    $period = (object) ['start' => now()->startOfDay(), 'end' => now()->endOfDay()];
+                }
+
                 $orderModel = \Dashed\DashedEcommerceCore\Models\Order::class;
 
                 $paidInRange = $orderModel::query()
