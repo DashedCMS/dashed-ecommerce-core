@@ -1588,12 +1588,12 @@ MARKDOWN,
         ]);
 
         cms()->builder('dashboardWidgets', [
-            'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 2,      'sort' => 10],
-            'ec-revenue'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 2,      'sort' => 15],
-            'ec-alltime-revenue'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class,                  'label' => 'Omzet (totaal)',               'width' => 2,      'sort' => 20],
-            'ec-cart-statistics'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics::class,                     'label' => 'Winkelmand-statistieken',      'width' => 2,      'sort' => 25],
-            'ec-soldout'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount::class,                       'label' => 'Uitverkocht',                  'width' => 2,      'sort' => 30],
-            'ec-print-queue'          => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget::class,                             'label' => 'Printwachtrij',                'width' => 2,      'sort' => 35],
+            'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 'full',      'sort' => 10],
+            'ec-revenue'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 'full',      'sort' => 15],
+            'ec-alltime-revenue'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class,                  'label' => 'Omzet (totaal)',               'width' => 'full',      'sort' => 20],
+            'ec-cart-statistics'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics::class,                     'label' => 'Winkelmand-statistieken',      'width' => 'full',      'sort' => 25],
+            'ec-soldout'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount::class,                       'label' => 'Uitverkocht',                  'width' => 'full',      'sort' => 30],
+            'ec-print-queue'          => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget::class,                             'label' => 'Printwachtrij',                'width' => 'full',      'sort' => 35],
             'ec-payment-methods'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
             'ec-revenue-return-chart' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats::class, 'label' => 'Omzet & retouren (grafiek)',  'width' => 'full', 'sort' => 45],
         ]);

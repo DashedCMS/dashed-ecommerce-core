@@ -111,7 +111,10 @@ class OpenOrderProductsTable
                     }),
                 TextColumn::make('order.name')
                     ->label('Klant')
-                    ->toggleable(),
+                    ->toggleable()
+                    // Bij de gegroepeerde weergaven hoort geen klantnaam (een
+                    // regel bundelt meerdere orders/klanten).
+                    ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
                 TextColumn::make('order.created_at')
                     ->label('Besteld op')
                     ->dateTime('d-m-Y H:i')
