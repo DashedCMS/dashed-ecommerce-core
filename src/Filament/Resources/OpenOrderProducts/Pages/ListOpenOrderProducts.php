@@ -121,8 +121,8 @@ class ListOpenOrderProducts extends ListRecords
 
                     return Excel::download(
                         new OpenOrderProducts($mode),
-                        $base . $suffix . '.csv',
-                        ExcelType::CSV,
+                        $base . $suffix . '.xlsx',
+                        ExcelType::XLSX,
                     );
                 }),
         ];
