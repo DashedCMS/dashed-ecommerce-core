@@ -11,7 +11,7 @@ use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 class CreatePackingSlipPrintJobListener implements ShouldQueue
 {
@@ -19,7 +19,15 @@ class CreatePackingSlipPrintJobListener implements ShouldQueue
 
     public int $tries = 3;
 
-    public function handle(OrderCreatedEvent $event): void
+    /**
+     * Maakt automatisch een pakbon-print-job zodra een bestelling betaald is.
+     *
+     * Bewust gekoppeld aan OrderMarkedAsPaidEvent (niet OrderCreatedEvent): zo
+     * worden er geen pakbonnen geprint voor onbetaalde/afgehaakte bestellingen.
+     * Het paid-event kan voor één order meerdere keren afgaan (paid /
+     * partially_paid / waiting_for_confirmation), daarom de dedup-guard.
+     */
+    public function handle(OrderMarkedAsPaidEvent $event): void
     {
         if (! (bool) Customsetting::get('print_queue.auto_print_on_new_order', null, null)) {
             return;
@@ -30,6 +38,18 @@ class CreatePackingSlipPrintJobListener implements ShouldQueue
             ->exists();
 
         if (! $hasPrinter) {
+            return;
+        }
+
+        // Niet nog een pakbon-job aanmaken als er al één voor deze order loopt of
+        // klaar is. Een eerder mislukte/geannuleerde job mag wél opnieuw.
+        $alreadyQueued = PrintJob::query()
+            ->where('order_id', $event->order->id)
+            ->where('type', PrintJobType::PackingSlip->value)
+            ->whereNotIn('status', [PrintJobStatus::Failed->value, PrintJobStatus::Cancelled->value])
+            ->exists();
+
+        if ($alreadyQueued) {
             return;
         }
 

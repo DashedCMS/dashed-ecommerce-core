@@ -29,10 +29,10 @@ class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
         OrderMarkedAsPaidEvent::class => [
           PrintDocumentsAfterPaidOrder::class,
           CancelPendingAbandonedEmailsListener::class,
+          \Dashed\DashedEcommerceCore\Listeners\PrintQueue\CreatePackingSlipPrintJobListener::class,
         ],
         OrderCreatedEvent::class => [
           UpdateOrderReservedStock::class,
-          \Dashed\DashedEcommerceCore\Listeners\PrintQueue\CreatePackingSlipPrintJobListener::class,
         ],
         OrderCancelledEvent::class => [
             QueueAbandonedCartEmailsForOrderListener::class,

@@ -122,8 +122,8 @@ class PrintQueueSettingsPage extends Page
                 ->columnSpanFull()
                 ->schema([
                     Toggle::make('auto_print_on_new_order')
-                        ->label('Automatisch pakbon printen bij nieuwe bestelling')
-                        ->helperText('Voegt een pakbon-job toe aan de wachtrij zodra een nieuwe bestelling binnenkomt. Dit werkt alleen als minstens 1 printer type "pakbon" of "beide" actief is.'),
+                        ->label('Automatisch pakbon printen na betaling')
+                        ->helperText('Voegt een pakbon-job toe aan de wachtrij zodra een bestelling betaald is (niet bij onbetaalde/afgehaakte bestellingen). Dit werkt alleen als minstens 1 printer type "pakbon" of "beide" actief is.'),
                     Toggle::make('auto_print_label_on_generated')
                         ->label('Automatisch verzendlabel printen zodra label is aangemaakt')
                         ->helperText('Pakt verzendlabels op die door MyParcel of Veloyd zijn gegenereerd. Werkt alleen als minstens 1 printer type "label" of "beide" actief is.'),
