@@ -116,6 +116,15 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // De print-queue-routes (routes/print-queue-api.php) beschermen elke
+        // daemon-call met de 'ensure.printer'-alias. Die moet hier geregistreerd
+        // worden, anders faalt elke call met "Target class [ensure.printer] does
+        // not exist".
+        $this->app['router']->aliasMiddleware(
+            'ensure.printer',
+            \Dashed\DashedEcommerceCore\Http\Middleware\EnsurePrinter::class
+        );
+
         cms()->registerNavigationGroup('E-commerce', 30);
         cms()->registerNavigationGroup('Producten', 40);
         cms()->registerNavigationGroup('Statistics', 110);

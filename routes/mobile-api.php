@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductGroupController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
@@ -47,6 +48,7 @@ $posActions = [
     'cancel-order' => 'cancelOrder',
     'update-search-query-input-mode' => 'updateSearchQueryInputmode',
     'apply-custom-discount' => 'applyCustomDiscount',
+    'set-prices-ex-vat' => 'setPricesExVat',
 ];
 
 Route::prefix('api/v1')
@@ -81,8 +83,17 @@ Route::prefix('api/v1')
         Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
         Route::get('orders/{order}/invoice-url', [OrderController::class, 'invoiceUrl'])->middleware('ability:orders.read');
         Route::get('orders/{order}/packing-slip-url', [OrderController::class, 'packingSlipUrl'])->middleware('ability:orders.read');
+        Route::get('orders/{order}/label-url', [OrderController::class, 'labelUrl'])->middleware('ability:orders.read');
         Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->middleware('ability:orders.write');
         Route::post('orders/{order}/print', [OrderController::class, 'print'])->middleware('ability:orders.write');
         Route::get('orders/{order}/actions', [OrderController::class, 'actions'])->middleware('ability:orders.read');
         Route::post('orders/{order}/actions/{key}', [OrderController::class, 'runAction'])->middleware('ability:orders.write');
+
+        // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
+        // de print-queue + de daemon op de Pi/NAS.
+        Route::get('printers', [PrinterController::class, 'index'])->middleware('ability:orders.write');
+        Route::post('printers', [PrinterController::class, 'store'])->middleware('ability:orders.write');
+        Route::patch('printers/{printer}', [PrinterController::class, 'update'])->middleware('ability:orders.write');
+        Route::delete('printers/{printer}', [PrinterController::class, 'destroy'])->middleware('ability:orders.write');
+        Route::post('printers/{printer}/pair', [PrinterController::class, 'pair'])->middleware('ability:orders.write');
     });

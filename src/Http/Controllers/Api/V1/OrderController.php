@@ -168,6 +168,35 @@ class OrderController extends Controller
         return response()->json(['url' => $model->downloadPackingslipUrl()]);
     }
 
+    /** Verzendlabel-PDF-URL van de fulfillment-integratie (MyParcel/Veloyd), indien aangemaakt. */
+    public function labelUrl(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $url = null;
+
+        if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
+            $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
+                ->whereNotNull('label_pdf_path')
+                ->latest()
+                ->first();
+            if ($mp && $mp->label_pdf_path) {
+                $url = \Illuminate\Support\Facades\Storage::disk('public')->url($mp->label_pdf_path);
+            }
+        }
+
+        if (! $url && class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
+            $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
+                ->whereNotNull('label_url')
+                ->latest()
+                ->first();
+            if ($v && $v->label_url) {
+                $url = $v->label_url;
+            }
+        }
+
+        return response()->json(['url' => $url]);
+    }
+
     /** Voeg een notitie/orderlog toe (optioneel zichtbaar voor de klant). */
     public function addNote(Request $request, int $order): OrderResource
     {
@@ -199,6 +228,7 @@ class OrderController extends Controller
 
         $data = $request->validate([
             'type' => ['required', Rule::in(['packing_slip', 'shipping_label'])],
+            'printer_id' => ['sometimes', 'nullable', 'integer'],
         ]);
 
         $jobType = $data['type'] === 'shipping_label'
@@ -208,17 +238,28 @@ class OrderController extends Controller
             ? \Dashed\DashedEcommerceCore\Enums\PrinterType::ShippingLabel
             : \Dashed\DashedEcommerceCore\Enums\PrinterType::PackingSlip;
 
-        $hasPrinter = \Dashed\DashedEcommerceCore\Models\Printer::active()
-            ->whereIn('type', [$printerType->value, \Dashed\DashedEcommerceCore\Enums\PrinterType::Both->value])
-            ->exists();
+        // Een specifiek gekozen printer (uit de app) → de job gaat exact daarheen.
+        // Anders: een actieve printer van het juiste type (type-routing).
+        $printerId = $data['printer_id'] ?? null;
+        if ($printerId) {
+            $printer = \Dashed\DashedEcommerceCore\Models\Printer::active()->whereKey($printerId)->first();
+            if (! $printer) {
+                return response()->json(['success' => false, 'message' => 'De gekozen printer is niet (meer) actief.'], 422);
+            }
+        } else {
+            $hasPrinter = \Dashed\DashedEcommerceCore\Models\Printer::active()
+                ->whereIn('type', [$printerType->value, \Dashed\DashedEcommerceCore\Enums\PrinterType::Both->value])
+                ->exists();
 
-        if (! $hasPrinter) {
-            return response()->json(['success' => false, 'message' => 'Geen actieve ' . strtolower($jobType->label()) . '-printer geconfigureerd.'], 422);
+            if (! $hasPrinter) {
+                return response()->json(['success' => false, 'message' => 'Geen actieve ' . strtolower($jobType->label()) . '-printer geconfigureerd.'], 422);
+            }
         }
 
         \Dashed\DashedEcommerceCore\Models\PrintJob::create([
             'type' => $jobType,
             'order_id' => $model->id,
+            'printer_id' => $printerId,
             'status' => \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending,
         ]);
 

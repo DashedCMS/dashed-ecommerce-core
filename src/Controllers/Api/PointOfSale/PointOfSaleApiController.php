@@ -75,7 +75,7 @@ class PointOfSaleApiController extends Controller
                 }
 
                 $product['image'] = $dbProduct->firstImage
-                    ? (mediaHelper()->getSingleMedia($dbProduct->firstImage, ['widen' => 200])->url ?? '')
+                    ? (mediaHelper()->getSingleMedia($dbProduct->firstImage)->url ?? '')
                     : '';
                 $product['name'] = $dbProduct->getTranslation('name', app()->getLocale());
                 $product['singlePrice'] = (float) ($product['singlePrice'] ?? $dbProduct->currentPrice);
@@ -417,7 +417,7 @@ class PointOfSaleApiController extends Controller
                 return [
                     'id' => $product->id,
                     'name' => $product->getTranslation('name', app()->getLocale()),
-                    'image' => mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '',
+                    'image' => $product->firstImage ? (mediaHelper()->getSingleMedia($product->firstImage)->url ?? '') : '',
                     'currentPrice' => $product->currentPrice,
                     'currentPriceFormatted' => CurrencyHelper::formatPrice($product->currentPrice),
                 ];
@@ -1570,20 +1570,27 @@ class PointOfSaleApiController extends Controller
             Cache::forget('pos_products');
         }
 
+        // Prijsweergave excl./incl. BTW (zoals de cart-modus prices_ex_vat).
+        $exVat = (bool) $request->boolean('prices_ex_vat');
+
         $products = Product::handOrderShowable()
-            ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status'])
+            ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status', 'vat_rate'])
             ->get()
-            ->map(function ($product) {
+            ->map(function ($product) use ($exVat) {
                 $name = $product->getTranslation('name', app()->getLocale());
-                $currentPrice = $product->currentPrice;
+                $currentPrice = (float) $product->currentPrice;
+                $displayPrice = $exVat
+                    ? \Dashed\DashedEcommerceCore\Classes\VatDisplay::exFromIncl($currentPrice, (int) ($product->vat_rate ?? 21))
+                    : $currentPrice;
 
                 return [
                     'id' => $product->id,
                     'name' => $name,
                     'stock' => $product->directSellableStock(),
                     'actual_stock' => $product->stock,
-                    'currentPrice' => $currentPrice,
-                    'currentPriceFormatted' => CurrencyHelper::formatPrice($currentPrice),
+                    'currentPrice' => $displayPrice,
+                    'currentPriceFormatted' => CurrencyHelper::formatPrice($displayPrice),
+                    'image' => $product->firstImage ? (mediaHelper()->getSingleMedia($product->firstImage)->url ?? '') : '',
                     'search' => $name.' '.$product->sku.' '.$product->ean,
                 ];
             })
@@ -1604,7 +1611,7 @@ class PointOfSaleApiController extends Controller
             $thisProduct = Product::find($product['id']);
             $product['stock'] = $thisProduct->directSellableStock();
             $product['actual_stock'] = $thisProduct->stock;
-            $product['image'] = $thisProduct->firstImage ? (mediaHelper()->getSingleMedia($thisProduct->firstImage, ['widen' => 300])->url ?? '') : '';
+            $product['image'] = $thisProduct->firstImage ? (mediaHelper()->getSingleMedia($thisProduct->firstImage)->url ?? '') : '';
         }
 
         return response()->json([
@@ -1827,6 +1834,26 @@ class PointOfSaleApiController extends Controller
                 ];
             }),
         ];
+    }
+
+    /**
+     * Zet de prijsweergave op excl./incl. BTW voor deze POS-cart en geef de
+     * herberekende cart terug (zoals de web-POS doet via prices_ex_vat).
+     */
+    public function setPricesExVat(Request $request): JsonResponse
+    {
+        $data = $request->all();
+        $cartInstance = $data['cartInstance'] ?? '';
+        $posIdentifier = $data['posIdentifier'] ?? '';
+        $exVat = (bool) ($data['prices_ex_vat'] ?? false);
+
+        $posCart = POSCart::where('identifier', $posIdentifier)->first();
+        if ($posCart) {
+            $posCart->prices_ex_vat = $exVat;
+            $posCart->save();
+        }
+
+        return response()->json($this->updateCart($cartInstance, $posIdentifier));
     }
 
     public function retrieveCartForCustomer(Request $request): JsonResponse
