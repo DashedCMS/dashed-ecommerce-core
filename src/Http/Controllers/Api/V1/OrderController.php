@@ -172,29 +172,106 @@ class OrderController extends Controller
     public function labelUrl(int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
-        $url = null;
+
+        return response()->json(['url' => $this->firstLabelPublicUrl($model)]);
+    }
+
+    /**
+     * Lijst van verzendlabels voor deze order (zoals Filament toont): per
+     * vervoerder elke zending met track&trace en of er al een PDF is.
+     */
+    public function labels(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $labels = [];
 
         if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
+            foreach (\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
+                ->whereNotNull('shipment_id')->latest()->get() as $mp) {
+                $labels[] = [
+                    'id' => (int) $mp->id,
+                    'carrier' => 'myparcel',
+                    'carrier_name' => $mp->carrier ?: 'MyParcel',
+                    'track_trace' => $this->trackTraceString($mp->track_and_trace),
+                    'has_pdf' => (bool) $mp->label_pdf_path,
+                    'created_at' => optional($mp->created_at)->toIso8601String(),
+                ];
+            }
+        }
+
+        if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
+            foreach (\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
+                ->whereNotNull('label_pdf_path')->latest()->get() as $v) {
+                $labels[] = [
+                    'id' => (int) $v->id,
+                    'carrier' => 'veloyd',
+                    'carrier_name' => $v->carrier ?: 'Veloyd',
+                    'track_trace' => $this->trackTraceString($v->track_and_trace),
+                    'has_pdf' => (bool) $v->label_pdf_path,
+                    'created_at' => optional($v->created_at)->toIso8601String(),
+                ];
+            }
+        }
+
+        return response()->json(['data' => $labels]);
+    }
+
+    /** Eerste beschikbare label als publieke PDF-URL (MyParcel zo nodig on-demand). */
+    private function firstLabelPublicUrl(Order $model): ?string
+    {
+        if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
             $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
-                ->whereNotNull('label_pdf_path')
-                ->latest()
-                ->first();
-            if ($mp && $mp->label_pdf_path) {
-                $url = \Illuminate\Support\Facades\Storage::disk('public')->url($mp->label_pdf_path);
+                ->whereNotNull('shipment_id')->latest()->first();
+            if ($mp) {
+                $path = $mp->label_pdf_path;
+                if ((! $path || ! \Illuminate\Support\Facades\Storage::disk('public')->exists($path))
+                    && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
+                    try {
+                        $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($mp);
+                    } catch (\Throwable $e) {
+                        report($e);
+                        $path = null;
+                    }
+                }
+                if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                    return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+                }
             }
         }
 
-        if (! $url && class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
+        if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
-                ->whereNotNull('label_url')
-                ->latest()
-                ->first();
-            if ($v && $v->label_url) {
-                $url = $v->label_url;
+                ->whereNotNull('label_pdf_path')->latest()->first();
+            if ($v && $v->label_pdf_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($v->label_pdf_path)) {
+                return \Illuminate\Support\Facades\Storage::disk('public')->url($v->label_pdf_path);
             }
         }
 
-        return response()->json(['url' => $url]);
+        return null;
+    }
+
+    /** Maakt van het track_and_trace-veld (array of string) een leesbare string. */
+    private function trackTraceString($tt): ?string
+    {
+        if (blank($tt)) {
+            return null;
+        }
+        if (is_string($tt)) {
+            return $tt;
+        }
+
+        $codes = [];
+        foreach ((array) $tt as $entry) {
+            if (is_array($entry)) {
+                foreach ($entry as $code => $url) {
+                    $codes[] = (string) $code;
+                }
+            } elseif (is_string($entry)) {
+                $codes[] = $entry;
+            }
+        }
+
+        return $codes ? implode(', ', array_filter($codes)) : null;
     }
 
     /** Voeg een notitie/orderlog toe (optioneel zichtbaar voor de klant). */
@@ -229,6 +306,9 @@ class OrderController extends Controller
         $data = $request->validate([
             'type' => ['required', Rule::in(['packing_slip', 'shipping_label'])],
             'printer_id' => ['sometimes', 'nullable', 'integer'],
+            // Optioneel: print een specifiek label (uit de labellijst).
+            'carrier' => ['sometimes', 'nullable', Rule::in(['myparcel', 'veloyd'])],
+            'label_id' => ['sometimes', 'nullable', 'integer'],
         ]);
 
         $jobType = $data['type'] === 'shipping_label'
@@ -256,10 +336,32 @@ class OrderController extends Controller
             }
         }
 
+        // Optioneel een specifiek label targeten (uit de labellijst), zodat het
+        // juiste label wordt opgehaald i.p.v. het nieuwste van de order.
+        $printableType = null;
+        $printableId = null;
+        if ($jobType === \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel
+            && ! empty($data['carrier']) && ! empty($data['label_id'])) {
+            $map = [
+                'myparcel' => \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class,
+                'veloyd' => \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class,
+            ];
+            $cls = $map[$data['carrier']] ?? null;
+            if ($cls && class_exists($cls)) {
+                $row = $cls::where('order_id', $model->id)->whereKey((int) $data['label_id'])->first();
+                if ($row) {
+                    $printableType = $cls;
+                    $printableId = (int) $row->id;
+                }
+            }
+        }
+
         \Dashed\DashedEcommerceCore\Models\PrintJob::create([
             'type' => $jobType,
             'order_id' => $model->id,
             'printer_id' => $printerId,
+            'printable_type' => $printableType,
+            'printable_id' => $printableId,
             'status' => \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending,
         ]);
 

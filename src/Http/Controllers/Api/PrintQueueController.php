@@ -95,42 +95,32 @@ class PrintQueueController extends Controller
             return response()->file($path, ['Content-Type' => 'application/pdf']);
         }
 
-        // Verzendlabel zonder opgeslagen PDF (bv. handmatige/automatische print):
-        // los 'm on-demand op en download 'm zo nodig uit MyParcel.
-        if ($job->type === PrintJobType::ShippingLabel && ! $job->pdf_path && $job->order_id) {
-            if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
-                $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $job->order_id)
-                    ->whereNotNull('shipment_id')
-                    ->latest()
-                    ->first();
-                if ($mp) {
-                    $path = $mp->label_pdf_path;
-                    // Nog niet lokaal gedownload? Haal 'm nu op bij MyParcel. Een
-                    // fout hier mag de Veloyd-route hieronder niet blokkeren.
-                    if ((! $path || ! Storage::disk('public')->exists($path))
-                        && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
-                        try {
-                            $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($mp);
-                        } catch (\Throwable $e) {
-                            report($e);
-                            $path = null;
-                        }
-                    }
-                    if ($path && Storage::disk('public')->exists($path)) {
-                        return Storage::disk('public')->response($path);
-                    }
+        // Verzendlabel zonder opgeslagen PDF: los 'm on-demand op (download zo
+        // nodig uit MyParcel). Een specifiek label (printable) heeft voorrang op
+        // het nieuwste label van de order.
+        if ($job->type === PrintJobType::ShippingLabel && ! $job->pdf_path) {
+            if ($job->printable_type && $job->printable_id && class_exists($job->printable_type)) {
+                $row = ($job->printable_type)::find($job->printable_id);
+                if ($row && ($path = $this->resolveLabelPdfPath($row))) {
+                    return Storage::disk('public')->response($path);
                 }
             }
 
-            if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
-                // Veloyd slaat het label-PDF op de public disk op (label_pdf_path);
-                // het veld label_url wordt niet gebruikt.
-                $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $job->order_id)
-                    ->whereNotNull('label_pdf_path')
-                    ->latest()
-                    ->first();
-                if ($v && $v->label_pdf_path && Storage::disk('public')->exists($v->label_pdf_path)) {
-                    return Storage::disk('public')->response($v->label_pdf_path);
+            if ($job->order_id) {
+                if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
+                    $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $job->order_id)
+                        ->whereNotNull('shipment_id')->latest()->first();
+                    if ($mp && ($path = $this->resolveLabelPdfPath($mp))) {
+                        return Storage::disk('public')->response($path);
+                    }
+                }
+
+                if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
+                    $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $job->order_id)
+                        ->whereNotNull('label_pdf_path')->latest()->first();
+                    if ($v && ($path = $this->resolveLabelPdfPath($v))) {
+                        return Storage::disk('public')->response($path);
+                    }
                 }
             }
         }
@@ -169,5 +159,32 @@ class PrintQueueController extends Controller
         abort_unless($printer instanceof Printer, 403);
 
         return $printer;
+    }
+
+    /**
+     * Lost het label-PDF-pad (public disk) op voor een vervoerder-order. MyParcel
+     * wordt zo nodig on-demand gedownload; bij Veloyd staat de PDF er al.
+     */
+    private function resolveLabelPdfPath($carrierOrder): ?string
+    {
+        $path = $carrierOrder->label_pdf_path ?? null;
+        if ($path && Storage::disk('public')->exists($path)) {
+            return $path;
+        }
+
+        if ($carrierOrder instanceof \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder
+            && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
+            try {
+                $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($carrierOrder);
+            } catch (\Throwable $e) {
+                report($e);
+                $path = null;
+            }
+            if ($path && Storage::disk('public')->exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 }
