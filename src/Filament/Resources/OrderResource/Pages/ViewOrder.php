@@ -41,6 +41,43 @@ class ViewOrder extends ViewRecord
             ->exists();
     }
 
+    /** Is er een actieve printer die pakbonnen kan printen (wachtrij)? */
+    private function packingSlipPrinterAvailable(): bool
+    {
+        return Printer::active()
+            ->whereIn('type', [PrinterType::PackingSlip->value, PrinterType::Both->value])
+            ->exists();
+    }
+
+    /**
+     * Zet één print-job van dit type in de wachtrij, tenzij er voor deze order al
+     * een onafgeronde (pending/claimed/printing) job van dit type staat. Voorkomt
+     * dubbele jobs. Geeft terug of er een nieuwe job is aangemaakt.
+     */
+    private function queueJobOnce(PrintJobType $type): bool
+    {
+        $exists = PrintJob::where('order_id', $this->record->id)
+            ->where('type', $type->value)
+            ->whereIn('status', [
+                PrintJobStatus::Pending->value,
+                PrintJobStatus::Claimed->value,
+                PrintJobStatus::Printing->value,
+            ])
+            ->exists();
+
+        if ($exists) {
+            return false;
+        }
+
+        PrintJob::create([
+            'type' => $type,
+            'order_id' => $this->record->id,
+            'status' => PrintJobStatus::Pending,
+        ]);
+
+        return true;
+    }
+
     /** Bestaat er een verzendlabel voor deze order (MyParcel-shipment of Veloyd-PDF)? */
     private function orderHasLabel(): bool
     {
@@ -113,25 +150,40 @@ class ViewOrder extends ViewRecord
                     ->openUrlInNewTab()
                     ->visible((bool)$packingSlipUrl),
                 RegenerateInvoiceAction::make($this->record),
-                Action::make('printLabel')
-                    ->label('Label printen')
+                Action::make('reprintDocuments')
+                    ->label('Pakbon + label printen')
                     ->icon('heroicon-s-printer')
-                    ->tooltip('Stuur het verzendlabel naar de label-printer (wachtrij)')
-                    ->visible(fn (): bool => $this->labelPrinterAvailable() && $this->orderHasLabel())
+                    ->tooltip('Stuur pakbon én label (opnieuw) naar de printers — zonder dubbele wachtrij-jobs')
+                    ->visible(fn (): bool => $this->packingSlipPrinterAvailable()
+                        || ($this->labelPrinterAvailable() && $this->orderHasLabel()))
                     ->requiresConfirmation()
-                    ->modalHeading('Label printen')
-                    ->modalDescription('Het verzendlabel wordt naar de actieve label-printer gestuurd. De printer-daemon pakt het binnen enkele seconden op.')
+                    ->modalHeading('Opnieuw printen')
+                    ->modalDescription('Pakbon en/of verzendlabel worden naar de printers gestuurd. Staat er al een job in de wachtrij voor deze bestelling, dan wordt die niet gedupliceerd.')
                     ->action(function (): void {
-                        PrintJob::create([
-                            'type' => PrintJobType::ShippingLabel,
-                            'order_id' => $this->record->id,
-                            'status' => PrintJobStatus::Pending,
-                        ]);
+                        $queued = [];
 
-                        Notification::make()
-                            ->title('Label naar de printer gestuurd')
-                            ->success()
-                            ->send();
+                        if ($this->packingSlipPrinterAvailable()
+                            && $this->queueJobOnce(PrintJobType::PackingSlip)) {
+                            $queued[] = 'pakbon';
+                        }
+
+                        if ($this->labelPrinterAvailable() && $this->orderHasLabel()
+                            && $this->queueJobOnce(PrintJobType::ShippingLabel)) {
+                            $queued[] = 'label';
+                        }
+
+                        if ($queued) {
+                            Notification::make()
+                                ->title('Naar de printer gestuurd: ' . implode(' + ', $queued))
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Niets toegevoegd')
+                                ->body('Er staat al een job in de wachtrij, of er is geen geschikte printer/label.')
+                                ->warning()
+                                ->send();
+                        }
                     }),
             ])
                 ->label('Documenten')
