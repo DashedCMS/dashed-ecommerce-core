@@ -227,6 +227,101 @@ class OrderController extends Controller
         return response()->json(['success' => true, 'message' => $jobType->label() . ' naar de printer gestuurd.']);
     }
 
+    /**
+     * De order-acties (zoals op de Filament ViewOrder-pagina) die nú beschikbaar
+     * zijn voor deze bestelling — dynamisch uit de registry, met per-order
+     * opgeloste velden/standaardwaarden.
+     */
+    public function actions(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $registry = app(\Dashed\DashedMobileApi\MobileApiRegistry::class);
+
+        $out = [];
+        foreach ($registry->orderActions() as $action) {
+            $visible = $action['visible'] ?? null;
+            if (is_callable($visible) && ! $visible($model)) {
+                continue;
+            }
+
+            $out[] = [
+                'key' => $action['key'],
+                'label' => $action['label'],
+                'group' => $action['group'] ?? 'Acties',
+                'icon' => $action['icon'] ?? 'ellipsis-horizontal',
+                'destructive' => (bool) ($action['destructive'] ?? false),
+                'confirm' => $action['confirm'] ?? null,
+                'fields' => array_map(function (array $field) use ($model) {
+                    $options = $field['options'] ?? null;
+                    $options = is_callable($options) ? $options($model) : $options;
+                    $default = $field['default'] ?? null;
+                    $default = is_callable($default) ? $default($model) : $default;
+
+                    return [
+                        'name' => $field['name'],
+                        'label' => $field['label'],
+                        'type' => $field['type'] ?? 'text',
+                        'required' => (bool) ($field['required'] ?? false),
+                        // Selecties als lijst van {value,label} voor de app.
+                        'options' => is_array($options)
+                            ? array_map(fn ($value, $label) => ['value' => (string) $value, 'label' => (string) $label], array_keys($options), array_values($options))
+                            : null,
+                        'default' => $default,
+                    ];
+                }, $action['fields'] ?? []),
+            ];
+        }
+
+        return response()->json(['data' => $out]);
+    }
+
+    /** Voer een geregistreerde order-actie uit. */
+    public function runAction(Request $request, int $order, string $key): OrderResource|JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $registry = app(\Dashed\DashedMobileApi\MobileApiRegistry::class);
+        $action = $registry->orderAction($key);
+
+        if (! $action) {
+            return response()->json(['message' => 'Onbekende actie.'], 404);
+        }
+
+        $visible = $action['visible'] ?? null;
+        if (is_callable($visible) && ! $visible($model)) {
+            return response()->json(['message' => 'Deze actie is niet beschikbaar voor deze bestelling.'], 422);
+        }
+
+        // Validatieregels uit de velddefinities.
+        $rules = [];
+        foreach ($action['fields'] ?? [] as $field) {
+            $type = $field['type'] ?? 'text';
+            if ($type === 'checkbox') {
+                $rules[$field['name']] = ['sometimes', 'boolean'];
+
+                continue;
+            }
+            $rule = [($field['required'] ?? false) ? 'required' : 'nullable'];
+            if ($type === 'number') {
+                $rule[] = 'numeric';
+            } elseif ($type === 'email') {
+                $rule[] = 'email';
+            } else {
+                $rule[] = 'string';
+            }
+            $rules[$field['name']] = $rule;
+        }
+        $data = $request->validate($rules);
+
+        $handle = $action['handle'] ?? null;
+        if (is_callable($handle)) {
+            $handle($model, $data);
+        }
+
+        activity()->performedOn($model)->causedBy($request->user())->withProperties(['action' => $key])->log('mobile-api: order-actie ' . $key);
+
+        return $this->detail($model->fresh());
+    }
+
     private function applyArrayFilter(Builder $query, string $column, mixed $value): void
     {
         $values = $this->toList($value);

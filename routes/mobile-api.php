@@ -83,4 +83,6 @@ Route::prefix('api/v1')
         Route::get('orders/{order}/packing-slip-url', [OrderController::class, 'packingSlipUrl'])->middleware('ability:orders.read');
         Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->middleware('ability:orders.write');
         Route::post('orders/{order}/print', [OrderController::class, 'print'])->middleware('ability:orders.write');
+        Route::get('orders/{order}/actions', [OrderController::class, 'actions'])->middleware('ability:orders.read');
+        Route::post('orders/{order}/actions/{key}', [OrderController::class, 'runAction'])->middleware('ability:orders.write');
     });

@@ -26,6 +26,12 @@ class ProductController extends Controller
             $query->where('product_group_id', (int) $groupId);
         }
 
+        if ($categoryId = $request->query('product_category_id')) {
+            $query->whereHas('productCategories', function ($q) use ($categoryId): void {
+                $q->whereKey((int) $categoryId);
+            });
+        }
+
         if ($search = $request->query('search')) {
             $query->search((string) $search);
         }
@@ -34,6 +40,9 @@ class ProductController extends Controller
         if (in_array($sort, self::SORTABLE, true)) {
             $direction = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
             $query->orderBy($sort, $direction);
+        } else {
+            // Stabiele volgorde voor betrouwbare paginatie (infinite scroll).
+            $query->orderBy('id');
         }
 
         $perPage = (int) config('dashed-mobile-api.default_page_size', 25);

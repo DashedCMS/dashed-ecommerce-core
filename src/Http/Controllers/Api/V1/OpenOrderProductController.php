@@ -52,7 +52,16 @@ class OpenOrderProductController extends Controller
             ->whereNull('op.deleted_at')
             ->whereNotIn('op.sku', self::COST_SKUS)
             ->whereIn('o.status', self::PAID_STATUSES)
-            ->where('o.fulfillment_status', (string) $request->query('fulfillment_status', 'unhandled'));
+            // Alleen betaalde bestellingen met een echte factuur-id; nooit proforma/retour.
+            ->whereNotNull('o.invoice_id')
+            ->where('o.invoice_id', '!=', '')
+            ->whereNotIn('o.invoice_id', ['PROFORMA', 'RETURN']);
+
+        // Fulfillment status: standaard 'unhandled' (zoals Filament); expliciet leeg = alles.
+        $fulfillment = $request->has('fulfillment_status') ? (string) $request->query('fulfillment_status') : 'unhandled';
+        if ($fulfillment !== '') {
+            $query->where('o.fulfillment_status', $fulfillment);
+        }
 
         if ($origins = $this->list($request->query('order_origin'))) {
             $query->whereIn('o.order_origin', $origins);
@@ -73,6 +82,31 @@ class OpenOrderProductController extends Controller
                     $sub->from('dashed__product_category as pc')
                         ->whereColumn('pc.product_group_id', 'p.product_group_id')
                         ->whereIn('pc.product_category_id', $categoryIds);
+                });
+            }
+        }
+
+        // Ternary: product-opties (product_extras gevuld of niet).
+        if ($request->has('has_product_extras')) {
+            if ($request->boolean('has_product_extras')) {
+                $query->whereNotNull('op.product_extras')
+                    ->whereRaw('JSON_VALID(op.product_extras) = 1')
+                    ->whereRaw('JSON_LENGTH(op.product_extras) > 0');
+            } else {
+                $query->where(function ($q): void {
+                    $q->whereNull('op.product_extras')
+                        ->orWhereRaw('JSON_VALID(op.product_extras) = 1 AND JSON_LENGTH(op.product_extras) = 0');
+                });
+            }
+        }
+
+        // Ternary: gekoppeld aan een catalogus-product (product_id) of niet.
+        if ($request->has('has_product_id')) {
+            if ($request->boolean('has_product_id')) {
+                $query->whereNotNull('op.product_id')->where('op.product_id', '!=', 0);
+            } else {
+                $query->where(function ($q): void {
+                    $q->whereNull('op.product_id')->orWhere('op.product_id', 0);
                 });
             }
         }

@@ -74,7 +74,9 @@ class PointOfSaleApiController extends Controller
                     continue;
                 }
 
-                $product['image'] = $dbProduct->firstImage;
+                $product['image'] = $dbProduct->firstImage
+                    ? (mediaHelper()->getSingleMedia($dbProduct->firstImage, ['widen' => 200])->url ?? '')
+                    : '';
                 $product['name'] = $dbProduct->getTranslation('name', app()->getLocale());
                 $product['singlePrice'] = (float) ($product['singlePrice'] ?? $dbProduct->currentPrice);
                 $product['price'] = (float) ($product['price'] ?? ($product['singlePrice'] * (int) ($product['quantity'] ?? 1)));
@@ -294,6 +296,26 @@ class PointOfSaleApiController extends Controller
             }, $totals['giftCards'] ?? []),
             'giftCardsTotal' => CurrencyHelper::formatPrice((float) ($totals['giftCardsTotal'] ?? 0)),
             'giftCardsTotalUnformatted' => (float) ($totals['giftCardsTotal'] ?? 0),
+
+            // Klant-/adresgegevens zodat de app het klantformulier kan voorvullen.
+            'customerUserId' => $posCart->customer_user_id,
+            'firstName' => $posCart->first_name,
+            'lastName' => $posCart->last_name,
+            'phoneNumber' => $posCart->phone_number,
+            'email' => $posCart->email,
+            'street' => $posCart->street,
+            'houseNr' => $posCart->house_nr,
+            'zipCode' => $posCart->zip_code,
+            'city' => $posCart->city,
+            'country' => $posCart->country,
+            'company' => $posCart->company,
+            'btwId' => $posCart->btw_id,
+            'invoiceStreet' => $posCart->invoice_street,
+            'invoiceHouseNr' => $posCart->invoice_house_nr,
+            'invoiceZipCode' => $posCart->invoice_zip_code,
+            'invoiceCity' => $posCart->invoice_city,
+            'invoiceCountry' => $posCart->invoice_country,
+            'note' => $posCart->note,
 
             'success' => true,
         ];
@@ -862,6 +884,26 @@ class PointOfSaleApiController extends Controller
         $posIdentifier = $data['posIdentifier'] ?? null;
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        // Klant-/adresvelden op de cart zetten — exact dezelfde velden als de
+        // CMS-kassa (klant + verzend- én factuuradres + bedrijf/btw + notitie).
+        $fields = [
+            'first_name', 'last_name', 'phone_number', 'email',
+            'street', 'house_nr', 'zip_code', 'city', 'country',
+            'company', 'btw_id',
+            'invoice_street', 'invoice_house_nr', 'invoice_zip_code', 'invoice_city', 'invoice_country',
+            'note',
+        ];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                $value = is_string($data[$field]) ? trim($data[$field]) : $data[$field];
+                $posCart->{$field} = ($value === '' || $value === null) ? null : $value;
+            }
+        }
+
         $posCart->save();
 
         return response()->json(['success' => true]);
