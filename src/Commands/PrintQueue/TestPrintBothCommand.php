@@ -64,15 +64,19 @@ class TestPrintBothCommand extends Command
             'status' => PrintJobStatus::Pending,
         ];
 
+        // Label bestaat bij MyParcel zodra er een shipment_id is; de PDF wordt
+        // bij het printen on-demand gedownload (label_pdf_path hoeft nog niet).
         $hasLabel = class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
             && \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $order->id)
-                ->whereNotNull('label_pdf_path')
+                ->whereNotNull('shipment_id')
                 ->exists();
 
         if (! $hasLabel) {
             $labelAttrs['pdf_disk'] = 'dashed-ecommerce-core';
             $labelAttrs['pdf_path'] = 'print/test-page.pdf';
-            $this->warn('  ! Geen MyParcel-label voor deze order → DYMO print de test-pagina.');
+            $this->warn('  ! Geen MyParcel-zending voor deze order → DYMO print de test-pagina.');
+        } else {
+            $this->line('  · MyParcel-label gevonden → wordt on-demand gedownload en geprint.');
         }
 
         $label = PrintJob::create($labelAttrs);

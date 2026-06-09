@@ -44,8 +44,14 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
             ->pluck('printable_id')
             ->all();
 
+        // Een label is "klaar om te printen" zodra het bij de vervoerder bestaat:
+        // MyParcel heeft dan een shipment_id (de PDF wordt on-demand gedownload),
+        // Veloyd een label_url. De PDF zelf lost PrintQueueController::pdf() op,
+        // daarom zetten we hier bewust geen pdf_disk/pdf_path.
+        $availableColumn = str_contains($sourceModel, 'MyParcel') ? 'shipment_id' : 'label_url';
+
         $sourceModel::query()
-            ->whereNotNull('label_pdf_path')
+            ->whereNotNull($availableColumn)
             ->where('label_printed', false)
             ->whereNotIn('id', $existingPrintableIds)
             ->chunkById(100, function ($shippingOrders) use ($sourceModel): void {
@@ -55,8 +61,6 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
                         'order_id' => $shippingOrder->order_id,
                         'printable_type' => $sourceModel,
                         'printable_id' => $shippingOrder->id,
-                        'pdf_disk' => 'public',
-                        'pdf_path' => $shippingOrder->label_pdf_path,
                         'status' => PrintJobStatus::Pending,
                     ]);
                 }

@@ -95,16 +95,24 @@ class PrintQueueController extends Controller
             return response()->file($path, ['Content-Type' => 'application/pdf']);
         }
 
-        // Verzendlabel zonder opgeslagen PDF (bv. handmatige print vanuit de app):
-        // los 'm on-demand op, net als OrderController::labelUrl().
+        // Verzendlabel zonder opgeslagen PDF (bv. handmatige/automatische print):
+        // los 'm on-demand op en download 'm zo nodig uit MyParcel.
         if ($job->type === PrintJobType::ShippingLabel && ! $job->pdf_path && $job->order_id) {
             if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
                 $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $job->order_id)
-                    ->whereNotNull('label_pdf_path')
+                    ->whereNotNull('shipment_id')
                     ->latest()
                     ->first();
-                if ($mp && $mp->label_pdf_path && Storage::disk('public')->exists($mp->label_pdf_path)) {
-                    return Storage::disk('public')->response($mp->label_pdf_path);
+                if ($mp) {
+                    $path = $mp->label_pdf_path;
+                    // Nog niet lokaal gedownload? Haal 'm nu op bij MyParcel.
+                    if ((! $path || ! Storage::disk('public')->exists($path))
+                        && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
+                        $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($mp);
+                    }
+                    if ($path && Storage::disk('public')->exists($path)) {
+                        return Storage::disk('public')->response($path);
+                    }
                 }
             }
 
