@@ -7,6 +7,11 @@ use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
@@ -26,6 +31,32 @@ class ViewOrder extends ViewRecord
     public function getTitle(): string
     {
         return "Bestelling {$this->record->invoice_id} van {$this->record->name}";
+    }
+
+    /** Is er een actieve printer die verzendlabels kan printen (wachtrij)? */
+    private function labelPrinterAvailable(): bool
+    {
+        return Printer::active()
+            ->whereIn('type', [PrinterType::ShippingLabel->value, PrinterType::Both->value])
+            ->exists();
+    }
+
+    /** Bestaat er een verzendlabel voor deze order (MyParcel-shipment of Veloyd-PDF)? */
+    private function orderHasLabel(): bool
+    {
+        $orderId = $this->record->id;
+
+        $myParcel = class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
+            && \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $orderId)
+                ->whereNotNull('shipment_id')
+                ->exists();
+
+        $veloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
+            && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $orderId)
+                ->whereNotNull('label_pdf_path')
+                ->exists();
+
+        return $myParcel || $veloyd;
     }
 
     protected function getActions(): array
@@ -82,6 +113,26 @@ class ViewOrder extends ViewRecord
                     ->openUrlInNewTab()
                     ->visible((bool)$packingSlipUrl),
                 RegenerateInvoiceAction::make($this->record),
+                Action::make('printLabel')
+                    ->label('Label printen')
+                    ->icon('heroicon-s-printer')
+                    ->tooltip('Stuur het verzendlabel naar de label-printer (wachtrij)')
+                    ->visible(fn (): bool => $this->labelPrinterAvailable() && $this->orderHasLabel())
+                    ->requiresConfirmation()
+                    ->modalHeading('Label printen')
+                    ->modalDescription('Het verzendlabel wordt naar de actieve label-printer gestuurd. De printer-daemon pakt het binnen enkele seconden op.')
+                    ->action(function (): void {
+                        PrintJob::create([
+                            'type' => PrintJobType::ShippingLabel,
+                            'order_id' => $this->record->id,
+                            'status' => PrintJobStatus::Pending,
+                        ]);
+
+                        Notification::make()
+                            ->title('Label naar de printer gestuurd')
+                            ->success()
+                            ->send();
+                    }),
             ])
                 ->label('Documenten')
                 ->icon('heroicon-o-document-text')
