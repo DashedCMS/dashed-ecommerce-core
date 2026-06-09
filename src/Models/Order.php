@@ -1187,6 +1187,11 @@ class Order extends Model
 
         $this->updateOrderProductsProductInformation();
 
+        // Ook bij annuleren-met-credit een annuleringsmelding sturen (zelfde event
+        // als de gewone annulering). De abandoned-cart-listener no-opt op betaalde
+        // orders, dus dit triggert alleen de push.
+        OrderCancelledEvent::dispatch($this);
+
         return $newOrder;
     }
 
