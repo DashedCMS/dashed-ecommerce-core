@@ -39,7 +39,7 @@ class PrintJobResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('ulid')->limit(8)->tooltip(fn ($state) => $state),
-                TextColumn::make('type')->badge()->formatStateUsing(fn (PrintJobType $s) => $s->label()),
+                TextColumn::make('type')->badge()->formatStateUsing(fn ($state) => $state?->label()),
                 TextColumn::make('order.invoice_id')
                     ->label('Bestelling')
                     ->url(fn (PrintJob $r) => $r->order
@@ -48,8 +48,8 @@ class PrintJobResource extends Resource
                 TextColumn::make('printer.name')->label('Printer')->placeholder('-'),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (PrintJobStatus $s) => $s->color())
-                    ->formatStateUsing(fn (PrintJobStatus $s) => $s->label()),
+                    ->color(fn ($state) => $state?->color())
+                    ->formatStateUsing(fn ($state) => $state?->label()),
                 TextColumn::make('attempts'),
                 TextColumn::make('created_at')->since(),
                 TextColumn::make('printed_at')->since()->placeholder('-'),
