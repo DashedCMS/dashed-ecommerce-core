@@ -73,7 +73,7 @@ class TestPrintBothCommand extends Command
                 ->exists();
         $hasVeloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
             && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $order->id)
-                ->whereNotNull('label_url')
+                ->whereNotNull('label_pdf_path')
                 ->exists();
         $hasLabel = $hasMyParcel || $hasVeloyd;
 

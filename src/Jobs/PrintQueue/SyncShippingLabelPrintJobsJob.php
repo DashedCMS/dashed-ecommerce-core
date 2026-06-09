@@ -44,15 +44,17 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
             ->pluck('printable_id')
             ->all();
 
-        // Een label is "klaar om te printen" zodra het bij de vervoerder bestaat:
-        // MyParcel heeft dan een shipment_id (de PDF wordt on-demand gedownload),
-        // Veloyd een label_url. De PDF zelf lost PrintQueueController::pdf() op,
-        // daarom zetten we hier bewust geen pdf_disk/pdf_path.
-        $availableColumn = str_contains($sourceModel, 'MyParcel') ? 'shipment_id' : 'label_url';
+        // "Klaar om te printen" verschilt per vervoerder: MyParcel heeft een
+        // shipment_id (PDF wordt on-demand gedownload), Veloyd heeft het PDF al op
+        // de public disk (label_pdf_path; label_url wordt niet gebruikt). De
+        // label_printed-vlag deugt niet als filter (Veloyd zet 'm direct op 1),
+        // dus de dedup op printable_id voorkomt dubbele jobs en het tijdvenster
+        // voorkomt dat de eerste run het hele verleden in één keer print.
+        $availableColumn = str_contains($sourceModel, 'MyParcel') ? 'shipment_id' : 'label_pdf_path';
 
         $sourceModel::query()
             ->whereNotNull($availableColumn)
-            ->where('label_printed', false)
+            ->where('created_at', '>=', now()->subDays(2))
             ->whereNotIn('id', $existingPrintableIds)
             ->chunkById(100, function ($shippingOrders) use ($sourceModel): void {
                 foreach ($shippingOrders as $shippingOrder) {

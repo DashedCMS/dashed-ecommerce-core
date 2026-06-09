@@ -123,12 +123,14 @@ class PrintQueueController extends Controller
             }
 
             if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
+                // Veloyd slaat het label-PDF op de public disk op (label_pdf_path);
+                // het veld label_url wordt niet gebruikt.
                 $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $job->order_id)
-                    ->whereNotNull('label_url')
+                    ->whereNotNull('label_pdf_path')
                     ->latest()
                     ->first();
-                if ($v && $v->label_url) {
-                    return redirect()->away($v->label_url);
+                if ($v && $v->label_pdf_path && Storage::disk('public')->exists($v->label_pdf_path)) {
+                    return Storage::disk('public')->response($v->label_pdf_path);
                 }
             }
         }
