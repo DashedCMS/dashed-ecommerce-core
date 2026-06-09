@@ -1724,7 +1724,7 @@ MARKDOWN,
                 $mobileApi->registerNotificationTypes([
                     ['key' => 'order.payment_started', 'label' => 'Betaling gestart', 'description' => 'Een klant is met een betaling begonnen.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => false],
                     ['key' => 'order.paid', 'label' => 'Bestelling betaald', 'description' => 'Een bestelling is betaald.', 'group' => 'Bestellingen', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
-                    ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => false],
+                    ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
                     ['key' => 'stock.low', 'label' => 'Lage voorraad', 'description' => 'Een product zakt onder de voorraaddrempel.', 'group' => 'Producten', 'sound' => 'default', 'ability' => 'products.read', 'default' => false],
                 ]);
             }
