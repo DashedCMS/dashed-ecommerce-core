@@ -86,6 +86,39 @@ class PrintQueueController extends Controller
     {
         $job = PrintJob::where('ulid', $ulid)->firstOrFail();
 
+        // Test-print: de PDF is een asset in de package zelf (geen Storage-disk).
+        // 'dashed-ecommerce-core' is de package-naam, gebruikt als sentinel.
+        if ($job->pdf_disk === 'dashed-ecommerce-core') {
+            $path = __DIR__ . '/../../../../resources/' . ltrim((string) $job->pdf_path, '/');
+            abort_unless(is_file($path), 404, 'Test-PDF ontbreekt');
+
+            return response()->file($path, ['Content-Type' => 'application/pdf']);
+        }
+
+        // Verzendlabel zonder opgeslagen PDF (bv. handmatige print vanuit de app):
+        // los 'm on-demand op, net als OrderController::labelUrl().
+        if ($job->type === PrintJobType::ShippingLabel && ! $job->pdf_path && $job->order_id) {
+            if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
+                $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $job->order_id)
+                    ->whereNotNull('label_pdf_path')
+                    ->latest()
+                    ->first();
+                if ($mp && $mp->label_pdf_path && Storage::disk('public')->exists($mp->label_pdf_path)) {
+                    return Storage::disk('public')->response($mp->label_pdf_path);
+                }
+            }
+
+            if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
+                $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $job->order_id)
+                    ->whereNotNull('label_url')
+                    ->latest()
+                    ->first();
+                if ($v && $v->label_url) {
+                    return redirect()->away($v->label_url);
+                }
+            }
+        }
+
         if ($job->type === PrintJobType::PackingSlip && ! $job->pdf_path) {
             $job->order->generatePackingSlip();
             $job->update([
