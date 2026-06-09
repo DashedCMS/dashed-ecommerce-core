@@ -87,6 +87,7 @@ Route::prefix('api/v1')
         Route::get('orders/{order}/labels', [OrderController::class, 'labels'])->middleware('ability:orders.read');
         Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->middleware('ability:orders.write');
         Route::post('orders/{order}/print', [OrderController::class, 'print'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/print-documents', [OrderController::class, 'printDocuments'])->middleware('ability:orders.write');
         Route::get('orders/{order}/actions', [OrderController::class, 'actions'])->middleware('ability:orders.read');
         Route::post('orders/{order}/actions/{key}', [OrderController::class, 'runAction'])->middleware('ability:orders.write');
 

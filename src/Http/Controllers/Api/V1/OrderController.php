@@ -371,6 +371,87 @@ class OrderController extends Controller
     }
 
     /**
+     * Print pakbon én label in één keer (op type-routing naar de actieve printers).
+     * Dedup: maakt geen nieuwe job aan als er voor de order al een onafgeronde job
+     * van dat type in de wachtrij staat — geen dubbele jobs.
+     */
+    public function printDocuments(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $queued = [];
+
+        if ($this->activePrinterForType(\Dashed\DashedEcommerceCore\Enums\PrinterType::PackingSlip)
+            && $this->queueJobOnce($model, \Dashed\DashedEcommerceCore\Enums\PrintJobType::PackingSlip)) {
+            $queued[] = 'pakbon';
+        }
+
+        if ($this->orderHasShippingLabel($model)
+            && $this->activePrinterForType(\Dashed\DashedEcommerceCore\Enums\PrinterType::ShippingLabel)
+            && $this->queueJobOnce($model, \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel)) {
+            $queued[] = 'label';
+        }
+
+        return response()->json([
+            'success' => ! empty($queued),
+            'queued' => $queued,
+            'message' => $queued
+                ? 'Naar de printer gestuurd: ' . implode(' + ', $queued)
+                : 'Er staat al een job in de wachtrij, of er is geen geschikte printer/label.',
+        ]);
+    }
+
+    /** Is er een actieve printer van dit type (of "beide")? */
+    private function activePrinterForType(\Dashed\DashedEcommerceCore\Enums\PrinterType $type): bool
+    {
+        return \Dashed\DashedEcommerceCore\Models\Printer::active()
+            ->whereIn('type', [$type->value, \Dashed\DashedEcommerceCore\Enums\PrinterType::Both->value])
+            ->exists();
+    }
+
+    /** Heeft de order een verzendlabel (MyParcel-shipment of Veloyd-PDF)? */
+    private function orderHasShippingLabel(Order $model): bool
+    {
+        $myParcel = class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
+            && \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
+                ->whereNotNull('shipment_id')->exists();
+
+        $veloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
+            && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
+                ->whereNotNull('label_pdf_path')->exists();
+
+        return $myParcel || $veloyd;
+    }
+
+    /**
+     * Zet één job van dit type in de wachtrij, tenzij er al een onafgeronde
+     * (pending/claimed/printing) job van dat type voor de order staat. Geeft
+     * terug of er een nieuwe job is aangemaakt.
+     */
+    private function queueJobOnce(Order $model, \Dashed\DashedEcommerceCore\Enums\PrintJobType $type): bool
+    {
+        $exists = \Dashed\DashedEcommerceCore\Models\PrintJob::where('order_id', $model->id)
+            ->where('type', $type->value)
+            ->whereIn('status', [
+                \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending->value,
+                \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Claimed->value,
+                \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Printing->value,
+            ])
+            ->exists();
+
+        if ($exists) {
+            return false;
+        }
+
+        \Dashed\DashedEcommerceCore\Models\PrintJob::create([
+            'type' => $type,
+            'order_id' => $model->id,
+            'status' => \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending,
+        ]);
+
+        return true;
+    }
+
+    /**
      * De order-acties (zoals op de Filament ViewOrder-pagina) die nú beschikbaar
      * zijn voor deze bestelling — dynamisch uit de registry, met per-order
      * opgeloste velden/standaardwaarden.
