@@ -64,19 +64,26 @@ class TestPrintBothCommand extends Command
             'status' => PrintJobStatus::Pending,
         ];
 
-        // Label bestaat bij MyParcel zodra er een shipment_id is; de PDF wordt
-        // bij het printen on-demand gedownload (label_pdf_path hoeft nog niet).
-        $hasLabel = class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
+        // Een label is beschikbaar zodra welke vervoerder dan ook er één heeft:
+        // MyParcel (shipment_id) of Veloyd (label_url). De PDF wordt on-demand
+        // opgehaald door PrintQueueController::pdf().
+        $hasMyParcel = class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
             && \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $order->id)
                 ->whereNotNull('shipment_id')
                 ->exists();
+        $hasVeloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
+            && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $order->id)
+                ->whereNotNull('label_url')
+                ->exists();
+        $hasLabel = $hasMyParcel || $hasVeloyd;
 
         if (! $hasLabel) {
             $labelAttrs['pdf_disk'] = 'dashed-ecommerce-core';
             $labelAttrs['pdf_path'] = 'print/test-page.pdf';
-            $this->warn('  ! Geen MyParcel-zending voor deze order → DYMO print de test-pagina.');
+            $this->warn('  ! Geen verzendlabel (MyParcel/Veloyd) voor deze order → DYMO print de test-pagina.');
         } else {
-            $this->line('  · MyParcel-label gevonden → wordt on-demand gedownload en geprint.');
+            $carrier = $hasMyParcel ? 'MyParcel' : 'Veloyd';
+            $this->line("  · {$carrier}-label gevonden → wordt on-demand opgehaald en geprint.");
         }
 
         $label = PrintJob::create($labelAttrs);

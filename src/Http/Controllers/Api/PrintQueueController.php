@@ -105,10 +105,16 @@ class PrintQueueController extends Controller
                     ->first();
                 if ($mp) {
                     $path = $mp->label_pdf_path;
-                    // Nog niet lokaal gedownload? Haal 'm nu op bij MyParcel.
+                    // Nog niet lokaal gedownload? Haal 'm nu op bij MyParcel. Een
+                    // fout hier mag de Veloyd-route hieronder niet blokkeren.
                     if ((! $path || ! Storage::disk('public')->exists($path))
                         && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
-                        $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($mp);
+                        try {
+                            $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($mp);
+                        } catch (\Throwable $e) {
+                            report($e);
+                            $path = null;
+                        }
                     }
                     if ($path && Storage::disk('public')->exists($path)) {
                         return Storage::disk('public')->response($path);
@@ -127,13 +133,11 @@ class PrintQueueController extends Controller
             }
         }
 
-        if ($job->type === PrintJobType::PackingSlip && ! $job->pdf_path) {
-            $job->order->generatePackingSlip();
+        if ($job->type === PrintJobType::PackingSlip && ! $job->pdf_path && $job->order) {
+            $job->order->createPackingSlip();
             $job->update([
                 'pdf_disk' => 'dashed',
-                'pdf_path' => 'dashed/packing-slips/packing-slip-'
-                    . ($job->order->invoice_id ?: $job->order->id)
-                    . '-' . $job->order->hash . '.pdf',
+                'pdf_path' => $job->order->packingSlipPath(),
             ]);
         }
 
