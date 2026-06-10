@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Services\ProductFinder;
 
 use Throwable;
-use Illuminate\Support\Collection;
 use Dashed\DashedAi\Facades\Ai;
+use Illuminate\Support\Collection;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFinder;
