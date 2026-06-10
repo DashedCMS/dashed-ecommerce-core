@@ -791,9 +791,16 @@ class Product extends Model
      * producten (`use_stock` + `outOfStockSellable()`). Gebruikt de rauwe
      * on-hand `stock`-kolom, net als de bestaande checkout-pre-order-check,
      * zodat gereserveerde voorraad niet dubbel wordt geteld.
+     *
+     * Bundles worden overgeslagen: hun voorraad is afgeleid van de losse
+     * bundleProducts, die elders (checkout) per component worden beoordeeld.
      */
     public function backorderedQuantity(int $requestedQty): int
     {
+        if ($this->is_bundle) {
+            return 0;
+        }
+
         if (! $this->use_stock || ! $this->outOfStockSellable()) {
             return 0;
         }

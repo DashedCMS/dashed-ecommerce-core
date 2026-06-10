@@ -59,3 +59,9 @@ it('returns 0 when the product is not sellable out of stock', function () {
 
     expect($product->backorderedQuantity(2))->toBe(0);
 });
+
+it('returns 0 for a bundle product (handled per component elsewhere)', function () {
+    $product = makeBackorderProduct(['stock' => 0, 'is_bundle' => true]);
+
+    expect($product->backorderedQuantity(2))->toBe(0);
+});
