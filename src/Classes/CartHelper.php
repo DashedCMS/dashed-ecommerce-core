@@ -1661,23 +1661,23 @@ class CartHelper
     /**
      * Levertijd-label voor een backorder-product: voorkeur voor een geldige
      * absolute datum, daarna een relatief aantal dagen, anders generiek.
+     *
+     * We halen de template zonder variabelen op en vullen zelf in met
+     * str_replace, zodat de interpolatie ook werkt als de translations-tabel
+     * (test-omgeving) ontbreekt — Translation::get geeft dan de kale default terug.
      */
     public function backorderDeliveryLabel(Product $model): string
     {
         if ($model->expectedInStockDateValid()) {
-            $template = Translation::get('backorder-delivery-date', 'cart', 'verwacht op :date:', 'text', [
-                'date' => $model->expectedInStockDate(),
-            ]);
+            $template = Translation::get('backorder-delivery-date', 'cart', 'verwacht op :date:');
 
-            return str_replace(':date:', $model->expectedInStockDate(), $template);
+            return str_replace(':date:', (string) $model->expectedInStockDate(), $template);
         }
 
         if ($model->expectedDeliveryInDays() > 0) {
-            $template = Translation::get('backorder-delivery-days', 'cart', 'verwacht over :days: dagen', 'text', [
-                'days' => $model->expectedDeliveryInDays(),
-            ]);
+            $template = Translation::get('backorder-delivery-days', 'cart', 'verwacht over :days: dagen');
 
-            return str_replace(':days:', $model->expectedDeliveryInDays(), $template);
+            return str_replace(':days:', (string) $model->expectedDeliveryInDays(), $template);
         }
 
         return Translation::get('backorder-delivery-generic', 'cart', 'wordt nabesteld');
@@ -1695,25 +1695,16 @@ class CartHelper
         }
 
         $available = max(0, (int) $model->stock);
-        $delivery = $this->backorderDeliveryLabel($model);
 
         $template = Translation::get(
             'product-partially-backordered',
             'cart',
             ':product:: :available: van :quantity: direct leverbaar, :backordered: wordt nabesteld (:delivery:)',
-            'text',
-            [
-                'product' => $model->name,
-                'available' => $available,
-                'quantity' => $quantity,
-                'backordered' => $backordered,
-                'delivery' => $delivery,
-            ],
         );
 
         return str_replace(
             [':product:', ':available:', ':quantity:', ':backordered:', ':delivery:'],
-            [$model->name, $available, $quantity, $backordered, $delivery],
+            [$model->name, $available, $quantity, $backordered, $this->backorderDeliveryLabel($model)],
             $template,
         );
     }
