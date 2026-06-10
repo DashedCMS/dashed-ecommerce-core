@@ -25,6 +25,8 @@ class OrderResource extends JsonResource
             'invoice_id' => $this->invoice_id,
             'status' => $this->status,
             'fulfillment_status' => $this->fulfillment_status,
+            'is_packed' => (bool) $this->packed_at,
+            'packed_at' => optional($this->packed_at)->toIso8601String(),
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             'email' => $this->email,

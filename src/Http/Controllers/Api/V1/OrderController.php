@@ -371,6 +371,32 @@ class OrderController extends Controller
     }
 
     /**
+     * Markeer een order als ingepakt (of maak dat ongedaan). Wordt gebruikt door
+     * de Pick & Pack-flow: scan de pakbon → pak in → scan het label → ingepakt.
+     */
+    public function packed(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'packed' => ['sometimes', 'boolean'],
+        ]);
+        $packed = $data['packed'] ?? true;
+
+        $model->forceFill(['packed_at' => $packed ? now() : null])->save();
+
+        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+            orderId: $model->id,
+            tag: $packed ? 'order.packed' : 'order.unpacked',
+        );
+
+        activity()->performedOn($model)->causedBy($request->user())
+            ->log('mobile-api: order ' . ($packed ? 'ingepakt' : 'inpakken ongedaan gemaakt'));
+
+        return $this->detail($model);
+    }
+
+    /**
      * Print pakbon én label in één keer (op type-routing naar de actieve printers).
      * Dedup: maakt geen nieuwe job aan als er voor de order al een onafgeronde job
      * van dat type in de wachtrij staat — geen dubbele jobs.

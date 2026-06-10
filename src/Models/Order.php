@@ -74,6 +74,7 @@ class Order extends Model
         'attribution_last_touch_at' => 'datetime',
         'applied_discount_codes' => 'array',
         'applied_gift_cards' => 'array',
+        'packed_at' => 'datetime',
     ];
 
     protected $appends = [
