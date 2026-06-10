@@ -90,7 +90,7 @@ class ViewOrder extends ViewRecord
 
         $veloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
             && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $orderId)
-                ->whereNotNull('label_pdf_path')
+                ->whereNotNull('shipment_id')
                 ->exists();
 
         return $myParcel || $veloyd;

@@ -201,7 +201,7 @@ class OrderController extends Controller
 
         if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             foreach (\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
-                ->whereNotNull('label_pdf_path')->latest()->get() as $v) {
+                ->whereNotNull('shipment_id')->latest()->get() as $v) {
                 $labels[] = [
                     'id' => (int) $v->id,
                     'carrier' => 'veloyd',
@@ -241,9 +241,21 @@ class OrderController extends Controller
 
         if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
-                ->whereNotNull('label_pdf_path')->latest()->first();
-            if ($v && $v->label_pdf_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($v->label_pdf_path)) {
-                return \Illuminate\Support\Facades\Storage::disk('public')->url($v->label_pdf_path);
+                ->whereNotNull('shipment_id')->latest()->first();
+            if ($v) {
+                $path = $v->label_pdf_path;
+                if ((! $path || ! \Illuminate\Support\Facades\Storage::disk('public')->exists($path))
+                    && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)) {
+                    try {
+                        $path = \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::downloadLabelForOrder($v);
+                    } catch (\Throwable $e) {
+                        report($e);
+                        $path = null;
+                    }
+                }
+                if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                    return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+                }
             }
         }
 
@@ -443,7 +455,7 @@ class OrderController extends Controller
 
         $veloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
             && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
-                ->whereNotNull('label_pdf_path')->exists();
+                ->whereNotNull('shipment_id')->exists();
 
         return $myParcel || $veloyd;
     }

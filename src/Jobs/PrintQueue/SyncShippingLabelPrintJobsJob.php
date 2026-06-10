@@ -50,10 +50,10 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
         // label_printed-vlag deugt niet als filter (Veloyd zet 'm direct op 1),
         // dus de dedup op printable_id voorkomt dubbele jobs en het tijdvenster
         // voorkomt dat de eerste run het hele verleden in één keer print.
-        $availableColumn = str_contains($sourceModel, 'MyParcel') ? 'shipment_id' : 'label_pdf_path';
-
+        // Beide vervoerders hebben een shipment_id zodra de zending bestaat; de
+        // PDF wordt bij het printen on-demand opgehaald.
         $sourceModel::query()
-            ->whereNotNull($availableColumn)
+            ->whereNotNull('shipment_id')
             ->where('created_at', '>=', now()->subDays(2))
             ->whereNotIn('id', $existingPrintableIds)
             ->chunkById(100, function ($shippingOrders) use ($sourceModel): void {

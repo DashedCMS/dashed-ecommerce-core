@@ -117,7 +117,7 @@ class PrintQueueController extends Controller
 
                 if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
                     $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $job->order_id)
-                        ->whereNotNull('label_pdf_path')->latest()->first();
+                        ->whereNotNull('shipment_id')->latest()->first();
                     if ($v && ($path = $this->resolveLabelPdfPath($v))) {
                         return Storage::disk('public')->response($path);
                     }
@@ -176,6 +176,19 @@ class PrintQueueController extends Controller
             && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
             try {
                 $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($carrierOrder);
+            } catch (\Throwable $e) {
+                report($e);
+                $path = null;
+            }
+            if ($path && Storage::disk('public')->exists($path)) {
+                return $path;
+            }
+        }
+
+        if ($carrierOrder instanceof \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder
+            && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)) {
+            try {
+                $path = \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::downloadLabelForOrder($carrierOrder);
             } catch (\Throwable $e) {
                 report($e);
                 $path = null;
