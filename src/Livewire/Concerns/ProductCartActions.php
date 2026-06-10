@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
@@ -205,6 +206,15 @@ trait ProductCartActions
         }
 
         cartHelper()->removeInvalidItems();
+
+        $backorderNotices = cartHelper()->getBackorderNotices();
+        if ($backorderNotices) {
+            Notification::make()
+                ->warning()
+                ->title(Translation::get('cart-backorder-title', 'cart', 'Niet alle producten zijn volledig op voorraad'))
+                ->body(new HtmlString(implode('<br>', array_map('e', $backorderNotices))))
+                ->send();
+        }
 
         $this->dispatch('refreshCart');
     }
