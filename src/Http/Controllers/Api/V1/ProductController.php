@@ -36,6 +36,15 @@ class ProductController extends Controller
             $query->search((string) $search);
         }
 
+        // Lage/negatieve voorraad: voorraad op of onder de drempel, of <= 0.
+        if ($request->boolean('low_stock')) {
+            $query->where('use_stock', true)
+                ->where(function ($q): void {
+                    $q->whereColumn('stock', '<=', 'low_stock_notification_limit')
+                        ->orWhere('stock', '<=', 0);
+                });
+        }
+
         $sort = (string) $request->query('sort', '');
         if (in_array($sort, self::SORTABLE, true)) {
             $direction = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
