@@ -2,9 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Commands;
 
+use Throwable;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
@@ -54,11 +56,28 @@ class SendAbandonedCartEmails extends Command
                 $record->update(['discount_code_id' => $discountCode->id]);
             }
 
-            Mail::to($record->email)->send(new AbandonedCartMail($record, $step, $discountCode, $source->locale(), $record->id));
+            try {
+                Mail::to($record->email)->send(new AbandonedCartMail($record, $step, $discountCode, $source->locale(), $record->id));
 
-            $record->update(['sent_at' => now()]);
+                $record->update(['sent_at' => now()]);
 
-            $this->info("Sent abandoned cart email #{$record->id} to {$record->email}");
+                $this->info("Sent abandoned cart email #{$record->id} to {$record->email}");
+            } catch (Throwable $e) {
+                report($e);
+                Log::warning('abandoned-cart: mail kon niet verstuurd worden', [
+                    'abandoned_cart_email_id' => $record->id,
+                    'email' => $record->email,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // Postmark levert bv. een 406 als het adres als inactive is
+                // gemarkeerd. Verdere pogingen voor dezelfde ontvanger zouden
+                // ook falen, dus we cancellen deze mail i.p.v. eindeloos te
+                // herproberen (wat ook de hele batch zou blokkeren).
+                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'mail_failed']);
+
+                $this->warn("Mail failed for abandoned cart email #{$record->id} ({$record->email}); cancelled.");
+            }
         }
 
         $this->info("Done. {$emails->count()} email(s) processed.");
