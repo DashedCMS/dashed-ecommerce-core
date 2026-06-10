@@ -118,7 +118,19 @@ class ProductFinderMatcher
      */
     protected function candidates(ProductFinder $finder): Collection
     {
-        // Geïmplementeerd in Task 3.
-        return collect();
+        $query = Product::query()->where('public', 1);
+
+        if ($finder->only_in_stock) {
+            $query->where('in_stock', 1);
+        }
+
+        $categoryIds = array_filter((array) ($finder->category_ids ?? []));
+        if ($categoryIds !== []) {
+            $query->whereHas('productCategories', function ($q) use ($categoryIds) {
+                $q->whereIn('dashed__product_categories.id', $categoryIds);
+            });
+        }
+
+        return $query->limit(40)->get();
     }
 }
