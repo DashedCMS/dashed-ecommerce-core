@@ -18,6 +18,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFinderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
@@ -130,6 +131,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ShippingMethodResource::class,
                 DiscountCodeResource::class,
                 ProductFaqResource::class,
+                ProductFinderResource::class,
                 ProductResource::class,
                 ProductCategoryResource::class,
                 ProductFilterResource::class,
