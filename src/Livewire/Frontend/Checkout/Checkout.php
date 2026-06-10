@@ -1004,7 +1004,7 @@ class Checkout extends Component
             $orderProduct->product_extras = $productExtras;
             $orderProduct->hidden_options = $cartItem->options['hiddenOptions'] ?? [];
 
-            if ($cartItem->model->isPreorderable() && $cartItem->model->stock < $cartItem->qty) {
+            if ($cartItem->model->backorderedQuantity((int) $cartItem->qty) > 0) {
                 $orderProduct->is_pre_order = true;
                 $orderProduct->pre_order_restocked_date = $cartItem->model->resolvePreOrderRestockedDate();
                 $orderContainsPreOrders = true;
@@ -1022,7 +1022,7 @@ class Checkout extends Component
                 $bundleOrderProduct->price = 0;
                 $bundleOrderProduct->discount = 0;
 
-                if ($bundleProduct->isPreorderable() && $bundleProduct->stock < $cartItem->qty) {
+                if ($bundleProduct->backorderedQuantity((int) $cartItem->qty) > 0) {
                     $bundleOrderProduct->is_pre_order = true;
                     $bundleOrderProduct->pre_order_restocked_date = $bundleProduct->resolvePreOrderRestockedDate();
                     $orderContainsPreOrders = true;
