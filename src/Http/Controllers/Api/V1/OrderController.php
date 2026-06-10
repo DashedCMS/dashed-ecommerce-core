@@ -213,7 +213,70 @@ class OrderController extends Controller
             }
         }
 
-        return response()->json(['data' => $labels]);
+        return response()->json([
+            'data' => $labels,
+            'providers' => $this->labelProviders($model),
+        ]);
+    }
+
+    /**
+     * Maak een verzendlabel aan via de geconfigureerde provider (MyParcel/Veloyd)
+     * met de standaard carrier/pakkettype per land. Optioneel `provider` om te
+     * forceren. Geeft de bijgewerkte labellijst terug.
+     */
+    public function createLabel(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $provider = (string) $request->input('provider', '');
+        $errors = [];
+
+        if (($provider === '' || $provider === 'veloyd')
+            && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
+            && \Dashed\DashedCore\Models\Customsetting::get('veloyd_api_key', $model->site_id)) {
+            try {
+                \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::createLabelForOrder($model);
+
+                return response()->json(['success' => true, 'provider' => 'veloyd', 'message' => 'Verzendlabel aangemaakt via Veloyd.']);
+            } catch (\Throwable $e) {
+                report($e);
+                $errors[] = 'Veloyd: ' . $e->getMessage();
+            }
+        }
+
+        if (($provider === '' || $provider === 'myparcel')
+            && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
+            && \Dashed\DashedCore\Models\Customsetting::get('my_parcel_api_key', $model->site_id)) {
+            try {
+                \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::createLabelForOrder($model);
+
+                return response()->json(['success' => true, 'provider' => 'myparcel', 'message' => 'Verzendlabel aangemaakt via MyParcel.']);
+            } catch (\Throwable $e) {
+                report($e);
+                $errors[] = 'MyParcel: ' . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => $errors ? implode(' ', $errors) : 'Geen verzendprovider geconfigureerd voor deze site.',
+        ], 422);
+    }
+
+    /** Welke label-providers zijn (op basis van de API-sleutel) beschikbaar. */
+    private function labelProviders(Order $model): array
+    {
+        $providers = [];
+
+        if (class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
+            && \Dashed\DashedCore\Models\Customsetting::get('veloyd_api_key', $model->site_id)) {
+            $providers[] = 'veloyd';
+        }
+        if (class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
+            && \Dashed\DashedCore\Models\Customsetting::get('my_parcel_api_key', $model->site_id)) {
+            $providers[] = 'myparcel';
+        }
+
+        return $providers;
     }
 
     /** Eerste beschikbare label als publieke PDF-URL (MyParcel zo nodig on-demand). */
