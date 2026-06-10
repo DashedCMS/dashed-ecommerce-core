@@ -785,6 +785,24 @@ class Product extends Model
         return $this->inStock() && ! $this->hasDirectSellableStock() && $this->use_stock;
     }
 
+    /**
+     * Het aantal van `$requestedQty` dat NIET direct uit voorraad geleverd kan
+     * worden en dus nabesteld wordt. Alleen > 0 voor verkoopbare backorder-
+     * producten (`use_stock` + `outOfStockSellable()`). Gebruikt de rauwe
+     * on-hand `stock`-kolom, net als de bestaande checkout-pre-order-check,
+     * zodat gereserveerde voorraad niet dubbel wordt geteld.
+     */
+    public function backorderedQuantity(int $requestedQty): int
+    {
+        if (! $this->use_stock || ! $this->outOfStockSellable()) {
+            return 0;
+        }
+
+        $available = max(0, (int) $this->stock);
+
+        return max(0, $requestedQty - $available);
+    }
+
     public function expectedInStockDate()
     {
         return $this->expected_in_stock_date ? $this->expected_in_stock_date->format('d-m-Y') : null;
