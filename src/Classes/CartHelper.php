@@ -1659,6 +1659,90 @@ class CartHelper
     }
 
     /**
+     * Levertijd-label voor een backorder-product: voorkeur voor een geldige
+     * absolute datum, daarna een relatief aantal dagen, anders generiek.
+     */
+    public function backorderDeliveryLabel(Product $model): string
+    {
+        if ($model->expectedInStockDateValid()) {
+            $template = Translation::get('backorder-delivery-date', 'cart', 'verwacht op :date:', 'text', [
+                'date' => $model->expectedInStockDate(),
+            ]);
+
+            return str_replace(':date:', $model->expectedInStockDate(), $template);
+        }
+
+        if ($model->expectedDeliveryInDays() > 0) {
+            $template = Translation::get('backorder-delivery-days', 'cart', 'verwacht over :days: dagen', 'text', [
+                'days' => $model->expectedDeliveryInDays(),
+            ]);
+
+            return str_replace(':days:', $model->expectedDeliveryInDays(), $template);
+        }
+
+        return Translation::get('backorder-delivery-generic', 'cart', 'wordt nabesteld');
+    }
+
+    /**
+     * Eén meldingregel voor een product dat deels/volledig nabesteld wordt,
+     * of null wanneer er niets nabesteld hoeft te worden.
+     */
+    public function backorderNoticeLine(Product $model, int $quantity): ?string
+    {
+        $backordered = $model->backorderedQuantity($quantity);
+        if ($backordered < 1) {
+            return null;
+        }
+
+        $available = max(0, (int) $model->stock);
+        $delivery = $this->backorderDeliveryLabel($model);
+
+        $template = Translation::get(
+            'product-partially-backordered',
+            'cart',
+            ':product:: :available: van :quantity: direct leverbaar, :backordered: wordt nabesteld (:delivery:)',
+            'text',
+            [
+                'product' => $model->name,
+                'available' => $available,
+                'quantity' => $quantity,
+                'backordered' => $backordered,
+                'delivery' => $delivery,
+            ],
+        );
+
+        return str_replace(
+            [':product:', ':available:', ':quantity:', ':backordered:', ':delivery:'],
+            [$model->name, $available, $quantity, $backordered, $delivery],
+            $template,
+        );
+    }
+
+    /**
+     * Alle backorder-meldingregels voor de huidige winkelwagen (één per
+     * betrokken product, lege array als alles op voorraad is).
+     *
+     * @return array<int, string>
+     */
+    public function getBackorderNotices(): array
+    {
+        $notices = [];
+
+        foreach ($this->getCartItems() ?: [] as $cartItem) {
+            if (! $cartItem->model) {
+                continue;
+            }
+
+            $line = $this->backorderNoticeLine($cartItem->model, (int) $cartItem->qty);
+            if ($line !== null) {
+                $notices[] = $line;
+            }
+        }
+
+        return $notices;
+    }
+
+    /**
      * Dit blijft inhoudelijk hetzelfde, maar nu DB removals/updates.
      */
     public function removeInvalidItems($checkStock = true): bool
