@@ -8,19 +8,22 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFinder;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
 
 function candProduct(string $name, array $overrides = []): Product
 {
+    $siteId = Sites::getActive() ?: 'default';
+
     $group = ProductGroup::create([
         'name' => ['en' => $name . ' G'], 'slug' => ['en' => Str::slug($name) . '-g'],
         'short_description' => ['en' => ''], 'description' => ['en' => ''],
-        'content' => ['en' => ''], 'search_terms' => ['en' => ''], 'site_ids' => ['default'],
+        'content' => ['en' => ''], 'search_terms' => ['en' => ''], 'site_ids' => [$siteId],
     ]);
 
     return Product::withoutEvents(fn () => Product::create(array_merge([
         'name' => ['en' => $name], 'slug' => ['en' => Str::slug($name)],
-        'site_ids' => ['default'], 'product_group_id' => $group->id,
+        'site_ids' => [$siteId], 'product_group_id' => $group->id,
         'public' => 1, 'use_stock' => false, 'in_stock' => true, 'stock_status' => 'in_stock',
         'price' => 10, 'current_price' => 10,
     ], $overrides)));

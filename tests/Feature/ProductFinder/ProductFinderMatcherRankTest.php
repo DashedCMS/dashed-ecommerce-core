@@ -90,3 +90,14 @@ it('geeft een lege lijst zonder kandidaten', function () {
     Ai::shouldReceive('hasProvider')->andReturn(true);
     expect((new ProductFinderMatcher())->rank(rankFinder(4), [], collect()))->toBe([]);
 });
+
+it('valt terug bij niet-array rijen in de AI-output (geen crash)', function () {
+    $a = rankProduct('Alpha'); $b = rankProduct('Beta');
+    Ai::shouldReceive('hasProvider')->andReturn(true);
+    Ai::shouldReceive('json')->once()->andReturn(['results' => ['Alpha', 'Beta']]); // scalars, ongeldig
+
+    $result = (new ProductFinderMatcher())->rank(rankFinder(2), [], collect([$a, $b]));
+
+    expect($result)->toHaveCount(2); // valt terug op de kandidaten
+    expect($result[0]['product']->id)->toBe($a->id);
+});

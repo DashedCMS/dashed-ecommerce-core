@@ -5,11 +5,16 @@ namespace Dashed\DashedEcommerceCore\Services\ProductFinder;
 use Throwable;
 use Illuminate\Support\Collection;
 use Dashed\DashedAi\Facades\Ai;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFinder;
 
 class ProductFinderMatcher
 {
+    private const CANDIDATE_LIMIT = 40;
+
+    private const DEFAULT_RESULT_COUNT = 4;
+
     /**
      * @param  array<string, string>  $answers  vraaglabel => gekozen antwoord
      * @return array<int, array{product: Product, reason: string}>
@@ -26,7 +31,7 @@ class ProductFinderMatcher
      */
     public function rank(ProductFinder $finder, array $answers, Collection $candidates): array
     {
-        $limit = max(1, (int) ($finder->result_count ?: 4));
+        $limit = $this->resultLimit($finder);
 
         if ($candidates->isEmpty()) {
             return [];
@@ -53,6 +58,9 @@ class ProductFinderMatcher
         $out = [];
 
         foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
             $id = (int) ($row['id'] ?? 0);
             if (! $byId->has($id)) {
                 continue;
@@ -64,6 +72,11 @@ class ProductFinderMatcher
         }
 
         return $out !== [] ? $out : $this->fallback($candidates, $limit);
+    }
+
+    private function resultLimit(ProductFinder $finder): int
+    {
+        return max(1, (int) ($finder->result_count ?: self::DEFAULT_RESULT_COUNT));
     }
 
     /**
@@ -95,7 +108,7 @@ class ProductFinderMatcher
         ])->values()->all();
 
         $productsJson = json_encode($products, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $limit = max(1, (int) ($finder->result_count ?: 4));
+        $limit = $this->resultLimit($finder);
 
         return <<<PROMPT
             Je bent een behulpzame productadviseur. Op basis van de antwoorden van de klant,
@@ -120,6 +133,11 @@ class ProductFinderMatcher
     {
         $query = Product::query()->where('public', 1);
 
+        $activeSite = Sites::getActive();
+        if ($activeSite) {
+            $query->whereJsonContains('site_ids', $activeSite);
+        }
+
         if ($finder->only_in_stock) {
             $query->where('in_stock', 1);
         }
@@ -131,6 +149,6 @@ class ProductFinderMatcher
             });
         }
 
-        return $query->limit(40)->get();
+        return $query->limit(self::CANDIDATE_LIMIT)->get();
     }
 }
