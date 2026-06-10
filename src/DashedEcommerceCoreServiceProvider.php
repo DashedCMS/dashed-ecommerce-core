@@ -1400,6 +1400,9 @@ MARKDOWN,
             $schedule->command(PruneCartLogs::class)
                 ->dailyAt('03:15')
                 ->withoutOverlapping();
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class)
+                ->dailyAt('08:00')
+                ->withoutOverlapping();
             $schedule->command(SendAbandonedCartEmails::class)
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
@@ -1726,6 +1729,7 @@ MARKDOWN,
                     ['key' => 'order.paid', 'label' => 'Bestelling betaald', 'description' => 'Een bestelling is betaald.', 'group' => 'Bestellingen', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
                     ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
                     ['key' => 'stock.low', 'label' => 'Lage voorraad', 'description' => 'Een product zakt onder de voorraaddrempel.', 'group' => 'Producten', 'sound' => 'default', 'ability' => 'products.read', 'default' => false],
+                    ['key' => 'daily.briefing', 'label' => 'Dagstart', 'description' => 'Krijg \'s ochtends een samenvatting: omzet van gisteren + wat er vandaag te verzenden is en welke producten lage voorraad hebben.', 'group' => 'Dashboard', 'sound' => 'default', 'ability' => 'dashboard.read', 'default' => false],
                 ]);
             }
 
@@ -1956,6 +1960,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrintQueue\TestPrintBothCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\CleanupPriceGroupUserPricingCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class,
             ]);
 
     }
