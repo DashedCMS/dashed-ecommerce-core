@@ -2,19 +2,23 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder;
 
-use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFinder;
 use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
+use Livewire\Component;
 
 class ProductFinderQuiz extends Component
 {
     public ?int $finderId = null;
+
     public int $step = 0;
+
     /** @var array<string, string> */
     public array $answers = [];
+
     /** @var array<int, array<string, mixed>> */
     public array $results = [];
+
     public bool $finished = false;
 
     public function mount(array $blockData = []): void
@@ -73,6 +77,22 @@ class ProductFinderQuiz extends Component
         }, $matches);
 
         $this->finished = true;
+    }
+
+    public function addToCart(int $productId): void
+    {
+        cartHelper()->addToCart($productId, 1);
+        $this->dispatch('refreshCart');
+    }
+
+    public function addAll(): void
+    {
+        foreach ($this->results as $result) {
+            if (! empty($result['id'])) {
+                cartHelper()->addToCart((int) $result['id'], 1);
+            }
+        }
+        $this->dispatch('refreshCart');
     }
 
     public function restart(): void
