@@ -72,7 +72,7 @@ class ProductFinderQuiz extends Component
                 'name' => (string) $product->name,
                 'price' => (float) ($product->current_price ?? $product->price ?? 0),
                 'reason' => (string) ($row['reason'] ?? ''),
-                'url' => $product->url ?? null,
+                'url' => $product->getUrl(),
             ];
         }, $matches);
 

@@ -91,7 +91,7 @@ it('loopt de stappen door en levert resultaten op het einde', function () {
         ->call('selectAnswer', 'Budget?', 'Hoog')
         ->assertSet('finished', true)
         ->assertSet('results', [[
-            'id' => $p->id, 'name' => 'Alpha', 'price' => 10.0, 'reason' => 'Past goed', 'url' => $p->url ?? null,
+            'id' => $p->id, 'name' => 'Alpha', 'price' => 10.0, 'reason' => 'Past goed', 'url' => $p->getUrl(),
         ]]);
 });
 
