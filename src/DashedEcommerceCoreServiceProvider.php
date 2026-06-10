@@ -1874,6 +1874,16 @@ MARKDOWN,
             Block::make('view-order-block')
                 ->label('Bestelling')
                 ->schema([]),
+            Block::make('product-finder')
+                ->label('Product finder')
+                ->schema([
+                    Select::make('finder_id')
+                        ->label('Finder')
+                        ->options(\Dashed\DashedEcommerceCore\Models\ProductFinder::query()
+                            ->where('is_active', true)->pluck('name', 'id'))
+                        ->required()
+                        ->searchable(),
+                ]),
         ];
 
         cms()
