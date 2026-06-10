@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder;
 
+use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductFinder;
 use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
-use Livewire\Component;
 
 class ProductFinderQuiz extends Component
 {
