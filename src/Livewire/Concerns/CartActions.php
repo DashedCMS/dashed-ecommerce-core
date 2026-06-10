@@ -45,8 +45,18 @@ trait CartActions
         if ($cartChanged) { //If cartPopup info dissapears, removeInvalidItems has changed the cart, known bug
             $this->dispatch('refreshCart');
         }
+    }
 
+    /**
+     * Toon één waarschuwing met per product een regel wanneer er meer in de
+     * winkelwagen ligt dan direct leverbaar is. Wordt bewust alleen aangeroepen
+     * bij een echte mutatie (toevoegen/aantal wijzigen) en NIET in checkCart(),
+     * zodat de melding niet bij elke page load opnieuw verschijnt.
+     */
+    public function notifyBackorders(): void
+    {
         $backorderNotices = cartHelper()->getBackorderNotices();
+
         if ($backorderNotices) {
             Notification::make()
                 ->warning()
@@ -65,6 +75,7 @@ trait CartActions
         }
 
         $this->checkCart($response['status'], $response['message']);
+        $this->notifyBackorders();
         $this->fillPrices();
         $this->dispatch('refreshCart');
     }
@@ -392,6 +403,7 @@ trait CartActions
 
         session(['lastAddedProductInCart' => $product]);
         $this->fillPrices();
+        $this->notifyBackorders();
 
         if ($redirectChoice == 'same') {
             return $this->checkCart('success', Translation::get('product-added-to-cart', $this->cartType, 'The product has been added to your cart'));

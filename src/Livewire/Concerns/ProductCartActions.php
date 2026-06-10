@@ -207,7 +207,19 @@ trait ProductCartActions
 
         cartHelper()->removeInvalidItems();
 
+        $this->dispatch('refreshCart');
+    }
+
+    /**
+     * Toon één waarschuwing met per product een regel wanneer er meer in de
+     * winkelwagen ligt dan direct leverbaar is. Wordt bewust alleen aangeroepen
+     * bij een echte mutatie (toevoegen) en NIET in checkCart(), zodat de melding
+     * niet bij elke page load opnieuw verschijnt.
+     */
+    public function notifyBackorders(): void
+    {
         $backorderNotices = cartHelper()->getBackorderNotices();
+
         if ($backorderNotices) {
             Notification::make()
                 ->warning()
@@ -215,8 +227,6 @@ trait ProductCartActions
                 ->body(new HtmlString(implode('<br>', array_map('e', $backorderNotices))))
                 ->send();
         }
-
-        $this->dispatch('refreshCart');
     }
 
     public function setQuantity(int $quantity)
@@ -1147,6 +1157,7 @@ trait ProductCartActions
         ]);
 
         session(['lastAddedProductInCart' => $product]);
+        $this->notifyBackorders();
 
         if ($redirectChoice == 'same') {
             return $this->checkCart('success', Translation::get('product-added-to-cart', $this->cartType, 'The product has been added to your cart'));
