@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Dashed\DashedCore\Classes\Sites;
@@ -43,6 +44,15 @@ trait CartActions
 
         if ($cartChanged) { //If cartPopup info dissapears, removeInvalidItems has changed the cart, known bug
             $this->dispatch('refreshCart');
+        }
+
+        $backorderNotices = cartHelper()->getBackorderNotices();
+        if ($backorderNotices) {
+            Notification::make()
+                ->warning()
+                ->title(Translation::get('cart-backorder-title', 'cart', 'Niet alle producten zijn volledig op voorraad'))
+                ->body(new HtmlString(implode('<br>', array_map('e', $backorderNotices))))
+                ->send();
         }
     }
 
