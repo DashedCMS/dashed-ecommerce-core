@@ -10,7 +10,7 @@
                               clip-rule="evenodd"/>
                     </svg>
                     <span>
-                    {{ Translation::get('too-much-in-cart-pre-order-product-static-delivery-time', 'product', ':stock: op voorraad, levering duurt circa :days: dagen', 'text', [
+                    {{ Translation::get('too-much-in-cart-pre-order-product-static-delivery-time', 'product', ':stock: op voorraad, de rest op nalevering in :days: dagen', 'text', [
                         'days' => $product->expectedDeliveryInDays(),
                         'stock' => $product->directSellableStock(),
                     ]) }}
@@ -25,7 +25,7 @@
                               clip-rule="evenodd"/>
                     </svg>
                     <span>
-                    {{ Translation::get('too-much-in-cart-pre-order-product-now', 'product', ':stock: op voorraad, de rest van de levering op :date:', 'text', [
+                    {{ Translation::get('too-much-in-cart-pre-order-product-now', 'product', ':stock: op voorraad, de rest op nalevering op :date:', 'text', [
                         'date' => $product->expectedInStockDate(),
                         'stock' => $product->directSellableStock(),
                     ]) }}
