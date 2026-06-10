@@ -185,6 +185,25 @@ class ViewOrder extends ViewRecord
                                 ->send();
                         }
                     }),
+                Action::make('printLabelOnly')
+                    ->label('Alleen label printen')
+                    ->icon('heroicon-s-tag')
+                    ->tooltip('Stuur enkel het verzendlabel naar de label-printer')
+                    ->visible(fn (): bool => $this->labelPrinterAvailable() && $this->orderHasLabel())
+                    ->requiresConfirmation()
+                    ->modalHeading('Alleen label printen')
+                    ->modalDescription('Alleen het verzendlabel wordt naar de label-printer gestuurd (geen pakbon).')
+                    ->action(function (): void {
+                        if ($this->queueJobOnce(PrintJobType::ShippingLabel)) {
+                            Notification::make()->title('Label naar de printer gestuurd')->success()->send();
+                        } else {
+                            Notification::make()
+                                ->title('Niets toegevoegd')
+                                ->body('Er staat al een label-job in de wachtrij voor deze bestelling.')
+                                ->warning()
+                                ->send();
+                        }
+                    }),
             ])
                 ->label('Documenten')
                 ->icon('heroicon-o-document-text')
