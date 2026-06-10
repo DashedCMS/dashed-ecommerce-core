@@ -805,7 +805,7 @@ class Product extends Model
             return 0;
         }
 
-        $available = max(0, (int) $this->stock);
+        $available = max(0, (int) $this->directSellableStock());
 
         return max(0, $requestedQty - $available);
     }

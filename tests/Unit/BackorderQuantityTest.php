@@ -65,3 +65,10 @@ it('returns 0 for a bundle product (handled per component elsewhere)', function 
 
     expect($product->backorderedQuantity(2))->toBe(0);
 });
+
+it('counts stock reserved by pending orders as unavailable', function () {
+    $product = makeBackorderProduct(['stock' => 5, 'reserved_stock' => 4]);
+
+    // 5 on hand minus 4 reserved = 1 directly sellable; ordering 3 backorders 2.
+    expect($product->backorderedQuantity(3))->toBe(2);
+});

@@ -1694,7 +1694,7 @@ class CartHelper
             return null;
         }
 
-        $available = max(0, (int) $model->stock);
+        $available = max(0, (int) $model->directSellableStock());
 
         $template = Translation::get(
             'product-partially-backordered',
