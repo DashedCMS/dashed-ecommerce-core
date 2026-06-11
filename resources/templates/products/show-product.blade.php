@@ -142,7 +142,7 @@
 
                         <div class="mt-6 grid gap-2">
                             @if($product)
-                                <x-product.stock-text :product="$product"/>
+                                <x-product.stock-text :product="$product" :cartQuantity="$quantity"/>
                             @endif
 
                             <div class="flex items-center text-sm">

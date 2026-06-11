@@ -7,6 +7,11 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Added
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
+## v4.57.3 - 2026-06-11
+
+### Fixed
+- **Nalevering-melding op de productdetailpagina.** De `stock-text` component op `templates/products/show-product.blade.php` kreeg geen `cartQuantity` doorgegeven, waardoor de bestaande "X op voorraad, de rest op nalevering"-melding nooit verscheen wanneer een klant van een backorderbaar product (`use_stock` + `out_of_stock_sellable`) meer dan de fysieke voorraad in de mand legde. `:cartQuantity="$quantity"` wordt nu doorgegeven zodat de melding live meebeweegt met de hoeveelheid-selector. De winkelwagen (`cart-items.blade.php`) gaf `cartQuantity` al door.
+
 ## v4.36.7 - 2026-05-26
 
 ### Fixed
