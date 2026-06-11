@@ -64,11 +64,11 @@ it('includes return-specific variables in availableVariables', function () {
         ->and($vars)->toContain('adminNote');
 });
 
-it('defaultBlocks for requested mail includes invoiceId and returnRequestedAt', function () {
+it('defaultBlocks for requested mail includes orderNumber and returnRequestedAt', function () {
     $blocks = OrderReturnRequestedMail::defaultBlocks();
     $allText = collect($blocks)->map(fn ($b) => json_encode($b))->implode(' ');
 
-    expect($allText)->toContain(':invoiceId:')
+    expect($allText)->toContain(':orderNumber:')
         ->and($allText)->toContain(':returnRequestedAt:');
 });
 
@@ -100,4 +100,32 @@ it('escapes free-text return variables in HTML context but not in plain-text sub
     // Subject / plain-text: value passes through unmodified
     $subject = $ref->invoke($mail, 'Reden: :rejectedReason:', false);
     expect($subject)->toContain('<script>');
+});
+
+it('substitutes orderNumber with the invoice id when present', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-42']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $mail = new OrderReturnApprovedMail($return);
+    $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
+    $ref->setAccessible(true);
+
+    expect($ref->invoke($mail, 'Bestelling :orderNumber:', false))->toBe('Bestelling INV-42');
+});
+
+it('falls back to #order_id for orderNumber when invoice id is empty', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $mail = new OrderReturnApprovedMail($return);
+    $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
+    $ref->setAccessible(true);
+
+    expect($ref->invoke($mail, 'Bestelling :orderNumber:', false))->toBe('Bestelling #' . $order->id);
+});
+
+it('approved subject default no longer contains empty parentheses', function () {
+    expect(OrderReturnApprovedMail::defaultSubject())
+        ->not->toContain('()')
+        ->toContain(':orderNumber:');
 });

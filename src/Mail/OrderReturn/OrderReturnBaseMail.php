@@ -55,19 +55,20 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             'returnReason',
             'rejectedReason',
             'adminNote',
+            'orderNumber',
         ];
     }
 
     public static function defaultSubject(): string
     {
-        return 'Je retour voor bestelling :invoiceId:';
+        return 'Je retour voor bestelling :orderNumber:';
     }
 
     public static function defaultBlocks(): array
     {
         return [
             ['type' => 'heading', 'data' => ['text' => 'Je retour', 'level' => 'h1']],
-            ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je retourverzoek voor bestelling :invoiceId: ontvangen op :returnRequestedAt:.</p>']],
+            ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je retourverzoek voor bestelling :orderNumber: ontvangen op :returnRequestedAt:.</p>']],
             ['type' => 'divider', 'data' => []],
             ['type' => 'text', 'data' => ['body' => '<p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
@@ -151,17 +152,19 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
         $reason = (string) $this->orderReturn->customer_note;
         $rejectedReason = (string) $this->orderReturn->rejected_reason;
         $adminNote = (string) $this->orderReturn->admin_note;
+        $orderNumber = $this->orderReturn->order?->invoice_id ?: ('#' . ($this->orderReturn->order_id ?? ''));
 
         if ($escapeHtml) {
             $requestedAt = e($requestedAt);
             $reason = e($reason);
             $rejectedReason = e($rejectedReason);
             $adminNote = e($adminNote);
+            $orderNumber = e($orderNumber);
         }
 
         return str_replace(
-            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:'],
-            [$requestedAt, $reason, $rejectedReason, $adminNote],
+            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:'],
+            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber],
             $value
         );
     }
