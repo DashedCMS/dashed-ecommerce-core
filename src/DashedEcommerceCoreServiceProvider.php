@@ -2150,6 +2150,8 @@ MARKDOWN,
 
             \Dashed\DashedCore\Models\Customsetting::set('checkout_page_id', $page->id);
         }
+
+        \Dashed\DashedEcommerceCore\Support\DefaultReturnPage::createIfMissing();
     }
 
     protected function registerPopupTemplates(): void

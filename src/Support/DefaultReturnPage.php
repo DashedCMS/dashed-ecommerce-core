@@ -2,23 +2,31 @@
 
 namespace Dashed\DashedEcommerceCore\Support;
 
+use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedPages\Models\Page;
 
 class DefaultReturnPage
 {
-    public static function createIfMissing(): void
+    public static function createIfMissing(): ?Page
     {
-        $exists = Page::query()
-            ->where('slug->nl', 'retourneren')
-            ->orWhere('slug->en', 'returns')
-            ->exists();
+        if (\Dashed\DashedCore\Models\Customsetting::get('return_page_id')) {
+            return null;
+        }
 
-        if ($exists) {
-            return;
+        // Secondary defense: skip if the nl or en slug already exists.
+        if (Page::query()->where('slug->nl', 'retourneren')->orWhere('slug->en', 'returns')->exists()) {
+            return null;
+        }
+
+        $locales = Locales::getActivatedLocalesFromSites();
+
+        // Fallback so the page is always created, even in environments without
+        // active locales (e.g. fresh test databases).
+        if (empty($locales)) {
+            $locales = ['nl', 'en'];
         }
 
         $block = [
-            'type' => 'retour-formulier',
             'data' => [
                 'title' => 'Koop ongedaan maken',
                 'intro' => 'Vul je bestelnummer en e-mailadres in om je koop ongedaan te maken.',
@@ -26,15 +34,26 @@ class DefaultReturnPage
                 'top_margin' => true,
                 'bottom_margin' => true,
             ],
+            'type' => 'retour-formulier',
         ];
 
         $page = new Page();
-        $page->setTranslation('name', 'nl', 'Retourneren');
-        $page->setTranslation('name', 'en', 'Returns');
-        $page->setTranslation('slug', 'nl', 'retourneren');
-        $page->setTranslation('slug', 'en', 'returns');
-        $page->setTranslation('content', 'nl', [$block]);
-        $page->setTranslation('content', 'en', [$block]);
+
+        foreach ($locales as $locale) {
+            [$name, $slug] = match ($locale) {
+                'nl' => ['Retourneren', 'retourneren'],
+                default => ['Returns', 'returns'],
+            };
+
+            $page->setTranslation('name', $locale, $name);
+            $page->setTranslation('slug', $locale, $slug);
+            $page->setTranslation('content', $locale, [$block]);
+        }
+
         $page->save();
+
+        \Dashed\DashedCore\Models\Customsetting::set('return_page_id', $page->id);
+
+        return $page;
     }
 }
