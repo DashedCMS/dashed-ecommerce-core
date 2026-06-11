@@ -109,7 +109,7 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             $rawSubject = $template?->getTranslation('subject', $locale, useFallbackLocale: true) ?: static::defaultSubject();
 
             $html = $order ? OrderVariableReplacer::handle($order, $templateHtml, true) : $templateHtml;
-            $html = $this->replaceReturnVariables($html);
+            $html = $this->replaceReturnVariables($html, true);
 
             $subject = $order ? OrderVariableReplacer::handle($order, (string) $rawSubject) : (string) $rawSubject;
             $subject = $this->replaceReturnVariables($subject);
@@ -143,16 +143,25 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             ]);
     }
 
-    protected function replaceReturnVariables(string $value): string
+    // :returnReason: maps to customer_note; :rejectedReason: to rejected_reason; :adminNote: to admin_note.
+    // Free-text fields must be HTML-escaped when substituting into an email body.
+    protected function replaceReturnVariables(string $value, bool $escapeHtml = false): string
     {
+        $requestedAt = optional($this->orderReturn->requested_at)->format('d-m-Y H:i') ?? '';
+        $reason = (string) $this->orderReturn->customer_note;
+        $rejectedReason = (string) $this->orderReturn->rejected_reason;
+        $adminNote = (string) $this->orderReturn->admin_note;
+
+        if ($escapeHtml) {
+            $requestedAt = e($requestedAt);
+            $reason = e($reason);
+            $rejectedReason = e($rejectedReason);
+            $adminNote = e($adminNote);
+        }
+
         return str_replace(
             [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:'],
-            [
-                optional($this->orderReturn->requested_at)->format('d-m-Y H:i') ?? '',
-                (string) $this->orderReturn->customer_note,
-                (string) $this->orderReturn->rejected_reason,
-                (string) $this->orderReturn->admin_note,
-            ],
+            [$requestedAt, $reason, $rejectedReason, $adminNote],
             $value
         );
     }

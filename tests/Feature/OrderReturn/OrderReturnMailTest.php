@@ -78,3 +78,26 @@ it('defaultBlocks for rejected mail includes rejectedReason', function () {
 
     expect($allText)->toContain(':rejectedReason:');
 });
+
+it('escapes free-text return variables in HTML context but not in plain-text subject context', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-XSS-9']);
+    $return = OrderReturn::create([
+        'order_id' => $order->id,
+        'email' => 'a@b.nl',
+        'rejected_reason' => '<script>alert(1)</script>',
+    ]);
+
+    $mail = new OrderReturnRejectedMail($return);
+
+    $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
+    $ref->setAccessible(true);
+
+    // HTML body: angle brackets must be entity-encoded
+    $html = $ref->invoke($mail, 'Reden: :rejectedReason:', true);
+    expect($html)->not->toContain('<script>')
+        ->and($html)->toContain('&lt;script&gt;');
+
+    // Subject / plain-text: value passes through unmodified
+    $subject = $ref->invoke($mail, 'Reden: :rejectedReason:', false);
+    expect($subject)->toContain('<script>');
+});
