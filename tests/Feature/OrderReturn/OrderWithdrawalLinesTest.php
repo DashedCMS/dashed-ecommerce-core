@@ -74,6 +74,24 @@ it('refuses a quantity higher than ordered', function () {
     expect(OrderReturn::count())->toBe(0);
 });
 
+it('persists the reason when reason_id arrives as a string (browser select)', function () {
+    Mail::fake();
+    [$order, $p1] = makeOrderWithProductsT4();
+    $reason = ReturnReason::create(['label' => ['nl' => 'Te klein'], 'is_active' => true]);
+
+    Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'INV-1001')
+        ->set('email', 'klant@example.com')
+        ->call('search')
+        ->set("selectedLines.{$p1->id}.selected", true)
+        ->set("selectedLines.{$p1->id}.quantity", 1)
+        ->set("selectedLines.{$p1->id}.reason_id", (string) $reason->id)
+        ->call('confirm')
+        ->assertSet('completed', true);
+
+    expect(OrderReturnLine::first()->return_reason_id)->toBe($reason->id);
+});
+
 it('stores null reason_id when the reason is inactive but keeps the note', function () {
     Mail::fake();
     [$order, $p1] = makeOrderWithProductsT4();

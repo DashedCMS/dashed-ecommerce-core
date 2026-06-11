@@ -168,6 +168,16 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
                 $name = $line->orderProduct?->name ?? '';
                 $part = $line->quantity . 'x ' . $name;
 
+                $reasonLabel = $line->returnReason
+                    ? $line->returnReason->getTranslation('label', app()->getLocale())
+                    : null;
+                if (filled($reasonLabel)) {
+                    $part .= ' (' . $reasonLabel . ')';
+                }
+                if (filled($line->reason_note)) {
+                    $part .= ' - ' . $line->reason_note;
+                }
+
                 return $escapeHtml ? e($part) : $part;
             })
             ->implode($escapeHtml ? '<br>' : ', ');

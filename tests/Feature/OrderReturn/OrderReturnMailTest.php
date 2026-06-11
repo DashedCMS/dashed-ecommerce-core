@@ -132,6 +132,28 @@ it('approved subject default no longer contains empty parentheses', function () 
 
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
+use Dashed\DashedEcommerceCore\Models\ReturnReason;
+
+it('includes the reason note in the line summary and escapes it in HTML', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-9']);
+    $product = OrderProduct::create(['order_id' => $order->id, 'name' => 'Shirt', 'quantity' => 2, 'price' => 10]);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+    OrderReturnLine::create([
+        'order_return_id' => $return->id,
+        'order_product_id' => $product->id,
+        'quantity' => 1,
+        'reason_note' => '<script>x</script>',
+    ]);
+
+    $mail = new \Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail($return->fresh('lines'));
+    $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
+    $ref->setAccessible(true);
+    $html = $ref->invoke($mail, ':returnLines:', true);
+
+    expect($html)->toContain('1x Shirt')
+        ->and($html)->not->toContain('<script>')
+        ->and($html)->toContain('&lt;script&gt;');
+});
 
 it('renders the return lines summary and escapes product names in HTML', function () {
     $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-7']);

@@ -144,10 +144,13 @@ class OrderWithdrawal extends Component
 
                 return;
             }
+            $reasonId = $line['reason_id'] ?? null;
+            $reasonId = ($reasonId === null || $reasonId === '') ? null : (int) $reasonId;
+
             $chosen[] = [
                 'order_product_id' => $product->id,
                 'quantity' => $qty,
-                'reason_id' => $line['reason_id'] ?? null,
+                'reason_id' => $reasonId,
                 'note' => (string) ($line['note'] ?? ''),
             ];
         }
