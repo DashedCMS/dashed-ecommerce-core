@@ -3,10 +3,16 @@
         <div class="rounded-lg border border-green-200 bg-green-50 p-6">
             <h2 class="text-lg font-semibold text-green-900">{{ __('Je koop is ongedaan gemaakt') }}</h2>
             <p class="mt-2 text-green-800">
-                {{ __('We hebben je verzoek ontvangen voor bestelling :order op :datetime. Je ontvangt een bevestiging per e-mail.', [
-                    'order' => $this->order?->invoice_id ?: $this->order?->id,
-                    'datetime' => now()->format('d-m-Y H:i'),
-                ]) }}
+                @if ($completedAt)
+                    {{ __('We hebben je verzoek ontvangen voor bestelling :order op :datetime. Je ontvangt een bevestiging per e-mail.', [
+                        'order' => $completedOrderLabel,
+                        'datetime' => $completedAt,
+                    ]) }}
+                @else
+                    {{ __('We hebben je verzoek ontvangen voor bestelling :order. Je ontvangt een bevestiging per e-mail.', [
+                        'order' => $completedOrderLabel,
+                    ]) }}
+                @endif
             </p>
         </div>
     @elseif ($step === 1)

@@ -27,6 +27,8 @@ class OrderWithdrawal extends Component
     public ?int $foundOrderId = null;
     public bool $notFound = false;
     public bool $completed = false;
+    public ?string $completedAt = null;
+    public ?string $completedOrderLabel = null;
     public ?string $rateLimitMessage = null;
 
     /** @var array<string, mixed> */
@@ -91,13 +93,17 @@ class OrderWithdrawal extends Component
             return;
         }
 
-        DB::transaction(function () use ($order) {
+        $resolvedReturn = null;
+
+        DB::transaction(function () use ($order, &$resolvedReturn) {
             $existing = OrderReturn::where('order_id', $order->id)
                 ->open()
                 ->lockForUpdate()
                 ->first();
 
             if ($existing) {
+                $resolvedReturn = $existing;
+
                 return;
             }
 
@@ -107,6 +113,8 @@ class OrderWithdrawal extends Component
                 'email' => $order->email,
                 'customer_note' => $this->customerNote ?: null,
             ]);
+
+            $resolvedReturn = $return;
 
             $order->update(['retour_status' => 'waiting_for_return']);
 
@@ -127,6 +135,8 @@ class OrderWithdrawal extends Component
             }
         });
 
+        $this->completedAt = optional($resolvedReturn?->requested_at)->format('d-m-Y H:i');
+        $this->completedOrderLabel = $order->invoice_id ?: (string) $order->id;
         $this->completed = true;
     }
 

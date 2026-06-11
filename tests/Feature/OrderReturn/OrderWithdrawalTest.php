@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
@@ -39,7 +40,8 @@ it('creates a return request and mails the customer on confirm', function () {
         ->call('search')
         ->set('customerNote', 'Past niet')
         ->call('confirm')
-        ->assertSet('completed', true);
+        ->assertSet('completed', true)
+        ->assertSet('completedOrderLabel', 'INV-1001');
 
     $return = OrderReturn::first();
     expect($return)->not->toBeNull()
@@ -80,6 +82,23 @@ it('rejects a confirm with a foundOrderId that does not match the supplied crede
         ->assertSet('completed', false);
 
     expect(OrderReturn::where('order_id', $victim->id)->count())->toBe(0);
+});
+
+it('blocks search after too many attempts', function () {
+    RateLimiter::clear('order-withdrawal:127.0.0.1');
+
+    $component = Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'NOPE')
+        ->set('email', 'x@y.nl');
+
+    // 5 allowed attempts proceed to the lookup (notFound), rate limit not yet tripped.
+    for ($i = 0; $i < 5; $i++) {
+        $component->call('search')->assertSet('rateLimitMessage', null);
+    }
+
+    // 6th attempt is throttled.
+    $component->call('search');
+    expect($component->get('rateLimitMessage'))->not->toBeNull();
 });
 
 it('rejects a confirm when credentials match no order at all', function () {
