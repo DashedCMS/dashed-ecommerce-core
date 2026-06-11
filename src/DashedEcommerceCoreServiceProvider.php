@@ -1501,6 +1501,7 @@ MARKDOWN,
         Livewire::component('cart-recommendations', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartRecommendations::class);
         Livewire::component('cart.quick-add-product', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\QuickAddProduct::class);
         Livewire::component('product-finder-quiz', \Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder\ProductFinderQuiz::class);
+        Livewire::component('order-withdrawal', \Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal::class);
         Livewire::component('checkout.checkout', Checkout::class);
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
