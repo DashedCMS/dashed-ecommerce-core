@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Tests;
 
 use Orchestra\Testbench\TestCase as Orchestra;
 use Dashed\DashedCore\DashedCoreServiceProvider;
+use Dashed\DashedPages\DashedPagesServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Dashed\DashedEcommerceCore\DashedEcommerceCoreServiceProvider;
@@ -25,6 +26,7 @@ class TestCase extends Orchestra
     {
         return [
             DashedCoreServiceProvider::class,
+            DashedPagesServiceProvider::class,
             DashedEcommerceCoreServiceProvider::class,
         ];
     }
