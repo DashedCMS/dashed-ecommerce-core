@@ -17,11 +17,18 @@ it('stores a translatable label and casts is_active', function () {
 });
 
 it('active scope returns only active reasons ordered by sort_order', function () {
-    $a = ReturnReason::create(['label' => ['nl' => 'B'], 'is_active' => true, 'sort_order' => 2]);
-    $b = ReturnReason::create(['label' => ['nl' => 'A'], 'is_active' => true, 'sort_order' => 1]);
-    ReturnReason::create(['label' => ['nl' => 'Uit'], 'is_active' => false, 'sort_order' => 0]);
+    // Use high sort_order values so the two test rows sort after any seeded defaults.
+    $a = ReturnReason::create(['label' => ['nl' => 'B_test'], 'is_active' => true, 'sort_order' => 100]);
+    $b = ReturnReason::create(['label' => ['nl' => 'A_test'], 'is_active' => true, 'sort_order' => 99]);
+    $inactive = ReturnReason::create(['label' => ['nl' => 'Uit_test'], 'is_active' => false, 'sort_order' => 98]);
 
     $ids = ReturnReason::active()->pluck('id')->all();
 
-    expect($ids)->toBe([$b->id, $a->id]);
+    // The inactive reason must not appear.
+    expect($ids)->not->toContain($inactive->id);
+
+    // $b (sort_order 99) must come before $a (sort_order 100).
+    $posB = array_search($b->id, $ids);
+    $posA = array_search($a->id, $ids);
+    expect($posB)->toBeLessThan($posA);
 });
