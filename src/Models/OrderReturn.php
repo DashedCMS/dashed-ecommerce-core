@@ -4,7 +4,10 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -81,6 +84,7 @@ class OrderReturn extends Model
         $this->save();
 
         $this->logToOrder('order.return-approved');
+        Mail::to($this->email)->queue(new OrderReturnApprovedMail($this));
     }
 
     public function reject(string $reason): void
@@ -91,6 +95,7 @@ class OrderReturn extends Model
         $this->save();
 
         $this->logToOrder('order.return-rejected');
+        Mail::to($this->email)->queue(new OrderReturnRejectedMail($this));
     }
 
     public function markHandled(): void

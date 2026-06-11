@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
@@ -62,4 +65,24 @@ it('marks a return as handled', function () {
 
     expect($return->fresh()->status)->toBe(OrderReturn::STATUS_HANDLED)
         ->and($return->fresh()->handled_at)->not->toBeNull();
+});
+
+it('mails the customer on approve', function () {
+    Mail::fake();
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $return->approve();
+
+    Mail::assertQueued(OrderReturnApprovedMail::class);
+});
+
+it('mails the customer on reject', function () {
+    Mail::fake();
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $return->reject('Buiten termijn');
+
+    Mail::assertQueued(OrderReturnRejectedMail::class);
 });
