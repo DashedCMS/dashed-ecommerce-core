@@ -1792,6 +1792,52 @@ MARKDOWN,
                 ];
             });
 
+            // AI Ops-Copilot: actuele verkoop-/fulfilment-/voorraad-snapshot als
+            // context. De copilot baseert hierop zijn antwoorden.
+            if (method_exists($mobileApi, 'registerCopilotContext')) {
+                $mobileApi->registerCopilotContext(function (string $siteId): string {
+                    $orderModel = \Dashed\DashedEcommerceCore\Models\Order::class;
+                    $productModel = \Dashed\DashedEcommerceCore\Models\Product::class;
+                    $fmt = fn (float $n): string => '€ ' . number_format($n, 2, ',', '.');
+
+                    $sum = fn ($from) => $orderModel::query()->where('site_id', $siteId)->isPaid()
+                        ->whereBetween('created_at', [$from, now()])->get(['total']);
+
+                    $today = $sum(now()->startOfDay());
+                    $week = $sum(now()->startOfWeek());
+                    $month = $sum(now()->startOfMonth());
+
+                    $unhandled = $orderModel::query()->where('site_id', $siteId)
+                        ->where('fulfillment_status', 'unhandled')->isPaid()->count();
+
+                    $low = $productModel::thisSite($siteId)->where('use_stock', true)
+                        ->where(function ($q): void {
+                            $q->whereColumn('stock', '<=', 'low_stock_notification_limit')->orWhere('stock', '<=', 0);
+                        })
+                        ->orderBy('stock')->limit(20)->get(['name', 'stock', 'sku']);
+
+                    $lines = [];
+                    $lines[] = 'VERKOOP (betaalde bestellingen, tot nu):';
+                    $lines[] = '- Vandaag: ' . $fmt((float) $today->sum('total')) . ' over ' . $today->count() . ' bestellingen';
+                    $lines[] = '- Deze week: ' . $fmt((float) $week->sum('total')) . ' over ' . $week->count() . ' bestellingen';
+                    $lines[] = '- Deze maand: ' . $fmt((float) $month->sum('total')) . ' over ' . $month->count() . ' bestellingen';
+                    $lines[] = '';
+                    $lines[] = 'FULFILMENT:';
+                    $lines[] = '- Nog te verzenden (betaald + onafgehandeld): ' . $unhandled;
+                    $lines[] = '';
+                    $lines[] = 'VOORRAAD — producten op/onder drempel of uitverkocht (max 20):';
+                    if ($low->isEmpty()) {
+                        $lines[] = '- Geen producten onder de voorraaddrempel.';
+                    } else {
+                        foreach ($low as $p) {
+                            $lines[] = '- ' . $p->name . ($p->sku ? " [{$p->sku}]" : '') . ': ' . (int) $p->stock . ' op voorraad';
+                        }
+                    }
+
+                    return implode("\n", $lines);
+                });
+            }
+
             $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
         }
     }
