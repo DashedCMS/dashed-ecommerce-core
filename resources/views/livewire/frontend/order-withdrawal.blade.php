@@ -52,22 +52,55 @@
             <div class="mt-4 rounded border p-4">
                 <p class="font-medium">{{ __('Bestelling') }}: {{ $this->order->invoice_id ?: $this->order->id }}</p>
                 <p class="text-sm text-gray-600">{{ __('Besteldatum') }}: {{ $this->order->created_at?->format('d-m-Y') }}</p>
-                <ul class="mt-2 text-sm text-gray-700">
-                    @foreach ($this->order->orderProducts as $line)
-                        <li>{{ $line->quantity ?? 1 }}x {{ $line->name ?? '' }}</li>
-                    @endforeach
-                </ul>
             </div>
-        @endif
 
-        <form wire:submit.prevent="confirm" class="mt-4 space-y-4">
-            <div>
-                <label class="block text-sm font-medium">{{ __('Reden (optioneel)') }}</label>
-                <textarea wire:model="customerNote" rows="3" class="mt-1 w-full rounded border-gray-300"></textarea>
-            </div>
-            <button type="submit" class="rounded bg-red-600 px-4 py-2 text-white">
-                {{ __('Koop definitief ongedaan maken') }}
+            <button type="button" wire:click="selectAllLines" class="mt-3 text-sm underline">
+                {{ __('Alles selecteren') }}
             </button>
-        </form>
+
+            <form wire:submit.prevent="confirm" class="mt-4 space-y-4">
+                @foreach ($this->order->orderProducts as $product)
+                    <div class="rounded border p-3">
+                        <label class="flex items-center gap-2 font-medium">
+                            <input type="checkbox" wire:model.live="selectedLines.{{ $product->id }}.selected" />
+                            {{ $product->name }}
+                            <span class="text-sm text-gray-500">({{ __('besteld') }}: {{ $product->quantity }})</span>
+                        </label>
+
+                        @if (($selectedLines[$product->id]['selected'] ?? false))
+                            <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                                <div>
+                                    <label class="block text-sm">{{ __('Aantal') }}</label>
+                                    <input type="number" min="1" max="{{ $product->quantity }}"
+                                           wire:model="selectedLines.{{ $product->id }}.quantity"
+                                           class="mt-1 w-full rounded border-gray-300" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm">{{ __('Reden') }}</label>
+                                    <select wire:model="selectedLines.{{ $product->id }}.reason_id"
+                                            class="mt-1 w-full rounded border-gray-300">
+                                        <option value="">{{ __('Kies een reden') }}</option>
+                                        @foreach ($this->reasons as $reason)
+                                            <option value="{{ $reason->id }}">{{ $reason->getTranslation('label', app()->getLocale()) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm">{{ __('Toelichting') }}</label>
+                                    <input type="text" wire:model="selectedLines.{{ $product->id }}.note"
+                                           class="mt-1 w-full rounded border-gray-300" />
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+
+                @error('lines') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                <button type="submit" class="rounded bg-red-600 px-4 py-2 text-white">
+                    {{ __('Geselecteerde producten retourneren') }}
+                </button>
+            </form>
+        @endif
     @endif
 </div>
