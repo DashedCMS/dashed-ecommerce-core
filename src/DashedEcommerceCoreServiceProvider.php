@@ -1622,6 +1622,7 @@ MARKDOWN,
         Gate::policy(\Dashed\DashedEcommerceCore\Models\OrderLogTemplate::class, \Dashed\DashedEcommerceCore\Policies\OrderLogTemplatePolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Order::class, \Dashed\DashedEcommerceCore\Policies\OrderPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\OrderReturn::class, \Dashed\DashedEcommerceCore\Policies\OrderReturnPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\ReturnReason::class, \Dashed\DashedEcommerceCore\Policies\ReturnReasonPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\PaymentMethod::class, \Dashed\DashedEcommerceCore\Policies\PaymentMethodPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductCategory::class, \Dashed\DashedEcommerceCore\Policies\ProductCategoryPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ProductCharacteristics::class, \Dashed\DashedEcommerceCore\Policies\ProductCharacteristicsPolicy::class);
@@ -1642,6 +1643,8 @@ MARKDOWN,
             'delete_order' => 'Bestellingen verwijderen',
             'view_order_return' => 'Retouren bekijken',
             'edit_order_return' => 'Retouren bewerken',
+            'view_return_reason' => 'Retourredenen bekijken',
+            'edit_return_reason' => 'Retourredenen bewerken',
             'view_cart' => 'Winkelwagens bekijken',
             'edit_cart' => 'Winkelwagens bewerken',
             'delete_cart' => 'Winkelwagens verwijderen',

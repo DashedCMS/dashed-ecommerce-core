@@ -10,6 +10,7 @@ use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ReturnReasonResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
@@ -141,6 +142,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductCharacteristicResource::class,
                 OrderResource::class,
                 OrderReturnResource::class,
+                ReturnReasonResource::class,
                 OpenOrderProductResource::class,
                 ProductTabResource::class,
                 ProductExtraResource::class,
