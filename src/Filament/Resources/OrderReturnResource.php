@@ -4,9 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
 use UnitEnum;
 use BackedEnum;
-use Filament\Actions\Action;
 use Filament\Tables\Table;
-use Filament\Schemas\Schema;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;

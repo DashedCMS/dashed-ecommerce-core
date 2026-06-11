@@ -6,10 +6,10 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Database\Eloquent\Model;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 
 class OrderReturn extends Model
 {

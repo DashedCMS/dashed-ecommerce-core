@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Support;
 
-use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedPages\Models\Page;
+use Dashed\DashedCore\Classes\Locales;
 
 class DefaultReturnPage
 {
