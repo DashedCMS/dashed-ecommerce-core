@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,5 +69,46 @@ class OrderReturn extends Model
     public function statusLabel(): string
     {
         return self::statusLabels()[$this->status] ?? $this->status;
+    }
+
+    public function approve(?string $adminNote = null): void
+    {
+        $this->status = self::STATUS_APPROVED;
+        $this->approved_at = now();
+        if ($adminNote) {
+            $this->admin_note = $adminNote;
+        }
+        $this->save();
+
+        $this->logToOrder('order.return-approved');
+    }
+
+    public function reject(string $reason): void
+    {
+        $this->status = self::STATUS_REJECTED;
+        $this->rejected_at = now();
+        $this->rejected_reason = $reason;
+        $this->save();
+
+        $this->logToOrder('order.return-rejected');
+    }
+
+    public function markHandled(): void
+    {
+        $this->status = self::STATUS_HANDLED;
+        $this->handled_at = now();
+        $this->save();
+
+        $this->order?->update(['retour_status' => 'handled']);
+        $this->logToOrder('order.return-handled');
+    }
+
+    protected function logToOrder(string $tag): void
+    {
+        $log = new OrderLog();
+        $log->order_id = $this->order_id;
+        $log->user_id = Auth::id();
+        $log->tag = $tag;
+        $log->save();
     }
 }
