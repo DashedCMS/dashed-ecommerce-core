@@ -434,6 +434,11 @@ class OrderController extends Controller
                     }
                 }
                 if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                    // Label gedownload via de app → uit de wachtrij halen.
+                    if (! $mp->label_printed) {
+                        $mp->forceFill(['label_printed' => 1])->save();
+                    }
+
                     return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
                 }
             }
@@ -454,6 +459,11 @@ class OrderController extends Controller
                     }
                 }
                 if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                    // Label gedownload via de app → uit de wachtrij halen.
+                    if (! $v->label_printed) {
+                        $v->forceFill(['label_printed' => 1])->save();
+                    }
+
                     return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
                 }
             }
@@ -564,6 +574,10 @@ class OrderController extends Controller
                 if ($row) {
                     $printableType = $cls;
                     $printableId = (int) $row->id;
+                    // Label via de app geprint → uit de wachtrij halen.
+                    if (! $row->label_printed) {
+                        $row->forceFill(['label_printed' => 1])->save();
+                    }
                 }
             }
         }
