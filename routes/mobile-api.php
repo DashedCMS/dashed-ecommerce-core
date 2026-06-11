@@ -84,6 +84,7 @@ Route::prefix('api/v1')
 
         Route::get('orders', [OrderController::class, 'index'])->middleware('ability:orders.read');
         Route::get('orders/filter-options', [OrderController::class, 'filterOptions'])->middleware('ability:orders.read');
+        Route::get('orders/match', [OrderController::class, 'match'])->middleware('ability:orders.read');
         Route::get('orders/{order}', [OrderController::class, 'show'])->middleware('ability:orders.read');
         Route::patch('orders/{order}', [OrderController::class, 'update'])->middleware('ability:orders.write');
         Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');

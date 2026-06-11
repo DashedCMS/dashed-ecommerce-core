@@ -136,6 +136,33 @@ class OrderController extends Controller
         return $this->detail($model);
     }
 
+    /**
+     * Zoek een bestelling op een gescande code: track & trace-code of factuurnummer.
+     * Zo kun je in de inpak-scanner naast de pakbon-barcode ook een T&T-label scannen
+     * om de juiste order te openen.
+     */
+    public function match(Request $request): OrderResource
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:191'],
+        ]);
+        $code = trim($data['code']);
+
+        $model = Order::thisSite()
+            ->whereHas('trackAndTraces', fn (Builder $q) => $q->where('code', $code))
+            ->latest()
+            ->first();
+
+        // Terugval: factuurnummer (bijv. een gescande pakbon-/factuur-barcode).
+        if (! $model) {
+            $model = Order::thisSite()->where('invoice_id', $code)->latest()->first();
+        }
+
+        abort_if($model === null, 404, 'Geen bestelling gevonden voor deze code.');
+
+        return $this->detail($model);
+    }
+
     /** Wijzig de fulfilment-/verwerkingsstatus. */
     public function changeFulfillment(Request $request, int $order): OrderResource
     {
