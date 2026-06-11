@@ -67,3 +67,12 @@ it('builds a generic line when no delivery time is configured', function () {
     expect($line)->toContain('1 van 2')
         ->and($line)->toContain('wordt nabesteld');
 });
+
+it('returns null when there was no initial stock (full backorder, not partial)', function () {
+    // Zonder enige voorraad is het een volledige backorder, geen partiële. De
+    // "niet alle producten op voorraad"-melding is enkel bedoeld voor producten
+    // waar wel voorraad was maar je er meer aan toevoegt dan beschikbaar.
+    $product = makeNoticeProduct(['stock' => 0, 'expected_delivery_in_days' => 5]);
+
+    expect(cartHelper()->backorderNoticeLine($product, 2))->toBeNull();
+});
