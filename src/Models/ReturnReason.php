@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Spatie\Translatable\HasTranslations;
+use Illuminate\Database\Eloquent\Builder;
 
 class ReturnReason extends Model
 {
