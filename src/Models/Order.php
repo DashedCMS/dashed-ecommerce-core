@@ -1477,16 +1477,16 @@ class Order extends Model
         if ($printerName) {
             $this->createInvoice();
 
-            $pdfPath = 'files-to-download/'.time().rand(10000, 100000).'.pdf';
+            $pdfPath = 'files-to-download/'.Str::random(40).'.pdf';
 
             $content = Storage::disk('dashed')->get($this->invoicePath());
             Storage::disk('public')->put($pdfPath, $content);
 
-            $pdfPath = Storage::disk('public')->path($pdfPath);
+            Printing::print($printerName, Storage::disk('public')->path($pdfPath));
 
-            Printing::print($printerName, $pdfPath);
-
-            $pdfPath = Storage::disk('public')->delete($pdfPath);
+            // delete() verwacht een relatief pad; met het absolute pad werd nooit iets
+            // verwijderd en bleef de factuur-PDF met klantgegevens publiek staan.
+            Storage::disk('public')->delete($pdfPath);
         }
     }
 
@@ -1496,15 +1496,15 @@ class Order extends Model
         if ($printerName) {
             $this->createPackingSlip();
 
-            $pdfPath = 'files-to-download/'.time().rand(10000, 100000).'.pdf';
+            $pdfPath = 'files-to-download/'.Str::random(40).'.pdf';
 
             $content = Storage::disk('dashed')->get($this->packingSlipPath());
             Storage::disk('public')->put($pdfPath, $content);
 
-            $pdfPath = Storage::disk('public')->path($pdfPath);
-            Printing::print($printerName, $pdfPath);
+            Printing::print($printerName, Storage::disk('public')->path($pdfPath));
 
-            $pdfPath = Storage::disk('public')->delete($pdfPath);
+            // Zie printInvoice(): verwijderen met het relatieve pad zodat de PDF niet publiek blijft staan.
+            Storage::disk('public')->delete($pdfPath);
         }
     }
 

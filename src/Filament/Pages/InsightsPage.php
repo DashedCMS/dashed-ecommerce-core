@@ -28,6 +28,12 @@ class InsightsPage extends Page
 
     protected string $view = 'dashed-ecommerce-core::filament.pages.insights';
 
+    // Toont financiele cashflow/inkoopdata: vereist hetzelfde statistieken-recht als de andere Statistics-pagina's.
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->can('view_statistics');
+    }
+
     /** @var array<string, float|int> */
     public array $cashflow = [];
 

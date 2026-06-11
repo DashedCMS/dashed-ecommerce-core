@@ -1157,7 +1157,11 @@ class CartHelper
                     if ($paymentMethod['deposit_calculation']) {
                         $formula = str_replace('{ORDER_TOTAL_MINUS_PAYMENT_COSTS}', static::$total, $paymentMethod['deposit_calculation']);
                         $formula = str_replace('{ORDER_TOTAL}', static::$total, $formula);
-                        $depositAmount = eval('return '.$formula.';');
+                        // Alleen een rekenkundige expressie toestaan (cijfers, operatoren, haakjes,
+                        // punt, spaties), zodat een admin-bewerkbaar veld geen PHP-code kan injecteren.
+                        if (preg_match('/^[0-9+\-*\/().\s]+$/', $formula)) {
+                            $depositAmount = eval('return '.$formula.';');
+                        }
                     }
                 }
             }

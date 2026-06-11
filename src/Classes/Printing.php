@@ -11,7 +11,7 @@ class Printing
         try {
             $output = [];
             $returnValue = 0;
-            exec("lp -d $printerName $pdfPath", $output, $returnValue);
+            exec('lp -d ' . escapeshellarg($printerName) . ' ' . escapeshellarg($pdfPath), $output, $returnValue);
 
             if ($returnValue !== 0) {
                 Notification::make()

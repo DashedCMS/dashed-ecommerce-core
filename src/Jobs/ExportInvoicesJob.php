@@ -290,7 +290,7 @@ class ExportInvoicesJob implements ShouldQueue
         }
 
         // Move the generated file to the permanent exports location
-        $fileName = 'invoices-' . now()->format('Y-m-d-His') . '.pdf';
+        $fileName = 'invoices-' . now()->format('Y-m-d-His') . '-' . Str::random(20) . '.pdf';
         $finalRelativePath = 'dashed/exports/' . now()->format('Y/m') . '/' . $this->exportId . '/' . $fileName;
         $sourceRelativePath = ltrim($invoicePath, '/');
 

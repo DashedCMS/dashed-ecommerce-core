@@ -150,7 +150,12 @@ class ShoppingCart
                 if ($shippingAddress && $fromAddress && Customsetting::get('checkout_google_api_key')) {
                     $cacheKey = 'shipping_distance_' . md5($fromAddress . '|' . $shippingAddress);
                     $distanceRange = cache()->remember($cacheKey, 3600, function () use ($fromAddress, $shippingAddress) {
-                        $distanceResponse = Http::get("https://maps.googleapis.com/maps/api/distancematrix/json?destinations=$shippingAddress&origins=$fromAddress&units=imperial&key=" . Customsetting::get('checkout_google_api_key'))
+                        $distanceResponse = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json', [
+                            'destinations' => $shippingAddress,
+                            'origins' => $fromAddress,
+                            'units' => 'imperial',
+                            'key' => Customsetting::get('checkout_google_api_key'),
+                        ])
                             ->json();
                         if (($distanceResponse['status'] ?? '') == 'OK') {
                             return ($distanceResponse['rows'][0]['elements'][0]['distance']['value'] ?? 10000000) / 1000;

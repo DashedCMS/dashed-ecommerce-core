@@ -143,7 +143,7 @@ class ExportFinancialReportJob implements ShouldQueue
         $pdf->loadHTML($contents);
         $output = $pdf->output();
 
-        $fileName = 'financial-report-' . now()->format('Y-m-d-His') . '.pdf';
+        $fileName = 'financial-report-' . now()->format('Y-m-d-His') . '-' . Str::random(20) . '.pdf';
         $pdfPath = 'dashed/exports/' . now()->format('Y/m') . '/' . $this->exportId . '/' . $fileName;
         Storage::disk('public')->put($pdfPath, $output);
 

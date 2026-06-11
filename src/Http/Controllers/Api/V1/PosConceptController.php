@@ -63,7 +63,7 @@ class PosConceptController extends Controller
     /** Laad een concept terug in de kassa (hydrateert de cart). */
     public function load(Request $request): JsonResponse
     {
-        $order = Order::concept()->find((int) $request->input('orderId'));
+        $order = Order::concept()->where('site_id', (string) Sites::getActive())->find((int) $request->input('orderId'));
         $posCart = POSCart::where('identifier', (string) $request->input('posIdentifier'))->first();
 
         if (! $order || ! $posCart) {

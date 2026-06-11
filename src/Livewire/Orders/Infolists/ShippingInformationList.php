@@ -62,15 +62,15 @@ class ShippingInformationList extends Component implements HasSchemas
                         TextEntry::make('shipping_address')
                             ->hiddenLabel()
                             ->state(fn (Order $record) => new HtmlString(
-                                ($record->company_name ? $record->company_name . ' <br>' : '') .
-                                "{$record->name}<br>{$record->street} {$record->house_nr}<br>{$record->city} {$record->zip_code}<br>{$record->country}"
+                                ($record->company_name ? e($record->company_name) . ' <br>' : '') .
+                                e($record->name) . '<br>' . e($record->street) . ' ' . e($record->house_nr) . '<br>' . e($record->city) . ' ' . e($record->zip_code) . '<br>' . e($record->country)
                             )),
 
                         TextEntry::make('invoice_address')
                             ->hiddenLabel()
                             ->state(fn (Order $record) => new HtmlString(
-                                ($record->company_name ? $record->company_name . ' <br>' : '') .
-                                "{$record->name}<br>{$record->invoice_street} {$record->invoice_house_nr}<br>{$record->invoice_city} {$record->invoice_zip_code}<br>{$record->invoice_country}"
+                                ($record->company_name ? e($record->company_name) . ' <br>' : '') .
+                                e($record->name) . '<br>' . e($record->invoice_street) . ' ' . e($record->invoice_house_nr) . '<br>' . e($record->invoice_city) . ' ' . e($record->invoice_zip_code) . '<br>' . e($record->invoice_country)
                             )),
 
                         Grid::make()

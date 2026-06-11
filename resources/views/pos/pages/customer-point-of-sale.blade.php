@@ -1,3 +1,4 @@
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="relative w-full h-full"
      x-data="POSData({
         endpoint: @js(route('api.point-of-sale.retrieve-cart-for-customer')),
@@ -150,8 +151,7 @@
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
-                        // als route in web.php hangt met csrf:
-                        // 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content'),
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
                     },
                     body: JSON.stringify({
                         userId: '{{ auth()->user()->id }}',

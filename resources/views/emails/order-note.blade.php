@@ -347,7 +347,7 @@
                                                                 <div
                                                                     style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 25px; text-align: left; color: #4F4F4F;">
                                                                     <br>
-                                                                    {!! nl2br($orderLog->note) !!}
+                                                                    {!! nl2br(e($orderLog->note)) !!}
                                                                 </div>
                                                             </td>
                                                         </tr>

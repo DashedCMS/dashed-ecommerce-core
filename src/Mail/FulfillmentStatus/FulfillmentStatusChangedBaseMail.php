@@ -136,7 +136,7 @@ abstract class FulfillmentStatusChangedBaseMail extends Mailable implements Regi
                 $this->order->locale,
             );
 
-            return $this->html(OrderVariableReplacer::handle($this->order, $templateHtml))
+            return $this->html(OrderVariableReplacer::handle($this->order, $templateHtml, true))
                 ->from($fromEmail, $fromName)
                 ->subject($subject);
         }

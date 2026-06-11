@@ -59,10 +59,10 @@ class OrderProductsList extends Component implements HasSchemas
                             if (is_array($orderProduct->product_extras ?: [])) {
                                 foreach ($orderProduct->product_extras as $productExtra) {
                                     if ($productExtra['path'] ?? false) {
-                                        $html .= $productExtra['name'] . ': <a class="hover:text-primary-500" target="_blank" href="' .
-                                            Storage::disk('dashed')->url($productExtra['path']) . '">' . $productExtra['value'] . '</a> <br/>';
+                                        $html .= e($productExtra['name']) . ': <a class="hover:text-primary-500" target="_blank" href="' .
+                                            e(Storage::disk('dashed')->url($productExtra['path'])) . '">' . e($productExtra['value']) . '</a> <br/>';
                                     } else {
-                                        $html .= $productExtra['name'] . ': ' . $productExtra['value'] . ' <br/>';
+                                        $html .= e($productExtra['name']) . ': ' . e($productExtra['value']) . ' <br/>';
                                     }
                                 }
                             }
@@ -70,7 +70,7 @@ class OrderProductsList extends Component implements HasSchemas
                             if (is_array($orderProduct->hidden_options ?: [])) {
                                 foreach ($orderProduct->hidden_options ?: [] as $key => $value) {
                                     if (! str($value)->contains('base64')) {
-                                        $html .= $key . ': ' . $value . ' <br/>';
+                                        $html .= e($key) . ': ' . e($value) . ' <br/>';
                                     }
                                 }
                             }

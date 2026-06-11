@@ -1,12 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Dashed\DashedCore\Middleware\AdminMiddleware;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 Route::group(
     [
         'prefix' => 'api/point-of-sale',
-        'middleware' => [], //Todo: add protection from unauthorized access
+        // Sessie (web) + back-office auth: deze endpoints worden vanuit de Filament-kassa
+        // door een ingelogde beheerder aangeroepen. CSRF wordt via de fetch-headers meegestuurd.
+        'middleware' => ['web', AdminMiddleware::class],
     ],
     function () {
         Route::post('/open-cash-register', [PointOfSaleApiController::class, 'openCashRegister'])

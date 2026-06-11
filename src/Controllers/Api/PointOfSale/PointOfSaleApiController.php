@@ -143,7 +143,7 @@ class PointOfSaleApiController extends Controller
             'note' => $posCart->note,
             'discountCode' => $posCart->discount_code,
             'customFields' => $posCart->custom_fields,
-            'lastOrder' => Order::where('order_origin', 'pos')->latest()->first(),
+            'lastOrder' => Order::thisSite()->where('order_origin', 'pos')->latest()->first(),
             'success' => true,
         ]);
     }
@@ -328,7 +328,7 @@ class PointOfSaleApiController extends Controller
         $orderId = $data['orderId'] ?? null;
         $isCopy = $data['isCopy'] ?? false;
 
-        $order = Order::find($orderId);
+        $order = Order::thisSite()->find($orderId);
 
         if (! $order) {
             return response()->json([
@@ -347,7 +347,7 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
         $orderId = $data['orderId'] ?? null;
 
-        $order = Order::find($orderId);
+        $order = Order::thisSite()->find($orderId);
 
         if (! $order) {
             return response()->json([
@@ -371,7 +371,7 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
         $orderId = $data['orderId'] ?? null;
 
-        $order = Order::find($orderId);
+        $order = Order::thisSite()->find($orderId);
 
         if (! $order) {
             return response()->json([
@@ -612,7 +612,7 @@ class PointOfSaleApiController extends Controller
 
             if (str($productSearchQuery)->startsWith('order-')) {
                 $orderId = str($productSearchQuery)->replace('order-', '');
-                $order = Order::find($orderId);
+                $order = Order::thisSite()->find($orderId);
                 if ($order) {
                     return response()->json([
                         'products' => array_reverse($posCart->products ?? []),
@@ -779,7 +779,7 @@ class PointOfSaleApiController extends Controller
         $posIdentifier = $data['posIdentifier'] ?? null;
         $order = $data['order'] ?? null;
         if ($order) {
-            $order = Order::find($order['id']);
+            $order = Order::thisSite()->find($order['id']);
         }
 
         $cartInstance = $data['cartInstance'] ?? null;
@@ -1284,7 +1284,7 @@ class PointOfSaleApiController extends Controller
         $hasMultiplePayments = $data['hasMultiplePayments'] ?? false;
 
         $order = $data['order'] ?? null;
-        $order = Order::find($order['id']);
+        $order = Order::thisSite()->find($order['id']);
 
         $paymentMethod = $data['paymentMethod'] ?? null;
         $paymentMethod = PaymentMethod::find($paymentMethod['id']);
@@ -1309,7 +1309,7 @@ class PointOfSaleApiController extends Controller
 
         $orderInput = $data['order'] ?? null;
         $orderId = is_array($orderInput) ? ($orderInput['id'] ?? null) : null;
-        $order = $orderId ? Order::find($orderId) : null;
+        $order = $orderId ? Order::thisSite()->find($orderId) : null;
 
         if (! $order) {
             return response()->json([
@@ -1469,7 +1469,7 @@ class PointOfSaleApiController extends Controller
         $posIdentifier = $data['posIdentifier'] ?? null;
         $orderInput = $data['order'] ?? null;
         $orderId = is_array($orderInput) ? ($orderInput['id'] ?? null) : null;
-        $order = $orderId ? Order::find($orderId) : null;
+        $order = $orderId ? Order::thisSite()->find($orderId) : null;
 
         if (! $order) {
             return response()->json([
@@ -1545,7 +1545,7 @@ class PointOfSaleApiController extends Controller
             ], 400);
         }
 
-        $order = Order::find($order['id']);
+        $order = Order::thisSite()->find($order['id']);
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
         if ($order->isPaidFor()) {
@@ -1649,7 +1649,7 @@ class PointOfSaleApiController extends Controller
         $order = $data['order'] ?? null;
         $cancelData = $order['cancelData'] ?? null;
 
-        $order = Order::find($order['id']);
+        $order = Order::thisSite()->find($order['id']);
 
         if (in_array($order->order_origin, ['own', 'pos']) && $order->invoice_id != 'PROFORMA') {
             $sendCustomerEmail = $cancelData['sendCustomerEmail'];
@@ -1708,7 +1708,7 @@ class PointOfSaleApiController extends Controller
 
         if ($searchOrderQuery && str($searchOrderQuery)->startsWith('order-')) {
             $orderId = str($searchOrderQuery)->replace('order-', '');
-            $order = Order::find($orderId);
+            $order = Order::thisSite()->find($orderId);
             if ($order) {
                 return response()->json([
                     'success' => true,
@@ -1724,7 +1724,7 @@ class PointOfSaleApiController extends Controller
 
         $endDate = now()->subQuarter()->startOfDay();
 
-        $orders = Order::orderBy('created_at', 'desc');
+        $orders = Order::thisSite()->orderBy('created_at', 'desc');
 
         if (! $searchOrderQuery) {
             $orders->where('created_at', '>=', $endDate);

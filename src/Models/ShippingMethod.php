@@ -111,7 +111,11 @@ class ShippingMethod extends Model
             if ($variableStaticCosts != '{SHIPPING_COSTS}') {
                 $variableStaticCosts = str_replace('{SHIPPING_COSTS}', $shippingCosts, $variableStaticCosts);
 
-                $shippingCosts += eval('return ' . $variableStaticCosts . ';');
+                // Veiligheid: alleen een rekenkundige expressie toestaan (cijfers, operatoren,
+                // haakjes, punt en spaties), zodat een admin-bewerkbaar veld geen PHP-code kan injecteren.
+                if (preg_match('/^[0-9+\-*\/().\s]+$/', $variableStaticCosts)) {
+                    $shippingCosts += eval('return ' . $variableStaticCosts . ';');
+                }
             }
 
         } else {
