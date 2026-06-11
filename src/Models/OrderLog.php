@@ -142,6 +142,14 @@ class OrderLog extends Model
             $string = 'heeft de annulerings mail automatisch niet kunnen versturen vanwege een fout.';
         } elseif ($this->tag == 'abandoned-cart.converted') {
             $string = 'heeft de bestelling alsnog afgerond na een verlaten-winkelmand-flow.';
+        } elseif ($this->tag == 'order.return-requested') {
+            $string = 'Retour aangevraagd';
+        } elseif ($this->tag == 'order.return-approved') {
+            $string = 'Retour goedgekeurd';
+        } elseif ($this->tag == 'order.return-rejected') {
+            $string = 'Retour afgekeurd';
+        } elseif ($this->tag == 'order.return-handled') {
+            $string = 'Retour afgehandeld';
         } elseif ($this->message) {
             return $this->message;
         } else {

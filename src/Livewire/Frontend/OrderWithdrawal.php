@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -64,27 +65,41 @@ class OrderWithdrawal extends Component
 
     public function confirm(): void
     {
-        if (! $this->foundOrderId) {
-            $this->step = 1;
+        $this->rateLimitMessage = null;
+
+        $confirmThrottleKey = 'order-withdrawal-confirm:' . request()->ip();
+        if (RateLimiter::tooManyAttempts($confirmThrottleKey, 10)) {
+            $seconds = RateLimiter::availableIn($confirmThrottleKey);
+            $this->rateLimitMessage = __('Te veel pogingen. Probeer het over :seconds seconden opnieuw.', ['seconds' => $seconds]);
 
             return;
         }
+        RateLimiter::hit($confirmThrottleKey, 60);
 
-        $order = Order::find($this->foundOrderId);
-        if (! $order) {
+        $order = app(OrderLookupService::class)->find($this->orderNumber, $this->email);
+
+        if (! $order || ($this->foundOrderId && $order->id !== $this->foundOrderId)) {
             $this->step = 1;
+            $this->foundOrderId = null;
             $this->notFound = true;
 
             return;
         }
 
-        $return = OrderReturn::where('order_id', $order->id)->open()->first();
+        DB::transaction(function () use ($order) {
+            $existing = OrderReturn::where('order_id', $order->id)
+                ->open()
+                ->lockForUpdate()
+                ->first();
 
-        if (! $return) {
+            if ($existing) {
+                return;
+            }
+
             $return = OrderReturn::create([
                 'order_id' => $order->id,
                 'site_id' => $order->site_id,
-                'email' => $this->email,
+                'email' => $order->email,
                 'customer_note' => $this->customerNote ?: null,
             ]);
 
@@ -95,8 +110,8 @@ class OrderWithdrawal extends Component
             $log->tag = 'order.return-requested';
             $log->save();
 
-            Mail::to($this->email)->queue(new OrderReturnRequestedMail($return));
-        }
+            Mail::to($order->email)->queue(new OrderReturnRequestedMail($return));
+        });
 
         $this->completed = true;
     }

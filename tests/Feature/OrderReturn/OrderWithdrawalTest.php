@@ -62,3 +62,33 @@ it('does not create a second return when an open one exists', function () {
 
     expect(OrderReturn::where('order_id', $order->id)->count())->toBe(1);
 });
+
+it('rejects a confirm with a foundOrderId that does not match the supplied credentials', function () {
+    Mail::fake();
+    $mine = Order::create(['email' => 'me@example.com', 'status' => 'paid', 'invoice_id' => 'MINE-1']);
+    $victim = Order::create(['email' => 'victim@example.com', 'status' => 'paid', 'invoice_id' => 'VICT-1']);
+
+    // Attacker supplies their own credentials but points foundOrderId at the victim order.
+    Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'MINE-1')
+        ->set('email', 'me@example.com')
+        ->set('foundOrderId', $victim->id)
+        ->call('confirm')
+        ->assertSet('completed', false);
+
+    expect(OrderReturn::where('order_id', $victim->id)->count())->toBe(0);
+});
+
+it('rejects a confirm when credentials match no order at all', function () {
+    Mail::fake();
+    $victim = Order::create(['email' => 'victim@example.com', 'status' => 'paid', 'invoice_id' => 'VICT-2']);
+
+    Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'GUESS')
+        ->set('email', 'attacker@example.com')
+        ->set('foundOrderId', $victim->id)
+        ->call('confirm')
+        ->assertSet('completed', false);
+
+    expect(OrderReturn::where('order_id', $victim->id)->count())->toBe(0);
+});
