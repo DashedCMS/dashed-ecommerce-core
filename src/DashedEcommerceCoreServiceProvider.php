@@ -1934,6 +1934,16 @@ MARKDOWN,
                         ->required()
                         ->searchable(),
                 ]),
+            Block::make('retour-formulier')
+                ->label('Retour / ontbindingsfunctie')
+                ->schema([
+                    TextInput::make('title')
+                        ->label('Titel')
+                        ->default('Koop ongedaan maken'),
+                    \Filament\Forms\Components\Textarea::make('intro')
+                        ->label('Introtekst')
+                        ->rows(3),
+                ]),
         ];
 
         cms()
