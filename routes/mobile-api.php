@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
@@ -75,6 +76,8 @@ Route::prefix('api/v1')
         Route::put('products/{product}', [ProductController::class, 'update'])->middleware('ability:products.write');
 
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
+
+        Route::get('insights', [InsightsController::class, 'index'])->middleware('ability:dashboard.read');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');

@@ -107,6 +107,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 PrintQueueSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\ShippingLabelErrors::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\InsightsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,
