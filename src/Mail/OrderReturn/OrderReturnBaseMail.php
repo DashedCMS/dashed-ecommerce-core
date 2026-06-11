@@ -1,0 +1,159 @@
+<?php
+
+namespace Dashed\DashedEcommerceCore\Mail\OrderReturn;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Models\Customsetting;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
+use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
+
+/**
+ * Basis voor de retour-lifecycle mailables. Elke concrete subklasse stelt
+ * zijn eigen emailTemplateName() en defaultBlocks() in en krijgt automatisch
+ * een aparte EmailTemplate-rij in het admin-panel.
+ */
+abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTemplate, ShouldQueue
+{
+    use HasEmailTemplate;
+    use Queueable;
+    use SerializesModels;
+
+    public function __construct(public OrderReturn $orderReturn)
+    {
+    }
+
+    public static function availableVariables(): array
+    {
+        return [
+            'name',
+            'firstName',
+            'lastName',
+            'email',
+            'phoneNumber',
+            'street',
+            'houseNr',
+            'zipCode',
+            'city',
+            'country',
+            'companyName',
+            'total',
+            'tax',
+            'amountOfProducts',
+            'invoiceId',
+            'orderId',
+            'discount',
+            'orderOrigin',
+            'siteName',
+            'primaryColor',
+            'returnRequestedAt',
+            'returnReason',
+            'rejectedReason',
+            'adminNote',
+        ];
+    }
+
+    public static function defaultSubject(): string
+    {
+        return 'Je retour voor bestelling :invoiceId:';
+    }
+
+    public static function defaultBlocks(): array
+    {
+        return [
+            ['type' => 'heading', 'data' => ['text' => 'Je retour', 'level' => 'h1']],
+            ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je retourverzoek voor bestelling :invoiceId: ontvangen op :returnRequestedAt:.</p>']],
+            ['type' => 'divider', 'data' => []],
+            ['type' => 'text', 'data' => ['body' => '<p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
+        ];
+    }
+
+    public static function sampleData(): array
+    {
+        $return = OrderReturn::query()->latest()->first();
+
+        return [
+            'order' => $return?->order,
+            'orderReturn' => $return,
+            'siteName' => Customsetting::get('site_name'),
+        ];
+    }
+
+    public static function makeForTest(): ?self
+    {
+        $return = OrderReturn::query()->latest()->first();
+
+        return $return ? new static($return) : null;
+    }
+
+    public function build()
+    {
+        $order = $this->orderReturn->order;
+        $locale = $order?->locale;
+
+        $context = [
+            'order' => $order,
+            'orderReturn' => $this->orderReturn,
+            'siteName' => Customsetting::get('site_name'),
+        ];
+
+        $templateHtml = $this->renderFromTemplate($context, $locale);
+
+        if ($templateHtml !== null) {
+            $template = \Dashed\DashedCore\Models\EmailTemplate::forMailable(static::emailTemplateKey());
+            $rawSubject = $template?->getTranslation('subject', $locale, useFallbackLocale: true) ?: static::defaultSubject();
+
+            $html = $order ? OrderVariableReplacer::handle($order, $templateHtml, true) : $templateHtml;
+            $html = $this->replaceReturnVariables($html);
+
+            $subject = $order ? OrderVariableReplacer::handle($order, (string) $rawSubject) : (string) $rawSubject;
+            $subject = $this->replaceReturnVariables($subject);
+
+            [$fromEmail, $fromName] = $this->templateFrom(
+                Customsetting::get('site_from_email'),
+                Customsetting::get('site_name'),
+                $locale,
+            );
+
+            return $this->html($html)
+                ->from($fromEmail, $fromName)
+                ->subject($subject);
+        }
+
+        $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.notification')
+            ? config('dashed-core.site_theme', 'dashed') . '.emails.notification'
+            : 'dashed-core::emails.notification';
+
+        $defaultSubject = $order
+            ? OrderVariableReplacer::handle($order, static::defaultSubject())
+            : static::defaultSubject();
+        $defaultSubject = $this->replaceReturnVariables($defaultSubject);
+
+        return $this->view($view)
+            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
+            ->subject($defaultSubject)
+            ->with([
+                'logo' => Customsetting::get('site_logo', Sites::getActive(), ''),
+                'notification' => 'We hebben een update over je retourverzoek.',
+            ]);
+    }
+
+    protected function replaceReturnVariables(string $value): string
+    {
+        return str_replace(
+            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:'],
+            [
+                optional($this->orderReturn->requested_at)->format('d-m-Y H:i') ?? '',
+                (string) $this->orderReturn->customer_note,
+                (string) $this->orderReturn->rejected_reason,
+                (string) $this->orderReturn->admin_note,
+            ],
+            $value
+        );
+    }
+}
