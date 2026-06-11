@@ -255,13 +255,21 @@ class OrderController extends Controller
     {
         $model = Order::thisSite()->findOrFail($order);
         $provider = (string) $request->input('provider', '');
+
+        // Keuzes uit het formulier (zelfde als in het CMS). Lege waarden vallen
+        // terug op de standaard per land in de provider-classes.
+        $overrides = array_filter([
+            'carrier' => $request->input('carrier'),
+            'package_type' => $request->input('package_type'),
+            'delivery_type' => $request->input('delivery_type'),
+        ], fn ($v) => $v !== null && $v !== '');
         $errors = [];
 
         if (($provider === '' || $provider === 'veloyd')
             && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
             && \Dashed\DashedCore\Models\Customsetting::get('veloyd_api_key', $model->site_id)) {
             try {
-                \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::createLabelForOrder($model);
+                \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::createLabelForOrder($model, $overrides);
 
                 return response()->json(['success' => true, 'provider' => 'veloyd', 'message' => 'Verzendlabel aangemaakt via Veloyd.']);
             } catch (\Throwable $e) {
@@ -274,7 +282,7 @@ class OrderController extends Controller
             && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
             && \Dashed\DashedCore\Models\Customsetting::get('my_parcel_api_key', $model->site_id)) {
             try {
-                \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::createLabelForOrder($model);
+                \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::createLabelForOrder($model, $overrides);
 
                 return response()->json(['success' => true, 'provider' => 'myparcel', 'message' => 'Verzendlabel aangemaakt via MyParcel.']);
             } catch (\Throwable $e) {
@@ -304,6 +312,69 @@ class OrderController extends Controller
         }
 
         return $providers;
+    }
+
+    /**
+     * Keuze-opties (vervoerder / pakkettype / verzendtype) per beschikbare provider,
+     * met de standaard-waarde per land — exact dezelfde opties als in het CMS-formulier.
+     * De app toont deze vóór het aanmaken van een verzendlabel.
+     */
+    public function labelOptions(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $country = $model->countryIsoCode;
+        $available = $this->labelProviders($model);
+        $cs = '\Dashed\DashedCore\Models\Customsetting';
+        $out = [];
+
+        if (in_array('veloyd', $available, true)) {
+            $v = '\Dashed\DashedEcommerceVeloyd\Classes\Veloyd';
+            $out[] = [
+                'provider' => 'veloyd',
+                'label' => 'Veloyd',
+                'fields' => [
+                    $this->labelSelectField('carrier', 'Vervoerder', $v::getCarriers(), $cs::get("veloyd_default_carrier_{$country}", $model->site_id, 'PostNL')),
+                    $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), $cs::get("veloyd_default_package_type_{$country}", $model->site_id, 1)),
+                    $this->labelSelectField('delivery_type', 'Verzendtype', $v::getDeliveryTypes(), $cs::get("veloyd_default_delivery_type_{$country}", $model->site_id, 'Standaard')),
+                ],
+            ];
+        }
+
+        if (in_array('myparcel', $available, true)) {
+            $m = '\Dashed\DashedEcommerceMyParcel\Classes\MyParcel';
+            $out[] = [
+                'provider' => 'myparcel',
+                'label' => 'MyParcel',
+                'fields' => [
+                    $this->labelSelectField('carrier', 'Vervoerder', $m::getCarriers(), $cs::get("my_parcel_default_carrier_{$country}", $model->site_id)),
+                    $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), $cs::get("my_parcel_default_package_type_{$country}", $model->site_id, 1)),
+                    $this->labelSelectField('delivery_type', 'Verzendtype', $m::getDeliveryTypes(), $cs::get("my_parcel_default_delivery_type_{$country}", $model->site_id, 2)),
+                ],
+            ];
+        }
+
+        return response()->json(['providers' => $out]);
+    }
+
+    /**
+     * @param  array<int|string, string>  $options  value => label
+     * @return array<string, mixed>
+     */
+    private function labelSelectField(string $name, string $label, array $options, mixed $default): array
+    {
+        $opts = [];
+        foreach ($options as $value => $text) {
+            $opts[] = ['value' => (string) $value, 'label' => (string) $text];
+        }
+
+        return [
+            'name' => $name,
+            'label' => $label,
+            'type' => 'select',
+            'required' => true,
+            'options' => $opts,
+            'default' => $default === null ? null : (string) $default,
+        ];
     }
 
     /** Eerste beschikbare label als publieke PDF-URL (MyParcel zo nodig on-demand). */
