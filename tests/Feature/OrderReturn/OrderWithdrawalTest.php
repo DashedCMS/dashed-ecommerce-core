@@ -6,6 +6,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
+use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 
 it('finds an order and shows the confirm step', function () {
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-1001']);
@@ -29,6 +30,7 @@ it('shows a neutral error when not found', function () {
 
 it('creates a return request and mails the customer on confirm', function () {
     Mail::fake();
+    \Dashed\DashedCore\Models\Customsetting::set('notification_invoice_emails', ['beheerder@example.com']);
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-1001']);
 
     Livewire::test(OrderWithdrawal::class)
@@ -46,6 +48,7 @@ it('creates a return request and mails the customer on confirm', function () {
         ->and($order->fresh()->retour_status)->toBe('waiting_for_return');
 
     Mail::assertQueued(OrderReturnRequestedMail::class);
+    Mail::assertSent(AdminNewOrderReturnMail::class);
 });
 
 it('does not create a second return when an open one exists', function () {

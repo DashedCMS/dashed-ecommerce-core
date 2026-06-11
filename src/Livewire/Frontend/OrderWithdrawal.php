@@ -2,13 +2,18 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend;
 
+use Throwable;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
 
@@ -111,6 +116,15 @@ class OrderWithdrawal extends Component
             $log->save();
 
             Mail::to($order->email)->queue(new OrderReturnRequestedMail($return));
+
+            try {
+                AdminNotifier::send(new AdminNewOrderReturnMail($return), Mails::getAdminNotificationEmails());
+            } catch (Throwable $notifyError) {
+                Log::warning('OrderWithdrawal could not notify admins of new return', [
+                    'order_id' => $order->id,
+                    'error' => $notifyError->getMessage(),
+                ]);
+            }
         });
 
         $this->completed = true;
