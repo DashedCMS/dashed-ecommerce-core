@@ -215,12 +215,16 @@ class OrderController extends Controller
         if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
             foreach (\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
                 ->whereNotNull('shipment_id')->latest()->get() as $mp) {
+                $st = $this->labelStatus($mp);
                 $labels[] = [
                     'id' => (int) $mp->id,
                     'carrier' => 'myparcel',
                     'carrier_name' => $mp->carrier ?: 'MyParcel',
                     'track_trace' => $this->trackTraceString($mp->track_and_trace),
                     'has_pdf' => (bool) $mp->label_pdf_path,
+                    'status' => $st['key'],
+                    'status_label' => $st['label'],
+                    'status_tone' => $st['tone'],
                     'created_at' => optional($mp->created_at)->toIso8601String(),
                 ];
             }
@@ -229,12 +233,16 @@ class OrderController extends Controller
         if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             foreach (\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
                 ->whereNotNull('shipment_id')->latest()->get() as $v) {
+                $st = $this->labelStatus($v);
                 $labels[] = [
                     'id' => (int) $v->id,
                     'carrier' => 'veloyd',
                     'carrier_name' => $v->carrier ?: 'Veloyd',
                     'track_trace' => $this->trackTraceString($v->track_and_trace),
                     'has_pdf' => (bool) $v->label_pdf_path,
+                    'status' => $st['key'],
+                    'status_label' => $st['label'],
+                    'status_tone' => $st['tone'],
                     'created_at' => optional($v->created_at)->toIso8601String(),
                 ];
             }
@@ -295,6 +303,37 @@ class OrderController extends Controller
             'success' => false,
             'message' => $errors ? implode(' ', $errors) : 'Geen verzendprovider geconfigureerd voor deze site.',
         ], 422);
+    }
+
+    /**
+     * Genormaliseerde status van een verzendlabel. Gebruikt de door de
+     * carrier-sync opgeslagen status (kolom 'status') als die er is; anders
+     * afgeleid uit bestaande velden (fout / track&trace / geprint / concept).
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $po  Veloyd-/MyParcelOrder
+     * @return array{key: string, label: string, tone: string}
+     */
+    private function labelStatus($po): array
+    {
+        $key = $po->status
+            ?: ($po->error ? 'error'
+                : (! empty($po->track_and_trace) ? 'shipped'
+                    : ($po->label_printed ? 'printed' : 'concept')));
+
+        $meta = [
+            'concept' => ['Concept', 'neutral'],
+            'printed' => ['Geprint', 'neutral'],
+            'shipped' => ['Verzonden', 'success'],
+            'in_transit' => ['Onderweg', 'warning'],
+            'pickup' => ['Klaar voor afhalen', 'warning'],
+            'delivered' => ['Geleverd', 'success'],
+            'returned' => ['Retour', 'warning'],
+            'cancelled' => ['Geannuleerd', 'danger'],
+            'error' => ['Fout', 'danger'],
+        ];
+        [$label, $tone] = $meta[(string) $key] ?? ['Onbekend', 'neutral'];
+
+        return ['key' => (string) $key, 'label' => $label, 'tone' => $tone];
     }
 
     /** Welke label-providers zijn (op basis van de API-sleutel) beschikbaar. */
