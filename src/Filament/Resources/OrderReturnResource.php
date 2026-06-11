@@ -6,7 +6,12 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Notifications\Notification;
@@ -32,7 +37,7 @@ class OrderReturnResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('order'))
+            ->modifyQueryUsing(fn ($query) => $query->with(['order', 'lines.orderProduct', 'lines.returnReason']))
             ->defaultSort('requested_at', 'desc')
             ->columns([
                 TextColumn::make('order.invoice_id')
@@ -57,6 +62,9 @@ class OrderReturnResource extends Resource
                     ->label('Aangevraagd op')
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
+                TextColumn::make('lines_count')
+                    ->label('Regels')
+                    ->counts('lines'),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -64,6 +72,7 @@ class OrderReturnResource extends Resource
                     ->options(OrderReturn::statusLabels()),
             ])
             ->recordActions([
+                ViewAction::make(),
                 Action::make('approve')
                     ->label('Goedkeuren')
                     ->color('success')
@@ -113,10 +122,48 @@ class OrderReturnResource extends Resource
             ]);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Fieldset::make('Retouraanvraag')
+                ->columnSpanFull()
+                ->schema([
+                    TextEntry::make('order.invoice_id')
+                        ->label('Bestelling')
+                        ->formatStateUsing(fn ($state, $record) => $state ?: ('#' . $record->order_id)),
+                    TextEntry::make('email')
+                        ->label('E-mail'),
+                    TextEntry::make('status')
+                        ->label('Status')
+                        ->badge()
+                        ->formatStateUsing(fn ($state) => OrderReturn::statusLabels()[$state] ?? $state),
+                    TextEntry::make('requested_at')
+                        ->label('Aangevraagd op')
+                        ->dateTime('d-m-Y H:i'),
+                ]),
+            RepeatableEntry::make('lines')
+                ->label('Geretourneerde producten')
+                ->columnSpanFull()
+                ->schema([
+                    TextEntry::make('orderProduct.name')
+                        ->label('Product'),
+                    TextEntry::make('quantity')
+                        ->label('Aantal'),
+                    TextEntry::make('returnReason.label')
+                        ->label('Reden')
+                        ->formatStateUsing(fn ($state) => is_array($state) ? ($state[app()->getLocale()] ?? reset($state)) : $state),
+                    TextEntry::make('reason_note')
+                        ->label('Toelichting')
+                        ->default('-'),
+                ]),
+        ]);
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => OrderReturnResource\Pages\ListOrderReturns::route('/'),
+            'view' => OrderReturnResource\Pages\ViewOrderReturn::route('/{record}'),
         ];
     }
 }
