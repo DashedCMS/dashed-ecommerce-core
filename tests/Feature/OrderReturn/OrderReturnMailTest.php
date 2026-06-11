@@ -129,3 +129,30 @@ it('approved subject default no longer contains empty parentheses', function () 
         ->not->toContain('()')
         ->toContain(':orderNumber:');
 });
+
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
+
+it('renders the return lines summary and escapes product names in HTML', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-7']);
+    $product = OrderProduct::create(['order_id' => $order->id, 'name' => 'Shirt <b>', 'quantity' => 3, 'price' => 20]);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+    OrderReturnLine::create([
+        'order_return_id' => $return->id,
+        'order_product_id' => $product->id,
+        'quantity' => 2,
+    ]);
+
+    $mail = new OrderReturnRequestedMail($return->fresh('lines'));
+
+    $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
+    $ref->setAccessible(true);
+
+    $html = $ref->invoke($mail, 'Regels: :returnLines:', true);
+    expect($html)->toContain('2x Shirt')
+        ->and($html)->not->toContain('<b>')
+        ->and($html)->toContain('&lt;b&gt;');
+
+    $plain = $ref->invoke($mail, 'Regels: :returnLines:', false);
+    expect($plain)->toContain('2x Shirt <b>');
+});

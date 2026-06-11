@@ -56,6 +56,7 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             'rejectedReason',
             'adminNote',
             'orderNumber',
+            'returnLines',
         ];
     }
 
@@ -162,9 +163,18 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             $orderNumber = e($orderNumber);
         }
 
+        $linesSummary = $this->orderReturn->lines
+            ->map(function ($line) use ($escapeHtml) {
+                $name = $line->orderProduct?->name ?? '';
+                $part = $line->quantity . 'x ' . $name;
+
+                return $escapeHtml ? e($part) : $part;
+            })
+            ->implode($escapeHtml ? '<br>' : ', ');
+
         return str_replace(
-            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:'],
-            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber],
+            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:'],
+            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary],
             $value
         );
     }

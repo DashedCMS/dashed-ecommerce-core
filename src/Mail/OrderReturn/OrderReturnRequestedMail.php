@@ -24,6 +24,7 @@ class OrderReturnRequestedMail extends OrderReturnBaseMail
         return [
             ['type' => 'heading', 'data' => ['text' => 'Herroeping ontvangen', 'level' => 'h1']],
             ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je herroeping voor bestelling <strong>:orderNumber:</strong> ontvangen op <strong>:returnRequestedAt:</strong>.</p><p>Je aankoop wordt overeenkomstig het herroepingsrecht ongedaan gemaakt. We nemen zo snel mogelijk contact met je op over de verdere afhandeling.</p>']],
+            ['type' => 'text', 'data' => ['body' => '<p>Je hebt de volgende producten aangemeld voor retour:</p><p>:returnLines:</p>']],
             ['type' => 'divider', 'data' => []],
             ['type' => 'text', 'data' => ['body' => '<p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
