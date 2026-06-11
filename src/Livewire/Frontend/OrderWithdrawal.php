@@ -13,6 +13,9 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ReturnReason;
+use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
@@ -30,6 +33,9 @@ class OrderWithdrawal extends Component
     public ?string $completedAt = null;
     public ?string $completedOrderLabel = null;
     public ?string $rateLimitMessage = null;
+
+    /** @var array<int, array{selected: bool, quantity: int, reason_id: int|null, note: string}> */
+    public array $selectedLines = [];
 
     /** @var array<string, mixed> */
     public array $blockData = [];
@@ -67,7 +73,34 @@ class OrderWithdrawal extends Component
         }
 
         $this->foundOrderId = $order->id;
+        $order->loadMissing('orderProducts');
+        $this->initSelectedLines($order);
         $this->step = 2;
+    }
+
+    protected function initSelectedLines(Order $order): void
+    {
+        $this->selectedLines = [];
+        foreach ($order->orderProducts as $product) {
+            $this->selectedLines[$product->id] = [
+                'selected' => false,
+                'quantity' => (int) ($product->quantity ?: 1),
+                'reason_id' => null,
+                'note' => '',
+            ];
+        }
+    }
+
+    public function selectAllLines(): void
+    {
+        foreach ($this->selectedLines as $productId => $line) {
+            $this->selectedLines[$productId]['selected'] = true;
+        }
+    }
+
+    public function getReasonsProperty()
+    {
+        return ReturnReason::active()->get();
     }
 
     public function confirm(): void
@@ -93,9 +126,42 @@ class OrderWithdrawal extends Component
             return;
         }
 
+        $order->loadMissing('orderProducts');
+        $productsById = $order->orderProducts->keyBy('id');
+
+        $chosen = [];
+        foreach ($this->selectedLines as $productId => $line) {
+            if (empty($line['selected'])) {
+                continue;
+            }
+            $product = $productsById->get($productId);
+            if (! $product) {
+                continue;
+            }
+            $maxQty = (int) ($product->quantity ?: 1);
+            $qty = (int) ($line['quantity'] ?? 1);
+            if ($qty < 1 || $qty > $maxQty) {
+                $this->addError('lines', __('Het aantal voor :product moet tussen 1 en :max liggen.', ['product' => $product->name, 'max' => $maxQty]));
+
+                return;
+            }
+            $chosen[] = [
+                'order_product_id' => $product->id,
+                'quantity' => $qty,
+                'reason_id' => $line['reason_id'] ?? null,
+                'note' => (string) ($line['note'] ?? ''),
+            ];
+        }
+
+        if (empty($chosen)) {
+            $this->addError('lines', __('Selecteer minimaal een product om te retourneren.'));
+
+            return;
+        }
+
         $resolvedReturn = null;
 
-        DB::transaction(function () use ($order, &$resolvedReturn) {
+        DB::transaction(function () use ($order, $chosen, &$resolvedReturn) {
             $existing = OrderReturn::where('order_id', $order->id)
                 ->open()
                 ->lockForUpdate()
@@ -115,6 +181,17 @@ class OrderWithdrawal extends Component
             ]);
 
             $resolvedReturn = $return;
+
+            $activeReasonIds = ReturnReason::active()->pluck('id')->all();
+            foreach ($chosen as $row) {
+                OrderReturnLine::create([
+                    'order_return_id' => $return->id,
+                    'order_product_id' => $row['order_product_id'],
+                    'quantity' => $row['quantity'],
+                    'return_reason_id' => in_array($row['reason_id'], $activeReasonIds, true) ? $row['reason_id'] : null,
+                    'reason_note' => $row['note'] !== '' ? $row['note'] : null,
+                ]);
+            }
 
             $order->update(['retour_status' => 'waiting_for_return']);
 

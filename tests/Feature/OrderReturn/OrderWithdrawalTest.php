@@ -4,6 +4,7 @@ use Livewire\Livewire;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
@@ -33,12 +34,14 @@ it('creates a return request and mails the customer on confirm', function () {
     Mail::fake();
     \Dashed\DashedCore\Models\Customsetting::set('notification_invoice_emails', ['beheerder@example.com']);
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-1001']);
+    $product = OrderProduct::create(['order_id' => $order->id, 'name' => 'Shirt', 'quantity' => 1, 'price' => 20]);
 
     Livewire::test(OrderWithdrawal::class)
         ->set('orderNumber', 'INV-1001')
         ->set('email', 'klant@example.com')
         ->call('search')
         ->set('customerNote', 'Past niet')
+        ->set("selectedLines.{$product->id}.selected", true)
         ->call('confirm')
         ->assertSet('completed', true)
         ->assertSet('completedOrderLabel', 'INV-1001');
@@ -56,12 +59,14 @@ it('creates a return request and mails the customer on confirm', function () {
 it('does not create a second return when an open one exists', function () {
     Mail::fake();
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-1001']);
+    $product = OrderProduct::create(['order_id' => $order->id, 'name' => 'Shirt', 'quantity' => 1, 'price' => 20]);
     OrderReturn::create(['order_id' => $order->id, 'email' => 'klant@example.com']);
 
     Livewire::test(OrderWithdrawal::class)
         ->set('orderNumber', 'INV-1001')
         ->set('email', 'klant@example.com')
         ->call('search')
+        ->set("selectedLines.{$product->id}.selected", true)
         ->call('confirm')
         ->assertSet('completed', true);
 
