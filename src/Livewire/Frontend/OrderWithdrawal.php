@@ -231,6 +231,12 @@ class OrderWithdrawal extends Component
                     'error' => $notifyError->getMessage(),
                 ]);
             }
+
+            if (app(\Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnAutoAcceptEvaluator::class)->shouldAutoAccept($return->fresh('lines'))) {
+                $return->auto_accepted = true;
+                $return->save();
+                $return->approve();
+            }
         });
 
         $this->completedAt = optional($resolvedReturn?->requested_at)->format('d-m-Y H:i');

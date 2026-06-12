@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
@@ -140,4 +141,45 @@ it('stores null reason_id when the reason is inactive but keeps the note', funct
     $line = OrderReturnLine::first();
     expect($line->return_reason_id)->toBeNull()
         ->and($line->reason_note)->toBe('Toelichting');
+});
+
+it('auto-approves a new return when the rules match', function () {
+    Mail::fake();
+    Customsetting::set('returns_auto_accept_enabled', '1');
+    Customsetting::set('returns_auto_accept_max_days', '14');
+    Customsetting::set('returns_auto_accept_excluded_category_ids', []);
+    Customsetting::set('returns_auto_accept_excluded_order_origins', []);
+    Customsetting::set('returns_auto_accept_max_amount', null);
+
+    [$order, $p1] = makeOrderWithProductsT4();
+
+    Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'INV-1001')
+        ->set('email', 'klant@example.com')
+        ->call('search')
+        ->set("selectedLines.{$p1->id}.selected", true)
+        ->set("selectedLines.{$p1->id}.quantity", 1)
+        ->call('confirm')
+        ->assertSet('completed', true);
+
+    $return = OrderReturn::first();
+    expect($return->status)->toBe(OrderReturn::STATUS_APPROVED)
+        ->and($return->auto_accepted)->toBeTrue();
+});
+
+it('leaves a new return as requested when auto-accept is disabled', function () {
+    Mail::fake();
+    Customsetting::set('returns_auto_accept_enabled', '0');
+
+    [$order, $p1] = makeOrderWithProductsT4();
+
+    Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'INV-1001')
+        ->set('email', 'klant@example.com')
+        ->call('search')
+        ->set("selectedLines.{$p1->id}.selected", true)
+        ->call('confirm')
+        ->assertSet('completed', true);
+
+    expect(OrderReturn::first()->status)->toBe(OrderReturn::STATUS_REQUESTED);
 });
