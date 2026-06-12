@@ -315,10 +315,13 @@ class OrderController extends Controller
      */
     private function labelStatus($po): array
     {
+        // 'Verzonden/Onderweg/Geleverd' komt UITSLUITEND uit de carrier-sync
+        // (kolom 'status'); een track&trace-code bestaat al bij het aanmaken van
+        // het label en betekent dus niet dat het pakket al verzonden is. Afgeleid
+        // blijft het daarom op geprint/concept tot de vervoerder de status meldt.
         $key = $po->status
             ?: ($po->error ? 'error'
-                : (! empty($po->track_and_trace) ? 'shipped'
-                    : ($po->label_printed ? 'printed' : 'concept')));
+                : ($po->label_printed ? 'printed' : 'concept'));
 
         $meta = [
             'concept' => ['Concept', 'neutral'],
