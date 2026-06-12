@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Contracts;
 
+use Dashed\DashedEcommerceCore\Models\Order;
+
 interface ShippingLabelProvider
 {
     public function key(): string;
@@ -16,4 +18,15 @@ interface ShippingLabelProvider
     public function failedOrders(): array;
 
     public function retry(int $id): void;
+
+    /**
+     * Werkt de labelstatussen van deze order bij door de live bezorgstatus bij
+     * de vervoerder op te halen. Geeft het aantal gewijzigde labels terug.
+     */
+    public function syncOrderStatuses(Order $order): int;
+
+    /**
+     * Heeft deze order minstens één verzendlabel bij deze provider?
+     */
+    public function hasLabelsForOrder(Order $order): bool;
 }

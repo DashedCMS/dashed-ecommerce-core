@@ -78,22 +78,19 @@ class ViewOrder extends ViewRecord
         return true;
     }
 
-    /** Bestaat er een verzendlabel voor deze order (MyParcel-shipment of Veloyd-PDF)? */
+    /**
+     * Heeft deze order een verzendlabel bij minstens één geregistreerde
+     * verzendkoppeling? Provider-agnostisch via het ShippingLabelProvider-contract.
+     */
     private function orderHasLabel(): bool
     {
-        $orderId = $this->record->id;
+        foreach (ecommerce()->shippingLabelProviders() as $provider) {
+            if ($provider->hasLabelsForOrder($this->record)) {
+                return true;
+            }
+        }
 
-        $myParcel = class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
-            && \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $orderId)
-                ->whereNotNull('shipment_id')
-                ->exists();
-
-        $veloyd = class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
-            && \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $orderId)
-                ->whereNotNull('shipment_id')
-                ->exists();
-
-        return $myParcel || $veloyd;
+        return false;
     }
 
     protected function getActions(): array
@@ -208,6 +205,25 @@ class ViewOrder extends ViewRecord
                 ->label('Documenten')
                 ->icon('heroicon-o-document-text')
                 ->button(),
+            Action::make('syncLabelStatuses')
+                ->label('Labelstatussen bijwerken')
+                ->icon('heroicon-o-arrow-path')
+                ->color('gray')
+                ->tooltip('Haal de actuele bezorgstatus van de verzendlabels op bij de vervoerder(s)')
+                ->visible(fn (): bool => $this->orderHasLabel())
+                ->requiresConfirmation()
+                ->modalHeading('Labelstatussen bijwerken')
+                ->modalDescription('De huidige bezorgstatus van de verzendlabels van deze bestelling wordt op de achtergrond opgehaald bij de vervoerder(s).')
+                ->modalSubmitActionLabel('Bijwerken')
+                ->action(function (): void {
+                    \Dashed\DashedEcommerceCore\Jobs\SyncOrderLabelStatusesJob::dispatch($this->record);
+
+                    Notification::make()
+                        ->title('Bijwerken gestart')
+                        ->body('De labelstatussen worden op de achtergrond bijgewerkt.')
+                        ->success()
+                        ->send();
+                }),
             ActionGroup::make([
                 Action::make('markCancelledAsPaid')
                     ->label('Markeer als betaald')
