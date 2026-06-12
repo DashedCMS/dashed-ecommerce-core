@@ -29,7 +29,7 @@ class ReturnReasonResource extends Resource
     protected static ?string $recordTitleAttribute = 'label';
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-arrow-uturn-left';
-    protected static UnitEnum|string|null $navigationGroup = 'E-commerce';
+    protected static UnitEnum|string|null $navigationGroup = 'Retouren';
     protected static ?string $navigationLabel = 'Retourredenen';
     protected static ?string $label = 'Retourreden';
     protected static ?string $pluralLabel = 'Retourredenen';

@@ -24,7 +24,7 @@ class OrderReturnResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-uturn-left';
 
-    protected static string|UnitEnum|null $navigationGroup = 'E-commerce';
+    protected static string|UnitEnum|null $navigationGroup = 'Retouren';
 
     protected static ?string $navigationLabel = 'Retouren';
 

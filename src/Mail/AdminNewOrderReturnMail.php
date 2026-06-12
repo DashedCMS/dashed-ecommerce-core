@@ -54,8 +54,6 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
             ['type' => 'text', 'data' => ['body' => '<p>Er is een nieuw retourverzoek binnengekomen voor bestelling <strong>#:orderId:</strong> van :customerFirstName: :customerLastName:.</p><p>Aangevraagd op :returnRequestedAt:.</p>']],
             ['type' => 'divider', 'data' => []],
             ['type' => 'order-details', 'data' => []],
-            ['type' => 'divider', 'data' => []],
-            ['type' => 'order-summary', 'data' => ['show_totals' => true]],
         ];
     }
 
