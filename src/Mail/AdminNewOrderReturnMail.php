@@ -39,7 +39,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
 
     public static function availableVariables(): array
     {
-        return ['orderId', 'customerFirstName', 'customerLastName', 'returnRequestedAt', 'returnReason', 'siteName', 'primaryColor'];
+        return ['orderId', 'customerFirstName', 'customerLastName', 'returnRequestedAt', 'returnReason', 'returnLines', 'siteName', 'primaryColor'];
     }
 
     public static function defaultSubject(): string
@@ -52,6 +52,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
         return [
             ['type' => 'heading', 'data' => ['text' => 'Nieuw retourverzoek voor bestelling #:orderId:', 'level' => 'h1']],
             ['type' => 'text', 'data' => ['body' => '<p>Er is een nieuw retourverzoek binnengekomen voor bestelling <strong>#:orderId:</strong> van :customerFirstName: :customerLastName:.</p><p>Aangevraagd op :returnRequestedAt:.</p>']],
+            ['type' => 'text', 'data' => ['body' => '<p><strong>Geretourneerde producten:</strong></p><p>:returnLines:</p>']],
             ['type' => 'divider', 'data' => []],
             ['type' => 'order-details', 'data' => []],
         ];
@@ -70,8 +71,16 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
             'customerLastName' => $order?->last_name ?? 'Jansen',
             'returnRequestedAt' => optional($return?->requested_at)->format('d-m-Y H:i') ?? '01-01-2026 12:00',
             'returnReason' => $return?->customer_note ?? 'Past niet',
+            'returnLines' => $return ? self::returnLinesHtmlFor($return) : '2x Voorbeeldproduct',
             'siteName' => Customsetting::get('site_name'),
         ];
+    }
+
+    protected static function returnLinesHtmlFor(OrderReturn $orderReturn): string
+    {
+        return $orderReturn->lines
+            ->map(fn ($line) => e($line->quantity . 'x ' . ($line->orderProduct?->name ?? '')))
+            ->implode('<br>');
     }
 
     public static function makeForTest(): ?self
@@ -93,6 +102,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
             'customerLastName' => $order?->last_name,
             'returnRequestedAt' => optional($this->orderReturn->requested_at)->format('d-m-Y H:i') ?? '',
             'returnReason' => (string) $this->orderReturn->customer_note,
+            'returnLines' => self::returnLinesHtmlFor($this->orderReturn),
             'siteName' => Customsetting::get('site_name'),
         ];
 

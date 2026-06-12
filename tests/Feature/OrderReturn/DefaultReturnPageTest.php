@@ -16,7 +16,7 @@ it('creates a default return page with the return block, idempotently', function
     $content = $page->getTranslation('content', 'nl');
     $types = collect($content)->pluck('type')->all();
 
-    expect($types)->toContain('retour-formulier');
+    expect($types)->toContain('return-form');
 });
 
 it('creates the page with English translation', function () {

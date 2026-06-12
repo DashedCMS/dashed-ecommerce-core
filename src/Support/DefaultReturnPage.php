@@ -34,7 +34,7 @@ class DefaultReturnPage
                 'top_margin' => true,
                 'bottom_margin' => true,
             ],
-            'type' => 'retour-formulier',
+            'type' => 'return-form',
         ];
 
         $page = new Page();

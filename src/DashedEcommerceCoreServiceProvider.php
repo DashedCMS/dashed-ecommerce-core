@@ -1941,7 +1941,7 @@ MARKDOWN,
                         ->required()
                         ->searchable(),
                 ]),
-            Block::make('retour-formulier')
+            Block::make('return-form')
                 ->label('Retour / ontbindingsfunctie')
                 ->schema([
                     TextInput::make('title')
