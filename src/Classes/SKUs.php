@@ -13,4 +13,9 @@ class SKUs
     {
         return ['payment_costs', 'shipping_costs'];
     }
+
+    public static function nonReturnable(): array
+    {
+        return ['payment_costs', 'shipping_costs'];
+    }
 }

@@ -1950,6 +1950,15 @@ MARKDOWN,
                     \Filament\Forms\Components\Textarea::make('intro')
                         ->label('Introtekst')
                         ->rows(3),
+                    \Filament\Forms\Components\Toggle::make('in_container')
+                        ->label('In container')
+                        ->default(true),
+                    \Filament\Forms\Components\Toggle::make('top_margin')
+                        ->label('Marge boven')
+                        ->default(true),
+                    \Filament\Forms\Components\Toggle::make('bottom_margin')
+                        ->label('Marge onder')
+                        ->default(true),
                 ]),
         ];
 

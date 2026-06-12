@@ -92,6 +92,35 @@ it('persists the reason when reason_id arrives as a string (browser select)', fu
     expect(OrderReturnLine::first()->return_reason_id)->toBe($reason->id);
 });
 
+it('excludes shipping_costs lines from the returnable selection and refuses to return them', function () {
+    Mail::fake();
+    [$order, $p1] = makeOrderWithProductsT4();
+
+    $shipping = OrderProduct::create(['order_id' => $order->id, 'name' => 'Verzendkosten', 'quantity' => 1, 'price' => 6.95]);
+    $shipping->sku = 'shipping_costs';
+    $shipping->save();
+
+    $component = Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'INV-1001')
+        ->set('email', 'klant@example.com')
+        ->call('search');
+
+    $selectedLines = $component->get('selectedLines');
+    expect(array_keys($selectedLines))->toContain($p1->id)
+        ->and(array_keys($selectedLines))->not->toContain($shipping->id);
+
+    // Defense in depth: even if a client injects the shipping product id, no return line is created for it.
+    $component
+        ->set("selectedLines.{$shipping->id}.selected", true)
+        ->set("selectedLines.{$shipping->id}.quantity", 1)
+        ->call('confirm')
+        ->assertSet('completed', false)
+        ->assertHasErrors('lines');
+
+    expect(OrderReturn::count())->toBe(0)
+        ->and(OrderReturnLine::count())->toBe(0);
+});
+
 it('stores null reason_id when the reason is inactive but keeps the note', function () {
     Mail::fake();
     [$order, $p1] = makeOrderWithProductsT4();

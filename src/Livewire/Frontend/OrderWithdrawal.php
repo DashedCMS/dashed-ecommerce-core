@@ -16,6 +16,8 @@ use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\ReturnReason;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
+use Dashed\DashedEcommerceCore\Classes\SKUs;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
 
@@ -57,7 +59,7 @@ class OrderWithdrawal extends Component
         $throttleKey = 'order-withdrawal:' . request()->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            $this->rateLimitMessage = __('Te veel pogingen. Probeer het over :seconds seconden opnieuw.', ['seconds' => $seconds]);
+            $this->rateLimitMessage = Translation::get('return-rate-limited', 'returns', 'Te veel pogingen. Probeer het over :seconds: seconden opnieuw.', 'text', ['seconds' => $seconds]);
 
             return;
         }
@@ -72,7 +74,7 @@ class OrderWithdrawal extends Component
         }
 
         $this->foundOrderId = $order->id;
-        $order->loadMissing('orderProducts');
+        $order->loadMissing('orderProducts.product');
         $this->initSelectedLines($order);
         $this->step = 2;
     }
@@ -81,6 +83,10 @@ class OrderWithdrawal extends Component
     {
         $this->selectedLines = [];
         foreach ($order->orderProducts as $product) {
+            if (in_array($product->sku, SKUs::nonReturnable(), true)) {
+                continue;
+            }
+
             $this->selectedLines[$product->id] = [
                 'selected' => false,
                 'quantity' => (int) ($product->quantity ?: 1),
@@ -88,6 +94,17 @@ class OrderWithdrawal extends Component
                 'note' => '',
             ];
         }
+    }
+
+    public function getReturnableProductsProperty()
+    {
+        $order = $this->order;
+
+        if (! $order) {
+            return collect();
+        }
+
+        return $order->orderProducts->reject(fn ($product) => in_array($product->sku, SKUs::nonReturnable(), true));
     }
 
     public function selectAllLines(): void
@@ -109,7 +126,7 @@ class OrderWithdrawal extends Component
         $confirmThrottleKey = 'order-withdrawal-confirm:' . request()->ip();
         if (RateLimiter::tooManyAttempts($confirmThrottleKey, 10)) {
             $seconds = RateLimiter::availableIn($confirmThrottleKey);
-            $this->rateLimitMessage = __('Te veel pogingen. Probeer het over :seconds seconden opnieuw.', ['seconds' => $seconds]);
+            $this->rateLimitMessage = Translation::get('return-rate-limited', 'returns', 'Te veel pogingen. Probeer het over :seconds: seconden opnieuw.', 'text', ['seconds' => $seconds]);
 
             return;
         }
@@ -126,7 +143,9 @@ class OrderWithdrawal extends Component
         }
 
         $order->loadMissing('orderProducts');
-        $productsById = $order->orderProducts->keyBy('id');
+        $productsById = $order->orderProducts
+            ->reject(fn ($product) => in_array($product->sku, SKUs::nonReturnable(), true))
+            ->keyBy('id');
 
         $chosen = [];
         foreach ($this->selectedLines as $productId => $line) {
@@ -140,7 +159,7 @@ class OrderWithdrawal extends Component
             $maxQty = (int) ($product->quantity ?: 1);
             $qty = (int) ($line['quantity'] ?? 1);
             if ($qty < 1 || $qty > $maxQty) {
-                $this->addError('lines', __('Het aantal voor :product moet tussen 1 en :max liggen.', ['product' => $product->name, 'max' => $maxQty]));
+                $this->addError('lines', Translation::get('return-quantity-invalid', 'returns', 'Het aantal voor :product: moet tussen 1 en :max: liggen.', 'text', ['product' => $product->name, 'max' => $maxQty]));
 
                 return;
             }
@@ -156,7 +175,7 @@ class OrderWithdrawal extends Component
         }
 
         if (empty($chosen)) {
-            $this->addError('lines', __('Selecteer minimaal een product om te retourneren.'));
+            $this->addError('lines', Translation::get('return-select-one', 'returns', 'Selecteer minimaal een product om te retourneren.'));
 
             return;
         }
@@ -221,7 +240,7 @@ class OrderWithdrawal extends Component
 
     public function getOrderProperty(): ?Order
     {
-        return $this->foundOrderId ? Order::with('orderProducts')->find($this->foundOrderId) : null;
+        return $this->foundOrderId ? Order::with('orderProducts.product')->find($this->foundOrderId) : null;
     }
 
     public function render()
