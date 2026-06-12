@@ -150,6 +150,8 @@ class OrderLog extends Model
             $string = 'Retour afgekeurd';
         } elseif ($this->tag == 'order.return-handled') {
             $string = 'Retour afgehandeld';
+        } elseif ($this->tag == 'order.return-label-failed') {
+            $string = 'Retourlabel mislukt';
         } elseif ($this->message) {
             return $this->message;
         } else {

@@ -10,6 +10,7 @@ use Filament\Schemas\Schema;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Fieldset;
@@ -58,6 +59,9 @@ class OrderReturnResource extends Resource
                         OrderReturn::STATUS_HANDLED => 'gray',
                         default => 'gray',
                     }),
+                IconColumn::make('auto_accepted')
+                    ->label('Automatisch')
+                    ->boolean(),
                 TextColumn::make('requested_at')
                     ->label('Aangevraagd op')
                     ->dateTime('d-m-Y H:i')
@@ -140,6 +144,12 @@ class OrderReturnResource extends Resource
                     TextEntry::make('requested_at')
                         ->label('Aangevraagd op')
                         ->dateTime('d-m-Y H:i'),
+                    TextEntry::make('auto_accepted')
+                        ->label('Automatisch goedgekeurd')
+                        ->formatStateUsing(fn ($state) => $state ? 'Ja' : 'Nee'),
+                    TextEntry::make('return_label_provider')
+                        ->label('Retourlabel via')
+                        ->placeholder('-'),
                 ]),
             RepeatableEntry::make('lines')
                 ->label('Geretourneerde producten')
