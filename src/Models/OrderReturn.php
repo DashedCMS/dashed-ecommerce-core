@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 
@@ -92,6 +93,7 @@ class OrderReturn extends Model
 
         $this->logToOrder('order.return-approved');
         Mail::to($this->email)->queue(new OrderReturnApprovedMail($this));
+        OrderReturnApprovedEvent::dispatch($this);
     }
 
     public function reject(string $reason): void

@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -85,6 +87,16 @@ it('mails the customer on reject', function () {
     $return->reject('Buiten termijn');
 
     Mail::assertQueued(OrderReturnRejectedMail::class);
+});
+
+it('fires OrderReturnApprovedEvent on approve', function () {
+    Event::fake([OrderReturnApprovedEvent::class]);
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $return->approve();
+
+    Event::assertDispatched(OrderReturnApprovedEvent::class, fn ($e) => $e->orderReturn->is($return));
 });
 
 it('casts auto_accepted and stores label fields', function () {
