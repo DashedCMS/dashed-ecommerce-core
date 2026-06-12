@@ -1,10 +1,10 @@
-<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="relative w-full h-full"
      x-data="POSData({
         endpoint: @js(route('api.point-of-sale.retrieve-cart-for-customer')),
         fallbackImage: @js('https://placehold.co/400x400/' . str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') . '/fff?text=Aangepaste%20verkoop')
      })"
      x-init="init()">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <div class="absolute top-4 right-4 z-20 flex gap-4">
         <button id="fullscreenBtn" @click="toggleFullscreen"

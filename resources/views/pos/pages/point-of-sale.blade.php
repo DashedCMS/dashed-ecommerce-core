@@ -1,7 +1,7 @@
-<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="relative w-full h-full"
      x-data="POSData()"
      @price-mode-toggled.window="retrieveCart()">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .scrollbar-wide::-webkit-scrollbar {
             width: 16px;
@@ -2540,6 +2540,7 @@
         },
 
         async addCustomProduct() {
+            await $wire.$commit();
             const formData = await $wire.get('customProductData');
             const name = (formData?.name ?? '').trim();
             const price = parseFloat(formData?.price ?? 0);
@@ -3877,7 +3878,7 @@
             this.initialize();
             this.getAllProducts();
 
-            $watch('searchProductQuery', (value) => {
+            this.$watch('searchProductQuery', (value) => {
                 if (value.length >= 2) {
                     this.getSearchedProducts();
                 } else {
@@ -3885,7 +3886,7 @@
                 }
             });
 
-            $watch('searchStockProductQuery', (value) => {
+            this.$watch('searchStockProductQuery', (value) => {
                 if (value.length >= 2) {
                     this.selectedStockProduct = null;
                     this.getSearchedStockProducts();
@@ -3895,7 +3896,7 @@
                 }
             });
 
-            $watch('searchOrderQuery', (value, oldValue) => {
+            this.$watch('searchOrderQuery', (value, oldValue) => {
                 this.orderAmountToSkip = 0;
                 this.retrieveOrders();
             });
