@@ -79,6 +79,17 @@ it('defaultBlocks for rejected mail includes rejectedReason', function () {
     expect($allText)->toContain(':rejectedReason:');
 });
 
+it('return mail defaultBlocks use the order-details block like other order mails', function () {
+    foreach ([
+        \Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail::defaultBlocks(),
+        \Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail::defaultBlocks(),
+        \Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail::defaultBlocks(),
+    ] as $blocks) {
+        $types = collect($blocks)->pluck('type')->all();
+        expect($types)->toContain('order-details');
+    }
+});
+
 it('escapes free-text return variables in HTML context but not in plain-text subject context', function () {
     $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-XSS-9']);
     $return = OrderReturn::create([

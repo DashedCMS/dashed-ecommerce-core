@@ -71,6 +71,8 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             ['type' => 'heading', 'data' => ['text' => 'Je retour', 'level' => 'h1']],
             ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je retourverzoek voor bestelling :orderNumber: ontvangen op :returnRequestedAt:.</p>']],
             ['type' => 'divider', 'data' => []],
+            ['type' => 'order-details', 'data' => []],
+            ['type' => 'divider', 'data' => []],
             ['type' => 'text', 'data' => ['body' => '<p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
     }

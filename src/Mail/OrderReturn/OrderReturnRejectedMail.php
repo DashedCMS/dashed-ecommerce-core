@@ -25,6 +25,8 @@ class OrderReturnRejectedMail extends OrderReturnBaseMail
             ['type' => 'heading', 'data' => ['text' => 'Retour afgewezen', 'level' => 'h1']],
             ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>Helaas kunnen we je retourverzoek voor bestelling <strong>:orderNumber:</strong> niet accepteren.</p><p><strong>Reden:</strong> :rejectedReason:</p><p>Heb je vragen over deze beslissing? Neem dan contact met ons op.</p>']],
             ['type' => 'divider', 'data' => []],
+            ['type' => 'order-details', 'data' => []],
+            ['type' => 'divider', 'data' => []],
             ['type' => 'text', 'data' => ['body' => '<p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
     }
