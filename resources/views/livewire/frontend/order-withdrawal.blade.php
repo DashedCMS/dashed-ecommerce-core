@@ -1,5 +1,5 @@
 @php use Dashed\DashedTranslations\Models\Translation; @endphp
-<div class="max-w-xl mx-auto">
+<div class="max-w-2xl mx-auto">
     @if ($completed)
         <div class="rounded-lg border border-green-200 bg-green-50 p-6">
             <h2 class="text-lg font-semibold text-green-900">{{ Translation::get('return-completed-title', 'returns', 'Je koop is ongedaan gemaakt') }}</h2>
