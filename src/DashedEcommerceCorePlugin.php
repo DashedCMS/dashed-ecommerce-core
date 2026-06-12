@@ -56,6 +56,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ReturnSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
@@ -104,6 +105,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 AttributionStatisticsPage::class,
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
+                ReturnSettingsPage::class,
                 CustomerMatchSettingsPage::class,
                 Gs1SettingsPage::class,
                 PrintQueueSettingsPage::class,
