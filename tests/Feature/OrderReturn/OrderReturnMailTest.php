@@ -69,7 +69,17 @@ it('defaultBlocks for requested mail includes orderNumber and returnRequestedAt'
     $allText = collect($blocks)->map(fn ($b) => json_encode($b))->implode(' ');
 
     expect($allText)->toContain(':orderNumber:')
-        ->and($allText)->toContain(':returnRequestedAt:');
+        ->and($allText)->toContain(':returnRequestedAt:')
+        ->and($allText)->toContain('retourverzoek')
+        ->and($allText)->not->toContain('herroeping')
+        ->and(mb_strtolower($allText))->toContain('beoordel');
+});
+
+it('requested mail subject uses retour wording, not herroeping', function () {
+    $subject = OrderReturnRequestedMail::defaultSubject();
+
+    expect($subject)->toContain('retourverzoek')
+        ->and($subject)->not->toContain('herroeping');
 });
 
 it('defaultBlocks for rejected mail includes rejectedReason', function () {

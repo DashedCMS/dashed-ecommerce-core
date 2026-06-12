@@ -16,14 +16,14 @@ class OrderReturnRequestedMail extends OrderReturnBaseMail
 
     public static function defaultSubject(): string
     {
-        return 'We hebben je herroeping ontvangen voor bestelling :orderNumber:';
+        return 'We hebben je retourverzoek ontvangen voor bestelling :orderNumber:';
     }
 
     public static function defaultBlocks(): array
     {
         return [
-            ['type' => 'heading', 'data' => ['text' => 'Herroeping ontvangen', 'level' => 'h1']],
-            ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je herroeping voor bestelling <strong>:orderNumber:</strong> ontvangen op <strong>:returnRequestedAt:</strong>.</p><p>Je aankoop wordt overeenkomstig het herroepingsrecht ongedaan gemaakt. We nemen zo snel mogelijk contact met je op over de verdere afhandeling.</p>']],
+            ['type' => 'heading', 'data' => ['text' => 'Retourverzoek ontvangen', 'level' => 'h1']],
+            ['type' => 'text', 'data' => ['body' => '<p>Beste :firstName:,</p><p>We hebben je retourverzoek voor bestelling <strong>:orderNumber:</strong> ontvangen op <strong>:returnRequestedAt:</strong>.</p><p>We beoordelen je verzoek en je ontvangt zo snel mogelijk bericht of het is goedgekeurd of afgewezen.</p>']],
             ['type' => 'text', 'data' => ['body' => '<p>Je hebt de volgende producten aangemeld voor retour:</p><p>:returnLines:</p>']],
             ['type' => 'divider', 'data' => []],
             ['type' => 'order-details', 'data' => []],
