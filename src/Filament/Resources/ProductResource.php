@@ -502,7 +502,7 @@ class ProductResource extends Resource
                                     ]),
                                 ];
                             })
-                            ->visible(fn ($record) => $record && Ai::hasProvider())
+                            ->visible(fn ($record) => $record && class_exists(Ai::class) && Ai::hasProvider())
                             ->action(function ($data, Set $set, $record, $livewire) {
                                 $description = $data['description'] ?? '';
 

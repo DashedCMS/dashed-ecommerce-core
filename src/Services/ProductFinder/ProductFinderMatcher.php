@@ -37,7 +37,7 @@ class ProductFinderMatcher
             return [];
         }
 
-        if (! Ai::hasProvider()) {
+        if (! class_exists(Ai::class) || ! Ai::hasProvider()) {
             return $this->fallback($candidates, $limit);
         }
 
