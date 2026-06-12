@@ -28,6 +28,7 @@ class OrderReturn extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'handled_at' => 'datetime',
+        'auto_accepted' => 'boolean',
     ];
 
     protected static function booted(): void

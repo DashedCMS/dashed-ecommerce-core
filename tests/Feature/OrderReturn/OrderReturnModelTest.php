@@ -86,3 +86,19 @@ it('mails the customer on reject', function () {
 
     Mail::assertQueued(OrderReturnRejectedMail::class);
 });
+
+it('casts auto_accepted and stores label fields', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create([
+        'order_id' => $order->id,
+        'email' => 'a@b.nl',
+        'auto_accepted' => true,
+        'return_label_provider' => 'myparcel',
+        'return_label_path' => '/labels/x.pdf',
+    ]);
+
+    $fresh = OrderReturn::find($return->id);
+    expect($fresh->auto_accepted)->toBeTrue()
+        ->and($fresh->return_label_provider)->toBe('myparcel')
+        ->and($fresh->return_label_path)->toBe('/labels/x.pdf');
+});
