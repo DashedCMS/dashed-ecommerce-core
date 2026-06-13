@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
@@ -57,4 +58,26 @@ it('rate-limits the status page after too many attempts', function () {
         $this->get($url)->assertOk();
     }
     $this->get($url)->assertStatus(429);
+});
+
+it('downloads the return label when a label path is present', function () {
+    Storage::fake('public');
+    $return = makeReturnForStatus();
+    Storage::disk('public')->put('dashed/orders/return-label-test.pdf', '%PDF-1.4 test');
+    $return->update(['return_label_path' => 'dashed/orders/return-label-test.pdf']);
+
+    $this->get(route('dashed.frontend.return-status.label', $return->hash))
+        ->assertSuccessful();
+});
+
+it('returns 404 for the label route when no label exists', function () {
+    $return = makeReturnForStatus();
+
+    $this->get(route('dashed.frontend.return-status.label', $return->hash))
+        ->assertNotFound();
+});
+
+it('returns 404 for the label route with an unknown hash', function () {
+    $this->get(route('dashed.frontend.return-status.label', 'unknownhash0000000000000000000000'))
+        ->assertNotFound();
 });
