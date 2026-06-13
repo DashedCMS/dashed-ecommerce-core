@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductGroupController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosConceptController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 /**
@@ -78,6 +79,11 @@ Route::prefix('api/v1')
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
 
         Route::get('insights', [InsightsController::class, 'index'])->middleware('ability:dashboard.read');
+
+        // Per-site dashboard-doelen (omzet/bestellingen) per periode instellen.
+        // Een management-actie → gegate met de admin-write ability die de
+        // ecommerce-routes voor schrijfacties gebruiken.
+        Route::put('dashboard/targets', [DashboardTargetsController::class, 'update'])->middleware('ability:orders.write');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');

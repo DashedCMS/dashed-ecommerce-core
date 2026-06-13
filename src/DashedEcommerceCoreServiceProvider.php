@@ -1794,12 +1794,19 @@ MARKDOWN,
                     $series[] = ['label' => $bucket['label'], 'value' => round((float) $sum, 2)];
                 }
 
+                // Per-site doelen (omzet/bestellingen) per periode. Sleutel volgt
+                // de eigen periode-key zodat vandaag/week/maand/jaar elk een eigen
+                // doel hebben. 0 = geen doel (de app behandelt 0 als "geen doel").
+                $periodKey = $period->key ?? 'today';
+
                 return [
                     'revenue' => $revenue,
                     'orders' => $orders,
                     'average_order_value' => $orders > 0 ? round($revenue / $orders, 2) : 0.0,
                     'unhandled_orders' => $unhandledOrders,
                     'revenue_series' => $series,
+                    'revenue_target' => (float) (\Dashed\DashedCore\Models\Customsetting::get('dashboard_revenue_target_' . $periodKey, $siteId) ?: 0),
+                    'orders_target' => (int) (\Dashed\DashedCore\Models\Customsetting::get('dashboard_orders_target_' . $periodKey, $siteId) ?: 0),
                 ];
             });
 
