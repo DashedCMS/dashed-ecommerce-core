@@ -27,6 +27,7 @@ class OrderReturnApprovedMail extends OrderReturnBaseMail
             ['type' => 'divider', 'data' => []],
             ['type' => 'order-details', 'data' => []],
             ['type' => 'divider', 'data' => []],
+            ['type' => 'text', 'data' => ['body' => '<p><a href=":returnStatusUrl:">De status van je retour volgen</a></p>']],
             ['type' => 'text', 'data' => ['body' => '<p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
     }

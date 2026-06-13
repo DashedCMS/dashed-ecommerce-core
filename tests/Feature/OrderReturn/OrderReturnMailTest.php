@@ -199,3 +199,21 @@ it('renders the return lines summary and escapes product names in HTML', functio
     $plain = $ref->invoke($mail, 'Regels: :returnLines:', false);
     expect($plain)->toContain('2x Shirt <b>');
 });
+
+it('substitutes returnStatusUrl with the hash route', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-77']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $mail = new \Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail($return);
+    $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
+    $ref->setAccessible(true);
+
+    $out = $ref->invoke($mail, 'Volg: :returnStatusUrl:', false);
+
+    expect($out)->toContain('/return-status/' . $return->hash);
+});
+
+it('exposes returnStatusUrl as an available variable', function () {
+    expect(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail::availableVariables())
+        ->toContain('returnStatusUrl');
+});

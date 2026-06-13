@@ -57,6 +57,7 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             'adminNote',
             'orderNumber',
             'returnLines',
+            'returnStatusUrl',
         ];
     }
 
@@ -156,6 +157,11 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
         $rejectedReason = (string) $this->orderReturn->rejected_reason;
         $adminNote = (string) $this->orderReturn->admin_note;
         $orderNumber = $this->orderReturn->order?->invoice_id ?: ('#' . ($this->orderReturn->order_id ?? ''));
+        $statusUrl = rescue(
+            fn () => route('dashed.frontend.return-status', $this->orderReturn->hash),
+            '',
+            false
+        );
 
         if ($escapeHtml) {
             $requestedAt = e($requestedAt);
@@ -163,6 +169,7 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             $rejectedReason = e($rejectedReason);
             $adminNote = e($adminNote);
             $orderNumber = e($orderNumber);
+            $statusUrl = e($statusUrl);
         }
 
         $linesSummary = $this->orderReturn->lines
@@ -185,8 +192,8 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             ->implode($escapeHtml ? '<br>' : ', ');
 
         return str_replace(
-            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:'],
-            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary],
+            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:', ':returnStatusUrl:'],
+            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary, $statusUrl],
             $value
         );
     }
