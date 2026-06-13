@@ -117,6 +117,11 @@ class ReturnSettingsPage extends Page
         ];
     }
 
+    public function submit(): void
+    {
+        $this->save();
+    }
+
     public function save(): void
     {
         $data = $this->form->getState();
