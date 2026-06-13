@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
 
 /**
  * Klanten = aggregatie van bestellingen op e-mailadres (er is geen los klant-
@@ -75,16 +76,18 @@ class CustomerController extends Controller
         $email = trim((string) $request->query('email', ''));
         abort_if($email === '', 404, 'Geen e-mailadres opgegeven');
 
-        $orders = Order::thisSite()
+        // Anchor = meest recente bestelling van deze klant op de actieve site. Alle
+        // CRM-statistieken (LTV, AOV, klanttype, ...) komen uit CustomerHistory zodat
+        // we de rekenlogica niet dupliceren.
+        $latest = Order::thisSite()
             ->where('email', $email)
             ->orderByDesc('created_at')
-            ->limit(100)
-            ->get();
+            ->first();
 
-        abort_if($orders->isEmpty(), 404, 'Klant niet gevonden');
+        abort_if($latest === null, 404, 'Klant niet gevonden');
 
-        $latest = $orders->first();
-        $paidOrders = $orders->whereIn('status', self::PAID_STATUSES);
+        $history = new CustomerHistory($latest);
+        $recent = $history->recentOrders(25);
 
         return response()->json([
             'data' => [
@@ -96,21 +99,36 @@ class CustomerController extends Controller
                 'company_name' => $latest->company_name,
                 'city' => $latest->city ?: $latest->invoice_city,
                 'country' => $latest->country ?: $latest->invoice_country,
-                'orders_count' => $orders->count(),
-                'paid_orders_count' => $paidOrders->count(),
-                'total_spent' => (float) $paidOrders->sum('total'),
-                'first_order_at' => optional($orders->last()->created_at)->toIso8601String(),
-                'last_order_at' => optional($latest->created_at)->toIso8601String(),
-                'orders' => $orders->map(fn ($o) => [
-                    'id' => (int) $o->id,
-                    'invoice_id' => $o->invoice_id,
-                    'total' => $o->total !== null ? (float) $o->total : null,
-                    'status' => $o->status,
-                    'fulfillment_status' => $o->fulfillment_status,
-                    'created_at' => optional($o->created_at)->toIso8601String(),
-                ])->all(),
+                'lifetime_spent' => (float) round($history->lifetimeSpent(), 2),
+                'average_order_value' => (float) round($history->averageOrderValue(), 2),
+                'paid_count' => $history->paidCount(),
+                'total_count' => $history->totalCount(),
+                'customer_type' => $history->customerType(),
+                'days_since_last_order' => $history->daysSinceLastOrder(),
+                'first_order_at' => optional($history->firstOrderAt())->toIso8601String(),
+                'last_order_at' => optional($history->lastOrderAt())->toIso8601String(),
+                'favorite_payment_method' => $history->favoritePaymentMethod(),
+                // Aliassen voor terugwaartse compatibiliteit met de bestaande app-parser.
+                'orders_count' => $history->totalCount(),
+                'paid_orders_count' => $history->paidCount(),
+                'total_spent' => (float) round($history->lifetimeSpent(), 2),
+                'recent_orders' => $recent->map(fn ($o) => $this->orderRow($o))->all(),
+                // Alias: oudere clients lezen `orders`.
+                'orders' => $recent->map(fn ($o) => $this->orderRow($o))->all(),
             ],
         ]);
+    }
+
+    private function orderRow(Order $o): array
+    {
+        return [
+            'id' => (int) $o->id,
+            'invoice_id' => $o->invoice_id,
+            'total' => $o->total !== null ? (float) $o->total : null,
+            'status' => $o->status,
+            'fulfillment_status' => $o->fulfillment_status,
+            'created_at' => optional($o->created_at)->toIso8601String(),
+        ];
     }
 
     private function listRow($r): array
