@@ -16,6 +16,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedPages\Models\Page as PageModel;
 
 class ReturnSettingsPage extends Page
 {
@@ -37,6 +38,7 @@ class ReturnSettingsPage extends Page
         $maxAmount = Customsetting::get('returns_auto_accept_max_amount');
 
         $this->form->fill([
+            'return_page_id' => Customsetting::get('return_page_id'),
             'returns_auto_accept_enabled' => (bool) Customsetting::get('returns_auto_accept_enabled', null, false),
             'returns_auto_accept_max_days' => (int) Customsetting::get('returns_auto_accept_max_days', null, 14),
             'returns_auto_accept_excluded_category_ids' => (array) (Customsetting::get('returns_auto_accept_excluded_category_ids') ?: []),
@@ -59,6 +61,15 @@ class ReturnSettingsPage extends Page
         return $schema
             ->statePath('data')
             ->schema([
+                Section::make('Retourpagina')
+                    ->schema([
+                        Select::make('return_page_id')
+                            ->label('Standaard retourpagina')
+                            ->helperText('De pagina met het retourformulier waar klanten hun retour aanmelden. Wordt automatisch aangemaakt; hier kun je een andere pagina kiezen.')
+                            ->searchable()
+                            ->options(PageModel::pluck('name', 'id')),
+                    ]),
+
                 Section::make('Automatisch goedkeuren')
                     ->schema([
                         Toggle::make('returns_auto_accept_enabled')
@@ -110,6 +121,7 @@ class ReturnSettingsPage extends Page
     {
         $data = $this->form->getState();
 
+        Customsetting::set('return_page_id', $data['return_page_id'] ?? '');
         Customsetting::set('returns_auto_accept_enabled', ! empty($data['returns_auto_accept_enabled']) ? '1' : '0');
         Customsetting::set('returns_auto_accept_max_days', (int) ($data['returns_auto_accept_max_days'] ?: 14));
         Customsetting::set('returns_auto_accept_excluded_category_ids', array_values(array_map('intval', (array) ($data['returns_auto_accept_excluded_category_ids'] ?? []))));
