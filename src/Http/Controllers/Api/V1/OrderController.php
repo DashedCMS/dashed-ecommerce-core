@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
@@ -18,6 +19,8 @@ use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
 class OrderController extends Controller
 {
     private const CHANGEABLE_STATUSES = ['paid', 'partially_paid', 'cancelled', 'waiting_for_confirmation'];
+
+    private const CHANGEABLE_FULFILLMENT_STATUSES = ['handled', 'partially_handled', 'unhandled', 'waiting_for_supplier'];
 
     /**
      * Betaalstatus-opties — gelijk aan de Filament order-resource.
@@ -169,7 +172,7 @@ class OrderController extends Controller
         $model = Order::thisSite()->findOrFail($order);
 
         $data = $request->validate([
-            'fulfillment_status' => ['required', 'string', Rule::in(['handled', 'partially_handled', 'unhandled', 'waiting_for_supplier'])],
+            'fulfillment_status' => ['required', 'string', Rule::in(self::CHANGEABLE_FULFILLMENT_STATUSES)],
         ]);
 
         $model->changeFulfillmentStatus($data['fulfillment_status']);
@@ -262,15 +265,46 @@ class OrderController extends Controller
     public function createLabel(Request $request, int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
-        $provider = (string) $request->input('provider', '');
 
-        // Keuzes uit het formulier (zelfde als in het CMS). Lege waarden vallen
-        // terug op de standaard per land in de provider-classes.
-        $overrides = array_filter([
-            'carrier' => $request->input('carrier'),
-            'package_type' => $request->input('package_type'),
-            'delivery_type' => $request->input('delivery_type'),
+        $result = $this->attemptCreateLabel(
+            $model,
+            (string) $request->input('provider', ''),
+            $this->labelOverrides($request->all()),
+        );
+
+        if ($result['ok']) {
+            return response()->json(['success' => true, 'provider' => $result['provider'], 'message' => $result['message']]);
+        }
+
+        return response()->json(['success' => false, 'message' => $result['message']], 422);
+    }
+
+    /**
+     * De label-keuzes (vervoerder/pakkettype/verzendtype) uit het verzoek; lege
+     * waarden vallen terug op de standaard per land in de provider-classes.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function labelOverrides(array $input): array
+    {
+        return array_filter([
+            'carrier' => $input['carrier'] ?? null,
+            'package_type' => $input['package_type'] ?? null,
+            'delivery_type' => $input['delivery_type'] ?? null,
         ], fn ($v) => $v !== null && $v !== '');
+    }
+
+    /**
+     * Maak één verzendlabel aan via de geconfigureerde provider (Veloyd/MyParcel).
+     * Gedeeld door het single- en het bulk-endpoint, zodat de business-logica
+     * (provider-keuze + carrier-call) maar op één plek staat.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array{ok: bool, provider: ?string, message: string}
+     */
+    private function attemptCreateLabel(Order $model, string $provider, array $overrides): array
+    {
         $errors = [];
 
         if (($provider === '' || $provider === 'veloyd')
@@ -279,7 +313,7 @@ class OrderController extends Controller
             try {
                 \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::createLabelForOrder($model, $overrides);
 
-                return response()->json(['success' => true, 'provider' => 'veloyd', 'message' => 'Verzendlabel aangemaakt via Veloyd.']);
+                return ['ok' => true, 'provider' => 'veloyd', 'message' => 'Verzendlabel aangemaakt via Veloyd.'];
             } catch (\Throwable $e) {
                 report($e);
                 $errors[] = 'Veloyd: ' . $e->getMessage();
@@ -292,17 +326,125 @@ class OrderController extends Controller
             try {
                 \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::createLabelForOrder($model, $overrides);
 
-                return response()->json(['success' => true, 'provider' => 'myparcel', 'message' => 'Verzendlabel aangemaakt via MyParcel.']);
+                return ['ok' => true, 'provider' => 'myparcel', 'message' => 'Verzendlabel aangemaakt via MyParcel.'];
             } catch (\Throwable $e) {
                 report($e);
                 $errors[] = 'MyParcel: ' . $e->getMessage();
             }
         }
 
-        return response()->json([
-            'success' => false,
+        return [
+            'ok' => false,
+            'provider' => null,
             'message' => $errors ? implode(' ', $errors) : 'Geen verzendprovider geconfigureerd voor deze site.',
-        ], 422);
+        ];
+    }
+
+    // ── Bulk-acties ──────────────────────────────────────────────────────────
+    //
+    // Dezelfde per-order logica als de single-endpoints hierboven, maar in een
+    // loop over een lijst id's. Elke order wordt site-scoped opgehaald en in een
+    // eigen DB-transactie verwerkt; een fout bij één order zet die op ok:false
+    // (met error-melding) maar laat de rest doorlopen (partial success).
+
+    /** Bulk: wijzig de betaalstatus van meerdere orders. */
+    public function bulkStatus(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'max:100'],
+            'ids.*' => ['integer'],
+            'status' => ['required', 'string', Rule::in(self::CHANGEABLE_STATUSES)],
+        ]);
+
+        return $this->runBulk($request, $data['ids'], function (Order $model) use ($data): void {
+            $model->changeStatus($data['status']);
+        }, ['status' => $data['status']], 'mobile-api: bulk orderstatus gewijzigd');
+    }
+
+    /** Bulk: wijzig de fulfilment-/verwerkingsstatus van meerdere orders. */
+    public function bulkFulfillment(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'max:100'],
+            'ids.*' => ['integer'],
+            'fulfillment_status' => ['required', 'string', Rule::in(self::CHANGEABLE_FULFILLMENT_STATUSES)],
+        ]);
+
+        return $this->runBulk($request, $data['ids'], function (Order $model) use ($data): void {
+            $model->changeFulfillmentStatus($data['fulfillment_status']);
+        }, ['fulfillment_status' => $data['fulfillment_status']], 'mobile-api: bulk fulfilment-status gewijzigd');
+    }
+
+    /** Bulk: maak verzendlabels aan voor meerdere orders (sequentieel; mag deels falen). */
+    public function bulkCreateLabel(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'max:100'],
+            'ids.*' => ['integer'],
+            'provider' => ['sometimes', 'nullable', 'string'],
+            'carrier' => ['sometimes', 'nullable', 'string'],
+            'package_type' => ['sometimes', 'nullable', 'string'],
+            'delivery_type' => ['sometimes', 'nullable', 'string'],
+        ]);
+
+        $provider = (string) ($data['provider'] ?? '');
+        $overrides = $this->labelOverrides($data);
+
+        return $this->runBulk($request, $data['ids'], function (Order $model) use ($provider, $overrides): void {
+            $result = $this->attemptCreateLabel($model, $provider, $overrides);
+            if (! $result['ok']) {
+                // Gooi door zodat runBulk dit als ok:false met de melding registreert.
+                throw new \RuntimeException($result['message']);
+            }
+        }, [], 'mobile-api: bulk verzendlabel aangemaakt');
+    }
+
+    /**
+     * Voer een per-order mutatie uit over een lijst id's. Per id: site-scoped
+     * ophalen (niet gevonden → ok:false), in een eigen transactie de callback
+     * draaien, fouten vangen → ok:false met melding (partial success).
+     *
+     * @param  array<int, int>  $ids
+     * @param  callable(Order): void  $mutate
+     * @param  array<string, mixed>  $logProperties
+     * @return JsonResponse
+     */
+    private function runBulk(Request $request, array $ids, callable $mutate, array $logProperties, string $logMessage): JsonResponse
+    {
+        $results = [];
+        $okCount = 0;
+        $failCount = 0;
+
+        foreach (array_values(array_unique(array_map('intval', $ids))) as $id) {
+            $model = Order::thisSite()->find($id);
+
+            if (! $model) {
+                $results[] = ['id' => $id, 'ok' => false, 'error' => 'Bestelling niet gevonden.'];
+                $failCount++;
+
+                continue;
+            }
+
+            try {
+                DB::transaction(fn () => $mutate($model));
+
+                activity()->performedOn($model)->causedBy($request->user())
+                    ->withProperties($logProperties)->log($logMessage);
+
+                $results[] = ['id' => $id, 'ok' => true, 'error' => null];
+                $okCount++;
+            } catch (\Throwable $e) {
+                report($e);
+                $results[] = ['id' => $id, 'ok' => false, 'error' => $e->getMessage()];
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'results' => $results,
+            'ok_count' => $okCount,
+            'fail_count' => $failCount,
+        ]);
     }
 
     /**

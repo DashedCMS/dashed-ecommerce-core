@@ -91,6 +91,13 @@ Route::prefix('api/v1')
         Route::get('orders', [OrderController::class, 'index'])->middleware('ability:orders.read');
         Route::get('orders/filter-options', [OrderController::class, 'filterOptions'])->middleware('ability:orders.read');
         Route::get('orders/match', [OrderController::class, 'match'])->middleware('ability:orders.read');
+
+        // Bulk-acties — vóór de orders/{order}-wildcard, anders wordt 'bulk' als
+        // order-id opgevangen. Zelfde recht (orders.write) als de single-writes.
+        Route::post('orders/bulk/status', [OrderController::class, 'bulkStatus'])->middleware('ability:orders.write');
+        Route::post('orders/bulk/fulfillment', [OrderController::class, 'bulkFulfillment'])->middleware('ability:orders.write');
+        Route::post('orders/bulk/create-label', [OrderController::class, 'bulkCreateLabel'])->middleware('ability:orders.write');
+
         Route::get('orders/{order}', [OrderController::class, 'show'])->middleware('ability:orders.read');
         Route::patch('orders/{order}', [OrderController::class, 'update'])->middleware('ability:orders.write');
         Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');
