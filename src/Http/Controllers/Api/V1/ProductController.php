@@ -12,6 +12,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\ProductResource;
 
@@ -113,32 +114,44 @@ class ProductController extends Controller
 
         $data = $request->validate($this->rules(isCreate: false));
 
-        $this->applyData($model, $data);
-        $this->applySlug($model, $data);
+        // Idempotentie voor offline ingevoerde voorraad-acties: draagt het verzoek
+        // een `op_id`, dan passen we de mutatie maar één keer toe. Een replay
+        // (dubbele sync) is dan een no-op die het product ongewijzigd teruggeeft —
+        // anders zou "inboeken" bij elke replay nog eens optellen. Zonder op_id
+        // gedraagt het endpoint zich exact als vroeger.
+        $opId = isset($data['op_id']) ? (string) $data['op_id'] : null;
+        unset($data['op_id']);
 
-        // Bestaande media die behouden moet blijven (image_ids) + nieuw geüploade
-        // foto's. Wordt alleen aangeraakt als de app er iets over zegt.
-        if ($request->hasFile('images') || $request->has('image_ids')) {
-            $existing = $request->has('image_ids')
-                ? array_map('intval', (array) $request->input('image_ids'))
-                : (is_array($model->images) ? $model->images : []);
+        ProcessedOperation::once($opId, function () use ($request, $model, $data): array {
+            $this->applyData($model, $data);
+            $this->applySlug($model, $data);
 
-            $model->images = $this->resolveImages($request, $data, existing: $existing);
-        }
+            // Bestaande media die behouden moet blijven (image_ids) + nieuw geüploade
+            // foto's. Wordt alleen aangeraakt als de app er iets over zegt.
+            if ($request->hasFile('images') || $request->has('image_ids')) {
+                $existing = $request->has('image_ids')
+                    ? array_map('intval', (array) $request->input('image_ids'))
+                    : (is_array($model->images) ? $model->images : []);
 
-        $model->save();
+                $model->images = $this->resolveImages($request, $data, existing: $existing);
+            }
 
-        $this->syncCategories($model, $data);
+            $model->save();
 
-        // Alleen scalaire velden loggen: geüploade files/arrays zijn niet naar
-        // JSON te encoden voor de activity-log.
-        $logProperties = array_filter($data, static fn ($value): bool => is_scalar($value) || $value === null);
+            $this->syncCategories($model, $data);
 
-        activity()
-            ->performedOn($model)
-            ->causedBy($request->user())
-            ->withProperties($logProperties)
-            ->log('mobile-api: product bijgewerkt');
+            // Alleen scalaire velden loggen: geüploade files/arrays zijn niet naar
+            // JSON te encoden voor de activity-log.
+            $logProperties = array_filter($data, static fn ($value): bool => is_scalar($value) || $value === null);
+
+            activity()
+                ->performedOn($model)
+                ->causedBy($request->user())
+                ->withProperties($logProperties)
+                ->log('mobile-api: product bijgewerkt');
+
+            return ['id' => $model->id, 'stock' => $model->stock];
+        });
 
         return new ProductResource($model->fresh());
     }
@@ -179,6 +192,9 @@ class ProductController extends Controller
             'images.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif', 'max:10240'],
             'image_ids' => ['sometimes', 'array'],
             'image_ids.*' => ['integer'],
+
+            // Client-gegenereerd operatie-id voor idempotente (offline) sync.
+            'op_id' => ['sometimes', 'nullable', 'string', 'max:120'],
         ];
     }
 

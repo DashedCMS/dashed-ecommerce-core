@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
@@ -756,31 +757,41 @@ class OrderController extends Controller
 
         $data = $request->validate([
             'packed' => ['sometimes', 'boolean'],
+            // Client-gegenereerd operatie-id voor idempotente (offline) sync.
+            'op_id' => ['sometimes', 'nullable', 'string', 'max:120'],
         ]);
         $packed = $data['packed'] ?? true;
+        $opId = isset($data['op_id']) ? (string) $data['op_id'] : null;
 
-        $model->forceFill(['packed_at' => $packed ? now() : null])->save();
+        // Idempotentie: draagt de actie een op_id, dan voeren we 'm maar één keer
+        // uit. Een replay (offline sync die per ongeluk twee keer afspeelt) is een
+        // no-op die de order ongewijzigd teruggeeft. Zonder op_id: gedrag als vroeger.
+        ProcessedOperation::once($opId, function () use ($request, $model, $packed): array {
+            $model->forceFill(['packed_at' => $packed ? now() : null])->save();
 
-        // Houd de fulfillment-status in het CMS in sync met de inpak-actie:
-        // inpakken → 'packed' (Ingepakt); inpakken ongedaan maken → terug naar
-        // 'unhandled', maar alléén als de order nog op 'packed' staat (zo
-        // overschrijven we geen latere status zoals 'shipped'). changeFulfillmentStatus
-        // is idempotent en verstuurt de geconfigureerde fulfillment-mail + event.
-        if ($packed) {
-            $model->changeFulfillmentStatus('packed');
-        } elseif ($model->fulfillment_status === 'packed') {
-            $model->changeFulfillmentStatus('unhandled');
-        }
+            // Houd de fulfillment-status in het CMS in sync met de inpak-actie:
+            // inpakken → 'packed' (Ingepakt); inpakken ongedaan maken → terug naar
+            // 'unhandled', maar alléén als de order nog op 'packed' staat (zo
+            // overschrijven we geen latere status zoals 'shipped'). changeFulfillmentStatus
+            // is idempotent en verstuurt de geconfigureerde fulfillment-mail + event.
+            if ($packed) {
+                $model->changeFulfillmentStatus('packed');
+            } elseif ($model->fulfillment_status === 'packed') {
+                $model->changeFulfillmentStatus('unhandled');
+            }
 
-        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
-            orderId: $model->id,
-            tag: $packed ? 'order.packed' : 'order.unpacked',
-        );
+            \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                orderId: $model->id,
+                tag: $packed ? 'order.packed' : 'order.unpacked',
+            );
 
-        activity()->performedOn($model)->causedBy($request->user())
-            ->log('mobile-api: order ' . ($packed ? 'ingepakt' : 'inpakken ongedaan gemaakt'));
+            activity()->performedOn($model)->causedBy($request->user())
+                ->log('mobile-api: order ' . ($packed ? 'ingepakt' : 'inpakken ongedaan gemaakt'));
 
-        return $this->detail($model);
+            return ['id' => $model->id, 'packed' => $packed];
+        });
+
+        return $this->detail($model->fresh());
     }
 
     /**
