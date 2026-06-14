@@ -13,6 +13,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductGroupController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosConceptController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
@@ -68,6 +69,12 @@ Route::prefix('api/v1')
             Route::get('concepts', [PosConceptController::class, 'index']);
             Route::post('save-concept', [PosConceptController::class, 'save']);
             Route::post('load-concept', [PosConceptController::class, 'load']);
+
+            // Dagafsluiting / kasstaat (Z-rapport): één open sessie per user + site + dag.
+            Route::post('open-day', [PosRegisterSessionController::class, 'openDay']);
+            Route::get('day-summary', [PosRegisterSessionController::class, 'daySummary']);
+            Route::post('close-day', [PosRegisterSessionController::class, 'closeDay']);
+            Route::get('day-report/{session}', [PosRegisterSessionController::class, 'dayReport']);
         });
 
         Route::get('product-categories', [ProductGroupController::class, 'categories'])->middleware('ability:products.read');
