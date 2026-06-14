@@ -191,6 +191,16 @@ class OrderController extends Controller
         ]);
         $code = trim($data['code']);
 
+        // Pakbon-/order-barcode: Code128 van 'order-<id>' (zie packing-slip.blade,
+        // gelijk aan de POS-conventie) → direct op order-id.
+        if (str($code)->lower()->startsWith('order-')) {
+            $orderId = (int) str($code)->after('-')->trim()->toString();
+            $model = $orderId > 0 ? Order::thisSite()->find($orderId) : null;
+            if ($model) {
+                return $this->detail($model);
+            }
+        }
+
         $model = Order::thisSite()
             ->whereHas('trackAndTraces', fn (Builder $q) => $q->where('code', $code))
             ->latest()

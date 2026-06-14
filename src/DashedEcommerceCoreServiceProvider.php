@@ -1865,14 +1865,19 @@ MARKDOWN,
             if (method_exists($mobileApi, 'registerSearchProvider')) {
                 // Bestellingen — zelfde kolommen als OrderController@index (?search).
                 $mobileApi->registerSearchProvider(function (string $siteId, string $query): array {
+                    // Pakbon-/order-barcode 'order-<id>' (zie packing-slip.blade) → ook op order-id matchen.
+                    $orderId = str($query)->lower()->startsWith('order-')
+                        ? (int) str($query)->after('-')->trim()->toString()
+                        : (ctype_digit($query) ? (int) $query : null);
+
                     $orders = \Dashed\DashedEcommerceCore\Models\Order::query()
                         ->where('site_id', $siteId)
-                        ->where(function ($q) use ($query): void {
+                        ->where(function ($q) use ($query, $orderId): void {
                             foreach (['invoice_id', 'first_name', 'last_name', 'email', 'company_name', 'city'] as $column) {
                                 $q->orWhere($column, 'like', "%{$query}%");
                             }
-                            if (is_numeric($query)) {
-                                $q->orWhere('id', (int) $query);
+                            if ($orderId) {
+                                $q->orWhere('id', $orderId);
                             }
                         })
                         ->orderByDesc('created_at')
