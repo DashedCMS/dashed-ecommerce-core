@@ -79,6 +79,7 @@ class Product extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'expected_in_stock_date' => 'datetime',
+        'low_stock_alerted_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

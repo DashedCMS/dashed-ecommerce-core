@@ -1407,6 +1407,9 @@ MARKDOWN,
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class)
                 ->dailyAt('08:00')
                 ->withoutOverlapping();
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckLowStock::class)
+                ->hourly()
+                ->withoutOverlapping();
             $schedule->command(SendAbandonedCartEmails::class)
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
@@ -2056,6 +2059,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\PrintQueue\TestPrintBothCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\CleanupPriceGroupUserPricingCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\CheckLowStock::class,
             ]);
 
     }
