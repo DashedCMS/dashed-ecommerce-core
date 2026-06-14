@@ -17,14 +17,30 @@ class ProductResource extends JsonResource
         $imageId = $this->firstImage;
         $imageUrl = $imageId ? (mediaHelper()->getSingleMedia($imageId)->url ?? null) : null;
 
+        // Volledige fotogalerij (id + url) zodat de app bestaande foto's kan
+        // tonen en herordenen/verwijderen bij het bewerken van een product.
+        $images = [];
+        foreach ((is_array($this->images) ? $this->images : []) as $id) {
+            $url = mediaHelper()->getSingleMedia($id)->url ?? null;
+            if ($url) {
+                $images[] = ['id' => (int) $id, 'url' => $url];
+            }
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'short_description' => $this->short_description,
+            'description' => $this->description,
+            'new_price' => $this->new_price !== null ? (float) $this->new_price : null,
             'price' => $this->price !== null ? (float) $this->price : null,
             'current_price' => $this->price !== null ? (float) $this->price : null,
             'public' => (bool) $this->public,
             'image_url' => $imageUrl,
+            'images' => $images,
+            'product_group_id' => $this->product_group_id !== null ? (int) $this->product_group_id : null,
+            'category_ids' => $this->productCategories->pluck('id')->map(fn ($id) => (int) $id)->all(),
             'total_purchases' => (int) ($this->total_purchases ?? 0),
 
             // Voorraad

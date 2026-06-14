@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\ProductResource;
 
 class ProductController extends Controller
@@ -64,46 +69,233 @@ class ProductController extends Controller
         return new ProductResource(Product::thisSite()->findOrFail($product));
     }
 
+    /**
+     * Maak een nieuw product (+ optioneel foto's) vanuit de app aan.
+     * Multipart, zodat foto's in hetzelfde verzoek meekomen.
+     */
+    public function store(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate($this->rules(isCreate: true));
+
+        $product = new Product();
+
+        // Elk product hangt onder een productgroep (zoals in de CMS). De app
+        // bouwt geen groepen, dus maken we er één aan op naam van het product.
+        $group = $this->resolveProductGroup($request, $data);
+        $product->product_group_id = $group->id;
+
+        $product->site_ids = $group->site_ids ?: [Sites::getActive()];
+
+        $this->applyData($product, $data);
+        $product->images = $this->resolveImages($request, $data, existing: []);
+
+        // Slug wordt in IsVisitable::saving() afgeleid van name als hij leeg is,
+        // maar we respecteren een expliciete slug uit de request.
+        $this->applySlug($product, $data);
+
+        $product->save();
+
+        $this->syncCategories($product, $data);
+
+        activity()
+            ->performedOn($product)
+            ->causedBy($request->user())
+            ->log('mobile-api: product aangemaakt');
+
+        return (new ProductResource($product->fresh()))
+            ->response()
+            ->setStatusCode(201);
+    }
+
     public function update(Request $request, int $product): ProductResource
     {
         $model = Product::thisSite()->findOrFail($product);
 
-        $data = $request->validate([
-            'price' => ['sometimes', 'numeric', 'min:0'],
-            'public' => ['sometimes', 'boolean'],
+        $data = $request->validate($this->rules(isCreate: false));
 
-            // Voorraad
-            'use_stock' => ['sometimes', 'boolean'],
-            'stock' => ['sometimes', 'integer', 'min:0'],
-            'low_stock_notification' => ['sometimes', 'boolean'],
-            'low_stock_notification_limit' => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'out_of_stock_sellable' => ['sometimes', 'boolean'],
-            'expected_in_stock_date' => ['sometimes', 'nullable', 'date'],
-            'expected_delivery_in_days' => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'stock_status' => ['sometimes', 'in:in_stock,out_of_stock'],
-            'limit_purchases_per_customer' => ['sometimes', 'boolean'],
-            'limit_purchases_per_customer_limit' => ['sometimes', 'nullable', 'integer', 'min:1'],
+        $this->applyData($model, $data);
+        $this->applySlug($model, $data);
 
-            // Praktische informatie
-            'purchase_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'vat_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
-            'sku' => ['sometimes', 'string', 'max:255'],
-            'ean' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'article_code' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'weight' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'length' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'width' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'height' => ['sometimes', 'nullable', 'integer', 'min:0'],
-        ]);
+        // Bestaande media die behouden moet blijven (image_ids) + nieuw geüploade
+        // foto's. Wordt alleen aangeraakt als de app er iets over zegt.
+        if ($request->hasFile('images') || $request->has('image_ids')) {
+            $existing = $request->has('image_ids')
+                ? array_map('intval', (array) $request->input('image_ids'))
+                : (is_array($model->images) ? $model->images : []);
 
-        $model->fill($data)->save();
+            $model->images = $this->resolveImages($request, $data, existing: $existing);
+        }
+
+        $model->save();
+
+        $this->syncCategories($model, $data);
+
+        // Alleen scalaire velden loggen: geüploade files/arrays zijn niet naar
+        // JSON te encoden voor de activity-log.
+        $logProperties = array_filter($data, static fn ($value): bool => is_scalar($value) || $value === null);
 
         activity()
             ->performedOn($model)
             ->causedBy($request->user())
-            ->withProperties($data)
+            ->withProperties($logProperties)
             ->log('mobile-api: product bijgewerkt');
 
         return new ProductResource($model->fresh());
+    }
+
+    /**
+     * Validatieregels voor create/update. Bij create zijn name + price verplicht.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function rules(bool $isCreate): array
+    {
+        $req = $isCreate ? 'required' : 'sometimes';
+
+        return [
+            'name' => [$req, 'string', 'max:255'],
+            'slug' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'price' => [$req, 'numeric', 'min:0'],
+            'new_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'purchase_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'vat_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],
+            'sku' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'ean' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'article_code' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'short_description' => ['sometimes', 'nullable', 'string'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'public' => ['sometimes', 'boolean'],
+
+            // Voorraad
+            'use_stock' => ['sometimes', 'boolean'],
+            'stock' => ['sometimes', 'nullable', 'integer', 'min:0'],
+
+            'product_group_id' => ['sometimes', 'nullable', 'integer', 'exists:dashed__product_groups,id'],
+            'category_ids' => ['sometimes', 'array'],
+            'category_ids.*' => ['integer', 'exists:dashed__product_categories,id'],
+
+            // Foto-upload (zelfde mimetypes/grootte als de chat-bijlagen).
+            'images' => ['sometimes', 'array', 'max:10'],
+            'images.*' => ['file', 'mimetypes:image/jpeg,image/png,image/webp,image/heic,image/gif', 'max:10240'],
+            'image_ids' => ['sometimes', 'array'],
+            'image_ids.*' => ['integer'],
+        ];
+    }
+
+    /**
+     * Zet de niet-relationele, niet-foto velden op het product. Translatable
+     * velden (name/short_description/description) worden via Spatie's
+     * HasTranslations voor de actieve locale weggeschreven.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function applyData(Product $product, array $data): void
+    {
+        $locale = app()->getLocale();
+
+        $translatable = ['name', 'short_description', 'description'];
+        foreach ($translatable as $field) {
+            if (array_key_exists($field, $data)) {
+                $product->setTranslation($field, $locale, (string) ($data[$field] ?? ''));
+            }
+        }
+
+        $plain = [
+            'price', 'new_price', 'purchase_price', 'vat_rate',
+            'sku', 'ean', 'article_code', 'public', 'use_stock', 'stock',
+        ];
+        foreach ($plain as $field) {
+            if (array_key_exists($field, $data)) {
+                $product->{$field} = $data[$field];
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function applySlug(Product $product, array $data): void
+    {
+        if (! empty($data['slug'])) {
+            $product->setTranslation('slug', app()->getLocale(), Str::slug((string) $data['slug']));
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function resolveProductGroup(Request $request, array $data): ProductGroup
+    {
+        if (! empty($data['product_group_id'])) {
+            return ProductGroup::findOrFail((int) $data['product_group_id']);
+        }
+
+        $locale = app()->getLocale();
+        $name = (string) ($data['name'] ?? 'Product');
+
+        $group = new ProductGroup();
+        $group->setTranslation('name', $locale, $name);
+        $group->setTranslation('slug', $locale, Str::slug($name).'-'.Str::random(6));
+        // ProductGroup heeft NOT NULL translatable tekstvelden; leeg invullen.
+        foreach (['short_description', 'description', 'content', 'search_terms'] as $field) {
+            $group->setTranslation($field, $locale, '');
+        }
+        $group->site_ids = [Sites::getActive()];
+        $group->save();
+
+        return $group;
+    }
+
+    /**
+     * Sla geüploade foto's op naar de dashed-disk, registreer ze via de
+     * MediaHelper (zelfde pad als de CMS ProductResource + de chat-bijlagen) en
+     * combineer ze met de te behouden bestaande media-ids.
+     *
+     * Achtergrond-verwijderen gebeurt NIET hier: dat is een aparte, native
+     * iOS-stap (#10) die later vóór de upload op het toestel draait. Deze
+     * methode is bewust het integratiepunt — de bytes die hier binnenkomen zijn
+     * de definitieve productfoto.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int, int>  $existing
+     * @return array<int, int>
+     */
+    private function resolveImages(Request $request, array $data, array $existing): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $existing)));
+
+        foreach ($request->file('images', []) as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
+            }
+
+            // Op de dashed-disk zetten zodat MediaHelper het kan registreren.
+            $path = $file->store('producten-tmp', 'dashed');
+            if (! $path) {
+                continue;
+            }
+
+            $id = mediaHelper()->uploadFromPath($path, 'producten');
+            Storage::disk('dashed')->delete($path);
+
+            if ($id) {
+                $ids[] = (int) $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function syncCategories(Product $product, array $data): void
+    {
+        if (! array_key_exists('category_ids', $data)) {
+            return;
+        }
+
+        $ids = array_values(array_filter(array_map('intval', (array) $data['category_ids'])));
+        $product->productCategories()->sync($ids);
     }
 }
