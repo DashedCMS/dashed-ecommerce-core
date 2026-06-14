@@ -754,6 +754,137 @@ class Order extends Model
         }
     }
 
+    /**
+     * Registreer een (gedeeltelijke) retour voor deze bestelling: boek de
+     * geretourneerde aantallen per regel, herbereken de retour-status (volledig
+     * vs. gedeeltelijk) en — indien gewenst — boek de voorraad terug.
+     *
+     * Hergebruikt door zowel het CMS als de mobiele API zodat de retour-logica
+     * (validatie + voorraad-terugboeking) maar op één plek staat. Verplaatst
+     * GEEN geld: bij `markForRefund` wordt enkel een markering (OrderLog) gezet,
+     * net als de handmatige "te verwerken terugbetaling" in het CMS — de PSP-
+     * terugbetaling blijft een bewuste handmatige actie in het CMS.
+     *
+     * @param  array<int, array{order_product_id: int, quantity: int}>  $lines
+     * @return array{returned_lines: int, returned_quantity: int, retour_status: string}
+     *
+     * @throws \InvalidArgumentException als een regel niet bij de order hoort of het aantal de (resterende) gekochte hoeveelheid overschrijdt
+     */
+    public function registerReturn(array $lines, bool $restock = true, bool $markForRefund = false): array
+    {
+        if (empty($lines)) {
+            throw new \InvalidArgumentException('Er zijn geen retourregels opgegeven.');
+        }
+
+        // Regels valideren + normaliseren vóór we iets muteren (alles of niets).
+        $orderProducts = $this->orderProducts()->get()->keyBy('id');
+        $normalized = [];
+        foreach ($lines as $line) {
+            $orderProductId = (int) ($line['order_product_id'] ?? 0);
+            $quantity = (int) ($line['quantity'] ?? 0);
+
+            if ($quantity < 1) {
+                throw new \InvalidArgumentException('Een retour-aantal moet minimaal 1 zijn.');
+            }
+
+            /** @var OrderProduct|null $orderProduct */
+            $orderProduct = $orderProducts->get($orderProductId);
+            if (! $orderProduct) {
+                throw new \InvalidArgumentException("Regel {$orderProductId} hoort niet bij deze bestelling.");
+            }
+
+            $alreadyReturned = (int) ($orderProduct->returned_quantity ?? 0);
+            $remaining = (int) $orderProduct->quantity - $alreadyReturned;
+            if ($quantity > $remaining) {
+                throw new \InvalidArgumentException("Je kunt niet meer retourneren dan er nog over is voor {$orderProduct->name} (nog {$remaining}).");
+            }
+
+            // Meerdere regels voor hetzelfde order-product samenvoegen.
+            if (isset($normalized[$orderProductId])) {
+                $normalized[$orderProductId]['quantity'] += $quantity;
+                if ($normalized[$orderProductId]['quantity'] > $remaining) {
+                    throw new \InvalidArgumentException("Je kunt niet meer retourneren dan er nog over is voor {$orderProduct->name} (nog {$remaining}).");
+                }
+            } else {
+                $normalized[$orderProductId] = ['orderProduct' => $orderProduct, 'quantity' => $quantity];
+            }
+        }
+
+        $returnedQuantity = 0;
+        foreach ($normalized as $entry) {
+            /** @var OrderProduct $orderProduct */
+            $orderProduct = $entry['orderProduct'];
+            $quantity = $entry['quantity'];
+
+            $orderProduct->returned_quantity = (int) ($orderProduct->returned_quantity ?? 0) + $quantity;
+            $orderProduct->save();
+
+            $returnedQuantity += $quantity;
+
+            if ($restock) {
+                $this->restockOrderProduct($orderProduct, $quantity);
+            }
+        }
+
+        // Status bepalen: volledig als élke regel (op het volledige gekochte
+        // aantal) is geretourneerd, anders gedeeltelijk.
+        $allFullyReturned = $this->orderProducts()->get()
+            ->every(fn (OrderProduct $op) => (int) ($op->returned_quantity ?? 0) >= (int) $op->quantity);
+
+        $this->retour_status = $allFullyReturned ? 'returned' : 'partially_returned';
+        $this->save();
+
+        OrderLog::createLog(
+            orderId: $this->id,
+            tag: $allFullyReturned ? 'order.return.full' : 'order.return.partial',
+            note: "Retour geregistreerd: {$returnedQuantity} stuk(s)" . ($restock ? ' (voorraad teruggeboekt)' : ''),
+        );
+
+        // Conservatief: GEEN geldbeweging. Markeer alleen dat er nog een
+        // terugbetaling handmatig verwerkt moet worden (zoals de CMS-markering
+        // voor een openstaande terugbetaling).
+        if ($markForRefund) {
+            OrderLog::createLog(
+                orderId: $this->id,
+                tag: 'order.return.refund-requested',
+                note: 'Terugbetaling aangevraagd via de app — handmatig te verwerken in het CMS. Er is automatisch géén geld teruggeboekt.',
+            );
+        }
+
+        return [
+            'returned_lines' => count($normalized),
+            'returned_quantity' => $returnedQuantity,
+            'retour_status' => $this->retour_status,
+        ];
+    }
+
+    /**
+     * Boek de voorraad van één order-product terug met het geretourneerde aantal.
+     * Spiegelt de voorraad-terugboeking in refillStock() (incl. parent-voorraad +
+     * stock-sync), maar dan gericht op een specifiek aantal.
+     */
+    protected function restockOrderProduct(OrderProduct $orderProduct, int $quantity): void
+    {
+        $product = $orderProduct->product;
+        if (! $product) {
+            return;
+        }
+
+        if ($product->use_stock) {
+            $product->stock = $product->stock + $quantity;
+        }
+        $product->save();
+
+        if ($product->parent && $product->parent->use_parent_stock && $product->parent->use_stock) {
+            $product->parent->stock = $product->parent->stock + $quantity;
+            $product->parent->save();
+        }
+
+        if ($product->stockSyncGroup()) {
+            SyncProductStockJob::dispatch($product)->onQueue('ecommerce');
+        }
+    }
+
     public function refillDiscount()
     {
         if ($this->discountCode) {

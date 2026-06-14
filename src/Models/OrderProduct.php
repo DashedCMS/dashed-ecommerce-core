@@ -21,6 +21,7 @@ class OrderProduct extends Model
 
     protected $fillable = [
         'quantity',
+        'returned_quantity',
         'is_pre_order',
         'order_id',
         'name',
@@ -35,6 +36,7 @@ class OrderProduct extends Model
     protected $casts = [
         'product_extras' => 'array',
         'hidden_options' => 'array',
+        'returned_quantity' => 'integer',
     ];
 
     public function scopeSearch($query, ?string $search)

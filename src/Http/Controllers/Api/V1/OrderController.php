@@ -140,6 +140,42 @@ class OrderController extends Controller
     }
 
     /**
+     * Registreer een (gedeeltelijke) retour/RMA voor de bestelling. Hergebruikt
+     * de centrale Order::registerReturn-logica (voorraad-terugboeking + status).
+     *
+     * Conservatief m.b.t. geld: `refund=true` zet alléén een markering (zoals het
+     * CMS doet voor een nog te verwerken terugbetaling) — er wordt nooit een echte
+     * PSP-terugbetaling uitgevoerd vanuit de app.
+     */
+    public function returnOrder(Request $request, int $order): OrderResource|JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'lines' => ['required', 'array', 'min:1'],
+            'lines.*.order_product_id' => ['required', 'integer'],
+            'lines.*.quantity' => ['required', 'integer', 'min:1'],
+            'restock' => ['sometimes', 'boolean'],
+            'refund' => ['sometimes', 'boolean'],
+        ]);
+
+        $restock = (bool) ($data['restock'] ?? true);
+        $refund = (bool) ($data['refund'] ?? false);
+
+        try {
+            $result = DB::transaction(fn () => $model->registerReturn($data['lines'], $restock, $refund));
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        activity()->performedOn($model)->causedBy($request->user())
+            ->withProperties(['restock' => $restock, 'refund' => $refund] + $result)
+            ->log('mobile-api: retour geregistreerd');
+
+        return $this->detail($model);
+    }
+
+    /**
      * Zoek een bestelling op een gescande code: track & trace-code of factuurnummer.
      * Zo kun je in de inpak-scanner naast de pakbon-barcode ook een T&T-label scannen
      * om de juiste order te openen.

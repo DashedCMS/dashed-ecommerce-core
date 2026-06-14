@@ -24,6 +24,7 @@ class OrderProductResource extends JsonResource
                     ? (mediaHelper()->getSingleMedia($this->product->firstImage, ['widen' => 200])->url ?? null)
                     : null),
             'quantity' => (int) $this->quantity,
+            'returned_quantity' => (int) ($this->returned_quantity ?? 0),
             'price' => $this->price !== null ? (float) $this->price : null,
             'btw' => $this->btw !== null ? (float) $this->btw : null,
             'vat_rate' => $this->vat_rate !== null ? (float) $this->vat_rate : null,
