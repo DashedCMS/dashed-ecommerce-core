@@ -1859,6 +1859,96 @@ MARKDOWN,
                 });
             }
 
+            // Globaal zoeken: orders / producten / klanten. Elke provider hergebruikt
+            // exact dezelfde zoekquery als de bijbehorende list-controller en levert
+            // max. 5 items in de afgesproken item-vorm (type/id/title/subtitle/route).
+            if (method_exists($mobileApi, 'registerSearchProvider')) {
+                // Bestellingen — zelfde kolommen als OrderController@index (?search).
+                $mobileApi->registerSearchProvider(function (string $siteId, string $query): array {
+                    $orders = \Dashed\DashedEcommerceCore\Models\Order::query()
+                        ->where('site_id', $siteId)
+                        ->where(function ($q) use ($query): void {
+                            foreach (['invoice_id', 'first_name', 'last_name', 'email', 'company_name', 'city'] as $column) {
+                                $q->orWhere($column, 'like', "%{$query}%");
+                            }
+                            if (is_numeric($query)) {
+                                $q->orWhere('id', (int) $query);
+                            }
+                        })
+                        ->orderByDesc('created_at')
+                        ->limit(5)
+                        ->get(['id', 'invoice_id', 'first_name', 'last_name', 'email', 'total']);
+
+                    return $orders->map(function ($order): array {
+                        $name = trim((string) (($order->first_name ?? '') . ' ' . ($order->last_name ?? ''))) ?: ($order->email ?? '');
+                        $title = $order->invoice_id ? "#{$order->invoice_id}" : "Bestelling {$order->id}";
+
+                        return [
+                            'type' => 'order',
+                            'id' => $order->id,
+                            'title' => $title,
+                            'subtitle' => $name !== '' ? $name : null,
+                            'route' => "/order/{$order->id}",
+                        ];
+                    })->all();
+                });
+
+                // Producten — zelfde search-scope als ProductController@index (?search).
+                $mobileApi->registerSearchProvider(function (string $siteId, string $query): array {
+                    $products = \Dashed\DashedEcommerceCore\Models\Product::thisSite($siteId)
+                        ->search($query)
+                        ->orderBy('id')
+                        ->limit(5)
+                        ->get();
+
+                    return $products->map(function ($product): array {
+                        $sku = $product->sku ? (string) $product->sku : null;
+
+                        return [
+                            'type' => 'product',
+                            'id' => $product->id,
+                            'title' => (string) $product->name,
+                            'subtitle' => $sku,
+                            'route' => "/product/{$product->id}",
+                        ];
+                    })->all();
+                });
+
+                // Klanten — geaggregeerd op e-mail, zelfde kolommen als CustomerController@index.
+                $mobileApi->registerSearchProvider(function (string $siteId, string $query): array {
+                    $like = '%' . $query . '%';
+
+                    $rows = \Dashed\DashedEcommerceCore\Models\Order::query()
+                        ->where('site_id', $siteId)
+                        ->whereNotNull('email')
+                        ->where('email', '!=', '')
+                        ->where(function ($q) use ($like): void {
+                            $q->where('email', 'like', $like)
+                                ->orWhere('first_name', 'like', $like)
+                                ->orWhere('last_name', 'like', $like)
+                                ->orWhere('company_name', 'like', $like)
+                                ->orWhere('phone_number', 'like', $like);
+                        })
+                        ->groupBy('email')
+                        ->selectRaw('email, MAX(first_name) as first_name, MAX(last_name) as last_name')
+                        ->orderByRaw('MAX(created_at) DESC')
+                        ->limit(5)
+                        ->get();
+
+                    return $rows->map(function ($row): array {
+                        $name = trim((string) (($row->first_name ?? '') . ' ' . ($row->last_name ?? '')));
+
+                        return [
+                            'type' => 'customer',
+                            'id' => $row->email,
+                            'title' => $name !== '' ? $name : (string) $row->email,
+                            'subtitle' => $name !== '' ? (string) $row->email : null,
+                            'route' => '/customer/' . rawurlencode((string) $row->email),
+                        ];
+                    })->all();
+                });
+            }
+
             $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
         }
     }
