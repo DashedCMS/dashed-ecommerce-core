@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductInsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
@@ -91,6 +92,9 @@ Route::prefix('api/v1')
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
 
+        // Verzend-hub: één overzicht van alle zendingen over de carriers heen.
+        Route::get('shipments', [ShipmentController::class, 'index'])->middleware('ability:orders.read');
+
         Route::get('orders', [OrderController::class, 'index'])->middleware('ability:orders.read');
         Route::get('orders/filter-options', [OrderController::class, 'filterOptions'])->middleware('ability:orders.read');
         Route::get('orders/match', [OrderController::class, 'match'])->middleware('ability:orders.read');
@@ -106,6 +110,7 @@ Route::prefix('api/v1')
         Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');
         Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return', [OrderController::class, 'returnOrder'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/return-label', [ShipmentController::class, 'returnLabel'])->middleware('ability:orders.write');
         Route::post('orders/{order}/packed', [OrderController::class, 'packed'])->middleware('ability:orders.write');
         Route::get('orders/{order}/invoice-url', [OrderController::class, 'invoiceUrl'])->middleware('ability:orders.read');
         Route::get('orders/{order}/packing-slip-url', [OrderController::class, 'packingSlipUrl'])->middleware('ability:orders.read');

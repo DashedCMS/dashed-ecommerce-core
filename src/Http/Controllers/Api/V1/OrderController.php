@@ -15,9 +15,12 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
 
 class OrderController extends Controller
 {
+    use MapsCarrierLabelStatus;
+
     private const CHANGEABLE_STATUSES = ['paid', 'partially_paid', 'cancelled', 'waiting_for_confirmation'];
 
     private const CHANGEABLE_FULFILLMENT_STATUSES = ['handled', 'partially_handled', 'unhandled', 'waiting_for_supplier'];
@@ -481,40 +484,6 @@ class OrderController extends Controller
             'ok_count' => $okCount,
             'fail_count' => $failCount,
         ]);
-    }
-
-    /**
-     * Genormaliseerde status van een verzendlabel. Gebruikt de door de
-     * carrier-sync opgeslagen status (kolom 'status') als die er is; anders
-     * afgeleid uit bestaande velden (fout / track&trace / geprint / concept).
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $po  Veloyd-/MyParcelOrder
-     * @return array{key: string, label: string, tone: string}
-     */
-    private function labelStatus($po): array
-    {
-        // 'Verzonden/Onderweg/Geleverd' komt UITSLUITEND uit de carrier-sync
-        // (kolom 'status'); een track&trace-code bestaat al bij het aanmaken van
-        // het label en betekent dus niet dat het pakket al verzonden is. Afgeleid
-        // blijft het daarom op geprint/concept tot de vervoerder de status meldt.
-        $key = $po->status
-            ?: ($po->error ? 'error'
-                : ($po->label_printed ? 'printed' : 'concept'));
-
-        $meta = [
-            'concept' => ['Concept', 'neutral'],
-            'printed' => ['Geprint', 'neutral'],
-            'shipped' => ['Verzonden', 'success'],
-            'in_transit' => ['Onderweg', 'warning'],
-            'pickup' => ['Klaar voor afhalen', 'warning'],
-            'delivered' => ['Geleverd', 'success'],
-            'returned' => ['Retour', 'warning'],
-            'cancelled' => ['Geannuleerd', 'danger'],
-            'error' => ['Fout', 'danger'],
-        ];
-        [$label, $tone] = $meta[(string) $key] ?? ['Onbekend', 'neutral'];
-
-        return ['key' => (string) $key, 'label' => $label, 'tone' => $tone];
     }
 
     /** Welke label-providers zijn (op basis van de API-sleutel) beschikbaar. */
