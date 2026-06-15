@@ -2119,6 +2119,7 @@ MARKDOWN,
         cms()->registerSettingsPage(CustomerMatchSettingsPage::class, 'Google Ads Customer Match', 'megaphone', 'HTTPS-feed met gehashte klantdata voor Google Ads Customer Match');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage::class, 'GS1 / EAN instellingen', 'qr-code', 'Standaardwaarden voor het GS1-export en EAN-toewijzing');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage::class, 'Print queue', 'printer', 'Instellingen voor de print queue (auto print, health check, retentie)');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class, 'Verkoopdoelen', 'flag', 'Stel omzet- en bestellingsdoelen in per dag, week, maand en jaar');
 
         $package
             ->name('dashed-ecommerce-core')

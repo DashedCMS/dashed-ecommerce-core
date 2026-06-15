@@ -112,6 +112,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\ShippingLabelErrors::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\InsightsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,
