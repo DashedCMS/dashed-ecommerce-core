@@ -591,6 +591,13 @@ class ProductResource extends Resource
                     ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(Product::class, $search))
                     ->label('Link cross sell producten')
                     ->helperText('Dit mogen alleen maar producten zijn die zonder verplichte opties zijn'),
+                Select::make('crossSellProductGroups')
+                    ->multiple()
+                    ->relationship('crossSellProductGroups', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Link cross sell productgroepen')
+                    ->helperText('Een groep met meerdere varianten toont op de productpagina een popup om de juiste variant te kiezen'),
                 Select::make('globalProductExtras')
                     ->multiple()
                     ->relationship('globalProductExtras', 'name')

@@ -399,6 +399,13 @@ class ProductGroupResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->label('Link cross sell producten')
                     ->helperText('Dit mogen alleen maar producten zijn die zonder verplichte opties zijn. Indien je bij een variant ook cross sell producten koppelt, worden deze samengevoegd'),
+                Select::make('crossSellProductGroups')
+                    ->multiple()
+                    ->relationship('crossSellProductGroups', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Link cross sell productgroepen')
+                    ->helperText('Een groep met meerdere varianten toont op de productpagina een popup om de juiste variant te kiezen'),
                 Select::make('globalProductExtras')
                     ->multiple()
                     ->preload()
