@@ -949,6 +949,16 @@ class Product extends Model
         return $this->belongsToMany(Product::class, 'dashed__product_crosssell_product', 'product_id', 'crosssell_product_id');
     }
 
+    public function crossSellProductGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Dashed\DashedEcommerceCore\Models\ProductGroup::class,
+            'dashed__product_crosssell_product_group',
+            'product_id',
+            'crosssell_product_group_id',
+        );
+    }
+
     public function shippingClasses()
     {
         return $this->belongsToMany(ShippingClass::class, 'dashed__product_shipping_class');
