@@ -369,6 +369,14 @@ class Checkout extends Component
             'shippingMethod',
             'paymentMethod',
             'depositPaymentMethod',
+            // Het bezorgadres bepaalt mede de beschikbare verzendmethodes
+            // (o.a. afstand-gebaseerde methodes). Zonder deze velden werden de
+            // methodes pas herberekend bij een landwissel, niet bij het invullen
+            // van het adres.
+            'street',
+            'houseNr',
+            'zipCode',
+            'city',
         ];
 
         if (in_array($name, $fieldsAffectingCart, true)) {
