@@ -392,6 +392,12 @@ class ProductGroupResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->helperText('Indien je bij een variant ook voorgestelde producten koppelt, worden deze samengevoegd')
                     ->label('Link voorgestelde producten'),
+                Select::make('suggestedProductGroups')
+                    ->multiple()
+                    ->relationship('suggestedProductGroups', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Link voorgestelde productgroepen'),
                 Select::make('crossSellProducts')
                     ->multiple()
                     ->relationship('crossSellProducts', 'name')

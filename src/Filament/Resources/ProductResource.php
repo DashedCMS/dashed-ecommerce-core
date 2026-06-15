@@ -584,6 +584,12 @@ class ProductResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                     ->getSearchResultsUsing(fn ($search) => RelationshipSearchQuery::make(Product::class, $search))
                     ->label('Link voorgestelde producten'),
+                Select::make('suggestedProductGroups')
+                    ->multiple()
+                    ->relationship('suggestedProductGroups', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Link voorgestelde productgroepen'),
                 Select::make('crossSellProducts')
                     ->multiple()
                     ->relationship('crossSellProducts', 'name')

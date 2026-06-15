@@ -944,6 +944,16 @@ class Product extends Model
         return $this->belongsToMany(Product::class, 'dashed__product_suggested_product', 'product_id', 'suggested_product_id');
     }
 
+    public function suggestedProductGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \Dashed\DashedEcommerceCore\Models\ProductGroup::class,
+            'dashed__product_suggested_product_group',
+            'product_id',
+            'suggested_product_group_id',
+        );
+    }
+
     public function crossSellProducts()
     {
         return $this->belongsToMany(Product::class, 'dashed__product_crosssell_product', 'product_id', 'crosssell_product_id');
@@ -1414,6 +1424,22 @@ class Product extends Model
             );
         } else {
             $groupIds = $this->crossSellProductGroups->pluck('id')->toArray();
+        }
+
+        return \Dashed\DashedEcommerceCore\Models\ProductGroup::whereIn('id', array_unique($groupIds))
+            ->with('products')
+            ->get();
+    }
+
+    public function getSuggestedProductGroups(bool $includeFromProductGroup = false): Collection
+    {
+        if ($includeFromProductGroup && $this->productGroup) {
+            $groupIds = array_merge(
+                $this->suggestedProductGroups->pluck('id')->toArray(),
+                $this->productGroup->suggestedProductGroups->pluck('id')->toArray(),
+            );
+        } else {
+            $groupIds = $this->suggestedProductGroups->pluck('id')->toArray();
         }
 
         return \Dashed\DashedEcommerceCore\Models\ProductGroup::whereIn('id', array_unique($groupIds))

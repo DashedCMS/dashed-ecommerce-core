@@ -116,6 +116,11 @@ class ProductGroup extends Model
         return $this->belongsToMany(Product::class, 'dashed__product_suggested_product', 'product_group_id', 'suggested_product_id');
     }
 
+    public function suggestedProductGroups()
+    {
+        return $this->belongsToMany(self::class, 'dashed__product_suggested_product_group', 'product_group_id', 'suggested_product_group_id');
+    }
+
     public function crossSellProducts()
     {
         return $this->belongsToMany(Product::class, 'dashed__product_crosssell_product', 'product_group_id', 'crosssell_product_id');

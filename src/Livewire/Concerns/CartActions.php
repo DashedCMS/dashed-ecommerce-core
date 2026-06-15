@@ -19,6 +19,8 @@ use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 trait CartActions
 {
     public $suggestedProducts = [];
+
+    public $suggestedProductGroups = [];
     public $crossSellProducts = [];
     public \Illuminate\Database\Eloquent\Collection|Collection|array $shippingMethods = [];
     public ?array $extras = [];
@@ -90,6 +92,7 @@ trait CartActions
     public function getSuggestedProducts()
     {
         $this->suggestedProducts = ShoppingCart::getCrossSellAndSuggestedProducts();
+        $this->suggestedProductGroups = ShoppingCart::getCrossSellAndSuggestedProductGroups();
         $this->crossSellProducts = ShoppingCart::getCrossSellProducts();
     }
 

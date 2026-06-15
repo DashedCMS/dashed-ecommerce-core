@@ -549,6 +549,38 @@ class ShoppingCart
             ->get();
     }
 
+    public static function getCrossSellAndSuggestedProductGroups(
+        int $limit = 4,
+        bool $removeIfAlreadyPresentInShoppingCart = true
+    ): SupportCollection {
+        $groupIds = collect();
+
+        $cartItems = cartHelper()->getCartItems();
+
+        $productsById = cartHelper()->preloadProductsForCartItems(
+            $cartItems,
+            ['crossSellProductGroups:id', 'suggestedProductGroups:id']
+        );
+
+        foreach ($cartItems as $cartItem) {
+            $product = $productsById[$cartItem->id] ?? null;
+
+            if (! $product) {
+                continue;
+            }
+
+            $groupIds = $groupIds
+                ->merge($product->crossSellProductGroups?->pluck('id') ?? [])
+                ->merge($product->suggestedProductGroups?->pluck('id') ?? []);
+        }
+
+        $groupIds = $groupIds->unique()->take($limit);
+
+        return \Dashed\DashedEcommerceCore\Models\ProductGroup::whereIn('id', $groupIds->toArray())
+            ->with('products')
+            ->get();
+    }
+
     public static function getCrossSellProducts(
         int  $limit = 4,
         bool $removeIfAlreadyPresentInShoppingCart = true
