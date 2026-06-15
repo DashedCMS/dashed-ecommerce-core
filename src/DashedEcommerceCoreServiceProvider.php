@@ -1619,6 +1619,7 @@ MARKDOWN,
             'ec-print-queue'          => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget::class,                             'label' => 'Printwachtrij',                'width' => 'full',      'sort' => 35],
             'ec-payment-methods'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
             'ec-revenue-return-chart' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats::class, 'label' => 'Omzet & retouren (grafiek)',  'width' => 'full', 'sort' => 45],
+            'ec-doelen'               => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget::class,                      'label' => 'Verkoopdoelen',                'width' => 'full',      'sort' => 12],
         ]);
 
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);
