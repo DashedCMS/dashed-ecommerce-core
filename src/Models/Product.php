@@ -1405,6 +1405,22 @@ class Product extends Model
         return $products->get();
     }
 
+    public function getCrossSellProductGroups(bool $includeFromProductGroup = false): Collection
+    {
+        if ($includeFromProductGroup && $this->productGroup) {
+            $groupIds = array_merge(
+                $this->crossSellProductGroups->pluck('id')->toArray(),
+                $this->productGroup->crossSellProductGroups->pluck('id')->toArray(),
+            );
+        } else {
+            $groupIds = $this->crossSellProductGroups->pluck('id')->toArray();
+        }
+
+        return \Dashed\DashedEcommerceCore\Models\ProductGroup::whereIn('id', array_unique($groupIds))
+            ->with('products')
+            ->get();
+    }
+
     public static function getShoppingCartItemPrice($cartItem, string|DiscountCode|null $discountCode = null): float
     {
         // We ondersteunen hier alleen een DiscountCode object; strings negeren

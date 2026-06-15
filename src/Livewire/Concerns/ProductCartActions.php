@@ -40,6 +40,8 @@ trait ProductCartActions
 
     public $crossSellProducts;
 
+    public $crossSellProductGroups = [];
+
     public $recentlyViewedProducts;
 
     public array $filters = [];
@@ -355,6 +357,10 @@ trait ProductCartActions
         $this->crossSellProducts = $this->product
             ? $this->product->getCrossSellProducts(includeFromProductGroup: true)
             : $this->productGroup->crossSellProducts;
+
+        $this->crossSellProductGroups = $this->product
+            ? $this->product->getCrossSellProductGroups(includeFromProductGroup: true)
+            : $this->productGroup->crossSellProductGroups;
 
         $this->productTabs = $this->product
             ? $this->product->allProductTabs()
