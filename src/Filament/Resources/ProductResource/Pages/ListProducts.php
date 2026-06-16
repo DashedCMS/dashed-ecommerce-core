@@ -94,7 +94,7 @@ class ListProducts extends ListRecords
                     ->icon('heroicon-s-arrow-down-tray')
                     ->requiresConfirmation()
                     ->modalHeading('Exporteer producten zonder EAN voor GS1')
-                    ->modalDescription(fn () => 'Er worden ' . cache()->remember('products_without_ean_count', 300, fn () => Product::whereNull('ean')->where('public', true)->where('is_bundle', false)->count()) . ' producten geëxporteerd. Standaardwaardes komen uit Instellingen → GS1, eventueel overschreven per categorie of product. Je kunt het bestand aanpassen vóór upload bij mijnGS1.')
+                    ->modalDescription(fn () => 'Er worden ' . cache()->remember('products_without_ean_count', 300, fn () => Product::withoutEan()->where('public', true)->where('is_bundle', false)->count()) . ' producten geëxporteerd. Standaardwaardes komen uit Instellingen → GS1, eventueel overschreven per categorie of product. Je kunt het bestand aanpassen vóór upload bij mijnGS1.')
                     ->modalSubmitActionLabel('Download bestand')
                     ->action(function () {
                         $siteId = Sites::getActive() ?: (Sites::getFirstSite()['id'] ?? 1);

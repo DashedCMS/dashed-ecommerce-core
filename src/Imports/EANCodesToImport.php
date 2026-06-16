@@ -12,7 +12,7 @@ class EANCodesToImport implements ToArray
         foreach ($rows as $row) {
             $EANCode = $row[0];
             if (! Product::where('ean', $EANCode)->exists()) {
-                $product = Product::whereNull('ean')->first();
+                $product = Product::withoutEan()->first();
                 if ($product) {
                     $product->ean = $EANCode;
                     $product->saveQuietly();

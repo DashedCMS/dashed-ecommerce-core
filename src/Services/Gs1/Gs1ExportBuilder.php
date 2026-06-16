@@ -20,7 +20,7 @@ class Gs1ExportBuilder
     public function buildForProductsWithoutEan(int $siteId, string $outputPath): int
     {
         $products = Product::query()
-            ->whereNull('ean')
+            ->withoutEan()
             ->where('public', true)
             ->where('is_bundle', false)
             ->with('productCategories')

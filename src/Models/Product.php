@@ -341,6 +341,18 @@ class Product extends Model
         $query->where('ean', '!=', null);
     }
 
+    /**
+     * Products without an EAN: covers both NULL and the empty string '', because
+     * some code paths historically stored '' instead of NULL. Used by the GS1
+     * export and EAN import so blank-string EANs are not silently missed.
+     */
+    public function scopeWithoutEan($query)
+    {
+        $query->where(function ($query) {
+            $query->whereNull('ean')->orWhere('ean', '');
+        });
+    }
+
     public function breadcrumbs()
     {
         $breadcrumbs = [

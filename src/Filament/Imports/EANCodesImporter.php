@@ -28,7 +28,7 @@ class EANCodesImporter extends Importer
         }
 
         return Product::query()
-            ->whereNull('ean')
+            ->withoutEan()
             ->first();
     }
 
