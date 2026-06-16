@@ -164,18 +164,9 @@ class DashedEcommerceCorePlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        ecommerce()
-            ->builder('productPriceFields', [
-                'price' => [
-                    'label' => 'Prijs van het product',
-                    'helperText' => 'Voorbeeld: 10.25',
-                    'required' => true,
-                ],
-                'new_price' => [
-                    'label' => 'Vorige prijs (de hogere prijs)',
-                    'helperText' => 'Voorbeeld: 14.25',
-                ],
-            ]);
+        // productPriceFields is registered in DashedEcommerceCoreServiceProvider::bootingPackage()
+        // so it is available in every context (incl. the queued product import worker),
+        // not only when a Filament panel boots.
 
         ecommerce()->buttonActions(
             'orders',

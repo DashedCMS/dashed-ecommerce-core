@@ -126,6 +126,23 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Http\Middleware\EnsurePrinter::class
         );
 
+        // Register the product price fields at package boot (runs in every
+        // context) rather than only in the Filament panel plugin. The product
+        // import runs in a queue worker that never boots a panel, so a panel-only
+        // registration left productPriceFields empty there and the import silently
+        // skipped every price update.
+        ecommerce()->builder('productPriceFields', [
+            'price' => [
+                'label' => 'Prijs van het product',
+                'helperText' => 'Voorbeeld: 10.25',
+                'required' => true,
+            ],
+            'new_price' => [
+                'label' => 'Vorige prijs (de hogere prijs)',
+                'helperText' => 'Voorbeeld: 14.25',
+            ],
+        ]);
+
         cms()->registerNavigationGroup('E-commerce', 30);
         cms()->registerNavigationGroup('Producten', 40);
         cms()->registerNavigationGroup('Statistics', 110);
