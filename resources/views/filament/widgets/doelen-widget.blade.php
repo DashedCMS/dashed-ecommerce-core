@@ -53,11 +53,11 @@
                                             <circle cx="48" cy="48" r="40" fill="none" stroke-width="9"
                                                 stroke-linecap="round"
                                                 transform="rotate(-90 48 48)"
-                                                style="stroke: rgb({{ $accent }}); stroke-dasharray: {{ $circumference }}; stroke-dashoffset: {{ $offset }}; transition: stroke-dashoffset .5s ease;" />
+                                                style="stroke: {{ $accent }}; stroke-dasharray: {{ $circumference }}; stroke-dashoffset: {{ $offset }}; transition: stroke-dashoffset .5s ease;" />
                                         </svg>
                                         <div class="absolute inset-0 flex items-center justify-center">
                                             <span class="text-lg font-semibold"
-                                                style="{{ $reached ? 'color: rgb(var(--success-600));' : '' }}"
+                                                style="{{ $reached ? 'color: var(--success-600);' : '' }}"
                                                 @class(['text-gray-900 dark:text-white' => ! $reached])>
                                                 {{ $g['pct'] }}%
                                             </span>
