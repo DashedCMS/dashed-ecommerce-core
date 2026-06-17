@@ -6,13 +6,15 @@ set -euo pipefail
 API_URL="{{ $apiUrl }}"
 DISCOVER_URL="{!! $discoverUrl !!}"
 
+OS="$(uname -s)"
 CONFIG_DIR="/opt/dashedcms-printer"
 CONFIG_FILE="$CONFIG_DIR/config.yaml"
 DAEMON_FILE="$CONFIG_DIR/print_daemon.py"
-SERVICE_FILE="/etc/systemd/system/dashedcms-printer.service"
+LOG_FILE="/var/log/dashedcms-printer.log"
 
 echo "==> DashedCMS print queue auto-discover installer"
 echo "    API URL:   $API_URL"
+echo "    Systeem:   $OS"
 echo ""
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -20,24 +22,44 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-PI_USER="${SUDO_USER:-pi}"
+RUN_USER="${SUDO_USER:-$(whoami)}"
 HOSTNAME_LABEL="$(hostname -s 2>/dev/null || hostname)"
 
 echo "==> Dependencies installeren..."
-apt update >/dev/null
-apt install -y cups-client python3 python3-pip python3-yaml curl jq >/dev/null
-pip3 install --break-system-packages requests pyyaml >/dev/null 2>&1 || pip3 install requests pyyaml >/dev/null
+if [ "$OS" = "Darwin" ]; then
+    # macOS: CUPS (lp/lpstat) en meestal python3 zitten er al. Geen apt.
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "    python3 ontbreekt. Installeer eerst de Command Line Tools: 'xcode-select --install' en draai dit script daarna opnieuw."
+        exit 1
+    fi
+    python3 -m pip install --break-system-packages requests pyyaml >/dev/null 2>&1 \
+        || python3 -m pip install requests pyyaml >/dev/null 2>&1 \
+        || { python3 -m ensurepip >/dev/null 2>&1 && python3 -m pip install --break-system-packages requests pyyaml >/dev/null 2>&1; } \
+        || echo "    LET OP: kon 'requests'/'pyyaml' niet automatisch installeren. Draai handmatig: sudo python3 -m pip install --break-system-packages requests pyyaml"
+else
+    apt update >/dev/null
+    apt install -y cups-client python3 python3-pip python3-yaml curl >/dev/null
+    pip3 install --break-system-packages requests pyyaml >/dev/null 2>&1 || pip3 install requests pyyaml >/dev/null
+fi
+
+PYTHON_BIN="$(command -v python3)"
 
 echo ""
 echo "==> CUPS printers op deze host detecteren..."
-mapfile -t CUPS_NAMES < <(lpstat -p 2>/dev/null | awk '/^printer / {print $2}')
+CUPS_NAMES=()
+while IFS= read -r _name; do
+    [ -n "$_name" ] && CUPS_NAMES+=("$_name")
+done < <(lpstat -p 2>/dev/null | awk '/^printer / {print $2}')
 
 if [ "${#CUPS_NAMES[@]}" -eq 0 ]; then
     echo "    Geen CUPS printers gevonden op deze host."
-    echo "    Registreer eerst minstens 1 printer:"
-    echo "      USB:     sudo lpadmin -p <naam> -E -v 'usb://...' -m everywhere"
-    echo "      Netwerk: sudo lpadmin -p <naam> -E -v socket://<ip>:9100 -m everywhere"
-    echo "      Of via mDNS-share van een andere host: 'sudo apt install cups-browsed && sudo systemctl enable --now cups-browsed'"
+    if [ "$OS" = "Darwin" ]; then
+        echo "    Voeg er eerst een toe via Systeeminstellingen > Printers (of de CUPS web-UI op http://localhost:631)."
+    else
+        echo "    Registreer eerst minstens 1 printer:"
+        echo "      USB:     sudo lpadmin -p <naam> -E -v 'usb://...' -m everywhere"
+        echo "      Netwerk: sudo lpadmin -p <naam> -E -v socket://<ip>:9100 -m everywhere"
+    fi
     echo "    Daarna draai dit commando opnieuw."
     exit 1
 fi
@@ -49,10 +71,14 @@ done
 
 echo ""
 echo "==> Doorsturen naar CMS voor registratie..."
-PAYLOAD=$(jq -n \
-    --arg host "$HOSTNAME_LABEL" \
-    --argjson printers "$(printf '%s\n' "${CUPS_NAMES[@]}" | jq -R . | jq -s .)" \
-    '{hostname: $host, discovered_printers: $printers}')
+PAYLOAD=$(CUPS_LIST="$(printf '%s\n' "${CUPS_NAMES[@]}")" HOSTNAME_LABEL="$HOSTNAME_LABEL" "$PYTHON_BIN" - <<'PY'
+import json
+import os
+
+names = [n for n in os.environ["CUPS_LIST"].splitlines() if n]
+print(json.dumps({"hostname": os.environ.get("HOSTNAME_LABEL") or None, "discovered_printers": names}))
+PY
+)
 
 DISCOVER_RESPONSE=$(curl -sS -X POST "$DISCOVER_URL" \
     -H 'Accept: application/json' \
@@ -73,25 +99,30 @@ if [ "$HTTP_CODE" != "200" ]; then
     exit 1
 fi
 
-CREATED_COUNT=$(echo "$RESPONSE" | jq '.created | length')
-SKIPPED_COUNT=$(echo "$RESPONSE" | jq '.skipped | length')
+CREATED_COUNT=$(RESPONSE_ENV="$RESPONSE" "$PYTHON_BIN" -c 'import json,os;print(len(json.loads(os.environ["RESPONSE_ENV"]).get("created",[])))')
+SKIPPED_COUNT=$(RESPONSE_ENV="$RESPONSE" "$PYTHON_BIN" -c 'import json,os;print(len(json.loads(os.environ["RESPONSE_ENV"]).get("skipped",[])))')
 
 echo "    $CREATED_COUNT nieuwe printer(s) aangemaakt, $SKIPPED_COUNT overgeslagen (bestonden al)."
 
 if [ "$SKIPPED_COUNT" -gt 0 ]; then
     echo "    Skipped:"
-    echo "$RESPONSE" | jq -r '.skipped[] | "      - \(.cups_name): \(.reason)"'
+    RESPONSE_ENV="$RESPONSE" "$PYTHON_BIN" - <<'PY'
+import json
+import os
+
+for s in json.loads(os.environ["RESPONSE_ENV"]).get("skipped", []):
+    print(f"      - {s.get('cups_name')}: {s.get('reason')}")
+PY
 fi
 
 mkdir -p "$CONFIG_DIR"
 
 echo ""
-echo "==> Daemon en systemd unit downloaden..."
+echo "==> Daemon downloaden..."
 curl -fsSL "$API_URL/vendor/dashed-ecommerce-core/pi/print_daemon.py" -o "$DAEMON_FILE"
-[ ! -f "$SERVICE_FILE" ] && curl -fsSL "$API_URL/vendor/dashed-ecommerce-core/pi/dashedcms-printer.service" -o "$SERVICE_FILE"
 
 echo "==> Config schrijven (multi-printer)..."
-API_URL_ENV="$API_URL" CONFIG_FILE_ENV="$CONFIG_FILE" RESPONSE_ENV="$RESPONSE" python3 <<'PYTHON_EOF'
+API_URL_ENV="$API_URL" CONFIG_FILE_ENV="$CONFIG_FILE" RESPONSE_ENV="$RESPONSE" "$PYTHON_BIN" <<'PYTHON_EOF'
 import json
 import os
 import yaml
@@ -130,28 +161,74 @@ for p in cfg["printers"]:
     print(f"      - {p['cups_printer']}")
 PYTHON_EOF
 
-chown "$PI_USER:$PI_USER" "$CONFIG_FILE"
+chown "$RUN_USER" "$CONFIG_FILE" 2>/dev/null || true
 chmod 600 "$CONFIG_FILE"
-touch /var/log/dashedcms-printer.log
-chown "$PI_USER:$PI_USER" /var/log/dashedcms-printer.log
+touch "$LOG_FILE"; chmod 666 "$LOG_FILE" 2>/dev/null || true
 
-echo ""
-echo "==> Service (her)starten..."
-sed -i "s|^User=.*|User=$PI_USER|" "$SERVICE_FILE"
-systemctl daemon-reload
-systemctl enable dashedcms-printer
-systemctl restart dashedcms-printer
-sleep 2
+if [ "$OS" = "Darwin" ]; then
+    echo ""
+    echo "==> launchd-service (her)starten..."
+    PLIST="/Library/LaunchDaemons/com.dashedcms.printer.plist"
+    cat > "$PLIST" <<PLIST_EOF
+{!! '<' . '?xml version="1.0" encoding="UTF-8"?' . '>' !!}
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key><string>com.dashedcms.printer</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$PYTHON_BIN</string>
+        <string>$DAEMON_FILE</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>DASHEDCMS_PRINTER_CONFIG</key><string>$CONFIG_FILE</string>
+        <key>DASHEDCMS_PRINTER_LOG</key><string>$LOG_FILE</string>
+    </dict>
+    <key>WorkingDirectory</key><string>$CONFIG_DIR</string>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>StandardOutPath</key><string>$LOG_FILE</string>
+    <key>StandardErrorPath</key><string>$LOG_FILE</string>
+</dict>
+</plist>
+PLIST_EOF
+    chmod 644 "$PLIST"
+    launchctl bootout system "$PLIST" >/dev/null 2>&1 || true
+    launchctl bootstrap system "$PLIST" >/dev/null 2>&1 || launchctl load "$PLIST" >/dev/null 2>&1 || true
+    launchctl enable system/com.dashedcms.printer >/dev/null 2>&1 || true
+    launchctl kickstart -k system/com.dashedcms.printer >/dev/null 2>&1 || true
 
-echo ""
-echo "==> Klaar!"
-systemctl status dashedcms-printer --no-pager --lines=5 || true
+    echo "==> Slaapstand uitzetten zolang op netstroom (anders stopt het printen)..."
+    pmset -c sleep 0 disablesleep 1 >/dev/null 2>&1 || true
+
+    sleep 2
+    echo ""
+    echo "==> Klaar! (macOS / launchd)"
+    echo "    Live logs:    tail -f $LOG_FILE"
+    echo "    Herstarten:   sudo launchctl kickstart -k system/com.dashedcms.printer"
+    echo "    Stoppen:      sudo launchctl bootout system $PLIST"
+    echo "    Slaap terug:  sudo pmset -c sleep 1 disablesleep 0"
+else
+    echo ""
+    echo "==> systemd-service (her)starten..."
+    SERVICE_FILE="/etc/systemd/system/dashedcms-printer.service"
+    curl -fsSL "$API_URL/vendor/dashed-ecommerce-core/pi/dashedcms-printer.service" -o "$SERVICE_FILE"
+    sed -i "s|^User=.*|User=$RUN_USER|" "$SERVICE_FILE"
+    systemctl daemon-reload
+    systemctl enable dashedcms-printer
+    systemctl restart dashedcms-printer
+    sleep 2
+    echo ""
+    echo "==> Klaar! (Linux / systemd)"
+    systemctl status dashedcms-printer --no-pager --lines=5 || true
+    echo "    Live logs:    sudo journalctl -u dashedcms-printer -f"
+    echo "    Herstarten:   sudo systemctl restart dashedcms-printer"
+fi
 
 echo ""
 echo "    Nu in het CMS:"
 echo "      1. Open Print queue -> Printers"
 echo "      2. Voor elke nieuwe printer: stel het 'Doel' in (pakbon / verzendlabel / beide)"
 echo "      3. Klik 'Test print' om end-to-end te testen"
-echo ""
-echo "    Live logs:  sudo journalctl -u dashedcms-printer -f"
 echo ""

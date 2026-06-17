@@ -35,7 +35,11 @@ sudo tail -f /var/log/dashedcms-printer.log
 
 Een oude Mac (mini, iMac of MacBook) met macOS werkt prima als print-host: CUPS zit al in macOS ingebouwd. In plaats van systemd gebruik je launchd.
 
-### Installatie
+### Aanbevolen: 1-commando installer
+
+Koppel eerst de printer(s) via Systeeminstellingen -> Printers. Genereer daarna in het CMS via Print queue -> instellingen de knop "Auto-import printers van een Pi, NAS of Mac" en plak het curl-commando in Terminal op de Mac. Het script herkent macOS automatisch en regelt alles in 1x: printers registreren, daemon installeren, launchd-service starten en slaapstand uitzetten. De handmatige stappen hieronder zijn alleen nodig als je het liever zelf doet.
+
+### Handmatige installatie
 
 brew install python
 pip3 install requests pyyaml

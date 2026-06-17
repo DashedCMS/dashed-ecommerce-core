@@ -37,11 +37,11 @@ class PrintQueueSettingsPage extends Page
     {
         return [
             Action::make('discover_printers')
-                ->label('Auto-import printers van een Pi/NAS')
+                ->label('Auto-import printers van een Pi, NAS of Mac')
                 ->icon('heroicon-o-magnifying-glass-plus')
                 ->color('success')
-                ->modalHeading('Auto-import printers van een Pi/NAS')
-                ->modalDescription('Genereert een eenmalig curl-commando. Draai het op je Pi/NAS via SSH; het script detecteert alle CUPS-printers daar en registreert ze automatisch in dit CMS, inclusief tokens en daemon-setup.')
+                ->modalHeading('Auto-import printers van een Pi, NAS of Mac')
+                ->modalDescription('Genereert een eenmalig curl-commando. Draai het op de host (Raspberry Pi, NAS of een Mac) via SSH of Terminal; het script detecteert het besturingssysteem zelf en regelt alles in 1x: alle CUPS-printers detecteren en registreren in dit CMS (inclusief tokens), de daemon installeren en als service (systemd op Linux, launchd op macOS) starten.')
                 ->modalSubmitActionLabel('Genereer commando')
                 ->action(function (): void {
                     $nonce = Str::random(16);
@@ -117,14 +117,9 @@ class PrintQueueSettingsPage extends Page
                             . '</div>'
                             . '<div style="background-color: #f5f3ff; border-left: 4px solid #7c3aed; border-radius: 0.5rem; padding: 0.75rem; color: #4c1d95;">'
                             . '<strong>Een (oude) MacBook of Mac als print-host</strong>'
-                            . '<p style="margin-top: 0.25rem;">CUPS zit al in macOS ingebouwd, dus een Mac werkt prima. De auto-import knop hierboven is voor een Pi/NAS (Linux); op een Mac doe je de daemon-installatie eenmalig handmatig via Terminal:</p>'
-                            . '<ol style="list-style: decimal inside; margin-top: 0.5rem;">'
-                            . '<li><strong>Python + libraries:</strong> <code>brew install python</code> en daarna <code>pip3 install requests pyyaml</code>.</li>'
-                            . '<li><strong>Koppel de printer</strong> via Systeeminstellingen &rarr; Printers (of de CUPS web-UI op <code>http://localhost:631</code>) en zoek de exacte CUPS-naam op met <code>lpstat -p -d</code>. Die naam vul je hier in het CMS in bij Printers.</li>'
-                            . '<li><strong>Installeer de daemon</strong> met de bestanden uit <code>resources/pi/</code>: kopieer <code>print_daemon.py</code> en je <code>config.yaml</code> (token uit dit CMS) naar <code>/opt/dashedcms-printer/</code>, en zet <code>com.dashedcms.printer.plist</code> in <code>/Library/LaunchDaemons/</code>.</li>'
-                            . '<li><strong>Start de daemon:</strong> <code>sudo launchctl load -w /Library/LaunchDaemons/com.dashedcms.printer.plist</code>. Herstarten doe je met <code>unload</code> gevolgd door <code>load -w</code>.</li>'
-                            . '</ol>'
-                            . '<p style="margin-top: 0.5rem;"><strong>Belangrijk &mdash; voorkom slaapstand:</strong> een Mac in slaapstand stopt met printen. Zet dit uit terwijl hij op netstroom hangt met <code>sudo pmset -c sleep 0 disablesleep 1</code>.</p>'
+                            . '<p style="margin-top: 0.25rem;">CUPS zit al in macOS ingebouwd, dus een Mac werkt prima. Koppel eerst de printer(s) via Systeeminstellingen &rarr; Printers, en gebruik daarna gewoon de knop <strong>Auto-import printers van een Pi, NAS of Mac</strong> hierboven: het commando herkent macOS zelf en regelt alles in 1x (printers registreren, daemon installeren, launchd-service starten en slaapstand uitzetten). Plak het in Terminal op de Mac.</p>'
+                            . '<p style="margin-top: 0.5rem;">Liever handmatig? De stappen staan in <code>resources/pi/README.md</code> onder "macOS (launchd)".</p>'
+                            . '<p style="margin-top: 0.5rem;"><strong>Belangrijk &mdash; slaapstand:</strong> het script zet slaapstand uit op netstroom (<code>pmset -c sleep 0 disablesleep 1</code>), want een Mac in slaapstand stopt met printen. Terugdraaien kan met <code>sudo pmset -c sleep 1 disablesleep 0</code>.</p>'
                             . '</div>'
                             . '</div>'
                         )),
