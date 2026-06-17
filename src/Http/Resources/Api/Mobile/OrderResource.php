@@ -43,6 +43,9 @@ class OrderResource extends JsonResource
         return array_merge($base, [
             'invoice_name' => $this->invoiceName,
             'hash' => $this->hash,
+            'outstanding_amount' => (float) $this->outstandingAmount(),
+            // Deelbare betaallink zolang er nog openstaat (zelfde route als de e-mail-actie).
+            'payment_url' => $this->outstandingAmount() > 0 ? url('/pay/order/' . $this->hash . '/remainder') : null,
             'retour_status' => $this->retour_status,
             'credit_for_order_id' => $this->credit_for_order_id,
             'ip' => $this->ip,
