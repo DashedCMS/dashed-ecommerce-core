@@ -1432,6 +1432,10 @@ MARKDOWN,
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
 
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::class)
+                ->everyFiveMinutes()
+                ->withoutOverlapping();
+
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendOrderHandledFlowEmails::class)
                 ->hourly()
                 ->withoutOverlapping();
@@ -2155,6 +2159,7 @@ MARKDOWN,
             ->hasViews()
             ->hasCommands([
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::class,
                 RecalculatePurchasesCommand::class,
                 CancelOldOrders::class,
                 SendInvoices::class,
