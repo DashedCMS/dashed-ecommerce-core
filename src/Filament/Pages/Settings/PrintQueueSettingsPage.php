@@ -115,6 +115,17 @@ class PrintQueueSettingsPage extends Page
                             . '<li>Op een NAS: zelfde principe, alleen open je een SSH-sessie via de NAS-beheer-UI (Synology DSM Terminal &amp; SNMP, QNAP Telnet/SSH, UnRAID console, TrueNAS Shell).</li>'
                             . '</ul>'
                             . '</div>'
+                            . '<div style="background-color: #f5f3ff; border-left: 4px solid #7c3aed; border-radius: 0.5rem; padding: 0.75rem; color: #4c1d95;">'
+                            . '<strong>Een (oude) MacBook of Mac als print-host</strong>'
+                            . '<p style="margin-top: 0.25rem;">CUPS zit al in macOS ingebouwd, dus een Mac werkt prima. De auto-import knop hierboven is voor een Pi/NAS (Linux); op een Mac doe je de daemon-installatie eenmalig handmatig via Terminal:</p>'
+                            . '<ol style="list-style: decimal inside; margin-top: 0.5rem;">'
+                            . '<li><strong>Python + libraries:</strong> <code>brew install python</code> en daarna <code>pip3 install requests pyyaml</code>.</li>'
+                            . '<li><strong>Koppel de printer</strong> via Systeeminstellingen &rarr; Printers (of de CUPS web-UI op <code>http://localhost:631</code>) en zoek de exacte CUPS-naam op met <code>lpstat -p -d</code>. Die naam vul je hier in het CMS in bij Printers.</li>'
+                            . '<li><strong>Installeer de daemon</strong> met de bestanden uit <code>resources/pi/</code>: kopieer <code>print_daemon.py</code> en je <code>config.yaml</code> (token uit dit CMS) naar <code>/opt/dashedcms-printer/</code>, en zet <code>com.dashedcms.printer.plist</code> in <code>/Library/LaunchDaemons/</code>.</li>'
+                            . '<li><strong>Start de daemon:</strong> <code>sudo launchctl load -w /Library/LaunchDaemons/com.dashedcms.printer.plist</code>. Herstarten doe je met <code>unload</code> gevolgd door <code>load -w</code>.</li>'
+                            . '</ol>'
+                            . '<p style="margin-top: 0.5rem;"><strong>Belangrijk &mdash; voorkom slaapstand:</strong> een Mac in slaapstand stopt met printen. Zet dit uit terwijl hij op netstroom hangt met <code>sudo pmset -c sleep 0 disablesleep 1</code>.</p>'
+                            . '</div>'
                             . '</div>'
                         )),
                 ]),
