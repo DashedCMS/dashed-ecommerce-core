@@ -152,6 +152,10 @@ class OrderLog extends Model
             $string = 'Retour afgehandeld';
         } elseif ($this->tag == 'order.return-label-failed') {
             $string = 'Retourlabel mislukt';
+        } elseif ($this->tag == 'order.packed') {
+            $string = 'heeft de bestelling ingepakt.';
+        } elseif ($this->tag == 'order.unpacked') {
+            $string = 'heeft het inpakken van de bestelling ongedaan gemaakt.';
         } elseif ($this->message) {
             return $this->message;
         } else {
