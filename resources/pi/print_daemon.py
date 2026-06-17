@@ -60,13 +60,24 @@ def handle_signal(signum, frame):
     shutdown = True
 
 
+def ensure_printer_ready(cups_printer: str, logger: logging.Logger) -> None:
+    """Hervat een door CUPS gepauzeerde/gestopte printer. Best effort: faalt dit,
+    dan loggen we het en proberen we alsnog te printen."""
+    for cmd in (["cupsenable", cups_printer], ["cupsaccept", cups_printer]):
+        try:
+            subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        except Exception as exc:
+            logger.warning("%s faalde voor %s: %s", cmd[0], cups_printer, exc)
+
+
 def print_pdf(cups_printer: str, pdf_path: Path, logger: logging.Logger) -> bool:
+    ensure_printer_ready(cups_printer, logger)
     try:
         result = subprocess.run(
             ["lp", "-d", cups_printer, str(pdf_path)],
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=20,
         )
         if result.returncode != 0:
             logger.error("lp failed for %s: rc=%s stderr=%s", cups_printer, result.returncode, result.stderr.strip())
