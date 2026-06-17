@@ -1749,14 +1749,14 @@ MARKDOWN,
                 : null;
             $mobileApi->registerCapability('ecommerce', ['version' => $version]);
 
-            $mobileApi->registerAbilities(['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use']);
+            $mobileApi->registerAbilities(['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use']);
             $mobileApi->registerRoleAbilities([
-                'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use'],
-                'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use'],
-                'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'pos.use'],
-                'kassamedewerker' => ['products.read', 'orders.read', 'pos.use'],
+                'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use'],
+                'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use'],
+                'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use'],
+                'kassamedewerker' => ['products.read', 'orders.read', 'discounts.read', 'pos.use'],
                 'support-agent' => ['orders.read'],
-                'read-only' => ['products.read', 'orders.read'],
+                'read-only' => ['products.read', 'orders.read', 'discounts.read'],
             ]);
 
             // App-notificatietypes waar een gebruiker per stuk voor kan kiezen.

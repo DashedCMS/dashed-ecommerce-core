@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductControlle
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosConceptController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DiscountController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 /**
@@ -95,6 +96,14 @@ Route::prefix('api/v1')
         // Een management-actie → gegate met de admin-write ability die de
         // ecommerce-routes voor schrijfacties gebruiken.
         Route::put('dashboard/targets', [DashboardTargetsController::class, 'update'])->middleware('ability:orders.write');
+
+        // Kortingscodes (focus-set CRUD). Eigen abilities discounts.read/write,
+        // afgeleid van dezelfde rollen die products.* krijgen.
+        Route::get('discounts', [DiscountController::class, 'index'])->middleware('ability:discounts.read');
+        Route::get('discounts/{id}', [DiscountController::class, 'show'])->middleware('ability:discounts.read');
+        Route::post('discounts', [DiscountController::class, 'store'])->middleware('ability:discounts.write');
+        Route::put('discounts/{id}', [DiscountController::class, 'update'])->middleware('ability:discounts.write');
+        Route::delete('discounts/{id}', [DiscountController::class, 'destroy'])->middleware('ability:discounts.write');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
