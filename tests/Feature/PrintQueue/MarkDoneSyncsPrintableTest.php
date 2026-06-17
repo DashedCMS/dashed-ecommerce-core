@@ -10,7 +10,7 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder;
 
 it('flips label_printed=true on linked MyParcelOrder when shipping_label job is marked done', function () {
-    $order = Order::factory()->create();
+    $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid']);
     $mpo = MyParcelOrder::create([
         'order_id' => $order->id,
         'label_pdf_path' => 'dashed/orders/my-parcel/label-x.pdf',
@@ -38,7 +38,7 @@ it('flips label_printed=true on linked MyParcelOrder when shipping_label job is 
 });
 
 it('does not crash when printable_type does not exist', function () {
-    $order = Order::factory()->create();
+    $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid']);
     $printer = Printer::factory()->create(['is_active' => true]);
     $job = PrintJob::factory()->create([
         'type' => PrintJobType::ShippingLabel,
