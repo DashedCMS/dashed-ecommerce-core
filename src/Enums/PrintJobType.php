@@ -8,12 +8,14 @@ enum PrintJobType: string
 {
     case PackingSlip = 'packing_slip';
     case ShippingLabel = 'shipping_label';
+    case Invoice = 'invoice';
 
     public function label(): string
     {
         return match ($this) {
             self::PackingSlip => 'Pakbon',
             self::ShippingLabel => 'Verzendlabel',
+            self::Invoice => 'Factuur',
         };
     }
 }

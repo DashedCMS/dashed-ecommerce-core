@@ -24,9 +24,7 @@ class PrintQueueController extends Controller
     {
         $printer = $this->printerFrom($request);
 
-        $allowedTypes = $printer->type === PrinterType::Both
-            ? [PrintJobType::PackingSlip->value, PrintJobType::ShippingLabel->value]
-            : [$printer->type->value];
+        $allowedTypes = $this->allowedTypesFor($printer);
 
         $jobs = PrintJob::query()
             ->where('status', PrintJobStatus::Pending->value)
@@ -44,9 +42,7 @@ class PrintQueueController extends Controller
         $printer = $this->printerFrom($request);
 
         return DB::transaction(function () use ($printer, $ulid, $request) {
-            $allowedTypes = $printer->type === PrinterType::Both
-                ? [PrintJobType::PackingSlip->value, PrintJobType::ShippingLabel->value]
-                : [$printer->type->value];
+            $allowedTypes = $this->allowedTypesFor($printer);
 
             $job = PrintJob::query()
                 ->where('ulid', $ulid)
@@ -133,6 +129,14 @@ class PrintQueueController extends Controller
             ]);
         }
 
+        if ($job->type === PrintJobType::Invoice && ! $job->pdf_path && $job->order) {
+            $job->order->createInvoice();
+            $job->update([
+                'pdf_disk' => 'dashed',
+                'pdf_path' => $job->order->invoicePath(),
+            ]);
+        }
+
         abort_unless(
             $job->pdf_disk && Storage::disk($job->pdf_disk)->exists($job->pdf_path),
             404,
@@ -159,6 +163,29 @@ class PrintQueueController extends Controller
         abort_unless($printer instanceof Printer, 403);
 
         return $printer;
+    }
+
+    /**
+     * Welke jobtypes mag deze printer claimen? Een A4-document-printer
+     * (PackingSlip of Both) verwerkt zowel pakbonnen als facturen; een
+     * verzendlabel-printer alleen labels.
+     *
+     * @return list<string>
+     */
+    private function allowedTypesFor(Printer $printer): array
+    {
+        return match ($printer->type) {
+            PrinterType::Both => [
+                PrintJobType::PackingSlip->value,
+                PrintJobType::Invoice->value,
+                PrintJobType::ShippingLabel->value,
+            ],
+            PrinterType::PackingSlip => [
+                PrintJobType::PackingSlip->value,
+                PrintJobType::Invoice->value,
+            ],
+            default => [$printer->type->value],
+        };
     }
 
     /**

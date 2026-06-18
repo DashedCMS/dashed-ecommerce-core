@@ -687,16 +687,20 @@ class OrderController extends Controller
         $model = Order::thisSite()->findOrFail($order);
 
         $data = $request->validate([
-            'type' => ['required', Rule::in(['packing_slip', 'shipping_label'])],
+            'type' => ['required', Rule::in(['packing_slip', 'shipping_label', 'invoice'])],
             'printer_id' => ['sometimes', 'nullable', 'integer'],
             // Optioneel: print een specifiek label (uit de labellijst).
             'carrier' => ['sometimes', 'nullable', Rule::in(['myparcel', 'veloyd'])],
             'label_id' => ['sometimes', 'nullable', 'integer'],
         ]);
 
-        $jobType = $data['type'] === 'shipping_label'
-            ? \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel
-            : \Dashed\DashedEcommerceCore\Enums\PrintJobType::PackingSlip;
+        $jobType = match ($data['type']) {
+            'shipping_label' => \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel,
+            'invoice' => \Dashed\DashedEcommerceCore\Enums\PrintJobType::Invoice,
+            default => \Dashed\DashedEcommerceCore\Enums\PrintJobType::PackingSlip,
+        };
+        // Facturen én pakbonnen gaan naar dezelfde A4-document-printer
+        // (PrinterType::PackingSlip/Both); alleen verzendlabels hebben een eigen type.
         $printerType = $data['type'] === 'shipping_label'
             ? \Dashed\DashedEcommerceCore\Enums\PrinterType::ShippingLabel
             : \Dashed\DashedEcommerceCore\Enums\PrinterType::PackingSlip;
