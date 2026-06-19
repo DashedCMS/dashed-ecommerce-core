@@ -570,6 +570,36 @@ class OrderController extends Controller
             ];
         }
 
+        // TIJDELIJKE DIAGNOSE: geen provider gevonden? Geef de runtime-waarden terug
+        // (site van de order, actieve site, en de daadwerkelijke sleutel-rijen met
+        // hun locale) zodat we zien WAAROM de mobiele API de provider niet vindt
+        // terwijl het CMS dat wel doet. Bevat geen sleutelwaarden, alleen set/leeg.
+        if (empty($out)) {
+            $site = (string) $model->site_id;
+            $rows = \Dashed\DashedCore\Models\Customsetting::query()
+                ->whereIn('name', ['veloyd_api_key', 'my_parcel_api_key'])
+                ->get(['name', 'site_id', 'locale', 'value'])
+                ->map(fn ($r): string => sprintf(
+                    '%s[site=%s,locale=%s,%s]',
+                    $r->name,
+                    var_export($r->site_id, true),
+                    var_export($r->locale, true),
+                    ($r->value !== null && $r->value !== '') ? 'gevuld' : 'leeg',
+                ))->implode('  ');
+
+            return response()->json([
+                'providers' => [],
+                'message' => sprintf(
+                    'DIAG — order.site_id=%s | actief=%s | veloyd_fresh=%s | myparcel_fresh=%s | rijen: %s',
+                    var_export($model->site_id, true),
+                    var_export(\Dashed\DashedCore\Classes\Sites::getActive(), true),
+                    $this->veloydConfigured($model) ? 'ja' : 'nee',
+                    $this->myparcelConfigured($model) ? 'ja' : 'nee',
+                    $rows ?: '(geen veloyd/myparcel api_key rijen)',
+                ),
+            ], 422);
+        }
+
         return response()->json(['providers' => $out]);
     }
 
