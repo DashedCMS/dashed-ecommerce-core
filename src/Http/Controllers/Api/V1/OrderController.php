@@ -358,8 +358,7 @@ class OrderController extends Controller
         $errors = [];
 
         if (($provider === '' || $provider === 'veloyd')
-            && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
-            && \Dashed\DashedCore\Models\Customsetting::get('veloyd_api_key', $model->site_id)) {
+            && $this->veloydConfigured($model)) {
             try {
                 \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::createLabelForOrder($model, $overrides);
 
@@ -371,8 +370,7 @@ class OrderController extends Controller
         }
 
         if (($provider === '' || $provider === 'myparcel')
-            && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
-            && \Dashed\DashedCore\Models\Customsetting::get('my_parcel_api_key', $model->site_id)) {
+            && $this->myparcelConfigured($model)) {
             try {
                 \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::createLabelForOrder($model, $overrides);
 
@@ -502,16 +500,35 @@ class OrderController extends Controller
     {
         $providers = [];
 
-        if (class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
-            && \Dashed\DashedCore\Models\Customsetting::get('veloyd_api_key', $model->site_id)) {
+        if ($this->veloydConfigured($model)) {
             $providers[] = 'veloyd';
         }
-        if (class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
-            && \Dashed\DashedCore\Models\Customsetting::get('my_parcel_api_key', $model->site_id)) {
+        if ($this->myparcelConfigured($model)) {
             $providers[] = 'myparcel';
         }
 
         return $providers;
+    }
+
+    /**
+     * Is Veloyd voor de site van deze order geconfigureerd?
+     *
+     * Leest de API-sleutel via de provider-class zelf (die met `disableCache: true`
+     * leest), zodat deze check NOOIT op een verouderde settings-cache draait. Dat
+     * voorkomt de situatie waarin het CMS (dat ook vers leest) wél een label kan
+     * maken maar de app "Geen verzendprovider geconfigureerd" terugkrijgt.
+     */
+    private function veloydConfigured(Order $model): bool
+    {
+        return class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
+            && \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::apiKey($model->site_id) !== '';
+    }
+
+    /** Idem voor MyParcel; `false` haalt de onbewerkte (niet-base64) sleutel op. */
+    private function myparcelConfigured(Order $model): bool
+    {
+        return class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
+            && \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::apiKey($model->site_id, false) !== '';
     }
 
     /**
