@@ -65,12 +65,22 @@ class OrderController extends Controller
         }
 
         if ($search = trim((string) $request->query('search'))) {
-            $query->where(function (Builder $q) use ($search): void {
-                foreach (['invoice_id', 'first_name', 'last_name', 'email', 'company_name', 'city'] as $column) {
-                    $q->orWhere($column, 'like', "%{$search}%");
-                }
-                if (is_numeric($search)) {
-                    $q->orWhere('id', (int) $search);
+            // Slimme zoek: splits op spaties; ELK woord moet ergens matchen (over
+            // de kolommen), en ALLE woorden samen (AND). Zo vindt "Jan Jansen"
+            // een order met voornaam Jan + achternaam Jansen (en omgekeerd).
+            $columns = ['invoice_id', 'first_name', 'last_name', 'email', 'company_name', 'city'];
+            $terms = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [$search];
+
+            $query->where(function (Builder $outer) use ($terms, $columns): void {
+                foreach ($terms as $term) {
+                    $outer->where(function (Builder $q) use ($term, $columns): void {
+                        foreach ($columns as $column) {
+                            $q->orWhere($column, 'like', "%{$term}%");
+                        }
+                        if (is_numeric($term)) {
+                            $q->orWhere('id', (int) $term);
+                        }
+                    });
                 }
             });
         }
@@ -551,7 +561,7 @@ class OrderController extends Controller
                 'label' => 'Veloyd',
                 'fields' => [
                     $this->labelSelectField('carrier', 'Vervoerder', $v::getCarriers(), $cs::get("veloyd_default_carrier_{$country}", $model->site_id, 'PostNL')),
-                    $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), $cs::get("veloyd_default_package_type_{$country}", $model->site_id, 1)),
+                    $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), $cs::get("veloyd_default_package_type_{$country}", $model->site_id, '1')),
                     $this->labelSelectField('delivery_type', 'Verzendtype', $v::getDeliveryTypes(), $cs::get("veloyd_default_delivery_type_{$country}", $model->site_id, 'Standaard')),
                 ],
             ];
@@ -564,40 +574,10 @@ class OrderController extends Controller
                 'label' => 'MyParcel',
                 'fields' => [
                     $this->labelSelectField('carrier', 'Vervoerder', $m::getCarriers(), $cs::get("my_parcel_default_carrier_{$country}", $model->site_id)),
-                    $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), $cs::get("my_parcel_default_package_type_{$country}", $model->site_id, 1)),
-                    $this->labelSelectField('delivery_type', 'Verzendtype', $m::getDeliveryTypes(), $cs::get("my_parcel_default_delivery_type_{$country}", $model->site_id, 2)),
+                    $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), $cs::get("my_parcel_default_package_type_{$country}", $model->site_id, '1')),
+                    $this->labelSelectField('delivery_type', 'Verzendtype', $m::getDeliveryTypes(), $cs::get("my_parcel_default_delivery_type_{$country}", $model->site_id, '2')),
                 ],
             ];
-        }
-
-        // TIJDELIJKE DIAGNOSE: geen provider gevonden? Geef de runtime-waarden terug
-        // (site van de order, actieve site, en de daadwerkelijke sleutel-rijen met
-        // hun locale) zodat we zien WAAROM de mobiele API de provider niet vindt
-        // terwijl het CMS dat wel doet. Bevat geen sleutelwaarden, alleen set/leeg.
-        if (empty($out)) {
-            $site = (string) $model->site_id;
-            $rows = \Dashed\DashedCore\Models\Customsetting::query()
-                ->whereIn('name', ['veloyd_api_key', 'my_parcel_api_key'])
-                ->get(['name', 'site_id', 'locale', 'value'])
-                ->map(fn ($r): string => sprintf(
-                    '%s[site=%s,locale=%s,%s]',
-                    $r->name,
-                    var_export($r->site_id, true),
-                    var_export($r->locale, true),
-                    ($r->value !== null && $r->value !== '') ? 'gevuld' : 'leeg',
-                ))->implode('  ');
-
-            return response()->json([
-                'providers' => [],
-                'message' => sprintf(
-                    'DIAG — order.site_id=%s | actief=%s | veloyd_fresh=%s | myparcel_fresh=%s | rijen: %s',
-                    var_export($model->site_id, true),
-                    var_export(\Dashed\DashedCore\Classes\Sites::getActive(), true),
-                    $this->veloydConfigured($model) ? 'ja' : 'nee',
-                    $this->myparcelConfigured($model) ? 'ja' : 'nee',
-                    $rows ?: '(geen veloyd/myparcel api_key rijen)',
-                ),
-            ], 422);
         }
 
         return response()->json(['providers' => $out]);
