@@ -50,7 +50,8 @@ class OrdersRelationManager extends RelationManager
                     ->color(fn (?string $state): string => match ($state) {
                         'handled' => 'success',
                         'unhandled' => 'warning',
-                        'in_treatment', 'packed', 'ready_for_pickup' => 'info',
+                        'packed' => 'warning',
+                        'in_treatment', 'ready_for_pickup' => 'info',
                         'shipped' => 'primary',
                         default => 'gray',
                     })
