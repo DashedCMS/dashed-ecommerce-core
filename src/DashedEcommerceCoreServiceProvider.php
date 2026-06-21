@@ -43,7 +43,6 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\CreateTrackAndTrace;
 use Dashed\DashedEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\CrossSellVariantPicker;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentsList;
 use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
@@ -86,6 +85,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerMatchSettingsPage
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\CrossSellVariantPicker;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
@@ -1506,6 +1506,7 @@ MARKDOWN,
         Livewire::component('order-order-products-list', OrderProductsList::class);
         Livewire::component('order-payments-list', PaymentsList::class);
         Livewire::component('order-logs-list', LogsList::class);
+        Livewire::component('order-abandonment-diagnosis-list', \Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderAbandonmentDiagnosisList::class);
         Livewire::component('order-customer-information-block-list', CustomerInformationBlockList::class);
         Livewire::component('order-attribution-information-list', AttributionInformationList::class);
         Livewire::component('order-view-statusses', ViewStatusses::class);
@@ -1633,14 +1634,14 @@ MARKDOWN,
 
         cms()->builder('dashboardWidgets', [
             'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 'full',      'sort' => 10],
-            'ec-revenue'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 'full',      'sort' => 15],
-            'ec-alltime-revenue'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class,                  'label' => 'Omzet (totaal)',               'width' => 'full',      'sort' => 20],
-            'ec-cart-statistics'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics::class,                     'label' => 'Winkelmand-statistieken',      'width' => 'full',      'sort' => 25],
-            'ec-soldout'              => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount::class,                       'label' => 'Uitverkocht',                  'width' => 'full',      'sort' => 30],
-            'ec-print-queue'          => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget::class,                             'label' => 'Printwachtrij',                'width' => 'full',      'sort' => 35],
-            'ec-payment-methods'      => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
+            'ec-revenue' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 'full',      'sort' => 15],
+            'ec-alltime-revenue' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class,                  'label' => 'Omzet (totaal)',               'width' => 'full',      'sort' => 20],
+            'ec-cart-statistics' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics::class,                     'label' => 'Winkelmand-statistieken',      'width' => 'full',      'sort' => 25],
+            'ec-soldout' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount::class,                       'label' => 'Uitverkocht',                  'width' => 'full',      'sort' => 30],
+            'ec-print-queue' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget::class,                             'label' => 'Printwachtrij',                'width' => 'full',      'sort' => 35],
+            'ec-payment-methods' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
             'ec-revenue-return-chart' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats::class, 'label' => 'Omzet & retouren (grafiek)',  'width' => 'full', 'sort' => 45],
-            'ec-doelen'               => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget::class,                      'label' => 'Verkoopdoelen',                'width' => 'full',      'sort' => 12],
+            'ec-doelen' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget::class,                      'label' => 'Verkoopdoelen',                'width' => 'full',      'sort' => 12],
         ]);
 
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);

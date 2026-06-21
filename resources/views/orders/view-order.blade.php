@@ -44,6 +44,7 @@
                     <livewire:is :component="$widget['name']" :order="$record"></livewire:is>
                 @endif
             @endforeach
+            @livewire('order-abandonment-diagnosis-list', ['order' => $record], key('order-abandonment-'.$record->id))
             @livewire('order-logs-list', ['order' => $record])
         </div>
     </div>

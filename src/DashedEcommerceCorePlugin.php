@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Artisan;
 use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ReturnReasonResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
 use Dashed\DashedEcommerceCore\Filament\Widgets\PrintQueueWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
@@ -20,9 +18,9 @@ use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFaqResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductFinderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportOrdersPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
@@ -31,10 +29,12 @@ use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ReturnReasonResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\SoldoutCount;
 use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductFinderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
@@ -42,6 +42,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPageRedirect;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ReturnSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
@@ -56,7 +57,6 @@ use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ReturnSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ActionsStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductStatisticsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
@@ -103,6 +103,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductGroupStatisticsPage::class,
                 ActionsStatisticsPage::class,
                 AttributionStatisticsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Statistics\CheckoutAbandonmentsPage::class,
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
                 ReturnSettingsPage::class,

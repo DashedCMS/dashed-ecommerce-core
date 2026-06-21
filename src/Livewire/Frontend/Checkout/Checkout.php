@@ -28,6 +28,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
@@ -643,6 +644,27 @@ class Checkout extends Component
         ], $this->customFieldRules);
     }
 
+    /**
+     * Leg vast waarom de checkout strandt vóór order-creatie. Error-veilig:
+     * mag de checkout nooit breken.
+     */
+    protected function recordAbandonment(string $reason, array $context = []): void
+    {
+        try {
+            $cart = cartHelper()->getCart();
+
+            CheckoutAbandonment::record(
+                reason: $reason,
+                context: $context,
+                cartId: $cart?->id,
+                email: $this->email ?: null,
+                cartTotal: (float) cartHelper()->getTotal(),
+            );
+        } catch (\Throwable $e) {
+            // Bewust stil: uitval-logging mag het afrekenen niet verstoren.
+        }
+    }
+
     public function submit()
     {
         cartHelper()->initialize($this->cartType);
@@ -712,6 +734,8 @@ class Checkout extends Component
                 ->title(collect($validator->errors())->first()[0])
                 ->send();
 
+            $this->recordAbandonment('validation_failed');
+
             return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
         }
 
@@ -730,6 +754,8 @@ class Checkout extends Component
                 ->title($this->taxIdValidationMessage)
                 ->send();
 
+            $this->recordAbandonment('invalid_vat_id');
+
             return $this->dispatch('showAlert', 'error', $this->taxIdValidationMessage);
         }
 
@@ -747,6 +773,11 @@ class Checkout extends Component
                         ))
                         ->send();
 
+                    $this->recordAbandonment('address_rejected', [
+                        'provider' => $fulfillmentProvider['name'],
+                        'message' => $addressValid['message'],
+                    ]);
+
                     return $this->dispatch('showAlert', 'error', Translation::get(
                         'address-invalid-'.str($fulfillmentProvider['name'])->slug().'-'.str($addressValid['message'])->slug(),
                         'checkout',
@@ -763,6 +794,8 @@ class Checkout extends Component
                 ->danger()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
                 ->send();
+
+            $this->recordAbandonment('no_items');
 
             return $this->dispatch('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
         }
@@ -804,6 +837,8 @@ class Checkout extends Component
                     ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'))
                     ->send();
 
+                $this->recordAbandonment('no_payment_method');
+
                 return $this->dispatch('showAlert', 'error', Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid payment method'));
             }
         }
@@ -822,6 +857,8 @@ class Checkout extends Component
                 ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid shipping method'))
                 ->send();
 
+            $this->recordAbandonment('no_shipping_method', ['country' => $this->country]);
+
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
@@ -839,6 +876,8 @@ class Checkout extends Component
                     ->title(collect($validator->errors())->first()[0])
                     ->send();
 
+                $this->recordAbandonment('deposit_method_missing');
+
                 return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
             }
 
@@ -855,6 +894,8 @@ class Checkout extends Component
                     ->title(Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'))
                     ->send();
 
+                $this->recordAbandonment('deposit_method_missing');
+
                 return $this->dispatch('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
         }
@@ -865,6 +906,8 @@ class Checkout extends Component
                     ->danger()
                     ->title(Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'))
                     ->send();
+
+                $this->recordAbandonment('email_duplicate');
 
                 return $this->dispatch('showAlert', 'error', Translation::get('email-duplicate-for-user', 'cart', 'The email you chose has already been used to create a account'));
             }
@@ -1160,6 +1203,8 @@ class Checkout extends Component
                 ->danger()
                 ->title(Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'))
                 ->send();
+
+            $this->recordAbandonment('payment_start_failed');
 
             return $this->dispatch('showAlert', 'error', Translation::get('failed-to-start-payment-try-again', 'cart', 'The payment could not be started, please try again'));
         }
