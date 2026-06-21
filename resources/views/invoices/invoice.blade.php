@@ -164,6 +164,14 @@
                                 <small>{{ $option['name'] }}: {{ $option['value'] }}</small>
                             @endforeach
                         @endif
+                        @if($orderProduct->hidden_options && is_array($orderProduct->hidden_options))
+                            @foreach($orderProduct->hidden_options as $key => $value)
+                                @if(! str($value)->contains('base64'))
+                                <br>
+                                <small>{{ $key }}: {{ $value }}</small>
+                                @endif
+                            @endforeach
+                        @endif
                     </td>
 
                     <td class="numeric">

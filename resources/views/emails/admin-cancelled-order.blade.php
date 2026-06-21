@@ -526,6 +526,14 @@
                                                                                 <span>{{$option['name']}}: {{$option['value']}}</span>
                                                                             @endforeach
                                                                         @endif
+                                                                        @if($orderProduct->hidden_options && is_array($orderProduct->hidden_options))
+                                                                            @foreach($orderProduct->hidden_options as $key => $value)
+                                                                                @if(! str($value)->contains('base64'))
+                                                                                <br/>
+                                                                                <span>{{ $key }}: {{ $value }}</span>
+                                                                                @endif
+                                                                            @endforeach
+                                                                        @endif
                                                                     </div>
                                                                     <div
                                                                         style="font-family: Open Sans, Helvetica, Tahoma, Arial, sans-serif;">
