@@ -108,6 +108,13 @@ class OrderProductsList extends Component implements HasSchemas
                                 : 'Pre-order';
                         })
                         ->visible($orderProduct->is_pre_order),
+                    TextEntry::make('addedVia_' . $pid)
+                        ->hiddenLabel()
+                        ->badge()
+                        ->color('info')
+                        ->weight('bold')
+                        ->getStateUsing(fn () => 'Cross/up-sell')
+                        ->visible((bool) $orderProduct->added_via),
                     TextEntry::make('price')
                         ->hiddenLabel()
                         ->getStateUsing(fn () => $orderProduct->price)

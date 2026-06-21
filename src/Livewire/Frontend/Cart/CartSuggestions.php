@@ -118,6 +118,7 @@ class CartSuggestions extends Component
             'originalPrice' => $price,
             'options' => [],
             'hiddenOptions' => [],
+            'addedVia' => 'cross_sell',
         ];
 
         cartHelper()->addToCart($productId, 1, $attributes);

@@ -81,7 +81,7 @@ class ProductFinderQuiz extends Component
 
     public function addToCart(int $productId): void
     {
-        cartHelper()->addToCart($productId, 1);
+        cartHelper()->addToCart($productId, 1, ['addedVia' => 'cross_sell']);
         $this->dispatch('refreshCart');
     }
 
@@ -89,7 +89,7 @@ class ProductFinderQuiz extends Component
     {
         foreach ($this->results as $result) {
             if (! empty($result['id'])) {
-                cartHelper()->addToCart((int) $result['id'], 1);
+                cartHelper()->addToCart((int) $result['id'], 1, ['addedVia' => 'cross_sell']);
             }
         }
         $this->dispatch('refreshCart');

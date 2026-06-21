@@ -2,10 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
@@ -57,6 +57,10 @@ trait ProductCartActions
     public ?array $extras = [];
 
     public ?array $hiddenOptions = [];
+
+    // Bron waarmee dit product in het mandje belandt (bijv. 'cross_sell').
+    // Componenten als CrossSellVariantPicker zetten dit; standaard leeg.
+    public ?string $addedVia = null;
 
     public string|int $quantity = 1;
 
@@ -1088,6 +1092,12 @@ trait ProductCartActions
         $attributes['originalPrice'] = $productPrice;
         $attributes['options'] = $options;
         $attributes['hiddenOptions'] = $this->hiddenOptions;
+
+        // Bron-attributie (bijv. cross-sell): alleen meegeven als een component
+        // 'm expliciet zet, zodat normale productpagina-toevoegingen leeg blijven.
+        if ($this->addedVia) {
+            $attributes['addedVia'] = $this->addedVia;
+        }
 
         if (! $productPrice) {
             Notification::make()

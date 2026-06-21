@@ -31,6 +31,7 @@ class OrderProduct extends Model
         'btw',
         'vat_rate',
         'product_extras',
+        'added_via',
     ];
 
     protected $casts = [

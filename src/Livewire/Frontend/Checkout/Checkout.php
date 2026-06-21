@@ -1011,6 +1011,7 @@ class Checkout extends Component
 
             $orderProduct->product_extras = $productExtras;
             $orderProduct->hidden_options = $cartItem->options['hiddenOptions'] ?? [];
+            $orderProduct->added_via = $cartItem->options['addedVia'] ?? null;
 
             if ($cartItem->model->backorderedQuantity((int) $cartItem->qty) > 0) {
                 $orderProduct->is_pre_order = true;

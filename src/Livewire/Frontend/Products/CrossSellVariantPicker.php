@@ -16,6 +16,9 @@ class CrossSellVariantPicker extends Component
 {
     use ProductCartActions;
 
+    // Alles wat via deze picker in het mandje komt is een cross-sell.
+    public ?string $addedVia = 'cross_sell';
+
     protected $listeners = [
         'setProductExtraCustomValue',
         'addToCart',

@@ -33,6 +33,7 @@ class OrderProductResource extends JsonResource
             'pre_order_restocked_date' => $this->pre_order_restocked_date,
             'fulfillment_provider' => $this->fulfillment_provider,
             'send_to_fulfiller' => (bool) $this->send_to_fulfiller,
+            'added_via' => $this->added_via,
             'extras' => $this->product_extras ?: [],
         ];
     }
