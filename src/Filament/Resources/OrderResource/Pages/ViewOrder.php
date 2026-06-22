@@ -201,6 +201,25 @@ class ViewOrder extends ViewRecord
                                 ->send();
                         }
                     }),
+                Action::make('printPackingSlipOnly')
+                    ->label('Alleen pakbon printen')
+                    ->icon('heroicon-s-document-text')
+                    ->tooltip('Stuur enkel de pakbon naar de pakbon-printer')
+                    ->visible(fn (): bool => $this->packingSlipPrinterAvailable())
+                    ->requiresConfirmation()
+                    ->modalHeading('Alleen pakbon printen')
+                    ->modalDescription('Alleen de pakbon wordt naar de pakbon-printer gestuurd (geen label).')
+                    ->action(function (): void {
+                        if ($this->queueJobOnce(PrintJobType::PackingSlip)) {
+                            Notification::make()->title('Pakbon naar de printer gestuurd')->success()->send();
+                        } else {
+                            Notification::make()
+                                ->title('Niets toegevoegd')
+                                ->body('Er staat al een pakbon-job in de wachtrij voor deze bestelling.')
+                                ->warning()
+                                ->send();
+                        }
+                    }),
             ])
                 ->label('Documenten')
                 ->icon('heroicon-o-document-text')
