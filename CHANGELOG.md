@@ -7,6 +7,9 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Added
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
+### Fixed
+- **Fatal error op de productdetailpagina onder PHP 8.4.** `CrossSellVariantPicker` herdeclareerde de property `$addedVia` met een andere default (`'cross_sell'`) dan de trait `ProductCartActions` (`null`). PHP 8.4 beschouwt dat als een incompatibele compositie en gooit een fatal error (`define the same property ($addedVia) ... the definition differs and is considered incompatible`). De property-default is verwijderd; de waarde wordt nu in `mount()` gezet.
+
 ## v4.57.3 - 2026-06-11
 
 ### Fixed

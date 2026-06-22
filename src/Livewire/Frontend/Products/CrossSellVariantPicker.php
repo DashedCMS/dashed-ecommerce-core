@@ -16,9 +16,6 @@ class CrossSellVariantPicker extends Component
 {
     use ProductCartActions;
 
-    // Alles wat via deze picker in het mandje komt is een cross-sell.
-    public ?string $addedVia = 'cross_sell';
-
     protected $listeners = [
         'setProductExtraCustomValue',
         'addToCart',
@@ -26,6 +23,12 @@ class CrossSellVariantPicker extends Component
 
     public function mount(ProductGroup $productGroup): void
     {
+        // Alles wat via deze picker in het mandje komt is een cross-sell.
+        // Wordt hier gezet i.p.v. als property-default, omdat PHP 8.4 een
+        // class-property met andere default dan de trait (ProductCartActions::$addedVia = null)
+        // als incompatibel beschouwt en een fatal error geeft.
+        $this->addedVia = 'cross_sell';
+
         // Mirror ShowProduct::mount() for a group without a preselected variant.
         $this->productGroup = $productGroup;
         $this->productGroup->load([
