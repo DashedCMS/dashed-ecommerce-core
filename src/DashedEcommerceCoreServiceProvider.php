@@ -2125,6 +2125,22 @@ MARKDOWN,
         cms()->registerRouteModel(ProductGroup::class, 'Product groep');
         cms()->registerRouteModel(ProductCategory::class, 'Product categorie');
 
+        cms()->registerContentQualityModel(
+            \Dashed\DashedEcommerceCore\Models\Product::class,
+            \Dashed\DashedEcommerceCore\Filament\Resources\ProductResource::class,
+            'Product'
+        );
+        cms()->registerContentQualityModel(
+            \Dashed\DashedEcommerceCore\Models\ProductCategory::class,
+            \Dashed\DashedEcommerceCore\Filament\Resources\ProductCategoryResource::class,
+            'Productcategorie'
+        );
+        cms()->registerContentQualityModel(
+            \Dashed\DashedEcommerceCore\Models\ProductGroup::class,
+            \Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource::class,
+            'Productgroep'
+        );
+
         cms()->registerSettingsPage(DefaultEcommerceSettingsPage::class, 'Algemene Ecommerce', 'banknotes', 'Algemene Ecommerce instellingen');
         cms()->registerSettingsPage(InvoiceSettingsPage::class, 'Facturatie instellingen', 'document-check', 'Instellingen voor de facturatie');
         cms()->registerSettingsPage(OrderSettingsPage::class, 'Bestellingen', 'banknotes', 'Instellingen voor de bestellingen');
