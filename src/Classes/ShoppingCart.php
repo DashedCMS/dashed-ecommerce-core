@@ -175,14 +175,18 @@ class ShoppingCart
                 // threshold against the cart subtotal.
                 $total = cartHelper()->getTotal() - cartHelper()->getShippingCosts();
 
-                // Een cadeaubon is een betaalmiddel, niet een orderwaarde-
-                // reductie: zonder deze correctie zou een mandje van €30
-                // met een cadeaubon van €50 een totaal van €0,01 hebben en
-                // alle shipping methods met een minimum_order_value > €0,01
-                // wegfilteren. We tellen de cadeaubon-portie van getDiscount()
-                // terug op zodat we tegen de echte cart-waarde checken.
+                // Een korting/cadeaubon mag de min/max-order-value check niet
+                // verstoren: een hoge kortingscode (of cadeaubon) capt het
+                // totaal op €0,01, waardoor alle shipping methods met een
+                // minimum_order_value > €0,01 wegvielen — en omdat deze filter
+                // vóór het definitief zetten van de verzendmethode draait, gaf
+                // getTotal() - getShippingCosts() per refresh een ander (soms
+                // negatief) bedrag. We tellen getDiscount() terug op zodat we
+                // altijd tegen de echte, korting-onafhankelijke cart-waarde
+                // checken (getTotal() + getDiscount() - getShippingCosts() ==
+                // totalWithoutDiscount - shippingCosts).
                 $activeDiscountCode = cartHelper()->getDiscountCode();
-                if ($activeDiscountCode && $activeDiscountCode->is_giftcard) {
+                if ($activeDiscountCode) {
                     $total += cartHelper()->getDiscount();
                 }
 
