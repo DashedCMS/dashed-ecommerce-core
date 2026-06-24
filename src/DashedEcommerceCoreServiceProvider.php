@@ -2143,6 +2143,10 @@ MARKDOWN,
             );
         }
 
+        if (method_exists(cms(), 'registerContentQualityCheck')) {
+            cms()->registerContentQualityCheck(new \Dashed\DashedEcommerceCore\ContentQuality\ProductWithoutImageCheck());
+        }
+
         cms()->registerSettingsPage(DefaultEcommerceSettingsPage::class, 'Algemene Ecommerce', 'banknotes', 'Algemene Ecommerce instellingen');
         cms()->registerSettingsPage(InvoiceSettingsPage::class, 'Facturatie instellingen', 'document-check', 'Instellingen voor de facturatie');
         cms()->registerSettingsPage(OrderSettingsPage::class, 'Bestellingen', 'banknotes', 'Instellingen voor de bestellingen');
