@@ -24,6 +24,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Concerns\HasSearchIndex;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,6 +44,7 @@ class Product extends Model
     use LogsActivity;
     use HasCustomBlocks;
     use HasDynamicRelation;
+    use HasSearchIndex;
     use IsVisitable;
     use SoftDeletes;
 
@@ -181,6 +183,42 @@ class Product extends Model
     public function ecommerceActionLogs(): HasMany
     {
         return $this->hasMany(EcommerceActionLog::class);
+    }
+
+    /**
+     * Bouwt de gedenormaliseerde zoekindex voor dit product.
+     * Tekstvelden komen uit de eigen translatables; de productgroep-tekst
+     * wordt toegevoegd zodat zoeken op groepsnaam het product vindt.
+     * SKU, EAN en artikelcode worden als exacte keywords geïndexeerd.
+     */
+    public function toSearchIndexArray(string $locale): array
+    {
+        $parts = [];
+
+        foreach ($this->getSearchIndexAttributes() as $attribute) {
+            $parts[] = $this->normalizeSearchText($this->getTranslation($attribute, $locale, false));
+        }
+
+        // Productgroep-tekst meenemen zodat zoeken op groepsnaam het product vindt.
+        $group = $this->productGroup;
+        if ($group) {
+            foreach ($group->getTranslatableAttributes() as $attribute) {
+                if (method_exists($group, $attribute)) {
+                    continue;
+                }
+                $parts[] = $this->normalizeSearchText($group->getTranslation($attribute, $locale, false));
+            }
+        }
+
+        $keywords = collect([$this->sku, $this->ean, $this->article_code])
+            ->filter()
+            ->map(fn ($code) => mb_strtolower((string) $code))
+            ->implode(' ');
+
+        return [
+            'text' => trim(implode(' ', array_filter($parts))),
+            'keywords' => $keywords,
+        ];
     }
 
     /**
