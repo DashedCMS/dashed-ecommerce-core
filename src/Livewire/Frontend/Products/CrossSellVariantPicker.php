@@ -42,6 +42,33 @@ class CrossSellVariantPicker extends Component
         $this->fillInformation(true);
     }
 
+    // Spiegelt ShowProduct::updated() — zonder deze hook werkt een filterwissel
+    // (wire:model.live op filters.*.active) in de popup niet: het filter wordt
+    // wel gezet, maar de variant/prijs worden nooit opnieuw berekend.
+    public function updated($name, $value)
+    {
+        if (str($name)->contains(['qty', 'quantity'])) {
+            return;
+        }
+
+        // Extras/files wijzigen het product niet - alleen prijzen herberekenen
+        if (str($name)->startsWith(['extras', 'files'])) {
+            $this->calculateCurrentPrices();
+
+            return;
+        }
+
+        // Wanneer de gebruiker zelf een filter wijzigt, beschouwen we die
+        // keuze als leidend. autoResolveFilterConflicts laat dat filter dan
+        // ongemoeid en past alleen de overige filters aan.
+        $lockedFilterKey = null;
+        if (preg_match('/^filters\.(\d+)\.active$/', (string) $name, $m)) {
+            $lockedFilterKey = (int) $m[1];
+        }
+
+        $this->fillInformation(false, $lockedFilterKey);
+    }
+
     public function render()
     {
         return view(config('dashed-core.site_theme', 'dashed') . '.products.cross-sell-variant-picker');
