@@ -25,7 +25,7 @@
                     type="text"
                     id="searchField"
                     name="search"
-                    wire:model.live.debounce.500ms="search"
+                    wire:model.live.debounce.150ms="search"
                     placeholder="{{ Translation::get('search-products', 'searchbar', 'Zoek een product...') }}"
                 >
                 <div x-show="showSearchbar" @click.away="showSearchbar = false"
