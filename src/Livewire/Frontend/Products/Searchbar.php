@@ -43,10 +43,9 @@ class Searchbar extends Component
         $cacheKey = "searchbar.v{$version}.{$siteId}.{$locale}.{$this->resultLimit}." . sha1(mb_strtolower($query));
 
         $ids = Cache::remember($cacheKey, now()->addDay(), function () use ($query) {
-            return Product::search($query)
+            return Product::searchIndexed($query)
                 ->thisSite()
                 ->publicShowableWithIndex()
-                ->orderBy('order')
                 ->limit($this->resultLimit)
                 ->pluck('id')
                 ->all();
