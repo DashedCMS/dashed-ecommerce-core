@@ -119,6 +119,24 @@ class ViewOrder extends Component
                 $itemLoop++;
             }
 
+            $countryCode = $this->order->countryCode;
+            $phoneE164 = $this->normalizePhoneToE164($this->order->phone_number, $countryCode);
+
+            $userData = [
+                'email' => $this->order->email,
+                'phone_number' => $phoneE164,
+                'address' => [
+                    'first_name' => $this->order->first_name,
+                    'last_name' => $this->order->last_name,
+                    'street' => trim(($this->order->street ?? '') . ' ' . ($this->order->house_nr ?? '')),
+                    'city' => $this->order->city,
+                    // Provincie/regio wordt niet op de order opgeslagen.
+                    'region' => '',
+                    'postal_code' => $this->order->zip_code,
+                    'country' => $countryCode,
+                ],
+            ];
+
             $this->dispatch('orderPaid', [
                 'orderId' => $this->order->id,
                 'total' => number_format($this->order->total, 2, '.', ''),
@@ -127,9 +145,10 @@ class ViewOrder extends Component
                 'items' => $items,
                 'newCustomer' => Order::isPaid()->where('email', $this->order->email)->count() === 1,
                 'email' => $this->order->email,
-                'phoneNumber' => $this->order->phone_number,
+                'phoneNumber' => $phoneE164,
                 'country' => $this->order->country,
-                'countryCode' => $this->order->countryCode,
+                'countryCode' => $countryCode,
+                'userData' => $userData,
                 'estimatedDeliveryDate' => $this->order->created_at->addDays(1)->format('Y-m-d'),
                 'tiktokItems' => Customsetting::get('trigger_tiktok_events') ? TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number) : [],
             ]);
@@ -139,5 +158,59 @@ class ViewOrder extends Component
     public function render()
     {
         return view(config('dashed-core.site_theme', 'dashed') . '.orders.view-order');
+    }
+
+    /**
+     * Best-effort normalisatie naar E.164 (+landcode...). Zonder
+     * libphonenumber dekken we de gangbare NL/BE-invoer af; onbekende
+     * landen vallen terug op de opgeschoonde invoer.
+     */
+    private function normalizePhoneToE164(?string $phone, ?string $countryCode): string
+    {
+        $phone = trim((string) $phone);
+        if ($phone === '') {
+            return '';
+        }
+
+        // Internationale prefix 00 -> +
+        if (str_starts_with($phone, '00')) {
+            $phone = '+' . substr($phone, 2);
+        }
+
+        // Al in E.164: alleen cijfers achter de + behouden.
+        if (str_starts_with($phone, '+')) {
+            return '+' . preg_replace('/\D/', '', substr($phone, 1));
+        }
+
+        $digits = preg_replace('/\D/', '', $phone);
+        if ($digits === '') {
+            return '';
+        }
+
+        $callingCodes = [
+            'NL' => '31',
+            'BE' => '32',
+            'DE' => '49',
+            'FR' => '33',
+            'LU' => '352',
+        ];
+        $callingCode = $callingCodes[strtoupper((string) $countryCode)] ?? null;
+
+        if ($callingCode === null) {
+            // Onbekend land: geef de cijfers terug zonder te gokken op een landcode.
+            return $digits;
+        }
+
+        // Nationale notatie met voorloop-0 -> landcode ervoor.
+        if (str_starts_with($digits, '0')) {
+            return '+' . $callingCode . substr($digits, 1);
+        }
+
+        // Begint al met de landcode.
+        if (str_starts_with($digits, $callingCode)) {
+            return '+' . $digits;
+        }
+
+        return '+' . $callingCode . $digits;
     }
 }

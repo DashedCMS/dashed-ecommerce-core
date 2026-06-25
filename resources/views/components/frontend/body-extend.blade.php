@@ -74,20 +74,21 @@
             const payload = event[0];
 
             if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                const unitPrice = parseFloat(payload.price) || 0;
+                const qty = parseInt(payload.quantity) || 1;
                 dataLayer.push({
                     event: 'add_to_cart',
                     ecommerce: {
                         currency: 'EUR',
-                        cartTotal: payload.cartTotal,
-                        items: {
-                            products: [{
-                                name: payload.productName,
-                                id: payload.product.id,
-                                price: payload.price,
-                                quantity: payload.quantity,
-                                item_category: payload.category,
-                            }],
-                        },
+                        value: parseFloat((unitPrice * qty).toFixed(2)),
+                        items: [{
+                            item_id: payload.product.id,
+                            item_name: payload.productName,
+                            index: 0,
+                            item_category: payload.category,
+                            price: unitPrice,
+                            quantity: qty,
+                        }],
                     },
                 });
             }
@@ -116,19 +117,21 @@
             const payload = event[0];
 
             if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                const unitPrice = parseFloat(payload.price) || 0;
+                const qty = parseInt(payload.quantity) || 1;
                 dataLayer.push({
                     event: 'remove_from_cart',
                     ecommerce: {
                         currency: 'EUR',
-                        cartTotal: payload.cartTotal,
-                        items: {
-                            products: [{
-                                name: payload.productName,
-                                id: payload.product.id,
-                                price: payload.price,
-                                item_category: payload.category,
-                            }],
-                        },
+                        value: parseFloat((unitPrice * qty).toFixed(2)),
+                        items: [{
+                            item_id: payload.product.id,
+                            item_name: payload.productName,
+                            index: 0,
+                            item_category: payload.category,
+                            price: unitPrice,
+                            quantity: qty,
+                        }],
                     },
                 });
             }
@@ -206,19 +209,21 @@
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
+                    const unitPrice = parseFloat(payload.price) || 0;
+                    const qty = parseInt(payload.quantity) || 1;
                     dataLayer.push({
                         event: 'view_item',
                         ecommerce: {
                             currency: 'EUR',
-                            value: payload.cartTotal,
-                            items: {
-                                products: [{
-                                    name: payload.productName,
-                                    id: payload.product.id,
-                                    price: payload.price,
-                                    item_category: payload.category,
-                                }],
-                            },
+                            value: unitPrice,
+                            items: [{
+                                item_id: payload.product.id,
+                                item_name: payload.productName,
+                                index: 0,
+                                item_category: payload.category,
+                                price: unitPrice,
+                                quantity: qty,
+                            }],
                         },
                     });
                 }
@@ -277,6 +282,7 @@
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
                     dataLayer.push({
                         event: 'purchase',
+                        user_data: payload.userData,
                         ecommerce: {
                             currency: 'EUR',
                             value: payload.total,
