@@ -24,8 +24,6 @@ class OrderController extends Controller
 
     private const CHANGEABLE_STATUSES = ['paid', 'partially_paid', 'cancelled', 'waiting_for_confirmation'];
 
-    private const CHANGEABLE_FULFILLMENT_STATUSES = ['handled', 'partially_handled', 'unhandled', 'waiting_for_supplier'];
-
     /**
      * Betaalstatus-opties — gelijk aan de Filament order-resource.
      */
@@ -232,7 +230,7 @@ class OrderController extends Controller
         $model = Order::thisSite()->findOrFail($order);
 
         $data = $request->validate([
-            'fulfillment_status' => ['required', 'string', Rule::in(self::CHANGEABLE_FULFILLMENT_STATUSES)],
+            'fulfillment_status' => ['required', 'string', Rule::in(array_keys(Orders::getFulfillmentStatusses()))],
         ]);
 
         $model->changeFulfillmentStatus($data['fulfillment_status']);
@@ -425,7 +423,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'ids' => ['required', 'array', 'max:100'],
             'ids.*' => ['integer'],
-            'fulfillment_status' => ['required', 'string', Rule::in(self::CHANGEABLE_FULFILLMENT_STATUSES)],
+            'fulfillment_status' => ['required', 'string', Rule::in(array_keys(Orders::getFulfillmentStatusses()))],
         ]);
 
         return $this->runBulk($request, $data['ids'], function (Order $model) use ($data): void {
