@@ -86,13 +86,48 @@ class PrintJob extends Model
             'printed_at' => now(),
         ]);
 
-        if ($this->type === PrintJobType::ShippingLabel
-            && $this->printable_type
-            && $this->printable_id
-            && class_exists($this->printable_type)) {
+        if ($this->type !== PrintJobType::ShippingLabel) {
+            return;
+        }
+
+        // Een specifiek label geprint → enkel die rij uit de wachtrij halen.
+        if ($this->printable_type && $this->printable_id && class_exists($this->printable_type)) {
             $printable = ($this->printable_type)::find($this->printable_id);
             $printable?->update(['label_printed' => true]);
+
+            return;
         }
+
+        // Geen specifiek label gekoppeld (order-niveau print via de app) → alle
+        // nog-niet-geprinte verzendlabels van deze order uit de wachtrij halen.
+        $this->markOrderShippingLabelsPrinted();
+    }
+
+    /**
+     * Zet label_printed=1 op alle nog-niet-geprinte vervoerder-labels van deze
+     * order, zodat ze uit de "Download labels"-wachtrij verdwijnen.
+     */
+    private function markOrderShippingLabelsPrinted(): void
+    {
+        foreach (self::shippingLabelSources() as $sourceModel) {
+            $sourceModel::query()
+                ->where('order_id', $this->order_id)
+                ->where('label_printed', 0)
+                ->update(['label_printed' => 1]);
+        }
+    }
+
+    /** @return array<int, class-string> */
+    public static function shippingLabelSources(): array
+    {
+        return array_values(array_filter([
+            class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)
+                ? \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class
+                : null,
+            class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)
+                ? \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class
+                : null,
+        ]));
     }
 
     public function markAsFailed(string $errorMessage): void
