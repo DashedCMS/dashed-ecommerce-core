@@ -39,7 +39,8 @@ class OrderController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Order::thisSite();
+        // Laad de orderregels mee voor de product-preview in de app-lijst (geen N+1).
+        $query = Order::thisSite()->with('orderProducts');
 
         // Dashboard-shortcut: alleen onafgehandelde orders.
         if ($request->boolean('unhandled')) {
