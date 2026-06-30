@@ -19,7 +19,7 @@ it('pos_allow_proforma is wired into the POSSettingsPage form schema', function 
     $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
 
     // The form loads pos_allow_proforma from Customsetting (default false).
-    // assertFormSet verifies the component key is present and bound correctly —
+    // assertFormSet verifies the component key is present and bound correctly -
     // a source-string check would pass even if the field were commented out.
     Livewire::test(POSSettingsPage::class)
         ->assertFormSet(['pos_allow_proforma' => false]);

@@ -57,7 +57,7 @@ it('default status filter would exclude concept proformas (confirming the overri
         ->and($ids)->toContain($paid->id);
 });
 
-// Per-request state tests — directly invoke OrderResource::statusFilterQuery()
+// Per-request state tests - directly invoke OrderResource::statusFilterQuery()
 // with a stub $livewire so the fix is locked without a full Filament table render.
 
 function makeLivewireStub(bool $proformaActive): object

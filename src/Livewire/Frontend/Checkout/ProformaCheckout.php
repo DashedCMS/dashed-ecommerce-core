@@ -76,7 +76,7 @@ class ProformaCheckout extends Component
             'country' => ['required', 'max:255'],
             'companyName' => ['nullable', 'max:255'],
             'btwId' => ['nullable', 'max:255'],
-            'shippingMethod' => [$this->shippingEnabled ? 'required' : 'nullable', 'max:255'],
+            'shippingMethod' => [$this->shippingEnabled && count($this->shippingMethods) > 0 ? 'required' : 'nullable', 'max:255'],
             'psp' => ['nullable', 'max:255'],
         ];
     }
@@ -129,79 +129,93 @@ class ProformaCheckout extends Component
         $this->validate();
 
         $order = $this->order;
+        $order->refresh();
 
-        $order->first_name = $this->firstName;
-        $order->last_name = $this->lastName;
-        $order->email = $this->email;
-        $order->phone_number = $this->phoneNumber;
-        $order->street = $this->street;
-        $order->house_nr = $this->houseNr;
-        $order->zip_code = $this->zipCode;
-        $order->city = $this->city;
-        $order->country = $this->country;
-        $order->company_name = $this->companyName;
-        $order->btw_id = $this->btwId;
-        $order->invoice_id = 'PROFORMA';
-        $order->status = 'pending';
+        // Guard: already paid - no mutation, redirect back to the controller
+        // which will serve the "already paid" view.
+        if ($order->isPaidFor()) {
+            return redirect()->route('dashed.frontend.proforma-checkout', ['orderHash' => $order->hash]);
+        }
 
-        $selectedShipping = null;
-        if ($this->shippingEnabled && $this->shippingMethod) {
-            foreach ($this->shippingMethods as $method) {
-                if ((string) ($method['id'] ?? '') === (string) $this->shippingMethod) {
-                    $selectedShipping = $method;
+        // Mutation block: runs ONLY on the first submit while the order is still
+        // a concept. A re-submit after a payment abandonment (order=pending) skips
+        // this entirely, so totals and shipping lines are never compounded.
+        if ($order->isConcept()) {
+            $order->first_name = $this->firstName;
+            $order->last_name = $this->lastName;
+            $order->email = $this->email;
+            $order->phone_number = $this->phoneNumber;
+            $order->street = $this->street;
+            $order->house_nr = $this->houseNr;
+            $order->zip_code = $this->zipCode;
+            $order->city = $this->city;
+            $order->country = $this->country;
+            $order->company_name = $this->companyName;
+            $order->btw_id = $this->btwId;
+            $order->invoice_id = 'PROFORMA';
+            $order->status = 'pending';
 
-                    break;
+            $selectedShipping = null;
+            if ($this->shippingEnabled && $this->shippingMethod) {
+                foreach ($this->shippingMethods as $method) {
+                    if ((string) ($method['id'] ?? '') === (string) $this->shippingMethod) {
+                        $selectedShipping = $method;
+
+                        break;
+                    }
+                }
+
+                if ($selectedShipping) {
+                    $order->shipping_method_id = $selectedShipping['id'];
                 }
             }
 
-            if ($selectedShipping) {
-                $order->shipping_method_id = $selectedShipping['id'];
+            // Verzendkosten in het ordertotaal verrekenen VOOR het opslaan en voor de
+            // betaling. outstandingAmount() = max(0, total - paid), dus zonder deze
+            // ophoging zou de klant de verzendkosten niet betalen. We spiegelen de
+            // manier waarop ConceptOrderService::saveAsConcept de bedragen zet: de
+            // (btw-inclusieve) prijs telt op bij total en subtotal, het btw-deel bij btw.
+            $shippingCost = 0.0;
+            $shippingVatRate = 21.0;
+            if ($selectedShipping && ($selectedShipping['costs'] ?? 0) > 0) {
+                $shippingCost = (float) $selectedShipping['costs'];
+                $shippingVatRate = (float) ($selectedShipping['vat_rate'] ?? 21);
+
+                $shippingVat = $shippingVatRate > 0
+                    ? $shippingCost - ($shippingCost / (1 + $shippingVatRate / 100))
+                    : 0.0;
+
+                $order->total = (float) $order->total + $shippingCost;
+                $order->subtotal = (float) $order->subtotal + $shippingCost;
+                $order->btw = round((float) $order->btw + $shippingVat, 2);
             }
+
+            $order->save();
+            $order->refresh();
+
+            // Verzendkosten als losse regel (product_id = null), net als Checkout::submit().
+            if ($shippingCost > 0) {
+                $orderProduct = new OrderProduct();
+                $orderProduct->quantity = 1;
+                $orderProduct->product_id = null;
+                $orderProduct->order_id = $order->id;
+                $orderProduct->name = $selectedShipping['correctName'] ?? ($selectedShipping['name'] ?? 'Verzendkosten');
+                $orderProduct->price = $shippingCost;
+                $orderProduct->vat_rate = $shippingVatRate;
+                $orderProduct->discount = 0;
+                $orderProduct->product_extras = [];
+                $orderProduct->sku = 'shipping_costs';
+                $orderProduct->save();
+            }
+
+            $order->createInvoice();
+            $order->refresh();
         }
-
-        // Verzendkosten in het ordertotaal verrekenen VOOR het opslaan en voor de
-        // betaling. outstandingAmount() = max(0, total - paid), dus zonder deze
-        // ophoging zou de klant de verzendkosten niet betalen. We spiegelen de
-        // manier waarop ConceptOrderService::saveAsConcept de bedragen zet: de
-        // (btw-inclusieve) prijs telt op bij total en subtotal, het btw-deel bij btw.
-        $shippingCost = 0.0;
-        $shippingVatRate = 21.0;
-        if ($selectedShipping && ($selectedShipping['costs'] ?? 0) > 0) {
-            $shippingCost = (float) $selectedShipping['costs'];
-            $shippingVatRate = (float) ($selectedShipping['vat_rate'] ?? 21);
-
-            $shippingVat = $shippingVatRate > 0
-                ? $shippingCost - ($shippingCost / (1 + $shippingVatRate / 100))
-                : 0.0;
-
-            $order->total = (float) $order->total + $shippingCost;
-            $order->subtotal = (float) $order->subtotal + $shippingCost;
-            $order->btw = round((float) $order->btw + $shippingVat, 2);
-        }
-
-        $order->save();
-        $order->refresh();
-
-        // Verzendkosten als losse regel (product_id = null), net als Checkout::submit().
-        if ($shippingCost > 0) {
-            $orderProduct = new OrderProduct();
-            $orderProduct->quantity = 1;
-            $orderProduct->product_id = null;
-            $orderProduct->order_id = $order->id;
-            $orderProduct->name = $selectedShipping['correctName'] ?? ($selectedShipping['name'] ?? 'Verzendkosten');
-            $orderProduct->price = $shippingCost;
-            $orderProduct->vat_rate = $shippingVatRate;
-            $orderProduct->discount = 0;
-            $orderProduct->product_extras = [];
-            $orderProduct->sku = 'shipping_costs';
-            $orderProduct->save();
-        }
-
-        $order->createInvoice();
-        $order->refresh();
 
         // Betaling starten: spiegelt RemainderPaymentController. De klant kiest
-        // de PSP; valt terug op de eerste verbonden provider.
+        // de PSP; valt terug op de eerste verbonden provider. Dit blok draait
+        // zowel bij de eerste submit (concept->pending) als bij een herpoging
+        // (order al pending, betaling verlaten).
         $providerId = null;
         $providerClass = null;
         foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
