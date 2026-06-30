@@ -12,10 +12,11 @@ use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\ReturnStatusController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\RemainderPaymentController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\ReturnStatusController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\ProformaCheckoutController;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])
@@ -34,6 +35,8 @@ Route::post('/dashed/exchange', [TransactionController::class, 'exchange'])
 Route::middleware(['web'])->group(function () {
     Route::get('/pay/order/{orderHash}/remainder', RemainderPaymentController::class)
         ->name('dashed.frontend.remainder-payment');
+    Route::get('/proforma/{orderHash}', [ProformaCheckoutController::class, 'show'])
+        ->name('dashed.frontend.proforma-checkout');
 });
 
 Route::middleware(['web'])->group(function () {

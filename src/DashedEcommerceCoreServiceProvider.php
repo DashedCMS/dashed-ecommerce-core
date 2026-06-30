@@ -1530,6 +1530,7 @@ MARKDOWN,
         Livewire::component('product-finder-quiz', \Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder\ProductFinderQuiz::class);
         Livewire::component('order-withdrawal', \Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal::class);
         Livewire::component('checkout.checkout', Checkout::class);
+        Livewire::component('checkout.proforma-checkout', \Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\ProformaCheckout::class);
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
