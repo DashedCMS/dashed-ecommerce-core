@@ -51,6 +51,16 @@ class OrderResource extends Resource
     use WithFileUploads;
     use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
 
+    /**
+     * Set to true while the proforma filter callback is running so the status
+     * filter can skip its whereIn and avoid conflicting with the concept constraint
+     * that proformaAwaitingPayment() adds.  Safe within a PHP-FPM worker because:
+     * - each worker handles one Livewire request at a time (single-threaded), and
+     * - the proforma filter callback always resets the flag at the start of every
+     *   filter evaluation pass, regardless of whether the filter is active.
+     */
+    private static bool $filteringProforma = false;
+
     protected static ?string $model = Order::class;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -389,6 +399,20 @@ class OrderResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                // Proforma filter must be declared FIRST so that $filteringProforma
+                // is set before the status filter's query callback reads it.
+                Filter::make('proforma_awaiting_payment')
+                    ->toggle()
+                    ->label('Wachtend op betaling (proforma)')
+                    ->query(function (Builder $query, array $data): Builder {
+                        static::$filteringProforma = $data['isActive'] ?? false;
+
+                        if (! static::$filteringProforma) {
+                            return $query;
+                        }
+
+                        return $query->proformaAwaitingPayment();
+                    }),
                 SelectFilter::make('status')
                     ->multiple()
                     ->form([
@@ -405,7 +429,24 @@ class OrderResource extends Resource
                                 'return ' => 'Retour',
                             ])
                             ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
-                    ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        // When the proforma filter is active, skip the status constraint:
+                        // proformaAwaitingPayment() already restricts to concept + is_proforma = 1,
+                        // so adding a competing whereIn('status', [...non-concept...]) here
+                        // would produce an impossible AND and return nothing.
+                        if (static::$filteringProforma) {
+                            return $query;
+                        }
+
+                        $values = $data['values'] ?? [];
+
+                        if (empty($values)) {
+                            return $query;
+                        }
+
+                        return $query->whereIn('status', $values);
+                    }),
                 SelectFilter::make('fulfillment_status')
                     ->multiple()
                     ->options(Orders::getFulfillmentStatusses() + [
