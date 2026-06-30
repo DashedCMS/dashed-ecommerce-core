@@ -30,7 +30,9 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 // Ik trek ‘m gelijk met jullie core.
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\Address\AddressLookup;
+use Filament\Forms\Components\Toggle;
 
 class POSPage extends Component implements HasActions, HasSchemas
 {
@@ -110,6 +112,8 @@ class POSPage extends Component implements HasActions, HasSchemas
     public ?array $cancelOrderData = [];
 
     public ?array $customerData = [];
+
+    public bool $proformaAllowShipping = false;
 
     public $cashPaymentAmount = null;
 
@@ -933,6 +937,12 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->nullable()
                     ->maxLength(5000)
                     ->columnSpanFull(),
+
+                Toggle::make('proformaAllowShipping')
+                    ->label('Verzending toestaan')
+                    ->default(false)
+                    ->columnSpanFull()
+                    ->visible(fn () => (bool) Customsetting::get('pos_allow_proforma', null, false)),
             ])
             ->fill([
                 'country' => $this->country ?: (Countries::getAllSelectedCountries()[0] ?? 'NL'),
@@ -1031,6 +1041,58 @@ class POSPage extends Component implements HasActions, HasSchemas
 
                 Notification::make()
                     ->title($existingConcept ? __('Concept bijgewerkt') : __('Concept opgeslagen'))
+                    ->success()
+                    ->send();
+
+                $this->redirect(request()->header('Referer') ?? url()->current());
+            });
+    }
+
+    public function sendProformaAction(): Action
+    {
+        return Action::make('sendProforma')
+            ->label(__('Opslaan als proforma & mailen'))
+            ->icon('heroicon-o-envelope')
+            ->color('info')
+            ->requiresConfirmation()
+            ->modalHeading(__('Proforma opslaan en mailen naar klant?'))
+            ->visible(fn () => (bool) Customsetting::get('pos_allow_proforma', null, false))
+            ->disabled(fn () => blank($this->email))
+            ->action(function () {
+                $posCart = $this->getActivePosCart();
+
+                if (empty($posCart->products ?? [])) {
+                    Notification::make()
+                        ->title(__('Geen producten in de cart'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                if (blank($posCart->email)) {
+                    Notification::make()
+                        ->title(__('Vul eerst een e-mailadres in om de proforma te mailen'))
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                ProformaOrderService::createAndSend(
+                    $posCart,
+                    auth()->user(),
+                    $this->proformaAllowShipping,
+                );
+
+                $posCart->refresh();
+                $posCart->loaded_concept_order_id = null;
+                $posCart->save();
+
+                $this->proformaAllowShipping = false;
+
+                Notification::make()
+                    ->title(__('Proforma opgeslagen en gemaild'))
                     ->success()
                     ->send();
 
