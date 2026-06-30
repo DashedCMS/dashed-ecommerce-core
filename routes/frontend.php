@@ -36,6 +36,7 @@ Route::middleware(['web'])->group(function () {
     Route::get('/pay/order/{orderHash}/remainder', RemainderPaymentController::class)
         ->name('dashed.frontend.remainder-payment');
     Route::get('/proforma/{orderHash}', [ProformaCheckoutController::class, 'show'])
+        ->middleware(FrontendMiddleware::class)
         ->name('dashed.frontend.proforma-checkout');
 });
 

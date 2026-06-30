@@ -34,3 +34,24 @@ it('serves the already-paid view for a paid proforma', function () {
 
     expect($view->name())->toBe('dashed-ecommerce-core::proforma.already-paid');
 });
+
+/**
+ * Regressie voor de productie-fout "Undefined variable $favicon": de route
+ * moet via FrontendMiddleware lopen zodat de site-view-globals (favicon,
+ * siteName, ...) gedeeld zijn en de volledige layout rendert.
+ */
+it('renders the full proforma page through frontend middleware without a 500', function () {
+    $order = Order::create([
+        'email' => 'a@b.nl',
+        'status' => Order::STATUS_CONCEPT,
+        'is_proforma' => true,
+        'first_name' => 'Jan',
+        'total' => 121.0,
+        'btw' => 21.0,
+    ]);
+    $order->orderProducts()->create([
+        'product_id' => null, 'name' => 'Maatwerk dienst', 'quantity' => 1, 'price' => 121.0, 'vat_rate' => 21,
+    ]);
+
+    $this->get('/proforma/' . $order->hash)->assertOk();
+});
