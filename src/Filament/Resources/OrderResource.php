@@ -51,16 +51,6 @@ class OrderResource extends Resource
     use WithFileUploads;
     use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
 
-    /**
-     * Set to true while the proforma filter callback is running so the status
-     * filter can skip its whereIn and avoid conflicting with the concept constraint
-     * that proformaAwaitingPayment() adds.  Safe within a PHP-FPM worker because:
-     * - each worker handles one Livewire request at a time (single-threaded), and
-     * - the proforma filter callback always resets the flag at the start of every
-     *   filter evaluation pass, regardless of whether the filter is active.
-     */
-    private static bool $filteringProforma = false;
-
     protected static ?string $model = Order::class;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -289,6 +279,35 @@ class OrderResource extends Resource
         return $schema->schema($newSchema);
     }
 
+    /**
+     * Status filter logic extracted for testability.
+     *
+     * When the proforma filter is active the proformaAwaitingPayment() scope has
+     * already constrained the query to status=concept + is_proforma=1.  Adding a
+     * competing whereIn here would produce an impossible AND and return nothing,
+     * so we read the proforma filter's live per-request state and skip.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  array<string,mixed>  $data
+     * @param  mixed  $livewire  Filament-injected HasTable Livewire component
+     */
+    public static function statusFilterQuery(Builder $query, array $data, mixed $livewire): Builder
+    {
+        $proformaActive = (bool) ($livewire->getTableFilterState('proforma_awaiting_payment')['isActive'] ?? false);
+
+        if ($proformaActive) {
+            return $query;
+        }
+
+        $values = $data['values'] ?? [];
+
+        if (empty($values)) {
+            return $query;
+        }
+
+        return $query->whereIn('status', $values);
+    }
+
     public static function table(Table $table): Table
     {
         $orderOrigins = [];
@@ -399,15 +418,11 @@ class OrderResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                // Proforma filter must be declared FIRST so that $filteringProforma
-                // is set before the status filter's query callback reads it.
                 Filter::make('proforma_awaiting_payment')
                     ->toggle()
                     ->label('Wachtend op betaling (proforma)')
                     ->query(function (Builder $query, array $data): Builder {
-                        static::$filteringProforma = $data['isActive'] ?? false;
-
-                        if (! static::$filteringProforma) {
+                        if (! ($data['isActive'] ?? false)) {
                             return $query;
                         }
 
@@ -430,23 +445,7 @@ class OrderResource extends Resource
                             ])
                             ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        // When the proforma filter is active, skip the status constraint:
-                        // proformaAwaitingPayment() already restricts to concept + is_proforma = 1,
-                        // so adding a competing whereIn('status', [...non-concept...]) here
-                        // would produce an impossible AND and return nothing.
-                        if (static::$filteringProforma) {
-                            return $query;
-                        }
-
-                        $values = $data['values'] ?? [];
-
-                        if (empty($values)) {
-                            return $query;
-                        }
-
-                        return $query->whereIn('status', $values);
-                    }),
+                    ->query(fn (Builder $query, array $data, $livewire): Builder => static::statusFilterQuery($query, $data, $livewire)),
                 SelectFilter::make('fulfillment_status')
                     ->multiple()
                     ->options(Orders::getFulfillmentStatusses() + [

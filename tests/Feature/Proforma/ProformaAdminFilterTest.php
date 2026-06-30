@@ -3,7 +3,8 @@
 // tests/Feature/Proforma/ProformaAdminFilterTest.php
 //
 // Verifies the behavior of the "Wachtend op betaling (proforma)" filter
-// at the Eloquent query level, without requiring a Filament table render.
+// at the Eloquent query level and via direct invocation of the status
+// filter's logic in OrderResource::statusFilterQuery().
 //
 // Why no Livewire table test?
 // The OrderResource is guarded by OrderPolicy::viewAny(), which requires
@@ -14,39 +15,9 @@
 // proves the filter's query closure produces the correct result set.
 
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
-// ── how the filter override works ─────────────────────────────────────────
-//
-// OrderResource::table() registers filters in this order:
-//
-//   1. Filter::make('proforma_awaiting_payment')   <-- FIRST
-//      ->query(function ($query, $data) {
-//          static::$filteringProforma = $data['isActive'] ?? false;
-//          if (! static::$filteringProforma) { return $query; }
-//          return $query->proformaAwaitingPayment();   // status=concept + is_proforma=1
-//      })
-//
-//   2. SelectFilter::make('status')                <-- SECOND
-//      ->query(function ($query, $data) {
-//          if (static::$filteringProforma) { return $query; }  // ← skip
-//          $values = $data['values'] ?? [];
-//          if (empty($values)) { return $query; }
-//          return $query->whereIn('status', $values);
-//      })
-//      ->default(['paid', 'partially_paid', 'waiting_for_confirmation'])
-//
-// Filament calls each filter's ->query() callback in order inside a single
-// grouped WHERE.  Because the proforma filter runs FIRST it sets
-// $filteringProforma = true before the status filter's callback is reached.
-// The status filter then returns early, preventing its default
-// whereIn('status', ['paid', ...]) from conflicting with the
-// status='concept' constraint added by proformaAwaitingPayment().
-//
-// Net SQL when proforma filter is active:
-//   WHERE (status = 'concept' AND is_proforma = 1)
-//
-// Net SQL when proforma filter is inactive (default view):
-//   WHERE (status IN ('paid', 'partially_paid', 'waiting_for_confirmation'))
+// Scope assertions
 
 it('proforma filter query includes concept proformas and excludes plain concepts and paid orders', function () {
     $proforma = Order::create(['email' => 'p@test.nl', 'status' => Order::STATUS_CONCEPT, 'is_proforma' => true]);
@@ -84,4 +55,57 @@ it('default status filter would exclude concept proformas (confirming the overri
     // This confirms why the proforma filter must suppress the status constraint.
     expect($ids)->not->toContain($proforma->id)
         ->and($ids)->toContain($paid->id);
+});
+
+// Per-request state tests — directly invoke OrderResource::statusFilterQuery()
+// with a stub $livewire so the fix is locked without a full Filament table render.
+
+function makeLivewireStub(bool $proformaActive): object
+{
+    return new class($proformaActive) {
+        public function __construct(private bool $active) {}
+
+        public function getTableFilterState(string $name): ?array
+        {
+            if ($name === 'proforma_awaiting_payment') {
+                return ['isActive' => $this->active];
+            }
+
+            return null;
+        }
+    };
+}
+
+it('statusFilterQuery skips whereIn when proforma filter is active', function () {
+    $paid = Order::create(['email' => 'paid@test.nl', 'status' => 'paid',    'is_proforma' => false]);
+    $concept = Order::create(['email' => 'conc@test.nl', 'status' => Order::STATUS_CONCEPT, 'is_proforma' => true]);
+
+    $livewire = makeLivewireStub(true);
+
+    // Even though values excludes 'concept', the proforma-active path must NOT
+    // apply a whereIn, so both rows survive.
+    $ids = OrderResource::statusFilterQuery(
+        Order::query(),
+        ['values' => ['paid', 'partially_paid', 'waiting_for_confirmation']],
+        $livewire,
+    )->pluck('id')->all();
+
+    expect($ids)->toContain($paid->id)
+        ->and($ids)->toContain($concept->id);
+});
+
+it('statusFilterQuery applies whereIn when proforma filter is inactive', function () {
+    $paid = Order::create(['email' => 'paid@test.nl', 'status' => 'paid',    'is_proforma' => false]);
+    $concept = Order::create(['email' => 'conc@test.nl', 'status' => Order::STATUS_CONCEPT, 'is_proforma' => false]);
+
+    $livewire = makeLivewireStub(false);
+
+    $ids = OrderResource::statusFilterQuery(
+        Order::query(),
+        ['values' => ['paid']],
+        $livewire,
+    )->pluck('id')->all();
+
+    expect($ids)->toContain($paid->id)
+        ->and($ids)->not->toContain($concept->id);
 });
