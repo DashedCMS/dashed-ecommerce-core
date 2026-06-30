@@ -83,6 +83,7 @@ class ProformaCheckoutMail extends Mailable implements RegistersEmailTemplate
     public function build()
     {
         $siteName = Customsetting::get('site_name', Sites::getActive(), '');
+        $primaryColor = Customsetting::get('mail_primary_color', Sites::getActive(), '') ?: '#A0131C';
 
         $context = [
             'order' => $this->order,
@@ -91,6 +92,7 @@ class ProformaCheckoutMail extends Mailable implements RegistersEmailTemplate
             'customerLastName' => $this->order->last_name,
             'checkoutUrl' => $this->checkoutUrl,
             'siteName' => $siteName,
+            'primaryColor' => $primaryColor,
         ];
 
         $templateHtml = $this->renderFromTemplate($context);
