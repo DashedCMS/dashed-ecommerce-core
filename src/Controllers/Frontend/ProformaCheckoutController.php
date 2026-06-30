@@ -12,7 +12,7 @@ class ProformaCheckoutController
         $order = Order::where('hash', $orderHash)->where('is_proforma', true)->firstOrFail();
 
         if ($order->isPaidFor()) {
-            return response()->view('dashed-ecommerce-core::proforma.already-paid', ['order' => $order]);
+            return view('dashed-ecommerce-core::proforma.already-paid', ['order' => $order]);
         }
 
         return view('dashed-ecommerce-core::proforma.checkout', ['order' => $order]);

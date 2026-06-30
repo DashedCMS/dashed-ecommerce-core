@@ -1,17 +1,14 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('Deze bestelling is al betaald') }}</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 540px; margin: 80px auto; padding: 0 20px; color: #1f2937; text-align: center; }
-        h1 { font-size: 22px; margin-bottom: 12px; }
-        p { color: #6b7280; line-height: 1.6; }
-    </style>
-</head>
-<body>
-    <h1>{{ __('Deze bestelling is al betaald') }}</h1>
-    <p>{{ __('Bedankt, er is niets meer te doen.') }}</p>
-</body>
-</html>
+<x-master>
+    <section class="py-[clamp(40px,6vw,80px)]">
+        <x-container>
+            <div class="mx-auto max-w-md text-center">
+                <div class="mx-auto mb-6 grid size-16 place-items-center rounded-full bg-secondary text-primary-text">
+                    <x-lucide-check class="size-8"/>
+                </div>
+                <h1 class="font-display text-[clamp(26px,3vw,38px)] text-black">{{ __('Deze bestelling is al betaald') }}</h1>
+                <p class="mt-4 text-[rgba(48,84,91,0.7)]">{{ __('Bedankt, er is niets meer te doen.') }}</p>
+                <a href="{{ url('/') }}" class="button button--primary mt-8 inline-flex">{{ __('Naar de homepage') }}</a>
+            </div>
+        </x-container>
+    </section>
+</x-master>
