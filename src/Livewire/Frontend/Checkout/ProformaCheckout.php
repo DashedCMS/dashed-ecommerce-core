@@ -98,11 +98,19 @@ class ProformaCheckout extends Component
 
     public function retrieveShippingMethods(): void
     {
-        // Spiegelt Checkout::retrieveShippingMethods(): gebruikt
-        // ShoppingCart::getAvailableShippingMethods($country).
-        $this->shippingMethods = $this->country
-            ? ShoppingCart::getAvailableShippingMethods($this->country)->values()->toArray()
+        // Een proforma heeft GEEN sessie-cart (maatwerkproducten mogen daar nooit
+        // in komen). De min/max-order-value filtering moet daarom tegen de eigen
+        // proforma-total draaien, niet tegen een lege cart. We geven die total
+        // expliciet mee via $orderTotalOverride zodat ShoppingCart cartless werkt.
+        $proformaTotal = (float) ($this->order->total ?? 0);
+
+        $methods = $this->country
+            ? ShoppingCart::getAvailableShippingMethods($this->country, '', null, $proformaTotal)
             : [];
+
+        // getAvailableShippingMethods geeft een Collection terug wanneer een zone
+        // matcht en een lege array wanneer niet; collect() normaliseert beide.
+        $this->shippingMethods = collect($methods)->values()->toArray();
 
         if (! $this->shippingMethod && count($this->shippingMethods)) {
             $this->shippingMethod = (string) ($this->shippingMethods[0]['id'] ?? '');
@@ -151,18 +159,38 @@ class ProformaCheckout extends Component
             }
         }
 
+        // Verzendkosten in het ordertotaal verrekenen VOOR het opslaan en voor de
+        // betaling. outstandingAmount() = max(0, total - paid), dus zonder deze
+        // ophoging zou de klant de verzendkosten niet betalen. We spiegelen de
+        // manier waarop ConceptOrderService::saveAsConcept de bedragen zet: de
+        // (btw-inclusieve) prijs telt op bij total en subtotal, het btw-deel bij btw.
+        $shippingCost = 0.0;
+        $shippingVatRate = 21.0;
+        if ($selectedShipping && ($selectedShipping['costs'] ?? 0) > 0) {
+            $shippingCost = (float) $selectedShipping['costs'];
+            $shippingVatRate = (float) ($selectedShipping['vat_rate'] ?? 21);
+
+            $shippingVat = $shippingVatRate > 0
+                ? $shippingCost - ($shippingCost / (1 + $shippingVatRate / 100))
+                : 0.0;
+
+            $order->total = (float) $order->total + $shippingCost;
+            $order->subtotal = (float) $order->subtotal + $shippingCost;
+            $order->btw = round((float) $order->btw + $shippingVat, 2);
+        }
+
         $order->save();
         $order->refresh();
 
         // Verzendkosten als losse regel (product_id = null), net als Checkout::submit().
-        if ($selectedShipping && ($selectedShipping['costs'] ?? 0) > 0) {
+        if ($shippingCost > 0) {
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;
             $orderProduct->order_id = $order->id;
             $orderProduct->name = $selectedShipping['correctName'] ?? ($selectedShipping['name'] ?? 'Verzendkosten');
-            $orderProduct->price = $selectedShipping['costs'];
-            $orderProduct->vat_rate = $selectedShipping['vat_rate'] ?? 21;
+            $orderProduct->price = $shippingCost;
+            $orderProduct->vat_rate = $shippingVatRate;
             $orderProduct->discount = 0;
             $orderProduct->product_extras = [];
             $orderProduct->sku = 'shipping_costs';

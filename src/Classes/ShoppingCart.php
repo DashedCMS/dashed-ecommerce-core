@@ -74,7 +74,7 @@ class ShoppingCart
         return Cart::count();
     }
 
-    public static function getAvailableShippingMethods($countryName, string $shippingAddress = '', $paymentMethod = null)
+    public static function getAvailableShippingMethods($countryName, string $shippingAddress = '', $paymentMethod = null, ?float $orderTotalOverride = null)
     {
         $cartItems = cartHelper()->getCartItems();
         cartHelper()->preloadCartProducts(['productGroup']);
@@ -165,29 +165,37 @@ class ShoppingCart
                     });
                 }
 
-                // Use the cart total WITHOUT shipping costs so the
-                // minimum/maximum-order-value check on each shipping method
-                // is independent of whichever shipping method is currently
-                // selected. Otherwise a paid shipping method that crosses
-                // the free-shipping threshold would mark itself as unavailable:
-                // its own shipping costs push the running total above the
-                // free-shipping threshold while the merchant configured the
-                // threshold against the cart subtotal.
-                $total = cartHelper()->getTotal() - cartHelper()->getShippingCosts();
+                if ($orderTotalOverride !== null) {
+                    // Cartless aanroep (bijv. proforma checkout): er is geen
+                    // sessie-cart, dus filteren we de min/max-order-value tegen
+                    // een expliciet meegegeven totaal (de proforma-total) in
+                    // plaats van tegen cartHelper()->getTotal().
+                    $total = $orderTotalOverride;
+                } else {
+                    // Use the cart total WITHOUT shipping costs so the
+                    // minimum/maximum-order-value check on each shipping method
+                    // is independent of whichever shipping method is currently
+                    // selected. Otherwise a paid shipping method that crosses
+                    // the free-shipping threshold would mark itself as unavailable:
+                    // its own shipping costs push the running total above the
+                    // free-shipping threshold while the merchant configured the
+                    // threshold against the cart subtotal.
+                    $total = cartHelper()->getTotal() - cartHelper()->getShippingCosts();
 
-                // Een korting/cadeaubon mag de min/max-order-value check niet
-                // verstoren: een hoge kortingscode (of cadeaubon) capt het
-                // totaal op €0,01, waardoor alle shipping methods met een
-                // minimum_order_value > €0,01 wegvielen — en omdat deze filter
-                // vóór het definitief zetten van de verzendmethode draait, gaf
-                // getTotal() - getShippingCosts() per refresh een ander (soms
-                // negatief) bedrag. We tellen getDiscount() terug op zodat we
-                // altijd tegen de echte, korting-onafhankelijke cart-waarde
-                // checken (getTotal() + getDiscount() - getShippingCosts() ==
-                // totalWithoutDiscount - shippingCosts).
-                $activeDiscountCode = cartHelper()->getDiscountCode();
-                if ($activeDiscountCode) {
-                    $total += cartHelper()->getDiscount();
+                    // Een korting/cadeaubon mag de min/max-order-value check niet
+                    // verstoren: een hoge kortingscode (of cadeaubon) capt het
+                    // totaal op €0,01, waardoor alle shipping methods met een
+                    // minimum_order_value > €0,01 wegvielen — en omdat deze filter
+                    // vóór het definitief zetten van de verzendmethode draait, gaf
+                    // getTotal() - getShippingCosts() per refresh een ander (soms
+                    // negatief) bedrag. We tellen getDiscount() terug op zodat we
+                    // altijd tegen de echte, korting-onafhankelijke cart-waarde
+                    // checken (getTotal() + getDiscount() - getShippingCosts() ==
+                    // totalWithoutDiscount - shippingCosts).
+                    $activeDiscountCode = cartHelper()->getDiscountCode();
+                    if ($activeDiscountCode) {
+                        $total += cartHelper()->getDiscount();
+                    }
                 }
 
                 $shippingMethods = $shippingZone->shippingMethods()
