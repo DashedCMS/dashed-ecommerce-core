@@ -6,7 +6,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Mail\EmailRenderer;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
@@ -106,13 +108,18 @@ class ProformaCheckoutMail extends Mailable implements RegistersEmailTemplate
                 ->subject($this->templateSubject($fallbackSubject, $context));
         }
 
-        return $this->html(
-            '<p>Beste ' . e($this->order->first_name) . ',</p>'
-            . '<p>Jouw bestelling staat klaar om te worden afgerekend.</p>'
-            . '<p><a href="' . e($this->checkoutUrl) . '">' . e($this->checkoutUrl) . '</a></p>'
-            . '<p>Met vriendelijke groet,<br>' . e($siteName) . '</p>'
-        )
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
+        // Geen opgeslagen template: render de standaard-blocks via dezelfde
+        // gedeelde layout/renderer, zodat de mail ook zonder admin-seeding al
+        // netjes is (incl. order-overzicht), net als de order-bevestiging.
+        $defaultTemplate = new EmailTemplate();
+        $defaultTemplate->mailable_key = static::emailTemplateKey();
+        $defaultTemplate->setTranslations('subject', [app()->getLocale() => $fallbackSubject]);
+        $defaultTemplate->setTranslations('blocks', [app()->getLocale() => static::defaultBlocks()]);
+
+        [$fromEmail, $fromName] = $this->templateFrom(Customsetting::get('site_from_email'), Customsetting::get('site_name'));
+
+        return $this->html(app(EmailRenderer::class)->render($defaultTemplate, $context))
+            ->from($fromEmail, $fromName)
             ->subject($fallbackSubject);
     }
 }
