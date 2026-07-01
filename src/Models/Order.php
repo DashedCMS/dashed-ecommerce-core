@@ -426,6 +426,19 @@ class Order extends Model
         return $query->where('status', self::STATUS_CONCEPT)->where('is_proforma', true);
     }
 
+    /**
+     * Alleen "echte" bestellingen: betaald of met een echt factuurnummer.
+     * Sluit concepten (geen invoice_id) en de PROFORMA/RETURN-placeholders uit,
+     * zodat ze niet als openstaande bestelling meetellen tot ze betaald zijn of
+     * een factuurnummer hebben.
+     */
+    public function scopeWithRealInvoice($query)
+    {
+        return $query->whereNotNull('invoice_id')
+            ->where('invoice_id', '!=', '')
+            ->whereNotIn('invoice_id', ['PROFORMA', 'RETURN']);
+    }
+
     public function scopeNotConcept($query)
     {
         return $query->where('status', '!=', self::STATUS_CONCEPT);

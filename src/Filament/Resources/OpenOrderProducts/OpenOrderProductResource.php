@@ -40,7 +40,7 @@ class OpenOrderProductResource extends Resource
         // SKU is gekwalificeerd zodat deze scope ook werkt wanneer een tab
         // de query joint met dashed__products (welke ook een sku-kolom heeft).
         return parent::getEloquentQuery()
-            ->whereHas('order', fn ($q) => $q->where('fulfillment_status', 'unhandled'))
+            ->whereHas('order', fn ($q) => $q->where('fulfillment_status', 'unhandled')->withRealInvoice())
             ->where(function ($q) {
                 $q->whereNull('dashed__order_products.sku')
                     ->orWhereNotIn('dashed__order_products.sku', ['shipping_costs', 'payment_costs']);
