@@ -1163,10 +1163,16 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public function render()
     {
-        $view = 'dashed-ecommerce-core::pos.pages.point-of-sale';
+        $layout = Customsetting::get('pos_layout', null, 'classic');
 
-        if (view()->exists('dashed.pos.point-of-sale')) {
-            $view = 'dashed.pos.point-of-sale';
+        if ($layout === 'modern') {
+            $view = view()->exists('dashed.pos.point-of-sale-modern')
+                ? 'dashed.pos.point-of-sale-modern'
+                : 'dashed-ecommerce-core::pos.pages.point-of-sale-modern';
+        } else {
+            $view = view()->exists('dashed.pos.point-of-sale')
+                ? 'dashed.pos.point-of-sale'
+                : 'dashed-ecommerce-core::pos.pages.point-of-sale';
         }
 
         return view($view);
