@@ -9,6 +9,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\ProformaCheckout;
 
@@ -54,6 +55,18 @@ function makeProformaNlShippingMethod(float $costs): ShippingMethod
     ]);
 }
 
+function makeShippingProformaPaymentMethod(): PaymentMethod
+{
+    return PaymentMethod::create([
+        'site_id' => Sites::getActive(),
+        'name' => ['nl' => 'iDEAL'],
+        'type' => 'online',
+        'active' => 1,
+        'psp' => 'mollie',
+        'available_from_amount' => 0,
+    ]);
+}
+
 beforeEach(function () {
     Mail::fake();
 });
@@ -70,12 +83,14 @@ it('lists shipping methods for the proforma total without a session cart', funct
 it('charges the customer for shipping by raising the order total on submit', function () {
     $order = makeShippingProforma(121.0);
     $method = makeProformaNlShippingMethod(6.95);
+    $paymentMethod = makeShippingProformaPaymentMethod();
 
     Livewire::test(ProformaCheckout::class, ['orderHash' => $order->hash])
         ->set('firstName', 'Jan')->set('lastName', 'Jansen')
         ->set('street', 'Straat')->set('houseNr', '1')
         ->set('zipCode', '1234AB')->set('city', 'Stad')->set('country', 'NL')
         ->set('shippingMethod', (string) $method->id)
+        ->set('paymentMethod', (string) $paymentMethod->id)
         ->call('submit');
 
     $order->refresh();

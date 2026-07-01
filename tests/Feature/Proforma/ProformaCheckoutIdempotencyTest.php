@@ -11,10 +11,11 @@ declare(strict_types=1);
 // does not block payment.
 
 use Livewire\Livewire;
-use Illuminate\Support\Facades\Mail;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout\ProformaCheckout;
 
@@ -59,6 +60,18 @@ function makeIdempotencyNlShippingMethod(float $costs): ShippingMethod
     ]);
 }
 
+function makeIdempotencyPaymentMethod(): PaymentMethod
+{
+    return PaymentMethod::create([
+        'site_id' => Sites::getActive(),
+        'name' => ['nl' => 'iDEAL'],
+        'type' => 'online',
+        'active' => 1,
+        'psp' => 'mollie',
+        'available_from_amount' => 0,
+    ]);
+}
+
 beforeEach(function () {
     Mail::fake();
 });
@@ -68,12 +81,14 @@ beforeEach(function () {
 it('second submit on a pending proforma does not compound the total or add a duplicate shipping line', function () {
     $order = makeIdempotencyShippingProforma(121.0);
     $method = makeIdempotencyNlShippingMethod(6.95);
+    $paymentMethod = makeIdempotencyPaymentMethod();
 
     $component = Livewire::test(ProformaCheckout::class, ['orderHash' => $order->hash])
         ->set('firstName', 'Jan')->set('lastName', 'Jansen')
         ->set('street', 'Straat')->set('houseNr', '1')
         ->set('zipCode', '1234AB')->set('city', 'Stad')->set('country', 'NL')
-        ->set('shippingMethod', (string) $method->id);
+        ->set('shippingMethod', (string) $method->id)
+        ->set('paymentMethod', (string) $paymentMethod->id);
 
     // First submit: transitions concept to pending and adds one shipping line.
     // No PSP is connected in the test harness, so the method ends with a flash
@@ -107,11 +122,13 @@ it('submit on an already-paid proforma does not mutate the order', function () {
     $order->orderProducts()->create([
         'product_id' => null, 'name' => 'Maatwerk', 'quantity' => 1, 'price' => 100.0, 'vat_rate' => 21,
     ]);
+    $paymentMethod = makeIdempotencyPaymentMethod();
 
     Livewire::test(ProformaCheckout::class, ['orderHash' => $order->hash])
         ->set('firstName', 'Jan')->set('lastName', 'Jansen')
         ->set('street', 'Straat')->set('houseNr', '1')
         ->set('zipCode', '1234AB')->set('city', 'Stad')->set('country', 'NL')
+        ->set('paymentMethod', (string) $paymentMethod->id)
         ->call('submit');
 
     $order->refresh();
@@ -138,11 +155,13 @@ it('submit succeeds without a shipping line when shipping is enabled but no meth
     $order->orderProducts()->create([
         'product_id' => null, 'name' => 'Maatwerk', 'quantity' => 1, 'price' => 121.0, 'vat_rate' => 21,
     ]);
+    $paymentMethod = makeIdempotencyPaymentMethod();
 
     Livewire::test(ProformaCheckout::class, ['orderHash' => $order->hash])
         ->set('firstName', 'Jan')->set('lastName', 'Jansen')
         ->set('street', 'Straat')->set('houseNr', '1')
         ->set('zipCode', '1234AB')->set('city', 'Stad')->set('country', 'NL')
+        ->set('paymentMethod', (string) $paymentMethod->id)
         ->call('submit')
         ->assertHasNoErrors(['shippingMethod']);
 

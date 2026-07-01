@@ -326,9 +326,13 @@ class ShoppingCart
         return [];
     }
 
-    public static function getAvailablePaymentMethods($countryName, ?int $userId = null)
+    public static function getAvailablePaymentMethods($countryName, ?int $userId = null, ?float $totalOverride = null)
     {
-        $paymentMethods = self::getPaymentMethods(userId: $userId);
+        // $totalOverride laat cartless-callers (o.a. de proforma-checkout, die geen
+        // sessie-cart heeft) de available_from_amount-filter tegen een expliciete
+        // total draaien i.p.v. tegen cartHelper()->getTotal(). Null valt terug op
+        // het oude gedrag (cart-total), dus dit is backwards-compatible.
+        $paymentMethods = self::getPaymentMethods('online', $totalOverride, $userId, false);
         $allCountries = Countries::getCountries();
         $countryNameLower = strtolower($countryName);
         $shippingZones = ShippingZone::get();
