@@ -1266,18 +1266,35 @@
         },
 
         checkPinTerminalPayment() {
+            // Ruim een eventueel nog lopend interval op zodat er nooit twee
+            // pollers tegelijk draaien (orphan intervals blijven anders pollen).
+            this.stopPinTerminalPolling();
+
             this.pinTerminalIntervalId = setInterval(() => {
-                if (this.isPinTerminalPayment && this.pinTerminalStatus == 'pending') {
+                if (this.isPinTerminalPayment && this.pinTerminalStatus == 'pending' && this.order) {
                     console.log('Checking pin terminal payment status...');
                     this.pollPinTerminalPayment();
                 } else {
                     console.log('Stopping pin terminal payment status check.');
-                    clearInterval(this.pinTerminalIntervalId); // Stop polling if condition changes
+                    this.stopPinTerminalPolling(); // Stop polling if condition changes
                 }
             }, 1000);
         },
 
+        stopPinTerminalPolling() {
+            if (this.pinTerminalIntervalId) {
+                clearInterval(this.pinTerminalIntervalId);
+                this.pinTerminalIntervalId = null;
+            }
+        },
+
         async pollPinTerminalPayment() {
+            // Zonder order kan de backend niets controleren (400). Kan gebeuren
+            // als de kassa gereset wordt terwijl een pinbetaling nog 'pending' is.
+            if (!this.order) {
+                this.stopPinTerminalPolling();
+                return;
+            }
 
             try {
                 console.log('Polling pin terminal payment status...');
@@ -1367,6 +1384,11 @@
         async resetPOS() {
             this.lastOrder = this.order;
             this.order = null;
+            // Breek een eventueel lopende pinbetaling-polling af; anders blijft
+            // die pollen met een lege order (400) en klapt de pin-template.
+            this.stopPinTerminalPolling();
+            this.isPinTerminalPayment = false;
+            this.pinTerminalStatus = false;
             this.paymentPopup = false;
             this.orderUrl = null;
             this.postPay = false;

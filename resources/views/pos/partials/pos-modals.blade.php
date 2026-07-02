@@ -298,7 +298,7 @@
                     <div class="grid gap-2 flex items-center justify-between">
                         <p class="text-3xl">{{ Translation::get('pin-transaction-started', 'point-of-sale', 'De klant mag nu pinnen.') }}</p>
                         <p class="text-xl text-gray-400" x-show="order && order.paidAmount > 0">
-                            Al betaald: <span x-html="order.paidAmountFormatted"></span>
+                            Al betaald: <span x-html="order?.paidAmountFormatted"></span>
                         </p>
                     </div>
                 </template>
