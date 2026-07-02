@@ -27,8 +27,18 @@ class SendOrderHandledFlowEmails extends Command
     {
         $enrollments = OrderFlowEnrollment::query()
             ->whereNull('cancelled_at')
-            ->whereNotNull('next_mail_at')
-            ->where('next_mail_at', '<=', now())
+            ->where(function ($query) {
+                // Snelle pad: inschrijvingen die aan de beurt zijn.
+                $query->where('next_mail_at', '<=', now())
+                    // Vangnet: inschrijvingen zonder next_mail_at zijn nooit
+                    // ingepland (bv. legacy-inschrijvingen van vóór de
+                    // poll-based verzender, of een bulk-import/backfill). Zonder
+                    // dit filter blijven die permanent onzichtbaar en versturen
+                    // ze nooit een mail. processEnrollment() herberekent
+                    // next_mail_at en verstuurt indien inmiddels verschuldigd,
+                    // of laat 'm met rust als er geen openstaande stap meer is.
+                    ->orWhereNull('next_mail_at');
+            })
             ->with(['order', 'flow.steps'])
             ->get();
 
