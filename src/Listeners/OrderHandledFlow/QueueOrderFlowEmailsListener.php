@@ -40,6 +40,11 @@ class QueueOrderFlowEmailsListener implements ShouldQueue
         if (in_array((string) $order->status, ['concept', 'cancelled'], true)) {
             return;
         }
+        // Alleen betaalde bestellingen mogen in de opvolg-flow. Een order kan
+        // op 'handled' gezet worden zonder betaling; die hoort er niet in.
+        if (! $order->isPaidFor()) {
+            return;
+        }
 
         $flows = OrderHandledFlow::query()
             ->where('is_active', true)

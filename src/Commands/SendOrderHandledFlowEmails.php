@@ -90,6 +90,25 @@ class SendOrderHandledFlowEmails extends Command
             return;
         }
 
+        // Alleen betaalde, echte bestellingen horen in de flow. Proforma-/
+        // retour-facturen en niet-betaalde orders mogen nooit een opvolg-mail
+        // krijgen; annuleer de inschrijving als de order niet (meer)
+        // kwalificeert. Dit is de laatste vangst, ongeacht hoe de inschrijving
+        // ooit is aangemaakt (listener, bulk-backfill of import).
+        if (in_array((string) $order->invoice_id, ['PROFORMA', 'RETURN'], true) || ! $order->isPaidFor()) {
+            $enrollment->forceFill([
+                'cancelled_at' => now(),
+                'cancelled_reason' => 'order_not_paid_or_proforma',
+                'next_mail_at' => null,
+            ])->save();
+
+            if ((string) $flow->trigger_status === 'handled') {
+                $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
+            }
+
+            return;
+        }
+
         if (blank($order->email)) {
             $enrollment->forceFill([
                 'cancelled_at' => now(),

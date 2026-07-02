@@ -55,6 +55,9 @@ class BackfillOrderHandledFlowService
         $query = Order::query()
             ->where('fulfillment_status', $triggerStatus)
             ->where('updated_at', '>=', $since)
+            // Alleen betaalde, echte bestellingen; nooit proforma-/retour-facturen.
+            ->isPaid()
+            ->whereNotIn('invoice_id', ['PROFORMA', 'RETURN'])
             ->where(function ($q) {
                 $q->whereNull('order_origin')->orWhere('order_origin', '!=', 'Bol');
             });
