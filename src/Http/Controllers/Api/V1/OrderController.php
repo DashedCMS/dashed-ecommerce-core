@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
@@ -23,8 +23,6 @@ class OrderController extends Controller
     use MapsCarrierLabelStatus;
 
     private const CHANGEABLE_STATUSES = ['paid', 'partially_paid', 'cancelled', 'waiting_for_confirmation'];
-
-    private const CHANGEABLE_FULFILLMENT_STATUSES = ['handled', 'partially_handled', 'unhandled', 'waiting_for_supplier'];
 
     /**
      * Betaalstatus-opties — gelijk aan de Filament order-resource.
@@ -232,7 +230,7 @@ class OrderController extends Controller
         $model = Order::thisSite()->findOrFail($order);
 
         $data = $request->validate([
-            'fulfillment_status' => ['required', 'string', Rule::in(self::CHANGEABLE_FULFILLMENT_STATUSES)],
+            'fulfillment_status' => ['required', 'string', Rule::in(array_keys(Orders::getFulfillmentStatusses()))],
         ]);
 
         $model->changeFulfillmentStatus($data['fulfillment_status']);
@@ -425,7 +423,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'ids' => ['required', 'array', 'max:100'],
             'ids.*' => ['integer'],
-            'fulfillment_status' => ['required', 'string', Rule::in(self::CHANGEABLE_FULFILLMENT_STATUSES)],
+            'fulfillment_status' => ['required', 'string', Rule::in(array_keys(Orders::getFulfillmentStatusses()))],
         ]);
 
         return $this->runBulk($request, $data['ids'], function (Order $model) use ($data): void {
