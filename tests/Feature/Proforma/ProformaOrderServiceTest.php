@@ -42,3 +42,29 @@ it('creates a sent proforma concept with a custom product and no invoice', funct
 
     Mail::assertSent(ProformaCheckoutMail::class);
 });
+
+/**
+ * Na het versturen van een proforma moet de POS-cart afgesloten worden, zodat
+ * de volgende verkoop met een verse, lege cart begint en klantgegevens
+ * (e-mail) + verzending van deze proforma niet blijven staan.
+ */
+it('finishes the POS cart after sending a proforma so the next sale starts fresh', function () {
+    Illuminate\Support\Facades\Mail::fake();
+    $cashier = Dashed\DashedCore\Models\User::factory()->create();
+
+    $posCart = Dashed\DashedEcommerceCore\Models\POSCart::create([
+        'identifier' => 'pos-finish',
+        'user_id' => $cashier->id,
+        'status' => 'active',
+        'email' => 'klant@example.com',
+        'products' => [[
+            'id' => null, 'name' => 'Dienst', 'price' => 50.0, 'vat_rate' => 21,
+            'quantity' => 1, 'extra' => [], 'customProduct' => true, 'identifier' => 'x',
+        ]],
+    ]);
+
+    Dashed\DashedEcommerceCore\Classes\ProformaOrderService::createAndSend($posCart, $cashier, false);
+
+    expect($posCart->fresh()->status)->toBe('finished')
+        ->and(Dashed\DashedEcommerceCore\Models\POSCart::where('user_id', $cashier->id)->where('status', 'active')->exists())->toBeFalse();
+});

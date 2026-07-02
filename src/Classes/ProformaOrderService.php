@@ -26,6 +26,12 @@ class ProformaOrderService
         $order->proforma_sent_at = now();
         $order->save();
 
+        // Sluit de POS-cart af (zoals een afgeronde verkoop), zodat de volgende
+        // verkoop met een verse, lege cart start en de klantgegevens/verzending
+        // van deze proforma niet blijven staan.
+        $posCart->status = 'finished';
+        $posCart->save();
+
         return $order;
     }
 }
