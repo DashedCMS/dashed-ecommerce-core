@@ -94,6 +94,7 @@ class OrderSettingsPage extends Page
         $formData["attribution_tracking_enabled"] = (bool) Customsetting::get('attribution_tracking_enabled', null, true);
         $formData["attribution_show_on_invoice"] = (bool) Customsetting::get('attribution_show_on_invoice', null, false);
         $formData["order_handled_flow_review_url"] = (string) Customsetting::get('order_handled_flow_review_url', null, '');
+        $formData["order_flow_max_sends_per_run"] = (int) Customsetting::get('order_flow_max_sends_per_run', null, 0);
         $formData["invoice_printer_connector_type"] = Customsetting::get('invoice_printer_connector_type', null, '');
         $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
         $formData["packing_slip_printer_connector_type"] = Customsetting::get('packing_slip_printer_connector_type', null, '');
@@ -187,6 +188,13 @@ class OrderSettingsPage extends Page
                         ->helperText('Wordt als :reviewUrl: in opvolg-mails ingevuld wanneer de flow zelf geen review-URLs heeft staan. Vul per flow meerdere URLs in om A/B-testen tussen platformen mogelijk te maken.')
                         ->url()
                         ->maxLength(2048)
+                        ->columnSpanFull(),
+                    TextInput::make('order_flow_max_sends_per_run')
+                        ->label('Max. opvolg-mails per verzendronde')
+                        ->helperText('Begrenst hoeveel opvolg-mails de verzender per run (uurlijks) verstuurt. Handig om een grote achterstand gespreid te versturen i.p.v. in één keer. 0 = geen limiet.')
+                        ->numeric()
+                        ->minValue(0)
+                        ->default(0)
                         ->columnSpanFull(),
                 ])
                 ->columns(1),
@@ -423,6 +431,7 @@ class OrderSettingsPage extends Page
         Customsetting::set('attribution_tracking_enabled', (bool) ($this->form->getState()['attribution_tracking_enabled'] ?? true));
         Customsetting::set('attribution_show_on_invoice', (bool) ($this->form->getState()['attribution_show_on_invoice'] ?? false));
         Customsetting::set('order_handled_flow_review_url', (string) ($this->form->getState()['order_handled_flow_review_url'] ?? ''));
+        Customsetting::set('order_flow_max_sends_per_run', (int) ($this->form->getState()['order_flow_max_sends_per_run'] ?? 0));
 
         foreach ($locales as $locale) {
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
