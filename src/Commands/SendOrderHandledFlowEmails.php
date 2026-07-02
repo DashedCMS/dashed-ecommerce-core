@@ -6,6 +6,7 @@ use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Mail\OrderHandledMail;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
@@ -42,9 +43,22 @@ class SendOrderHandledFlowEmails extends Command
             ->with(['order', 'flow.steps'])
             ->get();
 
+        // Optionele rem per run: bij een grote (retroactieve) achterstand wil je
+        // niet in één run honderden mails de deur uit blazen (deliverability /
+        // spam-risico). Met deze Customsetting > 0 verstuurt elke run maximaal
+        // N mails; de rest wordt de volgende run opgepakt. 0 = geen limiet.
+        $maxSendsPerRun = (int) Customsetting::get('order_flow_max_sends_per_run', null, 0);
+        $sentThisRun = 0;
+
         foreach ($enrollments as $enrollment) {
             try {
-                $this->processEnrollment($enrollment);
+                if ($this->processEnrollment($enrollment)) {
+                    $sentThisRun++;
+
+                    if ($maxSendsPerRun > 0 && $sentThisRun >= $maxSendsPerRun) {
+                        break;
+                    }
+                }
             } catch (Throwable $e) {
                 report($e);
                 Log::warning('order-flow: enrollment kon niet verwerkt worden', [
@@ -59,7 +73,7 @@ class SendOrderHandledFlowEmails extends Command
         return self::SUCCESS;
     }
 
-    protected function processEnrollment(OrderFlowEnrollment $enrollment): void
+    protected function processEnrollment(OrderFlowEnrollment $enrollment): bool
     {
         $order = $enrollment->order;
         $flow = $enrollment->flow;
@@ -71,13 +85,13 @@ class SendOrderHandledFlowEmails extends Command
                 'next_mail_at' => null,
             ])->save();
 
-            return;
+            return false;
         }
 
         if (! $flow->is_active) {
             // Flow tijdelijk uit; laat enrollment staan zodat hij opgepakt wordt
             // zodra de flow weer aanstaat. Geen update nodig.
-            return;
+            return false;
         }
 
         if (in_array((string) $order->status, ['concept', 'cancelled'], true)) {
@@ -87,7 +101,7 @@ class SendOrderHandledFlowEmails extends Command
                 'next_mail_at' => null,
             ])->save();
 
-            return;
+            return false;
         }
 
         // Alleen betaalde, echte bestellingen horen in de flow. Proforma-/
@@ -106,7 +120,7 @@ class SendOrderHandledFlowEmails extends Command
                 $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
             }
 
-            return;
+            return false;
         }
 
         if (blank($order->email)) {
@@ -116,7 +130,7 @@ class SendOrderHandledFlowEmails extends Command
                 'next_mail_at' => null,
             ])->save();
 
-            return;
+            return false;
         }
 
         // Cooldown: klant heeft recent een nieuwe betaalde bestelling geplaatst.
@@ -140,7 +154,7 @@ class SendOrderHandledFlowEmails extends Command
                     $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
                 }
 
-                return;
+                return false;
             }
         }
 
@@ -165,13 +179,15 @@ class SendOrderHandledFlowEmails extends Command
             // Geen due stap meer; herrekenen voor UI en done.
             $enrollment->recomputeNextMailAt();
 
-            return;
+            return false;
         }
 
         try {
             $locale = $order->locale ?: app()->getLocale();
             Mail::to($order->email)->send(new OrderHandledMail($order, $dueStep, $locale));
             $enrollment->markStepSent((int) $dueStep->id);
+
+            return true;
         } catch (Throwable $e) {
             report($e);
             Log::warning('order-flow: mail kon niet verstuurd worden', [
@@ -193,6 +209,8 @@ class SendOrderHandledFlowEmails extends Command
             if ((string) $flow->trigger_status === 'handled') {
                 $order->forceFill(['handled_flow_cancelled_at' => now()])->save();
             }
+
+            return false;
         }
     }
 }
