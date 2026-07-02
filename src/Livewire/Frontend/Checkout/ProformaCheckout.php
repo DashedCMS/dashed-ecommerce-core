@@ -410,6 +410,10 @@ class ProformaCheckout extends Component
 
         $orderPayment->save();
         $orderPayment->refresh();
+        // Koppel de al-geladen order expliciet zodat de PSP (o.a. PayNL leest
+        // $orderPayment->order->orderProducts) niet afhankelijk is van een
+        // lazy-load die in sommige contexten null teruggeeft.
+        $orderPayment->setRelation('order', $order);
 
         // Handmatige (own) betaling: geen PSP-transactie, direct naar wachten-op-bevestiging.
         if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
