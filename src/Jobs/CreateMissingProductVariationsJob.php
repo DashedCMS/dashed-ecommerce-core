@@ -27,11 +27,20 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     public ProductGroup $productGroup;
 
     /**
+     * Optionele selectie van variaties om aan te maken. Elke variatie is een
+     * lijst van product_filter_option_id's. Null = alle ontbrekende variaties.
+     *
+     * @var array<int, array<int, int>>|null
+     */
+    public ?array $variations = null;
+
+    /**
      * Create a new job instance.
      */
-    public function __construct(ProductGroup $productGroup)
+    public function __construct(ProductGroup $productGroup, ?array $variations = null)
     {
         $this->productGroup = $productGroup;
+        $this->variations = $variations;
     }
 
     /**
@@ -39,7 +48,7 @@ class CreateMissingProductVariationsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $missingVariations = $this->productGroup->missingVariations();
+        $missingVariations = $this->variations ?? $this->productGroup->missingVariations();
 
         if (! count($missingVariations) && ! $this->productGroup->products->count()) {
             $missingVariations = [

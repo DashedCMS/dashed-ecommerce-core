@@ -32,6 +32,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\TrashedFilter;
 use Dashed\DashedAi\Jobs\GenerateAiContent;
 use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Forms\Components\CheckboxList;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -44,6 +45,7 @@ use Dashed\DashedEcommerceCore\Models\ProductFilter;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
+use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
@@ -200,14 +202,39 @@ class ProductGroupResource extends Resource
             ->headerActions([
                 \Filament\Actions\Action::make('createMissingVariations')
                     ->label(fn ($record) => "Ontbrekende variaties aanmaken (" . count($record->missing_variations ?? []) . ")")
-                    ->visible(fn ($livewire, $record, $get) => count($record->missing_variations ?? []) && $livewire instanceof EditProductGroup)
-                    ->requiresConfirmation()
-                    ->action(function ($record) {
-                        CreateMissingProductVariationsJob::dispatch($record)
+                    ->visible(fn ($livewire, $record) => count($record->missing_variations ?? []) && $livewire instanceof EditProductGroup)
+                    ->modalHeading('Ontbrekende variaties aanmaken')
+                    ->modalDescription('Vink de variaties uit die je NIET wilt aanmaken. Alleen de aangevinkte variaties worden aangemaakt.')
+                    ->modalSubmitActionLabel('Geselecteerde aanmaken')
+                    ->fillForm(fn ($record) => ['variations' => array_keys(static::missingVariationOptions($record))])
+                    ->form(fn ($record) => [
+                        CheckboxList::make('variations')
+                            ->label('Aan te maken variaties')
+                            ->options(static::missingVariationOptions($record))
+                            ->columns(2)
+                            ->bulkToggleable(),
+                    ])
+                    ->action(function (array $data, $record) {
+                        $variations = collect($data['variations'] ?? [])
+                            ->map(fn ($key) => array_values(array_filter(array_map('intval', explode('-', (string) $key)))))
+                            ->filter(fn ($ids) => count($ids))
+                            ->values()
+                            ->all();
+
+                        if (! count($variations)) {
+                            Notification::make()
+                                ->title('Geen variaties geselecteerd')
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        CreateMissingProductVariationsJob::dispatch($record, $variations)
                             ->onQueue('ecommerce');
 
                         Notification::make()
-                            ->title('Missende variaties worden aangemaakt, refresh de pagina om de voortgang te zien')
+                            ->title(count($variations) . ' variatie(s) worden aangemaakt, refresh de pagina om de voortgang te zien')
                             ->success()
                             ->send();
                     }),
@@ -625,5 +652,47 @@ class ProductGroupResource extends Resource
             'create' => CreateProductGroup::route('/create'),
             'edit' => EditProductGroup::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Bouwt voor elke ontbrekende variatie een [key => label]-paar voor de
+     * aanvinklijst. De key is de aaneengeschakelde product_filter_option_id's
+     * (stabiel), het label is leesbaar, bv. "Maat: L · Kleur: Rood".
+     *
+     * @return array<string, string>
+     */
+    public static function missingVariationOptions($record): array
+    {
+        $missing = $record->missingVariations();
+
+        $allOptionIds = collect($missing)
+            ->flatMap(fn ($variation) => array_values($variation))
+            ->unique()
+            ->all();
+
+        $optionsMap = ProductFilterOption::with('productFilter')
+            ->whereIn('id', $allOptionIds)
+            ->get()
+            ->keyBy('id');
+
+        $result = [];
+        foreach ($missing as $variation) {
+            $optionIds = array_values($variation);
+            $key = implode('-', $optionIds);
+            $label = collect($optionIds)
+                ->map(function ($id) use ($optionsMap) {
+                    $option = $optionsMap->get($id);
+                    if (! $option) {
+                        return (string) $id;
+                    }
+                    $filterName = $option->productFilter?->name;
+
+                    return ($filterName ? $filterName . ': ' : '') . $option->name;
+                })
+                ->implode(' · ');
+            $result[$key] = $label;
+        }
+
+        return $result;
     }
 }
