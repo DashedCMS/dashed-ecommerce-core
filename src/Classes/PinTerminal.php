@@ -19,8 +19,18 @@ class PinTerminal
         $order->status = 'pending';
         $order->save();
 
+        // Stop de status-checks van eventuele nog actieve (pending) pin-betalingen
+        // voor deze order voordat we een nieuwe starten: de
+        // CheckPinTerminalPaymentStatusJob van een betaling stopt zodra die niet
+        // meer 'pending' is. Zo blijven oude polling-loops niet doordraaien
+        // (de terminal kan er sowieso maar 1 tegelijk aan).
+        $order->orderPayments()
+            ->where('status', 'pending')
+            ->whereHas('paymentMethod', fn ($query) => $query->whereNotNull('pin_terminal_id'))
+            ->update(['status' => 'cancelled']);
+
         $orderPayment = new OrderPayment();
-        $orderPayment->amount = $order->total - $order->orderPayments->where('status', 'paid')->sum('amount');
+        $orderPayment->amount = $order->total - $order->orderPayments()->where('status', 'paid')->sum('amount');
         $orderPayment->order_id = $order->id;
         $orderPayment->payment_method_id = $paymentMethod->id;
         $orderPayment->payment_method = $paymentMethod->name;
