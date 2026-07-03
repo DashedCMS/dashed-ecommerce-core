@@ -394,7 +394,7 @@
         </div>
     </div>
 
-    @include('dashed-ecommerce-core::pos.partials.pos-modals')
+    @include('dashed-ecommerce-core::pos.partials.pos-modals-modern')
 @include('dashed-ecommerce-core::pos.partials.pos-script')
 
 <x-filament-actions::modals/>
