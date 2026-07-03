@@ -128,6 +128,14 @@ class ViewOrder extends ViewRecord
                 ->url($this->record->getUrl())
                 ->tooltip('Bekijk bestelling in de webshop')
                 ->openUrlInNewTab(),
+            Action::make('openProformaCheckout')
+                ->label('Proforma-afrekenlink')
+                ->icon('heroicon-o-link')
+                ->color('warning')
+                ->tooltip('Open de afrekenpagina die naar de klant is gestuurd')
+                ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
+                ->openUrlInNewTab()
+                ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
             Action::make('edit')
                 ->hiddenLabel()
                 ->icon('heroicon-s-pencil-square')
