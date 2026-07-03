@@ -276,7 +276,11 @@
             }
         },
 
-        async retrieveCart() {
+        async retrieveCart(applyDiscountCode = null) {
+            // retrieveCart is een pure refresh: het past ALLEEN een kortingscode toe
+            // als er expliciet eentje wordt meegegeven (scan-as-code flow). Zonder
+            // argument wordt er niets toegepast, zodat een net verwijderde code niet
+            // per ongeluk opnieuw wordt toegevoegd bij het verversen van de mand.
             this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.retrieve-cart') }}', {
@@ -289,7 +293,7 @@
                     body: JSON.stringify({
                         cartInstance: this.cartInstance,
                         posIdentifier: this.posIdentifier,
-                        discountCode: this.discountCode,
+                        discountCode: applyDiscountCode,
                     })
                 });
 
@@ -740,14 +744,15 @@
                     } else {
                         this.products = data.products;
 
+                        let codeToApply = null;
                         if (data.discountCode) {
-                            this.discountCode = data.discountCode;
+                            codeToApply = data.discountCode;
                         } else if (data.order) {
                             this.showOrdersPopup();
                             this.selectedOrder = data.order;
                         }
 
-                        this.retrieveCart();
+                        this.retrieveCart(codeToApply);
                         this.searchedProducts = [];
                         this.focus();
                     }
@@ -1943,8 +1948,9 @@
                 this.toggle(variable[0]);
             })
 
-            $wire.on('discountCodeCreated', (variable) => {
-                this.discountCode = variable[0].discountCode;
+            $wire.on('discountCodeCreated', () => {
+                // De kortingscode is server-side al toegepast (submitCreateDiscountForm);
+                // hier alleen de mand verversen, niet opnieuw toepassen.
                 this.createDiscountPopup = false;
                 this.focus();
                 this.retrieveCart();
