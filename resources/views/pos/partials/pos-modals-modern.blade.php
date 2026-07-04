@@ -5,8 +5,8 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="toggle('customProductPopup');"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative">
-            <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative">
+            <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                  @click="toggle('customProductPopup')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="size-10">
@@ -22,7 +22,7 @@
                         <button type="submit"
                                 :disabled="loading"
                                 :class="loading ? 'bg-primary-500/50 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-600'"
-                                class="px-4 py-2 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                class="px-4 py-2 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full">
                             Toevoegen
                         </button>
                     </div>
@@ -36,8 +36,8 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="toggle('changeProductPricePopup')"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative">
-            <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative">
+            <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                  @click="toggle('changeProductPricePopup')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="size-10">
@@ -65,9 +65,9 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="toggle('createDiscountPopup')"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative">
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative">
             <div class="rounded-2xl p-8 grid gap-4">
-                <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                      @click="toggle('createDiscountPopup')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
@@ -100,9 +100,9 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="toggle('redeemGiftCardPopup')"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[480px]">
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[480px]">
             <div class="rounded-2xl p-2 grid gap-4">
-                <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                      @click="toggle('redeemGiftCardPopup')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
@@ -111,21 +111,21 @@
                     </svg>
                 </div>
                 <p class="text-3xl font-bold">Cadeaubon inleveren</p>
-                <p class="text-sm text-white/60" x-show="!giftCards.length">
+                <p class="text-sm text-neutral-500 dark:text-white/60" x-show="!giftCards.length">
                     Voer een cadeaubon-code in. Je kan meerdere bonnen na elkaar toevoegen.
                 </p>
                 <div x-show="giftCards.length" x-cloak class="grid gap-2">
                     <p class="text-sm font-semibold">Reeds toegepast:</p>
                     <div class="grid gap-1">
                         <template x-for="card in giftCards" :key="card.code">
-                            <div class="flex items-center justify-between gap-2 bg-white/5 border border-white/10 rounded p-2 text-sm">
+                            <div class="flex items-center justify-between gap-2 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded p-2 text-sm">
                                 <span class="flex items-center gap-2">
                                     <span class="font-mono" x-text="card.code"></span>
-                                    <span class="text-white/40">(saldo <span x-html="card.balanceFormatted"></span>)</span>
+                                    <span class="text-neutral-500 dark:text-white/40">(saldo <span x-html="card.balanceFormatted"></span>)</span>
                                 </span>
                                 <button type="button"
                                         @click="$wire.removeGiftCardCode(card.code)"
-                                        class="text-red-400 hover:text-red-300"
+                                        class="text-red-600 dark:text-red-400 hover:text-red-300"
                                         title="Cadeaubon verwijderen">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
@@ -155,9 +155,9 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="toggle('chooseShippingMethodPopup')"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative">
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative">
             <div class="rounded-2xl p-8 grid gap-4">
-                <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                      @click="toggle('chooseShippingMethodPopup')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
@@ -171,13 +171,13 @@
                         <button @click="selectShippingMethod(shippingMethod.id)"
                                 x-bind:disabled="loading"
                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
-                                class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
+                                class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center flex-wrap justify-between">
                             <span x-html="shippingMethod.fullName"></span>
                         </button>
                     </template>
                 </div>
                 <div class="p-4" x-show="!shippingMethods.length">
-                    <p class="text-center text-white/60">Geen verzendmethodes gevonden</p>
+                    <p class="text-center text-neutral-500 dark:text-white/60">Geen verzendmethodes gevonden</p>
                 </div>
             </div>
         </div>
@@ -188,9 +188,9 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="hideCheckoutPopup"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px]">
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="rounded-2xl p-8 grid gap-4">
-                <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                      @click="hideCheckoutPopup">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
@@ -200,14 +200,14 @@
                 </div>
                 <div>
                     <p class="text-3xl font-bold" x-html="'Totaal: ' + total"></p>
-                    <p class="text-xl text-white/60">Selecteer betaalmethode</p>
+                    <p class="text-xl text-neutral-500 dark:text-white/60">Selecteer betaalmethode</p>
                 </div>
                 <div class="grid gap-8" x-show="paymentMethods.length">
                     <template x-for="paymentMethod in paymentMethods">
                         <button @click="selectPaymentMethod(paymentMethod.id)"
                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                 x-bind:disabled="loading"
-                                class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
+                                class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center flex-wrap justify-between">
                             <img
                                 x-show="paymentMethod.image"
                                 :src="paymentMethod.image"
@@ -221,7 +221,7 @@
                     </template>
                 </div>
                 <div class="p-4" x-show="!paymentMethods.length">
-                    <p class="text-center text-white/60">Geen betaalmethodes gevonden</p>
+                    <p class="text-center text-neutral-500 dark:text-white/60">Geen betaalmethodes gevonden</p>
                 </div>
             </div>
         </div>
@@ -232,9 +232,9 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="closePayment"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px]">
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px]">
             <div class="rounded-2xl p-8 grid gap-4">
-                <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                      x-bind:disabled="loading"
                      @click="closePayment">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -246,7 +246,7 @@
                 <template x-if="chosenPaymentMethod">
                     <div>
                         <p class="text-3xl font-bold" x-html="'Totaal: ' + total"></p>
-                        <p class="text-xl text-white/60" x-html="'Betaalmethode: ' + chosenPaymentMethod.name"></p>
+                        <p class="text-xl text-neutral-500 dark:text-white/60" x-html="'Betaalmethode: ' + chosenPaymentMethod.name"></p>
                     </div>
                 </template>
                 <div class="flex flex-col gap-4"
@@ -258,7 +258,7 @@
                                 <button @click="setCashPaymentAmount(suggestedCashPaymentAmount.amount)"
                                         x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                         x-bind:disabled="loading"
-                                        class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full"
+                                        class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full"
                                         x-html="suggestedCashPaymentAmount.formattedAmount">
 
                                 </button>
@@ -271,19 +271,19 @@
                                    class="text-xl font-bold">Anders</label>
                             <div class="mt-2">
                                 <div
-                                    class="flex items-center rounded-xl bg-white/10 px-3 outline outline-1 -outline-offset-1 outline-white/10 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-500">
-                                    <div class="shrink-0 select-none text-base text-white/40 sm:text-lg pr-3">€</div>
+                                    class="flex items-center rounded-xl bg-neutral-200 dark:bg-white/10 px-3 outline outline-1 -outline-offset-1 outline-neutral-200 dark:outline-white/10 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-primary-500">
+                                    <div class="shrink-0 select-none text-base text-neutral-500 dark:text-white/40 sm:text-lg pr-3">€</div>
                                     <input x-model="cashPaymentAmount"
                                            type="number"
                                            min="0"
                                            max="100000"
                                            required
                                            placeholder="Anders..."
-                                           x-bind:class="loading ? 'bg-white/5' : 'bg-transparent'"
+                                           x-bind:class="loading ? 'bg-neutral-100 dark:bg-white/5' : 'bg-transparent'"
                                            x-bind:disabled="loading"
-                                           class="block min-w-0 grow py-3 pl-1 pr-3 text-base text-white placeholder:text-white/40 focus:outline focus:outline-0 sm:text-lg">
+                                           class="block min-w-0 grow py-3 pl-1 pr-3 text-base text-neutral-900 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-white/40 focus:outline focus:outline-0 sm:text-lg">
                                     <div id="price-currency"
-                                         class="shrink-0 select-none text-base text-white/40 sm:text-lg pl-3">EUR
+                                         class="shrink-0 select-none text-base text-neutral-500 dark:text-white/40 sm:text-lg pl-3">EUR
                                     </div>
                                 </div>
                             </div>
@@ -297,7 +297,7 @@
                 <template x-if="isPinTerminalPayment && pinTerminalStatus == 'pending'">
                     <div class="grid gap-2 flex items-center justify-between">
                         <p class="text-3xl">{{ Translation::get('pin-transaction-started', 'point-of-sale', 'De klant mag nu pinnen.') }}</p>
-                        <p class="text-xl text-white/60" x-show="order && order.paidAmount > 0">
+                        <p class="text-xl text-neutral-500 dark:text-white/60" x-show="order && order.paidAmount > 0">
                             Al betaald: <span x-html="order?.paidAmountFormatted"></span>
                         </p>
                     </div>
@@ -308,7 +308,7 @@
                     <button @click="startPinTerminalPayment"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
@@ -318,7 +318,7 @@
                     <button @click="startPinTerminalPayment"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
@@ -328,7 +328,7 @@
                     <button @click="startPinTerminalPayment"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Start betaling opnieuw</span>
                     </button>
                 </div>
@@ -339,7 +339,7 @@
                     <button @click="startPinTerminalPayment"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
+                            class="w-full px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center justify-center gap-1">
                         <span>Probeer betaling opnieuw</span>
                     </button>
                 </div>
@@ -347,7 +347,7 @@
                     <template x-if="isPinTerminalPayment && pinTerminalStatus == 'pending'">
                         <button disabled
                                 class="md:col-span-2 px-4 py-4 text-lg uppercase rounded-xl bg-primary-500/50 transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center justify-center gap-1">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-neutral-900 dark:text-white"
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                         stroke-width="4"></circle>
@@ -361,39 +361,39 @@
                         <button @click="printReceipt()" x-show="postPay"
                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                 x-bind:disabled="loading"
-                                class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                                class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full text-center">
                             Bon printen
                         </button>
                     @endif
                     <button @click="resetPOS()" x-show="postPay"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full text-center">
                         Terug naar POS
                     </button>
                     <a x-bind:href="orderUrl" x-show="postPay"
                        target="_blank"
                        x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                        x-bind:disabled="loading"
-                       class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                       class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full text-center">
                         Bestelling bekijken
                     </a>
                     <button @click="sendInvoice(order)" x-show="order && order.email"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full text-center">
                         E-mailbevestiging sturen
                     </button>
                     <button @click="sendPaymentLink(order)" x-show="order && order.email && order.openAmount > 0"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
-                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full text-center">
+                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full text-center">
                         Betaallink sturen
                     </button>
                     <button @click="closePayment" x-show="!isPinTerminalPayment && !postPay"
                             x-bind:class="loading ? 'bg-red-500/50' : 'bg-red-500 hover:bg-red-600'"
                             x-bind:disabled="loading"
-                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full">
                         Annuleren
                     </button>
                     <button disabled x-show="!cashPaymentAmount && !isPinTerminalPayment && !postPay"
@@ -406,14 +406,14 @@
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
                             x-show="!isPinTerminalPayment && cashPaymentAmount && Math.floor(cashPaymentAmount) < Math.floor(totalUnformatted) && !postPay"
-                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full">
                         Restbedrag bijpinnen
                     </button>
                     <button @click="markAsPaid"
                             x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                             x-bind:disabled="loading"
                             x-show="!isPinTerminalPayment && Math.floor(cashPaymentAmount) >= Math.floor(totalUnformatted) && !postPay"
-                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full">
+                            class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full">
                         Markeer als betaald
                     </button>
                 </div>
@@ -427,9 +427,9 @@
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="resetPOS()"></div>
         <template x-if="order && firstPaymentMethod">
-            <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px]">
+            <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px]">
                 <div class="rounded-2xl p-8 grid gap-4">
-                    <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                    <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                          @click="resetPOS()">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-10">
@@ -442,7 +442,7 @@
                             Bestelling <span x-html="order.invoice_id"></span> afgerond - <span
                                 x-html="order.totalFormatted"></span>
                         </p>
-                        <p class="text-xl text-white/60">
+                        <p class="text-xl text-neutral-500 dark:text-white/60">
                             Betaalmethode: <span x-html="firstPaymentMethod.name"></span>
                         </p>
                     </div>
@@ -450,10 +450,10 @@
                         <p class="text-xl font-bold">Betaling overzicht</p>
                         <template x-for="(orderPayment, index) in orderPayments">
                             <div x-show="index == 0 || (index != 0 && !order.shouldChangeMoney)"
-                                 class="flex flex-wrap items-center justify-between border border-white/10 rounded-xl p-4 gap-4">
+                                 class="flex flex-wrap items-center justify-between border border-neutral-200 dark:border-white/10 rounded-xl p-4 gap-4">
                                 <div class="flex flex-col">
                                     <p class="font-bold text-lg">Betaling <span x-html="index + 1"></span></p>
-                                    <p class="text-white/60" x-html="orderPayment.paymentMethodName"></p>
+                                    <p class="text-neutral-500 dark:text-white/60" x-html="orderPayment.paymentMethodName"></p>
                                 </div>
                                 <div class="flex flex-col">
                                     <p class="font-bold text-xl" x-html="orderPayment.amountFormatted"></p>
@@ -470,14 +470,14 @@
                             <button @click="printReceipt()"
                                     x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                     x-bind:disabled="loading"
-                                    class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                    class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full">
                                 Bon printen
                             </button>
                         @endif
                         <button @click="resetPOS()"
                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                 x-bind:disabled="loading"
-                                class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-white font-bold w-full">
+                                class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full">
                             Terug naar POS
                         </button>
                     </div>
@@ -491,9 +491,9 @@
         x-transition.opacity.scale.origin
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <div class="absolute h-full w-full" @click="toggle('customerDataPopup')"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px] h-[95%] overflow-y-auto">
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative sm:min-w-[800px] h-[95%] overflow-y-auto">
             <div class="rounded-2xl p-8 grid gap-4">
-                <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                      @click="toggle('customerDataPopup')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="size-10">
@@ -524,8 +524,8 @@
     <div class="fixed inset-0 flex items-center justify-center z-50" x-cloak x-show="ordersPopup"
          x-transition.opacity.scale.origin>
         <div class="absolute h-full w-full" @click="hideOrdersPopup"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 h-[95%] w-[95%] rounded-2xl grid gap-0.5 relative grid-cols-8 overflow-hidden">
-            <div class="absolute top-5 right-5 text-white/60 hover:text-white cursor-pointer z-10"
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 h-[95%] w-[95%] rounded-2xl grid gap-0.5 relative grid-cols-8 overflow-hidden">
+            <div class="absolute top-5 right-5 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer z-10"
                  @click="hideOrdersPopup">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="size-10">
@@ -533,11 +533,11 @@
                           d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                 </svg>
             </div>
-            <div class="col-span-2 bg-white/5 border-r border-white/10 flex flex-col p-4 overflow-y-auto">
+            <div class="col-span-2 bg-neutral-100 dark:bg-white/5 border-r border-neutral-200 dark:border-white/10 flex flex-col p-4 overflow-y-auto">
                 <div class="grid gap-4 overflow-y-auto">
                     <form @submit.prevent="retrieveOrders">
                         <div class="w-full relative">
-                    <span class="text-white/40 absolute left-2.5 top-2">
+                    <span class="text-neutral-500 dark:text-white/40 absolute left-2.5 top-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                           <path stroke-linecap="round" stroke-linejoin="round"
@@ -548,8 +548,8 @@
                                    id="search-order-query"
                                    :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                    placeholder="Zoek bestelling..."
-                                   class="bg-white/10 border border-white/10 text-white placeholder:text-white/40 w-full rounded-xl pl-10 pr-10 text-xl py-1 focus:ring-2 focus:ring-primary-500 outline-none">
-                            <p class="absolute right-2.5 top-2 text-white/40 hover:text-white cursor-pointer"
+                                   class="bg-neutral-200 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-900 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-white/40 w-full rounded-xl pl-10 pr-10 text-xl py-1 focus:ring-2 focus:ring-primary-500 outline-none">
+                            <p class="absolute right-2.5 top-2 text-neutral-500 dark:text-white/40 hover:text-white cursor-pointer"
                                @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -589,11 +589,11 @@
                     >
                         <template x-for="orderDate in orders">
                             <div class="grid gap-2">
-                                <p class="text-white/40 uppercase text-xs" x-html="orderDate.date"></p>
+                                <p class="text-neutral-500 dark:text-white/40 uppercase text-xs" x-html="orderDate.date"></p>
                                 <template x-for="order in orderDate.orders">
                                     <div @click="selectOrder(order)"
                                          class="rounded-xl flex gap-4 px-4 py-2 cursor-pointer group"
-                                         :class="order.id === selectedOrder.id ? 'text-white bg-primary-500' : 'bg-white/5 border border-white/10 hover:bg-primary-500 text-white hover:text-white'">
+                                         :class="order.id === selectedOrder.id ? 'text-white bg-primary-500' : 'bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 hover:bg-primary-500 text-neutral-900 dark:text-white hover:text-white'">
                                         <div class="flex items-center justify-center">
                                             <svg x-show="order.orderOrigin == 'own'" xmlns="http://www.w3.org/2000/svg"
                                                  fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -612,7 +612,7 @@
                                         <div>
                                             <p class="text-md font-medium" x-html="order.invoiceId"></p>
                                             <p class="text-sm group-hover:text-white"
-                                               :class="order.id === selectedOrder.id ? 'text-white' : 'text-white/40'"
+                                               :class="order.id === selectedOrder.id ? 'text-white' : 'text-neutral-500 dark:text-white/40'"
                                                x-html="order.time"></p>
                                         </div>
                                         <div class="ml-auto flex items-center gap-4">
@@ -646,8 +646,8 @@
                         x-transition.opacity.scale.origin
                         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-8 overflow-y-auto">
                         <div class="absolute h-full w-full" @click="toggle('cancelOrderPopup')"></div>
-                        <div class="bg-neutral-900 text-white border border-white/10 rounded-2xl p-8 grid gap-4 relative overflow-y-auto max-h-full">
-                            <div class="absolute top-2 right-2 text-white/60 hover:text-white cursor-pointer"
+                        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative overflow-y-auto max-h-full">
+                            <div class="absolute top-2 right-2 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer"
                                  @click="toggle('cancelOrderPopup')">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                      stroke-width="1.5"
@@ -660,17 +660,17 @@
                             <form @submit.prevent="submitCancelOrderForm">
                                 <div class="grid gap-4 max-w-2xl overflow-y-auto">
                                     <div class="grid gap-2">
-                                        <p class="text-white/40 uppercase text-sm">Producten</p>
+                                        <p class="text-neutral-500 dark:text-white/40 uppercase text-sm">Producten</p>
                                         <div class="grid gap-4">
                                             <template x-for="product in selectedOrder.cancelData.orderProducts">
-                                                <div class="flex gap-4 bg-white/5 border border-white/10 items-center rounded-xl p-4">
+                                                <div class="flex gap-4 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 items-center rounded-xl p-4">
                                                     <div>
                                                         <img :src="product.image" x-cloak x-show="product.image"
                                                              class="object-cover rounded-lg w-20 h-20">
                                                     </div>
                                                     <div class="grid">
                                                         <p class="text-sm font-medium" x-html="product.name"></p>
-                                                        <p class="text-sm text-white/40">
+                                                        <p class="text-sm text-neutral-500 dark:text-white/40">
                                                             <span x-html="product.quantity"></span>
                                                             x voor
                                                             <span x-html="product.priceFormatted"></span>
@@ -678,7 +678,7 @@
                                                     </div>
                                                     <div class="ml-auto grow text-right">
                                                         <div
-                                                            class="flex items-center gap-2 rounded-xl bg-white/10 p-2 ml-auto w-fit text-white">
+                                                            class="flex items-center gap-2 rounded-xl bg-neutral-200 dark:bg-white/10 p-2 ml-auto w-fit text-neutral-900 dark:text-white">
                                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                                                                  fill="currentColor"
                                                                  class="size-10 text-primary-400 hover:text-primary-300 cursor-pointer"
@@ -702,13 +702,13 @@
                                                     </div>
                                                 </div>
                                             </template>
-                                            <div class="bg-white/5 border border-white/10 p-4 rounded-xl grid gap-4">
+                                            <div class="bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 p-4 rounded-xl grid gap-4">
                                                 <div
                                                     @click="selectedOrder.cancelData.extraOrderLine = !selectedOrder.cancelData.extraOrderLine"
                                                     class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
-                                                            :class="selectedOrder.cancelData.extraOrderLine ? 'bg-primary-500' : 'bg-white/10'"
-                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                                            :class="selectedOrder.cancelData.extraOrderLine ? 'bg-primary-500' : 'bg-neutral-200 dark:bg-white/10'"
+                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-neutral-200 dark:bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
                                                 <span
                                                     :class="selectedOrder.cancelData.extraOrderLine ? 'translate-x-5' : 'translate-x-0'"
@@ -741,18 +741,18 @@
                                                      class="grid grid-cols-2 gap-4 items-center rounded-xl">
                                                     <input x-model="selectedOrder.cancelData.extraOrderLineName"
                                                            placeholder="Extra bestel regel naam"
-                                                           class="bg-white/10 border border-white/10 text-white placeholder:text-white/40 w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
+                                                           class="bg-neutral-200 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-900 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-white/40 w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
                                                     <input x-model="selectedOrder.cancelData.extraOrderLinePrice"
                                                            type="number"
                                                            placeholder="Extra bestel regel prijs"
-                                                           class="bg-white/10 border border-white/10 text-white placeholder:text-white/40 w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
+                                                           class="bg-neutral-200 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-900 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-white/40 w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
                                                 </div>
                                                 <div
                                                     @click="selectedOrder.cancelData.sendCustomerEmail = !selectedOrder.cancelData.sendCustomerEmail"
                                                     class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
-                                                            :class="selectedOrder.cancelData.sendCustomerEmail ? 'bg-primary-500' : 'bg-white/10'"
-                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                                            :class="selectedOrder.cancelData.sendCustomerEmail ? 'bg-primary-500' : 'bg-neutral-200 dark:bg-white/10'"
+                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-neutral-200 dark:bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
                                                 <span
                                                     :class="selectedOrder.cancelData.sendCustomerEmail ? 'translate-x-5' : 'translate-x-0'"
@@ -786,8 +786,8 @@
                                                     @click="selectedOrder.cancelData.productsMustBeReturned = !selectedOrder.cancelData.productsMustBeReturned"
                                                     class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
-                                                            :class="selectedOrder.cancelData.productsMustBeReturned ? 'bg-primary-500' : 'bg-white/10'"
-                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                                            :class="selectedOrder.cancelData.productsMustBeReturned ? 'bg-primary-500' : 'bg-neutral-200 dark:bg-white/10'"
+                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-neutral-200 dark:bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
                                                 <span
                                                     :class="selectedOrder.cancelData.productsMustBeReturned ? 'translate-x-5' : 'translate-x-0'"
@@ -820,8 +820,8 @@
                                                     @click="selectedOrder.cancelData.restock = !selectedOrder.cancelData.restock"
                                                     class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
-                                                            :class="selectedOrder.cancelData.restock ? 'bg-primary-500' : 'bg-white/10'"
-                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                                            :class="selectedOrder.cancelData.restock ? 'bg-primary-500' : 'bg-neutral-200 dark:bg-white/10'"
+                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-neutral-200 dark:bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
                                                 <span
                                                     :class="selectedOrder.cancelData.restock ? 'translate-x-5' : 'translate-x-0'"
@@ -854,8 +854,8 @@
                                                      @click="selectedOrder.cancelData.refundDiscountCosts = !selectedOrder.cancelData.refundDiscountCosts"
                                                      class="cursor-pointer flex items-center gap-2">
                                                     <button type="button"
-                                                            :class="selectedOrder.cancelData.refundDiscountCosts ? 'bg-primary-500' : 'bg-white/10'"
-                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                                            :class="selectedOrder.cancelData.refundDiscountCosts ? 'bg-primary-500' : 'bg-neutral-200 dark:bg-white/10'"
+                                                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-neutral-200 dark:bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                                                             role="switch" aria-checked="false">
                                                 <span
                                                     :class="selectedOrder.cancelData.refundDiscountCosts ? 'translate-x-5' : 'translate-x-0'"
@@ -891,7 +891,7 @@
                                                 <div class="grid">
                                                     <p>Betaalmethode</p>
                                                     <select x-model="selectedOrder.cancelData.paymentMethodId"
-                                                            class="bg-white/10 border border-white/10 text-white w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
+                                                            class="bg-neutral-200 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-900 dark:text-white w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
                                                         <template
                                                             x-for="(name, id) in selectedOrder.cancelData.paymentMethods">
                                                             <option x-value="id" x-html="name"></option>
@@ -902,7 +902,7 @@
                                                 <div class="grid">
                                                     <p>Fulfillment status</p>
                                                     <select x-model="selectedOrder.cancelData.fulfillmentStatus"
-                                                            class="bg-white/10 border border-white/10 text-white w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
+                                                            class="bg-neutral-200 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-900 dark:text-white w-full rounded-xl text-md px-1 py-2 focus:ring-2 focus:ring-primary-500 outline-none">
                                                         <template
                                                             x-for="(name, id) in selectedOrder.cancelData.fulfillmentStatusOptions">
                                                             <option x-value="id" x-html="name"></option>
@@ -925,11 +925,11 @@
                     </div>
                     <div class="grid gap-4">
                         <div class="grid gap-4">
-                            <div class="grid gap-4 bg-white/5 border border-white/10 rounded-xl p-4">
+                            <div class="grid gap-4 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                 <p class="text-2xl font-bold">Bestelling #<span x-html="selectedOrder.invoiceId"></span>
                                 </p>
                                 <div class="flex items-center flex-wrap gap-2 text-sm">
-                                    <p class="text-white/60 flex gap-1 items-center">
+                                    <p class="text-neutral-500 dark:text-white/60 flex gap-1 items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -939,7 +939,7 @@
                                         <span x-html="selectedOrder.createdAt"></span>
                                     </p>
                                     <p>|</p>
-                                    <p class="text-white/60 flex gap-1 items-center">
+                                    <p class="text-neutral-500 dark:text-white/60 flex gap-1 items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                              class="size-6">
                                             <path fill-rule="evenodd"
@@ -992,7 +992,7 @@
                                         <span>Retour</span>
                                     </p>
                                     <p>|</p>
-                                    <p class="text-white/60 flex gap-1 items-center">
+                                    <p class="text-neutral-500 dark:text-white/60 flex gap-1 items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                              stroke-width="1.5" stroke="currentColor" class="size-6">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -1050,8 +1050,8 @@
                                 </div>
                             </div>
                             <div class="grid gap-2">
-                                <p class="text-white/40 uppercase text-sm">Betaaloverzicht</p>
-                                <div class="grid gap-2 bg-white/5 border border-white/10 rounded-xl p-4">
+                                <p class="text-neutral-500 dark:text-white/40 uppercase text-sm">Betaaloverzicht</p>
+                                <div class="grid gap-2 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                     <div class="flex gap-4">
                                         <div>
                                             <p>Aantal producten</p>
@@ -1060,7 +1060,7 @@
                                             <p class="text-md font-medium" x-html="selectedOrder.totalProducts"></p>
                                         </div>
                                     </div>
-                                    <hr class="border-white/10"/>
+                                    <hr class="border-neutral-200 dark:border-white/10"/>
                                     <div class="flex gap-4 rounded-xl"
                                          x-show="selectedOrder.discountFormatted">
                                         <div>
@@ -1070,7 +1070,7 @@
                                             <p class="text-md font-medium" x-html="selectedOrder.discountFormatted"></p>
                                         </div>
                                     </div>
-                                    <hr class="border-white/10" x-show="selectedOrder.discountFormatted"/>
+                                    <hr class="border-neutral-200 dark:border-white/10" x-show="selectedOrder.discountFormatted"/>
                                     <template x-for="(value, percentage) in selectedOrder.vatPercentages">
                                         <div class="flex gap-4 rounded-xl">
                                             <div>
@@ -1081,7 +1081,7 @@
                                             </div>
                                         </div>
                                     </template>
-                                    <hr class="border-white/10"/>
+                                    <hr class="border-neutral-200 dark:border-white/10"/>
                                     <div class="flex gap-4 rounded-xl"
                                          x-show="selectedOrder.vatPercentages.length > 1">
                                         <div>
@@ -1091,7 +1091,7 @@
                                             <p class="text-md font-medium" x-html="selectedOrder.taxFormatted"></p>
                                         </div>
                                     </div>
-                                    <hr class="border-white/10" x-show="selectedOrder.vatPercentages.length > 1"/>
+                                    <hr class="border-neutral-200 dark:border-white/10" x-show="selectedOrder.vatPercentages.length > 1"/>
                                     <div class="flex gap-4 rounded-xl font-bold">
                                         <div>
                                             <p class="">Totaal</p>
@@ -1103,17 +1103,17 @@
                                 </div>
                             </div>
                             <div class="grid gap-2">
-                                <p class="text-white/40 uppercase text-sm">Producten</p>
+                                <p class="text-neutral-500 dark:text-white/40 uppercase text-sm">Producten</p>
                                 <div class="grid grid-cols-2 gap-4">
                                     <template x-for="product in selectedOrder.orderProducts">
-                                        <div class="flex gap-4 bg-white/5 border border-white/10 rounded-xl p-4">
+                                        <div class="flex gap-4 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                             <div>
                                                 <img :src="product.image" x-cloak x-show="product.image"
                                                      class="object-cover rounded-lg w-20 h-20">
                                             </div>
                                             <div class="grid gap-2">
                                                 <p class="text-sm font-medium" x-html="product.name"></p>
-                                                <p class="text-sm text-white/40"><span x-html="product.quantity"></span>x
+                                                <p class="text-sm text-neutral-500 dark:text-white/40"><span x-html="product.quantity"></span>x
                                                 </p>
                                             </div>
                                             <div class="ml-auto grow text-right">
@@ -1124,10 +1124,10 @@
                                 </div>
                             </div>
                             <div class="grid gap-2">
-                                <p class="text-white/40 uppercase text-sm">Betalingen</p>
+                                <p class="text-neutral-500 dark:text-white/40 uppercase text-sm">Betalingen</p>
                                 <div class="grid grid-cols-2 gap-4">
                                     <template x-for="payment in selectedOrder.orderPayments">
-                                        <div class="flex justify-between items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-4">
+                                        <div class="flex justify-between items-center gap-4 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                             <p class="font-medium" x-html="payment.paymentMethod"></p>
                                             <p class="text-green-800 rounded-lg bg-green-300 px-1 py-0.5 flex gap-1"
                                                x-show="payment.status == 'paid'">
@@ -1172,8 +1172,8 @@
     <div class="fixed inset-0 flex items-center justify-center z-50" x-cloak x-show="stockPopup"
          x-transition.opacity.scale.origin>
         <div class="absolute h-full w-full" @click="showStockPopup"></div>
-        <div class="bg-neutral-900 text-white border border-white/10 h-[95%] w-[95%] rounded-2xl grid gap-0.5 relative grid-cols-8 overflow-hidden">
-            <div class="absolute top-5 right-5 text-white/60 hover:text-white cursor-pointer z-10"
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 h-[95%] w-[95%] rounded-2xl grid gap-0.5 relative grid-cols-8 overflow-hidden">
+            <div class="absolute top-5 right-5 text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer z-10"
                  @click="showStockPopup">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="size-10">
@@ -1181,11 +1181,11 @@
                           d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                 </svg>
             </div>
-            <div class="col-span-2 bg-white/5 border-r border-white/10 flex flex-col p-4 overflow-y-auto">
+            <div class="col-span-2 bg-neutral-100 dark:bg-white/5 border-r border-neutral-200 dark:border-white/10 flex flex-col p-4 overflow-y-auto">
                 <div class="grid gap-4 overflow-y-auto">
                     <form @submit.prevent="getSearchedStockProducts">
                         <div class="w-full relative">
-                    <span class="text-white/40 absolute left-2.5 top-2">
+                    <span class="text-neutral-500 dark:text-white/40 absolute left-2.5 top-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="size-6">
                           <path stroke-linecap="round" stroke-linejoin="round"
@@ -1196,8 +1196,8 @@
                                    id="search-stock-product-query"
                                    :inputmode="!searchQueryInputmode ? 'text' : 'none'"
                                    placeholder="Zoek een product op naam, SKU of barcode..."
-                                   class="bg-white/10 border border-white/10 text-white placeholder:text-white/40 w-full rounded-xl pl-10 pr-10 text-xl py-1 focus:ring-2 focus:ring-primary-500 outline-none">
-                            <p class="absolute right-2.5 top-2 text-white/40 hover:text-white cursor-pointer"
+                                   class="bg-neutral-200 dark:bg-white/10 border border-neutral-200 dark:border-white/10 text-neutral-900 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-white/40 w-full rounded-xl pl-10 pr-10 text-xl py-1 focus:ring-2 focus:ring-primary-500 outline-none">
+                            <p class="absolute right-2.5 top-2 text-neutral-500 dark:text-white/40 hover:text-white cursor-pointer"
                                @click="updateSearchQueryInputmode">
                                                         <span x-show="searchQueryInputmode" x-cloak>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -1231,27 +1231,27 @@
                     <div>
                         <p class="text-2xl font-bold">Producten</p>
                     </div>
-                    <div class="z-50 bg-white/5 border border-white/10 rounded-xl mt-2 shadow-xl" x-cloak
+                    <div class="z-50 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl mt-2 shadow-xl" x-cloak
                          x-show="!loadingSearchedStockProducts && searchStockProductQuery && !searchedStockProducts.length">
                         <div class="p-4">
-                            <p x-show="searchStockProductQuery.length >= 3" class="text-center text-white/60">Geen
+                            <p x-show="searchStockProductQuery.length >= 3" class="text-center text-neutral-500 dark:text-white/60">Geen
                                 producten
                                 gevonden</p>
-                            <p x-show="searchStockProductQuery.length < 3" class="text-center text-white/60">Vul een
+                            <p x-show="searchStockProductQuery.length < 3" class="text-center text-neutral-500 dark:text-white/60">Vul een
                                 zoekterm
                                 in...</p>
                         </div>
                     </div>
-                    <div class="z-50 bg-white/5 border border-white/10 rounded-xl mt-2 shadow-xl" x-cloak
+                    <div class="z-50 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl mt-2 shadow-xl" x-cloak
                          x-show="loadingSearchedStockProducts">
                         <div class="p-4">
-                            <p class="text-center text-white/60">Producten aan het laden</p>
+                            <p class="text-center text-neutral-500 dark:text-white/60">Producten aan het laden</p>
                         </div>
                     </div>
                     <div class="grid gap-4 overflow-y-auto"
                          x-show="searchedStockProducts.length && !loadingSearchedStockProducts">
                         <template x-for="product in searchedStockProducts">
-                            <div class="grid relative items-center gap-6 p-4 text-white bg-white/5 border border-white/10 rounded-xl cursor-pointer"
+                            <div class="grid relative items-center gap-6 p-4 text-neutral-900 dark:text-white bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl cursor-pointer"
                                  @click="selectStockProduct(product)">
                                 <div class="mx-auto"
                                      x-show="product.image">
@@ -1289,14 +1289,14 @@
                 <div class="col-span-6 p-4 overflow-y-auto">
                     <div class="grid gap-4">
                         <div class="grid gap-4">
-                            <div class="grid gap-4 bg-white/5 border border-white/10 rounded-xl p-4">
+                            <div class="grid gap-4 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                 <p class="text-2xl font-bold">
                                     <span x-html="selectedStockProduct.name"></span>
                                 </p>
                             </div>
                             <div class="grid gap-2">
-                                <p class="text-white/40 uppercase text-sm">Voorraad</p>
-                                <div class="grid gap-2 bg-white/5 border border-white/10 rounded-xl p-4">
+                                <p class="text-neutral-500 dark:text-white/40 uppercase text-sm">Voorraad</p>
+                                <div class="grid gap-2 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                     <div class="flex gap-4">
                                         <form @submit.prevent="updateSelectedStockProduct()"
                                               class="ml-auto grow text-right flex items-center justify-start gap-2">
@@ -1305,7 +1305,7 @@
                                                 @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock - 1)"
                                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                                 x-bind:disabled="loading"
-                                                class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-white">
+                                                class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-neutral-900 dark:text-white">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
@@ -1314,16 +1314,16 @@
                                             </button>
                                             <input x-model="selectedStockProduct.actual_stock"
                                                    :id="'product-stock-' + selectedStockProduct.id"
-                                                   x-bind:class="loading ? 'bg-white/5' : 'bg-white/10'"
+                                                   x-bind:class="loading ? 'bg-neutral-100 dark:bg-white/5' : 'bg-neutral-200 dark:bg-white/10'"
                                                    placeholder="Vul de voorraad in..."
                                                    type="number"
-                                                   class="text-white border border-white/10 rounded-xl px-1 py-1 text-xl max-w-[50px] placeholder:text-white/40 focus:ring-2 focus:ring-primary-500 outline-none">
+                                                   class="text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-xl px-1 py-1 text-xl max-w-[50px] placeholder:text-neutral-500 dark:placeholder:text-white/40 focus:ring-2 focus:ring-primary-500 outline-none">
                                             <button
                                                 type="button"
                                                 @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock + 1)"
                                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                                 x-bind:disabled="loading"
-                                                class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-white">
+                                                class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-neutral-900 dark:text-white">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -1334,7 +1334,7 @@
                                             <button
                                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                                 x-bind:disabled="loading"
-                                                class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-white">
+                                                class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-neutral-900 dark:text-white">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
