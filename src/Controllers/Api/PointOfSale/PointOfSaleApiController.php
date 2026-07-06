@@ -1062,10 +1062,25 @@ class PointOfSaleApiController extends Controller
 
         $order->invoice_id = 'PROFORMA';
 
+        // Verzend-BTW hoort ook in de header-btw. calculatePosCartTotals()
+        // berekent 'vat'/'vatPercentages' uitsluitend over de productregels,
+        // terwijl $total de verzendkosten wél bevat (regel: subtotal + shipping).
+        // Zonder deze correctie mist de header-btw de verzend-BTW terwijl de
+        // aparte verzendregel die btw wél draagt -> order->btw is dan te laag.
+        // De verzendregel wordt hieronder altijd tegen 21% aangemaakt.
+        $shippingVat = $shippingCosts > 0
+            ? round($this->calculateVatFromGross((float) $shippingCosts, 21), 2)
+            : 0.0;
+
         $order->subtotal = (float) ($totals['subtotal'] ?? 0);
         $order->discount = (float) ($totals['discount'] ?? 0);
-        $order->btw = (float) ($totals['vat'] ?? 0);
-        $order->vat_percentages = (array) ($totals['vatPercentages'] ?? []);
+        $order->btw = round((float) ($totals['vat'] ?? 0) + $shippingVat, 2);
+
+        $vatPercentages = (array) ($totals['vatPercentages'] ?? []);
+        if ($shippingVat > 0) {
+            $vatPercentages['21'] = round((float) ($vatPercentages['21'] ?? 0) + $shippingVat, 2);
+        }
+        $order->vat_percentages = $vatPercentages;
         $order->total = $total;
 
         $order->status = 'pending';
