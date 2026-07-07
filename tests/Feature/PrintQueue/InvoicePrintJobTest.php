@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
-use Illuminate\Support\Facades\Storage;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 
 /**
  * Facturen door de CUPS-print-queue. Een factuur is een A4-document en gaat naar
  * dezelfde document-printer (PrinterType::PackingSlip/Both) als de pakbon; er is
  * geen apart factuur-printertype. Spiegelt de bestaande pakbon-print-flow.
  */
-function makeInvoiceOrder(string $siteId = 'site', array $overrides = []): Order
+function makeInvoicePrintOrder(string $siteId = 'site', array $overrides = []): Order
 {
     $order = Order::create(array_merge([
         'invoice_id' => 'INV-' . uniqid(),
@@ -39,7 +39,7 @@ it('creates an Invoice PrintJob via OrderController::print with type=invoice', f
     $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
 
     Printer::factory()->create(['type' => PrinterType::PackingSlip, 'is_active' => true]);
-    $order = makeInvoiceOrder();
+    $order = makeInvoicePrintOrder();
 
     $this->postJson("/api/v1/orders/{$order->id}/print", [
         'type' => 'invoice',
@@ -55,7 +55,7 @@ it('creates an Invoice PrintJob via OrderController::print with type=invoice', f
 });
 
 it('lets a document printer claim Invoice jobs from the queue', function () {
-    $order = makeInvoiceOrder();
+    $order = makeInvoicePrintOrder();
     $printer = Printer::factory()->create(['type' => PrinterType::PackingSlip, 'is_active' => true]);
     $job = PrintJob::factory()->create([
         'type' => PrintJobType::Invoice,
@@ -81,7 +81,7 @@ it('lets a document printer claim Invoice jobs from the queue', function () {
 });
 
 it('does not let a shipping-label-only printer claim Invoice jobs', function () {
-    $order = makeInvoiceOrder();
+    $order = makeInvoicePrintOrder();
     $printer = Printer::factory()->create(['type' => PrinterType::ShippingLabel, 'is_active' => true]);
     $job = PrintJob::factory()->create([
         'type' => PrintJobType::Invoice,
@@ -103,7 +103,7 @@ it('does not let a shipping-label-only printer claim Invoice jobs', function () 
 });
 
 it('generates and serves the invoice PDF for an Invoice job', function () {
-    $order = makeInvoiceOrder();
+    $order = makeInvoicePrintOrder();
 
     // Leg de factuur-PDF alvast neer op het pad waar createInvoice() schrijft,
     // zodat createInvoice() een no-op is (geen dompdf-render in de test) en de

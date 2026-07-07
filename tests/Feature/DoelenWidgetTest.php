@@ -4,7 +4,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget;
 
-function makePaidOrder(float $total): Order
+function makeDoelenPaidOrder(float $total): Order
 {
     return Order::withoutEvents(fn () => Order::create([
         'total' => $total,
@@ -19,8 +19,8 @@ function makePaidOrder(float $total): Order
 it('computes target progress per period', function () {
     Customsetting::set('dashboard_revenue_target_month', 1000, 'site');
     Customsetting::set('dashboard_orders_target_month', 4, 'site');
-    makePaidOrder(250);
-    makePaidOrder(250);
+    makeDoelenPaidOrder(250);
+    makeDoelenPaidOrder(250);
 
     $rows = (new DoelenWidget())->rows();
     $month = collect($rows)->firstWhere('key', 'month');
@@ -35,7 +35,7 @@ it('computes target progress per period', function () {
 });
 
 it('marks periods without a target and never divides by zero', function () {
-    makePaidOrder(99);
+    makeDoelenPaidOrder(99);
 
     $rows = (new DoelenWidget())->rows();
     $today = collect($rows)->firstWhere('key', 'today');
