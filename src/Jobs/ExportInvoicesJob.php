@@ -142,19 +142,62 @@ class ExportInvoicesJob implements ShouldQueue
             $ossTotals = [];
             $icpTotals = [];
 
+            // De btw-uitsplitsing wordt afgeleid uit de inclusieve bedragen per
+            // tarief: btw = round(incl * tarief / (100 + tarief)), ex = incl - btw.
+            // Zo komt elke regel exact op het tarief uit (ex * tarief == btw) én
+            // blijft de inclusieve kolom gelijk aan de daadwerkelijk ontvangen omzet.
+            // Het per-order optellen van (per factuur afgeronde) btw zou anders enkele
+            // centen wegdriften t.o.v. de btw over het periodetotaal.
+            $inclPerRateForOrder = function ($order): array {
+                $rates = [];
+                foreach ($order->vat_percentages ?: [] as $rate => $amount) {
+                    if ((float) $amount != 0.0) {
+                        $rates[(int) $rate] = (float) $amount;
+                    }
+                }
+
+                $totalIncl = (float) $order->total;
+
+                if (count($rates) === 0) {
+                    return []; // geen btw (bv. verlegd) -> volledige omzet is ex btw
+                }
+
+                if (count($rates) === 1) {
+                    return [array_key_first($rates) => $totalIncl];
+                }
+
+                // Meerdere tarieven: verdeel het inclusieve totaal naar rato van de
+                // btw-bedragen; de rest gaat naar het laatste tarief zodat de som
+                // exact het ordertotaal blijft.
+                $btwSum = array_sum($rates);
+                $result = [];
+                $assigned = 0.0;
+                $rateKeys = array_keys($rates);
+                $lastRate = end($rateKeys);
+                foreach ($rates as $rate => $amount) {
+                    if ($rate === $lastRate) {
+                        $result[$rate] = round($totalIncl - $assigned, 2);
+                    } else {
+                        $portion = $btwSum > 0 ? round($totalIncl * ($amount / $btwSum), 2) : 0.0;
+                        $result[$rate] = $portion;
+                        $assigned += $portion;
+                    }
+                }
+
+                return $result;
+            };
+
+            $vatFromIncl = function (float $incl, int $rate): float {
+                return round($incl * $rate / (100 + $rate), 2);
+            };
+
+            $globalInclPerRate = [];
+
             foreach ($orders as $order) {
-                $subTotal += ($order->total - $order->btw);
-                $btw += $order->btw;
                 $discount += $order->discount;
                 $total += $order->total;
 
-                foreach ($order->vat_percentages ?: [] as $percentage => $amount) {
-                    if (! isset($vatPercentages[number_format($percentage, 0)])) {
-                        $vatPercentages[number_format($percentage, 0)] = 0;
-                    }
-
-                    $vatPercentages[number_format($percentage, 0)] += $amount;
-                }
+                $orderInclPerRate = $inclPerRateForOrder($order);
 
                 foreach ($order->orderProducts as $orderProduct) {
                     if ($orderProduct->product) {
@@ -205,6 +248,11 @@ class ExportInvoicesJob implements ShouldQueue
                     continue;
                 }
 
+                // Omzet mét btw (binnenlands of OSS) telt mee voor de globale uitsplitsing.
+                foreach ($orderInclPerRate as $rate => $incl) {
+                    $globalInclPerRate[$rate] = ($globalInclPerRate[$rate] ?? 0) + $incl;
+                }
+
                 // Buitenlandse btw / OSS-achtig: zone zonder reverse charge, maar wel buitenlandse btw
                 $hasForeignVat = false;
                 foreach ($order->vat_percentages ?: [] as $percentage => $amount) {
@@ -219,15 +267,15 @@ class ExportInvoicesJob implements ShouldQueue
                     if (! isset($ossTotals[$ossKey])) {
                         $ossTotals[$ossKey] = [
                             'zone' => $zoneName ?: 'Onbekende zone',
-                            'ex_vat' => 0,
-                            'vat' => 0,
                             'incl_vat' => 0,
+                            'rates' => [],
                         ];
                     }
 
-                    $ossTotals[$ossKey]['ex_vat'] += ($order->total - $order->btw);
-                    $ossTotals[$ossKey]['vat'] += $order->btw;
                     $ossTotals[$ossKey]['incl_vat'] += $order->total;
+                    foreach ($orderInclPerRate as $rate => $incl) {
+                        $ossTotals[$ossKey]['rates'][$rate] = ($ossTotals[$ossKey]['rates'][$rate] ?? 0) + $incl;
+                    }
 
                     continue;
                 }
@@ -238,23 +286,50 @@ class ExportInvoicesJob implements ShouldQueue
                 if (! isset($normalZoneTotals[$normalKey])) {
                     $normalZoneTotals[$normalKey] = [
                         'zone' => $zoneName ?: 'Onbekende zone',
-                        'ex_vat' => 0,
-                        'vat' => 0,
                         'incl_vat' => 0,
+                        'rates' => [],
                     ];
                 }
 
-                $normalZoneTotals[$normalKey]['ex_vat'] += ($order->total - $order->btw);
-                $normalZoneTotals[$normalKey]['vat'] += $order->btw;
                 $normalZoneTotals[$normalKey]['incl_vat'] += $order->total;
+                foreach ($orderInclPerRate as $rate => $incl) {
+                    $normalZoneTotals[$normalKey]['rates'][$rate] = ($normalZoneTotals[$normalKey]['rates'][$rate] ?? 0) + $incl;
+                }
             }
 
+            // Globale totalen afleiden uit de inclusieve bedragen per tarief.
+            $btw = 0;
+            $vatPercentages = [];
+            foreach ($globalInclPerRate as $rate => $incl) {
+                $rateVat = $vatFromIncl((float) $incl, (int) $rate);
+                $vatPercentages[number_format($rate, 0)] = $rateVat;
+                $btw += $rateVat;
+            }
+            $btw = round($btw, 2);
+            $subTotal = round($total - $btw, 2);
+
+            // Per zone: btw = som van de btw per tarief, ex = incl - btw. Zo klopt
+            // ex * tarief == btw en blijft incl gelijk aan de ontvangen omzet.
+            $finalizeZone = function (array $zone) use ($vatFromIncl): array {
+                $zoneVat = 0.0;
+                foreach ($zone['rates'] as $rate => $incl) {
+                    $zoneVat += $vatFromIncl((float) $incl, (int) $rate);
+                }
+                $zone['vat'] = round($zoneVat, 2);
+                $zone['ex_vat'] = round($zone['incl_vat'] - $zone['vat'], 2);
+                unset($zone['rates']);
+
+                return $zone;
+            };
+
             $normalZoneTotals = collect($normalZoneTotals)
+                ->map($finalizeZone)
                 ->sortBy('zone')
                 ->values()
                 ->all();
 
             $ossTotals = collect($ossTotals)
+                ->map($finalizeZone)
                 ->sortBy('zone')
                 ->values()
                 ->all();
