@@ -28,6 +28,19 @@ class OpenOrderProductResource extends Resource
         return 'Openstaande bestellingen';
     }
 
+    /** Menu-teller: aantal openstaande producten (dezelfde scope als de lijst). */
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getEloquentQuery()->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
+
     public static function table(Table $table): Table
     {
         return OpenOrderProductsTable::configure($table);
