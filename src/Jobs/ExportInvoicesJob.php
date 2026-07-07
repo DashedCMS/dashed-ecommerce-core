@@ -148,43 +148,59 @@ class ExportInvoicesJob implements ShouldQueue
             // blijft de inclusieve kolom gelijk aan de daadwerkelijk ontvangen omzet.
             // Het per-order optellen van (per factuur afgeronde) btw zou anders enkele
             // centen wegdriften t.o.v. de btw over het periodetotaal.
+            // Inclusieve omzet per btw-tarief o.b.v. de orderregels (elke regel heeft
+            // een eigen vat_rate). Zo tellen 0%-regels (bv. margeregeling) niet mee in
+            // de 21%-grondslag. Het regeltotaal wordt geschaald naar order->total zodat
+            // lump-kortingen evenredig over de tarieven worden verdeeld en de som gelijk
+            // blijft aan de daadwerkelijk ontvangen omzet.
             $inclPerRateForOrder = function ($order): array {
-                $rates = [];
-                foreach ($order->vat_percentages ?: [] as $rate => $amount) {
-                    if ((float) $amount != 0.0) {
-                        $rates[(int) $rate] = (float) $amount;
-                    }
+                $perRate = [];
+                $sumLines = 0.0;
+                foreach ($order->orderProducts as $orderProduct) {
+                    $rate = (int) round((float) ($orderProduct->vat_rate ?? 21));
+                    $perRate[$rate] = ($perRate[$rate] ?? 0.0) + (float) $orderProduct->price;
+                    $sumLines += (float) $orderProduct->price;
                 }
 
                 $totalIncl = (float) $order->total;
 
-                if (count($rates) === 0) {
-                    return []; // geen btw (bv. verlegd) -> volledige omzet is ex btw
-                }
+                if ($sumLines <= 0.0) {
+                    // Geen regels om op te splitsen: val terug op het enige btw-tarief
+                    // van de order, of op 0% (geen btw) als er geen btw geboekt is.
+                    $rates = [];
+                    foreach ($order->vat_percentages ?: [] as $rate => $amount) {
+                        if ((float) $amount != 0.0) {
+                            $rates[(int) $rate] = true;
+                        }
+                    }
 
-                if (count($rates) === 1) {
+                    if ($totalIncl == 0.0 || count($rates) === 0) {
+                        return [];
+                    }
+
                     return [array_key_first($rates) => $totalIncl];
                 }
 
-                // Meerdere tarieven: verdeel het inclusieve totaal naar rato van de
-                // btw-bedragen; de rest gaat naar het laatste tarief zodat de som
-                // exact het ordertotaal blijft.
-                $btwSum = array_sum($rates);
-                $result = [];
-                $assigned = 0.0;
-                $rateKeys = array_keys($rates);
-                $lastRate = end($rateKeys);
-                foreach ($rates as $rate => $amount) {
-                    if ($rate === $lastRate) {
-                        $result[$rate] = round($totalIncl - $assigned, 2);
-                    } else {
-                        $portion = $btwSum > 0 ? round($totalIncl * ($amount / $btwSum), 2) : 0.0;
-                        $result[$rate] = $portion;
-                        $assigned += $portion;
+                // Schaal de regelbedragen naar het werkelijke ordertotaal (lump-korting
+                // of kleine afwijking); rest naar het laatste tarief zodat de som exact
+                // gelijk blijft aan order->total.
+                if (abs($sumLines - $totalIncl) >= 0.01) {
+                    $factor = $totalIncl / $sumLines;
+                    $assigned = 0.0;
+                    $rateKeys = array_keys($perRate);
+                    $lastRate = end($rateKeys);
+                    foreach ($perRate as $rate => $amount) {
+                        if ($rate === $lastRate) {
+                            $perRate[$rate] = round($totalIncl - $assigned, 2);
+                        } else {
+                            $scaled = round($amount * $factor, 2);
+                            $perRate[$rate] = $scaled;
+                            $assigned += $scaled;
+                        }
                     }
                 }
 
-                return $result;
+                return array_filter($perRate, fn ($amount) => abs($amount) >= 0.005);
             };
 
             $vatFromIncl = function (float $incl, int $rate): float {

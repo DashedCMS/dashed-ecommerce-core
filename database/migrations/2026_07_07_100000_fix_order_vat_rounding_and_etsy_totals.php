@@ -77,6 +77,20 @@ return new class extends Migration
                         continue;
                     }
 
+                    // vat_percentages bevat geen 0%-regels; controleer de regels zelf.
+                    // Orders met een niet-21%-regel (bv. 0% margeregeling) mogen niet
+                    // volledig als 21% worden herberekend — daar is de som van de
+                    // regel-btw's leidend en blijft de header ongemoeid.
+                    $hasNon21Line = DB::table('dashed__order_products')
+                        ->where('order_id', $order->id)
+                        ->whereNotNull('vat_rate')
+                        ->whereRaw('ROUND(vat_rate) <> 21')
+                        ->where('price', '<>', 0)
+                        ->exists();
+                    if ($hasNon21Line) {
+                        continue;
+                    }
+
                     $newBtw = round((float) $order->total * 21 / 121, 2);
 
                     // Vergelijk op hele centen (integer) i.p.v. floats: een verschil
