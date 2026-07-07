@@ -111,3 +111,15 @@ it('does not notify pending subscriptions for a different site_id', function () 
     Mail::assertNothingQueued();
     expect(StockNotification::pending()->count())->toBe(1);
 });
+
+it('het command verstuurt de wachtende meldingen en markeert ze', function () {
+    Mail::fake();
+
+    $product = makeBackInStockProduct(['stock' => 5, 'total_stock' => 5, 'in_stock' => true, 'stock_status' => 'in_stock']);
+    app(BackInStockService::class)->subscribe('main', $product->id, 'klant@example.com');
+
+    $this->artisan('dashed:notify-back-in-stock')->assertSuccessful();
+
+    Mail::assertQueued(BackInStockMail::class);
+    expect(StockNotification::where('product_id', $product->id)->first()->notified_at)->not->toBeNull();
+});

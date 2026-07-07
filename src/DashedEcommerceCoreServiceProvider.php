@@ -1429,6 +1429,9 @@ MARKDOWN,
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckLowStock::class)
                 ->hourly()
                 ->withoutOverlapping();
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class)
+                ->everyFifteenMinutes()
+                ->withoutOverlapping();
             $schedule->command(SendAbandonedCartEmails::class)
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
@@ -2207,6 +2210,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\CleanupPriceGroupUserPricingCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\CheckLowStock::class,
+                \Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class,
             ]);
 
     }
