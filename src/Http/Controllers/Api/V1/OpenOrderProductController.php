@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Query\Builder;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Database\Query\Builder;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
@@ -131,6 +131,7 @@ class OpenOrderProductController extends Controller
         ], 'o.id', 'desc');
 
         $total = (clone $base)->count();
+        $totalQuantity = (int) (clone $base)->sum('op.quantity');
         $rows = (clone $base)
             ->select([
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
@@ -163,7 +164,7 @@ class OpenOrderProductController extends Controller
             ];
         })->all();
 
-        return $this->respond($data, $total, $perPage, $page);
+        return $this->respond($data, $total, $perPage, $page, $totalQuantity);
     }
 
     private function grouped(Builder $base, Request $request, int $perPage, int $page, string $mode): JsonResponse
@@ -312,12 +313,13 @@ class OpenOrderProductController extends Controller
     /**
      * @param array<int, array<string, mixed>> $data
      */
-    private function respond(array $data, int $total, int $perPage, int $page): JsonResponse
+    private function respond(array $data, int $total, int $perPage, int $page, ?int $totalQuantity = null): JsonResponse
     {
         return response()->json([
             'data' => $data,
             'meta' => [
                 'total' => $total,
+                'total_quantity' => $totalQuantity ?? $total,
                 'per_page' => $perPage,
                 'current_page' => $page,
                 'last_page' => (int) max(1, ceil($total / $perPage)),
