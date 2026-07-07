@@ -148,6 +148,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 OrderReturnResource::class,
                 ReturnReasonResource::class,
                 OpenOrderProductResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\StockNotificationResource::class,
                 ProductTabResource::class,
                 ProductExtraResource::class,
                 ProductGroupResource::class,
