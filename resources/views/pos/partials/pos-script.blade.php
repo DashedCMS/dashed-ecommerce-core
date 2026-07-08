@@ -49,6 +49,7 @@
         orderPayments: [],
         firstPaymentMethod: null,
         pinTerminalIntervalId: null,
+        pinAttempt: 0,
         shippingMethods: [],
         shippingMethod: null,
         shippingMethodId: null,
@@ -1104,8 +1105,17 @@
         },
 
         async startPinTerminalPayment(hasMultiplePayments = false) {
+            // Elke start krijgt een eigen 'attempt'-nummer en stopt eerst de
+            // lopende poller. Reacties van een eerdere (mislukte/trage) poging
+            // worden daarna genegeerd, zodat een oude start niet alsnog een
+            // vorige betaling herstart nadat er al een nieuwe is gelukt.
+            this.stopPinTerminalPolling();
+            const attempt = ++this.pinAttempt;
             this.isPinTerminalPayment = true;
             this.pinTerminalStatusHandled = false;
+            this.pinTerminalStatus = 'pending';
+            this.pinTerminalError = false;
+            this.pinTerminalErrorMessage = null;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.start-pin-terminal-payment') }}', {
                     method: 'POST',
@@ -1124,6 +1134,13 @@
                 });
 
                 let data = await response.json();
+
+                // Hoort deze reactie nog bij de huidige poging? Zo niet: negeren,
+                // anders herstart een oude start alsnog een reeds afgehandelde betaling.
+                if (attempt !== this.pinAttempt) {
+                    return;
+                }
+
                 this.focus();
 
                 if (!response.ok) {
@@ -1301,6 +1318,8 @@
                 return;
             }
 
+            const attempt = this.pinAttempt;
+
             try {
                 console.log('Polling pin terminal payment status...');
                 let response = await fetch('{{ route('api.point-of-sale.check-pin-terminal-payment') }}', {
@@ -1317,9 +1336,23 @@
                 });
 
                 let data = await response.json();
+
+                // Reactie van een oudere poging (er is inmiddels een nieuwe
+                // pinbetaling gestart)? Stop deze poller en negeer de reactie.
+                if (attempt !== this.pinAttempt) {
+                    this.stopPinTerminalPolling();
+                    return;
+                }
+
                 this.focus();
 
                 if (!response.ok) {
+                    // 400/fout: stop de poller zodat we niet elke seconde blijven
+                    // hameren op een order die niet (meer) te controleren is.
+                    this.stopPinTerminalPolling();
+                    this.pinTerminalError = true;
+                    this.pinTerminalStatus = data.pinTerminalStatus || 'error';
+
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
