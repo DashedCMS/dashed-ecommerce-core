@@ -17,6 +17,7 @@ use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\ReturnReason;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
+use Dashed\DashedEcommerceCore\Support\ReturnNotifier;
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
@@ -181,8 +182,9 @@ class OrderWithdrawal extends Component
         }
 
         $resolvedReturn = null;
+        $createdReturn = null;
 
-        DB::transaction(function () use ($order, $chosen, &$resolvedReturn) {
+        DB::transaction(function () use ($order, $chosen, &$resolvedReturn, &$createdReturn) {
             $existing = OrderReturn::where('order_id', $order->id)
                 ->open()
                 ->lockForUpdate()
@@ -202,6 +204,7 @@ class OrderWithdrawal extends Component
             ]);
 
             $resolvedReturn = $return;
+            $createdReturn = $return;
 
             $activeReasonIds = ReturnReason::active()->pluck('id')->all();
             foreach ($chosen as $row) {
@@ -238,6 +241,15 @@ class OrderWithdrawal extends Component
                 $return->approve();
             }
         });
+
+        // App-push: auto-goedgekeurd krijgt zijn eigen melding, anders 'nieuw
+        // verzoek'. Alleen voor een NIEUW aangemaakte retour (niet als er al een
+        // open retour was) en buiten de transactie (best-effort).
+        if ($createdReturn) {
+            $createdReturn->auto_accepted
+                ? ReturnNotifier::autoApproved($createdReturn)
+                : ReturnNotifier::requested($createdReturn);
+        }
 
         $this->completedAt = optional($resolvedReturn?->requested_at)->format('d-m-Y H:i');
         $this->completedOrderLabel = $order->invoice_id ?: (string) $order->id;

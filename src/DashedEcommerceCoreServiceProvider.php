@@ -126,6 +126,23 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Http\Middleware\EnsurePrinter::class
         );
 
+        // Retourlabel mislukt → app-push. De veloyd/myparcel-listeners loggen bij
+        // een mislukte labelgeneratie met tag 'order.return-label-failed'; we
+        // koppelen daaraan de meest recente open retour van de order.
+        \Dashed\DashedEcommerceCore\Models\OrderLog::created(function ($log): void {
+            if ($log->tag !== 'order.return-label-failed') {
+                return;
+            }
+            $return = \Dashed\DashedEcommerceCore\Models\OrderReturn::query()
+                ->where('order_id', $log->order_id)
+                ->open()
+                ->latest('id')
+                ->first();
+            if ($return) {
+                \Dashed\DashedEcommerceCore\Support\ReturnNotifier::labelFailed($return);
+            }
+        });
+
         // Register the product price fields at package boot (runs in every
         // context) rather than only in the Filament panel plugin. The product
         // import runs in a queue worker that never boots a panel, so a panel-only
@@ -1775,6 +1792,9 @@ MARKDOWN,
                     ['key' => 'order.cancelled', 'label' => 'Geannuleerde bestelling', 'description' => 'Een bestelling is geannuleerd.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
                     ['key' => 'stock.low', 'label' => 'Lage voorraad', 'description' => 'Een product zakt onder de voorraaddrempel.', 'group' => 'Producten', 'sound' => 'default', 'ability' => 'products.read', 'default' => false],
                     ['key' => 'daily.briefing', 'label' => 'Dagstart', 'description' => 'Krijg \'s ochtends een samenvatting: omzet van gisteren + wat er vandaag te verzenden is en welke producten lage voorraad hebben.', 'group' => 'Dashboard', 'sound' => 'default', 'ability' => 'dashboard.read', 'default' => false],
+                    ['key' => 'return.requested', 'label' => 'Nieuw retourverzoek', 'description' => 'Een klant of chat meldt een retour aan.', 'group' => 'Retouren', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
+                    ['key' => 'return.auto_approved', 'label' => 'Retour automatisch goedgekeurd', 'description' => 'Een retour is via de auto-accept-regels meteen goedgekeurd.', 'group' => 'Retouren', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
+                    ['key' => 'return.label_failed', 'label' => 'Retourlabel mislukt', 'description' => 'Het aanmaken van een retourlabel is mislukt.', 'group' => 'Retouren', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
                 ]);
             }
 
@@ -1840,6 +1860,8 @@ MARKDOWN,
                     'revenue_series' => $series,
                     'revenue_target' => (float) (\Dashed\DashedCore\Models\Customsetting::get('dashboard_revenue_target_' . $periodKey, $siteId) ?: 0),
                     'orders_target' => (int) (\Dashed\DashedCore\Models\Customsetting::get('dashboard_orders_target_' . $periodKey, $siteId) ?: 0),
+                    'returns_requested' => \Dashed\DashedEcommerceCore\Models\OrderReturn::query()
+                        ->where('site_id', $siteId)->requested()->count(),
                 ];
             });
 
