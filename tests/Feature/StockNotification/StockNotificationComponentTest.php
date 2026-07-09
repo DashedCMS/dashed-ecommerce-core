@@ -1,10 +1,10 @@
 <?php
 
-use Livewire\Livewire;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification as StockNotificationComponent;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\StockNotification;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification as StockNotificationComponent;
+use Livewire\Livewire;
 
 function stockNotificationGroup(): ProductGroup
 {
@@ -108,4 +108,22 @@ it('weigert een ongeldig e-mailadres', function () {
         ->assertSet('submitted', false);
 
     expect(StockNotification::where('product_id', $product->id)->count())->toBe(0);
+});
+
+it('toont de verwachte voorraaddatum als die bekend is', function () {
+    $product = stockNotificationProduct([
+        'expected_in_stock_date' => now()->addDays(7),
+    ]);
+
+    Livewire::test(StockNotificationComponent::class, ['product' => $product])
+        ->assertSee('Verwacht terug op');
+});
+
+it('toont een successtaat met bevestigingstekst', function () {
+    $product = stockNotificationProduct();
+
+    Livewire::test(StockNotificationComponent::class, ['product' => $product])
+        ->set('email', 'klant@example.com')
+        ->call('submit')
+        ->assertSee('weer op voorraad');
 });
