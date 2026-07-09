@@ -43,6 +43,7 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\CreateTrackAndTrace;
 use Dashed\DashedEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentsList;
 use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
@@ -1555,6 +1556,7 @@ MARKDOWN,
         Livewire::component('categories.show-categories', ShowCategories::class);
         Livewire::component('products.show-products', ShowProducts::class);
         Livewire::component('products.show-product', ShowProduct::class);
+        Livewire::component('products.stock-notification', StockNotification::class);
         Livewire::component('products.cross-sell-variant-picker', CrossSellVariantPicker::class);
         Livewire::component('products.searchbar', Searchbar::class);
         Livewire::component('account.orders', Orders::class);
