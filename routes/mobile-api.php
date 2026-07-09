@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderReturnController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductInsightsController;
@@ -139,6 +140,14 @@ Route::prefix('api/v1')
         Route::post('orders/{order}/print-documents', [OrderController::class, 'printDocuments'])->middleware('ability:orders.write');
         Route::get('orders/{order}/actions', [OrderController::class, 'actions'])->middleware('ability:orders.read');
         Route::post('orders/{order}/actions/{key}', [OrderController::class, 'runAction'])->middleware('ability:orders.write');
+
+        // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write.
+        Route::get('returns', [OrderReturnController::class, 'index'])->middleware('ability:orders.read');
+        Route::get('returns/{orderReturn}', [OrderReturnController::class, 'show'])->middleware('ability:orders.read');
+        Route::get('returns/{orderReturn}/label', [OrderReturnController::class, 'label'])->middleware('ability:orders.read');
+        Route::post('returns/{orderReturn}/approve', [OrderReturnController::class, 'approve'])->middleware('ability:orders.write');
+        Route::post('returns/{orderReturn}/reject', [OrderReturnController::class, 'reject'])->middleware('ability:orders.write');
+        Route::post('returns/{orderReturn}/handle', [OrderReturnController::class, 'handle'])->middleware('ability:orders.write');
 
         // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
         // de print-queue + de daemon op de Pi/NAS.
