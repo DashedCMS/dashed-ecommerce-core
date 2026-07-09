@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Products;
 
-use Livewire\Component;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Services\BackInStockService;
+use Livewire\Component;
 
 class StockNotification extends Component
 {
@@ -42,7 +42,7 @@ class StockNotification extends Component
         $this->validate();
 
         $notification = $service->subscribe(
-            Sites::getActive() ?? 'default',
+            Sites::getActive(),
             $this->product->id,
             $this->email,
         );
