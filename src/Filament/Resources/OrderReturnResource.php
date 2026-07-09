@@ -12,12 +12,16 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\RichEditor;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Tables\Filters\SelectFilter;
+use Dashed\DashedCore\Models\EmailTemplate;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Filament\Infolists\Components\RepeatableEntry;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 class OrderReturnResource extends Resource
 {
@@ -34,6 +38,18 @@ class OrderReturnResource extends Resource
     protected static ?string $pluralLabel = 'Retouraanvragen';
 
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = OrderReturn::notHandled()->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
 
     public static function table(Table $table): Table
     {
@@ -121,6 +137,38 @@ class OrderReturnResource extends Resource
                         Notification::make()
                             ->success()
                             ->title('Retouraanvraag gemarkeerd als afgehandeld')
+                            ->send();
+                    }),
+                Action::make('sendEmail')
+                    ->label('Stuur e-mail')
+                    ->icon('heroicon-o-envelope')
+                    ->color('primary')
+                    ->schema([
+                        TextInput::make('email')
+                            ->label('E-mailadres')
+                            ->email()
+                            ->required()
+                            ->default(fn ($record) => $record->email),
+                        TextInput::make('subject')
+                            ->label('Onderwerp')
+                            ->required()
+                            ->default(function () {
+                                $template = EmailTemplate::forMailable(OrderReturnCustomMail::emailTemplateKey());
+
+                                return $template?->getTranslation('subject', app()->getLocale(), useFallbackLocale: true)
+                                    ?: OrderReturnCustomMail::defaultSubject();
+                            }),
+                        RichEditor::make('message')
+                            ->label('Bericht')
+                            ->required()
+                            ->default(fn () => OrderReturnCustomMail::defaultMessage()),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->sendCustomEmail($data['subject'], $data['message'], $data['email']);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Bericht naar klant verstuurd')
                             ->send();
                     }),
             ]);

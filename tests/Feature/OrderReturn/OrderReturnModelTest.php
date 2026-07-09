@@ -1,13 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
+use Illuminate\Support\Facades\Event;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
 
 it('creates an order return with a hash, requested status and requested_at', function () {
     $order = Order::create([
@@ -113,4 +114,46 @@ it('casts auto_accepted and stores label fields', function () {
     expect($fresh->auto_accepted)->toBeTrue()
         ->and($fresh->return_label_provider)->toBe('myparcel')
         ->and($fresh->return_label_path)->toBe('/labels/x.pdf');
+});
+
+it('sends a custom email to the customer and logs it to the order', function () {
+    Mail::fake();
+
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $return->sendCustomEmail('Onderwerp', '<p>Bericht</p>');
+
+    Mail::assertQueued(OrderReturnCustomMail::class, function ($mail) use ($return) {
+        return $mail->orderReturn->is($return)
+            && $mail->subjectOverride === 'Onderwerp'
+            && $mail->messageBody === '<p>Bericht</p>'
+            && $mail->hasTo('a@b.nl');
+    });
+
+    expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.return-message-sent')->exists())->toBeTrue();
+});
+
+it('sends the custom email to an overridden address when given', function () {
+    Mail::fake();
+
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $return->sendCustomEmail('Onderwerp', '<p>Bericht</p>', 'ander@adres.nl');
+
+    Mail::assertQueued(OrderReturnCustomMail::class, fn ($mail) => $mail->hasTo('ander@adres.nl'));
+});
+
+it('scopes notHandled to everything except handled', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $requested = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+    $approved = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_APPROVED]);
+    $rejected = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_REJECTED]);
+    $handled = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_HANDLED]);
+
+    $ids = OrderReturn::notHandled()->pluck('id')->all();
+
+    expect($ids)->toContain($requested->id, $approved->id, $rejected->id)
+        ->and($ids)->not->toContain($handled->id);
 });

@@ -3,12 +3,16 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Pages;
 
 use Filament\Actions\Action;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Textarea;
-use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Forms\Components\RichEditor;
+use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 class ViewOrderReturn extends ViewRecord
 {
@@ -71,6 +75,38 @@ class ViewOrderReturn extends ViewRecord
                     Notification::make()
                         ->success()
                         ->title('Retouraanvraag gemarkeerd als afgehandeld')
+                        ->send();
+                }),
+            Action::make('sendEmail')
+                ->label('Stuur e-mail naar klant')
+                ->icon('heroicon-o-envelope')
+                ->color('primary')
+                ->schema([
+                    TextInput::make('email')
+                        ->label('E-mailadres')
+                        ->email()
+                        ->required()
+                        ->default(fn () => $this->getRecord()->email),
+                    TextInput::make('subject')
+                        ->label('Onderwerp')
+                        ->required()
+                        ->default(function () {
+                            $template = EmailTemplate::forMailable(OrderReturnCustomMail::emailTemplateKey());
+
+                            return $template?->getTranslation('subject', app()->getLocale(), useFallbackLocale: true)
+                                ?: OrderReturnCustomMail::defaultSubject();
+                        }),
+                    RichEditor::make('message')
+                        ->label('Bericht')
+                        ->required()
+                        ->default(fn () => OrderReturnCustomMail::defaultMessage()),
+                ])
+                ->action(function (array $data) {
+                    $this->getRecord()->sendCustomEmail($data['subject'], $data['message'], $data['email']);
+
+                    Notification::make()
+                        ->success()
+                        ->title('Bericht naar klant verstuurd')
                         ->send();
                 }),
         ];

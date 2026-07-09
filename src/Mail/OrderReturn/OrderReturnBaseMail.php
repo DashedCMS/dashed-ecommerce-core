@@ -28,6 +28,10 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
     {
     }
 
+    public ?string $subjectOverride = null;
+
+    public string $messageBody = '';
+
     public static function availableVariables(): array
     {
         return [
@@ -58,6 +62,7 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             'orderNumber',
             'returnLines',
             'returnStatusUrl',
+            'message',
         ];
     }
 
@@ -111,7 +116,8 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
 
         if ($templateHtml !== null) {
             $template = \Dashed\DashedCore\Models\EmailTemplate::forMailable(static::emailTemplateKey());
-            $rawSubject = $template?->getTranslation('subject', $locale, useFallbackLocale: true) ?: static::defaultSubject();
+            $rawSubject = $this->subjectOverride
+                ?: ($template?->getTranslation('subject', $locale, useFallbackLocale: true) ?: static::defaultSubject());
 
             $html = $order ? OrderVariableReplacer::handle($order, $templateHtml, true) : $templateHtml;
             $html = $this->replaceReturnVariables($html, true);
@@ -134,9 +140,10 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             ? config('dashed-core.site_theme', 'dashed') . '.emails.notification'
             : 'dashed-core::emails.notification';
 
+        $baseSubject = $this->subjectOverride ?: static::defaultSubject();
         $defaultSubject = $order
-            ? OrderVariableReplacer::handle($order, static::defaultSubject())
-            : static::defaultSubject();
+            ? OrderVariableReplacer::handle($order, $baseSubject)
+            : $baseSubject;
         $defaultSubject = $this->replaceReturnVariables($defaultSubject);
 
         return $this->view($view)
@@ -191,9 +198,11 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             })
             ->implode($escapeHtml ? '<br>' : ', ');
 
+        // :message: wordt bewust rauw ingevoegd (nooit ge-escaped): het is vertrouwde
+        // RichEditor-HTML die de beheerder zelf opstelt vanaf de retourpagina.
         return str_replace(
-            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:', ':returnStatusUrl:'],
-            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary, $statusUrl],
+            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:', ':returnStatusUrl:', ':message:'],
+            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary, $statusUrl, $this->messageBody],
             $value
         );
     }

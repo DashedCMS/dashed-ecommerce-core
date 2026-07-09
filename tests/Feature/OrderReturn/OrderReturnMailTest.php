@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
 
 it('constructs all three return mailables without throwing', function () {
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-TEST-1']);
@@ -153,7 +153,6 @@ it('approved subject default no longer contains empty parentheses', function () 
 
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
-use Dashed\DashedEcommerceCore\Models\ReturnReason;
 
 it('includes the reason note in the line summary and escapes it in HTML', function () {
     $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'invoice_id' => 'INV-9']);
