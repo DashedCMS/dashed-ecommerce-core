@@ -51,6 +51,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
         $this->form->fill([
             'period' => 'this_month',
             'steps' => 'per_day',
+            'status' => 'payment_obligation',
         ]);
         $this->calculateStatistics();
     }
@@ -149,7 +150,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                                 'cancelled' => 'Geannuleerd',
                                 'return' => 'Retour',
                             ])
-                            ->default('all')
+                            ->default('payment_obligation')
                             ->reactive(),
 
                         Select::make('paymentMethod')
@@ -214,7 +215,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             : now()->endOfDay();
 
         $steps = $state['steps'] ?? 'per_day';
-        $status = $state['status'] ?? 'all';
+        $status = $state['status'] ?? 'payment_obligation';
         $paymentMethod = $state['paymentMethod'] ?? 'all';
         $fulfillmentStatus = $state['fulfillmentStatus'] ?? 'all';
         $retourStatus = $state['retourStatus'] ?? 'all';
