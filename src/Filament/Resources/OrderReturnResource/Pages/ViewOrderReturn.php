@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource;
@@ -96,6 +97,9 @@ class ViewOrderReturn extends ViewRecord
                             return $template?->getTranslation('subject', app()->getLocale(), useFallbackLocale: true)
                                 ?: OrderReturnCustomMail::defaultSubject();
                         }),
+                    Placeholder::make('variabelen')
+                        ->label('Beschikbare variabelen')
+                        ->content(fn () => OrderReturnCustomMail::usableVariablesHint()),
                     RichEditor::make('message')
                         ->label('Bericht')
                         ->required()

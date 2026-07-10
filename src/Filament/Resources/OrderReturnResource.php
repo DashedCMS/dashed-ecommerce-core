@@ -15,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Tables\Filters\SelectFilter;
 use Dashed\DashedCore\Models\EmailTemplate;
@@ -158,6 +159,9 @@ class OrderReturnResource extends Resource
                                 return $template?->getTranslation('subject', app()->getLocale(), useFallbackLocale: true)
                                     ?: OrderReturnCustomMail::defaultSubject();
                             }),
+                        Placeholder::make('variabelen')
+                            ->label('Beschikbare variabelen')
+                            ->content(fn () => OrderReturnCustomMail::usableVariablesHint()),
                         RichEditor::make('message')
                             ->label('Bericht')
                             ->required()

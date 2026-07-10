@@ -36,7 +36,15 @@ class OrderReturnCustomMail extends OrderReturnBaseMail
 
     public static function defaultMessage(): string
     {
-        return '<p>Beste klant,</p><p>We willen je graag een update geven over je retourverzoek.</p>';
+        return '<p>Beste :firstName:,</p><p>We willen je graag een update geven over je retourverzoek.</p>';
+    }
+
+    public static function usableVariablesHint(): string
+    {
+        return collect(static::availableVariables())
+            ->reject(fn ($variable) => $variable === 'message')
+            ->map(fn ($variable) => ':' . $variable . ':')
+            ->join(', ');
     }
 
     public static function defaultBlocks(): array

@@ -39,7 +39,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
 
     public static function availableVariables(): array
     {
-        return ['orderId', 'customerFirstName', 'customerLastName', 'returnRequestedAt', 'returnReason', 'returnLines', 'siteName', 'primaryColor'];
+        return ['orderId', 'customerFirstName', 'customerLastName', 'returnRequestedAt', 'returnReason', 'returnLines', 'siteName', 'primaryColor', 'adminReturnUrl'];
     }
 
     public static function defaultSubject(): string
@@ -55,6 +55,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
             ['type' => 'text', 'data' => ['body' => '<p><strong>Geretourneerde producten:</strong></p><p>:returnLines:</p>']],
             ['type' => 'divider', 'data' => []],
             ['type' => 'order-details', 'data' => []],
+            ['type' => 'button', 'data' => ['label' => 'Bekijk retourverzoek in CMS', 'url' => ':adminReturnUrl:', 'background' => ':primaryColor:', 'color' => '#ffffff']],
         ];
     }
 
@@ -73,6 +74,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
             'returnReason' => $return?->customer_note ?? 'Past niet',
             'returnLines' => $return ? self::returnLinesHtmlFor($return) : '2x Voorbeeldproduct',
             'siteName' => Customsetting::get('site_name'),
+            'adminReturnUrl' => rescue(fn () => route('filament.dashed.resources.order-returns.view', ['record' => $return?->id]), '', false),
         ];
     }
 
@@ -104,6 +106,7 @@ class AdminNewOrderReturnMail extends Mailable implements RegistersEmailTemplate
             'returnReason' => (string) $this->orderReturn->customer_note,
             'returnLines' => self::returnLinesHtmlFor($this->orderReturn),
             'siteName' => Customsetting::get('site_name'),
+            'adminReturnUrl' => rescue(fn () => route('filament.dashed.resources.order-returns.view', ['record' => $this->orderReturn->id]), '', false),
         ];
 
         $templateHtml = $this->renderFromTemplate($context);
