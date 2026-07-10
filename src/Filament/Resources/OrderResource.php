@@ -121,6 +121,7 @@ class OrderResource extends Resource
             'discount',
             'status',
             'site_id',
+            'trackAndTraces.code',
         ], collect(ecommerce()->builder('customOrderFields'))
             ->keys()
             ->map(fn ($key) => Str::snake($key))
@@ -395,6 +396,11 @@ class OrderResource extends Resource
                     ->getStateUsing(fn ($record) => str($record->orderProducts->map(fn ($product) => $product->name.' x '.$product->quantity)->join(', '))->limit(30))
                     ->tooltip(fn ($record) => $record->orderProducts->map(fn ($product) => $product->name.' x '.$product->quantity)->join(', '))
                     ->label('Bestelde producten')
+                    ->searchable(),
+                TextColumn::make('trackAndTraces.code')
+                    ->label('Track & trace')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->getStateUsing(fn ($record) => $record->trackAndTraces->pluck('code')->filter()->join(', '))
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->toggleable()
