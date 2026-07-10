@@ -8,6 +8,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 /**
  * Bouwt een order + één orderproduct + een retour met één regel op de gegeven site.
@@ -145,4 +146,47 @@ it('returns 404 for a label when none is present', function () {
     $return = makeReturn()['return'];
 
     $this->getJson("/api/v1/returns/{$return->id}/label", ['X-Site-Id' => 'site'])->assertNotFound();
+});
+
+it('returns email defaults for the compose sheet', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+
+    $res = $this->getJson('/api/v1/returns/email-defaults', ['X-Site-Id' => 'site']);
+
+    $res->assertOk();
+    expect($res->json('subject'))->toBeString()->not->toBe('')
+        ->and($res->json('message'))->toBeString()->not->toBe('')
+        ->and($res->json('message'))->not->toContain('<'); // platte tekst, geen HTML-tags
+});
+
+it('sends a custom email to the customer and logs it', function () {
+    Mail::fake();
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    ['return' => $return, 'order' => $order] = makeReturn();
+
+    $res = $this->postJson("/api/v1/returns/{$return->id}/email", [
+        'subject' => 'Update over je retour',
+        'message' => "Beste klant,\n\nWe hebben je retour ontvangen.",
+    ], ['X-Site-Id' => 'site']);
+
+    $res->assertOk()->assertJsonPath('data.id', $return->id);
+    Mail::assertQueued(OrderReturnCustomMail::class);
+    expect(\Dashed\DashedEcommerceCore\Models\OrderLog::where('order_id', $order->id)->where('tag', 'order.return-message-sent')->exists())->toBeTrue();
+});
+
+it('requires subject and message to send an email', function () {
+    Mail::fake();
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $return = makeReturn()['return'];
+
+    $this->postJson("/api/v1/returns/{$return->id}/email", ['subject' => 'x'], ['X-Site-Id' => 'site'])->assertStatus(422);
+    $this->postJson("/api/v1/returns/{$return->id}/email", ['message' => 'y'], ['X-Site-Id' => 'site'])->assertStatus(422);
+    Mail::assertNothingQueued();
+});
+
+it('gates sending an email behind orders.write', function () {
+    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $return = makeReturn()['return'];
+
+    $this->postJson("/api/v1/returns/{$return->id}/email", ['subject' => 'x', 'message' => 'y'], ['X-Site-Id' => 'site'])->assertStatus(403);
 });

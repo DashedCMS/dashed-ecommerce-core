@@ -143,11 +143,14 @@ Route::prefix('api/v1')
 
         // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write.
         Route::get('returns', [OrderReturnController::class, 'index'])->middleware('ability:orders.read');
+        // Vóór de {orderReturn}-wildcard, anders wordt 'email-defaults' als id opgevat.
+        Route::get('returns/email-defaults', [OrderReturnController::class, 'emailDefaults'])->middleware('ability:orders.read');
         Route::get('returns/{orderReturn}', [OrderReturnController::class, 'show'])->middleware('ability:orders.read');
         Route::get('returns/{orderReturn}/label', [OrderReturnController::class, 'label'])->middleware('ability:orders.read');
         Route::post('returns/{orderReturn}/approve', [OrderReturnController::class, 'approve'])->middleware('ability:orders.write');
         Route::post('returns/{orderReturn}/reject', [OrderReturnController::class, 'reject'])->middleware('ability:orders.write');
         Route::post('returns/{orderReturn}/handle', [OrderReturnController::class, 'handle'])->middleware('ability:orders.write');
+        Route::post('returns/{orderReturn}/email', [OrderReturnController::class, 'sendEmail'])->middleware('ability:orders.write');
 
         // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
         // de print-queue + de daemon op de Pi/NAS.

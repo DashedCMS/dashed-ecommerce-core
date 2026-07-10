@@ -10,7 +10,9 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
+use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderReturnResource;
 
@@ -104,6 +106,39 @@ class OrderReturnController extends Controller
         return new OrderReturnResource($this->find($orderReturn));
     }
 
+    /**
+     * Record-onafhankelijke standaard-onderwerp/-bericht voor een handmatig
+     * bericht aan de klant (spiegelt de Filament "Stuur e-mail"-actie). De app
+     * gebruikt dit om het opstelscherm voor te vullen.
+     */
+    public function emailDefaults(): JsonResponse
+    {
+        return response()->json([
+            'subject' => $this->defaultEmailSubject(),
+            'message' => $this->defaultEmailMessage(),
+        ]);
+    }
+
+    public function sendEmail(Request $request, int $orderReturn): OrderReturnResource
+    {
+        $return = $this->find($orderReturn);
+        $data = $request->validate([
+            'subject' => ['required', 'string'],
+            'message' => ['required', 'string'],
+            'email' => ['nullable', 'email'],
+        ]);
+
+        // De app stuurt platte tekst; zet die veilig om naar HTML voor het
+        // :message:-blok (Filament gebruikt daar een RichEditor).
+        $message = str_contains($data['message'], '<')
+            ? $data['message']
+            : nl2br(e($data['message']));
+
+        $return->sendCustomEmail($data['subject'], $message, $data['email'] ?? null);
+
+        return new OrderReturnResource($this->find($orderReturn));
+    }
+
     public function label(int $orderReturn): JsonResponse
     {
         $return = $this->find($orderReturn);
@@ -126,5 +161,23 @@ class OrderReturnController extends Controller
             ->where('site_id', Sites::getActive())
             ->with(self::EAGER)
             ->findOrFail($id);
+    }
+
+    private function defaultEmailSubject(): string
+    {
+        $template = EmailTemplate::forMailable(OrderReturnCustomMail::emailTemplateKey());
+        $subject = $template?->getTranslation('subject', app()->getLocale(), useFallbackLocale: true);
+
+        return $subject ?: OrderReturnCustomMail::defaultSubject();
+    }
+
+    private function defaultEmailMessage(): string
+    {
+        // Filament levert HTML (RichEditor); de app toont platte tekst, dus de
+        // alinea's worden regelovergangen en de tags gestript.
+        $html = OrderReturnCustomMail::defaultMessage();
+        $text = preg_replace('/<\/p>\s*<p>/i', "\n\n", $html);
+
+        return trim(html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5));
     }
 }
