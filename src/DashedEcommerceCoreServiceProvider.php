@@ -118,6 +118,14 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // Elke verzonden order-mail (klant of beheerder, ongeacht CMS/app/command/job)
+        // wordt via deze listener bij de order gelogd. De order wordt afgeleid uit de
+        // publieke mailable-properties (order/orderReturn/trackAndTrace).
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Mail\Events\MessageSent::class,
+            \Dashed\DashedEcommerceCore\Listeners\LogSentOrderMail::class,
+        );
+
         // De print-queue-routes (routes/print-queue-api.php) beschermen elke
         // daemon-call met de 'ensure.printer'-alias. Die moet hier geregistreerd
         // worden, anders faalt elke call met "Target class [ensure.printer] does

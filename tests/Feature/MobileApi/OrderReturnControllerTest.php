@@ -171,7 +171,9 @@ it('sends a custom email to the customer and logs it', function () {
 
     $res->assertOk()->assertJsonPath('data.id', $return->id);
     Mail::assertQueued(OrderReturnCustomMail::class);
-    expect(\Dashed\DashedEcommerceCore\Models\OrderLog::where('order_id', $order->id)->where('tag', 'order.return-message-sent')->exists())->toBeTrue();
+    // De verzonden-regel komt nu uit de globale MessageSent-listener; sendCustomEmail
+    // schrijft geen eigen 'order.return-message-sent' meer.
+    expect(\Dashed\DashedEcommerceCore\Models\OrderLog::where('order_id', $order->id)->where('tag', 'order.return-message-sent')->exists())->toBeFalse();
 });
 
 it('requires subject and message to send an email', function () {

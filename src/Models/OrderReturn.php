@@ -118,7 +118,6 @@ class OrderReturn extends Model
         $to = $email ?: $this->email;
 
         Mail::to($to)->queue(new OrderReturnCustomMail($this, $message, $subject));
-        $this->logToOrder('order.return-message-sent');
     }
 
     public function markHandled(): void

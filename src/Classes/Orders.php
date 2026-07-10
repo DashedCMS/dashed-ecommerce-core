@@ -48,19 +48,6 @@ class Orders
             } else {
                 Mail::to($email ?: $order->email)->bcc(Mails::getBCCNotificationEmails())->send(new OrderConfirmationMail($order));
             }
-            if (app()->runningInConsole() && ! $mailSendByUser) {
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $order->id;
-                $orderLog->user_id = null;
-                $orderLog->tag = 'order.system.paid.invoice.mail.send';
-                $orderLog->save();
-            } else {
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $order->id;
-                $orderLog->user_id = Auth::check() ? Auth::user()->id : ($mailSendByUser->id ?? null);
-                $orderLog->tag = 'order.paid.invoice.mail.send';
-                $orderLog->save();
-            }
         } catch (\Exception $e) {
             if (app()->runningInConsole()) {
                 $orderLog = new OrderLog();

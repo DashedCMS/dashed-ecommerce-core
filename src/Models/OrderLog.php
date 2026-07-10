@@ -102,6 +102,8 @@ class OrderLog extends Model
             $string = 'heeft de bestelling doorgezet naar Efulfillmentshop.';
         } elseif ($this->tag == 'order.pushed-to-montaportal') {
             $string = 'heeft de bestelling doorgezet naar Montaportal.';
+        } elseif ($this->tag == 'order.email.sent') {
+            $string = 'heeft een e-mail verstuurd.';
         } elseif ($this->tag == 'order.t&t.send') {
             $string = 'heeft de T&T codes verstuurd naar de klant.';
         } elseif ($this->tag == 'order.t&t.not-send') {

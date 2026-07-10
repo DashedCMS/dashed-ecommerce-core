@@ -996,7 +996,6 @@ class Order extends Model
             if ($mailable && $this->email && Customsetting::get("fulfillment_status_{$key}_enabled", null, false, $this->locale)) {
                 try {
                     Mail::to($this->email)->send(new $mailable($this));
-                    OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.send");
                 } catch (Exception $e) {
                     OrderLog::createLog(orderId: $this->id, tag: "order.fulfillment-status-update-to-{$key}.mail.not-send");
                 }
@@ -1134,14 +1133,12 @@ class Order extends Model
             if (app()->runningInConsole()) {
                 try {
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
-                    OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send');
                 } catch (Exception $e) {
                     OrderLog::createLog(orderId: $this->id, tag: 'order.system.cancelled.mail.send.failed', note: 'Error: '.$e->getMessage());
                 }
             } else {
                 try {
                     Mail::to($this->email)->send(new OrderCancelledMail($this));
-                    OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send');
                 } catch (Exception $e) {
                     OrderLog::createLog(orderId: $this->id, tag: 'order.cancelled.mail.send.failed', note: 'Error: '.$e->getMessage());
                 }
@@ -1308,18 +1305,13 @@ class Order extends Model
         if ($sendCustomerEmail) {
             try {
                 Mail::to($this->email)->send(new OrderCancelledWithCreditMail($newOrder));
-                //                $createCreditInvoice ? Mail::to($this->email)->send(new OrderCancelledWithCreditMail($newOrder)) : Mail::to($this->email)->send(new OrderCancelledMail($newOrder));
-                //                if ($createCreditInvoice) {
-                //                    Mail::to($this->email)->send(new OrderCancelledWithCreditMail($newOrder));
-                //                } else {
-                //                    Mail::to($this->email)->send(new OrderCancelledMail($newOrder));
-                //                }
-                $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send' : 'order.cancelled.mail.send';
             } catch (Exception $e) {
-                $tag = app()->runningInConsole() ? 'order.system.cancelled.mail.send.failed' : 'order.cancelled.mail.send.failed';
-                $error = 'Error: '.$e->getMessage();
+                OrderLog::createLog(
+                    orderId: $newOrder->id,
+                    tag: app()->runningInConsole() ? 'order.system.cancelled.mail.send.failed' : 'order.cancelled.mail.send.failed',
+                    note: 'Error: '.$e->getMessage(),
+                );
             }
-            OrderLog::createLog(orderId: $newOrder->id, tag: $tag, note: $error ?? null);
             $newOrder->invoice_send_to_customer = 1;
             $newOrder->save();
         }

@@ -116,7 +116,7 @@ it('casts auto_accepted and stores label fields', function () {
         ->and($fresh->return_label_path)->toBe('/labels/x.pdf');
 });
 
-it('sends a custom email to the customer and logs it to the order', function () {
+it('sends a custom email to the customer without writing a manual sent log', function () {
     Mail::fake();
 
     $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
@@ -131,7 +131,9 @@ it('sends a custom email to the customer and logs it to the order', function () 
             && $mail->hasTo('a@b.nl');
     });
 
-    expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.return-message-sent')->exists())->toBeTrue();
+    // De verzonden-regel komt nu uit de globale MessageSent-listener, niet meer
+    // uit sendCustomEmail zelf (die met Mail::fake toch niet zou vuren).
+    expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.return-message-sent')->exists())->toBeFalse();
 });
 
 it('sends the custom email to an overridden address when given', function () {
