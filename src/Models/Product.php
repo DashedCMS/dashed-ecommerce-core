@@ -1887,7 +1887,27 @@ class Product extends Model
             ->orderBy('min_quantity');
     }
 
+    /**
+     * Request-scoped memoization. De prijsberekening is duur en wordt in
+     * lijsten tientallen keren per instance opgevraagd. Memo is per-instance
+     * en per (user, fillFromProduct); niet gedeeld tussen requests.
+     */
+    private array $priceForUserMemo = [];
+
     public function priceForUser(?User $user = null, bool $fillFromProduct = true)
+    {
+        $key = ($user?->id ?? 'guest') . ':' . ($fillFromProduct ? '1' : '0');
+
+        if (array_key_exists($key, $this->priceForUserMemo)) {
+            return $this->priceForUserMemo[$key];
+        }
+
+        $result = $this->priceForUserUncached($user, $fillFromProduct);
+
+        return $this->priceForUserMemo[$key] = $result;
+    }
+
+    private function priceForUserUncached(?User $user = null, bool $fillFromProduct = true)
     {
         if (! $user && auth()->check()) {
             $user = auth()->user();
