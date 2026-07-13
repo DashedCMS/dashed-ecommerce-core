@@ -6,7 +6,10 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Auth;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\POSCart;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
@@ -277,7 +280,63 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-banknotes')
                 ->color('primary')
                 ->button(),
+            Action::make('editConceptInPos')
+                ->label('Bewerken in kassa')
+                ->icon('heroicon-o-pencil-square')
+                ->visible(fn (): bool => $this->record->isConcept())
+                ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
+                ->modalHeading('Kassa-winkelwagen vervangen?')
+                ->modalDescription('Je kassa bevat al producten. Die worden vervangen door dit concept.')
+                ->action(function () {
+                    $cart = $this->activePosCart();
+                    // loaded_concept_order_id vooraf zetten; hydrate() schrijft products
+                    // en slaat alles in één keer op (geen tussentijdse lege-cart-staat).
+                    $cart->loaded_concept_order_id = $this->record->id;
+                    ConceptOrderService::hydrate($cart, $this->record);
+
+                    $this->redirect(route('dashed.ecommerce.point-of-sale'));
+                }),
+            Action::make('copyToPos')
+                ->label('Kopiëren naar kassa')
+                ->icon('heroicon-o-document-duplicate')
+                ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
+                ->modalHeading('Kassa-winkelwagen vervangen?')
+                ->modalDescription('Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.')
+                ->action(function () {
+                    $cart = $this->activePosCart();
+                    ConceptOrderService::copyIntoCart($cart, $this->record);
+
+                    $this->redirect(route('dashed.ecommerce.point-of-sale'));
+                }),
         ], ecommerce()->buttonActions('order'));
+    }
+
+    protected function activePosCart(): POSCart
+    {
+        $userId = Auth::id();
+
+        $posCart = POSCart::where('user_id', $userId)->where('status', 'active')->first();
+
+        if (! $posCart) {
+            $posCart = new POSCart();
+            $posCart->user_id = $userId;
+            $posCart->status = 'active';
+            $posCart->identifier = uniqid();
+            $posCart->country = 'NL';
+            $posCart->products = [];
+            $posCart->save();
+        }
+
+        return $posCart;
+    }
+
+    protected function activeCartHasProducts(): bool
+    {
+        // Bewust GEEN cart aanmaken: dit draait bij het renderen van de actie, dus
+        // een order bekijken mag geen lege kassa-winkelwagen in de database zetten.
+        $cart = POSCart::where('user_id', Auth::id())->where('status', 'active')->first();
+
+        return $cart && filled($cart->products ?? []);
     }
 
     public function renderPage()

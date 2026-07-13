@@ -95,52 +95,77 @@ class ConceptOrderService
             throw new \LogicException('Cannot hydrate POS cart from a non-concept order.');
         }
 
-        $snapshot = $order->concept_cart_snapshot;
+        $posCart->products = self::buildCartProducts($order);
+        $posCart->prices_ex_vat = (bool) ($order->prices_ex_vat ?? false);
+        $posCart->shipping_method_id = $order->shipping_method_id ?? null;
+        $posCart->discount_code = $order->concept_discount_code ?? null;
+        $posCart->save();
+    }
+
+    /**
+     * Laadt een willekeurige order (concept of normaal/betaald) als NIEUWE,
+     * niet-gekoppelde winkelwagen. Opslaan in de POS maakt zo een nieuw concept
+     * aan; de bronorder blijft ongemoeid.
+     */
+    public static function copyIntoCart(POSCart $posCart, Order $order): void
+    {
+        $posCart->products = self::buildCartProducts($order);
+        $posCart->loaded_concept_order_id = null;
+        $posCart->prices_ex_vat = (bool) ($order->prices_ex_vat ?? false);
+        $posCart->shipping_method_id = $order->shipping_method_id ?? null;
+        $posCart->discount_code = null;
+        $posCart->save();
+    }
+
+    /**
+     * Bouwt de POS-winkelwagenrijen voor een order: verbatim uit de concept-snapshot
+     * indien aanwezig, anders gereconstrueerd uit de orderProducts (concepten zonder
+     * snapshot en normale orders). Elke rij krijgt een verse identifier.
+     */
+    protected static function buildCartProducts(Order $order): array
+    {
+        $snapshot = $order->isConcept() ? $order->concept_cart_snapshot : null;
 
         if (is_array($snapshot) && count($snapshot) > 0) {
             // Verbatim restore - every field (vat_rate, extras, custom flags, formatted prices)
             // is preserved exactly as it was when the cashier saved the concept.
-            $products = array_map(function (array $row): array {
+            return array_map(function (array $row): array {
                 // Refresh identifier so hydrated rows don't collide with anything in memory.
                 $row['identifier'] = (string) Str::random();
 
                 return $row;
             }, $snapshot);
-        } else {
-            // Fallback for concepts that predate the snapshot column - reconstruct from orderProducts.
-            $products = [];
-            foreach ($order->orderProducts as $op) {
-                $quantity = max(1, (int) $op->quantity);
-                $lineTotal = (float) $op->price;
-                $unitPrice = $quantity > 0 ? $lineTotal / $quantity : $lineTotal;
-
-                $product = $op->product_id ? Product::find($op->product_id) : null;
-                $image = '';
-                if ($product && $product->firstImage) {
-                    $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
-                }
-
-                $products[] = [
-                    'id' => $op->product_id,
-                    'identifier' => (string) Str::random(),
-                    'name' => $op->name ?: ($product?->name ?? 'Product'),
-                    'image' => $image,
-                    'quantity' => $quantity,
-                    'singlePrice' => $unitPrice,
-                    'price' => $lineTotal,
-                    'priceFormatted' => CurrencyHelper::formatPrice($lineTotal),
-                    'vat_rate' => (float) ($op->vat_rate ?? 21),
-                    'extra' => is_array($op->product_extras) ? $op->product_extras : [],
-                    'customProduct' => ! $op->product_id,
-                ];
-            }
         }
 
-        $posCart->products = $products;
-        $posCart->prices_ex_vat = (bool) ($order->prices_ex_vat ?? false);
-        $posCart->shipping_method_id = $order->shipping_method_id ?? null;
-        $posCart->discount_code = $order->concept_discount_code ?? null;
-        $posCart->save();
+        // Reconstruct from orderProducts (concepts that predate the snapshot column and normal orders).
+        $products = [];
+        foreach ($order->orderProducts as $op) {
+            $quantity = max(1, (int) $op->quantity);
+            $lineTotal = (float) $op->price;
+            $unitPrice = $quantity > 0 ? $lineTotal / $quantity : $lineTotal;
+
+            $product = $op->product_id ? Product::find($op->product_id) : null;
+            $image = '';
+            if ($product && $product->firstImage) {
+                $image = mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '';
+            }
+
+            $products[] = [
+                'id' => $op->product_id,
+                'identifier' => (string) Str::random(),
+                'name' => $op->name ?: ($product?->name ?? 'Product'),
+                'image' => $image,
+                'quantity' => $quantity,
+                'singlePrice' => $unitPrice,
+                'price' => $lineTotal,
+                'priceFormatted' => CurrencyHelper::formatPrice($lineTotal),
+                'vat_rate' => (float) ($op->vat_rate ?? 21),
+                'extra' => is_array($op->product_extras) ? $op->product_extras : [],
+                'customProduct' => ! $op->product_id,
+            ];
+        }
+
+        return $products;
     }
 
     public static function cancel(Order $order): void
