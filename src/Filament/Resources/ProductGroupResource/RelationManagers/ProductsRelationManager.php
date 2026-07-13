@@ -2,29 +2,29 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\RelationManagers;
 
-use Filament\Tables\Table;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
 use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\RestoreAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Section;
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Filters\TrashedFilter;
-use Filament\Actions\ForceDeleteBulkAction;
-use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Filament\Resources\RelationManagers\RelationManager;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class ProductsRelationManager extends RelationManager
 {
@@ -69,11 +69,16 @@ class ProductsRelationManager extends RelationManager
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('stock')
                     ->label('Voorraad')
-                    ->formatStateUsing(fn ($record) => $record->stock . ((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
+                    ->formatStateUsing(fn ($record) => $record->stock.((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
                     ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
                     ->sortable(),
+                TextColumn::make('open_orders')
+                    ->label('Openstaande bestellingen')
+                    ->badge()
+                    ->getStateUsing(fn ($record) => $record->openOrdersCount())
+                    ->color(fn ($state) => $state > 0 ? 'warning' : 'gray'),
                 IconColumn::make('indexable')
                     ->label('Tonen in overzicht')
                     ->trueIcon('heroicon-o-check-circle')
@@ -202,9 +207,9 @@ class ProductsRelationManager extends RelationManager
                 ForceDeleteBulkAction::make(),
             ])
             ->headerActions([
-                \Filament\Actions\Action::make('Product aanmaken')
+                Action::make('Product aanmaken')
                     ->button()
-                    ->url(fn () => route('filament.dashed.resources.products.create') . '?productGroupId=' . $ownerRecord->id),
+                    ->url(fn () => route('filament.dashed.resources.products.create').'?productGroupId='.$ownerRecord->id),
             ]);
     }
 }

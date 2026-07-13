@@ -2,81 +2,88 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources;
 
-use Closure;
-use UnitEnum;
 use BackedEnum;
-use Filament\Tables\Table;
-use Filament\Actions\Action;
-use Filament\Schemas\Schema;
+use Closure;
 use Dashed\DashedAi\Facades\Ai;
-use Filament\Actions\EditAction;
-use Filament\Resources\Resource;
-use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\DB;
-use Filament\Actions\RestoreAction;
-use Filament\Tables\Filters\Filter;
-use Dashed\DashedCore\Classes\Sites;
-use Filament\Support\Icons\Heroicon;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Dashed\DashedCore\Classes\Locales;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\RestoreBulkAction;
-use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Section;
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Filters\TrashedFilter;
 use Dashed\DashedAi\Jobs\GenerateAiContent;
-use Filament\Actions\ForceDeleteBulkAction;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
-use Dashed\DashedEcommerceCore\Models\ProductTab;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Filament\Forms\Components\Repeater\TableColumn;
-use Dashed\DashedEcommerceCore\Models\ShippingClass;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
-use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
-use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
-use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
-use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
-use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
+use Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
+use Dashed\DashedCore\Filament\Concerns\HasVisitableTab;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\CreateProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\RelationManagers\ChildProductsRelationManager;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
+use Dashed\DashedEcommerceCore\Models\ProductExtra;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductTab;
+use Dashed\DashedEcommerceCore\Models\ShippingClass;
+use Dashed\DashedTranslations\Models\Translation;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+use UnitEnum;
 
 class ProductResource extends Resource
 {
-    use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
-
-    use Translatable;
-    use HasVisitableTab;
     use HasCustomBlocksTab;
+    use HasLastEditedColumn;
+    use HasVisitableTab;
+    use Translatable;
 
     protected static ?string $model = Product::class;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
+
     protected static string|UnitEnum|null $navigationGroup = 'Producten';
+
     protected static ?string $navigationLabel = 'Producten';
+
     protected static ?string $label = 'Product';
+
     protected static ?string $pluralLabel = 'Producten';
+
     protected static ?int $navigationSort = 1;
 
     public static function getGloballySearchableAttributes(): array
@@ -168,7 +175,7 @@ class ProductResource extends Resource
                                     if (! in_array($bundleProduct['bundle_product_id'], $bundleProductIds)) {
                                         $bundleProductIds[] = $bundleProduct['bundle_product_id'];
                                     } else {
-                                        $fail("You cannot add more then 1 of the same product in the bundle products.");
+                                        $fail('You cannot add more then 1 of the same product in the bundle products.');
                                     }
                                 }
                             };
@@ -239,7 +246,7 @@ class ProductResource extends Resource
                     ->helperText('Vaak gebruikt voor interne herkenning')
                     ->maxLength(255)
                     ->required()
-                    ->default('SKU' . rand(10000, 99999))
+                    ->default('SKU'.rand(10000, 99999))
                     ->columnSpan([
                         'default' => 1,
                         'lg' => 3,
@@ -335,7 +342,7 @@ class ProductResource extends Resource
                 TextInput::make('gs1_unit')
                     ->label('Eenheid')
                     ->columnSpan(['default' => 1, 'lg' => 4]),
-                \Filament\Forms\Components\Select::make('gs1_consumer_unit')
+                Select::make('gs1_consumer_unit')
                     ->label('Consumenteneenheid')
                     ->options([
                         '1' => 'Ja',
@@ -367,14 +374,14 @@ class ProductResource extends Resource
 
                     $activeFilterOptionIds = $record->productFilters()
                         ->get()
-                        ->map(fn ($f) => $f->id . '_' . $f->pivot->product_filter_option_id)
+                        ->map(fn ($f) => $f->id.'_'.$f->pivot->product_filter_option_id)
                         ->toArray();
 
                     foreach ($productFilters as $productFilter) {
                         $productFiltersSchema = [];
 
                         foreach ($productFilter->productFilterOptions as $productFilterOption) {
-                            $isActive = in_array($productFilter->id . '_' . $productFilterOption->id, $activeFilterOptionIds);
+                            $isActive = in_array($productFilter->id.'_'.$productFilterOption->id, $activeFilterOptionIds);
 
                             $productFiltersSchema[] = Checkbox::make("product_filter_{$productFilter->id}_option_{$productFilterOption->id}")
                                 ->label("$productFilter->name: $productFilterOption->name")
@@ -422,7 +429,7 @@ class ProductResource extends Resource
         ];
         foreach (Locales::getLocales() as $locale) {
             $productCharacteristicsTableColumns[] = TableColumn::make("Waarde ({$locale['id']})");
-            $productCharacteristicsSchema[] = TextInput::make('value_' . $locale['id']);
+            $productCharacteristicsSchema[] = TextInput::make('value_'.$locale['id']);
         }
 
         $newSchema[] = Section::make('Kenmerken beheren')->columnSpanFull()
@@ -433,7 +440,7 @@ class ProductResource extends Resource
                     ->table($productCharacteristicsTableColumns)
                     ->mutateRelationshipDataBeforeFillUsing(function (array $data, $livewire): array {
                         foreach (Locales::getLocales() as $locale) {
-                            $data['value_' . $locale['id']] = json_decode(DB::table('dashed__product_characteristic')->where('id', $data['id'])->first()->value, true)[$locale['id']] ?? '';
+                            $data['value_'.$locale['id']] = json_decode(DB::table('dashed__product_characteristic')->where('id', $data['id'])->first()->value, true)[$locale['id']] ?? '';
                         }
 
                         return $data;
@@ -452,7 +459,7 @@ class ProductResource extends Resource
                             }
 
                             foreach (Locales::getLocales() as $locale) {
-                                $characteristic->setTranslation('value', $locale['id'], $entry['value_' . $locale['id']]);
+                                $characteristic->setTranslation('value', $locale['id'], $entry['value_'.$locale['id']]);
                             }
                             $characteristic->save();
                             $entryIds[] = $characteristic->id;
@@ -698,11 +705,16 @@ class ProductResource extends Resource
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('stock')
                     ->label('Voorraad')
-                    ->formatStateUsing(fn ($record) => $record->stock . ((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
+                    ->formatStateUsing(fn ($record) => $record->stock.((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
                     ->sortable(),
                 TextColumn::make('total_purchases')
                     ->label('Aantal verkopen')
                     ->sortable(),
+                TextColumn::make('open_orders')
+                    ->label('Openstaande bestellingen')
+                    ->badge()
+                    ->getStateUsing(fn ($record) => $record->openOrdersCount())
+                    ->color(fn ($state) => $state > 0 ? 'warning' : 'gray'),
                 IconColumn::make('indexable')
                     ->label('Tonen in overzicht')
                     ->trueIcon('heroicon-o-check-circle')
@@ -805,7 +817,7 @@ class ProductResource extends Resource
                             ->multiple()
                             ->options(fn () => cache()->remember('product_group_filter_options', 300, fn () => ProductGroup::whereHas('products', fn ($query) => $query->whereNull('deleted_at'))->pluck('name', 'id')->all())),
                     ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->query(function (Builder $query, array $data): Builder {
                         if (! $data['product_group_id']) {
                             return $query;
                         }
@@ -823,12 +835,12 @@ class ProductResource extends Resource
                             ->label('Categorieen')
                             ->options(fn () => cache()->remember('product_category_filter_options', 300, fn () => ProductCategory::pluck('name', 'id')->all())),
                     ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->query(function (Builder $query, array $data): Builder {
                         if (! $data['categories']) {
                             return $query;
                         }
 
-                        return $query->whereHas('productCategories', fn (\Illuminate\Database\Eloquent\Builder $query) => $query->whereIn('product_category_id', $data['categories']));
+                        return $query->whereHas('productCategories', fn (Builder $query) => $query->whereIn('product_category_id', $data['categories']));
                     }),
                 Filter::make('indexable')
                     ->schema([
@@ -839,25 +851,25 @@ class ProductResource extends Resource
                             ])
                             ->label('Getoond in overzicht'),
                     ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->query(function (Builder $query, array $data): Builder {
                         if ($data['indexable'] === null || $data['indexable'] === '') {
                             return $query;
                         }
 
                         return $query->where('indexable', $data['indexable']);
                     }),
-                \Filament\Tables\Filters\TernaryFilter::make('out_of_stock')
+                TernaryFilter::make('out_of_stock')
                     ->label('Niet op voorraad')
                     ->placeholder('Alle producten')
                     ->trueLabel('Alleen niet voorradig')
                     ->falseLabel('Alle producten')
                     ->queries(
-                        true: fn (\Illuminate\Database\Eloquent\Builder $q) => $q
+                        true: fn (Builder $q) => $q
                             ->where('use_stock', true)
                             ->where('stock', '<=', 0)
                             ->where('out_of_stock_sellable', false),
-                        false: fn (\Illuminate\Database\Eloquent\Builder $q) => $q,
-                        blank: fn (\Illuminate\Database\Eloquent\Builder $q) => $q,
+                        false: fn (Builder $q) => $q,
+                        blank: fn (Builder $q) => $q,
                     ),
             ])
             ->deferFilters(false);
@@ -866,7 +878,7 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-//            ChildProductsRelationManager::class,
+            //            ChildProductsRelationManager::class,
         ];
     }
 

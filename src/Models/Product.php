@@ -2,50 +2,53 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Exception;
 use Carbon\Carbon;
-use Dashed\DashedCore\Models\User;
-use Illuminate\Support\Facades\DB;
-use Dashed\DashedPages\Models\Page;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
-use Gloudemans\Shoppingcart\CartItem;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
-use LaraZeus\Quantity\Components\Quantity;
-use Dashed\DashedCore\Models\Customsetting;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedCore\Models\Concerns\HasSearchIndex;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
+use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
 use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
+use Dashed\DashedPages\Models\Page;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Exception;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Gloudemans\Shoppingcart\CartItem;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use LaraZeus\Quantity\Components\Quantity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Product extends Model
 {
-    use LogsActivity;
     use HasCustomBlocks;
     use HasDynamicRelation;
     use HasSearchIndex;
     use IsVisitable;
+    use LogsActivity;
     use SoftDeletes;
 
     protected $table = 'dashed__products';
@@ -382,9 +385,7 @@ class Product extends Model
         return $query;
     }
 
-    public function scopeHandOrderShowable($query)
-    {
-    }
+    public function scopeHandOrderShowable($query) {}
 
     public function scopeAvailableForShoppingFeed($query)
     {
@@ -591,6 +592,20 @@ class Product extends Model
     public function reservedStock(): ?int
     {
         return $this->reserved_stock;
+    }
+
+    /**
+     * Aantal betaalde, nog niet (volledig) afgehandelde bestellingen waar dit
+     * product in zit. Zelfde definitie als het OrderUnhandledStat-widget zodat
+     * de tellingen consistent zijn.
+     */
+    public function openOrdersCount(): int
+    {
+        return Order::query()
+            ->whereIn('status', ['paid', 'partially_paid'])
+            ->whereNotIn('fulfillment_status', ['handled', 'partially_handled'])
+            ->whereHas('orderProducts', fn ($query) => $query->where('product_id', $this->id))
+            ->count();
     }
 
     public function inCartStock(): int
@@ -1009,7 +1024,7 @@ class Product extends Model
     public function suggestedProductGroups(): BelongsToMany
     {
         return $this->belongsToMany(
-            \Dashed\DashedEcommerceCore\Models\ProductGroup::class,
+            ProductGroup::class,
             'dashed__product_suggested_product_group',
             'product_id',
             'suggested_product_group_id',
@@ -1024,7 +1039,7 @@ class Product extends Model
     public function crossSellProductGroups(): BelongsToMany
     {
         return $this->belongsToMany(
-            \Dashed\DashedEcommerceCore\Models\ProductGroup::class,
+            ProductGroup::class,
             'dashed__product_crosssell_product_group',
             'product_id',
             'crosssell_product_group_id',
@@ -1407,7 +1422,7 @@ class Product extends Model
         $remaining = $limit - count($suggestedProductIds);
 
         if ($remaining > 0) {
-            $categoryModel = new ProductCategory();
+            $categoryModel = new ProductCategory;
             $categoryTable = $categoryModel->getTable();
 
             $categoryIds = $this->productCategories()
@@ -1488,7 +1503,7 @@ class Product extends Model
             $groupIds = $this->crossSellProductGroups->pluck('id')->toArray();
         }
 
-        return \Dashed\DashedEcommerceCore\Models\ProductGroup::whereIn('id', array_unique($groupIds))
+        return ProductGroup::whereIn('id', array_unique($groupIds))
             ->with('products')
             ->get();
     }
@@ -1504,7 +1519,7 @@ class Product extends Model
             $groupIds = $this->suggestedProductGroups->pluck('id')->toArray();
         }
 
-        return \Dashed\DashedEcommerceCore\Models\ProductGroup::whereIn('id', array_unique($groupIds))
+        return ProductGroup::whereIn('id', array_unique($groupIds))
             ->with('products')
             ->get();
     }
@@ -2069,9 +2084,9 @@ class Product extends Model
      * Activity-log integration: emits a row per edit so the Filament
      * LastEditedColumn can surface "who changed this when".
      */
-    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return \Spatie\Activitylog\LogOptions::defaults()
+        return LogOptions::defaults()
             ->logOnly(['*'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
@@ -2081,9 +2096,9 @@ class Product extends Model
      * Latest activity-log entry. Eager-load via
      * `with('latestActivity.causer')` to avoid N+1 on list pages.
      */
-    public function latestActivity(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    public function latestActivity(): MorphOne
     {
-        return $this->morphOne(\Spatie\Activitylog\Models\Activity::class, 'subject')
+        return $this->morphOne(Activity::class, 'subject')
             ->latestOfMany('created_at');
     }
 }
