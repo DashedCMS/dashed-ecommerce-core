@@ -280,34 +280,40 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-banknotes')
                 ->color('primary')
                 ->button(),
-            Action::make('editConceptInPos')
-                ->label('Bewerken in kassa')
-                ->icon('heroicon-o-pencil-square')
-                ->visible(fn (): bool => $this->record->isConcept())
-                ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
-                ->modalHeading('Kassa-winkelwagen vervangen?')
-                ->modalDescription('Je kassa bevat al producten. Die worden vervangen door dit concept.')
-                ->action(function () {
-                    $cart = $this->activePosCart();
-                    // loaded_concept_order_id vooraf zetten; hydrate() schrijft products
-                    // en slaat alles in één keer op (geen tussentijdse lege-cart-staat).
-                    $cart->loaded_concept_order_id = $this->record->id;
-                    ConceptOrderService::hydrate($cart, $this->record);
+            ActionGroup::make([
+                Action::make('editConceptInPos')
+                    ->label('Bewerken in kassa')
+                    ->icon('heroicon-o-pencil-square')
+                    ->visible(fn (): bool => $this->record->isConcept())
+                    ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
+                    ->modalHeading('Kassa-winkelwagen vervangen?')
+                    ->modalDescription('Je kassa bevat al producten. Die worden vervangen door dit concept.')
+                    ->action(function () {
+                        $cart = $this->activePosCart();
+                        // loaded_concept_order_id vooraf zetten; hydrate() schrijft products
+                        // en slaat alles in één keer op (geen tussentijdse lege-cart-staat).
+                        $cart->loaded_concept_order_id = $this->record->id;
+                        ConceptOrderService::hydrate($cart, $this->record);
 
-                    $this->redirect(route('dashed.ecommerce.point-of-sale'));
-                }),
-            Action::make('copyToPos')
-                ->label('Kopiëren naar kassa')
-                ->icon('heroicon-o-document-duplicate')
-                ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
-                ->modalHeading('Kassa-winkelwagen vervangen?')
-                ->modalDescription('Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.')
-                ->action(function () {
-                    $cart = $this->activePosCart();
-                    ConceptOrderService::copyIntoCart($cart, $this->record);
+                        $this->redirect(route('dashed.ecommerce.point-of-sale'));
+                    }),
+                Action::make('copyToPos')
+                    ->label('Kopiëren naar kassa')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
+                    ->modalHeading('Kassa-winkelwagen vervangen?')
+                    ->modalDescription('Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.')
+                    ->action(function () {
+                        $cart = $this->activePosCart();
+                        ConceptOrderService::copyIntoCart($cart, $this->record);
 
-                    $this->redirect(route('dashed.ecommerce.point-of-sale'));
-                }),
+                        $this->redirect(route('dashed.ecommerce.point-of-sale'));
+                    }),
+            ])
+                ->label('POS')
+                ->icon('heroicon-o-computer-desktop')
+                ->color('gray')
+                ->button(),
         ], ecommerce()->buttonActions('order'));
     }
 
