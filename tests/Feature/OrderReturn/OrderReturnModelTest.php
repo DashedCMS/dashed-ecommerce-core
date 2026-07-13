@@ -6,6 +6,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
+use Dashed\DashedEcommerceCore\Models\OrderReturnMessage;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
@@ -158,4 +159,19 @@ it('scopes notHandled to everything except handled', function () {
 
     expect($ids)->toContain($requested->id, $approved->id, $rejected->id)
         ->and($ids)->not->toContain($handled->id);
+});
+
+it('persists an admin message in the thread when sending a custom email', function () {
+    Mail::fake();
+
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $return = OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl']);
+
+    $return->sendCustomEmail('Onderwerp', '<p>Bericht</p>');
+
+    $message = OrderReturnMessage::where('order_return_id', $return->id)->first();
+
+    expect($message)->not->toBeNull()
+        ->and($message->sender)->toBe(OrderReturnMessage::SENDER_ADMIN)
+        ->and($message->message)->toBe('<p>Bericht</p>');
 });

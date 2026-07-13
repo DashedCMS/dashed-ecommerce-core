@@ -31,6 +31,11 @@ class ReturnNotifier
         self::push($return, 'return.label_failed', 'Retourlabel mislukt', 'Het retourlabel kon niet worden aangemaakt — handmatig oppakken.');
     }
 
+    public static function customerReplied(OrderReturn $return): void
+    {
+        self::push($return, 'return.customer_replied', 'Klant reageerde op retour', self::body($return));
+    }
+
     private static function body(OrderReturn $return): string
     {
         $ref = $return->order?->invoice_id ?: ('#' . $return->order_id);

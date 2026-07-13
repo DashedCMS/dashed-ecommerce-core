@@ -44,3 +44,10 @@ it('substitutes :message: into the rendered body via replaceReturnVariables', fu
 it('provides a non-empty default message for prefilling', function () {
     expect(OrderReturnCustomMail::defaultMessage())->toBeString()->not->toBe('');
 });
+
+it('includes a button to view and reply on the return page', function () {
+    $blocks = collect(OrderReturnCustomMail::defaultBlocks())->map(fn ($b) => json_encode($b))->implode(' ');
+
+    expect($blocks)->toContain('Bekijk en reageer op je retour')
+        ->and($blocks)->toContain(':returnStatusUrl:');
+});

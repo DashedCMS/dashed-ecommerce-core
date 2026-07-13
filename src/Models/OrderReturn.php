@@ -58,6 +58,11 @@ class OrderReturn extends Model
         return $this->hasMany(OrderReturnLine::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(OrderReturnMessage::class)->orderBy('created_at')->orderBy('id');
+    }
+
     public function scopeRequested(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_REQUESTED);
@@ -116,6 +121,11 @@ class OrderReturn extends Model
     public function sendCustomEmail(string $subject, string $message, ?string $email = null): void
     {
         $to = $email ?: $this->email;
+
+        $this->messages()->create([
+            'sender' => OrderReturnMessage::SENDER_ADMIN,
+            'message' => $message,
+        ]);
 
         Mail::to($to)->queue(new OrderReturnCustomMail($this, $message, $subject));
     }

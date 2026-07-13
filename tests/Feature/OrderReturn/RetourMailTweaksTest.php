@@ -1,6 +1,7 @@
 <?php
 
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
+use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnReplyMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 it('greets the customer by first name in the default custom message', function () {
@@ -30,4 +31,19 @@ it('includes a CMS button linking to the return in the admin mail blocks', funct
     expect($button)->not->toBeNull()
         ->and($button['data']['url'])->toBe(':adminReturnUrl:')
         ->and($button['data']['label'])->toBe('Bekijk retourverzoek in CMS');
+});
+
+it('exposes adminReturnUrl and message on the reply mail', function () {
+    $vars = AdminNewOrderReturnReplyMail::availableVariables();
+
+    expect($vars)->toContain('adminReturnUrl')
+        ->and($vars)->toContain('customerMessage');
+});
+
+it('has a reply mail subject and blocks referencing the order', function () {
+    expect(AdminNewOrderReturnReplyMail::defaultSubject())->toContain(':orderId:');
+
+    $blocks = collect(AdminNewOrderReturnReplyMail::defaultBlocks())->map(fn ($b) => json_encode($b))->implode(' ');
+    expect($blocks)->toContain(':customerMessage:')
+        ->and($blocks)->toContain(':adminReturnUrl:');
 });

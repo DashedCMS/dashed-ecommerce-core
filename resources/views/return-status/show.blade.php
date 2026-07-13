@@ -52,4 +52,6 @@
             {{ Translation::get('return-status-download-label', 'returns', 'Retourlabel downloaden') }}
         </a>
     @endif
+
+    @livewire('order-return-thread', ['hash' => $orderReturn->hash])
 </div>
