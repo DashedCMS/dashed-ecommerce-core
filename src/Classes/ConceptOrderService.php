@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 class ConceptOrderService
 {
@@ -16,14 +17,11 @@ class ConceptOrderService
         return DB::transaction(function () use ($posCart, $cashier, $existingConcept) {
             $products = $posCart->products ?? [];
 
-            $subtotal = 0.0;
-            $totalBtw = 0.0;
-            foreach ($products as $row) {
-                $lineTotal = (float) ($row['price'] ?? 0);
-                $vatRate = (float) ($row['vat_rate'] ?? 21);
-                $subtotal += $lineTotal;
-                $totalBtw += $vatRate > 0 ? $lineTotal - ($lineTotal / (1 + $vatRate / 100)) : 0.0;
-            }
+            // Zelfde totaal-berekening als de kassa zelf (incl. kortingscodes en
+            // btw), zodat een ingestelde korting exact meegaat naar het concept en
+            // de proforma-afrekenlink. Voorheen werd hier het volle bedrag gesomd
+            // en discount hard op 0 gezet, waardoor de korting wegviel.
+            $totals = app(PointOfSaleApiController::class)->calculatePosCartTotals($posCart);
 
             if ($existingConcept && $existingConcept->isConcept()) {
                 $order = $existingConcept;
@@ -59,10 +57,14 @@ class ConceptOrderService
             $order->concept_discount_code = $posCart->discount_code ?? null;
             // Full-fidelity snapshot so hydrate() can restore the cart exactly as it was saved.
             $order->concept_cart_snapshot = array_values($products);
-            $order->total = $subtotal;
-            $order->subtotal = $subtotal;
-            $order->btw = round($totalBtw, 2);
-            $order->discount = 0;
+            // subtotal = product-totaal NA korting (zelfde semantiek als de
+            // definitieve POS-order in createOrder); total = subtotal (shipping komt
+            // pas bij het afrekenen erbij); discount = het kortingsbedrag.
+            $order->subtotal = $totals['subtotal'];
+            $order->total = $totals['subtotal'];
+            $order->btw = $totals['vat'];
+            $order->discount = $totals['discount'];
+            $order->applied_discount_codes = ($totals['discountCodes'] ?? []) ?: null;
             $order->invoice_id = null;
             $order->save();
 
