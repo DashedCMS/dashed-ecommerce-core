@@ -22,6 +22,11 @@ class OrderSummaryResource extends JsonResource
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             'created_at' => optional($this->created_at)->toIso8601String(),
+            // Bestelde producten (naam × aantal) voor de inline-preview in de lijst.
+            'products' => $this->orderProducts->map(fn ($p) => [
+                'name' => (string) $p->name,
+                'quantity' => (int) $p->quantity,
+            ])->values()->all(),
         ];
     }
 }

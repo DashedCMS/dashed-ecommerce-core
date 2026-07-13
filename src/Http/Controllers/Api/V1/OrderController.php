@@ -39,7 +39,8 @@ class OrderController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Order::thisSite();
+        // orderProducts eager-loaden voor de inline product-preview in de lijst.
+        $query = Order::thisSite()->with('orderProducts:id,order_id,name,quantity');
 
         // Dashboard-shortcut: alleen onafgehandelde orders.
         if ($request->boolean('unhandled')) {
@@ -48,7 +49,7 @@ class OrderController extends Controller
 
         $this->applyArrayFilter($query, 'status', $request->query('status'));
         $this->applyFulfillmentFilter($query, $request->query('fulfillment_status'));
-        $this->applyArrayFilter($query, 'retour_status', $request->query('retour_status'));
+        $this->applyRetourFilter($query, $request->query('retour_status'));
         $this->applyArrayFilter($query, 'order_origin', $request->query('order_origin'));
         $this->applyArrayFilter($query, 'utm_source', $request->query('utm_source'));
         $this->applyArrayFilter($query, 'utm_medium', $request->query('utm_medium'));
@@ -1032,6 +1033,34 @@ class OrderController extends Controller
         }
 
         $query->whereIn('fulfillment_status', $values);
+    }
+
+    /**
+     * Retourstatus-filter. De optie 'unhandled' ("Niet afgehandeld") bestaat niet
+     * als opgeslagen kolomwaarde — die betekent "er is een retour, maar die is nog
+     * niet afgehandeld". Daarom vertalen we die naar een virtuele voorwaarde
+     * (retour_status gezet én ongelijk aan 'handled'); de overige waarden matchen
+     * direct op de kolom.
+     */
+    private function applyRetourFilter(Builder $query, mixed $value): void
+    {
+        $values = $this->toList($value);
+        if (! $values) {
+            return;
+        }
+
+        $query->where(function (Builder $outer) use ($values): void {
+            if (in_array('unhandled', $values, true)) {
+                $outer->orWhere(function (Builder $q): void {
+                    $q->whereNotNull('retour_status')->where('retour_status', '!=', 'handled');
+                });
+            }
+
+            $direct = array_values(array_filter($values, fn ($v) => $v !== 'unhandled'));
+            if ($direct) {
+                $outer->orWhereIn('retour_status', $direct);
+            }
+        });
     }
 
     /**
