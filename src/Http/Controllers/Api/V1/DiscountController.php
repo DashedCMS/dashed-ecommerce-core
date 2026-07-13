@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -24,13 +25,7 @@ class DiscountController extends Controller
         $query = DiscountCode::query()
             ->whereJsonContains('site_ids', Sites::getActive());
 
-        if ($search = trim((string) $request->query('search', ''))) {
-            $like = '%' . $search . '%';
-            $query->where(function ($q) use ($like): void {
-                $q->where('name', 'like', $like)
-                    ->orWhere('code', 'like', $like);
-            });
-        }
+        SmartSearch::apply($query, $request->query('search'), ['name', 'code']);
 
         return DiscountCodeResource::collection(
             $query->orderByDesc('id')->get(),

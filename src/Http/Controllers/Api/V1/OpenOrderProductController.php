@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -111,12 +112,7 @@ class OpenOrderProductController extends Controller
             }
         }
 
-        if ($search = trim((string) $request->query('search'))) {
-            $query->where(function ($q) use ($search): void {
-                $q->where('op.name', 'like', "%{$search}%")
-                    ->orWhere('o.invoice_id', 'like', "%{$search}%");
-            });
-        }
+        SmartSearch::apply($query, $request->query('search'), ['op.name', 'o.invoice_id']);
 
         return $query;
     }

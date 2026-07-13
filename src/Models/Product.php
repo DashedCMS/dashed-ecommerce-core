@@ -249,29 +249,41 @@ class Product extends Model
             ->values()
             ->all();
 
+        // Slim multi-term: elk woord moet ergens matchen (eigen velden of
+        // productgroep), ALLE woorden samen (AND). Zo vindt "15cm 4 kinderen" een
+        // product waarin die woorden los en in willekeurige volgorde voorkomen.
+        // Een exacte streepjescode/SKU-match op de volledige zoekterm blijft apart
+        // meetellen (barcode-scan is één waarde).
+        $terms = preg_split('/\s+/', $needle, -1, PREG_SPLIT_NO_EMPTY) ?: [$needle];
+
         // Alles wat met search te maken heeft in 1 group (zodat min/max prijs netjes blijft werken)
-        $query->where(function ($outer) use ($columns, $needle, $search) {
+        $query->where(function ($group) use ($columns, $terms, $search) {
 
-            // Match op eigen velden
-            $outer->where(function ($q) use ($columns, $needle, $search) {
-                foreach ($columns as $i => $col) {
-                    $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
-                    $q->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
+            // Exacte streepjescode/SKU/artikelcode-match op de volledige zoekterm.
+            $group->where('sku', $search)
+                ->orWhere('ean', $search)
+                ->orWhere('article_code', $search);
+
+            // Of: elk woord matcht ergens (eigen velden of productgroep-velden).
+            $group->orWhere(function ($all) use ($columns, $terms) {
+                foreach ($terms as $term) {
+                    $all->where(function ($outer) use ($columns, $term) {
+                        // Eigen velden.
+                        $outer->where(function ($q) use ($columns, $term) {
+                            foreach ($columns as $i => $col) {
+                                $q->{$i === 0 ? 'whereRaw' : 'orWhereRaw'}("LOWER(`{$col}`) LIKE ?", ["%{$term}%"]);
+                            }
+                        });
+                        // Of productgroep-velden.
+                        $outer->orWhereHas('productGroup', function ($q) use ($columns, $term) {
+                            $q->where(function ($qq) use ($columns, $term) {
+                                foreach ($columns as $i => $col) {
+                                    $qq->{$i === 0 ? 'whereRaw' : 'orWhereRaw'}("LOWER(`{$col}`) LIKE ?", ["%{$term}%"]);
+                                }
+                            });
+                        });
+                    });
                 }
-
-                $q->orWhere('sku', $search)
-                    ->orWhere('ean', $search)
-                    ->orWhere('article_code', $search);
-            });
-
-            // Match op productGroup velden (ook binnen dezelfde group)
-            $outer->orWhereHas('productGroup', function ($q) use ($columns, $needle) {
-                $q->where(function ($qq) use ($columns, $needle) {
-                    foreach ($columns as $i => $col) {
-                        $method = $i === 0 ? 'whereRaw' : 'orWhereRaw';
-                        $qq->{$method}("LOWER(`{$col}`) LIKE ?", ["%{$needle}%"]);
-                    }
-                });
             });
         });
 

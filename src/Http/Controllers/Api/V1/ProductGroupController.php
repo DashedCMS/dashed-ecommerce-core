@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Illuminate\Routing\Controller;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -19,9 +20,7 @@ class ProductGroupController extends Controller
     {
         $query = ProductGroup::thisSite()->withCount('products');
 
-        if ($search = $request->query('search')) {
-            $query->where('name->nl', 'like', '%' . (string) $search . '%');
-        }
+        SmartSearch::apply($query, $request->query('search'), ['name->nl', 'slug->nl']);
 
         // Filter op één of meerdere productcategorieën (komma-gescheiden).
         $categoryIds = array_values(array_filter(

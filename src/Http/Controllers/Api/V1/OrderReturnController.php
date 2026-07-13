@@ -32,9 +32,16 @@ class OrderReturnController extends Controller
         }
 
         if ($search = trim((string) $request->query('search'))) {
-            $query->where(function ($q) use ($search): void {
-                $q->where('email', 'like', "%{$search}%")
-                    ->orWhereHas('order', fn ($o) => $o->where('invoice_id', 'like', "%{$search}%"));
+            // Slim multi-term: elk woord moet matchen op e-mail óf op het
+            // invoice_id van de gekoppelde order (whereHas kan niet via SmartSearch).
+            $terms = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [$search];
+            $query->where(function ($outer) use ($terms): void {
+                foreach ($terms as $term) {
+                    $outer->where(function ($q) use ($term): void {
+                        $q->where('email', 'like', "%{$term}%")
+                            ->orWhereHas('order', fn ($o) => $o->where('invoice_id', 'like', "%{$term}%"));
+                    });
+                }
             });
         }
 

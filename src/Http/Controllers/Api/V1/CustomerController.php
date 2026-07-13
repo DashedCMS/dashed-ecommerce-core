@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -28,14 +29,7 @@ class CustomerController extends Controller
             ->whereNotNull('email')
             ->where('email', '!=', '')
             ->when($search !== '', function ($q) use ($search): void {
-                $like = '%' . $search . '%';
-                $q->where(function ($qq) use ($like): void {
-                    $qq->where('email', 'like', $like)
-                        ->orWhere('first_name', 'like', $like)
-                        ->orWhere('last_name', 'like', $like)
-                        ->orWhere('company_name', 'like', $like)
-                        ->orWhere('phone_number', 'like', $like);
-                });
+                SmartSearch::apply($q, $search, ['email', 'first_name', 'last_name', 'company_name', 'phone_number']);
             });
 
         $total = (clone $base)->distinct('email')->count('email');
