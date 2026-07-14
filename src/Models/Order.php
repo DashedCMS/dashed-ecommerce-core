@@ -333,6 +333,20 @@ class Order extends Model
         return $this->status === self::STATUS_CONCEPT;
     }
 
+    /**
+     * Een verwijderbare draft: een concept of proforma zonder echt factuurnummer
+     * (PROFORMA/RETURN/leeg tellen niet als echt) en zonder betaalverplichting.
+     */
+    public function isDeletableDraft(): bool
+    {
+        $hasRealInvoice = filled($this->invoice_id)
+            && ! in_array($this->invoice_id, ['PROFORMA', 'RETURN'], true);
+
+        return ($this->isConcept() || (bool) $this->is_proforma)
+            && ! $hasRealInvoice
+            && ! $this->isPaidFor();
+    }
+
     public function outstandingAmount(): float
     {
         $paid = $this->orderPayments()->where('status', 'paid')->sum('amount');

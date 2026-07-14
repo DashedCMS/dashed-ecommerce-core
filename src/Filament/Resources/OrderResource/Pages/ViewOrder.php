@@ -314,6 +314,21 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-computer-desktop')
                 ->color('gray')
                 ->button(),
+            Action::make('deleteDraft')
+                ->label('Verwijderen')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->visible(fn (): bool => $this->record->isDeletableDraft())
+                ->requiresConfirmation()
+                ->modalHeading('Concept/proforma verwijderen')
+                ->modalDescription('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).')
+                ->action(function () {
+                    ConceptOrderService::deleteDraft($this->record);
+
+                    Notification::make()->success()->title('Bestelling verwijderd')->send();
+
+                    $this->redirect(route('filament.dashed.resources.orders.index'));
+                }),
         ], ecommerce()->buttonActions('order'));
     }
 

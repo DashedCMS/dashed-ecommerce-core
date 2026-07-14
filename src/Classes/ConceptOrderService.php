@@ -176,6 +176,24 @@ class ConceptOrderService
             throw new \LogicException('Cannot cancel a non-concept order via ConceptOrderService::cancel().');
         }
 
+        self::softDeleteOrderWithProducts($order);
+    }
+
+    /**
+     * Soft-delete een verwijderbare draft (concept of onbetaalde proforma zonder
+     * echte factuur). Herstelbaar; de order verdwijnt uit de standaardlijsten.
+     */
+    public static function deleteDraft(Order $order): void
+    {
+        if (! $order->isDeletableDraft()) {
+            throw new \LogicException('Cannot delete an order that is not a deletable draft.');
+        }
+
+        self::softDeleteOrderWithProducts($order);
+    }
+
+    private static function softDeleteOrderWithProducts(Order $order): void
+    {
         DB::transaction(function () use ($order) {
             $order->orderProducts()->delete();
             $order->delete();

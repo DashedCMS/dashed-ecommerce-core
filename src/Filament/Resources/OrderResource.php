@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Builder;
 use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
@@ -555,6 +556,19 @@ class OrderResource extends Resource
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('deleteDraft')
+                    ->label('Verwijderen')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->isDeletableDraft())
+                    ->requiresConfirmation()
+                    ->modalHeading('Concept/proforma verwijderen')
+                    ->modalDescription('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).')
+                    ->action(function ($record) {
+                        ConceptOrderService::deleteDraft($record);
+
+                        Notification::make()->success()->title('Bestelling verwijderd')->send();
+                    }),
                 Action::make('quickActions')
                     ->button()
                     ->label('Acties')
@@ -836,6 +850,35 @@ class OrderResource extends Resource
                         }
                     })
                     ->deselectRecordsAfterCompletion(),
+                BulkAction::make('deleteDrafts')
+                    ->label('Concepten/proforma verwijderen')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->deselectRecordsAfterCompletion()
+                    ->action(function (Collection $records) {
+                        $deleted = 0;
+                        foreach ($records as $record) {
+                            if ($record->isDeletableDraft()) {
+                                ConceptOrderService::deleteDraft($record);
+                                $deleted++;
+                            }
+                        }
+
+                        if ($deleted === 0) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Geen verwijderbare bestellingen in de selectie')
+                                ->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->success()
+                            ->title($deleted . ' bestelling(en) verwijderd')
+                            ->send();
+                    }),
             ])
             ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited(
                 $query->without('orderProducts')->with('mainPaymentMethod')
