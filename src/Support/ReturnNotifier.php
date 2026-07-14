@@ -18,7 +18,9 @@ class ReturnNotifier
 
     public static function requested(OrderReturn $return): void
     {
-        self::push($return, 'return.requested', 'Nieuw retourverzoek', self::body($return));
+        // Categorie 'return.requested' zet de OS-actieknoppen (Goedkeuren / Openen)
+        // onder de push — de app registreert exact deze categorie in notifications.ts.
+        self::push($return, 'return.requested', 'Nieuw retourverzoek', self::body($return), 'return.requested');
     }
 
     public static function autoApproved(OrderReturn $return): void
@@ -43,7 +45,7 @@ class ReturnNotifier
         return "Bestelling {$ref} — {$return->email}";
     }
 
-    private static function push(OrderReturn $return, string $type, string $title, string $body): void
+    private static function push(OrderReturn $return, string $type, string $title, string $body, ?string $category = null): void
     {
         if (! class_exists(self::CENTER)) {
             return;
@@ -56,6 +58,7 @@ class ReturnNotifier
                 ->body($body)
                 ->route("/return/{$return->id}")
                 ->data(['type' => 'return', 'id' => $return->id])
+                ->category($category)
                 ->toAbility('orders.read')
                 ->send();
         } catch (Throwable $e) {

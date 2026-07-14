@@ -57,6 +57,13 @@ class ReturnPushSpy extends PushNotification
         return $this;
     }
 
+    public function category(?string $category): self
+    {
+        $this->captured['category'] = $category;
+
+        return $this;
+    }
+
     public function send(): void
     {
         $GLOBALS['__return_push_sent'][] = $this->captured;
@@ -89,7 +96,8 @@ it('fires return.requested with the deep-link route and orders.read ability', fu
     expect($GLOBALS['__return_push_sent'])->toHaveCount(1)
         ->and($GLOBALS['__return_push_sent'][0]['type'])->toBe('return.requested')
         ->and($GLOBALS['__return_push_sent'][0]['route'])->toBe("/return/{$return->id}")
-        ->and($GLOBALS['__return_push_sent'][0]['ability'])->toBe('orders.read');
+        ->and($GLOBALS['__return_push_sent'][0]['ability'])->toBe('orders.read')
+        ->and($GLOBALS['__return_push_sent'][0]['category'])->toBe('return.requested');
 });
 
 it('fires return.label_failed when an order.return-label-failed log is created', function () {
