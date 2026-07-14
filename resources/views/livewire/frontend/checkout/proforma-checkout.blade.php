@@ -180,7 +180,7 @@
                                             <span class="text-[rgba(48,84,91,0.55)]">&times;{{ $orderProduct->quantity }}</span>
                                         @endif
                                     </span>
-                                    <span class="shrink-0 font-semibold text-black">{{ CurrencyHelper::formatPrice($orderProduct->price * $orderProduct->quantity) }}</span>
+                                    <span class="shrink-0 font-semibold text-black">{{ CurrencyHelper::formatPrice($orderProduct->price) }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -188,8 +188,14 @@
                         <dl class="mt-6 space-y-3 border-t border-[rgba(48,84,91,0.1)] pt-6 text-[14px]">
                             <div class="flex items-center justify-between">
                                 <dt class="text-[rgba(48,84,91,0.7)]">{{ Translation::get('subtotal', 'cart', 'Subtotaal') }}</dt>
-                                <dd class="font-semibold text-black">{{ CurrencyHelper::formatPrice($order->subtotal) }}</dd>
+                                <dd class="font-semibold text-black">{{ CurrencyHelper::formatPrice($order->subtotal + $order->discount) }}</dd>
                             </div>
+                            @if ($order->discount > 0)
+                                <div class="flex items-center justify-between">
+                                    <dt class="text-[rgba(48,84,91,0.7)]">{{ Translation::get('discount', 'cart', 'Korting') }}</dt>
+                                    <dd class="font-semibold text-black">- {{ CurrencyHelper::formatPrice($order->discount) }}</dd>
+                                </div>
+                            @endif
                             <div class="flex items-center justify-between">
                                 <dt class="text-[rgba(48,84,91,0.7)]">{{ Translation::get('vat', 'cart', 'Btw') }}</dt>
                                 <dd class="font-semibold text-black">{{ CurrencyHelper::formatPrice($order->btw) }}</dd>
