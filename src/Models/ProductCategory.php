@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Classes\FragmentCache;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -55,6 +57,7 @@ class ProductCategory extends Model
         });
 
         static::saved(function ($productCategory) {
+            FragmentCache::flushTag('product-categories:' . Sites::getActive());
             UpdateProductCategoriesInformationJob::dispatch()->onQueue('ecommerce');
 
             $categoryIds = collect([$productCategory->id]);
@@ -76,6 +79,10 @@ class ProductCategory extends Model
                     UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
                 }
             }
+        });
+
+        static::deleted(function ($productCategory) {
+            FragmentCache::flushTag('product-categories:' . Sites::getActive());
         });
 
         static::deleting(function ($productCategory) {
@@ -153,7 +160,7 @@ class ProductCategory extends Model
 
     public function getChilds(): array
     {
-        return Cache::rememberForever('product-category-childs-' . $this->id, function () {
+        return FragmentCache::remember('product-category-childs-' . $this->id, ['product-categories:' . Sites::getActive()], 3600, function () {
             $childs = [];
             $childProductCategories = self::where('parent_id', $this->id)->get();
             while ($childProductCategories->count()) {
@@ -171,7 +178,7 @@ class ProductCategory extends Model
 
     public function getFirstChilds()
     {
-        return Cache::rememberForever('product-category-first-childs-' . $this->id, function () {
+        return FragmentCache::remember('product-category-first-childs-' . $this->id, ['product-categories:' . Sites::getActive()], 3600, function () {
             return self::where('parent_id', $this->id)
                 ->get();
         });
