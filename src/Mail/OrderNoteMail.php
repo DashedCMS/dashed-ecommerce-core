@@ -69,14 +69,14 @@ class OrderNoteMail extends Mailable implements RegistersEmailTemplate
             'orderLog' => $orderLog,
             'orderId' => $order?->invoice_id ?? 'DEMO-001',
             'customerFirstName' => $order?->first_name ?? 'Jan',
-            'noteContent' => $orderLog?->email_content ?? 'Er is een notitie toegevoegd aan je bestelling.',
+            'noteContent' => $orderLog?->note ?? 'Er is een notitie toegevoegd aan je bestelling.',
             'siteName' => Customsetting::get('site_name'),
         ];
     }
 
     public static function makeForTest(): ?self
     {
-        $orderLog = OrderLog::query()->whereNotNull('email_content')->latest()->first() ?? OrderLog::query()->latest()->first();
+        $orderLog = OrderLog::query()->whereNotNull('note')->latest()->first() ?? OrderLog::query()->latest()->first();
         if (! $orderLog || ! $orderLog->order) {
             return null;
         }
@@ -91,7 +91,7 @@ class OrderNoteMail extends Mailable implements RegistersEmailTemplate
             'orderLog' => $this->orderLog,
             'orderId' => $this->order->invoice_id,
             'customerFirstName' => $this->order->first_name,
-            'noteContent' => $this->orderLog->email_content ?? '',
+            'noteContent' => $this->orderLog->note ?? '',
             'siteName' => Customsetting::get('site_name'),
         ];
 
@@ -102,7 +102,7 @@ class OrderNoteMail extends Mailable implements RegistersEmailTemplate
         $templateHtml = $this->renderFromTemplate($context);
 
         if ($templateHtml !== null) {
-            $subject = $this->templateSubject($fallbackSubject, $context);
+            $subject = $this->orderLog->email_subject ?: $this->templateSubject($fallbackSubject, $context);
             [$fromEmail, $fromName] = $this->templateFrom(Customsetting::get('site_from_email'), Customsetting::get('site_name'));
             $mail = $this->html($templateHtml)->from($fromEmail, $fromName)->subject($subject);
         } else {
