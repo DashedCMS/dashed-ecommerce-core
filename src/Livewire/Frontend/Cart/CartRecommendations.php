@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
+use Livewire\Attributes\Lazy;
 use Illuminate\Support\Collection;
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 use Dashed\DashedEcommerceCore\Services\Recommendations\RecommendationService;
@@ -20,6 +21,7 @@ use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationCo
  * Defaults to the `cart` view; pass `view="checkout"` for the smaller
  * checkout-sidebar layout or `view="popup"` for popup-embedded use.
  */
+#[Lazy]
 class CartRecommendations extends Component
 {
     public string $view = 'cart';
@@ -32,6 +34,15 @@ class CartRecommendations extends Component
         'refreshCart' => '$refresh',
         'productAddedToCart' => '$refresh',
     ];
+
+    public function placeholder(): \Illuminate\View\View
+    {
+        $cols = $this->view === 'checkout' ? 2 : 4;
+
+        return view('dashed-ecommerce-core::livewire.frontend.cart.cart-recommendations-skeleton', [
+            'cols' => $cols,
+        ]);
+    }
 
     public function mount(string $view = 'cart', ?int $limit = null): void
     {
