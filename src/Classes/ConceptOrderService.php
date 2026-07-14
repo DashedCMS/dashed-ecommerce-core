@@ -195,6 +195,13 @@ class ConceptOrderService
     private static function softDeleteOrderWithProducts(Order $order): void
     {
         DB::transaction(function () use ($order) {
+            // Geef een gereserveerd cadeaubonsaldo terug (zelfde als de niet-betaalde
+            // tak van Order::markAsCancelled). De status-guard voorkomt dubbel
+            // terugboeken van een reeds geannuleerde order.
+            if ($order->status !== 'cancelled') {
+                $order->refillGiftcard();
+            }
+
             $order->orderProducts()->delete();
             $order->delete();
         });
