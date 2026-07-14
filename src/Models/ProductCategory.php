@@ -160,6 +160,9 @@ class ProductCategory extends Model
 
     public function getChilds(): array
     {
+        // Cache key is scoped to category PK (global), flush tag is site-scoped via Sites::getActive(). Safe in
+        // single-site and deterministic-site-id setups; multi-site consumers that swap dashed_site_id per request
+        // should be aware that a cold read on one site will not warm the cache for another site.
         return FragmentCache::remember('product-category-childs-' . $this->id, ['product-categories:' . Sites::getActive()], 3600, function () {
             $childs = [];
             $childProductCategories = self::where('parent_id', $this->id)->get();
