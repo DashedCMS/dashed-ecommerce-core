@@ -39,6 +39,7 @@ class ProductOpenOrdersWidget extends TableWidget
     {
         return $table
             ->query($this->openOrdersBaseQuery()->with(['order']))
+            ->poll('10s')
             ->paginated([5, 10, 25])
             ->defaultPaginationPageOption(5)
             ->emptyStateHeading('Geen openstaande bestellingen')
