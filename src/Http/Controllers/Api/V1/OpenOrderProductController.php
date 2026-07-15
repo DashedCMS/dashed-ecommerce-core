@@ -51,7 +51,13 @@ class OpenOrderProductController extends Controller
             ->join('dashed__orders as o', 'o.id', '=', 'op.order_id')
             ->where('o.site_id', $siteId)
             ->whereNull('op.deleted_at')
-            ->whereNotIn('op.sku', self::COST_SKUS)
+            // Null-veilig: `sku NOT IN (...)` is in SQL onwaar voor NULL, dus zonder
+            // deze OR-groep vielen regels zonder SKU (bv. losse kassa-/POS-items)
+            // stil weg — gelijk aan de Filament-scope (OpenOrderProductResource).
+            ->where(function ($q): void {
+                $q->whereNull('op.sku')
+                    ->orWhereNotIn('op.sku', self::COST_SKUS);
+            })
             ->whereIn('o.status', self::PAID_STATUSES)
             // Alleen betaalde bestellingen met een echte factuur-id; nooit proforma/retour.
             ->whereNotNull('o.invoice_id')
