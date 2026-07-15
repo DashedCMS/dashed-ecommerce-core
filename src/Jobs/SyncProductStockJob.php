@@ -7,6 +7,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedEcommerceCore\Models\Product;
 
 class SyncProductStockJob implements ShouldQueue
@@ -60,6 +61,10 @@ class SyncProductStockJob implements ShouldQueue
         foreach ($group as $product) {
             $product = $product->fresh();
             $product->calculateStock();
+        }
+
+        if (class_exists(CacheInvalidator::class)) {
+            CacheInvalidator::flushSite();
         }
     }
 }

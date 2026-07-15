@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Resources\ProductFeedResource;
 use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
@@ -318,5 +319,9 @@ class UpdateProductInformationJob implements ShouldQueue
         }
 
         ProductInformationUpdatedEvent::dispatch($this->productGroup);
+
+        if (class_exists(CacheInvalidator::class)) {
+            CacheInvalidator::flushSite();
+        }
     }
 }

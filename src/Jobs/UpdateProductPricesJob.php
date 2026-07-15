@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 class UpdateProductPricesJob implements ShouldQueue
@@ -57,6 +58,10 @@ class UpdateProductPricesJob implements ShouldQueue
             foreach ($this->productGroup->volumeDiscounts as $volumeDiscount) {
                 $volumeDiscount->connectAllProducts();
             }
+        }
+
+        if (class_exists(CacheInvalidator::class)) {
+            CacheInvalidator::flushSite();
         }
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 class UpdateProductStockInformationJob implements ShouldQueue
@@ -56,5 +57,9 @@ class UpdateProductStockInformationJob implements ShouldQueue
         $this->product->productGroup->total_stock = $this->product->productGroup->products->sum('total_stock');
         $this->product->productGroup->total_purchases = $this->product->productGroup->products->sum('total_purchases');
         $this->product->productGroup->saveQuietly();
+
+        if (class_exists(CacheInvalidator::class)) {
+            CacheInvalidator::flushSite();
+        }
     }
 }
