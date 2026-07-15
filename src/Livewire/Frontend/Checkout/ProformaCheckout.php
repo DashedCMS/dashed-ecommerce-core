@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
+use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
 
 class ProformaCheckout extends Component
 {
@@ -284,6 +285,7 @@ class ProformaCheckout extends Component
                     $user->save();
 
                     Auth::login($user, 1);
+                    IdentifiedVisitor::mark();
                 }
             }
 

@@ -28,6 +28,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
 use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
@@ -920,6 +921,7 @@ class Checkout extends Component
             $user->save();
 
             Auth::login($user, 1);
+            IdentifiedVisitor::mark();
         }
 
         $order = new Order();

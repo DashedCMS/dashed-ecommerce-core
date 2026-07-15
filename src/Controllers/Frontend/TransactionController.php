@@ -22,8 +22,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
-
-;
+use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 
@@ -113,6 +112,7 @@ class TransactionController extends Controller
             $user->save();
 
             Auth::login($user, $request->remember_me);
+            IdentifiedVisitor::mark();
         }
 
         $order = new Order();
