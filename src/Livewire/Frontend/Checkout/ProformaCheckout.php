@@ -122,7 +122,12 @@ class ProformaCheckout extends Component
             $this->isCompany = $this->companyRequired == 1;
         }
 
-        $this->shippingEnabled = (bool) $this->order->proforma_allow_shipping;
+        // Heeft de kassa zelf al een verzendmethode vastgelegd, dan staan de kosten
+        // al in het proforma-totaal (als losse regel) en mag/hoeft de klant niets te
+        // kiezen. De verzendkeuze verschijnt alleen als er nog geen verzending ligt,
+        // zodat submit() de kosten nooit dubbel optelt.
+        $posShippingAlreadySet = filled($this->order->shipping_method_id);
+        $this->shippingEnabled = (bool) $this->order->proforma_allow_shipping && ! $posShippingAlreadySet;
 
         $this->retrievePaymentMethods();
 
