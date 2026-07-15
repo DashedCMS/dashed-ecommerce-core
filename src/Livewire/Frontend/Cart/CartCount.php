@@ -32,6 +32,12 @@ class CartCount extends Component
         $this->cartCount = cartHelper()->getCartItems()->count();
     }
 
+    public function placeholder()
+    {
+        // Same-size invisible badge so there is no layout shift while lazy-loading.
+        return '<span class="cart-count" aria-hidden="true"></span>';
+    }
+
     public function render()
     {
         return view(config('dashed-core.site_theme', 'dashed') . '.cart.cart-count');

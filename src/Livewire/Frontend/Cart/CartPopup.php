@@ -63,6 +63,12 @@ class CartPopup extends Component
         return $this->cartItems;
     }
 
+    public function placeholder()
+    {
+        // Empty overlay div - no visible content, no layout shift while lazy-loading.
+        return '<div aria-hidden="true"></div>';
+    }
+
     public function render()
     {
         return view(config('dashed-core.site_theme', 'dashed') . '.cart.' . ($this->view ?: 'cart-popup'));
