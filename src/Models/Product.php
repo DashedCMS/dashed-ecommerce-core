@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedCore\Models\Concerns\HasSearchIndex;
@@ -143,6 +144,13 @@ class Product extends Model
             }
 
             static::bumpSearchbarCacheVersion();
+
+            // Purge the response-cache so updated price/stock is never served stale.
+            // Stock mutations via Product::save() (e.g. SyncProductStockJob) are also
+            // covered here — no separate stock-listener is needed.
+            if (class_exists(CacheInvalidator::class)) {
+                CacheInvalidator::forModel($product);
+            }
         });
 
         static::deleting(function ($product) {
@@ -158,6 +166,10 @@ class Product extends Model
         static::deleted(function ($product) {
             UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
             static::bumpSearchbarCacheVersion();
+
+            if (class_exists(CacheInvalidator::class)) {
+                CacheInvalidator::forModel($product);
+            }
         });
     }
 

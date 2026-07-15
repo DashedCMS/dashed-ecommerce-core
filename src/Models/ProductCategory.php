@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\FragmentCache;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -58,6 +59,10 @@ class ProductCategory extends Model
 
         static::saved(function ($productCategory) {
             FragmentCache::flushTag('product-categories:' . Sites::getActive());
+
+            if (class_exists(CacheInvalidator::class)) {
+                CacheInvalidator::forModel($productCategory);
+            }
             UpdateProductCategoriesInformationJob::dispatch()->onQueue('ecommerce');
 
             $categoryIds = collect([$productCategory->id]);
@@ -83,6 +88,10 @@ class ProductCategory extends Model
 
         static::deleted(function ($productCategory) {
             FragmentCache::flushTag('product-categories:' . Sites::getActive());
+
+            if (class_exists(CacheInvalidator::class)) {
+                CacheInvalidator::forModel($productCategory);
+            }
         });
 
         static::deleting(function ($productCategory) {
