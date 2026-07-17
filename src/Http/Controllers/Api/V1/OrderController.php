@@ -578,27 +578,39 @@ class OrderController extends Controller
 
         if (in_array('veloyd', $available, true)) {
             $v = '\Dashed\DashedEcommerceVeloyd\Classes\Veloyd';
+            $fields = [
+                $this->labelSelectField('carrier', 'Vervoerder', $v::getCarriers(), $cs::get("veloyd_default_carrier_{$country}", $model->site_id, 'PostNL')),
+                $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), $cs::get("veloyd_default_package_type_{$country}", $model->site_id, '1')),
+                $this->labelSelectField('delivery_type', 'Verzendtype', $v::getDeliveryTypes(), $cs::get("veloyd_default_delivery_type_{$country}", $model->site_id, 'Standaard')),
+            ];
+
+            if (method_exists($v, 'extraLabelOptions')) {
+                $fields = array_merge($fields, $v::extraLabelOptions($model));
+            }
+
             $out[] = [
                 'provider' => 'veloyd',
                 'label' => 'Veloyd',
-                'fields' => [
-                    $this->labelSelectField('carrier', 'Vervoerder', $v::getCarriers(), $cs::get("veloyd_default_carrier_{$country}", $model->site_id, 'PostNL')),
-                    $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), $cs::get("veloyd_default_package_type_{$country}", $model->site_id, '1')),
-                    $this->labelSelectField('delivery_type', 'Verzendtype', $v::getDeliveryTypes(), $cs::get("veloyd_default_delivery_type_{$country}", $model->site_id, 'Standaard')),
-                ],
+                'fields' => $fields,
             ];
         }
 
         if (in_array('myparcel', $available, true)) {
             $m = '\Dashed\DashedEcommerceMyParcel\Classes\MyParcel';
+            $fields = [
+                $this->labelSelectField('carrier', 'Vervoerder', $m::getCarriers(), $cs::get("my_parcel_default_carrier_{$country}", $model->site_id)),
+                $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), $cs::get("my_parcel_default_package_type_{$country}", $model->site_id, '1')),
+                $this->labelSelectField('delivery_type', 'Verzendtype', $m::getDeliveryTypes(), $cs::get("my_parcel_default_delivery_type_{$country}", $model->site_id, '2')),
+            ];
+
+            if (method_exists($m, 'extraLabelOptions')) {
+                $fields = array_merge($fields, $m::extraLabelOptions($model));
+            }
+
             $out[] = [
                 'provider' => 'myparcel',
                 'label' => 'MyParcel',
-                'fields' => [
-                    $this->labelSelectField('carrier', 'Vervoerder', $m::getCarriers(), $cs::get("my_parcel_default_carrier_{$country}", $model->site_id)),
-                    $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), $cs::get("my_parcel_default_package_type_{$country}", $model->site_id, '1')),
-                    $this->labelSelectField('delivery_type', 'Verzendtype', $m::getDeliveryTypes(), $cs::get("my_parcel_default_delivery_type_{$country}", $model->site_id, '2')),
-                ],
+                'fields' => $fields,
             ];
         }
 
@@ -609,7 +621,7 @@ class OrderController extends Controller
      * @param  array<int|string, string>  $options  value => label
      * @return array<string, mixed>
      */
-    private function labelSelectField(string $name, string $label, array $options, mixed $default): array
+    private function labelSelectField(string $name, string $label, array $options, mixed $default, string $group = 'basis'): array
     {
         $opts = [];
         foreach ($options as $value => $text) {
@@ -623,6 +635,7 @@ class OrderController extends Controller
             'required' => true,
             'options' => $opts,
             'default' => $default === null ? null : (string) $default,
+            'group' => $group,
         ];
     }
 
