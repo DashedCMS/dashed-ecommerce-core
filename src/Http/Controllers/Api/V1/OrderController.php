@@ -341,17 +341,39 @@ class OrderController extends Controller
     /**
      * De label-keuzes (vervoerder/pakkettype/verzendtype) uit het verzoek; lege
      * waarden vallen terug op de standaard per land in de provider-classes.
+     * Overige (extra) request-keys — bv. `signature`, `insurance`, `age_check` —
+     * gaan ongefilterd mee in `$overrides`, zodat de provider ze kan gebruiken;
+     * de provider filtert/normaliseert zelf onbekende keys (`sanitizeExtraOptions`).
      *
      * @param  array<string, mixed>  $input
      * @return array<string, mixed>
      */
     private function labelOverrides(array $input): array
     {
-        return array_filter([
+        return self::mergeLabelOverrides($input);
+    }
+
+    /**
+     * Pure merge-logica achter `labelOverrides()`, losgetrokken zodat ze zonder
+     * Laravel-boot (dus buiten de Pest/SQLite-testharness om) te verifiëren is:
+     * de basis-drie (`carrier`/`package_type`/`delivery_type`) worden — zoals
+     * voorheen — leeg-gefilterd, maar de overige keys gaan ongewijzigd mee, dus
+     * booleans (incl. `false`) en `0` overleven in `$overrides`.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public static function mergeLabelOverrides(array $input): array
+    {
+        $basis = array_filter([
             'carrier' => $input['carrier'] ?? null,
             'package_type' => $input['package_type'] ?? null,
             'delivery_type' => $input['delivery_type'] ?? null,
         ], fn ($v) => $v !== null && $v !== '');
+
+        $extra = array_diff_key($input, array_flip(['provider', 'ids', 'carrier', 'package_type', 'delivery_type']));
+
+        return $basis + $extra;
     }
 
     /**
@@ -435,17 +457,18 @@ class OrderController extends Controller
     /** Bulk: maak verzendlabels aan voor meerdere orders (sequentieel; mag deels falen). */
     public function bulkCreateLabel(Request $request): JsonResponse
     {
+        // Alleen `ids`/`provider` strikt valideren; carrier/package_type/delivery_type
+        // én de extra label-opties (signature, insurance, age_check, …) worden hier
+        // bewust niet meer strikt (Rule::in) gevalideerd — labelOverrides() haalt ze
+        // uit het volledige request en de provider filtert onbekende keys downstream.
         $data = $request->validate([
             'ids' => ['required', 'array', 'max:100'],
             'ids.*' => ['integer'],
             'provider' => ['sometimes', 'nullable', 'string'],
-            'carrier' => ['sometimes', 'nullable', 'string'],
-            'package_type' => ['sometimes', 'nullable', 'string'],
-            'delivery_type' => ['sometimes', 'nullable', 'string'],
         ]);
 
         $provider = (string) ($data['provider'] ?? '');
-        $overrides = $this->labelOverrides($data);
+        $overrides = $this->labelOverrides($request->all());
 
         return $this->runBulk($request, $data['ids'], function (Order $model) use ($provider, $overrides): void {
             $result = $this->attemptCreateLabel($model, $provider, $overrides);
