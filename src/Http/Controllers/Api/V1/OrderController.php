@@ -288,6 +288,7 @@ class OrderController extends Controller
                     'status_label' => $st['label'],
                     'status_tone' => $st['tone'],
                     'created_at' => optional($mp->created_at)->toIso8601String(),
+                    'chosen_options' => $this->chosenOptionsFor($mp, 'myparcel'),
                 ];
             }
         }
@@ -306,6 +307,7 @@ class OrderController extends Controller
                     'status_label' => $st['label'],
                     'status_tone' => $st['tone'],
                     'created_at' => optional($v->created_at)->toIso8601String(),
+                    'chosen_options' => $this->chosenOptionsFor($v, 'veloyd'),
                 ];
             }
         }
@@ -314,6 +316,49 @@ class OrderController extends Controller
             'data' => $labels,
             'providers' => $this->labelProviders($model),
         ]);
+    }
+
+    /**
+     * Leesbare `{key,label,value}[]` weergave van de gekozen verzendopties voor
+     * één label-record: basis (vervoerder/pakkettype/verzendtype, code→label
+     * via de provider-getters) + extra (`ProviderClass::readOptionsForDisplay()`).
+     * Ontbrekende provider-methodes (oude package-versie) of een lege/legacy
+     * `options`-kolom leveren gewoon minder — nooit een fout.
+     *
+     * @param  \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder|\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder  $record
+     * @return array<int, array{key: string, label: string, value: string}>
+     */
+    private function chosenOptionsFor($record, string $provider): array
+    {
+        $providerClass = $provider === 'veloyd'
+            ? '\Dashed\DashedEcommerceVeloyd\Classes\Veloyd'
+            : '\Dashed\DashedEcommerceMyParcel\Classes\MyParcel';
+
+        $out = [];
+
+        $carrier = (string) ($record->carrier ?? '');
+        if ($carrier !== '') {
+            $carriers = method_exists($providerClass, 'getCarriers') ? $providerClass::getCarriers() : [];
+            $out[] = ['key' => 'carrier', 'label' => 'Vervoerder', 'value' => $carriers[$carrier] ?? $carrier];
+        }
+
+        $packageType = $record->package_type ?? null;
+        if ($packageType !== null && $packageType !== '') {
+            $types = method_exists($providerClass, 'getPackageTypes') ? $providerClass::getPackageTypes() : [];
+            $out[] = ['key' => 'package_type', 'label' => 'Pakkettype', 'value' => (string) ($types[$packageType] ?? $packageType)];
+        }
+
+        $deliveryType = $record->delivery_type ?? null;
+        if ($deliveryType !== null && $deliveryType !== '') {
+            $types = method_exists($providerClass, 'getDeliveryTypes') ? $providerClass::getDeliveryTypes() : [];
+            $out[] = ['key' => 'delivery_type', 'label' => 'Verzendtype', 'value' => (string) ($types[$deliveryType] ?? $deliveryType)];
+        }
+
+        if (method_exists($providerClass, 'readOptionsForDisplay')) {
+            $out = array_merge($out, $providerClass::readOptionsForDisplay($record->options ?? []));
+        }
+
+        return $out;
     }
 
     /**
