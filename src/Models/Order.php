@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Mails;
@@ -331,6 +332,54 @@ class Order extends Model
     public function isConcept(): bool
     {
         return $this->status === self::STATUS_CONCEPT;
+    }
+
+    /**
+     * Een proforma/concept-order wordt pas later betaald (bijv. vanuit de POS
+     * gemaild). De omzet moet tellen op het moment van de eerste betaling, niet
+     * op het moment dat het concept is aangemaakt. Zet daarom created_at gelijk
+     * aan de eerste betaalde OrderPayment.
+     *
+     * Draait alleen op de eerste overgang uit 'concept' (de guard), dus het
+     * blijft na de eerste betaling vaststaan en verschuift niet meer.
+     */
+    public function alignCreatedAtToFirstPayment(): void
+    {
+        if (! $this->isConcept()) {
+            return;
+        }
+
+        $firstPaidPayment = $this->orderPayments()
+            ->where('status', 'paid')
+            ->oldest('created_at')
+            ->first();
+
+        $this->created_at = $firstPaidPayment?->created_at ?? now();
+    }
+
+    /**
+     * Terugwerkende correctie: bestaande betaalde proforma-orders die nog op hun
+     * aanmaakdatum staan i.p.v. de eerste betaaldatum rechttrekken. Query-builder
+     * update zodat er geen events/observers/updated_at-bump meegaan.
+     */
+    public static function realignProformaCreatedAtToFirstPayment(): int
+    {
+        return static::query()
+            ->where('is_proforma', true)
+            ->whereIn('status', ['paid', 'partially_paid', 'waiting_for_confirmation'])
+            ->whereExists(fn ($query) => $query
+                ->selectRaw('1')
+                ->from('dashed__order_payments')
+                ->whereColumn('dashed__order_payments.order_id', 'dashed__orders.id')
+                ->where('dashed__order_payments.status', 'paid'))
+            ->toBase()
+            ->update([
+                'created_at' => DB::raw(
+                    "(select min(created_at) from dashed__order_payments
+                      where dashed__order_payments.order_id = dashed__orders.id
+                      and dashed__order_payments.status = 'paid')"
+                ),
+            ]);
     }
 
     /**
@@ -1019,6 +1068,8 @@ class Order extends Model
 
     public function markAsPaid()
     {
+        $this->alignCreatedAtToFirstPayment();
+
         if ($this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid') {
             $this->status = 'paid';
             $this->save();
@@ -1073,6 +1124,8 @@ class Order extends Model
             return;
         }
 
+        $this->alignCreatedAtToFirstPayment();
+
         $this->status = 'partially_paid';
         $this->save();
 
@@ -1099,6 +1152,8 @@ class Order extends Model
 
     public function markAsWaitingForConfirmation()
     {
+        $this->alignCreatedAtToFirstPayment();
+
         $this->status = 'waiting_for_confirmation';
         $this->save();
 

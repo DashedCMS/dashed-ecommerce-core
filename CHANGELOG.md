@@ -10,6 +10,12 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Fixed
 - **Fatal error op de productdetailpagina onder PHP 8.4.** `CrossSellVariantPicker` herdeclareerde de property `$addedVia` met een andere default (`'cross_sell'`) dan de trait `ProductCartActions` (`null`). PHP 8.4 beschouwt dat als een incompatibele compositie en gooit een fatal error (`define the same property ($addedVia) ... the definition differs and is considered incompatible`). De property-default is verwijderd; de waarde wordt nu in `mount()` gezet.
 
+## v4.82.0 - 2026-07-19
+
+### Fixed
+- **Zwevende omzet bij betaalde proforma-/concept-facturen.** Een proforma die bijv. vanuit de POS gemaild werd, hield zijn `created_at` op het moment van aanmaken. Omdat alle omzetstatistieken (`DailyRevenueStats`, `MonthlyRevenueStats`, `YearlyRevenueStats`, `InsightsService`) op `created_at` bucketen, telde een concept dat in januari verstuurd en in februari betaald werd in de verkeerde periode. `Order::alignCreatedAtToFirstPayment()` zet `created_at` nu bij de eerste betaling gelijk aan de oudste betaalde `OrderPayment` (of `now()` als er geen betaalregel is). Wordt aangeroepen vanuit `markAsPaid()`, `markAsPartiallyPaid()` en `markAsWaitingForConfirmation()`, met een `isConcept()`-guard zodat de datum alleen bij de eerste overgang uit `concept` wordt gezet en daarna nooit meer verschuift. Normale webshop-orders (starten als `pending`) blijven onaangeraakt.
+- **Terugwerkende correctie.** Migratie `2026_07_19_120000_realign_proforma_created_at_to_first_payment` trekt bestaande betaalde proforma-orders eenmalig recht naar hun eerste betaaldatum via `Order::realignProformaCreatedAtToFirstPayment()` (query-builder update, zonder events/`updated_at`-bump).
+
 ## v4.57.3 - 2026-06-11
 
 ### Fixed
