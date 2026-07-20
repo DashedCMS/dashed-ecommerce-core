@@ -1118,10 +1118,10 @@ class OrderController extends Controller
             'steps.*.params' => ['sometimes', 'array'],
         ]);
 
-        $steps = array_map(fn (array $step) => [
+        $steps = array_values(array_map(fn (array $step) => [
             'key' => $step['key'],
             'params' => $step['params'] ?? [],
-        ], $data['steps']);
+        ], $data['steps']));
 
         $siteId = (string) \Dashed\DashedCore\Classes\Sites::getActive();
         \Dashed\DashedCore\Models\Customsetting::set('fulfil_flow_sequence', json_encode($steps), $siteId);

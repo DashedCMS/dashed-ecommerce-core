@@ -50,3 +50,22 @@ it('round-trips an explicitly stored empty sequence on the next GET', function (
 
     $res->assertOk()->assertJson(['steps' => []]);
 });
+
+it('reindexes a sparse/associative steps payload into a proper JSON list', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+
+    // Sparse keys ("0" and "2") mimic a client that removed a middle step
+    // and re-sent without reindexing, or a form-encoded PUT.
+    $sparse = ['0' => ['key' => 'mark_packed', 'params' => []], '2' => ['key' => 'print_label', 'params' => []]];
+    $expected = [['key' => 'mark_packed', 'params' => []], ['key' => 'print_label', 'params' => []]];
+
+    $putRes = $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => $sparse], ['X-Site-Id' => 'site']);
+    $putRes->assertOk();
+    expect($putRes->json('steps'))->toBe($expected)
+        ->and(array_keys($putRes->json('steps')))->toBe([0, 1]);
+
+    $getRes = $this->getJson('/api/v1/settings/fulfil-flow', ['X-Site-Id' => 'site']);
+    $getRes->assertOk();
+    expect($getRes->json('steps'))->toBe($expected)
+        ->and(array_keys($getRes->json('steps')))->toBe([0, 1]);
+});
