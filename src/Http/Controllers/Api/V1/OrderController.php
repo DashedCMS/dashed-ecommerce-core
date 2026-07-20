@@ -1020,6 +1020,7 @@ class OrderController extends Controller
                 'icon' => $action['icon'] ?? 'ellipsis-horizontal',
                 'destructive' => (bool) ($action['destructive'] ?? false),
                 'confirm' => $action['confirm'] ?? null,
+                'sequenceable' => (bool) ($action['sequenceable'] ?? false),
                 'fields' => array_map(function (array $field) use ($model) {
                     $options = $field['options'] ?? null;
                     $options = is_callable($options) ? $options($model) : $options;

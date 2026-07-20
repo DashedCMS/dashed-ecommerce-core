@@ -145,6 +145,71 @@ class MobileOrderActions
                     (new SendPaymentLinkAction())->handle($o, $data);
                 },
             ],
+            // Onderstaande zeven zijn step-definities voor de configureerbare
+            // "Afronden"-knop. Ze worden uitgevoerd door de app zelf (via de
+            // bestaande catalog-endpoints), dus bewust zonder 'handle'. Ze
+            // blijven verborgen voor de losse per-order actielijst
+            // (`visible => fn () => false`) en worden alleen gelezen door het
+            // (latere) catalog-endpoint dat 'visible' negeert.
+            [
+                'key' => 'mark_packed',
+                'label' => 'Markeer als ingepakt',
+                'group' => 'Verzending',
+                'icon' => 'archive-outline',
+                'sequenceable' => true,
+                'visible' => fn () => false,
+            ],
+            [
+                'key' => 'create_label',
+                'label' => 'Verzendlabel aanmaken',
+                'group' => 'Verzending',
+                'icon' => 'pricetag-outline',
+                'sequenceable' => true,
+                'visible' => fn () => false,
+            ],
+            [
+                'key' => 'print_label',
+                'label' => 'Verzendlabel printen',
+                'group' => 'Verzending',
+                'icon' => 'print-outline',
+                'sequenceable' => true,
+                'visible' => fn () => false,
+            ],
+            [
+                'key' => 'print_packing_slip',
+                'label' => 'Pakbon printen',
+                'group' => 'Documenten',
+                'icon' => 'document-outline',
+                'sequenceable' => true,
+                'visible' => fn () => false,
+            ],
+            [
+                'key' => 'print_invoice',
+                'label' => 'Factuur printen',
+                'group' => 'Documenten',
+                'icon' => 'receipt-outline',
+                'sequenceable' => true,
+                'visible' => fn () => false,
+            ],
+            [
+                'key' => 'set_fulfillment_status',
+                'label' => 'Fulfilment-status wijzigen',
+                'group' => 'Status',
+                'icon' => 'flag-outline',
+                'sequenceable' => true,
+                'fields' => [
+                    ['name' => 'status', 'label' => 'Fulfilment-status', 'type' => 'select', 'required' => true, 'options' => Orders::getFulfillmentStatusses()],
+                ],
+                'visible' => fn () => false,
+            ],
+            [
+                'key' => 'mark_paid',
+                'label' => 'Markeer als betaald',
+                'group' => 'Betaling',
+                'icon' => 'checkmark-circle-outline',
+                'sequenceable' => true,
+                'visible' => fn () => false,
+            ],
         ]);
     }
 }
