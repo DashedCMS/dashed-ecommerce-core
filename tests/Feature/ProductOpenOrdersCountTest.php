@@ -1,8 +1,8 @@
 <?php
 
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
 function openOrdersProduct(): Product
@@ -57,9 +57,13 @@ it('telt alleen betaalde, nog niet afgehandelde orders met dit product', functio
     orderWithProduct($product, 'paid', 'unhandled');
     orderWithProduct($product, 'partially_paid', 'unhandled');
 
-    // Tellen niet mee:
+    // Tellen niet mee: alles wat niet op 'unhandled' staat telt niet als
+    // openstaande bestelling, ook al is de order nog niet volledig afgehandeld.
     orderWithProduct($product, 'paid', 'handled');
-    orderWithProduct($product, 'paid', 'partially_handled');
+    orderWithProduct($product, 'paid', 'in_treatment');
+    orderWithProduct($product, 'paid', 'packed');
+    orderWithProduct($product, 'paid', 'ready_for_pickup');
+    orderWithProduct($product, 'paid', 'shipped');
     orderWithProduct($product, 'pending', 'unhandled');
     orderWithProduct($product, 'cancelled', 'unhandled');
 

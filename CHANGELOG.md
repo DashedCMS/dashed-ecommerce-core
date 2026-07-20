@@ -10,6 +10,12 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Fixed
 - **Fatal error op de productdetailpagina onder PHP 8.4.** `CrossSellVariantPicker` herdeclareerde de property `$addedVia` met een andere default (`'cross_sell'`) dan de trait `ProductCartActions` (`null`). PHP 8.4 beschouwt dat als een incompatibele compositie en gooit een fatal error (`define the same property ($addedVia) ... the definition differs and is considered incompatible`). De property-default is verwijderd; de waarde wordt nu in `mount()` gezet.
 
+## v4.82.1 - 2026-07-20
+
+### Fixed
+- **"Openstaande bestellingen" telde te veel.** De telling (`Product::openOrdersCount()`, gebruikt in de producten- en productgroep-kolom "Openstaande bestellingen") filterde op `whereNotIn('fulfillment_status', ['handled', 'partially_handled'])`, waardoor orders die al `in_treatment`, `packed`, `ready_for_pickup` of `shipped` waren óók meetelden. Telt nu strikt `fulfillment_status = 'unhandled'` (niet afgehandeld), consistent met de open-orders-widgets.
+- Ook de **"Onafgehandelde orders"**-stat bovenaan de bestellingen-lijst (`OrderUnhandledStat`) en de bijbehorende doorklik-filter tellen/filteren nu strikt op `unhandled`. De losse filteroptie "Onafgehandeld (alles behalve afgehandeld)" blijft als brede keuze beschikbaar.
+
 ## v4.82.0 - 2026-07-19
 
 ### Fixed

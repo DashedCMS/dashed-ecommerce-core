@@ -33,7 +33,6 @@ use Illuminate\Database\Eloquent\Builder;
 use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
@@ -41,6 +40,7 @@ use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
@@ -463,9 +463,11 @@ class OrderResource extends Resource
 
                         // Widget-shortcut: ResourceFilterUrl stuurt
                         // tableFilters[fulfillment_status][value]=unhandled mee.
-                        // We mappen die op "alles behalve handled/partially_handled".
+                        // Strikt op 'unhandled' zodat de doorklik overeenkomt met
+                        // de OrderUnhandledStat-teller. De brede variant blijft
+                        // beschikbaar via de losse optie 'unhandled_virtual'.
                         if (isset($data['value']) && $data['value'] === 'unhandled') {
-                            return $query->whereNotIn('fulfillment_status', ['handled', 'partially_handled']);
+                            return $query->where('fulfillment_status', 'unhandled');
                         }
 
                         if (! is_array($values) || empty($values)) {

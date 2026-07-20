@@ -2,46 +2,46 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
-use Carbon\Carbon;
-use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
-use Dashed\DashedCore\Models\Concerns\HasSearchIndex;
-use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedCore\Traits\HasDynamicRelation;
-use Dashed\DashedEcommerceCore\Classes\VatDisplay;
-use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
-use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
-use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
-use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use Dashed\DashedPages\Models\Page;
-use Dashed\DashedTranslations\Models\Translation;
-use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Exception;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
+use Carbon\Carbon;
+use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\LogOptions;
+use Dashed\DashedPages\Models\Page;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Gloudemans\Shoppingcart\CartItem;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Activity;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use LaraZeus\Quantity\Components\Quantity;
+use Dashed\DashedCore\Models\Customsetting;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Gloudemans\Shoppingcart\CartItem;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedCore\Traits\HasDynamicRelation;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Models\Concerns\IsVisitable;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use LaraZeus\Quantity\Components\Quantity;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Models\Activity;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Dashed\DashedCore\Models\Concerns\HasSearchIndex;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
+use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\LaravelLocalization\Facades\LaravelLocalization;
+use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
+use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Products\ProductUpdatedEvent;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
 
 class Product extends Model
 {
@@ -397,7 +397,9 @@ class Product extends Model
         return $query;
     }
 
-    public function scopeHandOrderShowable($query) {}
+    public function scopeHandOrderShowable($query)
+    {
+    }
 
     public function scopeAvailableForShoppingFeed($query)
     {
@@ -607,15 +609,16 @@ class Product extends Model
     }
 
     /**
-     * Aantal betaalde, nog niet (volledig) afgehandelde bestellingen waar dit
-     * product in zit. Zelfde definitie als het OrderUnhandledStat-widget zodat
-     * de tellingen consistent zijn.
+     * Aantal betaalde bestellingen met fulfillment-status 'unhandled' (niet
+     * afgehandeld) waar dit product in zit. Alleen 'unhandled' telt als
+     * openstaande bestelling — orders die al in behandeling/ingepakt/verzonden
+     * zijn tellen niet mee. Gelijk aan de ProductOpenOrdersWidget-definitie.
      */
     public function openOrdersCount(): int
     {
         return Order::query()
             ->whereIn('status', ['paid', 'partially_paid'])
-            ->whereNotIn('fulfillment_status', ['handled', 'partially_handled'])
+            ->where('fulfillment_status', 'unhandled')
             ->whereHas('orderProducts', fn ($query) => $query->where('product_id', $this->id))
             ->count();
     }
@@ -1434,7 +1437,7 @@ class Product extends Model
         $remaining = $limit - count($suggestedProductIds);
 
         if ($remaining > 0) {
-            $categoryModel = new ProductCategory;
+            $categoryModel = new ProductCategory();
             $categoryTable = $categoryModel->getTable();
 
             $categoryIds = $this->productCategories()

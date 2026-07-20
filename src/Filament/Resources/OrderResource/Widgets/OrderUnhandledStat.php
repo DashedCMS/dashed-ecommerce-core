@@ -9,9 +9,10 @@ use Dashed\DashedCore\Filament\Support\ResourceFilterUrl;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 /**
- * Stat-widget bovenaan de orders-lijst: telt orders die betaald zijn maar
- * nog niet (volledig) zijn afgehandeld. Klik leidt door naar de
- * fulfillment-status-filter "unhandled".
+ * Stat-widget bovenaan de orders-lijst: telt betaalde orders die op
+ * fulfillment-status 'unhandled' (niet afgehandeld) staan. Orders die al in
+ * behandeling/ingepakt/verzonden zijn tellen niet mee. Klik leidt door naar
+ * de fulfillment-status-filter "unhandled".
  */
 class OrderUnhandledStat extends StatsOverviewWidget
 {
@@ -21,7 +22,7 @@ class OrderUnhandledStat extends StatsOverviewWidget
     {
         $count = Order::query()
             ->whereIn('status', ['paid', 'partially_paid'])
-            ->whereNotIn('fulfillment_status', ['handled', 'partially_handled'])
+            ->where('fulfillment_status', 'unhandled')
             ->count();
 
         return [
