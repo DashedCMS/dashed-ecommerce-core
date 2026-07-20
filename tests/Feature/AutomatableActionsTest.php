@@ -5,10 +5,14 @@ use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedMobileApi\Models\DeviceToken;
+use Dashed\DashedEcommerceCore\Support\Automation\LabelCreator;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
 
 /**
  * Task 4: `automatable`-vlag + server-side handlers voor de zeven
@@ -168,7 +172,81 @@ it('create_label falls back to MyParcel::createLabelForOrder when Veloyd is not 
     $handle($order, []);
 });
 
+// ── Review finding 1: gedeelde provider-keuze + fallback-op-exception ──────
+
+it('create_label falls back to MyParcel when Veloyd IS configured but throws', function () {
+    // Dit is het scenario dat zonder de LabelCreator-extractie zou falen: de
+    // vorige handler-copy had geen try/catch-fallback, dus een Veloyd-
+    // exception zou hier ongevangen doorbubbelen i.p.v. door te schakelen naar
+    // MyParcel — terwijl OrderController::attemptCreateLabel() dat altijd al
+    // deed.
+    $veloyd = Mockery::mock(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class);
+    $veloyd->shouldReceive('apiKey')->andReturn('a-fake-veloyd-key');
+    $veloyd->shouldReceive('createLabelForOrder')->once()
+        ->andThrow(new \RuntimeException('Veloyd API tijdelijk onbereikbaar'));
+    $this->app->instance(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class, $veloyd);
+
+    $myParcel = Mockery::mock(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class);
+    $myParcel->shouldReceive('apiKey')->andReturn('a-fake-myparcel-key');
+    $myParcel->shouldReceive('createLabelForOrder')->once()
+        ->withArgs(fn (Order $passedOrder) => true)
+        ->andReturn(['ok' => true]);
+    $this->app->instance(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class, $myParcel);
+
+    $order = makeAutomatableOrder();
+    $handle = automatableActionsByKey()['create_label']['handle'];
+
+    // Geen exception hier betekent: de MyParcel-fallback is echt aangeroepen
+    // (en Mockery verifieert beide `->once()`-verwachtingen in afterEach).
+    $handle($order, []);
+});
+
+it('shares one provider-choice implementation between the controller path and the create_label handler', function () {
+    // OrderController::attemptCreateLabel() en de create_label-handler moeten
+    // beide delegeren naar LabelCreator::attempt() — niet elk hun eigen kopie
+    // van de provider-precedence hebben. Bewijs dit op twee manieren:
+    // (a) structureel: de broncode van beide callers refereert aan
+    //     LabelCreator::attempt(), en (b) gedragsmatig: met dezelfde
+    //     provider-configuratie kiezen beide callers dezelfde provider.
+    $controllerSource = file_get_contents((new ReflectionMethod(OrderController::class, 'attemptCreateLabel'))->getFileName());
+    $handlerSource = file_get_contents((new ReflectionClass(\Dashed\DashedEcommerceCore\Support\MobileOrderActions::class))->getFileName());
+    $needle = LabelCreator::class . '::attempt';
+
+    expect($controllerSource)->toContain($needle)
+        ->and($handlerSource)->toContain($needle);
+
+    $veloyd = Mockery::mock(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class);
+    $veloyd->shouldReceive('apiKey')->andReturn('a-fake-veloyd-key');
+    $veloyd->shouldReceive('createLabelForOrder')->twice()
+        ->withArgs(fn (Order $passedOrder) => true)
+        ->andReturn(['ok' => true]);
+    $this->app->instance(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class, $veloyd);
+
+    $order = makeAutomatableOrder();
+
+    // Controller-pad (private methode; hetzelfde pad als de app-endpoints).
+    $controller = app(OrderController::class);
+    $ref = new ReflectionMethod($controller, 'attemptCreateLabel');
+    $ref->setAccessible(true);
+    $controllerResult = $ref->invoke($controller, $order, '', []);
+
+    expect($controllerResult['ok'])->toBeTrue()
+        ->and($controllerResult['provider'])->toBe('veloyd');
+
+    // Handler-pad (automatiseringsregel); zelfde config, zelfde keuze — en
+    // Mockery's `->twice()` hierboven bewijst dat beide paden dezelfde
+    // createLabelForOrder-aanroep raken.
+    $handle = automatableActionsByKey()['create_label']['handle'];
+    $handle($order, []);
+});
+
 it('print_label, print_packing_slip and print_invoice queue a PrintJob of the right type via the print-queue', function () {
+    // Actieve printers voor beide printer-types: verzendlabel heeft z'n eigen
+    // type, pakbon én factuur delen het pakbon-/A4-documenttype (zelfde
+    // mapping als OrderController::print()).
+    Printer::factory()->create(['type' => PrinterType::ShippingLabel]);
+    Printer::factory()->create(['type' => PrinterType::PackingSlip]);
+
     $order = makeAutomatableOrder();
     $byKey = automatableActionsByKey();
 
@@ -186,6 +264,8 @@ it('print_label, print_packing_slip and print_invoice queue a PrintJob of the ri
 });
 
 it('does not queue a duplicate PrintJob while one is still pending for the same type', function () {
+    Printer::factory()->create(['type' => PrinterType::ShippingLabel]);
+
     $order = makeAutomatableOrder();
     $handle = automatableActionsByKey()['print_label']['handle'];
 
@@ -193,6 +273,45 @@ it('does not queue a duplicate PrintJob while one is still pending for the same 
     $handle($order, []);
 
     expect(PrintJob::where('order_id', $order->id)->where('type', PrintJobType::ShippingLabel->value)->count())->toBe(1);
+});
+
+// ── Review finding 2: print-handlers mogen geen onclaimbare PrintJob wegzetten ─
+
+it('print_label refuses (no PrintJob, handler throws) when no active shipping-label printer is configured', function () {
+    // Geen actieve printer van het juiste type — mirrort OrderController::print()/
+    // printDocuments(), die in dat geval ook weigeren i.p.v. een onclaimbare job
+    // in de wachtrij te zetten.
+    Printer::factory()->create(['type' => PrinterType::PackingSlip, 'is_active' => false]);
+
+    $order = makeAutomatableOrder();
+    $handle = automatableActionsByKey()['print_label']['handle'];
+
+    expect(fn () => $handle($order, []))->toThrow(\RuntimeException::class);
+    expect(PrintJob::where('order_id', $order->id)->exists())->toBeFalse();
+});
+
+it('print_packing_slip and print_invoice refuse when no active packing-slip printer is configured', function () {
+    Printer::factory()->create(['type' => PrinterType::ShippingLabel]);
+
+    $order = makeAutomatableOrder();
+    $byKey = automatableActionsByKey();
+
+    expect(fn () => ($byKey['print_packing_slip']['handle'])($order, []))->toThrow(\RuntimeException::class);
+    expect(fn () => ($byKey['print_invoice']['handle'])($order, []))->toThrow(\RuntimeException::class);
+    expect(PrintJob::where('order_id', $order->id)->exists())->toBeFalse();
+});
+
+it('a "both" printer satisfies both the shipping-label and packing-slip check', function () {
+    Printer::factory()->create(['type' => PrinterType::Both]);
+
+    $order = makeAutomatableOrder();
+    $byKey = automatableActionsByKey();
+
+    ($byKey['print_label']['handle'])($order, []);
+    ($byKey['print_packing_slip']['handle'])($order, []);
+    ($byKey['print_invoice']['handle'])($order, []);
+
+    expect(PrintJob::where('order_id', $order->id)->count())->toBe(3);
 });
 
 it('set_fulfillment_status changes the fulfilment status via Order::changeFulfillmentStatus', function () {

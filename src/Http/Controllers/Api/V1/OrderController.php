@@ -426,42 +426,18 @@ class OrderController extends Controller
      * Gedeeld door het single- en het bulk-endpoint, zodat de business-logica
      * (provider-keuze + carrier-call) maar op één plek staat.
      *
+     * Delegeert naar `LabelCreator`, dezelfde klasse die de `create_label`-
+     * automatiseringshandler (`MobileOrderActions`) gebruikt — zo kunnen de
+     * app en een automatiseringsregel nooit meer een andere vervoerder kiezen
+     * voor dezelfde order. Gedrag/return-shape van deze methode blijven
+     * ongewijzigd; dit is een pure delegatie.
+     *
      * @param  array<string, mixed>  $overrides
      * @return array{ok: bool, provider: ?string, message: string}
      */
     private function attemptCreateLabel(Order $model, string $provider, array $overrides): array
     {
-        $errors = [];
-
-        if (($provider === '' || $provider === 'veloyd')
-            && $this->veloydConfigured($model)) {
-            try {
-                \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::createLabelForOrder($model, $overrides);
-
-                return ['ok' => true, 'provider' => 'veloyd', 'message' => 'Verzendlabel aangemaakt via Veloyd.'];
-            } catch (\Throwable $e) {
-                report($e);
-                $errors[] = 'Veloyd: ' . $e->getMessage();
-            }
-        }
-
-        if (($provider === '' || $provider === 'myparcel')
-            && $this->myparcelConfigured($model)) {
-            try {
-                \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::createLabelForOrder($model, $overrides);
-
-                return ['ok' => true, 'provider' => 'myparcel', 'message' => 'Verzendlabel aangemaakt via MyParcel.'];
-            } catch (\Throwable $e) {
-                report($e);
-                $errors[] = 'MyParcel: ' . $e->getMessage();
-            }
-        }
-
-        return [
-            'ok' => false,
-            'provider' => null,
-            'message' => $errors ? implode(' ', $errors) : 'Geen verzendprovider geconfigureerd voor deze site.',
-        ];
+        return \Dashed\DashedEcommerceCore\Support\Automation\LabelCreator::attempt($model, $provider, $overrides);
     }
 
     // ── Bulk-acties ──────────────────────────────────────────────────────────
@@ -590,22 +566,22 @@ class OrderController extends Controller
     /**
      * Is Veloyd voor de site van deze order geconfigureerd?
      *
-     * Leest de API-sleutel via de provider-class zelf (die met `disableCache: true`
-     * leest), zodat deze check NOOIT op een verouderde settings-cache draait. Dat
-     * voorkomt de situatie waarin het CMS (dat ook vers leest) wél een label kan
-     * maken maar de app "Geen verzendprovider geconfigureerd" terugkrijgt.
+     * Delegeert naar `LabelCreator` (zelfde predicate als `attemptCreateLabel()`
+     * en de `create_label`-automatiseringshandler), die de API-sleutel via de
+     * provider-class zelf leest (met `disableCache: true`), zodat deze check
+     * NOOIT op een verouderde settings-cache draait. Dat voorkomt de situatie
+     * waarin het CMS (dat ook vers leest) wél een label kan maken maar de app
+     * "Geen verzendprovider geconfigureerd" terugkrijgt.
      */
     private function veloydConfigured(Order $model): bool
     {
-        return class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)
-            && \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::apiKey($model->site_id) !== '';
+        return \Dashed\DashedEcommerceCore\Support\Automation\LabelCreator::veloydConfigured($model);
     }
 
     /** Idem voor MyParcel; `false` haalt de onbewerkte (niet-base64) sleutel op. */
     private function myparcelConfigured(Order $model): bool
     {
-        return class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)
-            && \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::apiKey($model->site_id, false) !== '';
+        return \Dashed\DashedEcommerceCore\Support\Automation\LabelCreator::myparcelConfigured($model);
     }
 
     /**
@@ -948,9 +924,7 @@ class OrderController extends Controller
     /** Is er een actieve printer van dit type (of "beide")? */
     private function activePrinterForType(\Dashed\DashedEcommerceCore\Enums\PrinterType $type): bool
     {
-        return \Dashed\DashedEcommerceCore\Models\Printer::active()
-            ->whereIn('type', [$type->value, \Dashed\DashedEcommerceCore\Enums\PrinterType::Both->value])
-            ->exists();
+        return \Dashed\DashedEcommerceCore\Models\Printer::hasActiveForType($type);
     }
 
     /** Heeft de order een verzendlabel (MyParcel-shipment of Veloyd-PDF)? */

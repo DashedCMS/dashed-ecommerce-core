@@ -6,10 +6,12 @@ namespace Dashed\DashedEcommerceCore\Support;
 
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterManualPaymentAction;
@@ -306,34 +308,15 @@ class MobileOrderActions
 
     /**
      * Maak een verzendlabel aan via de eerst-beschikbare geconfigureerde
-     * provider (Veloyd, dan MyParcel) — dezelfde provider-keuze en -aanroep als
-     * OrderController::attemptCreateLabel(), maar rechtstreeks op de
-     * provider-klassen (niet via de controller). Beide packages zijn optioneel,
-     * vandaar de `class_exists`-guards.
-     *
-     * Haalt de provider-klasse via de container op (i.p.v. een kale statische
-     * aanroep): functioneel identiek in productie (geen bindings geregistreerd,
-     * dus gewoon `new Veloyd()`), maar geeft tests een naadloze plek om de
-     * externe laag te vervangen door een mock — nodig omdat deze aanroep écht
-     * een label bij de vervoerder aanmaakt (portokosten).
+     * provider (Veloyd, dan MyParcel). Delegeert naar `LabelCreator`, dezelfde
+     * klasse die `OrderController::attemptCreateLabel()` gebruikt — zo kiest
+     * een automatiseringsregel altijd exact dezelfde vervoerder als een
+     * CMS-/app-aanroep, en valt (net als het CMS) terug op de volgende
+     * geconfigureerde provider wanneer de eerste een exception gooit.
      */
     private static function createLabel(Order $o): void
     {
-        if (class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)) {
-            $veloyd = app(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class);
-            if ($veloyd->apiKey($o->site_id) !== '') {
-                $veloyd->createLabelForOrder($o);
-
-                return;
-            }
-        }
-
-        if (class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
-            $myParcel = app(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class);
-            if ($myParcel->apiKey($o->site_id, false) !== '') {
-                $myParcel->createLabelForOrder($o);
-            }
-        }
+        \Dashed\DashedEcommerceCore\Support\Automation\LabelCreator::attempt($o);
     }
 
     /**
@@ -341,9 +324,22 @@ class MobileOrderActions
      * (`PrintJob`) als OrderController::print()/printDocuments() gebruiken.
      * Geen nieuwe job als er al een onafgeronde job van dit type voor de order
      * in de wachtrij staat (zelfde dedup als printDocuments()).
+     *
+     * Weigert (net als OrderController::print()/printDocuments()) wanneer er
+     * geen actieve printer van het bijbehorende type geconfigureerd is: zonder
+     * die check zou een automatiseringsregel een `PrintJob` wegzetten die door
+     * geen enkele printer-worker geclaimd kan worden en voor altijd op
+     * `Pending` blijft staan. De exception geeft de regel-run-log een heldere
+     * reden i.p.v. stilzwijgend een onclaimbare job aan te maken.
      */
     private static function queuePrintJob(Order $o, PrintJobType $type): void
     {
+        $printerType = self::printerTypeFor($type);
+
+        if (! Printer::hasActiveForType($printerType)) {
+            throw new \RuntimeException("Geen actieve {$type->label()}-printer geconfigureerd.");
+        }
+
         $exists = PrintJob::where('order_id', $o->id)
             ->where('type', $type->value)
             ->whereIn('status', [
@@ -362,5 +358,18 @@ class MobileOrderActions
             'order_id' => $o->id,
             'status' => PrintJobStatus::Pending,
         ]);
+    }
+
+    /**
+     * Welk printer-type hoort bij dit printjob-type — zelfde mapping als
+     * OrderController::print(): facturen én pakbonnen gaan naar dezelfde A4-
+     * document-printer (PrinterType::PackingSlip/Both), alleen verzendlabels
+     * hebben een eigen printer-type.
+     */
+    private static function printerTypeFor(PrintJobType $type): PrinterType
+    {
+        return $type === PrintJobType::ShippingLabel
+            ? PrinterType::ShippingLabel
+            : PrinterType::PackingSlip;
     }
 }

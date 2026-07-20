@@ -77,6 +77,22 @@ class Printer extends Model
         return $query->where('is_active', true);
     }
 
+    /**
+     * Is er een actieve printer van dit type (of "beide")? De ENE plek voor
+     * deze determinatie — gedeeld door `OrderController::print()`/
+     * `printDocuments()` (via `activePrinterForType()`) en de
+     * `print_label`/`print_packing_slip`/`print_invoice`-automatiseringshandlers
+     * in `MobileOrderActions`, zodat een automatiseringsregel nooit een
+     * `PrintJob` wegzet die door geen enkele printer-worker geclaimd kan
+     * worden (een pending job die voor altijd blijft hangen).
+     */
+    public static function hasActiveForType(PrinterType $type): bool
+    {
+        return self::active()
+            ->whereIn('type', [$type->value, PrinterType::Both->value])
+            ->exists();
+    }
+
     protected static function newFactory(): PrinterFactory
     {
         return new PrinterFactory();
