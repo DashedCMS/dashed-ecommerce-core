@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Support;
 
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterManualPaymentAction;
@@ -31,6 +34,10 @@ class MobileOrderActions
                 'label' => 'Stuur e-mailbevestiging',
                 'group' => 'Communicatie',
                 'icon' => 'mail-outline',
+                // Met een order in scope (automatiseringsregel) kan het e-mailadres
+                // uit de order zelf worden opgelost, ook al is dit veld niet
+                // 'sequenceable' (dat vereist een waarde zónder order).
+                'automatable' => true,
                 'fields' => [
                     ['name' => 'email', 'label' => 'E-mailadres', 'type' => 'email', 'required' => true, 'default' => fn (Order $o) => $o->email],
                 ],
@@ -44,6 +51,10 @@ class MobileOrderActions
                 'label' => 'Track & trace toevoegen',
                 'group' => 'Verzending',
                 'icon' => 'navigate-outline',
+                // De track & trace-code is een externe, niet-voorspelbare waarde
+                // (komt van de vervoerder) — een automatiseringsregel kan 'm niet
+                // van tevoren weten, dus niet geschikt om onbemand te draaien.
+                'automatable' => false,
                 'fields' => [
                     ['name' => 'delivery_company', 'label' => 'Vervoersbedrijf', 'type' => 'text', 'required' => false],
                     ['name' => 'code', 'label' => 'Track & trace code', 'type' => 'text', 'required' => true],
@@ -65,6 +76,7 @@ class MobileOrderActions
                 'label' => 'Verander retourstatus',
                 'group' => 'Status',
                 'icon' => 'refresh-outline',
+                'automatable' => false,
                 'fields' => [
                     ['name' => 'retourStatus', 'label' => 'Retourstatus', 'type' => 'select', 'options' => Orders::getReturnStatusses(), 'required' => true, 'default' => fn (Order $o) => $o->retour_status],
                 ],
@@ -82,6 +94,8 @@ class MobileOrderActions
                 'icon' => 'close-circle-outline',
                 'destructive' => true,
                 'confirm' => 'Weet je zeker dat je deze bestelling wilt annuleren?',
+                // Onomkeerbaar — nooit onbemand.
+                'automatable' => false,
                 'fields' => [
                     ['name' => 'send_email', 'label' => 'Klant e-mailen over annulering', 'type' => 'checkbox', 'default' => false],
                 ],
@@ -96,6 +110,7 @@ class MobileOrderActions
                 'group' => 'Verzending',
                 'icon' => 'cube-outline',
                 'confirm' => 'Alle gekoppelde producten naar de fulfillment-partijen sturen?',
+                'automatable' => true,
                 'visible' => fn (Order $o) => $o->orderProducts()->whereNotNull('fulfillment_provider')->exists(),
                 'handle' => function (Order $o, array $data): void {
                     foreach ($o->orderProducts()->whereNotNull('fulfillment_provider')->get() as $orderProduct) {
@@ -111,6 +126,7 @@ class MobileOrderActions
                 'group' => 'Documenten',
                 'icon' => 'document-text-outline',
                 'confirm' => 'De factuur opnieuw genereren?',
+                'automatable' => true,
                 'visible' => fn (Order $o) => true,
                 'handle' => function (Order $o, array $data): void {
                     $o->createNormalInvoice();
@@ -121,6 +137,8 @@ class MobileOrderActions
                 'label' => 'Handmatige betaling registreren',
                 'group' => 'Betaling',
                 'icon' => 'cash-outline',
+                // Registreert geld dat iemand echt heeft ontvangen — nooit onbemand.
+                'automatable' => false,
                 'fields' => [
                     ['name' => 'amount', 'label' => 'Bedrag (€)', 'type' => 'number', 'required' => true, 'default' => fn (Order $o) => round((float) $o->outstandingAmount(), 2)],
                     ['name' => 'payment_method', 'label' => 'Betaalmethode', 'type' => 'select', 'options' => ['cash' => 'Contant', 'pin' => 'Pin', 'bank_transfer' => 'Overboeking'], 'required' => true, 'default' => 'cash'],
@@ -136,6 +154,7 @@ class MobileOrderActions
                 'label' => 'Betaallink sturen',
                 'group' => 'Betaling',
                 'icon' => 'link-outline',
+                'automatable' => false,
                 'fields' => [
                     ['name' => 'amount', 'label' => 'Bedrag (€)', 'type' => 'number', 'required' => true, 'default' => fn (Order $o) => round((float) $o->outstandingAmount(), 2)],
                     ['name' => 'email', 'label' => 'E-mailadres', 'type' => 'email', 'required' => true, 'default' => fn (Order $o) => $o->email],
@@ -146,18 +165,32 @@ class MobileOrderActions
                 },
             ],
             // Onderstaande zeven zijn step-definities voor de configureerbare
-            // "Afronden"-knop. Ze worden uitgevoerd door de app zelf (via de
-            // bestaande catalog-endpoints), dus bewust zonder 'handle'. Ze
-            // blijven verborgen voor de losse per-order actielijst
-            // (`visible => fn () => false`) en worden alleen gelezen door het
-            // (latere) catalog-endpoint dat 'visible' negeert.
+            // "Afronden"-knop. Ze worden normaliter uitgevoerd door de app zelf
+            // (via de bestaande catalog-endpoints). Ze blijven verborgen voor de
+            // losse per-order actielijst (`visible => fn () => false`) en worden
+            // alleen gelezen door het catalog-endpoint dat 'visible' negeert.
+            //
+            // Elke stap krijgt nu ook een `handle`-closure: een automatiseringsregel
+            // draait server-side (geen app in de loop) en heeft de order al in
+            // scope, dus deze acties zijn `automatable`. De closures hergebruiken
+            // dezelfde onderliggende Order-methodes/services als het CMS
+            // (OrderController::packed/changeFulfillment/markAsPaid/print en de
+            // label-providers), niet de controller zelf.
             [
                 'key' => 'mark_packed',
                 'label' => 'Markeer als ingepakt',
                 'group' => 'Verzending',
                 'icon' => 'archive-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    // Zelfde kern als OrderController::packed() (packed=true-pad):
+                    // packed_at zetten, fulfilment-status meesynchroniseren, loggen.
+                    $o->forceFill(['packed_at' => now()])->save();
+                    $o->changeFulfillmentStatus('packed');
+                    OrderLog::createLog(orderId: $o->id, tag: 'order.packed');
+                },
             ],
             [
                 'key' => 'create_label',
@@ -165,7 +198,11 @@ class MobileOrderActions
                 'group' => 'Verzending',
                 'icon' => 'pricetag-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    self::createLabel($o);
+                },
             ],
             [
                 'key' => 'print_label',
@@ -173,7 +210,11 @@ class MobileOrderActions
                 'group' => 'Verzending',
                 'icon' => 'print-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    self::queuePrintJob($o, PrintJobType::ShippingLabel);
+                },
             ],
             [
                 'key' => 'print_packing_slip',
@@ -181,7 +222,11 @@ class MobileOrderActions
                 'group' => 'Documenten',
                 'icon' => 'document-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    self::queuePrintJob($o, PrintJobType::PackingSlip);
+                },
             ],
             [
                 'key' => 'print_invoice',
@@ -189,7 +234,11 @@ class MobileOrderActions
                 'group' => 'Documenten',
                 'icon' => 'receipt-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    self::queuePrintJob($o, PrintJobType::Invoice);
+                },
             ],
             [
                 'key' => 'set_fulfillment_status',
@@ -197,10 +246,15 @@ class MobileOrderActions
                 'group' => 'Status',
                 'icon' => 'flag-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'fields' => [
                     ['name' => 'status', 'label' => 'Fulfilment-status', 'type' => 'select', 'required' => true, 'options' => Orders::getFulfillmentStatusses()],
                 ],
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    // Zelfde als OrderController::changeFulfillment().
+                    $o->changeFulfillmentStatus($data['status']);
+                },
             ],
             [
                 'key' => 'mark_paid',
@@ -208,8 +262,105 @@ class MobileOrderActions
                 'group' => 'Betaling',
                 'icon' => 'checkmark-circle-outline',
                 'sequenceable' => true,
+                'automatable' => true,
                 'visible' => fn () => false,
+                'handle' => function (Order $o, array $data): void {
+                    // Zelfde als OrderController::markAsPaid().
+                    $o->markAsPaid();
+                },
             ],
+            [
+                'key' => 'notify_app',
+                'label' => 'Stuur app-melding',
+                'group' => 'Communicatie',
+                'icon' => 'notifications-outline',
+                'automatable' => true,
+                'fields' => [
+                    ['name' => 'title', 'label' => 'Titel', 'type' => 'text', 'required' => true],
+                    ['name' => 'body', 'label' => 'Bericht', 'type' => 'text', 'required' => false],
+                    [
+                        'name' => 'ability',
+                        'label' => 'Recht (wie ontvangt de melding)',
+                        'type' => 'select',
+                        'required' => false,
+                        'options' => array_combine($registry->abilities(), $registry->abilities()),
+                        'default' => 'orders.read',
+                    ],
+                ],
+                'visible' => fn (Order $o) => true,
+                'handle' => function (Order $o, array $data): void {
+                    if (! class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
+                        return;
+                    }
+
+                    app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
+                        ->title((string) ($data['title'] ?? ''))
+                        ->body((string) ($data['body'] ?? ''))
+                        ->route("/order/{$o->id}")
+                        ->toAbility((string) ($data['ability'] ?? 'orders.read'))
+                        ->send();
+                },
+            ],
+        ]);
+    }
+
+    /**
+     * Maak een verzendlabel aan via de eerst-beschikbare geconfigureerde
+     * provider (Veloyd, dan MyParcel) — dezelfde provider-keuze en -aanroep als
+     * OrderController::attemptCreateLabel(), maar rechtstreeks op de
+     * provider-klassen (niet via de controller). Beide packages zijn optioneel,
+     * vandaar de `class_exists`-guards.
+     *
+     * Haalt de provider-klasse via de container op (i.p.v. een kale statische
+     * aanroep): functioneel identiek in productie (geen bindings geregistreerd,
+     * dus gewoon `new Veloyd()`), maar geeft tests een naadloze plek om de
+     * externe laag te vervangen door een mock — nodig omdat deze aanroep écht
+     * een label bij de vervoerder aanmaakt (portokosten).
+     */
+    private static function createLabel(Order $o): void
+    {
+        if (class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)) {
+            $veloyd = app(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class);
+            if ($veloyd->apiKey($o->site_id) !== '') {
+                $veloyd->createLabelForOrder($o);
+
+                return;
+            }
+        }
+
+        if (class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
+            $myParcel = app(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class);
+            if ($myParcel->apiKey($o->site_id, false) !== '') {
+                $myParcel->createLabelForOrder($o);
+            }
+        }
+    }
+
+    /**
+     * Zet een printjob van dit type in de wachtrij — dezelfde print-queue-laag
+     * (`PrintJob`) als OrderController::print()/printDocuments() gebruiken.
+     * Geen nieuwe job als er al een onafgeronde job van dit type voor de order
+     * in de wachtrij staat (zelfde dedup als printDocuments()).
+     */
+    private static function queuePrintJob(Order $o, PrintJobType $type): void
+    {
+        $exists = PrintJob::where('order_id', $o->id)
+            ->where('type', $type->value)
+            ->whereIn('status', [
+                PrintJobStatus::Pending->value,
+                PrintJobStatus::Claimed->value,
+                PrintJobStatus::Printing->value,
+            ])
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        PrintJob::create([
+            'type' => $type,
+            'order_id' => $o->id,
+            'status' => PrintJobStatus::Pending,
         ]);
     }
 }

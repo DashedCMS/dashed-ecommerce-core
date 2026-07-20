@@ -1021,6 +1021,7 @@ class OrderController extends Controller
                 'destructive' => (bool) ($action['destructive'] ?? false),
                 'confirm' => $action['confirm'] ?? null,
                 'sequenceable' => (bool) ($action['sequenceable'] ?? false),
+                'automatable' => (bool) ($action['automatable'] ?? false),
                 'fields' => array_map(fn (array $field) => $this->mapActionField($field, $model), $action['fields'] ?? []),
             ];
         }
