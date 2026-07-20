@@ -1021,28 +1021,67 @@ class OrderController extends Controller
                 'destructive' => (bool) ($action['destructive'] ?? false),
                 'confirm' => $action['confirm'] ?? null,
                 'sequenceable' => (bool) ($action['sequenceable'] ?? false),
-                'fields' => array_map(function (array $field) use ($model) {
-                    $options = $field['options'] ?? null;
-                    $options = is_callable($options) ? $options($model) : $options;
-                    $default = $field['default'] ?? null;
-                    $default = is_callable($default) ? $default($model) : $default;
-
-                    return [
-                        'name' => $field['name'],
-                        'label' => $field['label'],
-                        'type' => $field['type'] ?? 'text',
-                        'required' => (bool) ($field['required'] ?? false),
-                        // Selecties als lijst van {value,label} voor de app.
-                        'options' => is_array($options)
-                            ? array_map(fn ($value, $label) => ['value' => (string) $value, 'label' => (string) $label], array_keys($options), array_values($options))
-                            : null,
-                        'default' => $default,
-                    ];
-                }, $action['fields'] ?? []),
+                'fields' => array_map(fn (array $field) => $this->mapActionField($field, $model), $action['fields'] ?? []),
             ];
         }
 
         return response()->json(['data' => $out]);
+    }
+
+    /**
+     * Catalogus van de configureerbare, sequenceable fulfilment-stappen (voor
+     * de "Afronden"-knop). Geen order in scope — dit is bewust site-breed en
+     * negeert `visible` (dat bestaat juist om deze stappen uit de per-order
+     * actielijst te houden, niet uit deze catalogus). Callable `options`/
+     * `default` worden daarom overgeslagen i.p.v. aangeroepen: geen van de
+     * huidige stappen heeft er een die een Order nodig heeft, maar een
+     * toekomstige stap zou dat kunnen hebben.
+     */
+    public function actionCatalog(): JsonResponse
+    {
+        $registry = app(\Dashed\DashedMobileApi\MobileApiRegistry::class);
+
+        $out = [];
+        foreach ($registry->orderActions() as $action) {
+            if (! ($action['sequenceable'] ?? false)) {
+                continue;
+            }
+
+            $out[] = [
+                'key' => $action['key'],
+                'label' => $action['label'],
+                'group' => $action['group'] ?? 'Acties',
+                'icon' => $action['icon'] ?? 'ellipsis-horizontal',
+                'fields' => array_map(fn (array $field) => $this->mapActionField($field, null), $action['fields'] ?? []),
+            ];
+        }
+
+        return response()->json(['data' => $out]);
+    }
+
+    /**
+     * Serialiseert een order-actie-veld voor de app. Zonder `$model` (bv. de
+     * order-loze catalogus) worden callable `options`/`default` overgeslagen
+     * in plaats van aangeroepen.
+     */
+    private function mapActionField(array $field, ?Order $model): array
+    {
+        $options = $field['options'] ?? null;
+        $options = is_callable($options) ? ($model ? $options($model) : null) : $options;
+        $default = $field['default'] ?? null;
+        $default = is_callable($default) ? ($model ? $default($model) : null) : $default;
+
+        return [
+            'name' => $field['name'],
+            'label' => $field['label'],
+            'type' => $field['type'] ?? 'text',
+            'required' => (bool) ($field['required'] ?? false),
+            // Selecties als lijst van {value,label} voor de app.
+            'options' => is_array($options)
+                ? array_map(fn ($value, $label) => ['value' => (string) $value, 'label' => (string) $label], array_keys($options), array_values($options))
+                : null,
+            'default' => $default,
+        ];
     }
 
     /** Voer een geregistreerde order-actie uit. */

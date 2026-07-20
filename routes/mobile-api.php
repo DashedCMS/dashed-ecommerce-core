@@ -141,6 +141,10 @@ Route::prefix('api/v1')
         Route::get('orders/{order}/actions', [OrderController::class, 'actions'])->middleware('ability:orders.read');
         Route::post('orders/{order}/actions/{key}', [OrderController::class, 'runAction'])->middleware('ability:orders.write');
 
+        // Catalogus van de configureerbare, sequenceable fulfilment-stappen
+        // (voor de "Afronden"-knop) — order-loos, dus los van orders/{order}/*.
+        Route::get('order-actions/catalog', [OrderController::class, 'actionCatalog'])->middleware('ability:orders.read');
+
         // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write.
         Route::get('returns', [OrderReturnController::class, 'index'])->middleware('ability:orders.read');
         // Vóór de {orderReturn}-wildcard, anders wordt 'email-defaults' als id opgevat.
