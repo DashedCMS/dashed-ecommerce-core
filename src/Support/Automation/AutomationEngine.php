@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Support\Automation;
 
 use Throwable;
+use Illuminate\Cache\NoLock;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Cache\Lock as CacheLock;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
@@ -39,6 +42,17 @@ use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
  *     door laag 2 overgeslagen run wordt niet gelogd (het is een rem, geen
  *     gebeurtenis) — een geclaimde ('running') rij telt wél als gebeurtenis
  *     en wordt dus wel gelogd.
+ *
+ * BELANGRIJK — laag 2 leunt volledig op de cache-lock uit `Cache::lock()`
+ * voor haar atomiciteit (zie claim()/claimInvalid()/withClaimLock()). Met
+ * een cache-driver zonder échte (gedistribueerde) lock-implementatie —
+ * `CACHE_STORE=null` (→ `Illuminate\Cache\NoLock`, accepteert `acquire()`
+ * altijd) of de `array`-driver (alleen in-process) — geldt de garantie
+ * "twee workers kunnen nooit allebei claimen" dus niet. Er is geen
+ * DB-unique-constraint als backstop. Productie draait op een echte
+ * gedistribueerde store (bv. redis/memcached/database); voor een `NoLock`
+ * logt withClaimLock() eenmalig per proces een waarschuwing (zie
+ * warnIfNoopLock()) zodat dit niet stilzwijgend misgaat.
  */
 class AutomationEngine
 {
@@ -58,6 +72,14 @@ class AutomationEngine
      * meerdere van zulke acties na elkaar draaien. 10 minuten geeft
      * ruimschoots (5-10x) marge boven dat worst-case, zonder dat een regel
      * na een dode worker urenlang bevroren blijft.
+     *
+     * Dit is een harde grens: een actie-keten die langer draait dan dit
+     * aantal minuten wordt door de engine als dood beschouwd, ook als hij in
+     * werkelijkheid nog gewoon bezig is. De 'running'-rij wordt dan door de
+     * eerstvolgende claim-poging op 'failed' (timeout) gezet — zie
+     * failStaleRunningRows() — en een nieuwe run mag starten. Een regel mag
+     * dus nooit een actie-keten bevatten die redelijkerwijs langer dan dit
+     * aantal minuten kan duren.
      */
     public const STALE_RUNNING_MINUTES = 10;
 
@@ -94,8 +116,13 @@ class AutomationEngine
 
     /**
      * Voert één automatiseringsregel uit voor één onderwerp en logt het
-     * resultaat. Geeft nooit een exception door aan de aanroeper: een
-     * falende regel mag de order-flow nooit breken. Geeft de aangemaakte
+     * resultaat. Geeft normaliter geen exception door aan de aanroeper voor
+     * fouten tijdens de actie-uitvoering zelf (elke actie wordt individueel
+     * gevangen in runActions(), en een onverwachte throw daarbuiten wordt
+     * hieronder alsnog opgevangen) — een falende regel mag de order-flow
+     * nooit breken. Dat vangnet dekt echter niet claim()/claimInvalid() en
+     * finishRun() zelf: een cache- of DB-storing daarin (bv. de connectie is
+     * weg) kan wél alsnog propageren naar de aanroeper. Geeft de aangemaakte
      * AutomationRuleRun terug, of null wanneer laag 2 de run heeft geremd
      * (dan is er bewust niets gelogd).
      */
@@ -105,12 +132,13 @@ class AutomationEngine
 
         // Validatie eerst, vóór de laag-2-claim: een regel met een onbekende
         // trigger/actie of een niet-automatiseerbare actie wordt nooit
-        // uitgevoerd, dus hoeft nooit te claimen — en moet altijd gelogd
-        // worden, ook al val je toevallig binnen het hergebruik-venster van
-        // een eerdere (geslaagde) run.
+        // uitgevoerd, dus hoeft nooit een 'running'-rij te claimen. Het
+        // hergebruik-venster wordt hier wél toegepast (via claimInvalid(),
+        // net als claim()) — anders logt een kapotte regel op elke trigger
+        // opnieuw een 'failed'-rij, onbegrensd.
         $invalidReason = self::validationError($registry, $rule);
         if ($invalidReason !== null) {
-            return self::logRun($rule, $subject, AutomationRuleRun::STATUS_FAILED, [], $invalidReason);
+            return self::claimInvalid($rule, $subject, $invalidReason);
         }
 
         $run = self::claim($rule, $subject);
@@ -123,14 +151,20 @@ class AutomationEngine
         $wasSuppressed = self::$suppressed;
         self::$suppressed = true;
 
+        // $results wordt by-reference doorgegeven aan runActions() en dus
+        // ook bijgewerkt als er daarbinnen iets ontsnapt vóórdat de methode
+        // normaal teruggeeft (zie de docblock bij runActions()). Zo verliezen
+        // we bij een onverwachte throw niet het bewijs van acties die al wél
+        // liepen — bv. een label dat al gekocht is.
+        $results = [];
+
         try {
-            [$results, $error] = self::runActions($registry, $actions, $subject);
+            $error = self::runActions($registry, $actions, $subject, $results);
         } catch (Throwable $e) {
             // Zou niet moeten gebeuren (elke actie wordt individueel
             // gevangen in runActions()), maar als er hier toch iets
             // ontsnapt mag de geclaimde rij nooit op 'running' blijven
             // staan tot de stale-bound dat oplost.
-            $results = [];
             $error = $e->getMessage();
         } finally {
             self::$suppressed = $wasSuppressed;
@@ -178,11 +212,16 @@ class AutomationEngine
 
     /**
      * @param  Collection<int, array<string, mixed>>  $actions
-     * @return array{0: array<int, array{key: string, ok: bool, message: ?string}>, 1: ?string}
+     * @param  array<int, array{key: string, ok: bool, message: ?string}>  $results
+     *         By-reference accumulator. De aanroeper (run()) leest 'm ook
+     *         terug wanneer hier iets ontsnapt dat buiten de per-actie
+     *         try/catch hieronder ligt (bv. een registry-lookup die faalt) —
+     *         omdat het dezelfde array is, blijft wat er al in stond intact,
+     *         in plaats van verloren te gaan zoals bij een lokale variabele.
+     * @return ?string
      */
-    private static function runActions(MobileApiRegistry $registry, Collection $actions, Model $subject): array
+    private static function runActions(MobileApiRegistry $registry, Collection $actions, Model $subject, array &$results): ?string
     {
-        $results = [];
         $error = null;
 
         foreach ($actions as $action) {
@@ -203,7 +242,7 @@ class AutomationEngine
             }
         }
 
-        return [$results, $error];
+        return $error;
     }
 
     /**
@@ -213,26 +252,120 @@ class AutomationEngine
      * niet allebei kunnen winnen. Alleen de winnaar krijgt een rij terug —
      * de rest krijgt null, precies zoals laag 2 dat altijd al deed.
      *
-     * Bewust non-blocking (Lock::get(), geen block()): de claim-sectie zelf
-     * is een enkele SELECT + INSERT, dus vrijwel altijd meteen vrij. Lukt
-     * het toch niet (iemand anders claimt op exact hetzelfde moment), dan is
-     * het resultaat sowieso "een ander proces is hiermee bezig" — net als
-     * een geslaagde claim door de ander, dus null teruggeven is hier
-     * correct, niet een noodgreep.
+     * Ruimt onderweg ook stale 'running'-rijen op (zie failStaleRunningRows())
+     * — dat gebeurt pas ná de recentlyRan()-check, met opzet: die check moet
+     * de stale rij nog als "niet-blokkerend maar wel aanwezig" zien, anders
+     * zou het zojuist-op-'failed'-gezette (dus vers 'updated_at') resultaat
+     * van de opruiming zelf de nieuwe claim binnen het hergebruik-venster
+     * blokkeren.
      */
     private static function claim(AutomationRule $rule, Model $subject): ?AutomationRuleRun
     {
-        $lock = Cache::lock(self::claimLockKey($rule, $subject), self::CLAIM_LOCK_SECONDS);
-
-        $claimed = $lock->get(function () use ($rule, $subject) {
+        return self::withClaimLock($rule, $subject, function () use ($rule, $subject) {
             if (self::recentlyRan($rule, $subject)) {
                 return null;
             }
 
+            self::failStaleRunningRows($rule, $subject);
+
             return self::logRun($rule, $subject, AutomationRuleRun::STATUS_RUNNING, [], null);
         });
+    }
+
+    /**
+     * Zelfde claim-atomiciteit als claim(), maar voor een regel die de
+     * validatie niet doorstaat: er wordt nooit een 'running'-rij aangemaakt
+     * (er draait niets), enkel — hooguit één keer per hergebruik-venster —
+     * een 'failed'-rij met de validatiefout. Zonder deze suppressie zou een
+     * kapotte regel op élke trigger een nieuwe rij loggen, onbegrensd.
+     */
+    private static function claimInvalid(AutomationRule $rule, Model $subject, string $invalidReason): ?AutomationRuleRun
+    {
+        return self::withClaimLock($rule, $subject, function () use ($rule, $subject, $invalidReason) {
+            if (self::recentlyRan($rule, $subject)) {
+                return null;
+            }
+
+            return self::logRun($rule, $subject, AutomationRuleRun::STATUS_FAILED, [], $invalidReason);
+        });
+    }
+
+    /**
+     * Gedeelde atomiciteits-envelop voor claim() en claimInvalid(): pakt de
+     * per-(regel, onderwerp) cache-lock en geeft terug wat $body opleverde,
+     * of null als $body null teruggaf of de lock niet te pakken was.
+     *
+     * Bewust non-blocking (Lock::get(), geen block()): de sectie binnen de
+     * lock is telkens een enkele SELECT (+ eventueel een UPDATE) + INSERT,
+     * dus vrijwel altijd meteen vrij. Lukt het toch niet (iemand anders
+     * claimt op exact hetzelfde moment), dan is het resultaat sowieso "een
+     * ander proces is hiermee bezig" — net als een geslaagde claim door de
+     * ander, dus null teruggeven is hier correct, niet een noodgreep.
+     */
+    private static function withClaimLock(AutomationRule $rule, Model $subject, callable $body): ?AutomationRuleRun
+    {
+        $lock = Cache::lock(self::claimLockKey($rule, $subject), self::CLAIM_LOCK_SECONDS);
+
+        self::warnIfNoopLock($lock);
+
+        $claimed = $lock->get($body);
 
         return $claimed instanceof AutomationRuleRun ? $claimed : null;
+    }
+
+    private static bool $warnedNoopLock = false;
+
+    /**
+     * Laag 2's atomiciteit staat of valt met een échte gedistribueerde
+     * cache-lock (zie de class-docblock). Met `CACHE_STORE=null` geeft
+     * `Cache::lock()` een `Illuminate\Cache\NoLock` terug, waarvan
+     * `acquire()` altíjd true is — de lock houdt dan niets tegen, zonder dat
+     * daar verder enig signaal van is. Waarschuw daarom één keer per
+     * PHP-proces (niet per aanroep, om zelf geen logruis toe te voegen)
+     * zodat een verkeerd ingestelde `CACHE_STORE` in productie niet
+     * stilzwijgend de rem uitschakelt.
+     */
+    private static function warnIfNoopLock(CacheLock $lock): void
+    {
+        if (self::$warnedNoopLock || ! $lock instanceof NoLock) {
+            return;
+        }
+
+        self::$warnedNoopLock = true;
+
+        Log::warning(
+            'AutomationEngine: de actieve cache-driver (CACHE_STORE=null) geeft geen '
+            . 'echte gedistribueerde lock (Illuminate\Cache\NoLock accepteert acquire() altijd). '
+            . 'Laag 2 van de lus-beveiliging (dubbele-uitvoering-rem) is hierdoor niet atomisch '
+            . 'gegarandeerd — configureer een echte cache-store (redis/memcached/database) in productie.'
+        );
+    }
+
+    /**
+     * Markeert 'running'-rijen voor (regel, onderwerp) die de stale-bound
+     * (STALE_RUNNING_MINUTES) gepasseerd zijn als 'failed' met een
+     * time-out-melding, zodat ze niet voor altijd als "in uitvoering" blijven
+     * staan (bv. na een gecrashte worker) — anders leest elke UI die runs
+     * toont zo'n rij permanent als "bezig". Draait binnen dezelfde
+     * claim-lock als de rest van claim(), dus atomisch t.o.v. andere
+     * claimers op (regel, onderwerp).
+     */
+    private static function failStaleRunningRows(AutomationRule $rule, Model $subject): void
+    {
+        AutomationRuleRun::query()
+            ->where('rule_id', $rule->id)
+            ->where('subject_type', $subject->getMorphClass())
+            ->where('subject_id', $subject->getKey())
+            ->where('status', AutomationRuleRun::STATUS_RUNNING)
+            ->where('created_at', '<', now()->subMinutes(self::STALE_RUNNING_MINUTES))
+            ->update([
+                'status' => AutomationRuleRun::STATUS_FAILED,
+                'error' => sprintf(
+                    'Time-out: deze run bleef langer dan %d minuten op \'running\' staan '
+                        . '(stale-grens overschreden, worker vermoedelijk gecrasht).',
+                    self::STALE_RUNNING_MINUTES,
+                ),
+            ]);
     }
 
     /** Publiek zodat tests dezelfde lock kunnen pakken om de atomiciteit te bewijzen. */
@@ -276,10 +409,21 @@ class AutomationEngine
     /**
      * True wanneer er voor (regel, onderwerp) al een run bestaat die nog
      * telt als "bezet":
-     *  - een 'running'-rij die niet stale is (nog binnen STALE_RUNNING_MINUTES) —
-     *    dekt de volledige duur van de actie-uitvoering, inclusief de
-     *    vervoerder-HTTP-call van create_label;
-     *  - een afgeronde ('success'/'failed') rij binnen RERUN_WINDOW_MINUTES.
+     *  - een 'running'-rij die niet stale is (nog binnen STALE_RUNNING_MINUTES,
+     *    gemeten vanaf de claim-timestamp `created_at` — dat ís het moment
+     *    waarop deze laag moet beginnen tellen: de rij wordt geclaimd vóórdat
+     *    er een actie draait) — dekt de volledige duur van de
+     *    actie-uitvoering, inclusief de vervoerder-HTTP-call van
+     *    create_label;
+     *  - een afgeronde ('success'/'failed') rij binnen RERUN_WINDOW_MINUTES,
+     *    gemeten vanaf `updated_at` — dat is het moment waarop finishRun()
+     *    'm afrondde, dus het venster gaat pas ná voltooiing lopen (zie de
+     *    class-docblock: "nadat hij is afgerond"). Meten vanaf `created_at`
+     *    (de claim-tijd) zou het venster tijdens de actie-uitvoering zélf
+     *    laten verstrijken — bij een actie-keten langer dan
+     *    RERUN_WINDOW_MINUTES (create_label alleen al kan ~60s duren) geeft
+     *    dat nul cooldown ná afloop, precies het duplicate-postage-scenario
+     *    dat deze laag moet voorkomen.
      */
     private static function recentlyRan(AutomationRule $rule, Model $subject): bool
     {
@@ -297,7 +441,7 @@ class AutomationEngine
                     ->orWhere(function ($finished) {
                         $finished
                             ->whereIn('status', [AutomationRuleRun::STATUS_SUCCESS, AutomationRuleRun::STATUS_FAILED])
-                            ->where('created_at', '>=', now()->subMinutes(self::RERUN_WINDOW_MINUTES));
+                            ->where('updated_at', '>=', now()->subMinutes(self::RERUN_WINDOW_MINUTES));
                     });
             })
             ->exists();

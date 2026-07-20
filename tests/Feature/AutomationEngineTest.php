@@ -223,8 +223,12 @@ it('reruns the same rule for the same subject once outside the rerun window', fu
     $rule = makeAutomationRule(['actions' => []]);
 
     $first = AutomationEngine::run($rule, $order);
+    // Het venster meet vanaf voltooiing (updated_at), niet vanaf de claim
+    // (created_at) — zie IMPORTANT 1 hieronder. Beide terugzetten simuleert
+    // "een tijdje geleden geclaimd én afgerond", het normale geval.
     AutomationRuleRun::whereKey($first->id)->update([
         'created_at' => now()->subMinutes(AutomationEngine::RERUN_WINDOW_MINUTES + 1),
+        'updated_at' => now()->subMinutes(AutomationEngine::RERUN_WINDOW_MINUTES + 1),
     ]);
 
     $second = AutomationEngine::run($rule, $order);
@@ -401,4 +405,138 @@ it('skips and logs a rule whose action is not automatable (e.g. cancel), and nev
         ->and($run)->not->toBeNull()
         ->and($run->status)->toBe(AutomationRuleRun::STATUS_FAILED)
         ->and($run->results)->toBe([]);
+});
+
+// -- IMPORTANT 1 (re-review): het venster moet vanaf voltooiing meten, niet vanaf de claim --
+
+it('IMPORTANT 1: a run whose row was claimed longer ago than the rerun window but only finished just now does not rerun', function () {
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => []]);
+
+    $first = AutomationEngine::run($rule, $order);
+
+    // Simuleert een actie-keten die langer duurde dan het hergebruik-venster:
+    // geclaimd (created_at) ruim buiten RERUN_WINDOW_MINUTES, maar zojuist
+    // afgerond — finishRun() zet updated_at bij het opslaan altijd op "nu",
+    // dus die blijft hier binnen het venster staan.
+    AutomationRuleRun::whereKey($first->id)->update([
+        'created_at' => now()->subMinutes(AutomationEngine::RERUN_WINDOW_MINUTES + 1),
+    ]);
+    expect(AutomationRuleRun::find($first->id)->updated_at->diffInSeconds(now()))->toBeLessThan(5);
+
+    // Vóór de fix meet recentlyRan() het venster vanaf created_at (de
+    // claim-tijd), die hier al buiten het venster ligt, dus zou dit ten
+    // onrechte een tweede run toestaan — precies het duplicate-postage-lek
+    // dat het venster moet dichten.
+    $second = AutomationEngine::run($rule, $order);
+
+    expect($second)->toBeNull()
+        ->and(AutomationRuleRun::count())->toBe(1);
+});
+
+// -- IMPORTANT 2: een stale 'running'-rij wordt niet enkel genegeerd, maar ook opgeruimd -----
+
+it('IMPORTANT 2: a stale running row is marked failed (timed out) when the guard passes it, and the new run proceeds', function () {
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => []]);
+
+    $stale = AutomationRuleRun::create([
+        'rule_id' => $rule->id,
+        'site_id' => $rule->site_id,
+        'subject_type' => $order->getMorphClass(),
+        'subject_id' => $order->getKey(),
+        'trigger' => $rule->trigger,
+        'status' => AutomationRuleRun::STATUS_RUNNING,
+        'results' => [],
+        'error' => null,
+    ]);
+    $stale->forceFill([
+        'created_at' => now()->subMinutes(AutomationEngine::STALE_RUNNING_MINUTES + 1),
+    ])->save();
+
+    $run = AutomationEngine::run($rule, $order);
+
+    expect($run)->not->toBeNull()
+        ->and($run->id)->not->toBe($stale->id)
+        ->and($run->status)->toBe(AutomationRuleRun::STATUS_SUCCESS)
+        ->and(AutomationRuleRun::count())->toBe(2);
+
+    $stale->refresh();
+    expect($stale->status)->toBe(AutomationRuleRun::STATUS_FAILED)
+        ->and($stale->error)->not->toBeNull()
+        ->and($stale->error)->toContain((string) AutomationEngine::STALE_RUNNING_MINUTES);
+});
+
+// -- MINOR: resultaten die al binnen waren mogen niet verdwijnen bij een throw die runActions() zelf verlaat --
+
+it('MINOR: preserves the results already collected when something escapes runActions() outside the per-action catch', function () {
+    // Een registry-dubbelganger die de eerste lookup per key (gebruikt door
+    // validationError()) gewoon doorlaat, maar de tweede lookup (gebruikt
+    // door runActions() tijdens de echte uitvoering) voor 'boom_action' laat
+    // ontsnappen — een staaf voor een onverwachte registry/DB-storing tussen
+    // validatie en uitvoering, buiten de per-actie try/catch. Delegeert al
+    // het overige (automationTrigger(), registerOrderActions()) naar de
+    // echte registry, zodat de al-geboote trigger-registraties (bv.
+    // 'order.paid') behouden blijven — enkel orderAction() wordt bespioneerd.
+    $realRegistry = app(MobileApiRegistry::class);
+    $registry = new class ($realRegistry) extends MobileApiRegistry {
+        private array $callCounts = [];
+
+        public function __construct(private MobileApiRegistry $delegate)
+        {
+        }
+
+        public function registerOrderActions(array $actions): void
+        {
+            $this->delegate->registerOrderActions($actions);
+        }
+
+        public function automationTrigger(string $key): ?array
+        {
+            return $this->delegate->automationTrigger($key);
+        }
+
+        public function orderAction(string $key): ?array
+        {
+            $this->callCounts[$key] = ($this->callCounts[$key] ?? 0) + 1;
+
+            if ($key === 'boom_action' && $this->callCounts[$key] >= 2) {
+                throw new RuntimeException('registry lookup kapot');
+            }
+
+            return $this->delegate->orderAction($key);
+        }
+    };
+    app()->instance(MobileApiRegistry::class, $registry);
+
+    registerSpyAction('ok_action', function () {});
+    registerSpyAction('boom_action', function () {});
+
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => [['key' => 'ok_action'], ['key' => 'boom_action']]]);
+
+    $run = AutomationEngine::run($rule, $order);
+
+    expect($run->status)->toBe(AutomationRuleRun::STATUS_FAILED)
+        ->and($run->error)->toBe('registry lookup kapot')
+        ->and($run->results)->toBe([
+            ['key' => 'ok_action', 'ok' => true, 'message' => null],
+        ]);
+});
+
+// -- MINOR: logruis — een kapotte regel logt hoogstens één rij per hergebruik-venster --------
+
+it('MINOR: an invalid rule (unknown action key) logs once within the rerun window, not once per trigger', function () {
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => [['key' => 'does-not-exist']]]);
+
+    $first = AutomationEngine::run($rule, $order);
+    $second = AutomationEngine::run($rule, $order);
+    $third = AutomationEngine::run($rule, $order);
+
+    expect($first)->not->toBeNull()
+        ->and($first->status)->toBe(AutomationRuleRun::STATUS_FAILED)
+        ->and($second)->toBeNull()
+        ->and($third)->toBeNull()
+        ->and(AutomationRuleRun::count())->toBe(1);
 });
