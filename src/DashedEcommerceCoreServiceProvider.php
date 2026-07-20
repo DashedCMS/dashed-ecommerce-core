@@ -1823,6 +1823,9 @@ MARKDOWN,
             // Order-acties (ViewOrder-pagina) die de app dynamisch kan tonen/uitvoeren.
             \Dashed\DashedEcommerceCore\Support\MobileOrderActions::register($mobileApi);
 
+            // Triggers voor automatiseringsregels die uitgaan van een Order.
+            \Dashed\DashedEcommerceCore\Support\OrderAutomationTriggers::register($mobileApi);
+
             $mobileApi->registerDashboardContributor(function (string $siteId, $period = null): array {
                 // Oudere mobile-api roept de contributor zonder periode aan; val
                 // dan terug op vandaag zodat er geen ArgumentCountError ontstaat.

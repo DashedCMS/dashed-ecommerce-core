@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\ReturnReason;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
 use Dashed\DashedEcommerceCore\Support\ReturnNotifier;
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRequestedEvent;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
 
@@ -246,6 +247,8 @@ class OrderWithdrawal extends Component
         // verzoek'. Alleen voor een NIEUW aangemaakte retour (niet als er al een
         // open retour was) en buiten de transactie (best-effort).
         if ($createdReturn) {
+            OrderReturnRequestedEvent::dispatch($createdReturn);
+
             $createdReturn->auto_accepted
                 ? ReturnNotifier::autoApproved($createdReturn)
                 : ReturnNotifier::requested($createdReturn);
