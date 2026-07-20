@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AutomationRuleRun extends Model
 {
+    /**
+     * Geclaimd, acties draaien nog (of het worker-proces is halverwege
+     * gecrasht — zie AutomationEngine::STALE_RUNNING_MINUTES). Een rij in
+     * deze status is een échte, in-flight run: hij telt mee voor laag 2 van
+     * de lus-beveiliging, precies zoals success/failed dat al deden.
+     */
+    public const STATUS_RUNNING = 'running';
     public const STATUS_SUCCESS = 'success';
     public const STATUS_FAILED = 'failed';
 

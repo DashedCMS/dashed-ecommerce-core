@@ -17,6 +17,13 @@ use Dashed\DashedEcommerceCore\Models\Order;
  * leest relaties van een echte Order (orderProducts, de payment-method-
  * accessor) en mag dus DB-calls doen. Dat is prima zolang de evaluator zelf
  * puur blijft.
+ *
+ * De kernvelden hieronder winnen altijd van `$extra`: AutomationTrigger-
+ * Subscriber::extraContext() leest alle publieke, niet-Model-properties van
+ * het trigger-event en geeft die door als `$extra`. Zonder die precedentie
+ * zou een toekomstig event met een publieke `$status`/`$total`-property
+ * stilzwijgend de conditie-semantiek voor élke regel op dat kernveld
+ * veranderen — vandaar dat `$extra` alleen aanvult, nooit overschrijft.
  */
 class AutomationContext
 {
@@ -26,7 +33,7 @@ class AutomationContext
      */
     public static function forOrder(Order $order, array $extra = []): array
     {
-        return [
+        $core = [
             'total' => (float) $order->total,
             'country' => $order->country,
             'origin' => $order->order_origin,
@@ -35,8 +42,11 @@ class AutomationContext
             'fulfillment_status' => $order->fulfillment_status,
             'product_count' => (int) $order->orderProducts->sum('quantity'),
             'has_discount_code' => self::hasDiscountCode($order),
-            ...$extra,
         ];
+
+        // `+` (array-union), niet spread: bestaande kernvelden winnen altijd,
+        // `$extra` mag alleen nieuwe velden toevoegen.
+        return $core + $extra;
     }
 
     /**

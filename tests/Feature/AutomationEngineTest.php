@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -48,10 +49,10 @@ function makeAutomationRule(array $attributes = []): AutomationRule
     ], $attributes));
 }
 
-function registerSpyAction(string $key, callable $handle): void
+function registerSpyAction(string $key, callable $handle, bool $automatable = true): void
 {
     app(MobileApiRegistry::class)->registerOrderActions([
-        ['key' => $key, 'automatable' => true, 'visible' => fn () => false, 'handle' => $handle],
+        ['key' => $key, 'automatable' => $automatable, 'visible' => fn () => false, 'handle' => $handle],
     ]);
 }
 
@@ -254,4 +255,150 @@ it('skips and logs a rule whose trigger key is unknown, without throwing', funct
     expect($run)->not->toBeNull()
         ->and($run->status)->toBe(AutomationRuleRun::STATUS_FAILED)
         ->and($run->trigger)->toBe('does.not.exist');
+});
+
+// -- CRITICAL: claim-vóór-uitvoeren — de rem bestaat tijdens actie-uitvoering -------
+
+it('CRITICAL: an action that re-enters AutomationEngine::run() for the same (rule, subject) does not execute a second time', function () {
+    $calls = 0;
+    $rule = null;
+
+    // Depth-capped stand-in voor een gelijktijdige worker B die run() voor
+    // exact dezelfde (regel, onderwerp) opnieuw aanroept — een getrouwe
+    // reproductie van de reviewer's probe. Bewust begrensd (i.p.v.
+    // onbegrensd): tegen de kapotte (pre-fix) engine loopt dit anders
+    // eindeloos door (het geheugen raakte in de review-probe daadwerkelijk
+    // op) — begrensd faalt de test hier netjes op de assertion in plaats van
+    // een fatal memory-error.
+    registerSpyAction('reentrant', function ($subject) use (&$calls, &$rule) {
+        $calls++;
+        if ($calls < 4) {
+            AutomationEngine::run($rule, $subject);
+        }
+    });
+
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => [['key' => 'reentrant']]]);
+
+    AutomationEngine::run($rule, $order);
+
+    // Vóór de fix bestaat de guard-rij pas na afloop van de actie-lus, dus
+    // de geneste run() ziet niets en voert de actie opnieuw uit (calls > 1).
+    // Na de fix is de rij al 'running' vóórdat de actie draait, dus de
+    // geneste run() wordt geclaimd door recentlyRan() en voert niets uit.
+    expect($calls)->toBe(1)
+        ->and(AutomationRuleRun::where('rule_id', $rule->id)->count())->toBe(1);
+});
+
+// -- atomaire claim: check-en-claim mag niet door een race heen kunnen --------------
+
+it('atomic claim: a lock held by a racing process blocks run() from claiming, instead of creating a second running row', function () {
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => []]);
+
+    // "Worker B" wint de race en houdt de claim-lock vast — dezelfde lock
+    // die AutomationEngine::claim() zelf pakt, met een eigen (andere) owner,
+    // zoals een writer/proces zou doen.
+    $lock = Cache::lock(AutomationEngine::claimLockKey($rule, $order), 10);
+    expect($lock->get())->toBeTrue();
+
+    // "Worker A" (run()) race in terwijl B de lock vasthoudt: hij mag niet
+    // alsnog claimen. Zonder een échte cross-process-lock zou dit gewoon
+    // doorlopen en een rij aanmaken.
+    $result = AutomationEngine::run($rule, $order);
+
+    expect($result)->toBeNull()
+        ->and(AutomationRuleRun::count())->toBe(0);
+
+    $lock->release();
+
+    // Met de lock vrij kan een normale run wél claimen en doorlopen.
+    $normal = AutomationEngine::run($rule, $order);
+
+    expect($normal)->not->toBeNull()
+        ->and(AutomationRuleRun::count())->toBe(1);
+});
+
+// -- stale claim: een dode worker mag de regel niet permanent bevriezen -------------
+
+it('a running row older than the stale bound no longer blocks a new run', function () {
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => []]);
+
+    $stale = AutomationRuleRun::create([
+        'rule_id' => $rule->id,
+        'site_id' => $rule->site_id,
+        'subject_type' => $order->getMorphClass(),
+        'subject_id' => $order->getKey(),
+        'trigger' => $rule->trigger,
+        'status' => AutomationRuleRun::STATUS_RUNNING,
+        'results' => [],
+        'error' => null,
+    ]);
+    $stale->forceFill([
+        'created_at' => now()->subMinutes(AutomationEngine::STALE_RUNNING_MINUTES + 1),
+    ])->save();
+
+    $run = AutomationEngine::run($rule, $order);
+
+    expect($run)->not->toBeNull()
+        ->and($run->id)->not->toBe($stale->id)
+        ->and($run->status)->toBe(AutomationRuleRun::STATUS_SUCCESS);
+});
+
+it('a running row within the stale bound still blocks a new run', function () {
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => []]);
+
+    AutomationRuleRun::create([
+        'rule_id' => $rule->id,
+        'site_id' => $rule->site_id,
+        'subject_type' => $order->getMorphClass(),
+        'subject_id' => $order->getKey(),
+        'trigger' => $rule->trigger,
+        'status' => AutomationRuleRun::STATUS_RUNNING,
+        'results' => [],
+        'error' => null,
+    ]);
+
+    $run = AutomationEngine::run($rule, $order);
+
+    expect($run)->toBeNull()
+        ->and(AutomationRuleRun::count())->toBe(1);
+});
+
+// -- exception-pad: de geclaimde rij mag nooit op 'running' blijven staan -----------
+
+it('a throwing action leaves the claimed row failed, never stuck at running', function () {
+    registerSpyAction('reentrant_throws', function () {
+        throw new RuntimeException('kapot tijdens uitvoering');
+    });
+
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => [['key' => 'reentrant_throws']]]);
+
+    $run = AutomationEngine::run($rule, $order);
+
+    expect($run->status)->toBe(AutomationRuleRun::STATUS_FAILED)
+        ->and(AutomationRuleRun::where('status', AutomationRuleRun::STATUS_RUNNING)->count())->toBe(0)
+        ->and(AutomationRuleRun::count())->toBe(1);
+});
+
+// -- IMPORTANT 1: automatable wordt nu ook op het uitvoeringspad gehandhaafd --------
+
+it('skips and logs a rule whose action is not automatable (e.g. cancel), and never executes it', function () {
+    $executed = false;
+    registerSpyAction('cancel', function () use (&$executed) {
+        $executed = true;
+    }, automatable: false);
+
+    $order = makeAutomationOrder();
+    $rule = makeAutomationRule(['actions' => [['key' => 'cancel']]]);
+
+    $run = AutomationEngine::run($rule, $order);
+
+    expect($executed)->toBeFalse()
+        ->and($run)->not->toBeNull()
+        ->and($run->status)->toBe(AutomationRuleRun::STATUS_FAILED)
+        ->and($run->results)->toBe([]);
 });
