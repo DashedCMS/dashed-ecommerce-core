@@ -1060,6 +1060,69 @@ class OrderController extends Controller
     }
 
     /**
+     * Standaard-reeks voor de "Afronden"-knop wanneer een site nog niets heeft
+     * opgeslagen: inpakken → verzendlabel aanmaken → fulfilment-status op
+     * "handled" zetten.
+     *
+     * @var array<int, array{key: string, params: array<string, mixed>}>
+     */
+    private const DEFAULT_FULFIL_FLOW = [
+        ['key' => 'mark_packed', 'params' => []],
+        ['key' => 'create_label', 'params' => []],
+        ['key' => 'set_fulfillment_status', 'params' => ['status' => 'handled']],
+    ];
+
+    /**
+     * De per-site geconfigureerde stap-reeks voor de "Afronden"-knop. Zonder
+     * opgeslagen reeks: de standaard-reeks hierboven.
+     */
+    public function fulfilFlow(): JsonResponse
+    {
+        $siteId = (string) \Dashed\DashedCore\Classes\Sites::getActive();
+        $stored = \Dashed\DashedCore\Models\Customsetting::get('fulfil_flow_sequence', $siteId, null);
+
+        $steps = $stored !== null ? (json_decode($stored, true) ?? []) : self::DEFAULT_FULFIL_FLOW;
+
+        return response()->json(['steps' => $steps]);
+    }
+
+    /**
+     * Sla de geconfigureerde stap-reeks voor de "Afronden"-knop op. Elke `key`
+     * moet in de order-actie-registry bestaan én `sequenceable` zijn — dezelfde
+     * notie als `actionCatalog()` hanteert. Een lege reeks is toegestaan (de
+     * knop doet dan niets; de app waarschuwt daarvoor).
+     */
+    public function saveFulfilFlow(Request $request): JsonResponse
+    {
+        $registry = app(\Dashed\DashedMobileApi\MobileApiRegistry::class);
+
+        $data = $request->validate([
+            'steps' => ['present', 'array'],
+            'steps.*.key' => [
+                'required',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail) use ($registry): void {
+                    $action = $registry->orderAction((string) $value);
+                    if (! $action || ! ($action['sequenceable'] ?? false)) {
+                        $fail("Onbekende of niet-sequenceable stap: {$value}.");
+                    }
+                },
+            ],
+            'steps.*.params' => ['sometimes', 'array'],
+        ]);
+
+        $steps = array_map(fn (array $step) => [
+            'key' => $step['key'],
+            'params' => $step['params'] ?? [],
+        ], $data['steps']);
+
+        $siteId = (string) \Dashed\DashedCore\Classes\Sites::getActive();
+        \Dashed\DashedCore\Models\Customsetting::set('fulfil_flow_sequence', json_encode($steps), $siteId);
+
+        return response()->json(['steps' => $steps]);
+    }
+
+    /**
      * Serialiseert een order-actie-veld voor de app. Zonder `$model` (bv. de
      * order-loze catalogus) worden callable `options`/`default` overgeslagen
      * in plaats van aangeroepen.

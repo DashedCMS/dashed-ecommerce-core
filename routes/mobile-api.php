@@ -145,6 +145,10 @@ Route::prefix('api/v1')
         // (voor de "Afronden"-knop) — order-loos, dus los van orders/{order}/*.
         Route::get('order-actions/catalog', [OrderController::class, 'actionCatalog'])->middleware('ability:orders.read');
 
+        // Per-site geconfigureerde stap-reeks voor de "Afronden"-knop zelf.
+        Route::get('settings/fulfil-flow', [OrderController::class, 'fulfilFlow'])->middleware('ability:orders.read');
+        Route::put('settings/fulfil-flow', [OrderController::class, 'saveFulfilFlow'])->middleware('ability:orders.write');
+
         // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write.
         Route::get('returns', [OrderReturnController::class, 'index'])->middleware('ability:orders.read');
         // Vóór de {orderReturn}-wildcard, anders wordt 'email-defaults' als id opgevat.
