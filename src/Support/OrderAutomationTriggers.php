@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Support;
 
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
@@ -120,11 +121,22 @@ class OrderAutomationTriggers
         ];
     }
 
-    /** @return array<string, string> */
+    /**
+     * Alleen origins/landen/betaalmethodes van de actieve site — zonder deze
+     * scope lekken deze condition-opties door naar andere sites in een
+     * multi-site installatie (de admin van site A zou landen/origins/
+     * betaalmethodes van site B in zijn voorwaarde-dropdown zien, en zou een
+     * voorwaarde kunnen opslaan die op zijn eigen site nooit matcht). `Order`
+     * heeft hiervoor al `scopeThisSite()`; `PaymentMethod` niet, dus die
+     * scopen we hier expliciet op dezelfde manier als
+     * AutomationRuleController.
+     *
+     * @return array<string, string>
+     */
     private static function originOptions(): array
     {
         $options = [];
-        foreach (Order::query()->whereNotNull('order_origin')->distinct()->pluck('order_origin') as $origin) {
+        foreach (Order::query()->thisSite()->whereNotNull('order_origin')->distinct()->pluck('order_origin') as $origin) {
             $options[$origin] = ucfirst($origin);
         }
 
@@ -135,7 +147,7 @@ class OrderAutomationTriggers
     private static function countryOptions(): array
     {
         $options = [];
-        foreach (Order::query()->whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country') as $country) {
+        foreach (Order::query()->thisSite()->whereNotNull('country')->where('country', '!=', '')->distinct()->orderBy('country')->pluck('country') as $country) {
             $options[$country] = $country;
         }
 
@@ -145,6 +157,10 @@ class OrderAutomationTriggers
     /** @return array<string, string> */
     private static function paymentMethodOptions(): array
     {
-        return PaymentMethod::query()->orderBy('name')->pluck('name', 'name')->all();
+        return PaymentMethod::query()
+            ->where('site_id', (string) Sites::getActive())
+            ->orderBy('name')
+            ->pluck('name', 'name')
+            ->all();
     }
 }
