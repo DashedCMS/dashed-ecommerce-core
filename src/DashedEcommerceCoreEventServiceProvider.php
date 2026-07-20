@@ -11,12 +11,25 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Listeners\PrintDocumentsAfterPaidOrder;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Dashed\DashedEcommerceCore\Listeners\Automation\AutomationTriggerSubscriber;
 use Dashed\DashedEcommerceCore\Listeners\OrderHandledFlow\QueueOrderFlowEmailsListener;
 use Dashed\DashedEcommerceCore\Listeners\AbandonedCart\CancelPendingAbandonedEmailsListener;
 use Dashed\DashedEcommerceCore\Listeners\AbandonedCart\QueueAbandonedCartEmailsForOrderListener;
 
 class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
 {
+    /**
+     * Subscribers registreren zichzelf op meerdere/dynamische event-classes.
+     * AutomationTriggerSubscriber luistert bij boot op alle event-classes
+     * die MobileApiRegistry::automationTriggers() registreert (zie de
+     * subscriber zelf) — dat kan niet als statische $listen-mapping.
+     *
+     * @var array
+     */
+    protected $subscribe = [
+        AutomationTriggerSubscriber::class,
+    ];
+
     /**
      * The event listener mappings for the application.
      *
