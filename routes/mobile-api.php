@@ -17,6 +17,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosConceptController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DiscountController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\AutomationRuleController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 
 /**
@@ -105,6 +106,13 @@ Route::prefix('api/v1')
         Route::post('discounts', [DiscountController::class, 'store'])->middleware('ability:discounts.write');
         Route::put('discounts/{id}', [DiscountController::class, 'update'])->middleware('ability:discounts.write');
         Route::delete('discounts/{id}', [DiscountController::class, 'destroy'])->middleware('ability:discounts.write');
+
+        // Automatiseringsregels: lezen met orders.read, de aan/uit-schakelaar met
+        // orders.write — dezelfde rechten als de order-acties die deze regels
+        // uitvoeren. Regel-inhoud bewerken kan alleen in het CMS.
+        Route::get('automation-rules', [AutomationRuleController::class, 'index'])->middleware('ability:orders.read');
+        Route::put('automation-rules/{id}', [AutomationRuleController::class, 'update'])->whereNumber('id')->middleware('ability:orders.write');
+        Route::get('automation-rule-runs', [AutomationRuleController::class, 'runs'])->middleware('ability:orders.read');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
