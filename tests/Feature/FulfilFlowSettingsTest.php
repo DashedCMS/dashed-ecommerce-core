@@ -40,3 +40,13 @@ it('accepts an empty steps array (the button then does nothing)', function () {
 
     $res->assertOk()->assertJson(['steps' => []]);
 });
+
+it('round-trips an explicitly stored empty sequence on the next GET', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+
+    $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => []], ['X-Site-Id' => 'site'])->assertOk();
+
+    $res = $this->getJson('/api/v1/settings/fulfil-flow', ['X-Site-Id' => 'site']);
+
+    $res->assertOk()->assertJson(['steps' => []]);
+});

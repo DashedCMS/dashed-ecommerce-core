@@ -1081,7 +1081,14 @@ class OrderController extends Controller
         $siteId = (string) \Dashed\DashedCore\Classes\Sites::getActive();
         $stored = \Dashed\DashedCore\Models\Customsetting::get('fulfil_flow_sequence', $siteId, null);
 
-        $steps = $stored !== null ? (json_decode($stored, true) ?? []) : self::DEFAULT_FULFIL_FLOW;
+        // `Customsetting::get()` decodes a stored '[]' itself and hands back a
+        // PHP array (an explicitly saved empty sequence); only json_decode()
+        // when it's still the raw string.
+        $steps = match (true) {
+            $stored === null => self::DEFAULT_FULFIL_FLOW,
+            is_array($stored) => $stored,
+            default => (json_decode($stored, true) ?? []),
+        };
 
         return response()->json(['steps' => $steps]);
     }
