@@ -219,6 +219,82 @@ it('edits an existing rule and updates its stored conditions/actions', function 
         ->and($rule->actions[0]['params'] ?? [])->toBe([]);
 });
 
+/**
+ * Task 8: de droogloop-rijactie ("Testen") op deze resource. RuleDryRun zelf
+ * (match/context/acties, nooit een handle aanroepen) wordt in RuleDryRunTest
+ * getest; hier alleen de CMS-specifieke bouwstenen — orderkeuze (site-scope,
+ * factuurnummer/ID-zoeken) en de weergave-mapping van RuleDryRun's resultaat.
+ */
+describe('dry run row action building blocks', function () {
+    it('labels an order by its invoice number, falling back to #id for a proforma/return placeholder', function () {
+        $withInvoice = Order::create(['email' => 'a@example.com', 'status' => 'paid', 'invoice_id' => 'F2026-001']);
+        $proforma = Order::create(['email' => 'b@example.com', 'status' => 'concept', 'invoice_id' => 'PROFORMA']);
+
+        expect(callAutomationResourceMethod('dryRunOrderLabel', [$withInvoice]))
+            ->toBe("F2026-001 — {$withInvoice->name}")
+            ->and(callAutomationResourceMethod('dryRunOrderLabel', [$proforma]))
+            ->toBe("#{$proforma->id} — {$proforma->name}")
+            ->and(callAutomationResourceMethod('dryRunOrderLabel', [null]))
+            ->toBeNull();
+    });
+
+    it('only offers orders from the rule’s own site when searching by invoice number or id', function () {
+        $rule = AutomationRule::create([
+            'site_id' => 'site',
+            'name' => 'Regel',
+            'trigger' => 'order.paid',
+            'conditions' => [],
+            'actions' => [],
+            'is_active' => true,
+        ]);
+
+        $ownOrder = Order::create(['email' => 'eigen@example.com', 'status' => 'paid', 'invoice_id' => 'F2026-100']);
+
+        config(['dashed-core.dashed_site_id' => 'andere-site']);
+        Order::create(['email' => 'ander@example.com', 'status' => 'paid', 'invoice_id' => 'F2026-100-B']);
+        config(['dashed-core.dashed_site_id' => 'site']);
+
+        $byInvoice = callAutomationResourceMethod('dryRunOrderOptions', [$rule, 'F2026-100']);
+        $byId = callAutomationResourceMethod('dryRunOrderOptions', [$rule, (string) $ownOrder->id]);
+
+        expect($byInvoice)->toBe([$ownOrder->id => callAutomationResourceMethod('dryRunOrderLabel', [$ownOrder])])
+            ->and($byId)->toBe([$ownOrder->id => callAutomationResourceMethod('dryRunOrderLabel', [$ownOrder])]);
+    });
+
+    it('maps a context array to human-readable field labels and value strings for display', function () {
+        $context = [
+            'total' => 123.45,
+            'has_discount_code' => true,
+            'country' => null,
+        ];
+
+        $display = callAutomationResourceMethod('dryRunContextForDisplay', [$context]);
+
+        expect($display)->toHaveKey(callAutomationResourceMethod('conditionFieldLabel', ['total']))
+            ->and($display[callAutomationResourceMethod('conditionFieldLabel', ['total'])])->toBe('123.45')
+            ->and($display[callAutomationResourceMethod('conditionFieldLabel', ['has_discount_code'])])->toBe('waar')
+            ->and($display[callAutomationResourceMethod('conditionFieldLabel', ['country'])])->toBe('-');
+    });
+
+    it('describes matched actions with their params, and a clear empty state for no actions or no match', function () {
+        $withParams = callAutomationResourceMethod('dryRunActionsForDisplay', [
+            [['key' => 'set_fulfillment_status', 'label' => 'Fulfilment-status wijzigen', 'params' => ['status' => 'packed']]],
+            true,
+        ]);
+        $withoutParams = callAutomationResourceMethod('dryRunActionsForDisplay', [
+            [['key' => 'mark_packed', 'label' => 'Markeer als ingepakt', 'params' => []]],
+            true,
+        ]);
+        $noActionsMatched = callAutomationResourceMethod('dryRunActionsForDisplay', [[], true]);
+        $noActionsUnmatched = callAutomationResourceMethod('dryRunActionsForDisplay', [[], false]);
+
+        expect($withParams)->toBe(['Fulfilment-status wijzigen ({"status":"packed"})'])
+            ->and($withoutParams)->toBe(['Markeer als ingepakt'])
+            ->and($noActionsMatched)->toBe(['Deze regel heeft geen acties.'])
+            ->and($noActionsUnmatched)->toBe(['Niet van toepassing — de regel matcht niet.']);
+    });
+});
+
 it('shows the recent runs of a rule via the runs relation manager relationship', function () {
     $rule = AutomationRule::create([
         'site_id' => 'site',

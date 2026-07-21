@@ -9,6 +9,7 @@ use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
 use Filament\Schemas\Schema;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
@@ -25,11 +26,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Filters\SelectFilter;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedMobileApi\MobileApiRegistry;
+use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
+use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Dashed\DashedEcommerceCore\Support\Automation\RuleDryRun;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\EditAutomationRule;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\ListAutomationRules;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\CreateAutomationRule;
@@ -278,6 +283,7 @@ class AutomationRuleResource extends Resource
             ])
             ->defaultSort('name')
             ->recordActions([
+                static::dryRunAction(),
                 EditAction::make()
                     ->button(),
                 DeleteAction::make(),
@@ -302,6 +308,175 @@ class AutomationRuleResource extends Resource
             'create' => CreateAutomationRule::route('/create'),
             'edit' => EditAutomationRule::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Droogloop ("test tegen bestelling"): een beheerder kiest een bestelling
+     * (op factuurnummer of ID) en ziet of déze regel zou matchen en welke
+     * acties zouden draaien — zonder dat er iets wordt uitgevoerd. Delegeert
+     * de match/actie-beschrijving volledig naar RuleDryRun (die zelf
+     * ConditionEvaluator/AutomationContext hergebruikt); deze actie roept dus
+     * zelf nooit een actie-`handle` aan.
+     *
+     * Zelfde "view-only modal"-patroon als OrderResource::table()'s
+     * bekijk-actie: geen submit-knop, enkel een sluitknop — dit scherm
+     * registreert of wijzigt niets.
+     */
+    private static function dryRunAction(): Action
+    {
+        return Action::make('dryRun')
+            ->label('Testen')
+            ->icon('heroicon-o-beaker')
+            ->color('gray')
+            ->modalHeading(fn (AutomationRule $record): string => "Droogloop — {$record->name}")
+            ->modalDescription('Kies een bestelling om te zien of deze regel zou matchen en welke acties zouden draaien. Er wordt niets uitgevoerd.')
+            ->modalWidth('2xl')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Sluiten')
+            ->schema(fn (AutomationRule $record): array => static::dryRunSchema($record));
+    }
+
+    /** @return array<int, Field|Section> */
+    private static function dryRunSchema(AutomationRule $record): array
+    {
+        return [
+            Select::make('order_id')
+                ->label('Bestelling (factuurnummer of ID)')
+                ->placeholder('Zoek op factuurnummer of ID')
+                ->native(false)
+                ->searchable()
+                ->live()
+                ->getSearchResultsUsing(fn (string $search): array => static::dryRunOrderOptions($record, $search))
+                ->getOptionLabelUsing(fn ($value): ?string => static::dryRunOrderLabel(Order::find($value))),
+
+            Section::make('Resultaat')
+                ->columnSpanFull()
+                ->visible(fn (Get $get): bool => filled($get('order_id')))
+                ->schema(fn (Get $get): array => static::dryRunResultSchema($record, $get('order_id'))),
+        ];
+    }
+
+    /**
+     * Bestellingen van de site van déze regel, gezocht op factuurnummer
+     * (deelstring) of exact ID — zelfde site-scope als elders in dit scherm
+     * (bv. conditionValueOptions): een regel van site A mag nooit tegen een
+     * order van site B getest worden.
+     *
+     * @return array<int|string, string|null>
+     */
+    private static function dryRunOrderOptions(AutomationRule $record, string $search): array
+    {
+        return Order::query()
+            ->where('site_id', $record->site_id)
+            ->where(function (Builder $query) use ($search): void {
+                $query->where('invoice_id', 'like', "%{$search}%");
+                if (is_numeric($search)) {
+                    $query->orWhere('id', (int) $search);
+                }
+            })
+            ->orderByDesc('id')
+            ->limit(25)
+            ->get()
+            ->mapWithKeys(fn (Order $order): array => [$order->id => static::dryRunOrderLabel($order)])
+            ->all();
+    }
+
+    /**
+     * 'PROFORMA'/'RETURN' zijn placeholder-waarden in invoice_id voor orders
+     * zonder echte factuur — daarvoor toont dit het order-ID in plaats van
+     * die placeholder-tekst.
+     */
+    private static function dryRunOrderLabel(?Order $order): ?string
+    {
+        if ($order === null) {
+            return null;
+        }
+
+        $invoice = filled($order->invoice_id) && ! in_array($order->invoice_id, ['PROFORMA', 'RETURN'], true)
+            ? $order->invoice_id
+            : "#{$order->id}";
+
+        return "{$invoice} — {$order->name}";
+    }
+
+    /**
+     * Het resultaat-blok voor de gekozen order: match ja/nee, de gebruikte
+     * contextwaarden en de acties die zouden draaien — exact de vorm die
+     * RuleDryRun::for() teruggeeft, hier weergegeven met Filament's eigen
+     * infolist-componenten (geen custom HTML, geen hardcoded kleuren).
+     *
+     * @return array<int, TextEntry|KeyValueEntry>
+     */
+    private static function dryRunResultSchema(AutomationRule $record, mixed $orderId): array
+    {
+        $order = is_numeric($orderId) ? Order::find($orderId) : null;
+
+        if ($order === null) {
+            return [
+                TextEntry::make('dry_run_missing')
+                    ->label('')
+                    ->state('Deze bestelling kon niet worden gevonden.'),
+            ];
+        }
+
+        $result = RuleDryRun::for($record, $order);
+
+        return [
+            TextEntry::make('dry_run_matched')
+                ->label('Match')
+                ->state($result['matched'] ? 'Ja, deze regel zou draaien' : 'Nee, deze regel zou niet draaien')
+                ->badge()
+                ->color($result['matched'] ? 'success' : 'gray'),
+
+            KeyValueEntry::make('dry_run_context')
+                ->label('Gebruikte contextwaarden')
+                ->keyLabel('Veld')
+                ->valueLabel('Waarde')
+                ->state(static::dryRunContextForDisplay($result['context'])),
+
+            TextEntry::make('dry_run_actions')
+                ->label('Acties die zouden draaien')
+                ->state(static::dryRunActionsForDisplay($result['actions'], $result['matched']))
+                ->listWithLineBreaks()
+                ->bulleted()
+                ->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     * @return array<string, string>
+     */
+    private static function dryRunContextForDisplay(array $context): array
+    {
+        $display = [];
+        foreach ($context as $field => $value) {
+            $display[static::conditionFieldLabel($field)] = match (true) {
+                is_bool($value) => $value ? 'waar' : 'onwaar',
+                is_array($value) => implode(', ', $value),
+                $value === null => '-',
+                default => (string) $value,
+            };
+        }
+
+        return $display;
+    }
+
+    /**
+     * @param  array<int, array{key: string, label: string, params: array<string, mixed>}>  $actions
+     * @return array<int, string>
+     */
+    private static function dryRunActionsForDisplay(array $actions, bool $matched): array
+    {
+        if ($actions === []) {
+            return [$matched ? 'Deze regel heeft geen acties.' : 'Niet van toepassing — de regel matcht niet.'];
+        }
+
+        return collect($actions)
+            ->map(fn (array $action): string => $action['params'] === []
+                ? $action['label']
+                : "{$action['label']} (" . json_encode($action['params']) . ')')
+            ->all();
     }
 
     /**
