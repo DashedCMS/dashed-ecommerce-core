@@ -143,3 +143,80 @@ it('falls back to the raw key as label for an action key that is no longer regis
             ['key' => 'does-not-exist', 'label' => 'does-not-exist', 'params' => ['a' => 1]],
         ]);
 });
+
+/**
+ * BEVINDING C2: `order.fulfillment_changed` heeft twee conditie-velden
+ * (old_status/new_status) die alleen via AutomationTriggerSubscriber::
+ * extraContext() bestaan — dus alléén tijdens de échte gebeurtenis, nooit in
+ * een droogloop tegen een statische, bestaande order. Deze groep bewijst dat
+ * RuleDryRun dat eerlijk rapporteert via `undeterminable_fields`, in plaats
+ * van een gegokte waarde te verzinnen of stilletjes `matched: false` te tonen
+ * alsof dat een definitief antwoord is.
+ */
+describe('undeterminable_fields — event-only conditie-velden (C2)', function () {
+    it('reports new_status as undeterminable for order.fulfillment_changed and still describes the actions, even though the raw match is false', function () {
+        registerNeverCalledAction('spy_fulfillment');
+
+        $order = dryRunOrder();
+        $rule = dryRunRule([
+            'trigger' => 'order.fulfillment_changed',
+            'conditions' => [['field' => 'new_status', 'operator' => 'eq', 'value' => 'shipped']],
+            'actions' => [['key' => 'spy_fulfillment', 'params' => []]],
+        ]);
+
+        $result = RuleDryRun::for($rule, $order);
+
+        expect($result['undeterminable_fields'])->toBe(['new_status'])
+            // De rauwe evaluator faalt hier fail-safe (het veld zit niet in de
+            // context), maar dat mag geen "regel matcht niet" betekenen: de
+            // acties worden alsnog beschreven, ter info.
+            ->and($result['matched'])->toBeFalse()
+            ->and($result['actions'])->toBe([
+                ['key' => 'spy_fulfillment', 'label' => 'Spy-actie', 'params' => []],
+            ]);
+    });
+
+    it('reports both old_status and new_status as undeterminable, in the order the conditions declare them', function () {
+        $order = dryRunOrder();
+        $rule = dryRunRule([
+            'trigger' => 'order.fulfillment_changed',
+            'conditions' => [
+                ['field' => 'old_status', 'operator' => 'eq', 'value' => 'pending'],
+                ['field' => 'new_status', 'operator' => 'eq', 'value' => 'shipped'],
+            ],
+            'actions' => [],
+        ]);
+
+        $result = RuleDryRun::for($rule, $order);
+
+        expect($result['undeterminable_fields'])->toBe(['old_status', 'new_status']);
+    });
+
+    it('leaves undeterminable_fields empty for order.fulfillment_changed when the rule does not condition on old_status/new_status, and computes the match normally', function () {
+        $order = dryRunOrder(['total' => 150]);
+        $rule = dryRunRule([
+            'trigger' => 'order.fulfillment_changed',
+            'conditions' => [['field' => 'total', 'operator' => 'gt', 'value' => 100]],
+            'actions' => [],
+        ]);
+
+        $result = RuleDryRun::for($rule, $order);
+
+        expect($result['undeterminable_fields'])->toBe([])
+            ->and($result['matched'])->toBeTrue();
+    });
+
+    it('leaves undeterminable_fields empty for a trigger without event-only fields (order.paid), match computed normally', function () {
+        $order = dryRunOrder(['total' => 10]);
+        $rule = dryRunRule([
+            'trigger' => 'order.paid',
+            'conditions' => [['field' => 'total', 'operator' => 'gt', 'value' => 100]],
+        ]);
+
+        $result = RuleDryRun::for($rule, $order);
+
+        expect($result['undeterminable_fields'])->toBe([])
+            ->and($result['matched'])->toBeFalse()
+            ->and($result['actions'])->toBe([]);
+    });
+});

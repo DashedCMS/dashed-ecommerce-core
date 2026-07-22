@@ -19,13 +19,27 @@ use Dashed\DashedEcommerceCore\Models\AutomationRule;
  * aangeroepen — dit is een test-tegen-bestelling-scherm, geen uitvoerpad.
  *
  * Geeft geen acties terug wanneer de regel niet matcht: er zou dan toch niets
- * draaien, dus is er niets zinvols te beschrijven.
+ * draaien, dus is er niets zinvols te beschrijven. Uitzondering: wanneer
+ * `undeterminable_fields` niet leeg is (zie hieronder) wordt er tóch
+ * beschreven, omdat "matcht niet" daar geen eerlijk antwoord is.
+ *
+ * `AutomationContext::forOrder()` wordt hier ALTIJD zonder `$extra`
+ * aangeroepen. Een droogloop test tegen een bestaande, statische order en kan
+ * de delta-velden die AutomationTriggerSubscriber::extraContext() per event
+ * toevoegt (bv. old_status/new_status bij order.fulfillment_changed) niet
+ * kennen — die bestaan pas op het moment van de échte gebeurtenis. Zelf een
+ * waarde verzinnen zou een stille misser kunnen zijn: de droogloop zou dan
+ * een matchresultaat tonen dat de motor op het echte event nooit zo zou
+ * geven. In plaats daarvan houdt `undeterminable_fields` bij op welke van dié
+ * event-only velden déze regel filtert, zodat de UI een waarschuwing kan
+ * tonen in plaats van een misleidend definitief "matched: false".
  */
 class RuleDryRun
 {
     /**
      * @return array{
      *     matched: bool,
+     *     undeterminable_fields: array<int, string>,
      *     context: array<string, mixed>,
      *     actions: array<int, array{key: string, label: string, params: array<string, mixed>}>,
      * }
@@ -34,12 +48,79 @@ class RuleDryRun
     {
         $context = AutomationContext::forOrder($order);
         $matched = ConditionEvaluator::matches($rule->conditions ?? [], $context);
+        $undeterminableFields = self::undeterminableFields($rule, $context);
+
+        // Een 'matched === false' die uitsluitend komt doordat een event-only
+        // veld (per definitie afwezig in $context) ConditionEvaluator's
+        // fail-safe raakt, is geen eerlijke "zou niet draaien" — de acties
+        // worden dan alsnog beschreven, ter info, net als bij een echte match.
+        $describeActions = $matched || $undeterminableFields !== [];
 
         return [
             'matched' => $matched,
+            'undeterminable_fields' => $undeterminableFields,
             'context' => $context,
-            'actions' => $matched ? self::describeActions($rule) : [],
+            'actions' => $describeActions ? self::describeActions($rule) : [],
         ];
+    }
+
+    /**
+     * Welke conditie-velden van déze regel filteren op een veld dat alleen
+     * tijdens de échte gebeurtenis bestaat — d.w.z. het zit niet in $context
+     * (die nooit `$extra` krijgt), terwijl de trigger het wél als geldig
+     * conditieveld registreert?
+     *
+     * Bron van waarheid: de trigger's geregistreerde `fields`
+     * (OrderAutomationTriggers::register()), niet reflectie op de event-class.
+     * Die twee lopen per constructie nooit uit de pas: een veld dat niet in
+     * `fields` staat is in AutomationRuleResource's conditie-Select sowieso
+     * niet te kiezen, dus kan hier ook nooit gemarkeerd hoeven worden. Voor
+     * `order.fulfillment_changed` bevat `fields` naast de kernvelden ook
+     * `old_status`/`new_status` — precies de twee velden die
+     * AutomationTriggerSubscriber::extraContext() dynamisch uit
+     * OrderFulfillmentStatusChangedEvent's publieke properties haalt.
+     *
+     * @param  array<string, mixed>  $context
+     * @return array<int, string>
+     */
+    private static function undeterminableFields(AutomationRule $rule, array $context): array
+    {
+        $triggerKey = $rule->trigger;
+        if (! is_string($triggerKey) || $triggerKey === '') {
+            return [];
+        }
+
+        $trigger = app(MobileApiRegistry::class)->automationTrigger($triggerKey);
+        if ($trigger === null) {
+            return [];
+        }
+
+        $triggerFields = is_array($trigger['fields'] ?? null) ? $trigger['fields'] : [];
+        $triggerFieldNames = [];
+        foreach ($triggerFields as $field) {
+            $name = is_array($field) ? ($field['name'] ?? null) : null;
+            if (is_string($name) && $name !== '') {
+                $triggerFieldNames[] = $name;
+            }
+        }
+
+        // Velden die de trigger kent maar die niet in de (event-loze) context
+        // zitten zijn "event-only" voor déze trigger.
+        $eventOnlyFields = array_diff($triggerFieldNames, array_keys($context));
+        if ($eventOnlyFields === []) {
+            return [];
+        }
+
+        // ... en dan alleen degene waarop déze regel daadwerkelijk filtert.
+        $conditionFields = [];
+        foreach (($rule->conditions ?? []) as $condition) {
+            $field = is_array($condition) ? ($condition['field'] ?? null) : null;
+            if (is_string($field) && in_array($field, $eventOnlyFields, true) && ! in_array($field, $conditionFields, true)) {
+                $conditionFields[] = $field;
+            }
+        }
+
+        return $conditionFields;
     }
 
     /**

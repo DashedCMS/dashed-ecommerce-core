@@ -238,6 +238,37 @@ describe('dry run row action building blocks', function () {
             ->toBeNull();
     });
 
+    /**
+     * BEVINDING C1: dryRunResultSchema()/getOptionLabelUsing haalden de order
+     * op met Order::find() zonder site-check — enkel de zoeksuggesties
+     * (dryRunOrderOptions, hierboven) filterden op site_id. Een beheerder kon
+     * zo via Livewire-state een order-ID van een ándere site injecteren en de
+     * droogloop daartegen laten draaien. dryRunFindOrder() is nu de ENIGE
+     * plek waar de droogloop een order ophaalt, en filtert altijd op de site
+     * van de regel.
+     */
+    it('scopes the order lookup for the dry run result to the rule’s own site, treating another site’s order as not found', function () {
+        $rule = AutomationRule::create([
+            'site_id' => 'site',
+            'name' => 'Regel',
+            'trigger' => 'order.paid',
+            'conditions' => [],
+            'actions' => [],
+            'is_active' => true,
+        ]);
+
+        $ownOrder = Order::create(['email' => 'eigen@example.com', 'status' => 'paid']);
+
+        config(['dashed-core.dashed_site_id' => 'andere-site']);
+        $otherSiteOrder = Order::create(['email' => 'ander@example.com', 'status' => 'paid']);
+        config(['dashed-core.dashed_site_id' => 'site']);
+
+        expect(callAutomationResourceMethod('dryRunFindOrder', [$rule, $otherSiteOrder->id]))
+            ->toBeNull()
+            ->and(callAutomationResourceMethod('dryRunFindOrder', [$rule, $ownOrder->id])?->is($ownOrder))
+            ->toBeTrue();
+    });
+
     it('only offers orders from the rule’s own site when searching by invoice number or id', function () {
         $rule = AutomationRule::create([
             'site_id' => 'site',
@@ -292,6 +323,47 @@ describe('dry run row action building blocks', function () {
             ->and($withoutParams)->toBe(['Markeer als ingepakt'])
             ->and($noActionsMatched)->toBe(['Deze regel heeft geen acties.'])
             ->and($noActionsUnmatched)->toBe(['Niet van toepassing — de regel matcht niet.']);
+    });
+
+    /**
+     * BEVINDING C2: wanneer undeterminable_fields niet leeg is, mag de
+     * "geen acties"-boodschap niet doen alsof "de regel matcht niet" een
+     * vaststaand feit is (dat weten we juist niet zeker).
+     */
+    it('does not claim "regel matcht niet" for an empty action list when the fields are undeterminable', function () {
+        $undeterminedNoActions = callAutomationResourceMethod('dryRunActionsForDisplay', [[], false, ['new_status']]);
+
+        expect($undeterminedNoActions)->toBe(['Deze regel heeft geen acties.']);
+    });
+});
+
+/**
+ * BEVINDING C2: dryRunMatchDisplay() is de plek waar RuleDryRun's rauwe
+ * `matched`-boolean vertaald wordt naar wat de beheerder daadwerkelijk te
+ * zien krijgt. Bij undeterminable_fields mag dat nooit een definitief
+ * "Nee, deze regel zou niet draaien" zijn.
+ */
+describe('dry run match display (C2 — geen misleidend "matched: false")', function () {
+    it('shows a definitive yes/no when there are no undeterminable fields', function () {
+        $matched = callAutomationResourceMethod('dryRunMatchDisplay', [
+            ['matched' => true, 'undeterminable_fields' => [], 'context' => [], 'actions' => []],
+        ]);
+        $unmatched = callAutomationResourceMethod('dryRunMatchDisplay', [
+            ['matched' => false, 'undeterminable_fields' => [], 'context' => [], 'actions' => []],
+        ]);
+
+        expect($matched)->toBe(['label' => 'Ja, deze regel zou draaien', 'color' => 'success'])
+            ->and($unmatched)->toBe(['label' => 'Nee, deze regel zou niet draaien', 'color' => 'gray']);
+    });
+
+    it('shows a warning instead of "Nee" when the raw match is false but fields are undeterminable, naming the fields', function () {
+        $display = callAutomationResourceMethod('dryRunMatchDisplay', [
+            ['matched' => false, 'undeterminable_fields' => ['new_status'], 'context' => [], 'actions' => []],
+        ]);
+
+        expect($display['color'])->toBe('warning')
+            ->and($display['label'])->not->toContain('Nee, deze regel zou niet draaien')
+            ->and($display['label'])->toContain(callAutomationResourceMethod('conditionFieldLabel', ['new_status']));
     });
 });
 

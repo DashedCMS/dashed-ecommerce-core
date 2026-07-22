@@ -347,7 +347,7 @@ class AutomationRuleResource extends Resource
                 ->searchable()
                 ->live()
                 ->getSearchResultsUsing(fn (string $search): array => static::dryRunOrderOptions($record, $search))
-                ->getOptionLabelUsing(fn ($value): ?string => static::dryRunOrderLabel(Order::find($value))),
+                ->getOptionLabelUsing(fn ($value): ?string => static::dryRunOrderLabel(static::dryRunFindOrder($record, $value))),
 
             Section::make('Resultaat')
                 ->columnSpanFull()
@@ -382,6 +382,27 @@ class AutomationRuleResource extends Resource
     }
 
     /**
+     * Haalt de order voor de droogloop site-gescoped op — dezelfde scope als
+     * dryRunOrderOptions() hierboven. Zonder deze check zou een beheerder via
+     * Livewire-state een order-ID van een ándere site kunnen injecteren
+     * (bv. via de dev tools) en de match-berekening (dryRunResultSchema) én
+     * het optie-label (getOptionLabelUsing) daartegen laten draaien, ook al
+     * biedt de zoek-Select zelf alleen orders van de eigen site aan. Een
+     * order die niet bij de site van déze regel hoort is hier "niet
+     * gevonden", nooit een geldige order om tegen te matchen.
+     */
+    private static function dryRunFindOrder(AutomationRule $record, mixed $orderId): ?Order
+    {
+        if (! is_numeric($orderId)) {
+            return null;
+        }
+
+        return Order::query()
+            ->where('site_id', $record->site_id)
+            ->find($orderId);
+    }
+
+    /**
      * 'PROFORMA'/'RETURN' zijn placeholder-waarden in invoice_id voor orders
      * zonder echte factuur — daarvoor toont dit het order-ID in plaats van
      * die placeholder-tekst.
@@ -400,16 +421,19 @@ class AutomationRuleResource extends Resource
     }
 
     /**
-     * Het resultaat-blok voor de gekozen order: match ja/nee, de gebruikte
-     * contextwaarden en de acties die zouden draaien — exact de vorm die
-     * RuleDryRun::for() teruggeeft, hier weergegeven met Filament's eigen
-     * infolist-componenten (geen custom HTML, geen hardcoded kleuren).
+     * Het resultaat-blok voor de gekozen order: match ja/nee (of "onbekend",
+     * zie dryRunMatchDisplay()), de gebruikte contextwaarden en de acties die
+     * zouden draaien — exact de vorm die RuleDryRun::for() teruggeeft, hier
+     * weergegeven met Filament's eigen infolist-componenten (geen custom
+     * HTML, geen hardcoded kleuren). De order wordt via dryRunFindOrder()
+     * site-gescoped opgehaald: een order van een andere site is hier "niet
+     * gevonden", niet een geldig testdoel.
      *
      * @return array<int, TextEntry|KeyValueEntry>
      */
     private static function dryRunResultSchema(AutomationRule $record, mixed $orderId): array
     {
-        $order = is_numeric($orderId) ? Order::find($orderId) : null;
+        $order = static::dryRunFindOrder($record, $orderId);
 
         if ($order === null) {
             return [
@@ -420,13 +444,14 @@ class AutomationRuleResource extends Resource
         }
 
         $result = RuleDryRun::for($record, $order);
+        $matchDisplay = static::dryRunMatchDisplay($result);
 
         return [
             TextEntry::make('dry_run_matched')
                 ->label('Match')
-                ->state($result['matched'] ? 'Ja, deze regel zou draaien' : 'Nee, deze regel zou niet draaien')
+                ->state($matchDisplay['label'])
                 ->badge()
-                ->color($result['matched'] ? 'success' : 'gray'),
+                ->color($matchDisplay['color']),
 
             KeyValueEntry::make('dry_run_context')
                 ->label('Gebruikte contextwaarden')
@@ -436,10 +461,42 @@ class AutomationRuleResource extends Resource
 
             TextEntry::make('dry_run_actions')
                 ->label('Acties die zouden draaien')
-                ->state(static::dryRunActionsForDisplay($result['actions'], $result['matched']))
+                ->state(static::dryRunActionsForDisplay($result['actions'], $result['matched'], $result['undeterminable_fields']))
                 ->listWithLineBreaks()
                 ->bulleted()
                 ->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * Vertaalt RuleDryRun's ruwe resultaat naar een label + semantische kleur
+     * voor de "Match"-regel. Wanneer `undeterminable_fields` niet leeg is, mag
+     * de ruwe `matched`-boolean (die door ConditionEvaluator's fail-safe
+     * altijd `false` teruggeeft zodra een conditieveld ontbreekt) NOOIT als
+     * "Nee, deze regel zou niet draaien" getoond worden — dat zou een gok
+     * voordoen als een feit. In dat geval toont dit i.p.v. een definitief
+     * ja/nee een waarschuwing (kleur 'warning', geen 'danger': het is geen
+     * fout, enkel onvolledige informatie) met de betrokken veldnamen.
+     *
+     * @param  array{matched: bool, undeterminable_fields: array<int, string>, context: array<string, mixed>, actions: array<int, array<string, mixed>>}  $result
+     * @return array{label: string, color: string}
+     */
+    private static function dryRunMatchDisplay(array $result): array
+    {
+        if ($result['undeterminable_fields'] !== []) {
+            $fields = collect($result['undeterminable_fields'])
+                ->map(fn (string $field): string => static::conditionFieldLabel($field))
+                ->implode(', ');
+
+            return [
+                'label' => "Onbekend — deze regel filtert ook op '{$fields}'. Die waarde bestaat pas tijdens de echte gebeurtenis en is in een droogloop niet na te bootsen, dus is de match hierboven niet doorslaggevend.",
+                'color' => 'warning',
+            ];
+        }
+
+        return [
+            'label' => $result['matched'] ? 'Ja, deze regel zou draaien' : 'Nee, deze regel zou niet draaien',
+            'color' => $result['matched'] ? 'success' : 'gray',
         ];
     }
 
@@ -464,12 +521,17 @@ class AutomationRuleResource extends Resource
 
     /**
      * @param  array<int, array{key: string, label: string, params: array<string, mixed>}>  $actions
+     * @param  array<int, string>  $undeterminableFields  zie RuleDryRun::for(): niet-leeg betekent
+     *         dat 'matched' geen betrouwbaar definitief antwoord is, dus tonen
+     *         we hier ook geen "matcht niet"-boodschap alsof dat vaststaat.
      * @return array<int, string>
      */
-    private static function dryRunActionsForDisplay(array $actions, bool $matched): array
+    private static function dryRunActionsForDisplay(array $actions, bool $matched, array $undeterminableFields = []): array
     {
         if ($actions === []) {
-            return [$matched ? 'Deze regel heeft geen acties.' : 'Niet van toepassing — de regel matcht niet.'];
+            return ($matched || $undeterminableFields !== [])
+                ? ['Deze regel heeft geen acties.']
+                : ['Niet van toepassing — de regel matcht niet.'];
         }
 
         return collect($actions)
