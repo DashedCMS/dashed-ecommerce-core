@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Support\Automation;
 
-use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 
 /**
@@ -90,7 +90,12 @@ class RuleDryRun
             return [];
         }
 
-        $trigger = app(MobileApiRegistry::class)->automationTrigger($triggerKey);
+        $registry = self::registry();
+        if ($registry === null) {
+            return [];
+        }
+
+        $trigger = $registry->automationTrigger($triggerKey);
         if ($trigger === null) {
             return [];
         }
@@ -135,7 +140,7 @@ class RuleDryRun
      */
     private static function describeActions(AutomationRule $rule): array
     {
-        $registry = app(MobileApiRegistry::class);
+        $registry = self::registry();
 
         $described = [];
         foreach (($rule->actions ?? []) as $action) {
@@ -144,7 +149,9 @@ class RuleDryRun
                 continue;
             }
 
-            $definition = $registry->orderAction($key);
+            // Zonder mobile-api geen registry-definitie: val terug op de kale
+            // key als label, net als bij een onbekende actie-key.
+            $definition = $registry?->orderAction($key);
             $params = is_array($action) && is_array($action['params'] ?? null) ? $action['params'] : [];
 
             $described[] = [
@@ -155,5 +162,20 @@ class RuleDryRun
         }
 
         return $described;
+    }
+
+    /**
+     * De MobileApiRegistry-singleton, of null wanneer dashed-mobile-api niet
+     * geïnstalleerd is. ec-core vereist dat package niet (soft dependency),
+     * dus mag de droogloop niet klappen op een ontbrekende registry — zelfde
+     * class_exists-guard als AutomationRuleResource::registry().
+     */
+    private static function registry(): ?MobileApiRegistry
+    {
+        if (! class_exists(MobileApiRegistry::class)) {
+            return null;
+        }
+
+        return app(MobileApiRegistry::class);
     }
 }

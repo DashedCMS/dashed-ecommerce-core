@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Jobs\RunAutomationRuleJob;
-use Dashed\DashedEcommerceCore\Support\Automation\AutomationContext;
 use Dashed\DashedEcommerceCore\Support\Automation\AutomationEngine;
+use Dashed\DashedEcommerceCore\Support\Automation\AutomationContext;
 use Dashed\DashedEcommerceCore\Support\Automation\ConditionEvaluator;
 
 /**
@@ -27,6 +27,16 @@ class AutomationTriggerSubscriber
 {
     public function subscribe(Dispatcher $events): void
     {
+        // ec-core vereist dashed-mobile-api niet (soft dependency): de
+        // trigger-registry woont dáár. Zonder dat package bestaat de class
+        // niet en zou app(MobileApiRegistry::class) de boot laten crashen —
+        // deze subscriber draait bij élke boot. Dezelfde class_exists-guard
+        // als AutomationRuleResource::registry() en de ServiceProvider-
+        // registratie: geen mobile-api → geen triggers → niets te luisteren.
+        if (! class_exists(MobileApiRegistry::class)) {
+            return;
+        }
+
         $registry = app(MobileApiRegistry::class);
 
         foreach ($registry->automationTriggers() as $trigger) {
