@@ -8,8 +8,8 @@ use Closure;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
-use Filament\Schemas\Schema;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
@@ -20,21 +20,21 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Group;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedMobileApi\MobileApiRegistry;
 use Filament\Infolists\Components\TextEntry;
-use Dashed\DashedEcommerceCore\Models\AutomationRule;
-use Filament\Infolists\Components\KeyValueEntry;
+use Dashed\DashedMobileApi\MobileApiRegistry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Filament\Infolists\Components\KeyValueEntry;
+use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Support\Automation\RuleDryRun;
+use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\EditAutomationRule;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\ListAutomationRules;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\CreateAutomationRule;
@@ -568,6 +568,11 @@ class AutomationRuleResource extends Resource
 
         $options = [];
         foreach ($registry->automationTriggers() as $key => $trigger) {
+            // Sluit tijd-triggers uit (B2); die krijgen later hun schedule-subformulier
+            if (($trigger['type'] ?? null) === 'time') {
+                continue;
+            }
+
             $options[$key] = (string) ($trigger['label'] ?? $key);
         }
 
