@@ -77,6 +77,25 @@ it('paid anker: negeert niet-paid betalingen', function () {
     expect(TimeAnchors::timeFor($order, 'paid'))->toBeNull();
 });
 
+it('paid anker: een eerdere niet-paid betaling telt niet mee, alleen de latere paid-betaling', function () {
+    $order = timeAnchorsOrder();
+    $pending = $order->orderPayments()->create(['status' => 'pending', 'amount' => 5]);
+    $pending->forceFill(['created_at' => Carbon::parse('2026-01-01 00:00')])->save();
+    addPaidPayment($order, Carbon::parse('2026-01-20 00:00'));
+
+    expect(TimeAnchors::timeFor($order, 'paid')->toDateTimeString())->toBe('2026-01-20 00:00:00');
+
+    $idsBeforeEarly = Order::query()
+        ->tap(fn ($q) => TimeAnchors::applyBefore($q, 'paid', Carbon::parse('2026-01-15')))
+        ->pluck('id');
+    expect($idsBeforeEarly)->not->toContain($order->id);
+
+    $idsBeforeLate = Order::query()
+        ->tap(fn ($q) => TimeAnchors::applyBefore($q, 'paid', Carbon::parse('2026-01-25')))
+        ->pluck('id');
+    expect($idsBeforeLate)->toContain($order->id);
+});
+
 it('timeFor gooit een InvalidArgumentException bij een onbekend anker', function () {
     $order = timeAnchorsOrder();
 
