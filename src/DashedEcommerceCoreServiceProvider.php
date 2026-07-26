@@ -43,7 +43,6 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\CreateTrackAndTrace;
 use Dashed\DashedEcommerceCore\Commands\RecalculatePurchasesCommand;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\Searchbar;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\ShowProduct;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentsList;
 use Dashed\DashedEcommerceCore\Middleware\EcommerceFrontendMiddleware;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
@@ -72,6 +71,7 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
@@ -1825,6 +1825,9 @@ MARKDOWN,
 
             // Triggers voor automatiseringsregels die uitgaan van een Order.
             \Dashed\DashedEcommerceCore\Support\OrderAutomationTriggers::register($mobileApi);
+
+            // Tijd-triggers (B2) voor automatiseringsregels die op tijd vuren.
+            \Dashed\DashedEcommerceCore\Support\TimeAutomationTriggers::register($mobileApi);
 
             $mobileApi->registerDashboardContributor(function (string $siteId, $period = null): array {
                 // Oudere mobile-api roept de contributor zonder periode aan; val

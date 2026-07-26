@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Support;
 
 use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedMobileApi\MobileApiRegistry;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
@@ -93,7 +93,7 @@ class OrderAutomationTriggers
      *
      * @return array<int, array<string, mixed>>
      */
-    private static function orderConditionFields(): array
+    public static function orderConditionFields(): array
     {
         return [
             ['name' => 'total', 'label' => 'Totaalbedrag', 'type' => 'number'],

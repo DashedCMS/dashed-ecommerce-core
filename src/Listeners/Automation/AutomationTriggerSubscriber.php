@@ -40,6 +40,12 @@ class AutomationTriggerSubscriber
         $registry = app(MobileApiRegistry::class);
 
         foreach ($registry->automationTriggers() as $trigger) {
+            // Sommige triggers (bv. tijd-triggers) vuren niet via events maar
+            // via een uurlijkse scan — die hebben geen 'event'-key.
+            if (! isset($trigger['event'])) {
+                continue;
+            }
+
             $events->listen($trigger['event'], function (object $event) use ($trigger): void {
                 $this->handle($trigger, $event);
             });
