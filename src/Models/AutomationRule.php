@@ -18,12 +18,14 @@ class AutomationRule extends Model
         'trigger',
         'conditions',
         'actions',
+        'schedule',
         'is_active',
     ];
 
     protected $casts = [
         'conditions' => 'array',
         'actions' => 'array',
+        'schedule' => 'array',
         'is_active' => 'boolean',
     ];
 

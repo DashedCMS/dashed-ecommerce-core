@@ -25,6 +25,7 @@ class AutomationRuleResource extends JsonResource
             'is_active' => (bool) $this->is_active,
             'last_run_at' => $this->lastRunAt(),
             'actions_count' => count($this->actions ?? []),
+            'schedule' => $this->schedule,
         ];
     }
 
