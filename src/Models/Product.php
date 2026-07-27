@@ -86,6 +86,8 @@ class Product extends Model
         'end_date' => 'datetime',
         'expected_in_stock_date' => 'datetime',
         'low_stock_alerted_at' => 'datetime',
+        'automation_stock_zero_at' => 'datetime',
+        'automation_stock_recovered_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -129,6 +131,32 @@ class Product extends Model
         });
 
         static::saved(function ($product) {
+            // Marker voor StockRuleScanner's stock.low/stock.back dedup+reset:
+            // uit de run-historie alleen is niet af te leiden of dit product
+            // ooit op 0 heeft gestaan (er wordt nergens een voorraad-historie
+            // bijgehouden), dus leggen we de 0-episode hier vast op het
+            // moment dat hij écht overgaat. Query-builder update (geen
+            // ->save()) zodat dit geen nieuwe model-events triggert. Moet
+            // vóór removeInvalidImages() draaien: die roept intern
+            // saveQuietly() aan, wat (ongeacht of er iets te updaten viel)
+            // altijd syncOriginal() aanroept en zo getOriginal('stock') hier
+            // verderop al zou laten samenvallen met de nieuwe waarde.
+            if ($product->wasChanged('stock')) {
+                $originalStock = (int) $product->getOriginal('stock');
+                $currentStock = (int) $product->stock;
+
+                if ($currentStock === 0 && $originalStock !== 0) {
+                    static::whereKey($product->getKey())->update([
+                        'automation_stock_zero_at' => now(),
+                        'automation_stock_recovered_at' => null,
+                    ]);
+                } elseif ($currentStock > 0 && $originalStock === 0 && $product->automation_stock_zero_at) {
+                    static::whereKey($product->getKey())->update([
+                        'automation_stock_recovered_at' => now(),
+                    ]);
+                }
+            }
+
             if (! $product->is_bundle) {
                 $product->bundleProducts()->detach();
             }
