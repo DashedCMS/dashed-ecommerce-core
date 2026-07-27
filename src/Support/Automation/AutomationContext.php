@@ -91,7 +91,10 @@ class AutomationContext
      *
      * `order_count`/`total_spend` tellen over alle bestellingen van die klant
      * (inclusief `$order` zelf), niet begrensd op `created_at` t.o.v. deze
-     * order.
+     * order — wél begrensd op `site_id`: een regel van site A mag nooit
+     * meetellen met bestellingen van site B (site-bewuste beslissing van de
+     * gebruiker, fix-ronde 1). Eenzelfde klant die op meerdere sites bestelt
+     * telt dus per site apart.
      *
      * @return array<string, mixed>
      */
@@ -100,6 +103,8 @@ class AutomationContext
         $ordersOfCustomer = $order->user_id
             ? Order::query()->where('user_id', $order->user_id)
             : Order::query()->where('email', $order->email);
+
+        $ordersOfCustomer->where('site_id', $order->site_id);
 
         return [
             'order_count' => (int) (clone $ordersOfCustomer)->count(),

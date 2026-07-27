@@ -64,6 +64,24 @@ it('forCustomer telt bestellingen van dezelfde klant (gast, via email)', functio
     expect($o1->id)->not->toBe($o2->id);
 });
 
+it('forCustomer telt alleen bestellingen op dezelfde site als de order', function () {
+    $sameSite1 = automationContextOrder(['email' => 'a@b.nl', 'total' => 10]);
+    $sameSite2 = automationContextOrder(['email' => 'a@b.nl', 'total' => 20]);
+
+    // Order::boot() overschrijft site_id bij create() altijd met Sites::getActive();
+    // forceFill()->save() (buiten de creating-hook om) is de manier om 'm daarna
+    // naar een andere site te verplaatsen, zoals ook TimeAnchorsTest doet voor created_at.
+    $otherSite = automationContextOrder(['email' => 'a@b.nl', 'total' => 1000]);
+    $otherSite->forceFill(['site_id' => 'other-site'])->save();
+
+    expect($otherSite->fresh()->site_id)->not->toBe($sameSite2->site_id);
+
+    $ctx = AutomationContext::forCustomer($sameSite2->fresh());
+
+    expect($ctx['order_count'])->toBe(2)
+        ->and($ctx['total_spend'])->toBe(30.0);
+});
+
 it('forCustomer telt op user_id voor geregistreerde klanten', function () {
     $user = User::factory()->create();
 
