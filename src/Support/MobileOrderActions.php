@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Support;
 
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedMobileApi\MobileApiRegistry;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
-use Dashed\DashedEcommerceCore\Models\Printer;
-use Dashed\DashedMobileApi\MobileApiRegistry;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterManualPaymentAction;
 
@@ -299,6 +300,62 @@ class MobileOrderActions
                         ->title((string) ($data['title'] ?? ''))
                         ->body((string) ($data['body'] ?? ''))
                         ->route("/order/{$o->id}")
+                        ->toAbility((string) ($data['ability'] ?? 'orders.read'))
+                        ->send();
+                },
+            ],
+            [
+                'key' => 'notify',
+                'label' => 'Stuur melding',
+                'group' => 'Communicatie',
+                'icon' => 'notifications-outline',
+                // Onderwerp-agnostisch (product of order) — bedoeld voor
+                // automatiseringsregels op voorraad-/klant-triggers waarvan het
+                // onderwerp geen order is (bv. een productwijziging), maar werkt
+                // ook op een order. Zie de handler hieronder voor de routing.
+                'automatable' => true,
+                'fields' => [
+                    ['name' => 'title', 'label' => 'Titel', 'type' => 'text', 'required' => false],
+                    ['name' => 'body', 'label' => 'Bericht', 'type' => 'text', 'required' => false],
+                    [
+                        'name' => 'ability',
+                        'label' => 'Recht (wie ontvangt de melding)',
+                        'type' => 'select',
+                        'required' => false,
+                        'options' => array_combine($registry->abilities(), $registry->abilities()),
+                        'default' => 'orders.read',
+                    ],
+                ],
+                'visible' => fn (Order $o) => true,
+                // Model-getypeerd (niet Order): de automatiseringsmotor
+                // (AutomationEngine::runActions) roept elke handler aan met het
+                // run-onderwerp als eerste argument, en dat onderwerp kan een
+                // Product óf een Order zijn — een Order-getypeerde handler zou
+                // een TypeError geven zodra deze actie op een product-trigger
+                // draait.
+                'handle' => function (\Illuminate\Database\Eloquent\Model $subject, array $data): void {
+                    if (! class_exists(\Dashed\DashedMobileApi\Support\NotificationCenter::class)) {
+                        return;
+                    }
+
+                    [$route, $defaultTitle, $defaultBody] = match (true) {
+                        $subject instanceof Product => ["/product/{$subject->id}", 'Voorraad-melding', (string) $subject->name],
+                        $subject instanceof Order => ["/order/{$subject->id}", 'Klant-melding', (string) $subject->email],
+                        default => [null, null, null],
+                    };
+
+                    if ($route === null) {
+                        // Onbekend onderwerp — geen push, niets om naartoe te routeren.
+                        return;
+                    }
+
+                    $title = trim((string) ($data['title'] ?? ''));
+                    $body = trim((string) ($data['body'] ?? ''));
+
+                    app(\Dashed\DashedMobileApi\Support\NotificationCenter::class)->push()
+                        ->title($title !== '' ? $title : $defaultTitle)
+                        ->body($body !== '' ? $body : $defaultBody)
+                        ->route($route)
                         ->toAbility((string) ($data['ability'] ?? 'orders.read'))
                         ->send();
                 },
