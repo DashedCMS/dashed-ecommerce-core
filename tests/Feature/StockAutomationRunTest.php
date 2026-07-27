@@ -87,9 +87,13 @@ it('draait een stock.low-regel één keer voor een product onder de limiet via d
         ->and($runs->first()->status)->toBe(AutomationRuleRun::STATUS_SUCCESS)
         ->and($runs->first()->subject_type)->toBe(Product::class);
 
-    // Tweede scan: geen tweede run — StockRuleScanner::lowCandidates() sluit
-    // het product al uit zodra er een geslaagde run voor (regel, product)
-    // bestaat (dedup, Task 5).
+    // Tweede scan: geen tweede run. Dit bewijst end-to-end "één run per
+    // product" via het commando — niet specifiek de scanner-dedup: hier
+    // blokkeert AutomationEngine's eigen 5-minuten-rerun-window (Automation-
+    // Engine::RERUN_WINDOW_MINUTES) de tweede run al, ongeacht of
+    // StockRuleScanner::lowCandidates() het product ook had uitgesloten. De
+    // scanner-dedup zelf (whereNotExists op een geslaagde run sinds de
+    // laatste 0-episode) wordt geïsoleerd bewezen in StockRuleScannerTest.
     Artisan::call('dashed:run-time-automations');
     expect(AutomationRuleRun::where('rule_id', $rule->id)->where('subject_id', $product->id)->count())->toBe(1);
 });

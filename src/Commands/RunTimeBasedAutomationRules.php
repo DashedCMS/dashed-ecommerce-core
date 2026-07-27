@@ -83,9 +83,22 @@ class RunTimeBasedAutomationRules extends Command
      * bijkomt die StockAutomationTriggers (of een ander package) registreert
      * met `type => 'stock'`, zonder dat dit commando zelf hoeft te weten
      * welke keys dat precies zijn.
+     *
+     * ec-core vereist dashed-mobile-api niet (soft dependency): de
+     * trigger-registry woont dáár. Zonder dat package bestaat de class niet,
+     * en dit commando draait uurlijks via de scheduler — een ongeguarde
+     * app(MobileApiRegistry::class) zou het dus op élke tick laten crashen,
+     * ook als er nul voorraad-regels zijn. Zelfde class_exists-guard als
+     * AutomationRuleResource::registry(), RuleDryRun::registry() en
+     * AutomationTriggerSubscriber::subscribe(): geen mobile-api → geen
+     * triggers → niets om te scannen.
      */
     private function scanStockRules(): void
     {
+        if (! class_exists(MobileApiRegistry::class)) {
+            return;
+        }
+
         $registry = app(MobileApiRegistry::class);
 
         $stockTriggerKeys = collect($registry->automationTriggers())
