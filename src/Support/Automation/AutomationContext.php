@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Support\Automation;
 
+use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 /**
  * Bouwt de waardecontext die ConditionEvaluator::matches() nodig heeft, voor
@@ -61,5 +63,69 @@ class AutomationContext
         }
 
         return is_array($order->applied_discount_codes) && count($order->applied_discount_codes) > 0;
+    }
+
+    /**
+     * Context voor voorraad-triggers (stock.low/stock.back e.d.): het Product
+     * zelf is het onderwerp.
+     *
+     * @return array<string, mixed>
+     */
+    public static function forProduct(Product $product): array
+    {
+        return [
+            'stock' => (int) $product->stock,
+            'price' => (float) $product->price,
+            'name' => (string) $product->name,
+            'sku' => (string) $product->sku,
+        ];
+    }
+
+    /**
+     * Context voor klant-triggers (customer.new/customer.nth_order e.d.): de
+     * Order is het onderwerp (ook voor gasten, die geen User hebben), maar de
+     * conditie-velden gaan over de klánt erachter. Die klant is `user_id`
+     * (geregistreerd) of, als die ontbreekt, `email` (gast) — geen bredere
+     * naam-matching zoals Order::scopeForCustomerOf(), want die telt bewust
+     * ruimer (ook first_name+last_name) dan wat hier gevraagd wordt.
+     *
+     * `order_count`/`total_spend` tellen over alle bestellingen van die klant
+     * (inclusief `$order` zelf), niet begrensd op `created_at` t.o.v. deze
+     * order.
+     *
+     * @return array<string, mixed>
+     */
+    public static function forCustomer(Order $order): array
+    {
+        $ordersOfCustomer = $order->user_id
+            ? Order::query()->where('user_id', $order->user_id)
+            : Order::query()->where('email', $order->email);
+
+        return [
+            'order_count' => (int) (clone $ordersOfCustomer)->count(),
+            'total_spend' => (float) (clone $ordersOfCustomer)->sum('total'),
+            'email' => (string) $order->email,
+            'is_registered' => filled($order->user_id),
+        ];
+    }
+
+    /**
+     * Dispatcht op het type van het onderwerp. Klant-context hoort óók bij
+     * een Order-onderwerp (klant-triggers gebruiken de Order als onderwerp),
+     * maar dat is geen taak van deze dispatcher: de subscriber geeft voor een
+     * klant-trigger `forCustomer($order)` zelf mee als `$extra` (zie Task 2/3).
+     * Onbekend subject-type → `[]` (fail-closed): een regel op een type dat
+     * we niet kennen mag nooit stilzwijgend op de verkeerde velden matchen.
+     *
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
+     */
+    public static function for(Model $subject, array $extra = []): array
+    {
+        return match ($subject::class) {
+            Order::class => self::forOrder($subject, $extra),
+            Product::class => self::forProduct($subject),
+            default => [],
+        };
     }
 }
