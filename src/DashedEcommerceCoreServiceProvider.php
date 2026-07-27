@@ -1470,6 +1470,10 @@ MARKDOWN,
                 ->hourly()
                 ->withoutOverlapping();
 
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class)
+                ->hourly()
+                ->withoutOverlapping();
+
             // Recommendation co-purchase precompute. Default 03:00; allow
             // site-specific override via Customsetting on high-volume stores.
             $cron = (string) \Dashed\DashedCore\Models\Customsetting::get('recommendation_copurchase_recompute_cron', null, '0 3 * * *');
@@ -2250,6 +2254,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\CheckLowStock::class,
                 \Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class,
             ]);
 
     }
