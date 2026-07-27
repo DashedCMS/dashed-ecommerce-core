@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Support\Automation;
 
+use Carbon\Carbon;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
@@ -61,6 +62,53 @@ class RuleDryRun
             'undeterminable_fields' => $undeterminableFields,
             'context' => $context,
             'actions' => $describeActions ? self::describeActions($rule) : [],
+        ];
+    }
+
+    /**
+     * Droogloop voor een tijd-regel (schedule.mode 'relative'/'recurring'):
+     * geen enkele order, dus geen "zou déze order matchen" maar "hoeveel
+     * orders zouden er NÚ door deze regel gevuurd worden". Hergebruikt exact
+     * hetzelfde drietal als RunTimeBasedAutomationRules::handle() — de échte
+     * scan-job — namelijk TimeRuleScanner voor de kandidaten en
+     * ConditionEvaluator/AutomationContext voor de match: alleen ontbreekt
+     * hier de laatste stap, `AutomationEngine::run()`. Die wordt bewust
+     * NERGENS in dit pad aangeroepen, direct noch indirect — dit telt enkel.
+     *
+     * Een onbekende/ontbrekende `schedule.mode` (of geen schedule) levert een
+     * lege kandidatenlijst op (via de `default => collect()` hieronder), dus
+     * `would_fire_count: 0` en geen acties — net zo fail-safe als
+     * TimeRuleScanner zelf bij een ongeldige schedule.
+     *
+     * @return array{
+     *     mode: ?string,
+     *     would_fire_count: int,
+     *     actions: array<int, array{key: string, label: string, params: array<string, mixed>}>,
+     * }
+     */
+    public static function forSchedule(AutomationRule $rule, Carbon $now): array
+    {
+        $schedule = $rule->schedule ?? [];
+        $mode = is_string($schedule['mode'] ?? null) ? $schedule['mode'] : null;
+
+        $candidates = match ($mode) {
+            'relative' => TimeRuleScanner::relativeCandidates($rule, $now),
+            'recurring' => TimeRuleScanner::recurringCandidates($rule, $now),
+            default => collect(),
+        };
+
+        $wouldFireCount = 0;
+        foreach ($candidates as $order) {
+            $context = AutomationContext::forOrder($order);
+            if (ConditionEvaluator::matches($rule->conditions ?? [], $context)) {
+                $wouldFireCount++;
+            }
+        }
+
+        return [
+            'mode' => $mode,
+            'would_fire_count' => $wouldFireCount,
+            'actions' => $wouldFireCount > 0 ? self::describeActions($rule) : [],
         ];
     }
 

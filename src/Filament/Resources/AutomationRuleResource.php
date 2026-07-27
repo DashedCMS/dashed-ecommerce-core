@@ -7,6 +7,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 use Closure;
 use UnitEnum;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
@@ -439,6 +440,12 @@ class AutomationRuleResource extends Resource
      * ConditionEvaluator/AutomationContext hergebruikt); deze actie roept dus
      * zelf nooit een actie-`handle` aan.
      *
+     * Voor een tijd-regel (schedule niet-null, zie isScheduleRule()) bestaat
+     * er geen "kies een bestelling" — er is geen enkel event/order waartegen
+     * getest wordt, alleen een cadans die op elk moment nul of meer orders
+     * kan raken. Die variant toont daarom direct "zou nu vuren voor N
+     * bestellingen" (RuleDryRun::forSchedule()) in plaats van de order-kiezer.
+     *
      * Zelfde "view-only modal"-patroon als OrderResource::table()'s
      * bekijk-actie: geen submit-knop, enkel een sluitknop — dit scherm
      * registreert of wijzigt niets.
@@ -450,11 +457,77 @@ class AutomationRuleResource extends Resource
             ->icon('heroicon-o-beaker')
             ->color('gray')
             ->modalHeading(fn (AutomationRule $record): string => "Droogloop — {$record->name}")
-            ->modalDescription('Kies een bestelling om te zien of deze regel zou matchen en welke acties zouden draaien. Er wordt niets uitgevoerd.')
+            ->modalDescription(fn (AutomationRule $record): string => static::isScheduleRule($record)
+                ? 'Toont hoeveel bestellingen deze regel nú zou raken en welke acties zouden draaien. Er wordt niets uitgevoerd.'
+                : 'Kies een bestelling om te zien of deze regel zou matchen en welke acties zouden draaien. Er wordt niets uitgevoerd.')
             ->modalWidth('2xl')
             ->modalSubmitAction(false)
             ->modalCancelActionLabel('Sluiten')
-            ->schema(fn (AutomationRule $record): array => static::dryRunSchema($record));
+            ->schema(fn (AutomationRule $record): array => static::isScheduleRule($record)
+                ? static::dryRunScheduleSchema($record)
+                : static::dryRunSchema($record));
+    }
+
+    /**
+     * Een tijd-regel heeft een `schedule` (gevuld door
+     * scheduleFromFormData(), zie onderaan) — een event-regel niet. Dat
+     * onderscheid, niet `trigger`-string-matching, bepaalt hier welke
+     * droogloop-variant getoond wordt: het is exact hetzelfde veld dat
+     * RunTimeBasedAutomationRules gebruikt om tijd-regels te selecteren
+     * (`whereNotNull('schedule')`).
+     */
+    private static function isScheduleRule(AutomationRule $record): bool
+    {
+        return $record->schedule !== null;
+    }
+
+    /**
+     * Droogloop-resultaat voor een tijd-regel: "zou nu vuren voor N
+     * bestellingen" plus de acties die zouden draaien, via
+     * RuleDryRun::forSchedule() — die zelf nooit een actie-`handle` aanroept
+     * en nooit `AutomationEngine::run()`. `Carbon::now()` (niet een door de
+     * beheerder gekozen moment): de droogloop beantwoordt "wat zou er NU
+     * gebeuren", dezelfde vraag als de uurlijkse scan-job zichzelf stelt.
+     *
+     * @return array<int, TextEntry>
+     */
+    private static function dryRunScheduleSchema(AutomationRule $record): array
+    {
+        $result = RuleDryRun::forSchedule($record, Carbon::now());
+
+        return [
+            TextEntry::make('dry_run_would_fire_count')
+                ->label('Zou nu vuren voor')
+                ->state("{$result['would_fire_count']} bestelling(en)")
+                ->badge()
+                ->color($result['would_fire_count'] > 0 ? 'success' : 'gray'),
+
+            TextEntry::make('dry_run_schedule_actions')
+                ->label('Acties die zouden draaien')
+                ->state(static::dryRunScheduleActionsForDisplay($result['actions'], $result['would_fire_count']))
+                ->listWithLineBreaks()
+                ->bulleted()
+                ->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * @param  array<int, array{key: string, label: string, params: array<string, mixed>}>  $actions
+     * @return array<int, string>
+     */
+    private static function dryRunScheduleActionsForDisplay(array $actions, int $wouldFireCount): array
+    {
+        if ($actions === []) {
+            return $wouldFireCount > 0
+                ? ['Deze regel heeft geen acties.']
+                : ['Niet van toepassing — er zijn nu geen bestellingen die deze regel zouden raken.'];
+        }
+
+        return collect($actions)
+            ->map(fn (array $action): string => $action['params'] === []
+                ? $action['label']
+                : "{$action['label']} (" . json_encode($action['params']) . ')')
+            ->all();
     }
 
     /** @return array<int, Field|Section> */
