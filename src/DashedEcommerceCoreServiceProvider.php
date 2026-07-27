@@ -1833,6 +1833,10 @@ MARKDOWN,
             // Tijd-triggers (B2) voor automatiseringsregels die op tijd vuren.
             \Dashed\DashedEcommerceCore\Support\TimeAutomationTriggers::register($mobileApi);
 
+            // Klant-triggers (B3) voor automatiseringsregels die op een nieuwe
+            // klant of een N-de bestelling vuren.
+            \Dashed\DashedEcommerceCore\Support\CustomerAutomationTriggers::register($mobileApi);
+
             $mobileApi->registerDashboardContributor(function (string $siteId, $period = null): array {
                 // Oudere mobile-api roept de contributor zonder periode aan; val
                 // dan terug op vandaag zodat er geen ArgumentCountError ontstaat.

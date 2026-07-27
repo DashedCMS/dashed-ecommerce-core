@@ -78,11 +78,15 @@ class AutomationTriggerSubscriber
             return;
         }
 
-        // Eén duidelijke plek voor de contextopbouw, zodat een latere
-        // klant-trigger (order-onderwerp + forCustomer-context via een
-        // `context => 'customer'`-marker op de trigger) hier zonder
-        // structuurwijziging kan aansluiten.
-        $context = AutomationContext::for($subject, $this->extraContext($event));
+        // Eén duidelijke plek voor de contextopbouw. Een klant-trigger
+        // (order-onderwerp, maar klant-conditievelden) draagt de marker
+        // `context => 'customer'` — in dat geval levert forCustomer($subject)
+        // de $extra i.p.v. de gewone event-properties, zodat order_count/
+        // total_spend/email/is_registered in de conditie-context terechtkomen.
+        $extra = ($trigger['context'] ?? null) === 'customer'
+            ? AutomationContext::forCustomer($subject)
+            : $this->extraContext($event);
+        $context = AutomationContext::for($subject, $extra);
         $rules = AutomationEngine::rulesFor((string) $trigger['key'], $this->siteIdFor($subject));
 
         foreach ($rules as $rule) {
