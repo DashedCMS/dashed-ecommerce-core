@@ -14,9 +14,21 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRequestedEvent;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
+/**
+ * Sinds B2 zitten er naast de zes order-triggers ook twee tijd-triggers
+ * (`time.relative`/`time.recurring`, type => 'time') in de registry — die
+ * vuren via de uurlijkse scan, niet via een event, en hebben dus bewust
+ * geen 'event'/'resolve'. Deze test gaat alleen over de order-triggers:
+ * hij filtert tijd-triggers eruit vóórdat hij de "zes order-triggers hebben
+ * subject+event+resolve"-assertie doet, zodat die intentie (order-triggers
+ * zijn event-gebaseerd) onverzwakt getest blijft. Het aparte, bedoelde
+ * gedrag van de tijd-triggers staat in de test hieronder.
+ */
 it('registers the six order automation triggers with a subject, event class and resolve callable', function () {
     $registry = app(MobileApiRegistry::class);
-    $byKey = collect($registry->automationTriggers())->keyBy('key');
+    $orderTriggers = collect($registry->automationTriggers())
+        ->reject(fn (array $trigger): bool => ($trigger['type'] ?? null) === 'time')
+        ->keyBy('key');
 
     $expectedKeys = [
         'order.created',
@@ -27,14 +39,34 @@ it('registers the six order automation triggers with a subject, event class and 
         'order.return_approved',
     ];
 
-    expect($byKey->keys()->all())->toEqualCanonicalizing($expectedKeys);
+    expect($orderTriggers->keys()->all())->toEqualCanonicalizing($expectedKeys);
 
     foreach ($expectedKeys as $key) {
-        $trigger = $byKey[$key];
+        $trigger = $orderTriggers[$key];
         expect($trigger['subject'])->toBe('order')
             ->and($trigger['event'])->toBeString()
             ->and(class_exists($trigger['event']))->toBeTrue("event class ontbreekt voor {$key}: {$trigger['event']}")
             ->and($trigger['resolve'])->toBeCallable();
+    }
+});
+
+/**
+ * B2: time.relative/time.recurring zijn scan-gebaseerd (RunTimeBasedAutomation
+ * Rules / TimeRuleScanner leest AutomationRule::schedule en vuurt op basis
+ * daarvan), niet event-gebaseerd — er is dus bewust GEEN 'event'-class en
+ * GEEN 'resolve'-callable, in tegenstelling tot de order-triggers hierboven.
+ * Dit legt die bedoelde registry-vorm vast, los van de order-trigger-test.
+ */
+it('registers time.relative and time.recurring as scan-based triggers without an event/resolve callable', function () {
+    $byKey = collect(app(MobileApiRegistry::class)->automationTriggers())->keyBy('key');
+
+    foreach (['time.relative', 'time.recurring'] as $key) {
+        expect($byKey->has($key))->toBeTrue("tijd-trigger {$key} ontbreekt in de registry");
+
+        $trigger = $byKey[$key];
+        expect($trigger['type'])->toBe('time')
+            ->and($trigger)->not->toHaveKey('event')
+            ->and($trigger)->not->toHaveKey('resolve');
     }
 });
 
