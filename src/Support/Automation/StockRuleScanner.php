@@ -20,12 +20,11 @@ use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
  * "stond dit product ooit op 0" (nodig om te weten wanneer stock.low weer
  * mag vuren, en wanneer stock.back kandidaat wordt) is niet betrouwbaar uit
  * enkel de run-historie + de huidige voorraad af te leiden. Daarom houdt
- * Product (zie `Product::booted()`'s `saved`-hook) twee marker-kolommen bij,
- * puur op basis van de wasChanged('stock')-transitie:
+ * Product (zie `Product::booted()`'s `created`- en `saved`-hooks) één
+ * marker-kolom bij, puur op basis van de wasChanged('stock')-transitie (en,
+ * voor een product dat al bij aanmaak op 0 staat, de create zelf):
  * - `automation_stock_zero_at`: wanneer dit product voor het laatst een
- *   nieuwe 0-episode inging (van >0 naar 0).
- * - `automation_stock_recovered_at`: wanneer diezelfde episode voor het
- *   laatst herstelde (van 0 naar >0).
+ *   nieuwe 0-episode inging (van >0 naar 0, of aangemaakt met stock 0).
  *
  * Met die marker wordt dedup/reset een zuivere lees-query, precies zoals
  * TimeRuleScanner: deze klasse zelf schrijft niets weg.

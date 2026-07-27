@@ -87,7 +87,6 @@ class Product extends Model
         'expected_in_stock_date' => 'datetime',
         'low_stock_alerted_at' => 'datetime',
         'automation_stock_zero_at' => 'datetime',
-        'automation_stock_recovered_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -124,6 +123,27 @@ class Product extends Model
 
         static::created(function ($product) {
             ProductCreatedEvent::dispatch($product);
+
+            // Marker voor StockRuleScanner: een product dat al bij aanmaak op
+            // 0 staat (bv. pre-order/nog nooit bevoorraad) telt ook als een
+            // 0-episode-start. Zonder dit zou `wasChanged('stock')` in de
+            // saved-hook hieronder de allereerste heraanvulling (0 -> N) nooit
+            // zien — wasChanged() is bij een INSERT altijd false, want
+            // syncChanges() draait alleen in performUpdate(), niet
+            // performInsert() — en backCandidates() zou dat product dan voor
+            // altijd missen (filtert op automation_stock_zero_at niet null).
+            // Let op: `$product->stock` (property-access) NIET gebruiken hier
+            // — als 'stock' niet expliciet in de create-payload zat (kolom-
+            // default), staat het nog niet in $product->attributes en botst
+            // Eloquent's __get met de gelijknamige stock()-methode elders in
+            // dit model ("must return a relationship instance"). Daarom de
+            // net geïnsertte waarde rechtstreeks opvragen.
+            $insertedStock = (int) (static::whereKey($product->getKey())->value('stock') ?? 0);
+            if ($insertedStock === 0) {
+                static::whereKey($product->getKey())->update([
+                    'automation_stock_zero_at' => now(),
+                ]);
+            }
         });
 
         static::updated(function ($product) {
@@ -148,11 +168,6 @@ class Product extends Model
                 if ($currentStock === 0 && $originalStock !== 0) {
                     static::whereKey($product->getKey())->update([
                         'automation_stock_zero_at' => now(),
-                        'automation_stock_recovered_at' => null,
-                    ]);
-                } elseif ($currentStock > 0 && $originalStock === 0 && $product->automation_stock_zero_at) {
-                    static::whereKey($product->getKey())->update([
-                        'automation_stock_recovered_at' => now(),
                     ]);
                 }
             }

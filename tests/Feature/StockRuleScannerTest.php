@@ -14,10 +14,10 @@ use Dashed\DashedEcommerceCore\Support\Automation\StockRuleScanner;
  * producten voor de voorraad-triggers stock.low/stock.back, site-bewust en
  * met dedup/reset gespiegeld op TimeRuleScanner's whereNotExists-patroon.
  *
- * Dedup/reset leunt op twee marker-kolommen die Product zelf onderhoudt
- * (`Product::booted()`'s saved-hook, bij een echte wasChanged('stock')-
- * transitie): `automation_stock_zero_at` (nieuwe 0-episode) en
- * `automation_stock_recovered_at` (die episode hersteld). Zie
+ * Dedup/reset leunt op één marker-kolom die Product zelf onderhoudt
+ * (`Product::booted()`'s created- en saved-hooks): `automation_stock_zero_at`
+ * — gezet bij een echte wasChanged('stock')-transitie naar 0, én bij aanmaak
+ * van een product dat al met stock 0 start (bv. pre-order). Zie
  * StockRuleScanner voor de volledige uitleg waarom dit niet puur uit de
  * run-historie + huidige voorraad af te leiden was.
  *
@@ -66,6 +66,33 @@ function stockProduct(string $siteId, array $overrides = []): Product
         'price' => 10.00,
         'current_price' => 10.00,
     ], $overrides)));
+}
+
+/**
+ * Voor de "aangemaakt met stock 0"-regressietest: hier moeten de échte
+ * created/saved-events lopen (niet withoutEvents()), want de
+ * automation_stock_zero_at-marker voor een INSERT zit in de created-hook.
+ * Queue::fake() (beforeEach) voorkomt dat UpdateProductInformationJob
+ * synchroon draait en op sqlite stukloopt op de MySQL-only GREATEST()-call.
+ */
+function stockProductWithRealEvents(string $siteId, array $overrides = []): Product
+{
+    $group = stockGroup($siteId);
+
+    return Product::create(array_merge([
+        'name' => ['en' => 'Vaas ' . uniqid()],
+        'slug' => ['en' => 'vaas-' . uniqid()],
+        'site_ids' => [$siteId],
+        'product_group_id' => $group->id,
+        'use_stock' => true,
+        'low_stock_notification_limit' => 5,
+        'stock' => 0,
+        'total_stock' => 0,
+        'in_stock' => false,
+        'stock_status' => 'out_of_stock',
+        'price' => 10.00,
+        'current_price' => 10.00,
+    ], $overrides));
 }
 
 function stockRule(string $trigger, string $siteId = 'main'): AutomationRule
@@ -158,6 +185,22 @@ it('vuurt stock.back niet opnieuw na een geslaagde run voor dezelfde 0-episode',
 
     expect(StockRuleScanner::backCandidates($backRule)->pluck('id'))
         ->not->toContain($product->id);
+});
+
+it('registreert een 0-episode voor een product dat al met stock 0 wordt aangemaakt (pre-order)', function () {
+    $backRule = stockRule('stock.back');
+
+    $product = stockProductWithRealEvents('main', ['stock' => 0]);
+
+    // De created-hook moet de 0-episode meteen vastleggen, ook al is er nooit
+    // een wasChanged('stock')-transitie geweest (dit was een INSERT).
+    expect($product->fresh()->automation_stock_zero_at)->not->toBeNull();
+
+    // Eerste échte heraanvulling: 0 -> N.
+    $product->update(['stock' => 5]);
+
+    expect(StockRuleScanner::backCandidates($backRule)->pluck('id'))
+        ->toContain($product->id);
 });
 
 it('sluit een product van een andere site uit', function () {
