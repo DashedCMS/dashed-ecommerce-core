@@ -44,7 +44,15 @@ it('is site-aware, read from a single model, wired into three pages', function (
         ->and(AutomationRuleResource::getPages())->toHaveKeys(['index', 'create', 'edit']);
 });
 
-it('exposes exactly the six order automation triggers to the trigger select', function () {
+/**
+ * Task 7: sinds het schedule-subformulier bestaat (de 'Planning'-Section in
+ * AutomationRuleResource::form()) mogen de twee tijd-triggers (type => 'time')
+ * weer in deze select verschijnen — Task 2 had ze tijdelijk uitgesloten
+ * (zie TimeAutomationTriggersTest.php) totdat een beheerder er ook echt een
+ * schedule bij kon configureren. Dit is dus bewust acht triggers, niet zes:
+ * de zes bestaande order-events plus time.relative/time.recurring.
+ */
+it('exposes all order and time automation triggers to the trigger select', function () {
     $options = callAutomationResourceMethod('triggerOptions');
 
     expect(array_keys($options))->toEqualCanonicalizing([
@@ -54,9 +62,13 @@ it('exposes exactly the six order automation triggers to the trigger select', fu
         'order.fulfillment_changed',
         'order.return_requested',
         'order.return_approved',
+        'time.relative',
+        'time.recurring',
     ])
         // uit de registry, geen ruwe keys
-        ->and($options['order.paid'])->toBe('Bestelling betaald');
+        ->and($options['order.paid'])->toBe('Bestelling betaald')
+        ->and($options['time.relative'])->toBe('Op tijd na een moment')
+        ->and($options['time.recurring'])->toBe('Terugkerend op een tijdstip');
 });
 
 it('only lists automatable actions in the action select, excluding cancel', function () {

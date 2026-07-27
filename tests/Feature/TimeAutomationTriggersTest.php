@@ -23,7 +23,16 @@ it('registreert time.relative en time.recurring met type time', function () {
         ->and($recurring['mode'])->toBe('recurring');
 });
 
-it('verbergt tijd-triggers in de Filament trigger-select totdat het schedule-subformulier klaar is', function () {
+/**
+ * Task 2 verborg tijd-triggers hier tijdelijk uit de trigger-select totdat
+ * het schedule-subformulier bestond (zonder zo'n formulier zou een beheerder
+ * een tijd-regel kunnen kiezen zonder er een schedule aan te kunnen hangen).
+ * Task 7 heeft dat schedule-subformulier nu gebouwd (de 'Planning'-Section in
+ * AutomationRuleResource::form(), zichtbaar zodra de trigger `type === 'time'`
+ * is) — de tijdelijke verberging is dus niet langer nodig en time.relative/
+ * time.recurring horen weer gewoon in de UI-opties te staan.
+ */
+it('toont tijd-triggers in de Filament trigger-select, nu het schedule-subformulier bestaat', function () {
     $registry = app(MobileApiRegistry::class);
     TimeAutomationTriggers::register($registry);
 
@@ -31,11 +40,13 @@ it('verbergt tijd-triggers in de Filament trigger-select totdat het schedule-sub
     expect($registry->automationTrigger('time.relative'))->not->toBeNull()
         ->and($registry->automationTrigger('time.recurring'))->not->toBeNull();
 
-    // Maar NIET in de UI-opties
+    // En nu ook in de UI-opties
     $reflection = new ReflectionMethod(AutomationRuleResource::class, 'triggerOptions');
     $reflection->setAccessible(true);
     $options = $reflection->invoke(null);
 
-    expect($options)->not->toHaveKey('time.relative')
-        ->and($options)->not->toHaveKey('time.recurring');
+    expect($options)->toHaveKey('time.relative')
+        ->and($options)->toHaveKey('time.recurring')
+        ->and($options['time.relative'])->toBe('Op tijd na een moment')
+        ->and($options['time.recurring'])->toBe('Terugkerend op een tijdstip');
 });

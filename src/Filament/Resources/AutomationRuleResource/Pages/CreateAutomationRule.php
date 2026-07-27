@@ -21,6 +21,9 @@ class CreateAutomationRule extends CreateRecord
     {
         $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
 
-        return $data;
+        // Bundelt de losse schedule_*-formuliervelden (Task 7) tot de
+        // `schedule`-array en whitelist daarbij de waarden — zie
+        // AutomationRuleResource::withScheduleData().
+        return AutomationRuleResource::withScheduleData($data);
     }
 }

@@ -20,10 +20,21 @@ class EditAutomationRule extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        // Zet een bestaande `schedule`-array uit naar de losse
+        // schedule_*-formuliervelden (Task 7), zodat het bewerken van een
+        // bestaande tijd-regel het schedule-subformulier voorvult.
+        return AutomationRuleResource::scheduleFormDataFromRecord($data);
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $data['site_id'] = $data['site_id'] ?? Sites::getFirstSite()['id'];
 
-        return $data;
+        // Bundelt de losse schedule_*-formuliervelden (Task 7) tot de
+        // `schedule`-array en whitelist daarbij de waarden — zie
+        // AutomationRuleResource::withScheduleData().
+        return AutomationRuleResource::withScheduleData($data);
     }
 }

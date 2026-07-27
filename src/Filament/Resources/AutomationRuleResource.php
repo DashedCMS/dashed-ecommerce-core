@@ -34,6 +34,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Infolists\Components\KeyValueEntry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Support\Automation\RuleDryRun;
+use Dashed\DashedEcommerceCore\Support\Automation\TimeAnchors;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\EditAutomationRule;
 use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\ListAutomationRules;
@@ -70,6 +71,54 @@ class AutomationRuleResource extends Resource
         'is_true' => 'is waar',
         'is_false' => 'is niet waar',
     ];
+
+    /**
+     * Labels voor het schedule-subformulier van tijd-triggers (type => 'time').
+     * De sleutels zijn de enige toegestane waarden — TimeRuleScanner en
+     * TimeAnchors lezen exact deze strings uit `schedule`, dus alles wat hier
+     * niet in staat wordt bij het opslaan geweigerd (zie scheduleFromFormData).
+     *
+     * @var array<string, string>
+     */
+    private const SCHEDULE_ANCHOR_LABELS = [
+        'created_at' => 'Aanmaakmoment van de bestelling',
+        'paid' => 'Betaalmoment van de bestelling',
+    ];
+
+    /** @var array<string, string> */
+    private const SCHEDULE_UNIT_LABELS = [
+        'hours' => 'Uren',
+        'days' => 'Dagen',
+    ];
+
+    /** @var array<string, string> */
+    private const SCHEDULE_FREQUENCY_LABELS = [
+        'daily' => 'Dagelijks',
+        'weekly' => 'Wekelijks',
+    ];
+
+    /**
+     * ISO-weekdagen (1 = maandag .. 7 = zondag), zelfde telling als
+     * `Carbon::dayOfWeekIso` dat TimeRuleScanner::recurringDue() gebruikt.
+     *
+     * @var array<int, string>
+     */
+    private const SCHEDULE_WEEKDAY_LABELS = [
+        1 => 'Maandag',
+        2 => 'Dinsdag',
+        3 => 'Woensdag',
+        4 => 'Donderdag',
+        5 => 'Vrijdag',
+        6 => 'Zaterdag',
+        7 => 'Zondag',
+    ];
+
+    /**
+     * Formaat voor het `at`-tijdstip van een terugkerende schedule: exact
+     * "uu:mm" (24-uurs), zoals TimeRuleScanner::recurringDue() het parseert
+     * (`explode(':', ...)`).
+     */
+    private const SCHEDULE_TIME_REGEX = '/^([01]\d|2[0-3]):[0-5]\d$/';
 
     protected static ?string $model = AutomationRule::class;
 
@@ -140,7 +189,79 @@ class AutomationRuleResource extends Resource
                             // Oude voorwaarden verwijzen naar velden van de vorige
                             // trigger — die kunnen na een wissel niet meer kloppen.
                             $set('conditions', []);
+                            // Idem voor de schedule: relative/recurring-velden van
+                            // een vorige tijd-trigger (of een niet-tijd-trigger)
+                            // horen niet blijven hangen na een wissel.
+                            $set('schedule_anchor', null);
+                            $set('schedule_amount', null);
+                            $set('schedule_unit', null);
+                            $set('schedule_frequency', null);
+                            $set('schedule_at', null);
+                            $set('schedule_weekday', null);
                         }),
+                ]),
+
+            Section::make('Planning')
+                ->description('Tijd-triggers draaien niet op een gebeurtenis maar op een periodieke scan (zie RunTimeBasedAutomationRules). Stel hier in wanneer deze regel in aanmerking komt.')
+                ->columnSpanFull()
+                ->columns(2)
+                ->visible(fn (Get $get): bool => static::isTimeTrigger($get('trigger')))
+                ->schema([
+                    // Relatief: "N uur/dagen na [anker]".
+                    Select::make('schedule_anchor')
+                        ->label('Anker')
+                        ->options(self::SCHEDULE_ANCHOR_LABELS)
+                        ->native(false)
+                        ->rules(['in:' . implode(',', TimeAnchors::KEYS)])
+                        ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative')
+                        ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative'),
+                    TextInput::make('schedule_amount')
+                        ->label('Aantal')
+                        ->integer()
+                        ->minValue(1)
+                        ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative')
+                        ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative'),
+                    Select::make('schedule_unit')
+                        ->label('Eenheid')
+                        ->options(self::SCHEDULE_UNIT_LABELS)
+                        ->native(false)
+                        ->rules(['in:' . implode(',', array_keys(self::SCHEDULE_UNIT_LABELS))])
+                        ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative')
+                        ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative'),
+
+                    // Terugkerend: dagelijks/wekelijks op een vast tijdstip.
+                    Select::make('schedule_frequency')
+                        ->label('Frequentie')
+                        ->options(self::SCHEDULE_FREQUENCY_LABELS)
+                        ->native(false)
+                        ->live()
+                        ->rules(['in:' . implode(',', array_keys(self::SCHEDULE_FREQUENCY_LABELS))])
+                        ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring')
+                        ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring')
+                        ->afterStateUpdated(function (Set $set, $state): void {
+                            // De weekdag is enkel relevant bij 'weekly' — laat 'm
+                            // niet stiekem blijven hangen na terugschakelen naar
+                            // 'daily'.
+                            if ($state !== 'weekly') {
+                                $set('schedule_weekday', null);
+                            }
+                        }),
+                    TextInput::make('schedule_at')
+                        ->label('Tijdstip')
+                        ->placeholder('14:30')
+                        ->helperText('Formaat uu:mm (24-uurs), bijvoorbeeld 14:30.')
+                        ->rules(['regex:' . self::SCHEDULE_TIME_REGEX])
+                        ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring')
+                        ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring'),
+                    Select::make('schedule_weekday')
+                        ->label('Weekdag')
+                        ->options(self::SCHEDULE_WEEKDAY_LABELS)
+                        ->native(false)
+                        ->rules(['in:' . implode(',', array_keys(self::SCHEDULE_WEEKDAY_LABELS))])
+                        ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring'
+                            && $get('schedule_frequency') === 'weekly')
+                        ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring'
+                            && $get('schedule_frequency') === 'weekly'),
                 ]),
 
             Section::make('Voorwaarden')
@@ -568,15 +689,186 @@ class AutomationRuleResource extends Resource
 
         $options = [];
         foreach ($registry->automationTriggers() as $key => $trigger) {
-            // Sluit tijd-triggers uit (B2); die krijgen later hun schedule-subformulier
-            if (($trigger['type'] ?? null) === 'time') {
-                continue;
-            }
-
+            // Tijd-triggers (type === 'time') waren hier tijdelijk uitgesloten
+            // (Task 2) totdat het schedule-subformulier bestond. Dat formulier
+            // is er nu (zie de 'Planning'-Section in form()), dus time.relative/
+            // time.recurring zijn weer gewoon te kiezen.
             $options[$key] = (string) ($trigger['label'] ?? $key);
         }
 
         return $options;
+    }
+
+    /**
+     * `type`/`mode` van de gekozen trigger, gelezen via de registry-helper
+     * (zie klasse-doc): `type === 'time'` bepaalt of de 'Planning'-Section
+     * zichtbaar is, `mode` (relative/recurring) welke velden daarin.
+     * Een onbekende of niet-tijd-trigger geeft `[null, null]` — de
+     * Planning-Section is dan simpelweg onzichtbaar.
+     *
+     * @return array{type: ?string, mode: ?string}
+     */
+    private static function triggerMeta(?string $triggerKey): array
+    {
+        if (! is_string($triggerKey) || $triggerKey === '') {
+            return ['type' => null, 'mode' => null];
+        }
+
+        $registry = static::registry();
+        $trigger = $registry?->automationTrigger($triggerKey);
+
+        return [
+            'type' => is_array($trigger) ? ($trigger['type'] ?? null) : null,
+            'mode' => is_array($trigger) ? ($trigger['mode'] ?? null) : null,
+        ];
+    }
+
+    private static function isTimeTrigger(?string $triggerKey): bool
+    {
+        return static::triggerMeta($triggerKey)['type'] === 'time';
+    }
+
+    private static function triggerScheduleMode(?string $triggerKey): ?string
+    {
+        return static::triggerMeta($triggerKey)['mode'];
+    }
+
+    /**
+     * Bouwt de `schedule`-array voor opslag uit de losse `schedule_*`-
+     * formuliervelden, en whitelist daarbij elke waarde — dit is de enige
+     * plek waar `AutomationRule::schedule` gevuld wordt. KRITIEK: dit
+     * package draait met een globale `Model::unguard()`, dus zonder deze
+     * whitelist zou een onbekende/ontbrekende waarde (of de rauwe
+     * `schedule_*`-sleutels zelf, die geen kolommen zijn) linea recta naar
+     * de database kunnen lekken. Een trigger zonder tijd-mode (of een
+     * ongeldige combinatie) levert `null` op — precies wat een event-regel
+     * al had (zie AutomationRuleScheduleColumnTest).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>|null
+     */
+    private static function scheduleFromFormData(array $data): ?array
+    {
+        $trigger = $data['trigger'] ?? null;
+        $mode = static::triggerScheduleMode(is_string($trigger) ? $trigger : null);
+
+        return match ($mode) {
+            'relative' => static::relativeScheduleFromFormData($data),
+            'recurring' => static::recurringScheduleFromFormData($data),
+            default => null,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{mode: string, anchor: string, amount: int, unit: string}|null
+     */
+    private static function relativeScheduleFromFormData(array $data): ?array
+    {
+        $anchor = $data['schedule_anchor'] ?? null;
+        $amount = $data['schedule_amount'] ?? null;
+        $unit = $data['schedule_unit'] ?? null;
+
+        if (! is_string($anchor) || ! in_array($anchor, TimeAnchors::KEYS, true)) {
+            return null;
+        }
+        if (! is_numeric($amount) || (int) $amount < 1) {
+            return null;
+        }
+        if (! is_string($unit) || ! array_key_exists($unit, self::SCHEDULE_UNIT_LABELS)) {
+            return null;
+        }
+
+        return [
+            'mode' => 'relative',
+            'anchor' => $anchor,
+            'amount' => (int) $amount,
+            'unit' => $unit,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{mode: string, frequency: string, at: string, weekday?: int}|null
+     */
+    private static function recurringScheduleFromFormData(array $data): ?array
+    {
+        $frequency = $data['schedule_frequency'] ?? null;
+        $at = $data['schedule_at'] ?? null;
+        $weekday = $data['schedule_weekday'] ?? null;
+
+        if (! is_string($frequency) || ! array_key_exists($frequency, self::SCHEDULE_FREQUENCY_LABELS)) {
+            return null;
+        }
+        if (! is_string($at) || ! preg_match(self::SCHEDULE_TIME_REGEX, $at)) {
+            return null;
+        }
+
+        $schedule = ['mode' => 'recurring', 'frequency' => $frequency, 'at' => $at];
+
+        if ($frequency === 'weekly') {
+            if (! is_numeric($weekday) || ! array_key_exists((int) $weekday, self::SCHEDULE_WEEKDAY_LABELS)) {
+                return null;
+            }
+            $schedule['weekday'] = (int) $weekday;
+        }
+
+        return $schedule;
+    }
+
+    /**
+     * Vervangt de losse `schedule_*`-formuliervelden in $data door de
+     * gebundelde `schedule`-array. Aangeroepen vanuit
+     * CreateAutomationRule::mutateFormDataBeforeCreate() en
+     * EditAutomationRule::mutateFormDataBeforeSave() — de `schedule_*`-
+     * sleutels moeten hier ALTIJD verwijderd worden, ook als scheduleFrom
+     * FormData() null teruggeeft: het zijn geen kolommen op AutomationRule,
+     * en door de globale `Model::unguard()` zou Eloquent anders een query
+     * tegen niet-bestaande kolommen proberen te bouwen.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function withScheduleData(array $data): array
+    {
+        $data['schedule'] = static::scheduleFromFormData($data);
+
+        unset(
+            $data['schedule_anchor'],
+            $data['schedule_amount'],
+            $data['schedule_unit'],
+            $data['schedule_frequency'],
+            $data['schedule_at'],
+            $data['schedule_weekday'],
+        );
+
+        return $data;
+    }
+
+    /**
+     * Het omgekeerde van withScheduleData(): zet een bestaande `schedule`-
+     * array uit de database uit naar de losse `schedule_*`-formuliervelden,
+     * zodat het bewerken van een bestaande tijd-regel het formulier voorvult.
+     * Aangeroepen vanuit EditAutomationRule::mutateFormDataBeforeFill().
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function scheduleFormDataFromRecord(array $data): array
+    {
+        $schedule = $data['schedule'] ?? null;
+        if (! is_array($schedule)) {
+            return $data;
+        }
+
+        $data['schedule_anchor'] = $schedule['anchor'] ?? null;
+        $data['schedule_amount'] = $schedule['amount'] ?? null;
+        $data['schedule_unit'] = $schedule['unit'] ?? null;
+        $data['schedule_frequency'] = $schedule['frequency'] ?? null;
+        $data['schedule_at'] = $schedule['at'] ?? null;
+        $data['schedule_weekday'] = $schedule['weekday'] ?? null;
+
+        return $data;
     }
 
     /** @return array<int, array<string, mixed>> */
