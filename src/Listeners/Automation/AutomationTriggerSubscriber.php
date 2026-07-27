@@ -6,8 +6,8 @@ namespace Dashed\DashedEcommerceCore\Listeners\Automation;
 
 use Illuminate\Support\Str;
 use Illuminate\Events\Dispatcher;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Jobs\RunAutomationRuleJob;
 use Dashed\DashedEcommerceCore\Support\Automation\AutomationEngine;
@@ -18,9 +18,10 @@ use Dashed\DashedEcommerceCore\Support\Automation\ConditionEvaluator;
  * Luistert bij boot dynamisch op alle event-classes die
  * MobileApiRegistry::automationTriggers() registreert — niet hardcoded, dus
  * een nieuwe trigger in OrderAutomationTriggers hoeft hier niets bij te
- * schrijven. Per event: onderwerp resolven via de trigger's `resolve`,
- * waardecontext bouwen, actieve regels voor deze trigger+site ophalen via
- * AutomationEngine::rulesFor() en per match (ConditionEvaluator::matches())
+ * schrijven. Per event: onderwerp resolven via de trigger's `resolve`
+ * (elk Model, niet alleen Order — zie handle()), waardecontext bouwen via
+ * AutomationContext::for(), actieve regels voor deze trigger+site ophalen
+ * via AutomationEngine::rulesFor() en per match (ConditionEvaluator::matches())
  * een RunAutomationRuleJob dispatchen op de 'ecommerce'-queue.
  */
 class AutomationTriggerSubscriber
@@ -68,19 +69,55 @@ class AutomationTriggerSubscriber
             return;
         }
 
+        // Generiek onderwerp: een `resolve` mag elk Model teruggeven, niet
+        // alleen een Order. Iets anders dan een Model (incl. null) betekent
+        // dat deze trigger voor dit event wordt overgeslagen — fail-closed,
+        // net als AutomationContext::for()'s default-tak.
         $subject = $resolve($event);
-        if (! $subject instanceof Order) {
+        if (! $subject instanceof Model) {
             return;
         }
 
-        $context = AutomationContext::forOrder($subject, $this->extraContext($event));
-        $rules = AutomationEngine::rulesFor((string) $trigger['key'], (string) $subject->site_id);
+        // Eén duidelijke plek voor de contextopbouw, zodat een latere
+        // klant-trigger (order-onderwerp + forCustomer-context via een
+        // `context => 'customer'`-marker op de trigger) hier zonder
+        // structuurwijziging kan aansluiten.
+        $context = AutomationContext::for($subject, $this->extraContext($event));
+        $rules = AutomationEngine::rulesFor((string) $trigger['key'], $this->siteIdFor($subject));
 
         foreach ($rules as $rule) {
             if (ConditionEvaluator::matches($rule->conditions ?? [], $context)) {
                 RunAutomationRuleJob::dispatch($rule, $subject)->onQueue('ecommerce');
             }
         }
+    }
+
+    /**
+     * Site-ID voor AutomationEngine::rulesFor(). Een Order heeft een scalar
+     * `site_id`; een Product heeft (nog) geen `site_id` maar een
+     * `site_ids`-array (een product kan bij meerdere sites horen). In B3
+     * komt een Product in de praktijk niet via déze subscriber binnen:
+     * voorraad-triggers zijn scan-gebaseerd (geen event, zie
+     * TimeAutomationTriggers/RunTimeBasedAutomationRules-achtige opzet),
+     * dus alleen order-onderwerpen (order-events, en straks klant-triggers —
+     * ook order-onderwerp) komen hier binnen. Deze helper houdt de
+     * site-afleiding alvast generiek voor een toekomstig, wél
+     * event-gedreven, niet-order onderwerp: bij ontbrekende `site_id` valt
+     * hij terug op de eerste waarde van `site_ids`, en anders op de actieve
+     * site.
+     */
+    private function siteIdFor(Model $subject): string
+    {
+        if (filled($subject->site_id ?? null)) {
+            return (string) $subject->site_id;
+        }
+
+        $siteIds = $subject->site_ids ?? [];
+        if (is_array($siteIds) && $siteIds !== []) {
+            return (string) $siteIds[0];
+        }
+
+        return (string) Sites::getActive();
     }
 
     /**
