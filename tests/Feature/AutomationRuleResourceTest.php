@@ -49,10 +49,20 @@ it('is site-aware, read from a single model, wired into three pages', function (
  * AutomationRuleResource::form()) mogen de twee tijd-triggers (type => 'time')
  * weer in deze select verschijnen — Task 2 had ze tijdelijk uitgesloten
  * (zie TimeAutomationTriggersTest.php) totdat een beheerder er ook echt een
- * schedule bij kon configureren. Dit is dus bewust acht triggers, niet zes:
- * de zes bestaande order-events plus time.relative/time.recurring.
+ * schedule bij kon configureren.
+ *
+ * B3 (Task 7): triggerOptions() filtert niet op trigger-'type' of 'subject' —
+ * het toont letterlijk alles uit MobileApiRegistry::automationTriggers().
+ * Zodra CustomerAutomationTriggers/StockAutomationTriggers (Task 4/6)
+ * registreren, verschijnen hun triggers dus vanzelf hier ook. Bewust
+ * bijgewerkt naar twaalf triggers, niet afgezwakt: zes bestaande order-events,
+ * time.relative/time.recurring, de twee klant-triggers (customer.new/
+ * customer.nth_order) en de twee voorraad-triggers (stock.low/stock.back).
+ * De vier nieuwe B3-triggers hebben een eigen, uitgebreidere dekking in
+ * AutomationRuleResourceB3Test.php (incl. dat het schedule-subformulier voor
+ * geen van beide verschijnt).
  */
-it('exposes all order and time automation triggers to the trigger select', function () {
+it('exposes all order, time, customer and stock automation triggers to the trigger select', function () {
     $options = callAutomationResourceMethod('triggerOptions');
 
     expect(array_keys($options))->toEqualCanonicalizing([
@@ -64,6 +74,10 @@ it('exposes all order and time automation triggers to the trigger select', funct
         'order.return_approved',
         'time.relative',
         'time.recurring',
+        'customer.new',
+        'customer.nth_order',
+        'stock.low',
+        'stock.back',
     ])
         // uit de registry, geen ruwe keys
         ->and($options['order.paid'])->toBe('Bestelling betaald')

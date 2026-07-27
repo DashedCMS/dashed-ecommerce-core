@@ -765,7 +765,12 @@ class AutomationRuleResource extends Resource
             // Tijd-triggers (type === 'time') waren hier tijdelijk uitgesloten
             // (Task 2) totdat het schedule-subformulier bestond. Dat formulier
             // is er nu (zie de 'Planning'-Section in form()), dus time.relative/
-            // time.recurring zijn weer gewoon te kiezen.
+            // time.recurring zijn weer gewoon te kiezen. Er is en was bewust
+            // geen filter op 'type'/'subject' hier — de B3-triggers
+            // (customer.new/customer.nth_order, stock.low/stock.back)
+            // verschijnen dus automatisch zodra CustomerAutomationTriggers/
+            // StockAutomationTriggers ze registreren, zonder dat dit scherm
+            // per trigger-soort hoeft te weten wat "customer" of "product" is.
             $options[$key] = (string) ($trigger['label'] ?? $key);
         }
 
