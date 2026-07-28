@@ -15,11 +15,17 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
 /**
- * Sinds B2 zitten er naast de zes order-triggers ook twee tijd-triggers
- * (`time.relative`/`time.recurring`, type => 'time') in de registry — die
- * vuren via de uurlijkse scan, niet via een event, en hebben dus bewust
- * geen 'event'/'resolve'. Deze test gaat alleen over de order-triggers:
- * hij filtert tijd-triggers eruit vóórdat hij de "zes order-triggers hebben
+ * Naast de zes order-triggers bevat de registry ook niet-order-triggers:
+ * de tijd-triggers uit B2 (`time.relative`/`time.recurring`) en de
+ * voorraad-/klant-triggers uit B3 (`stock.low`/`stock.back`;
+ * `customer.new`/`customer.nth_order`). Filteren op subject alléén is niet
+ * genoeg: de tijd-triggers delen bewust subject => 'order' met de echte
+ * order-triggers (hun voorwaarden gelden ook op de order, zie
+ * TimeAutomationTriggers), en zijn alleen te onderscheiden via
+ * type => 'time'. Klant-/voorraad-triggers hebben een ander subject
+ * ('customer'/'product') en vallen al buiten een subject-filter. Deze test
+ * gaat alleen over de order-triggers, dus filtert hij op subject === 'order'
+ * én type !== 'time', vóórdat hij de "zes order-triggers hebben
  * subject+event+resolve"-assertie doet, zodat die intentie (order-triggers
  * zijn event-gebaseerd) onverzwakt getest blijft. Het aparte, bedoelde
  * gedrag van de tijd-triggers staat in de test hieronder.
@@ -27,7 +33,8 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 it('registers the six order automation triggers with a subject, event class and resolve callable', function () {
     $registry = app(MobileApiRegistry::class);
     $orderTriggers = collect($registry->automationTriggers())
-        ->reject(fn (array $trigger): bool => ($trigger['type'] ?? null) === 'time')
+        ->filter(fn (array $trigger): bool => ($trigger['subject'] ?? null) === 'order'
+            && ($trigger['type'] ?? null) !== 'time')
         ->keyBy('key');
 
     $expectedKeys = [
