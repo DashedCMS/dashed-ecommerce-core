@@ -7,6 +7,7 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -68,6 +69,15 @@ class AutomationRuleRunResource extends JsonResource
             $invoiceId = trim((string) $subject->invoice_id);
 
             return $invoiceId !== '' ? $invoiceId : "Bestelling #{$subject->id}";
+        }
+
+        if ($subject instanceof Product) {
+            // Product::name is via HasTranslations JSON-locale-wrapped, maar
+            // (string) casten levert al de huidige-locale-string op (zie
+            // AutomationContext::forProduct(), die hetzelfde patroon gebruikt).
+            $name = trim((string) $subject->name);
+
+            return $name !== '' ? $name : "Product #{$subject->id}";
         }
 
         // Verwijderd onderwerp of een type dat we nog niet kennen: toon in elk

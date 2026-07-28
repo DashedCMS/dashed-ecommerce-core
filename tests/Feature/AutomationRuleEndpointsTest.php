@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
 
@@ -238,6 +240,63 @@ it('lists runs newest first, paginated, with rule name and subject', function ()
 
     // gepagineerd → meta aanwezig
     expect($res->json('meta.per_page'))->not->toBeNull();
+});
+
+/**
+ * Task 8 (B3): voorraad-triggers hebben een Product als subject, niet een
+ * Order. subjectLabel() viel daar eerder terug op "product #<id>" i.p.v. de
+ * productnaam — de app moet in het uitvoerlog de herkenbare productnaam zien.
+ */
+it('labels a stock-trigger run by the product name, not a generic placeholder', function () {
+    actingAsAdmin();
+
+    $rule = makeRule(['name' => 'Bijna op voorraad', 'trigger' => 'stock.low']);
+
+    $group = ProductGroup::create([
+        'name' => ['en' => 'Groep ' . uniqid()],
+        'slug' => ['en' => 'groep-' . uniqid()],
+        'short_description' => ['en' => ''],
+        'description' => ['en' => ''],
+        'content' => ['en' => ''],
+        'search_terms' => ['en' => ''],
+        'site_ids' => ['site'],
+    ]);
+
+    $product = Product::withoutEvents(fn () => Product::create([
+        'name' => ['en' => 'Blauwe vaas'],
+        'slug' => ['en' => 'blauwe-vaas-' . uniqid()],
+        'site_ids' => ['site'],
+        'product_group_id' => $group->id,
+        'use_stock' => true,
+        'stock' => 1,
+        'total_stock' => 1,
+        'in_stock' => true,
+        'stock_status' => 'in_stock',
+        'sku' => 'sku-' . uniqid(),
+        'price' => 5.00,
+        'current_price' => 5.00,
+    ]));
+
+    AutomationRuleRun::create([
+        'rule_id' => $rule->id,
+        'site_id' => 'site',
+        'subject_type' => Product::class,
+        'subject_id' => $product->id,
+        'trigger' => 'stock.low',
+        'status' => AutomationRuleRun::STATUS_SUCCESS,
+        'results' => ['notify' => 'ok'],
+        'error' => null,
+    ]);
+
+    $res = $this->getJson('/api/v1/automation-rule-runs', ['X-Site-Id' => 'site']);
+
+    $res->assertOk();
+
+    $first = collect($res->json('data'))->first();
+
+    expect($first['subject']['type'])->toBe('product')
+        ->and($first['subject']['id'])->toBe($product->id)
+        ->and($first['subject']['label'])->toBe('Blauwe vaas');
 });
 
 /**
