@@ -83,8 +83,17 @@ class ShoppingCart
         $activatedShippingMethodIds = [];
 
         if ($paymentMethod) {
-            $paymentMethod = PaymentMethod::find($paymentMethod);
-            if ($paymentMethod && $paymentMethod->shippingMethods->count()) {
+            // Het meegegeven paymentMethod hoort een enkel id te zijn. Komt het
+            // als array binnen (bijv. een request die paymentMethod als array
+            // stuurt), dan geeft PaymentMethod::find() een Collection terug en
+            // crasht ->shippingMethods. Normaliseer daarom eerst naar een enkel id.
+            if (is_array($paymentMethod)) {
+                $paymentMethod = $paymentMethod['id'] ?? (reset($paymentMethod) ?: null);
+            }
+
+            $paymentMethod = $paymentMethod ? PaymentMethod::find($paymentMethod) : null;
+
+            if ($paymentMethod instanceof PaymentMethod && $paymentMethod->shippingMethods->count()) {
                 foreach ($paymentMethod->shippingMethods as $shippingMethod) {
                     $activatedShippingMethodIds[] = $shippingMethod->id;
                 }
