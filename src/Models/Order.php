@@ -1207,10 +1207,12 @@ class Order extends Model
         $this->updateOrderProductsProductInformation();
     }
 
-    public function markAsCancelled($sendMail = false)
+    public function markAsCancelled($sendMail = false, $refillStock = true)
     {
         if ($this->status == 'paid') {
-            $this->refillStock();
+            if ($refillStock) {
+                $this->refillStock();
+            }
             $this->refillDiscount();
         } else {
             $this->refillGiftcard();
