@@ -73,6 +73,21 @@ it('trekt de korting van het totaal af en schaalt de btw mee', function () {
         ->and($order->vat_percentages)->toBe(['21' => 18.9]);
 });
 
+it('topt een korting die groter is dan het subtotaal af', function () {
+    Customsetting::set('taxes_prices_include_taxes', 1);
+
+    $order = orderWithLines([
+        ['price' => 24.2, 'vat_rate' => 21],
+    ], discount: 40.0);
+
+    OrderTotalsCalculator::recalculate($order);
+
+    expect(round($order->subtotal, 2))->toBe(24.2)
+        ->and(round($order->discount, 2))->toBe(24.2)
+        ->and(round($order->total, 2))->toBe(0.0)
+        ->and(round($order->btw, 2))->toBe(0.0);
+});
+
 it('zet alles op nul voor een order zonder regels', function () {
     Customsetting::set('taxes_prices_include_taxes', 1);
 

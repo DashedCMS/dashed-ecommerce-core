@@ -38,12 +38,18 @@ class OrderTotalsCalculator
             $vatPerRate[$key] = ($vatPerRate[$key] ?? 0.0) + $vat;
         }
 
-        $discount = (float) ($order->discount ?? 0);
+        // Een korting kan nooit groter zijn dan het subtotaal. Wordt een order
+        // zo aangepast dat er minder overblijft dan de korting, dan zakt de
+        // korting mee naar het subtotaal en wordt die verlaagde korting ook
+        // opgeslagen. Zonder deze aftopping zou het totaal negatief worden
+        // terwijl de btw op nul blijft staan.
+        $discount = min((float) ($order->discount ?? 0), $subtotal);
 
         // De korting drukt de btw proportioneel, ook bij gemengde tarieven.
-        $factor = $subtotal > 0 ? max(0.0, $subtotal - $discount) / $subtotal : 1.0;
+        $factor = $subtotal > 0 ? ($subtotal - $discount) / $subtotal : 1.0;
 
         $order->subtotal = round($subtotal, 2);
+        $order->discount = round($discount, 2);
         $order->total = round($subtotal - $discount, 2);
         $order->btw = round(array_sum($vatPerRate) * $factor, 2);
         $order->vat_percentages = array_map(
