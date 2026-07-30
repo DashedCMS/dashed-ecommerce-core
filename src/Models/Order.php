@@ -31,6 +31,7 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -257,6 +258,16 @@ class Order extends Model
         return $this->belongsTo(Order::class, 'credit_for_order_id');
     }
 
+    public function replacedByOrder(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'replaced_by_order_id');
+    }
+
+    public function replacesOrder(): HasOne
+    {
+        return $this->hasOne(Order::class, 'replaced_by_order_id');
+    }
+
     public function shippingMethod(): BelongsTo
     {
         return $this->belongsTo(ShippingMethod::class)
@@ -383,17 +394,34 @@ class Order extends Model
     }
 
     /**
+     * Een echt factuurnummer: PROFORMA, RETURN en leeg tellen niet mee.
+     */
+    public function hasRealInvoice(): bool
+    {
+        return filled($this->invoice_id)
+            && ! in_array($this->invoice_id, ['PROFORMA', 'RETURN'], true);
+    }
+
+    /**
      * Een verwijderbare draft: een concept of proforma zonder echt factuurnummer
-     * (PROFORMA/RETURN/leeg tellen niet als echt) en zonder betaalverplichting.
+     * en zonder betaalverplichting.
      */
     public function isDeletableDraft(): bool
     {
-        $hasRealInvoice = filled($this->invoice_id)
-            && ! in_array($this->invoice_id, ['PROFORMA', 'RETURN'], true);
-
         return ($this->isConcept() || (bool) $this->is_proforma)
-            && ! $hasRealInvoice
+            && ! $this->hasRealInvoice()
             && ! $this->isPaidFor();
+    }
+
+    /**
+     * Wat er meer betaald is dan de order kost. Tegenhanger van
+     * outstandingAmount(), gebruikt na een wijziging naar een lager totaal.
+     */
+    public function overpaidAmount(): float
+    {
+        $paid = $this->orderPayments()->where('status', 'paid')->sum('amount');
+
+        return (float) max(0, $paid - $this->total);
     }
 
     public function outstandingAmount(): float
