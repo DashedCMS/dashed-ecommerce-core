@@ -5,6 +5,8 @@ namespace Dashed\DashedEcommerceCore\Classes;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 /**
  * Wijzigt de inhoud van een bestelling. Onbetaalde orders zonder echte factuur
@@ -43,6 +45,85 @@ class OrderModificationService
 
             return $order->fresh();
         });
+    }
+
+    public static function replaceWithNewOrder(Order $order, array $lines, array $options = []): Order
+    {
+        if ($order->replaced_by_order_id) {
+            throw new \LogicException('Deze bestelling is al vervangen door een andere bestelling.');
+        }
+
+        $alreadyShipped = (bool) ($options['already_shipped'] ?? false);
+        $productsMustBeReturned = (bool) ($options['products_must_be_returned'] ?? false);
+        $creditOldOrder = $options['credit_old_order'] ?? $order->hasRealInvoice();
+
+        return DB::transaction(function () use ($order, $lines, $alreadyShipped, $productsMustBeReturned, $creditOldOrder) {
+            // 1. Nieuwe order. invoice_id expliciet op PROFORMA, want
+            // generateInvoiceId() deelt alleen een nieuw nummer uit aan orders
+            // met PROFORMA of RETURN. Zonder dit erft de kopie het oude nummer.
+            $newOrder = $order->replicate(['credit_for_order_id', 'replaced_by_order_id']);
+            $newOrder->invoice_id = 'PROFORMA';
+            $newOrder->status = 'pending';
+            $newOrder->fulfillment_status = 'unhandled';
+            $newOrder->retour_status = null;
+            $newOrder->save();
+
+            self::writeLines($newOrder, $lines);
+            OrderTotalsCalculator::recalculate($newOrder);
+
+            $order->replaced_by_order_id = $newOrder->id;
+            $order->save();
+
+            OrderLog::createLog(orderId: $order->id, tag: 'order.modified', note: 'Vervangen door bestelling '.$newOrder->id);
+            OrderLog::createLog(orderId: $newOrder->id, tag: 'order.modified.replacement', note: 'Vervangt bestelling '.$order->id);
+
+            // 2. Oude order afsluiten. Dit moet VOOR het verrekenen: beide
+            // methodes vuren een OrderCancelledEvent en de abandoned-cart
+            // listener haakt alleen af zolang de order nog betaalde
+            // betalingen heeft.
+            if ($creditOldOrder) {
+                self::creditOldOrder($order, $newOrder, $alreadyShipped, $productsMustBeReturned);
+            } else {
+                $order->markAsCancelled(sendMail: false, refillStock: ! $alreadyShipped);
+                $order->orderPayments()->where('status', 'paid')->update(['order_id' => $newOrder->id]);
+            }
+
+            if ($productsMustBeReturned) {
+                $order->retour_status = 'waiting_for_return';
+                $order->save();
+            }
+
+            // 3. Status, factuur en voorraad van de nieuwe order. Bewust niet
+            // via markAsPaid(): die verstuurt een factuurmail, leegt
+            // winkelwagens en stuurt een GA-omzethit die dubbel zou tellen.
+            $newOrder->refresh();
+            $newOrder->status = $newOrder->outstandingAmount() <= 0.001 ? 'paid' : 'partially_paid';
+            $newOrder->save();
+            $newOrder->createInvoice();
+            $newOrder->deductStock();
+
+            if (! $creditOldOrder) {
+                // markAsCancelled() heeft refillDiscount() gedraaid, dus de
+                // teller moet er hier weer af. markAsCancelledWithCredit()
+                // raakt de kortingstellers niet aan, daar dus niet.
+                $newOrder->deductDiscount();
+            }
+
+            $newOrder->refresh();
+
+            OrderModifiedEvent::dispatch($newOrder, $order->fresh());
+
+            if ($newOrder->status === 'paid') {
+                OrderMarkedAsPaidEvent::dispatch($newOrder);
+            }
+
+            return $newOrder;
+        });
+    }
+
+    protected static function creditOldOrder(Order $order, Order $newOrder, bool $alreadyShipped, bool $productsMustBeReturned): void
+    {
+        throw new \LogicException('De credittak wordt in de volgende stap geïmplementeerd.');
     }
 
     /**
