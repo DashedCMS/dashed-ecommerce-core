@@ -136,9 +136,59 @@ class OrderModificationService
         });
     }
 
+    /**
+     * Sluit de oude order af met een creditorder. De oude order blijft bewust
+     * op 'paid' staan met zijn eigen betalingen; markAsCancelledWithCredit()
+     * zet hem netto op nul met een negatieve creditorder. Het al betaalde
+     * bedrag wordt daarom niet verplaatst maar verrekend met twee
+     * tegenboekingen, zodat de som over alle orders blijft kloppen:
+     * oude order plus, creditorder min, nieuwe order plus.
+     */
     protected static function creditOldOrder(Order $order, Order $newOrder, bool $alreadyShipped, bool $productsMustBeReturned): void
     {
-        throw new \LogicException('De credittak wordt in de volgende stap geïmplementeerd.');
+        $paidAmount = (float) $order->orderPayments()->where('status', 'paid')->sum('amount');
+
+        $chosenOrderProducts = $order->orderProducts()->get();
+        foreach ($chosenOrderProducts as $orderProduct) {
+            $orderProduct->refundQuantity = $orderProduct->quantity;
+        }
+
+        $creditOrder = $order->markAsCancelledWithCredit(
+            sendCustomerEmail: false,
+            productsMustBeReturned: $productsMustBeReturned,
+            restock: ! $alreadyShipped,
+            refundDiscountCosts: false,
+            extraOrderLineName: null,
+            extraOrderLinePrice: 0,
+            chosenOrderProducts: $chosenOrderProducts,
+            fulfillmentStatus: 'handled',
+            paymentMethodId: null,
+        );
+
+        if ($paidAmount <= 0) {
+            return;
+        }
+
+        $creditOrder->orderPayments()->create([
+            'status' => 'paid',
+            'amount' => round((float) $creditOrder->total, 2),
+            'psp' => 'own',
+            'payment_method' => 'verrekening',
+            'attributes' => [
+                'verrekend_met_order_id' => $newOrder->id,
+            ],
+        ]);
+
+        $newOrder->orderPayments()->create([
+            'status' => 'paid',
+            'amount' => round($paidAmount, 2),
+            'psp' => 'own',
+            'payment_method' => 'verrekening',
+            'attributes' => [
+                'verrekend_vanuit_order_id' => $order->id,
+                'creditorder_id' => $creditOrder->id,
+            ],
+        ]);
     }
 
     /**
