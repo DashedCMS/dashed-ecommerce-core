@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 
@@ -80,8 +82,48 @@ it('rendert het openstaande bedrag en de betaallink in de mail', function () {
 
     $rendered = (new OrderModifiedMail($new, null))->render();
 
-    expect($rendered)->toContain('Nieuw product')
+    // Het bedrag zelf toetsen, niet alleen dat er een link staat: 100 was al
+    // betaald, het nieuwe totaal is 121, dus er hoort exact 21,00 open te
+    // staan. Zonder deze assertie zou een fout van 21 naar 121 door de test
+    // heen glippen.
+    expect(round($new->outstandingAmount(), 2))->toBe(21.0)
+        ->and($rendered)->toContain('Nieuw product')
+        ->and($rendered)->toContain(CurrencyHelper::formatPrice(21.0))
         ->and($rendered)->toContain('/pay/order/' . $new->hash . '/remainder');
+});
+
+it('hangt de factuur van de vervangende order aan de wijzigingsmail', function () {
+    // OrderModificationService slaat SendInvoiceJob bewust over, dus zonder
+    // deze bijlage krijgt de klant wel bericht dat er iets veranderd is, maar
+    // nooit de bijbehorende nieuwe factuur.
+    Storage::fake('dashed');
+
+    $old = mailableOrder();
+    $new = OrderModificationService::replaceWithNewOrder($old, [mailLine(121.0)], ['send_customer_email' => false]);
+
+    // createInvoice() in de service heeft de PDF net weggeschreven.
+    expect(Storage::disk('dashed')->exists($new->invoicePath()))->toBeTrue();
+
+    $attachments = (new OrderModifiedMail($new, null))->build()->attachments;
+
+    expect($attachments)->toHaveCount(1)
+        ->and($attachments[0]['options']['mime'])->toBe('application/pdf');
+});
+
+it('verstuurt de wijzigingsmail ook zonder factuur-pdf', function () {
+    // Een ontbrekende PDF mag het enige bericht dat de klant over de wijziging
+    // krijgt nooit tegenhouden.
+    Storage::fake('dashed');
+
+    $old = mailableOrder();
+    $new = OrderModificationService::replaceWithNewOrder($old, [mailLine(121.0)], ['send_customer_email' => false]);
+
+    Storage::disk('dashed')->delete($new->invoicePath());
+
+    $mail = (new OrderModifiedMail($new, null))->build();
+
+    expect($mail->attachments)->toHaveCount(0)
+        ->and($mail->subject)->toContain('is aangepast');
 });
 
 it('stuurt ook een wijzigingsmail wanneer een order in plaats aangepast wordt', function () {

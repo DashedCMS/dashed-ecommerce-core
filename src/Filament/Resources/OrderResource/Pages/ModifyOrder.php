@@ -19,6 +19,7 @@ use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
@@ -85,12 +86,20 @@ class ModifyOrder extends Page implements HasSchemas
      * Zelfde bewoording voor de banner boven het formulier en de
      * bevestigingsmodal van submitAction(), zodat ze niet uit elkaar kunnen
      * lopen.
+     *
+     * $creditOldOrder komt bewust van buiten en wordt niet zelf uit
+     * $this->order->hasRealInvoice() afgeleid: de beheerder kan de schakelaar
+     * "Creditfactuur maken voor de oude bestelling" omzetten, en submit() geeft
+     * precies die schakelaar aan de service door. Zou deze zin de schakelaar
+     * negeren, dan zegt de bevestiging "gecrediteerd" terwijl de order
+     * geannuleerd wordt (of andersom) — juist op de enige onomkeerbare stap in
+     * dit scherm.
      */
-    protected function routeDescription(bool $inPlace): string
+    protected function routeDescription(bool $inPlace, bool $creditOldOrder): string
     {
         return $inPlace
             ? 'Deze bestelling wordt zelf aangepast. Er komt geen tweede bestelling bij.'
-            : 'Er wordt een vervangende bestelling aangemaakt met het al betaalde bedrag erin verrekend. Deze bestelling wordt ' . ($this->order->hasRealInvoice() ? 'gecrediteerd' : 'geannuleerd') . '.';
+            : 'Er wordt een vervangende bestelling aangemaakt met het al betaalde bedrag erin verrekend. Deze bestelling wordt ' . ($creditOldOrder ? 'gecrediteerd' : 'geannuleerd') . '.';
     }
 
     public function modifyOrderForm(Schema $schema): Schema
@@ -103,7 +112,10 @@ class ModifyOrder extends Page implements HasSchemas
                     ->schema([
                         TextEntry::make('route')
                             ->hiddenLabel()
-                            ->state($this->routeDescription($inPlace)),
+                            // Bij het renderen van de banner is er nog geen
+                            // formulierstaat; de schakelaar staat dan nog op zijn
+                            // default. De modal leest wél de actuele staat.
+                            ->state($this->routeDescription($inPlace, $this->order->hasRealInvoice())),
                     ])
                     ->columnSpanFull(),
                 Section::make('Regels')
@@ -122,7 +134,14 @@ class ModifyOrder extends Page implements HasSchemas
                                     // kolom matcht de opgeslagen JSON, en de labels moeten
                                     // via het model lopen zodat de accessor vertaalt;
                                     // pluck() zou de ruwe JSON teruggeven.
+                                    // thisSite() op de site van de order (niet op de
+                                    // actieve site van de beheerder): op een
+                                    // multi-site-installatie hoort er geen product
+                                    // van een andere webshop op deze bestelling te
+                                    // kunnen belanden. replaceWithNewOrder() zet de
+                                    // site_id van de order ook zorgvuldig terug.
                                     ->getSearchResultsUsing(fn (string $search) => Product::query()
+                                        ->thisSite($this->order->site_id)
                                         ->where('name', 'LIKE', "%{$search}%")
                                         ->limit(25)
                                         ->get()
@@ -280,9 +299,11 @@ class ModifyOrder extends Page implements HasSchemas
             collect($state['lines'] ?? [])->sum(fn (array $line) => (float) ($line['price'] ?? 0)),
             2
         );
-        // Zelfde formule als OrderTotalsCalculator::recalculate(): korting kan
-        // nooit groter zijn dan het (nieuwe) subtotaal.
-        $discount = min((float) ($this->order->discount ?? 0), $newSubtotal);
+        // Via dezelfde methode als OrderTotalsCalculator::recalculate() straks
+        // gebruikt, zodat de bevestiging niet iets anders kan tonen dan er
+        // weggeschreven wordt. Bij een procentuele kortingscode wordt de korting
+        // hier dus al over het nieuwe subtotaal herrekend.
+        $discount = OrderTotalsCalculator::discountForLines($this->order, $this->confirmationLines($state));
         $newTotal = round($newSubtotal - $discount, 2);
         $oldTotal = (float) $this->order->total;
         $difference = round($newTotal - $oldTotal, 2);
@@ -308,12 +329,44 @@ class ModifyOrder extends Page implements HasSchemas
             ? 'De klant ontvangt een wijzigingsmail.'
             : 'De klant ontvangt geen wijzigingsmail.';
 
-        return $this->routeDescription($inPlace)
+        // De korting expliciet noemen zodra er een is: bij een procentuele code
+        // beweegt hij mee met de nieuwe regels en dan moet de beheerder kunnen
+        // zien welk bedrag er daadwerkelijk toegepast wordt.
+        $discountSentence = $discount > 0.005
+            ? ' Toegepaste korting: ' . CurrencyHelper::formatPrice($discount) . '.'
+            : '';
+
+        return $this->routeDescription($inPlace, (bool) ($state['credit_old_order'] ?? $this->order->hasRealInvoice()))
             . ' Huidig totaal: ' . CurrencyHelper::formatPrice($oldTotal)
             . ', nieuw totaal: ' . CurrencyHelper::formatPrice($newTotal)
             . ' (verschil: ' . $differenceText . ').'
+            . $discountSentence
             . ' ' . $moneySentence
             . ' ' . $emailSentence;
+    }
+
+    /**
+     * De regels uit de formulierstaat in de vorm die
+     * OrderTotalsCalculator::discountForLines() verwacht. De sku staat niet in
+     * het formulier (die is niet bewerkbaar) maar is wel nodig om verzend- en
+     * betaalkosten van een procentuele korting uit te sluiten; die komt via
+     * order_product_id van de bronregel, net zoals writeLines() dat straks doet.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>
+     */
+    protected function confirmationLines(array $state): array
+    {
+        $sourceLines = $this->order->orderProducts->keyBy('id');
+
+        return collect($state['lines'] ?? [])
+            ->map(fn (array $line) => [
+                'price' => (float) ($line['price'] ?? 0),
+                'quantity' => (int) ($line['quantity'] ?? 1),
+                'product_id' => $line['product_id'] ?? null,
+                'sku' => $sourceLines->get($line['order_product_id'] ?? null)?->sku,
+            ])
+            ->all();
     }
 
     public function submit(): void

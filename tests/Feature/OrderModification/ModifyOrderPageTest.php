@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
+use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -227,6 +228,96 @@ it('toont in de bevestigingsmodal het nieuwe totaal en de juiste geld-zin bij ee
     // blijft te betalen. Zou de berekening verkeerd zijn (bijv. tegen het
     // oude totaal of tegen nul) dan zou deze exacte zin niet voorkomen.
     $component->assertMountedActionModalSee('Er blijft ' . CurrencyHelper::formatPrice(30.5) . ' te betalen over.');
+});
+
+it('volgt de creditschakelaar in de bevestigingsmodal, niet alleen het factuurnummer', function () {
+    // Een order met een echt factuurnummer: standaard staat de schakelaar aan
+    // en wordt er gecrediteerd. Zet de beheerder hem uit, dan wordt de order
+    // geannuleerd en de betalingen verplaatst — submit() geeft precies die
+    // schakelaar door aan de service. De bevestiging moet dus meebewegen,
+    // anders belooft de enige onomkeerbare stap in dit scherm iets anders dan
+    // er gebeurt.
+    $order = pageOrder(invoiceId: '2026-0001');
+
+    $component = Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->set('data.lines', [
+            ['order_product_id' => null, 'product_id' => null, 'name' => 'Nieuw product', 'quantity' => 1, 'price' => 100.0, 'vat_rate' => 21],
+        ]);
+
+    $component->mountAction('submitAction');
+    $component->assertMountedActionModalSee('Deze bestelling wordt gecrediteerd.');
+
+    $component->unmountAction();
+    $component->set('data.credit_old_order', false);
+    $component->mountAction('submitAction');
+    $component->assertMountedActionModalSee('Deze bestelling wordt geannuleerd.');
+});
+
+it('spiegelt de creditschakelaar ook de andere kant op bij een proforma-order', function () {
+    // Zonder echt factuurnummer staat de schakelaar standaard uit. Zet de
+    // beheerder hem aan, dan komt er wél een creditfactuur.
+    $order = pageOrder(invoiceId: 'PROFORMA');
+
+    $component = Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->set('data.lines', [
+            ['order_product_id' => null, 'product_id' => null, 'name' => 'Nieuw product', 'quantity' => 1, 'price' => 100.0, 'vat_rate' => 21],
+        ]);
+
+    $component->mountAction('submitAction');
+    $component->assertMountedActionModalSee('Deze bestelling wordt geannuleerd.');
+
+    $component->unmountAction();
+    $component->set('data.credit_old_order', true);
+    $component->mountAction('submitAction');
+    $component->assertMountedActionModalSee('Deze bestelling wordt gecrediteerd.');
+});
+
+/**
+ * De product-Select zit genest in een Section en een Repeater. Recursief zoeken
+ * i.p.v. een vaste index, zodat een herschikking van het formulier deze toets
+ * niet stilletjes onbruikbaar maakt.
+ */
+function findProductSelect($components): ?Select
+{
+    foreach ($components as $component) {
+        if ($component instanceof Select && $component->getName() === 'product_id') {
+            return $component;
+        }
+
+        $nested = findProductSelect($component->getDefaultChildComponents());
+        if ($nested) {
+            return $nested;
+        }
+    }
+
+    return null;
+}
+
+it('zoekt alleen producten van de site van de bestelling', function () {
+    // Op een multi-site-installatie mag er geen product van een andere webshop
+    // op deze bestelling belanden.
+    $order = pageOrder();
+    $ownProduct = modifyPageProduct(price: 10.0);
+
+    $otherSiteProduct = Product::withoutEvents(fn () => Product::create([
+        'product_group_id' => $ownProduct->product_group_id,
+        'name' => ['en' => 'Testproduct van andere site'],
+        'slug' => ['en' => 'ander-' . uniqid()],
+        'site_ids' => ['andere-site'],
+        'price' => 10, 'current_price' => 10, 'vat_rate' => 21,
+        'use_stock' => false, 'stock' => 0,
+        'images' => [],
+    ]));
+
+    $component = Livewire::test(ModifyOrder::class, ['record' => $order->id]);
+
+    $select = findProductSelect($component->instance()->modifyOrderForm->getComponents());
+    expect($select)->not->toBeNull();
+
+    $results = $select->getSearchResults('Testproduct');
+
+    expect(array_keys($results))->toContain($ownProduct->id)
+        ->and(array_keys($results))->not->toContain($otherSiteProduct->id);
 });
 
 it('weigert opslaan als de order tussentijds elders niet meer wijzigbaar is geworden', function () {

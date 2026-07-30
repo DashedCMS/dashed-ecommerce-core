@@ -5,8 +5,10 @@ namespace Dashed\DashedEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
@@ -121,25 +123,65 @@ class OrderModifiedMail extends Mailable implements RegistersEmailTemplate
                 $locale
             );
 
-            return $this->html($templateHtml)
-                ->from($fromEmail, $fromName)
-                ->subject($subject);
+            return $this->attachInvoice(
+                $this->html($templateHtml)
+                    ->from($fromEmail, $fromName)
+                    ->subject($subject)
+            );
         }
 
         $view = view()->exists(config('dashed-core.site_theme', 'dashed') . '.emails.order-modified')
             ? config('dashed-core.site_theme', 'dashed') . '.emails.order-modified'
             : 'dashed-ecommerce-core::emails.order-modified';
 
-        return $this->view($view)
-            ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
-            ->subject('Je bestelling #' . $this->order->invoice_id . ' is aangepast')
-            ->with([
-                'order' => $this->order,
-                'note' => $this->note,
-                'outstandingAmount' => $outstandingAmount,
-                'overpaidAmount' => $overpaidAmount,
-                'paymentUrl' => $paymentUrl,
+        return $this->attachInvoice(
+            $this->view($view)
+                ->from(Customsetting::get('site_from_email'), Customsetting::get('site_name'))
+                ->subject('Je bestelling #' . $this->order->invoice_id . ' is aangepast')
+                ->with([
+                    'order' => $this->order,
+                    'note' => $this->note,
+                    'outstandingAmount' => $outstandingAmount,
+                    'overpaidAmount' => $overpaidAmount,
+                    'paymentUrl' => $paymentUrl,
+                ])
+        );
+    }
+
+    /**
+     * Hangt de factuur van de (gewijzigde of vervangende) bestelling aan de
+     * mail, op dezelfde manier als OrderConfirmationMail dat doet. De klant
+     * krijgt anders wel bericht dat zijn bestelling veranderd is, maar nooit de
+     * bijbehorende nieuwe factuur: OrderModificationService slaat SendInvoiceJob
+     * bewust over.
+     *
+     * Het bestaan van het bestand wordt eerst gecontroleerd en de attach zelf
+     * staat in een try/catch: een ontbrekende of onleesbare PDF mag de
+     * wijzigingsmail nooit tegenhouden, want dat is het enige bericht dat de
+     * klant over de wijziging krijgt.
+     */
+    protected function attachInvoice(self $mail): self
+    {
+        try {
+            $invoicePath = $this->order->invoicePath();
+
+            if (! $invoicePath || ! Storage::disk('dashed')->exists($invoicePath)) {
+                return $mail;
+            }
+
+            $mail->attach(Storage::disk('dashed')->url($invoicePath), [
+                'as' => Customsetting::get('site_name') . ' - ' . $this->order->invoice_id . '.pdf',
+                'mime' => 'application/pdf',
             ]);
+        } catch (\Throwable $e) {
+            OrderLog::createLog(
+                orderId: $this->order->id,
+                tag: 'order.modified.mail.invoice-attach.failed',
+                note: 'Error: ' . $e->getMessage(),
+            );
+        }
+
+        return $mail;
     }
 
     /**
