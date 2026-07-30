@@ -56,8 +56,9 @@ class OrderModificationService
         $alreadyShipped = (bool) ($options['already_shipped'] ?? false);
         $productsMustBeReturned = (bool) ($options['products_must_be_returned'] ?? false);
         $creditOldOrder = $options['credit_old_order'] ?? $order->hasRealInvoice();
+        $deductNewStock = (bool) ($options['deduct_new_stock'] ?? true);
 
-        return DB::transaction(function () use ($order, $lines, $alreadyShipped, $productsMustBeReturned, $creditOldOrder) {
+        return DB::transaction(function () use ($order, $lines, $alreadyShipped, $productsMustBeReturned, $creditOldOrder, $deductNewStock) {
             // 1. Nieuwe order. invoice_id expliciet op PROFORMA, want
             // generateInvoiceId() deelt alleen een nieuw nummer uit aan orders
             // met PROFORMA of RETURN. Zonder dit erft de kopie het oude nummer.
@@ -66,6 +67,17 @@ class OrderModificationService
             $newOrder->status = 'pending';
             $newOrder->fulfillment_status = 'unhandled';
             $newOrder->retour_status = null;
+            $newOrder->save();
+
+            // De creating-hook op Order overschrijft site_id, locale en ip
+            // onvoorwaardelijk met de actieve site, de huidige app-locale en
+            // het IP van de inloggende beheerder. Die overschrijving gebeurde
+            // dus net in de save() hierboven; nu pas de waarden van de
+            // oorspronkelijke klant/order terugzetten en opnieuw opslaan (een
+            // update, geen insert, dus de hook grijpt niet nogmaals in).
+            $newOrder->site_id = $order->site_id;
+            $newOrder->locale = $order->locale;
+            $newOrder->ip = $order->ip;
             $newOrder->save();
 
             self::writeLines($newOrder, $lines);
@@ -100,7 +112,10 @@ class OrderModificationService
             $newOrder->status = $newOrder->outstandingAmount() <= 0.001 ? 'paid' : 'partially_paid';
             $newOrder->save();
             $newOrder->createInvoice();
-            $newOrder->deductStock();
+
+            if ($deductNewStock) {
+                $newOrder->deductStock();
+            }
 
             if (! $creditOldOrder) {
                 // markAsCancelled() heeft refillDiscount() gedraaid, dus de
