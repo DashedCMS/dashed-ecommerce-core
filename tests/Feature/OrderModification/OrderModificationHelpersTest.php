@@ -36,3 +36,21 @@ it('koppelt een order aan zijn vervanger en terug', function () {
     expect($old->fresh()->replacedByOrder->id)->toBe($new->id)
         ->and($new->fresh()->replacesOrder->id)->toBe($old->id);
 });
+
+it('mag een order alleen wijzigen als hij niet geannuleerd, geretourneerd, vervangen of een creditnota is', function () {
+    $ordinary = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $cancelled = Order::create(['email' => 'a@b.nl', 'status' => 'cancelled']);
+    $returned = Order::create(['email' => 'a@b.nl', 'status' => 'return']);
+
+    $replacement = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $replaced = Order::create(['email' => 'a@b.nl', 'status' => 'cancelled', 'replaced_by_order_id' => $replacement->id]);
+
+    $original = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
+    $credit = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'credit_for_order_id' => $original->id]);
+
+    expect($ordinary->isModifiable())->toBeTrue()
+        ->and($cancelled->isModifiable())->toBeFalse()
+        ->and($returned->isModifiable())->toBeFalse()
+        ->and($replaced->isModifiable())->toBeFalse()
+        ->and($credit->isModifiable())->toBeFalse();
+});

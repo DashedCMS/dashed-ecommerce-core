@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Resources\Pages\Page;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Repeater;
@@ -14,17 +15,15 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class ModifyOrder extends Page implements HasSchemas
 {
-    use InteractsWithSchemas;
-
     protected static string $resource = OrderResource::class;
     protected string $view = 'dashed-ecommerce-core::orders.modify-order';
 
@@ -35,6 +34,18 @@ class ModifyOrder extends Page implements HasSchemas
     {
         $this->order = Order::findOrFail($record);
 
+        if (! $this->order->isModifiable()) {
+            Notification::make()
+                ->title('Deze bestelling kan niet gewijzigd worden')
+                ->body('Geannuleerde, geretourneerde, al vervangen of credit-bestellingen kunnen niet via dit scherm aangepast worden.')
+                ->danger()
+                ->send();
+
+            $this->redirect(route('filament.dashed.resources.orders.view', ['record' => $this->order->id]));
+
+            return;
+        }
+
         $this->modifyOrderForm->fill([
             'deduct_new_stock' => true,
             'lines' => $this->order->orderProducts->map(fn ($orderProduct) => [
@@ -44,6 +55,7 @@ class ModifyOrder extends Page implements HasSchemas
                 'quantity' => (int) $orderProduct->quantity,
                 'price' => (float) $orderProduct->price,
                 'vat_rate' => (float) ($orderProduct->vat_rate ?? 21),
+                'product_extras' => $orderProduct->product_extras ?? [],
             ])->values()->all(),
             'send_customer_email' => true,
             'already_shipped' => false,
@@ -107,13 +119,11 @@ class ModifyOrder extends Page implements HasSchemas
                                         ->mapWithKeys(fn (Product $product) => [$product->id => $product->name])
                                         ->all())
                                     ->getOptionLabelUsing(fn ($value) => Product::find($value)?->name)
-                                    ->afterStateUpdated(function ($state, callable $set) {
+                                    ->afterStateUpdated(function ($state, callable $set, Get $get) {
                                         $product = $state ? Product::find($state) : null;
                                         if ($product) {
                                             $set('name', $product->name);
-                                            // current_price is de kolom; currentPrice bestaat niet
-                                            // als attribuut op Product.
-                                            $set('price', (float) $product->current_price);
+                                            self::setLineTotalFromProduct($product, $get('quantity'), $set);
                                         }
                                     })
                                     ->live()
@@ -127,7 +137,15 @@ class ModifyOrder extends Page implements HasSchemas
                                     ->numeric()
                                     ->minValue(1)
                                     ->required()
-                                    ->default(1),
+                                    ->default(1)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                                        $productId = $get('product_id');
+                                        $product = $productId ? Product::find($productId) : null;
+                                        if ($product) {
+                                            self::setLineTotalFromProduct($product, $state, $set);
+                                        }
+                                    }),
                                 TextInput::make('price')
                                     ->label('Regeltotaal')
                                     ->helperText('Het totaal van deze regel, niet de stuksprijs')
@@ -140,6 +158,10 @@ class ModifyOrder extends Page implements HasSchemas
                                     ->required()
                                     ->default(21)
                                     ->suffix('%'),
+                                // Niet bewerkbaar in deze eerste versie; bestaat alleen om de
+                                // extras van een ongewijzigde regel de round-trip te laten
+                                // overleven (writeLines() herbouwt alle regels vanaf nul).
+                                Hidden::make('product_extras'),
                             ])
                             ->columns(4)
                             ->addActionLabel('Regel toevoegen')
@@ -176,6 +198,27 @@ class ModifyOrder extends Page implements HasSchemas
             ->statePath('data');
     }
 
+    /**
+     * Zet het regeltotaal (niet de stuksprijs) op basis van de kwantiteit.
+     *
+     * Gebruikt Product::getRawOriginal('current_price'): de ruwe, opgeslagen
+     * kolomwaarde vóór de currentPrice-accessor. Die accessor rekent om naar
+     * ex-BTW zodra de ingelogde beheerder `show_prices_ex_vat` aan heeft
+     * staan, wat de opgeslagen orderregel afhankelijk zou maken van wélke
+     * beheerder toevallig aan het wijzigen was. De ruwe kolom staat op
+     * dezelfde grondslag als orderregels (bepaald door de shopbrede
+     * taxes_prices_include_taxes-instelling, niet door een persoonlijke
+     * weergavevoorkeur) en is ongevoelig voor prijsgroep/custom-pricing van
+     * de ingelogde gebruiker, dus voor elke beheerder identiek.
+     */
+    protected static function setLineTotalFromProduct(Product $product, mixed $quantity, callable $set): void
+    {
+        $unitPrice = (float) $product->getRawOriginal('current_price');
+        $quantity = max(1, (int) ($quantity ?? 1));
+
+        $set('price', round($unitPrice * $quantity, 2));
+    }
+
     public function submit(): void
     {
         $state = $this->modifyOrderForm->getState();
@@ -188,7 +231,7 @@ class ModifyOrder extends Page implements HasSchemas
                 'quantity' => (int) $line['quantity'],
                 'price' => (float) $line['price'],
                 'vat_rate' => (float) $line['vat_rate'],
-                'product_extras' => [],
+                'product_extras' => $line['product_extras'] ?? [],
             ])
             ->all();
 

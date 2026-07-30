@@ -149,9 +149,7 @@ class ViewOrder extends ViewRecord
                 ->label('Bestelling wijzigen')
                 ->icon('heroicon-o-pencil-square')
                 ->color('warning')
-                ->visible(fn (): bool => ! in_array($this->record->status, ['cancelled', 'return'], true)
-                    && ! $this->record->replaced_by_order_id
-                    && ! $this->record->credit_for_order_id)
+                ->visible(fn (): bool => $this->record->isModifiable())
                 ->url(fn () => route('filament.dashed.resources.orders.modify', ['record' => $this->record->id])),
             ActionGroup::make([
                 Action::make('Factuur')

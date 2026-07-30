@@ -414,6 +414,20 @@ class Order extends Model
     }
 
     /**
+     * Mag deze order via het wijzigscherm aangepast worden? Niet geannuleerd
+     * of geretourneerd, niet al vervangen, en zelf geen creditnota voor een
+     * andere order. Losstaand van canModifyInPlace(): dit bepaalt of de
+     * bestelling er überhaupt aan mag komen, niet welke route (in-place of
+     * vervangend) daarna genomen wordt.
+     */
+    public function isModifiable(): bool
+    {
+        return ! in_array($this->status, ['cancelled', 'return'], true)
+            && ! $this->replaced_by_order_id
+            && ! $this->credit_for_order_id;
+    }
+
+    /**
      * Wat er meer betaald is dan de order kost. Tegenhanger van
      * outstandingAmount(), gebruikt na een wijziging naar een lager totaal.
      */
