@@ -79,6 +79,7 @@ class OrderController extends Controller
                         if (is_numeric($term)) {
                             $q->orWhere('id', (int) $term);
                         }
+                        $q->orWhereHas('orderProducts', fn (Builder $pq) => $pq->where('name', 'like', "%{$term}%"));
                     });
                 }
             });
