@@ -169,9 +169,14 @@ class OrderModificationService
             return;
         }
 
+        // De tegenboeking staat voor geld dat verhuist, niet voor de waarde van
+        // de creditregels. Bij een deels betaalde factuur is dat minder dan het
+        // negatieve totaal van de creditorder; zou je dat totaal boeken, dan
+        // telt de som over alle orders niet meer op tot wat de klant betaald
+        // heeft en claimt de creditorder een teruggave die nooit betaald is.
         $creditOrder->orderPayments()->create([
             'status' => 'paid',
-            'amount' => round((float) $creditOrder->total, 2),
+            'amount' => round(0 - $paidAmount, 2),
             'psp' => 'own',
             'payment_method' => 'verrekening',
             'attributes' => [

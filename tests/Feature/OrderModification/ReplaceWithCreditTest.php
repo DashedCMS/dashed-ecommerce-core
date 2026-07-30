@@ -6,7 +6,9 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -99,6 +101,24 @@ it('verrekent het betaalde bedrag met tegenboekingen', function () {
         ->and(round((float) $creditOrder->orderPayments()->where('status', 'paid')->sum('amount'), 2))->toBe(round((float) $creditOrder->total, 2));
 });
 
+it('verrekent alleen het werkelijk betaalde bedrag bij een deels betaalde factuur', function () {
+    $old = invoicedPaidOrder(100.0);
+    $old->orderPayments()->delete();
+    $old->orderPayments()->create(['status' => 'paid', 'amount' => 60, 'psp' => 'own']);
+    $old->status = 'partially_paid';
+    $old->save();
+
+    $new = OrderModificationService::replaceWithNewOrder($old->fresh(), [creditLine('Ander product', 100.0)]);
+
+    $allPaid = Order::query()->get()->sum(
+        fn (Order $order) => (float) $order->orderPayments()->where('status', 'paid')->sum('amount')
+    );
+
+    expect(round($allPaid, 2))->toBe(60.0)
+        ->and(round((float) $new->orderPayments()->where('status', 'paid')->sum('amount'), 2))->toBe(60.0)
+        ->and(round($new->outstandingAmount(), 2))->toBe(40.0);
+});
+
 it('houdt de som van alle betalingen gelijk aan het nieuwe totaal', function () {
     $old = invoicedPaidOrder(100.0);
 
@@ -141,10 +161,25 @@ it('zet de retourstatus wanneer de producten terug moeten komen', function () {
 
     OrderModificationService::replaceWithNewOrder($old, [creditLine('Ander product', 100.0)], ['products_must_be_returned' => true]);
 
-    expect($old->fresh()->retour_status)->toBe('waiting_for_return');
+    $creditOrder = Order::where('credit_for_order_id', $old->id)->first();
+
+    expect($old->fresh()->retour_status)->toBe('waiting_for_return')
+        ->and($creditOrder->retour_status)->toBe('waiting_for_return');
 });
 
 it('zet ook in de credittak geen herstelmails in de wachtrij', function () {
+    $flow = AbandonedCartFlow::create([
+        'name' => 'Herstel', 'is_active' => true,
+        'discount_prefix' => 'P', 'triggers' => ['cancelled_order'],
+    ]);
+    AbandonedCartFlowStep::create([
+        'flow_id' => $flow->id, 'sort_order' => 1,
+        'delay_value' => 1, 'delay_unit' => 'hours',
+        'subject' => 'Herstel je bestelling :orderId:',
+        'enabled' => true,
+        'blocks' => [['type' => 'text', 'data' => ['content' => '<p>Hoi</p>']]],
+    ]);
+
     $old = invoicedPaidOrder(100.0);
 
     OrderModificationService::replaceWithNewOrder($old, [creditLine('Ander product', 100.0)]);
