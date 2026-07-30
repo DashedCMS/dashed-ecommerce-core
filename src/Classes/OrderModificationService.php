@@ -15,7 +15,10 @@ class OrderModificationService
 {
     public static function canModifyInPlace(Order $order): bool
     {
-        return ! $order->hasRealInvoice()
+        // Een order die al vervangen is, is afgesloten. Hem alsnog in plaats
+        // aanpassen zou een achterhaalde bestelling weer tot leven wekken.
+        return ! $order->replaced_by_order_id
+            && ! $order->hasRealInvoice()
             && ! $order->isPaidFor()
             && ! $order->orderPayments()->where('status', 'paid')->exists();
     }

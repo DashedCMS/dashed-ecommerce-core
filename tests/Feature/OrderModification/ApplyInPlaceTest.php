@@ -44,6 +44,17 @@ it('mag een order met een betaalde betaling niet in plaats aanpassen', function 
     expect(OrderModificationService::canModifyInPlace($order->fresh()))->toBeFalse();
 });
 
+it('mag een al vervangen order niet in plaats aanpassen', function () {
+    $replacement = Order::create(['email' => 'a@b.nl', 'status' => 'pending']);
+    $order = Order::create([
+        'email' => 'a@b.nl',
+        'status' => 'cancelled',
+        'replaced_by_order_id' => $replacement->id,
+    ]);
+
+    expect(OrderModificationService::canModifyInPlace($order))->toBeFalse();
+});
+
 it('vervangt de regels en herberekent de totalen', function () {
     Customsetting::set('taxes_prices_include_taxes', 1);
     $order = conceptOrderWithLine();
