@@ -198,6 +198,86 @@ it('boekt de voorraad van de nieuwe order af en geeft de oude terug', function (
     expect($product->fresh()->stock)->toBe(4);
 });
 
+it('behoudt de sku van een ongewijzigde verzendkostenregel', function () {
+    // Verzend- en betaalkosten zijn gewone orderregels die alleen aan hun sku
+    // te herkennen zijn. Raakt die kwijt, dan telt RevenueStatisticsPage de
+    // verzendomzet van deze order als nul en valt door `sku NOT IN (...)` op
+    // NULL élke regel van deze order uit de verkochte-aantallen.
+    $old = paidOrderWithoutRealInvoice(100.0);
+    $shipping = OrderProduct::create([
+        'order_id' => $old->id,
+        'name' => 'Verzendkosten',
+        'quantity' => 1,
+        'price' => 7.5,
+        'vat_rate' => 21,
+        'sku' => 'shipping_costs',
+        'is_pre_order' => 1,
+        'discount' => 2.5,
+    ]);
+
+    $productLine = $old->orderProducts()->where('name', 'Oud product')->first();
+
+    $new = OrderModificationService::replaceWithNewOrder($old->fresh(), [
+        [
+            'order_product_id' => $productLine->id,
+            'product_id' => null,
+            'name' => 'Oud product',
+            'quantity' => 1,
+            'price' => 100.0,
+            'vat_rate' => 21,
+            'product_extras' => [],
+        ],
+        [
+            'order_product_id' => $shipping->id,
+            'product_id' => null,
+            'name' => 'Verzendkosten',
+            'quantity' => 1,
+            'price' => 7.5,
+            'vat_rate' => 21,
+            'product_extras' => [],
+        ],
+    ]);
+
+    $newShipping = $new->orderProducts()->where('name', 'Verzendkosten')->first();
+
+    expect($newShipping->sku)->toBe('shipping_costs')
+        // discount en is_pre_order gaan om dezelfde reden mee: ze staan niet in
+        // het wijzigformulier en zouden anders stilletjes op nul vallen.
+        ->and(round((float) $newShipping->discount, 2))->toBe(2.5)
+        ->and((int) $newShipping->is_pre_order)->toBe(1);
+});
+
+it('legt de vervangende order op de datum van de eerste betaling', function () {
+    // markAsPaid() begint met alignCreatedAtToFirstPayment() zodat omzet op de
+    // eerste betaaldatum telt. De service slaat markAsPaid() bewust over, dus
+    // moet hij dat zelf doen: de oude order valt als 'cancelled' uit de
+    // statistieken, en zonder uitlijning verhuist de omzet van mei naar juli.
+    $old = paidOrderWithoutRealInvoice(100.0);
+    $paidAt = now()->subMonths(2)->startOfDay();
+    $old->orderPayments()->update(['created_at' => $paidAt]);
+
+    $new = OrderModificationService::replaceWithNewOrder($old->fresh(), [line('Ander product', 100.0)]);
+
+    expect($new->created_at->toDateTimeString())->toBe($paidAt->toDateTimeString());
+});
+
+it('neemt packed_at, cart_id en de proforma-velden niet mee naar de vervanger', function () {
+    $old = paidOrderWithoutRealInvoice(100.0);
+    $old->packed_at = now()->subDay();
+    $old->invoice_send_to_customer = 1;
+    $old->is_proforma = true;
+    $old->proforma_sent_at = now()->subDay();
+    $old->save();
+
+    $new = OrderModificationService::replaceWithNewOrder($old->fresh(), [line('Ander product', 100.0)]);
+
+    expect($new->packed_at)->toBeNull()
+        ->and((bool) $new->invoice_send_to_customer)->toBeFalse()
+        ->and((bool) $new->is_proforma)->toBeFalse()
+        ->and($new->proforma_sent_at)->toBeNull()
+        ->and($new->cart_id)->toBeNull();
+});
+
 it('laat de oude voorraad staan en boekt de nieuwe niet af bij een administratieve correctie', function () {
     $product = replacementStockedProduct(stock: 5);
     $old = paidOrderWithStockedLine($product, quantity: 2, total: 100.0);

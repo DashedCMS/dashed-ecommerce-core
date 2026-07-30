@@ -1,14 +1,16 @@
 <?php
 
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
+use Dashed\DashedEcommerceCore\Models\OrderHandledFlow;
+use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
+use Dashed\DashedEcommerceCore\Models\OrderHandledFlowStep;
+use Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -167,22 +169,48 @@ it('zet de retourstatus wanneer de producten terug moeten komen', function () {
         ->and($creditOrder->retour_status)->toBe('waiting_for_return');
 });
 
-it('zet ook in de credittak geen herstelmails in de wachtrij', function () {
-    $flow = AbandonedCartFlow::create([
-        'name' => 'Herstel', 'is_active' => true,
-        'discount_prefix' => 'P', 'triggers' => ['cancelled_order'],
+it('schrijft de klant in de credittak niet in voor de na-aankoop-flows', function () {
+    // De oude toets hier keek naar AbandonedCartEmail. Die kon niet falen: in
+    // de credittak blijven de betaalde betalingen op de oude order staan en
+    // QueueAbandonedCartEmailsForOrderListener stapt per definitie uit zodra
+    // een order een betaalde betaling heeft, ongeacht wat deze code doet.
+    //
+    // Wat hier wél op het spel staat is de andere flow. De credittak riep
+    // changeFulfillmentStatus('handled') aan op een order die op 'paid' blijft
+    // staan mét echt factuurnummer, en QueueOrderFlowEmailsListener schreef de
+    // klant daarmee in voor de na-aankoop-opvolging van een bestelling die net
+    // weggecrediteerd is. Deze toets faalt zodra dat terugkomt.
+    $flow = OrderHandledFlow::create([
+        'name' => 'Na aankoop', 'is_active' => true,
+        'trigger_status' => 'handled', 'discount_prefix' => 'N',
     ]);
-    AbandonedCartFlowStep::create([
+    OrderHandledFlowStep::create([
         'flow_id' => $flow->id, 'sort_order' => 1,
-        'delay_value' => 1, 'delay_unit' => 'hours',
-        'subject' => 'Herstel je bestelling :orderId:',
-        'enabled' => true,
+        'send_after_minutes' => 60, 'is_active' => true,
+        'subject' => 'Hoe bevalt je bestelling?',
         'blocks' => [['type' => 'text', 'data' => ['content' => '<p>Hoi</p>']]],
     ]);
 
     $old = invoicedPaidOrder(100.0);
+    $old->fulfillment_status = 'shipped';
+    $old->save();
 
-    OrderModificationService::replaceWithNewOrder($old, [creditLine('Ander product', 100.0)]);
+    OrderModificationService::replaceWithNewOrder($old->fresh(), [creditLine('Ander product', 100.0)]);
 
-    expect(AbandonedCartEmail::count())->toBe(0);
+    expect(OrderFlowEnrollment::count())->toBe(0)
+        // De fulfillment-status van de oude order mag ook niet verzet zijn: dat
+        // is precies het mechanisme waarmee de inschrijving voorkomen wordt, en
+        // het zou de klant bovendien een FulfillmentStatusHandledMail sturen
+        // terwijl er een vervangende bestelling openstaat.
+        ->and($old->fresh()->fulfillment_status)->toBe('shipped');
+});
+
+it('stuurt de beheerders geen annuleringsmail bij een wijziging via de credittak', function () {
+    Mail::fake();
+
+    $old = invoicedPaidOrder(100.0);
+
+    OrderModificationService::replaceWithNewOrder($old, [creditLine('Ander product', 100.0)], ['send_customer_email' => false]);
+
+    Mail::assertNotSent(AdminOrderCancelledMail::class);
 });

@@ -353,10 +353,17 @@ class Order extends Model
      *
      * Draait alleen op de eerste overgang uit 'concept' (de guard), dus het
      * blijft na de eerste betaling vaststaan en verschuift niet meer.
+     *
+     * $force omzeilt die guard voor een order die nooit 'concept' is geweest
+     * maar wel dezelfde uitlijning nodig heeft: de vervangende order uit
+     * OrderModificationService::replaceWithNewOrder() wordt vandaag aangemaakt
+     * terwijl de betalingen die erheen verhuizen van maanden geleden kunnen
+     * zijn. Zonder deze aanroep verschuift de omzet van de oorspronkelijke
+     * betaalmaand naar de maand van de wijziging.
      */
-    public function alignCreatedAtToFirstPayment(): void
+    public function alignCreatedAtToFirstPayment(bool $force = false): void
     {
-        if (! $this->isConcept()) {
+        if (! $force && ! $this->isConcept()) {
             return;
         }
 
@@ -1221,15 +1228,27 @@ class Order extends Model
         $this->updateOrderProductsProductInformation();
     }
 
-    public function markAsCancelled($sendMail = false, $refillStock = true)
+    /**
+     * $refillDiscount uit zetten laat de kortingstellers (stock, stock_used en
+     * bij een cadeaubon discount_amount/reserved_amount) met rust. Nodig
+     * wanneer de annulering geen echte annulering is maar een verplaatsing:
+     * bij OrderModificationService::replaceWithNewOrder() erft de vervangende
+     * order dezelfde kortingscode, dus de code blijft gewoon verbruikt en mag
+     * niet eerst teruggegeven en daarna opnieuw afgeboekt worden.
+     */
+    public function markAsCancelled($sendMail = false, $refillStock = true, $refillDiscount = true)
     {
         if ($this->status == 'paid') {
             if ($refillStock) {
                 $this->refillStock();
             }
-            $this->refillDiscount();
+            if ($refillDiscount) {
+                $this->refillDiscount();
+            }
         } else {
-            $this->refillGiftcard();
+            if ($refillDiscount) {
+                $this->refillGiftcard();
+            }
         }
 
         foreach ($this->orderPayments()->where('status', 'pending')->get() as $orderPayment) {
@@ -1263,7 +1282,17 @@ class Order extends Model
         $this->updateOrderProductsProductInformation();
     }
 
-    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId)
+    /**
+     * $sendAdminEmail en $refillGiftcard staan standaard op het bestaande
+     * gedrag (altijd melden, cadeaubon altijd terugstorten) zodat het gewone
+     * annuleerscherm ongewijzigd blijft. Ze bestaan voor
+     * OrderModificationService::replaceWithNewOrder(): daar is de creditorder
+     * geen annulering maar een tegenboeking bij een wijziging. De beheerder
+     * hoeft dan geen annuleringsmail te krijgen, en de cadeaubon mag niet
+     * teruggestort worden omdat de vervangende order dezelfde kortingscode
+     * erft en het bedrag dus verbruikt blijft.
+     */
+    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true)
     {
         $newOrder = $this->replicate();
         $newOrder->invoice_id = 'RETURN';
@@ -1399,7 +1428,9 @@ class Order extends Model
 
         $newOrder->save();
         $newOrder->refresh();
-        $this->refillGiftcardFromPaidOrder();
+        if ($refillGiftcard) {
+            $this->refillGiftcardFromPaidOrder();
+        }
 
         if ($paymentMethodId) {
             $newOrderPayment = $newOrder->orderPayments()->create([
@@ -1430,11 +1461,13 @@ class Order extends Model
         }
 
         // Always send the invoice to admins
-        try {
-            //                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
-            AdminNotifier::send(new AdminOrderCancelledMail($newOrder), Mails::getAdminNotificationEmails());
-            //                }
-        } catch (Exception $e) {
+        if ($sendAdminEmail) {
+            try {
+                //                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
+                AdminNotifier::send(new AdminOrderCancelledMail($newOrder), Mails::getAdminNotificationEmails());
+                //                }
+            } catch (Exception $e) {
+            }
         }
 
         if ($restock) {

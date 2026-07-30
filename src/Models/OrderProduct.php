@@ -26,6 +26,7 @@ class OrderProduct extends Model
         'order_id',
         'name',
         'product_id',
+        'sku',
         'price',
         'discount',
         'btw',
