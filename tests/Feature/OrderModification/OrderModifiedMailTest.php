@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -22,6 +23,21 @@ function mailableOrder(): Order
     ]);
     OrderProduct::create(['order_id' => $order->id, 'name' => 'Oud product', 'quantity' => 1, 'price' => 100, 'vat_rate' => 21]);
     $order->orderPayments()->create(['status' => 'paid', 'amount' => 100, 'psp' => 'own']);
+
+    return $order->fresh();
+}
+
+function mailableConceptOrder(): Order
+{
+    Customsetting::set('taxes_prices_include_taxes', 1);
+
+    $order = Order::create([
+        'email' => 'klant@example.com',
+        'status' => Order::STATUS_CONCEPT,
+        'total' => 100,
+        'subtotal' => 100,
+    ]);
+    OrderProduct::create(['order_id' => $order->id, 'name' => 'Oud product', 'quantity' => 1, 'price' => 100, 'vat_rate' => 21]);
 
     return $order->fresh();
 }
@@ -66,4 +82,41 @@ it('rendert het openstaande bedrag en de betaallink in de mail', function () {
 
     expect($rendered)->toContain('Nieuw product')
         ->and($rendered)->toContain('/pay/order/' . $new->hash . '/remainder');
+});
+
+it('stuurt ook een wijzigingsmail wanneer een order in plaats aangepast wordt', function () {
+    Mail::fake();
+    $order = mailableConceptOrder();
+
+    OrderModificationService::applyInPlace($order, [mailLine(121.0)]);
+
+    Mail::assertSent(OrderModifiedMail::class, fn ($mail) => $mail->hasTo('klant@example.com'));
+});
+
+it('gebruikt de sjabloonvertaling van de locale van de order voor het onderwerp', function () {
+    // Zelfde seed-idioom als ProformaCheckoutMailTemplateTest/OrderNoteMailTest:
+    // een echte EmailTemplate-rij met per-locale subject/blocks, zodat build()
+    // via de HasEmailTemplate-tak rendert i.p.v. de kale fallback-view.
+    $template = EmailTemplate::firstOrCreate(
+        ['mailable_key' => OrderModifiedMail::emailTemplateKey()],
+        ['name' => OrderModifiedMail::emailTemplateName(), 'is_active' => true],
+    );
+    $template->setTranslations('subject', [
+        'nl' => 'Je bestelling is aangepast (NL)',
+        'en' => 'Your order has been modified (EN)',
+    ]);
+    $template->setTranslations('from_name', ['nl' => 'Test', 'en' => 'Test']);
+    $template->setTranslations('blocks', [
+        'nl' => OrderModifiedMail::defaultBlocks(),
+        'en' => OrderModifiedMail::defaultBlocks(),
+    ]);
+    $template->save();
+
+    $order = mailableOrder();
+    $order->locale = 'en';
+    $order->save();
+
+    $mail = (new OrderModifiedMail($order))->build();
+
+    expect($mail->subject)->toBe('Your order has been modified (EN)');
 });
