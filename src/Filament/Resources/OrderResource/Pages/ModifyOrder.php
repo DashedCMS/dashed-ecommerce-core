@@ -81,6 +81,18 @@ class ModifyOrder extends Page implements HasSchemas
         ];
     }
 
+    /**
+     * Zelfde bewoording voor de banner boven het formulier en de
+     * bevestigingsmodal van submitAction(), zodat ze niet uit elkaar kunnen
+     * lopen.
+     */
+    protected function routeDescription(bool $inPlace): string
+    {
+        return $inPlace
+            ? 'Deze bestelling wordt zelf aangepast. Er komt geen tweede bestelling bij.'
+            : 'Er wordt een vervangende bestelling aangemaakt met het al betaalde bedrag erin verrekend. Deze bestelling wordt ' . ($this->order->hasRealInvoice() ? 'gecrediteerd' : 'geannuleerd') . '.';
+    }
+
     public function modifyOrderForm(Schema $schema): Schema
     {
         $inPlace = OrderModificationService::canModifyInPlace($this->order);
@@ -91,9 +103,7 @@ class ModifyOrder extends Page implements HasSchemas
                     ->schema([
                         TextEntry::make('route')
                             ->hiddenLabel()
-                            ->state($inPlace
-                                ? 'Deze bestelling wordt zelf aangepast. Er komt geen tweede bestelling bij.'
-                                : 'Er wordt een vervangende bestelling aangemaakt met het al betaalde bedrag erin verrekend. Deze bestelling wordt ' . ($this->order->hasRealInvoice() ? 'gecrediteerd' : 'geannuleerd') . '.'),
+                            ->state($this->routeDescription($inPlace)),
                     ])
                     ->columnSpanFull(),
                 Section::make('Regels')
@@ -138,8 +148,25 @@ class ModifyOrder extends Page implements HasSchemas
                                     ->minValue(1)
                                     ->required()
                                     ->default(1)
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function ($state, $old, callable $set, Get $get) {
+                                        $previousQuantity = (int) ($old ?? 0);
+                                        $previousPrice = $get('price');
+                                        $newQuantity = max(1, (int) ($state ?? 1));
+
+                                        // Schaal vanaf de eigen regelprijs (kan onderhandeld of
+                                        // historisch zijn, of een extras-toeslag bevatten die niet
+                                        // in de catalogusprijs zit) zodra de regel al een prijs en
+                                        // een vorige kwantiteit heeft. Alleen wanneer die basis
+                                        // ontbreekt (nieuwe, nog lege regel) valt dit terug op de
+                                        // catalogusprijs van het gekoppelde product.
+                                        if ($previousQuantity > 0 && $previousPrice !== null && $previousPrice !== '') {
+                                            $unitPrice = (float) $previousPrice / $previousQuantity;
+                                            $set('price', round($unitPrice * $newQuantity, 2));
+
+                                            return;
+                                        }
+
                                         $productId = $get('product_id');
                                         $product = $productId ? Product::find($productId) : null;
                                         if ($product) {
@@ -213,14 +240,101 @@ class ModifyOrder extends Page implements HasSchemas
      */
     protected static function setLineTotalFromProduct(Product $product, mixed $quantity, callable $set): void
     {
-        $unitPrice = (float) $product->getRawOriginal('current_price');
+        // current_price is nullable en wordt pas gevuld zodra
+        // Product::calculatePrices() ooit gedraaid heeft. Zonder fallback
+        // zou een product waarvoor dat nog niet gebeurd is een regeltotaal
+        // van 0,00 opleveren; de ruwe price-kolom is de volgende beste basis.
+        $unitPrice = $product->getRawOriginal('current_price') ?? $product->getRawOriginal('price');
+        $unitPrice = (float) $unitPrice;
         $quantity = max(1, (int) ($quantity ?? 1));
 
         $set('price', round($unitPrice * $quantity, 2));
     }
 
+    /**
+     * Deze pagina herschrijft onomkeerbaar een echte bestelling; niet
+     * rechtstreeks vanaf de knop laten gaan. modalDescription() wordt bij
+     * elke keer openen opnieuw geëvalueerd, dus die leest de actuele
+     * formulierstaat op het moment van klikken, niet de staat bij het laden
+     * van de pagina.
+     */
+    public function submitAction(): Action
+    {
+        return Action::make('submitAction')
+            ->label('Wijziging doorvoeren')
+            ->color('primary')
+            ->requiresConfirmation()
+            ->modalHeading('Wijziging doorvoeren?')
+            ->modalDescription(fn () => $this->buildConfirmationDescription())
+            ->modalSubmitActionLabel('Ja, doorvoeren')
+            ->action(fn () => $this->submit());
+    }
+
+    protected function buildConfirmationDescription(): string
+    {
+        $state = $this->modifyOrderForm->getState();
+
+        $inPlace = OrderModificationService::canModifyInPlace($this->order);
+
+        $newSubtotal = round(
+            collect($state['lines'] ?? [])->sum(fn (array $line) => (float) ($line['price'] ?? 0)),
+            2
+        );
+        // Zelfde formule als OrderTotalsCalculator::recalculate(): korting kan
+        // nooit groter zijn dan het (nieuwe) subtotaal.
+        $discount = min((float) ($this->order->discount ?? 0), $newSubtotal);
+        $newTotal = round($newSubtotal - $discount, 2);
+        $oldTotal = (float) $this->order->total;
+        $difference = round($newTotal - $oldTotal, 2);
+
+        $paid = (float) $this->order->orderPayments()->where('status', 'paid')->sum('amount');
+        $balance = round($newTotal - $paid, 2);
+
+        if ($balance > 0.005) {
+            $moneySentence = 'Er blijft ' . CurrencyHelper::formatPrice($balance) . ' te betalen over.';
+        } elseif ($balance < -0.005) {
+            $moneySentence = 'Er moet ' . CurrencyHelper::formatPrice(abs($balance)) . ' terugbetaald worden.';
+        } else {
+            $moneySentence = 'Er hoeft niets (meer) betaald te worden.';
+        }
+
+        $differenceText = match (true) {
+            $difference > 0 => '+' . CurrencyHelper::formatPrice($difference),
+            $difference < 0 => '-' . CurrencyHelper::formatPrice(abs($difference)),
+            default => CurrencyHelper::formatPrice(0),
+        };
+
+        $emailSentence = (bool) ($state['send_customer_email'] ?? true)
+            ? 'De klant ontvangt een wijzigingsmail.'
+            : 'De klant ontvangt geen wijzigingsmail.';
+
+        return $this->routeDescription($inPlace)
+            . ' Huidig totaal: ' . CurrencyHelper::formatPrice($oldTotal)
+            . ', nieuw totaal: ' . CurrencyHelper::formatPrice($newTotal)
+            . ' (verschil: ' . $differenceText . ').'
+            . ' ' . $moneySentence
+            . ' ' . $emailSentence;
+    }
+
     public function submit(): void
     {
+        // Een tweede tabblad kan de order intussen elders vervangen,
+        // gecrediteerd of geannuleerd hebben. Zonder deze herhaalde check
+        // zou submit() alsnog replaceWithNewOrder() aanroepen en op de
+        // LogicException stuiten, wat als een onbehandelde 500 naar buiten
+        // komt in plaats van een nette melding.
+        if (! $this->order->fresh()->isModifiable()) {
+            Notification::make()
+                ->title('Deze bestelling kan niet gewijzigd worden')
+                ->body('De bestelling is intussen niet meer wijzigbaar, bijvoorbeeld omdat hij al vervangen, gecrediteerd of geannuleerd is.')
+                ->danger()
+                ->send();
+
+            $this->redirect(route('filament.dashed.resources.orders.view', ['record' => $this->order->id]));
+
+            return;
+        }
+
         $state = $this->modifyOrderForm->getState();
 
         $lines = collect($state['lines'] ?? [])

@@ -42,8 +42,13 @@ it('mag een order alleen wijzigen als hij niet geannuleerd, geretourneerd, verva
     $cancelled = Order::create(['email' => 'a@b.nl', 'status' => 'cancelled']);
     $returned = Order::create(['email' => 'a@b.nl', 'status' => 'return']);
 
+    // Bewust status 'paid': een gecrediteerd-en-vervangen order blijft op
+    // 'paid' staan (zie OrderModificationService::creditOldOrder()) en wordt
+    // dan alléén door replaced_by_order_id geblokkeerd. Met status
+    // 'cancelled' hier zou een predicate die alleen naar status kijkt deze
+    // case ook laten slagen, zonder replaced_by_order_id ooit te toetsen.
     $replacement = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
-    $replaced = Order::create(['email' => 'a@b.nl', 'status' => 'cancelled', 'replaced_by_order_id' => $replacement->id]);
+    $replaced = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'replaced_by_order_id' => $replacement->id]);
 
     $original = Order::create(['email' => 'a@b.nl', 'status' => 'paid']);
     $credit = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'credit_for_order_id' => $original->id]);

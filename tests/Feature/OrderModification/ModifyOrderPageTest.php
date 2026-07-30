@@ -8,6 +8,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ModifyOrder;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -128,6 +129,35 @@ it('rekent de kwantiteit door in het regeltotaal, ongeacht de weergavevoorkeur v
         ->assertSet('data.lines.0.price', 150.0);
 });
 
+it('schaalt bij een kwantiteitswijziging vanaf de eigen regelprijs, niet vanaf de catalogusprijs', function () {
+    // Product kost nu 100, maar deze regel staat op een onderhandelde 90
+    // voor kwantiteit 1. Aantal ophogen naar 2 moet 180 geven (90 / 1 * 2),
+    // niet 200 (de catalogusprijs 100 * 2) — anders verdwijnt de
+    // onderhandelde prijs (en zou een extras-toeslag net zo verdwijnen).
+    $product = modifyPageProduct(price: 100.0);
+
+    $order = Order::create([
+        'email' => 'klant@example.com',
+        'status' => Order::STATUS_CONCEPT,
+        'invoice_id' => 'PROFORMA',
+        'total' => 90,
+        'subtotal' => 90,
+    ]);
+    OrderProduct::create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+        'name' => 'Onderhandeld product',
+        'quantity' => 1,
+        'price' => 90.0,
+        'vat_rate' => 21,
+    ]);
+    $order = $order->fresh();
+
+    Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->set('data.lines.0.quantity', 2)
+        ->assertSet('data.lines.0.price', 180.0);
+});
+
 it('behoudt product_extras van een ongewijzigde regel bij het opslaan', function () {
     $order = Order::create([
         'email' => 'klant@example.com',
@@ -178,4 +208,44 @@ it('weigert het scherm te tonen voor een order die niet gewijzigd mag worden en 
 
     Livewire::test(ModifyOrder::class, ['record' => $order->id])
         ->assertRedirect(route('filament.dashed.resources.orders.view', ['record' => $order->id]));
+});
+
+it('toont in de bevestigingsmodal het nieuwe totaal en de juiste geld-zin bij een hoger totaal', function () {
+    $order = pageOrder(); // paid, totaal 100, al 100 betaald
+
+    $component = Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->set('data.lines', [
+            ['order_product_id' => null, 'product_id' => null, 'name' => 'Nieuw product', 'quantity' => 1, 'price' => 130.5, 'vat_rate' => 21],
+        ])
+        ->set('data.send_customer_email', true);
+
+    $component->mountAction('submitAction');
+
+    // Nieuw totaal (130,50) staat expliciet in de modal...
+    $component->assertMountedActionModalSee(CurrencyHelper::formatPrice(130.5));
+    // ...en de geld-zin klopt: al 100 betaald, nieuw totaal 130,50, dus 30,50
+    // blijft te betalen. Zou de berekening verkeerd zijn (bijv. tegen het
+    // oude totaal of tegen nul) dan zou deze exacte zin niet voorkomen.
+    $component->assertMountedActionModalSee('Er blijft ' . CurrencyHelper::formatPrice(30.5) . ' te betalen over.');
+});
+
+it('weigert opslaan als de order tussentijds elders niet meer wijzigbaar is geworden', function () {
+    $order = pageOrder(invoiceId: 'PROFORMA', status: Order::STATUS_CONCEPT);
+
+    $component = Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->set('data.lines', [
+            ['order_product_id' => null, 'product_id' => null, 'name' => 'Nieuw product', 'quantity' => 1, 'price' => 60.5, 'vat_rate' => 21],
+        ])
+        ->set('data.send_customer_email', false);
+
+    // Een ander tabblad heeft de order intussen al vervangen.
+    $order->replaced_by_order_id = Order::create(['email' => 'a@b.nl', 'status' => 'pending'])->id;
+    $order->save();
+
+    $component->call('submit')
+        ->assertRedirect(route('filament.dashed.resources.orders.view', ['record' => $order->id]));
+
+    // De regel is niet herschreven: submit() moet gestopt zijn vóór
+    // writeLines(), niet een onbehandelde LogicException hebben gegooid.
+    expect($order->fresh()->orderProducts()->first()->name)->toBe('Oud product');
 });

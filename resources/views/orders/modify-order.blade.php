@@ -1,13 +1,14 @@
 <x-filament::page>
 
-    <form wire:submit.prevent="submit" method="POST">
-        {{ $this->modifyOrderForm }}
+    {{-- Geen wire:submit meer: dit scherm herschrijft onomkeerbaar een echte
+         bestelling en mag dus nooit via Enter of een native form-submit
+         langs de bevestigingsmodal van submitAction() heen gaan. --}}
+    {{ $this->modifyOrderForm }}
 
-        <div class="mt-6">
-            <x-filament::button type="submit">
-                Wijziging doorvoeren
-            </x-filament::button>
-        </div>
-    </form>
+    <div class="mt-6">
+        <x-filament::button type="button" wire:click="mountAction('submitAction')">
+            Wijziging doorvoeren
+        </x-filament::button>
+    </div>
 
 </x-filament::page>
