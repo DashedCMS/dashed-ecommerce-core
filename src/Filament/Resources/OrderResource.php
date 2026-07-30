@@ -46,6 +46,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ListOrders;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\CreateOrder;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ModifyOrder;
 
 class OrderResource extends Resource
 {
@@ -898,6 +899,7 @@ class OrderResource extends Resource
             'create' => CreateOrder::route('/create'),
             'edit' => EditOrder::route('/{record}/edit'),
             'view' => ViewOrder::route('/{record}/view'),
+            'modify' => ModifyOrder::route('/{record}/modify'),
         ];
     }
 
