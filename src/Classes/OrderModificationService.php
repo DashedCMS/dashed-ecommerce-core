@@ -3,8 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
@@ -25,13 +27,13 @@ class OrderModificationService
             && ! $order->orderPayments()->where('status', 'paid')->exists();
     }
 
-    public static function applyInPlace(Order $order, array $lines): Order
+    public static function applyInPlace(Order $order, array $lines, array $options = []): Order
     {
         if (! self::canModifyInPlace($order)) {
             throw new \LogicException('Deze bestelling kan niet in plaats aangepast worden.');
         }
 
-        return DB::transaction(function () use ($order, $lines) {
+        return DB::transaction(function () use ($order, $lines, $options) {
             self::writeLines($order, $lines);
 
             OrderTotalsCalculator::recalculate($order);
@@ -42,6 +44,8 @@ class OrderModificationService
             $order->createInvoice();
 
             OrderLog::createLog(orderId: $order->id, tag: 'order.modified.in-place');
+
+            self::sendCustomerMail($order->fresh(), $options);
 
             return $order->fresh();
         });
@@ -58,7 +62,7 @@ class OrderModificationService
         $creditOldOrder = $options['credit_old_order'] ?? $order->hasRealInvoice();
         $deductNewStock = (bool) ($options['deduct_new_stock'] ?? true);
 
-        return DB::transaction(function () use ($order, $lines, $alreadyShipped, $productsMustBeReturned, $creditOldOrder, $deductNewStock) {
+        return DB::transaction(function () use ($order, $lines, $options, $alreadyShipped, $productsMustBeReturned, $creditOldOrder, $deductNewStock) {
             // 1. Nieuwe order. invoice_id expliciet op PROFORMA, want
             // generateInvoiceId() deelt alleen een nieuw nummer uit aan orders
             // met PROFORMA of RETURN. Zonder dit erft de kopie het oude nummer.
@@ -131,6 +135,8 @@ class OrderModificationService
             if ($newOrder->status === 'paid') {
                 OrderMarkedAsPaidEvent::dispatch($newOrder);
             }
+
+            self::sendCustomerMail($newOrder, $options);
 
             return $newOrder;
         });
@@ -217,5 +223,18 @@ class OrderModificationService
         }
 
         $order->load('orderProducts');
+    }
+
+    protected static function sendCustomerMail(Order $order, array $options): void
+    {
+        if (! ($options['send_customer_email'] ?? true) || blank($order->email)) {
+            return;
+        }
+
+        try {
+            Mail::to($order->email)->send(new OrderModifiedMail($order, $options['customer_note'] ?? null));
+        } catch (\Throwable $e) {
+            OrderLog::createLog(orderId: $order->id, tag: 'order.modified.mail.send.failed', note: 'Error: ' . $e->getMessage());
+        }
     }
 }
