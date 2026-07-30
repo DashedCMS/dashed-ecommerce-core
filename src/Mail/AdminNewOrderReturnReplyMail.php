@@ -12,11 +12,13 @@ use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
+use Dashed\DashedEcommerceCore\Mail\Concerns\RepliesToCustomer;
 
 class AdminNewOrderReturnReplyMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
     use Queueable;
+    use RepliesToCustomer;
     use SerializesModels;
 
     public function __construct(public OrderReturn $orderReturn, public string $customerMessage = '')
@@ -91,6 +93,10 @@ class AdminNewOrderReturnReplyMail extends Mailable implements RegistersEmailTem
             'siteName' => Customsetting::get('site_name'),
             'adminReturnUrl' => rescue(fn () => route('filament.dashed.resources.order-returns.view', ['record' => $this->orderReturn->id]), '', false),
         ];
+
+        if ($replyTo = $this->customerReplyTo($this->orderReturn)) {
+            $this->replyTo($replyTo[0], $replyTo[1]);
+        }
 
         $templateHtml = $this->renderFromTemplate($context);
 
