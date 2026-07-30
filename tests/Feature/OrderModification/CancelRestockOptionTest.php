@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 

@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Livewire;
-use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;

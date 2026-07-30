@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Mail;
-use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;

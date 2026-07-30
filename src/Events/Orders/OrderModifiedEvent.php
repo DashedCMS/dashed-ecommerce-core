@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Events\Orders;
 
-use Illuminate\Foundation\Events\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Illuminate\Foundation\Events\Dispatchable;
 
 class OrderModifiedEvent
 {

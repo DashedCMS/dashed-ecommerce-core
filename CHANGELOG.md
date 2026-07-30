@@ -5,6 +5,11 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ## Unreleased
 
 ### Added
+- **Bestelling wijzigen.** Nieuwe actie "Bestelling wijzigen" op de orderpagina met een eigen wijzigscherm (`Pages\ModifyOrder`), alleen beschikbaar zolang `Order::isModifiable()` true teruggeeft (diezelfde guard bewaakt zowel de knop als de pagina zelf). Het scherm toont eerst een bevestigingsstap die de wijziging samenvat (oude/nieuwe regels, bij- of terug te betalen bedrag) voordat er iets wordt weggeschreven. Onbetaalde orders zonder echt factuurnummer worden in plaats aangepast; betaalde of gefactureerde orders krijgen een vervangende order waarin het al betaalde bedrag verrekend wordt, zodat er alleen een meerprijs openstaat. De oude order wordt geannuleerd of gecrediteerd en gekoppeld via de nieuwe kolom `replaced_by_order_id`. Domeinlogica in `Classes\OrderModificationService`, totalen in `Classes\OrderTotalsCalculator`.
+  - Twee onafhankelijke voorraadschakelaars: "Al verzonden" voor de oude order (voorkomt dat producten die de deur al uit zijn terug de voorraad in geboekt worden) en "Voorraad nieuwe order afboeken" voor de vervangende order.
+  - `OrderModifiedMail` naar de klant met een betaallink bij een meerprijs of een terugstortmelding bij te veel betaald; volgt het bestaande `RegistersEmailTemplate`-patroon, dus per site editbaar in de CMS en wordt per locale van de order geresolved.
+  - `Order::overpaidAmount()` plus de actie "Terugstorting registreren" om een teveel betaald bedrag als afgehandeld te markeren.
+  - `Order::markAsCancelled()` heeft een tweede parameter `$refillStock` gekregen zodat al verzonden producten niet terug in voorraad komen.
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
 ### Fixed
