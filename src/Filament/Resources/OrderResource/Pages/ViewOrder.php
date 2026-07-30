@@ -4,19 +4,20 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Auth;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterRefundAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterManualPaymentAction;
 
@@ -275,6 +276,7 @@ class ViewOrder extends ViewRecord
                     }),
                 RegisterManualPaymentAction::make($this->record),
                 SendPaymentLinkAction::make($this->record),
+                RegisterRefundAction::make($this->record),
             ])
                 ->label('Betaling')
                 ->icon('heroicon-o-banknotes')
