@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Classes;
 
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 
@@ -55,7 +56,8 @@ class OrderTotalsCalculator
             ];
         }
 
-        $discount = self::discountForLines($order, $lines);
+        $breakdown = self::discountBreakdownForLines($order, $lines);
+        $discount = $breakdown['discount'];
 
         // De korting drukt de btw proportioneel, ook bij gemengde tarieven.
         $factor = $subtotal > 0 ? ($subtotal - $discount) / $subtotal : 1.0;
@@ -69,6 +71,42 @@ class OrderTotalsCalculator
             $vatPerRate
         );
         $order->save();
+
+        // Een afgetopte korting laat geld verdwijnen: bij een cadeaubon staat er
+        // in used_amount nog het volle bedrag terwijl de klant het niet meer
+        // krijgt. Dit terugboeken gebeurt bewust niet automatisch, maar het mag
+        // ook niet ongemerkt gebeuren, dus het komt in het orderlogboek te staan.
+        if ($breakdown['reduced_by'] > 0.005) {
+            OrderLog::createLog(
+                orderId: $order->id,
+                tag: 'order.discount.capped',
+                note: self::cappedDiscountSentence($order, $breakdown),
+            );
+        }
+    }
+
+    /**
+     * Eén zin over een afgetopte korting, voor het orderlogboek én voor de
+     * bevestigingsstap van het wijzigscherm, zodat beide precies hetzelfde
+     * zeggen. Bij een cadeaubon staat er expliciet bij dat het om echt
+     * klantsaldo gaat: dat is het enige geval waarin er geld van de klant zelf
+     * in verdwijnt.
+     *
+     * @param  array{discount: float, uncapped: float, reduced_by: float}  $breakdown
+     */
+    public static function cappedDiscountSentence(Order $order, array $breakdown): string
+    {
+        $discountCode = $order->discountCode;
+
+        $sentence = 'Korting verlaagd van ' . CurrencyHelper::formatPrice($breakdown['uncapped'])
+            . ' naar ' . CurrencyHelper::formatPrice($breakdown['discount'])
+            . ' (' . CurrencyHelper::formatPrice($breakdown['reduced_by']) . ' minder), omdat de korting niet groter kan zijn dan het subtotaal van de bestelling.';
+
+        if ($discountCode && $discountCode->is_giftcard) {
+            return $sentence . ' Dit is cadeaubon ' . $discountCode->code . ': dat saldo wordt niet automatisch teruggeboekt, corrigeer het handmatig op de cadeaubon.';
+        }
+
+        return $sentence;
     }
 
     /**
@@ -93,15 +131,36 @@ class OrderTotalsCalculator
      */
     public static function discountForLines(Order $order, array $lines): float
     {
+        return self::discountBreakdownForLines($order, $lines)['discount'];
+    }
+
+    /**
+     * Hetzelfde bedrag als discountForLines(), maar met het bedrag vóór de
+     * aftopping erbij. Die twee lopen alleen uiteen wanneer er minder op de
+     * bestelling overblijft dan de korting; wie dat verschil wil melden (het
+     * orderlogboek, de bevestigingsstap) heeft beide getallen nodig.
+     *
+     * @param  array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>  $lines
+     * @return array{discount: float, uncapped: float, reduced_by: float}
+     */
+    public static function discountBreakdownForLines(Order $order, array $lines): array
+    {
         $subtotal = array_sum(array_map(fn (array $line): float => (float) ($line['price'] ?? 0), $lines));
 
         $discountCode = $order->discountCode;
 
-        $discount = $discountCode && $discountCode->type === 'percentage'
+        $uncapped = $discountCode && $discountCode->type === 'percentage'
             ? self::percentageDiscountForLines($discountCode, $lines)
             : (float) ($order->discount ?? 0);
 
-        return round(min($discount, $subtotal), 2);
+        $uncapped = round($uncapped, 2);
+        $discount = round(min($uncapped, $subtotal), 2);
+
+        return [
+            'discount' => $discount,
+            'uncapped' => $uncapped,
+            'reduced_by' => round($uncapped - $discount, 2),
+        ];
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
@@ -288,13 +289,9 @@ class OrderModificationService
     public static function writeLines(Order $order, array $lines): void
     {
         // Velden die het wijzigformulier niet toont maar die wel bepalend zijn
-        // voor de rest van het systeem, worden van de bronregel overgenomen via
-        // order_product_id. Vooral sku: verzend- en betaalkosten zijn gewone
-        // orderregels die alleen aan sku = 'shipping_costs' / 'payment_costs'
-        // te herkennen zijn. Raakt die kwijt en de omzetstatistieken tellen de
-        // verzendomzet van deze order als nul, terwijl `sku NOT IN (...)` bij
-        // een NULL nooit waar is en dus élke regel van deze order uit de
-        // verkochte-aantallen valt.
+        // voor de rest van het systeem (sku, discount, is_pre_order) worden van
+        // de bronregel overgenomen via order_product_id — maar alleen zolang de
+        // regel nog over hetzelfde product gaat, zie skuForLine().
         //
         // De bronregels moeten opgehaald worden vóór de forceDelete hieronder:
         // bij applyInPlace() zijn dat de regels van deze order zelf.
@@ -311,6 +308,11 @@ class OrderModificationService
 
         foreach ($lines as $line) {
             $source = $sources->get($line['order_product_id'] ?? null);
+            // discount en is_pre_order horen bij de bronregel: het bedrag dat op
+            // dít product is afgesproken en de nalevering van dít product. Op een
+            // ander product hebben ze geen betekenis meer, dus ze volgen dezelfde
+            // overname-regel als de sku.
+            $inherited = self::lineFollowsSource($line, $source) ? $source : null;
 
             $order->orderProducts()->create([
                 'product_id' => $line['product_id'] ?? null,
@@ -319,13 +321,89 @@ class OrderModificationService
                 'price' => (float) ($line['price'] ?? 0),
                 'vat_rate' => (float) ($line['vat_rate'] ?? 21),
                 'product_extras' => $line['product_extras'] ?? [],
-                'sku' => $line['sku'] ?? $source?->sku,
-                'discount' => $line['discount'] ?? $source?->discount ?? 0,
-                'is_pre_order' => $line['is_pre_order'] ?? $source?->is_pre_order ?? 0,
+                'sku' => self::skuForLine($line, $source),
+                'discount' => $line['discount'] ?? $inherited?->discount ?? 0,
+                'is_pre_order' => $line['is_pre_order'] ?? $inherited?->is_pre_order ?? 0,
             ]);
         }
 
         $order->load('orderProducts');
+    }
+
+    /**
+     * De sku van een regel zoals hij weggeschreven wordt.
+     *
+     * Drie gevallen, in deze volgorde:
+     *
+     * 1. De aanroeper geeft zelf een sku mee. Die wint altijd.
+     * 2. De regel gaat nog over hetzelfde als de bronregel (zie
+     *    lineFollowsSource()): de sku van de bronregel blijft staan. Dit is wat
+     *    verzend- en betaalkostenregels intact houdt: dat zijn gewone
+     *    orderregels zonder product, alleen herkenbaar aan
+     *    sku = 'shipping_costs' / 'payment_costs'. Raken ze die kwijt, dan
+     *    telt de omzetstatistiek hun verzendomzet als nul en vallen ze niet
+     *    meer buiten de procentuele korting (OrderTotalsCalculator::COST_SKUS).
+     * 3. De regel hangt aan een ánder product dan de bronregel, of aan een
+     *    product zonder bronregel (nieuw toegevoegde regel). Dan komt de sku
+     *    van dát product, zoals de winkelwagen dat ook doet
+     *    (Checkout::createOrder(): `$orderProduct->sku = $cartItem->model->sku`).
+     *    De sku van de bronregel overnemen zou hier de zwaarste fout zijn: een
+     *    regel waarop de beheerder het product omzet naar iets anders zou de
+     *    oude sku houden, en stond die bronregel op 'shipping_costs', dan
+     *    boekt een echt product zich als verzendomzet.
+     *
+     * Blijft er in geval 3 geen product over (een los, zelf getypt item), dan
+     * is er niets om een sku uit af te leiden en blijft hij leeg — net als bij
+     * de custom producten die de kassa aanmaakt.
+     *
+     * @param  array<string, mixed>  $line
+     */
+    public static function skuForLine(array $line, ?OrderProduct $source): ?string
+    {
+        if (($line['sku'] ?? null) !== null) {
+            return $line['sku'];
+        }
+
+        if (self::lineFollowsSource($line, $source)) {
+            return $source->sku;
+        }
+
+        $productId = $line['product_id'] ?? null;
+
+        return $productId ? Product::find($productId)?->sku : null;
+    }
+
+    /**
+     * Mag deze regel de niet-bewerkbare velden van zijn bronregel overnemen?
+     *
+     * Het wijzigformulier vult order_product_id bij het laden en houdt die
+     * waarde vast, ook wanneer de beheerder in dezelfde regel een ander product
+     * kiest: het product-select zet name, price en product_id om, maar kan
+     * order_product_id niet leegmaken. Alleen op order_product_id afgaan
+     * betekent dus dat een omgezette regel de sku van zijn voorganger houdt.
+     *
+     * Daarom de vergelijking op product_id:
+     * - gelijk (inclusief allebei leeg, wat de kostenregels zijn): dezelfde
+     *   regel, overnemen;
+     * - de regel heeft zelf geen product meer: er valt niets uit een product af
+     *   te leiden, dus de bronregel blijft de enige bron;
+     * - een ánder product: een andere regel, niets overnemen.
+     *
+     * @param  array<string, mixed>  $line
+     */
+    protected static function lineFollowsSource(array $line, ?OrderProduct $source): bool
+    {
+        if (! $source) {
+            return false;
+        }
+
+        $lineProductId = ($line['product_id'] ?? null) !== null ? (int) $line['product_id'] : null;
+
+        if ($lineProductId === null) {
+            return true;
+        }
+
+        return $lineProductId === ($source->product_id !== null ? (int) $source->product_id : null);
     }
 
     protected static function sendCustomerMail(Order $order, array $options): void

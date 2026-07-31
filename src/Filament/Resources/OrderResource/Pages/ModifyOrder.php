@@ -303,7 +303,8 @@ class ModifyOrder extends Page implements HasSchemas
         // gebruikt, zodat de bevestiging niet iets anders kan tonen dan er
         // weggeschreven wordt. Bij een procentuele kortingscode wordt de korting
         // hier dus al over het nieuwe subtotaal herrekend.
-        $discount = OrderTotalsCalculator::discountForLines($this->order, $this->confirmationLines($state));
+        $discountBreakdown = OrderTotalsCalculator::discountBreakdownForLines($this->order, $this->confirmationLines($state));
+        $discount = $discountBreakdown['discount'];
         $newTotal = round($newSubtotal - $discount, 2);
         $oldTotal = (float) $this->order->total;
         $difference = round($newTotal - $oldTotal, 2);
@@ -336,11 +337,20 @@ class ModifyOrder extends Page implements HasSchemas
             ? ' Toegepaste korting: ' . CurrencyHelper::formatPrice($discount) . '.'
             : '';
 
+        // Wordt de korting afgetopt op het nieuwe subtotaal, dan raakt de klant
+        // het verschil kwijt; bij een cadeaubon is dat echt saldo dat niet
+        // automatisch terugkomt. Dat hoort de beheerder te zien vóór hij
+        // bevestigt, niet pas achteraf in het orderlogboek.
+        $capSentence = $discountBreakdown['reduced_by'] > 0.005
+            ? ' Let op: ' . lcfirst(OrderTotalsCalculator::cappedDiscountSentence($this->order, $discountBreakdown))
+            : '';
+
         return $this->routeDescription($inPlace, (bool) ($state['credit_old_order'] ?? $this->order->hasRealInvoice()))
             . ' Huidig totaal: ' . CurrencyHelper::formatPrice($oldTotal)
             . ', nieuw totaal: ' . CurrencyHelper::formatPrice($newTotal)
             . ' (verschil: ' . $differenceText . ').'
             . $discountSentence
+            . $capSentence
             . ' ' . $moneySentence
             . ' ' . $emailSentence;
     }
@@ -349,8 +359,12 @@ class ModifyOrder extends Page implements HasSchemas
      * De regels uit de formulierstaat in de vorm die
      * OrderTotalsCalculator::discountForLines() verwacht. De sku staat niet in
      * het formulier (die is niet bewerkbaar) maar is wel nodig om verzend- en
-     * betaalkosten van een procentuele korting uit te sluiten; die komt via
-     * order_product_id van de bronregel, net zoals writeLines() dat straks doet.
+     * betaalkosten van een procentuele korting uit te sluiten. Hij wordt bepaald
+     * met exact dezelfde methode als writeLines() straks gebruikt
+     * (OrderModificationService::skuForLine()), zodat de bevestiging geen
+     * kortingsbedrag kan tonen dat afwijkt van wat er weggeschreven wordt: een
+     * regel waarop de beheerder het product omzette, telt hier dan net zo goed
+     * als een gewone productregel mee in plaats van als kostenregel.
      *
      * @param  array<string, mixed>  $state
      * @return array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>
@@ -364,7 +378,7 @@ class ModifyOrder extends Page implements HasSchemas
                 'price' => (float) ($line['price'] ?? 0),
                 'quantity' => (int) ($line['quantity'] ?? 1),
                 'product_id' => $line['product_id'] ?? null,
-                'sku' => $sourceLines->get($line['order_product_id'] ?? null)?->sku,
+                'sku' => OrderModificationService::skuForLine($line, $sourceLines->get($line['order_product_id'] ?? null)),
             ])
             ->all();
     }
