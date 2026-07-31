@@ -108,15 +108,59 @@ class ConceptOrderService
      * Laadt een willekeurige order (concept of normaal/betaald) als NIEUWE,
      * niet-gekoppelde winkelwagen. Opslaan in de POS maakt zo een nieuw concept
      * aan; de bronorder blijft ongemoeid.
+     *
+     * $copyCustomerDetails staat standaard uit, zodat een aanroep zonder die
+     * parameter precies doet wat deze methode altijd al deed. De knop op de
+     * orderpagina geeft hem expliciet mee (daar staat het vinkje standaard aan).
      */
-    public static function copyIntoCart(POSCart $posCart, Order $order): void
+    public static function copyIntoCart(POSCart $posCart, Order $order, bool $copyCustomerDetails = false): void
     {
         $posCart->products = self::buildCartProducts($order);
         $posCart->loaded_concept_order_id = null;
         $posCart->prices_ex_vat = (bool) ($order->prices_ex_vat ?? false);
         $posCart->shipping_method_id = $order->shipping_method_id ?? null;
         $posCart->discount_code = null;
+
+        if ($copyCustomerDetails) {
+            self::copyCustomerDetailsIntoCart($posCart, $order);
+        }
+
         $posCart->save();
+    }
+
+    /**
+     * De klantgegevens van een order terug op een kassa-winkelwagen, precies de
+     * omgekeerde afbeelding van saveAsConcept() (inclusief company_name -> company).
+     */
+    protected static function copyCustomerDetailsIntoCart(POSCart $posCart, Order $order): void
+    {
+        $posCart->first_name = $order->first_name;
+        $posCart->last_name = $order->last_name;
+        $posCart->email = $order->email;
+        $posCart->phone_number = $order->phone_number;
+        $posCart->street = $order->street;
+        $posCart->house_nr = $order->house_nr;
+        $posCart->zip_code = $order->zip_code;
+        $posCart->city = $order->city;
+        $posCart->country = $order->country;
+        $posCart->company = $order->company_name;
+        $posCart->btw_id = $order->btw_id;
+        $posCart->invoice_street = $order->invoice_street;
+        $posCart->invoice_house_nr = $order->invoice_house_nr;
+        $posCart->invoice_zip_code = $order->invoice_zip_code;
+        $posCart->invoice_city = $order->invoice_city;
+        $posCart->invoice_country = $order->invoice_country;
+
+        // user_id is op een order niet per se de klant: saveAsConcept() valt
+        // terug op de kassamedewerker wanneer er geen klant aan de winkelwagen
+        // hing (`$posCart->customer_user_id ?: $cashier->id`). Diezelfde waarde
+        // terugkopiëren zou de medewerker als klant op de nieuwe verkoop zetten.
+        // De eigenaar van deze winkelwagen ís de kassamedewerker, dus zodra
+        // order en winkelwagen dezelfde gebruiker hebben, is dat die terugval en
+        // geen klant.
+        $posCart->customer_user_id = $order->user_id && (int) $order->user_id !== (int) $posCart->user_id
+            ? $order->user_id
+            : null;
     }
 
     /**

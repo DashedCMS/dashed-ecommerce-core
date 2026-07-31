@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Checkbox;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -308,12 +309,28 @@ class ViewOrder extends ViewRecord
                 Action::make('copyToPos')
                     ->label('Kopiëren naar kassa')
                     ->icon('heroicon-o-document-duplicate')
-                    ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
-                    ->modalHeading('Kassa-winkelwagen vervangen?')
-                    ->modalDescription('Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.')
-                    ->action(function () {
+                    // De modal staat er nu altijd, want het vinkje hieronder moet
+                    // gezet kunnen worden. De waarschuwing over een volle kassa
+                    // blijft wat hij was: alleen wanneer er echt iets vervangen
+                    // wordt, en dan ook als kop.
+                    ->modalHeading(fn (): string => $this->activeCartHasProducts() ? 'Kassa-winkelwagen vervangen?' : 'Kopiëren naar kassa')
+                    ->modalDescription(fn (): ?string => $this->activeCartHasProducts()
+                        ? 'Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.'
+                        : null)
+                    ->modalSubmitActionLabel('Kopiëren')
+                    ->form([
+                        Checkbox::make('copy_customer_details')
+                            ->label('Klantgegevens meekopiëren')
+                            ->helperText('Naam, adres, e-mail, telefoonnummer en factuurgegevens van deze bestelling gaan mee naar de kassa')
+                            ->default(true),
+                    ])
+                    ->action(function (array $data) {
                         $cart = $this->activePosCart();
-                        ConceptOrderService::copyIntoCart($cart, $this->record);
+                        ConceptOrderService::copyIntoCart(
+                            $cart,
+                            $this->record,
+                            copyCustomerDetails: (bool) ($data['copy_customer_details'] ?? true),
+                        );
 
                         $this->redirect(route('dashed.ecommerce.point-of-sale'));
                     }),
