@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 use Filament\Forms\Components\Checkbox;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -150,7 +151,13 @@ class ViewOrder extends ViewRecord
                 ->label('Bestelling wijzigen')
                 ->icon('heroicon-o-pencil-square')
                 ->color('warning')
-                ->visible(fn (): bool => $this->record->isModifiable())
+                // De route-check hoort hier echt bij: draait er nog een oude
+                // route-cache, dan bestaat deze pagina niet en gooit route()
+                // een exception. Omdat de knop bij het renderen van de
+                // orderpagina wordt opgebouwd, haalt dat de hele bestelling
+                // onderuit in plaats van alleen de knop.
+                ->visible(fn (): bool => Route::has('filament.dashed.resources.orders.modify')
+                    && $this->record->isModifiable())
                 ->url(fn () => route('filament.dashed.resources.orders.modify', ['record' => $this->record->id])),
             ActionGroup::make([
                 Action::make('Factuur')
