@@ -30,7 +30,7 @@ class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasA
     public function action(): Action
     {
         return Action::make('action')
-            ->label('Verander fulfilment status')
+            ->label(__('Verander fulfilment status'))
             ->color('primary')
             ->fillForm(function () {
                 return [
@@ -39,7 +39,7 @@ class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasA
             })
             ->schema([
                 Select::make('fulfillmentStatus')
-                    ->label('Verander fulfilment status')
+                    ->label(__('Verander fulfilment status'))
                     ->options(Orders::getFulfillmentStatusses())
                     ->required(),
             ])
@@ -47,7 +47,7 @@ class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasA
                 if ($this->order->fulfillment_status == $data['fulfillmentStatus']) {
                     Notification::make()
                         ->danger()
-                        ->title('Bestelling heeft al deze fulfillment status')
+                        ->title(__('Bestelling heeft al deze fulfillment status'))
                         ->send();
 
                     return;
@@ -63,7 +63,7 @@ class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasA
 
                 Notification::make()
                     ->success()
-                    ->title('Bestelling fulfillment status aangepast')
+                    ->title(__('Bestelling fulfillment status aangepast'))
                     ->send();
 
                 $this->dispatch('refreshData');

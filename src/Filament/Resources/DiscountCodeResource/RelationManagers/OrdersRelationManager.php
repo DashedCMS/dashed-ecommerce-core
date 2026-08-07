@@ -22,18 +22,18 @@ class OrdersRelationManager extends RelationManager
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('invoice_id')
-                    ->label('Factuur')
+                    ->label(__('Factuur'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Klant')
+                    ->label(__('Klant'))
                     ->getStateUsing(fn ($record) => $record->name ?: ($record->email ?: '-'))
                     ->searchable(['first_name', 'last_name', 'email'])
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'paid' => 'success',
@@ -45,7 +45,7 @@ class OrdersRelationManager extends RelationManager
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('fulfillment_status')
-                    ->label('Fulfillment')
+                    ->label(__('Fulfillment'))
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'handled' => 'success',
@@ -58,17 +58,17 @@ class OrdersRelationManager extends RelationManager
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('discount')
-                    ->label('Korting')
+                    ->label(__('Korting'))
                     ->money('EUR', locale: 'nl_NL')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total')
-                    ->label('Totaal')
+                    ->label(__('Totaal'))
                     ->money('EUR', locale: 'nl_NL')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Besteld op')
+                    ->label(__('Besteld op'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
             ])

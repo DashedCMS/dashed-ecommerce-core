@@ -40,22 +40,22 @@ class OrderOutstandingStatsWidget extends StatsOverviewWidget
 
         return [
             Stat::make('Wachten op betaling', $pendingCount)
-                ->description(CurrencyHelper::formatPrice($pendingTotal) . ' totaal')
+                ->description(__(':bedrag totaal', ['bedrag' => CurrencyHelper::formatPrice($pendingTotal)]))
                 ->url($this->filterUrl(['pending']))
                 ->extraAttributes(['class' => 'cursor-pointer']),
 
             Stat::make('Te bevestigen', $wfcCount)
-                ->description(CurrencyHelper::formatPrice($wfcTotal) . ' totaal')
+                ->description(__(':bedrag totaal', ['bedrag' => CurrencyHelper::formatPrice($wfcTotal)]))
                 ->url($this->filterUrl(['waiting_for_confirmation']))
                 ->extraAttributes(['class' => 'cursor-pointer']),
 
             Stat::make('Deels betaald', $partiallyPaidCount)
-                ->description(CurrencyHelper::formatPrice($partiallyPaidOutstanding) . ' openstaand')
+                ->description(__(':bedrag openstaand', ['bedrag' => CurrencyHelper::formatPrice($partiallyPaidOutstanding)]))
                 ->url($this->filterUrl(['partially_paid']))
                 ->extraAttributes(['class' => 'cursor-pointer']),
 
             Stat::make('Totaal openstaand', CurrencyHelper::formatPrice($totalOutstanding))
-                ->description(($pendingCount + $wfcCount + $partiallyPaidCount) . ' facturen')
+                ->description(__(':aantal facturen', ['aantal' => $pendingCount + $wfcCount + $partiallyPaidCount]))
                 ->url($this->filterUrl(['pending', 'waiting_for_confirmation', 'partially_paid']))
                 ->extraAttributes(['class' => 'cursor-pointer']),
         ];

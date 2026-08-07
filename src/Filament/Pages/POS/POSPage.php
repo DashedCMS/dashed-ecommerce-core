@@ -169,37 +169,37 @@ class POSPage extends Component implements HasActions, HasSchemas
         return $schema
             ->schema([
                 TextInput::make('name')
-                    ->label('Productnaam')
+                    ->label(__('Productnaam'))
                     ->required()
                     ->autofocus()
                     ->columnSpanFull(),
 
                 NumpadField::make('price')
-                    ->label(fn () => $this->getActivePosCart()->prices_ex_vat ? 'Prijs (ex BTW)' : 'Prijs (incl BTW)')
+                    ->label(fn () => $this->getActivePosCart()->prices_ex_vat ? __('Prijs (ex BTW)') : __('Prijs (incl BTW)'))
                     ->minCents(0)
                     ->maxCents(9999999)
                     ->required()
                     ->columnSpanFull(),
 
                 Quantity::make('quantity')
-                    ->label('Aantal')
+                    ->label(__('Aantal'))
                     ->numeric()
                     ->minValue(1)
                     ->maxValue(999999)
                     ->inputMode('numeric')
                     ->required()
                     ->default(1)
-                    ->prefix('x'),
+                    ->prefix(__('x')),
 
                 Quantity::make('vat_rate')
-                    ->label('Percentage')
+                    ->label(__('Percentage'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(100)
                     ->inputMode('numeric')
                     ->required()
                     ->default(21)
-                    ->prefix('%'),
+                    ->prefix(__('%')),
             ])
             ->columns(2)
             ->statePath('customProductData');
@@ -210,13 +210,13 @@ class POSPage extends Component implements HasActions, HasSchemas
         return $schema
             ->schema([
                 TextInput::make('name')
-                    ->label('Productnaam')
+                    ->label(__('Productnaam'))
                     ->required()
                     ->disabled()
                     ->columnSpanFull(),
 
                 NumpadField::make('singlePrice')
-                    ->label(fn () => $this->getActivePosCart()->prices_ex_vat ? 'Prijs (ex BTW)' : 'Prijs (incl BTW)')
+                    ->label(fn () => $this->getActivePosCart()->prices_ex_vat ? __('Prijs (ex BTW)') : __('Prijs (incl BTW)'))
                     ->minCents(0)
                     ->maxCents(999999)
                     ->required()
@@ -259,32 +259,32 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         return [
             Action::make('togglePriceMode')
-                ->label($exMode ? 'Prijzen: ex BTW' : 'Prijzen: incl BTW')
+                ->label($exMode ? __('Prijzen: ex BTW') : __('Prijzen: incl BTW'))
                 ->icon($exMode ? 'heroicon-o-receipt-percent' : 'heroicon-o-currency-euro')
                 ->color($exMode ? 'warning' : 'gray')
                 ->button()
                 ->action('togglePriceMode'),
             Action::make('addDiscountCode')
                 ->label(empty($appliedDiscounts)
-                    ? 'Kortingscode toevoegen'
-                    : 'Kortingscodes ('.count($appliedDiscounts).')')
+                    ? __('Kortingscode toevoegen')
+                    : __('Kortingscodes (:aantal)', ['aantal' => count($appliedDiscounts)]))
                 ->icon('heroicon-o-tag')
                 ->color('warning')
                 ->button()
-                ->modalHeading('Kortingscode toevoegen')
-                ->modalSubmitActionLabel('Toepassen')
-                ->modalCancelActionLabel('Sluiten')
+                ->modalHeading(__('Kortingscode toevoegen'))
+                ->modalSubmitActionLabel(__('Toepassen'))
+                ->modalCancelActionLabel(__('Sluiten'))
                 ->fillForm(['code' => ''])
                 ->schema([
                     TextInput::make('code')
-                        ->label('Kortingscode')
-                        ->placeholder('Bijv. ZOMER10')
+                        ->label(__('Kortingscode'))
+                        ->placeholder(__('Bijv. ZOMER10'))
                         ->autofocus()
                         ->maxLength(255)
                         ->helperText(
                             empty($appliedDiscounts)
-                                ? 'Voer een kortingscode in om toe te passen op deze bestelling. Maximaal 1 procentuele code, vaste-bedrag-codes mogen stapelen.'
-                                : 'Toegepast: '.collect($appliedDiscounts)->map(fn ($entry) => $entry['code'] ?? '')->filter()->implode(', ').'. Voer een nieuwe code in om er nog een toe te voegen.'
+                                ? __('Voer een kortingscode in om toe te passen op deze bestelling. Maximaal 1 procentuele code, vaste-bedrag-codes mogen stapelen.')
+                                : __('Toegepast: :codes. Voer een nieuwe code in om er nog een toe te voegen.', ['codes' => collect($appliedDiscounts)->map(fn ($entry) => $entry['code'] ?? '')->filter()->implode(', ')])
                         ),
                 ])
                 ->action(function (array $data) {
@@ -296,27 +296,27 @@ class POSPage extends Component implements HasActions, HasSchemas
                 }),
             Action::make('redeemGiftCard')
                 ->label(empty($applied)
-                    ? 'Cadeaubon inleveren'
-                    : 'Cadeaubonnen ('.count($applied).')')
+                    ? __('Cadeaubon inleveren')
+                    : __('Cadeaubonnen (:aantal)', ['aantal' => count($applied)]))
                 ->icon('heroicon-o-gift')
                 ->color('success')
                 ->button()
-                ->modalHeading('Cadeaubonnen inleveren')
-                ->modalSubmitActionLabel('Toepassen')
-                ->modalCancelActionLabel('Sluiten')
+                ->modalHeading(__('Cadeaubonnen inleveren'))
+                ->modalSubmitActionLabel(__('Toepassen'))
+                ->modalCancelActionLabel(__('Sluiten'))
                 ->fillForm(['code' => ''])
                 ->schema([
                     TextInput::make('code')
-                        ->label('Cadeaubon-code')
-                        ->placeholder('Bijv. WELKOM-ABC123')
+                        ->label(__('Cadeaubon-code'))
+                        ->placeholder(__('Bijv. WELKOM-ABC123'))
                         ->autofocus()
                         ->maxLength(255)
                         ->helperText(
                             empty($applied)
-                            ? 'Voer een cadeaubon-code in om toe te passen op deze bestelling.'
-                            : 'Toegepast: '.collect($applied)->map(
+                            ? __('Voer een cadeaubon-code in om toe te passen op deze bestelling.')
+                            : __('Toegepast: :codes. Voer een nieuwe code in om er nog een toe te voegen.', ['codes' => collect($applied)->map(
                                 fn ($entry) => $entry['code'].' (€'.number_format((float) ($entry['balance'] ?? 0), 2, ',', '.').')'
-                            )->implode(', ').'. Voer een nieuwe code in om er nog een toe te voegen.'
+                            )->implode(', ')])
                         ),
                 ])
                 ->action(function (array $data) {
@@ -356,7 +356,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         $posCart = $this->getActivePosCart();
         if ($posCart->removeGiftcard($code)) {
             Notification::make()
-                ->title('Cadeaubon verwijderd uit de bestelling.')
+                ->title(__('Cadeaubon verwijderd uit de bestelling.'))
                 ->success()
                 ->send();
 
@@ -421,31 +421,31 @@ class POSPage extends Component implements HasActions, HasSchemas
         return $schema
             ->schema([
                 Select::make('type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->options([
-                        'percentage' => 'Percentage',
-                        'amount' => 'Vast bedrag',
-                        'discountCode' => 'Kortingscode',
+                        'percentage' => __('Percentage'),
+                        'amount' => __('Vast bedrag'),
+                        'discountCode' => __('Kortingscode'),
                     ])
                     ->reactive()
                     ->required(),
 
                 TextInput::make('note')
-                    ->label('Reden voor korting')
+                    ->label(__('Reden voor korting'))
                     ->visible(fn (Get $get) => $get('type') !== 'discountCode')
                     ->reactive(),
 
                 NumpadField::make('amount')
-                    ->label('Prijs')
+                    ->label(__('Prijs'))
                     ->minCents(0)
                     ->maxCents(999999)
                     ->required()
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') === 'amount')
-                    ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
+                    ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),
 
                 TextInput::make('percentage')
-                    ->label('Percentage')
+                    ->label(__('Percentage'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(100)
@@ -453,13 +453,13 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->autofocus()
                     ->required()
                     ->default(10)
-                    ->prefix('%')
+                    ->prefix(__('%'))
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') === 'percentage')
-                    ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
+                    ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),
 
                 Select::make('discountCode')
-                    ->label('Kortingscode')
+                    ->label(__('Kortingscode'))
                     ->preload()
                     ->searchable()
                     ->options(function () {
@@ -496,7 +496,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         if (! ($posCart->products ?? [])) {
             Notification::make()
-                ->title('Geen producten in winkelmand')
+                ->title(__('Geen producten in winkelmand'))
                 ->danger()
                 ->send();
 
@@ -530,7 +530,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         if (! $discountCode) {
             Notification::make()
-                ->title('Kortingscode niet gevonden')
+                ->title(__('Kortingscode niet gevonden'))
                 ->danger()
                 ->send();
 
@@ -541,7 +541,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
         if (! ($result['success'] ?? false)) {
             Notification::make()
-                ->title($result['message'] ?? 'Kortingscode niet toegepast')
+                ->title($result['message'] ?? __('Kortingscode niet toegepast'))
                 ->danger()
                 ->send();
 
@@ -568,8 +568,8 @@ class POSPage extends Component implements HasActions, HasSchemas
         return $schema
             ->schema([
                 TextInput::make('code')
-                    ->label('Cadeaubon-code')
-                    ->placeholder('Bijv. WELKOM-ABC123')
+                    ->label(__('Cadeaubon-code'))
+                    ->placeholder(__('Bijv. WELKOM-ABC123'))
                     ->autofocus()
                     ->required()
                     ->maxLength(255)
@@ -619,7 +619,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         $posCart = $this->getActivePosCart();
         if ($posCart->removeDiscountCode($code)) {
             Notification::make()
-                ->title('Kortingscode verwijderd uit de bestelling.')
+                ->title(__('Kortingscode verwijderd uit de bestelling.'))
                 ->success()
                 ->send();
 
@@ -632,7 +632,7 @@ class POSPage extends Component implements HasActions, HasSchemas
         return $schema
             ->schema([
                 Select::make('customerUserId')
-                    ->label('Account')
+                    ->label(__('Account'))
                     ->columnSpanFull()
                     ->searchable()
                     ->preload()
@@ -652,13 +652,13 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->getOptionLabelUsing(fn ($value) => optional(User::find($value))->name)
                     ->suffixAction(
                         Action::make('copyCostToPrice')
-                            ->label('Gegevens invoeren')
+                            ->label(__('Gegevens invoeren'))
                             ->icon('heroicon-m-clipboard')
                             ->action(function (Get $get) {
                                 $state = $get('customerUserId');
 
                                 if (! $state) {
-                                    Notification::make()->title('Selecteer eerst een gebruiker')->danger()->send();
+                                    Notification::make()->title(__('Selecteer eerst een gebruiker'))->danger()->send();
 
                                     return;
                                 }
@@ -666,7 +666,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                                 $user = User::find($state);
 
                                 if (! $user) {
-                                    Notification::make()->title('Gebruiker niet gevonden')->danger()->send();
+                                    Notification::make()->title(__('Gebruiker niet gevonden'))->danger()->send();
 
                                     return;
                                 }
@@ -703,19 +703,19 @@ class POSPage extends Component implements HasActions, HasSchemas
 
                                 Notification::make()
                                     ->title($lastOrder
-                                        ? 'Gegevens van laatste bestelling geladen'
-                                        : 'Gegevens uit accountprofiel geladen (geen eerdere bestelling gevonden)')
+                                        ? __('Gegevens van laatste bestelling geladen')
+                                        : __('Gegevens uit accountprofiel geladen (geen eerdere bestelling gevonden)'))
                                     ->success()
                                     ->send();
                             })
                     )
-                    ->helperText('Selecteer een account om de bestelling aan te koppelen'),
+                    ->helperText(__('Selecteer een account om de bestelling aan te koppelen')),
 
                 Select::make('loadFromOrderId')
-                    ->label('Gegevens uit bestelling kopiëren')
+                    ->label(__('Gegevens uit bestelling kopiëren'))
                     ->columnSpanFull()
                     ->searchable()
-                    ->placeholder('Zoek een bestelling op naam, e-mail of factuurnummer')
+                    ->placeholder(__('Zoek een bestelling op naam, e-mail of factuurnummer'))
                     ->getSearchResultsUsing(function (string $search) {
                         return Order::query()
                             ->where(function ($q) use ($search) {
@@ -755,19 +755,19 @@ class POSPage extends Component implements HasActions, HasSchemas
                     })
                     ->suffixAction(
                         Action::make('loadFromOrder')
-                            ->label('Gegevens invoeren')
+                            ->label(__('Gegevens invoeren'))
                             ->icon('heroicon-m-clipboard-document-list')
                             ->action(function (Get $get) {
                                 $state = $get('loadFromOrderId');
                                 if (! $state) {
-                                    Notification::make()->title('Selecteer eerst een bestelling')->danger()->send();
+                                    Notification::make()->title(__('Selecteer eerst een bestelling'))->danger()->send();
 
                                     return;
                                 }
 
                                 $order = Order::find($state);
                                 if (! $order) {
-                                    Notification::make()->title('Bestelling niet gevonden')->danger()->send();
+                                    Notification::make()->title(__('Bestelling niet gevonden'))->danger()->send();
 
                                     return;
                                 }
@@ -795,27 +795,27 @@ class POSPage extends Component implements HasActions, HasSchemas
                                 $this->invoiceCountry = $pick($order->invoice_country, $this->invoiceCountry);
 
                                 Notification::make()
-                                    ->title('Gegevens van bestelling #'.($order->invoice_id ?: $order->id).' geladen')
+                                    ->title(__('Gegevens van bestelling #:nummer geladen', ['nummer' => $order->invoice_id ?: $order->id]))
                                     ->success()
                                     ->send();
                             })
                     )
-                    ->helperText('Zoek een eerdere bestelling om alle klantgegevens snel te kopiëren. Koppelt de bestelling niet aan een account.'),
+                    ->helperText(__('Zoek een eerdere bestelling om alle klantgegevens snel te kopiëren. Koppelt de bestelling niet aan een account.')),
 
-                TextInput::make('firstName')->label('Voornaam')->maxLength(255),
-                TextInput::make('lastName')->label('Achternaam')->maxLength(255),
+                TextInput::make('firstName')->label(__('Voornaam'))->maxLength(255),
+                TextInput::make('lastName')->label(__('Achternaam'))->maxLength(255),
 
                 TextInput::make('email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->type('email')
                     ->email()
                     ->minLength(4)
                     ->maxLength(255),
 
-                TextInput::make('phoneNumber')->label('Telefoon nummer')->maxLength(255),
+                TextInput::make('phoneNumber')->label(__('Telefoon nummer'))->maxLength(255),
 
                 TextInput::make('zipCode')
-                    ->label('Postcode')
+                    ->label(__('Postcode'))
                     ->nullable()
                     ->maxLength(255)
                     ->live(onBlur: true)
@@ -830,7 +830,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     }),
 
                 TextInput::make('houseNr')
-                    ->label('Huisnummer')
+                    ->label(__('Huisnummer'))
                     ->nullable()
                     ->maxLength(255)
                     ->live(onBlur: true)
@@ -845,19 +845,19 @@ class POSPage extends Component implements HasActions, HasSchemas
                     }),
 
                 TextInput::make('street')
-                    ->label('Straat')
+                    ->label(__('Straat'))
                     ->maxLength(255)
                     ->lazy()
                     ->reactive(),
 
                 TextInput::make('city')
-                    ->label('Stad')
+                    ->label(__('Stad'))
                     ->required(fn (Get $get) => (bool) $get('street'))
                     ->nullable()
                     ->maxLength(255),
 
                 Select::make('country')
-                    ->label('Land')
+                    ->label(__('Land'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
@@ -872,11 +872,11 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->lazy()
                     ->columnSpanFull(),
 
-                TextInput::make('company')->label('Bedrijfsnaam')->maxLength(255),
-                TextInput::make('btwId')->label('BTW id')->maxLength(255),
+                TextInput::make('company')->label(__('Bedrijfsnaam'))->maxLength(255),
+                TextInput::make('btwId')->label(__('BTW id'))->maxLength(255),
 
                 TextInput::make('invoiceZipCode')
-                    ->label('Factuur postcode')
+                    ->label(__('Factuur postcode'))
                     ->nullable()
                     ->maxLength(255)
                     ->live(onBlur: true)
@@ -891,7 +891,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     }),
 
                 TextInput::make('invoiceHouseNr')
-                    ->label('Factuur huisnummer')
+                    ->label(__('Factuur huisnummer'))
                     ->nullable()
                     ->maxLength(255)
                     ->live(onBlur: true)
@@ -906,19 +906,19 @@ class POSPage extends Component implements HasActions, HasSchemas
                     }),
 
                 TextInput::make('invoiceStreet')
-                    ->label('Factuur straat')
+                    ->label(__('Factuur straat'))
                     ->nullable()
                     ->maxLength(255)
                     ->reactive(),
 
                 TextInput::make('invoiceCity')
-                    ->label('Factuur stad')
+                    ->label(__('Factuur stad'))
                     ->required(fn (Get $get) => (bool) $get('invoiceStreet'))
                     ->nullable()
                     ->maxLength(255),
 
                 Select::make('invoiceCountry')
-                    ->label('Factuur land')
+                    ->label(__('Factuur land'))
                     ->required(fn (Get $get) => (bool) $get('invoiceStreet'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
@@ -933,7 +933,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->columnSpanFull(),
 
                 Textarea::make('note')
-                    ->label('Notitie')
+                    ->label(__('Notitie'))
                     ->nullable()
                     ->maxLength(5000)
                     ->columnSpanFull(),
@@ -1095,7 +1095,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                 $this->proformaAllowShipping = false;
 
                 Notification::make()
-                    ->title(__('Proforma opgeslagen en gemaild naar') . ' ' . $data['email'])
+                    ->title(__('Proforma opgeslagen en gemaild naar :email', ['email' => $data['email']]))
                     ->success()
                     ->send();
 

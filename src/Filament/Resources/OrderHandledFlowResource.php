@@ -61,46 +61,46 @@ class OrderHandledFlowResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Algemeen')
+            Section::make(__('Algemeen'))
                 ->schema([
                     TextInput::make('name')
-                        ->label('Naam')
+                        ->label(__('Naam'))
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Select::make('trigger_status')
-                        ->label('Trigger status')
-                        ->helperText('De flow start zodra de bestelling deze fulfillment-status krijgt.')
+                        ->label(__('Trigger status'))
+                        ->helperText(__('De flow start zodra de bestelling deze fulfillment-status krijgt.'))
                         ->options(Orders::getFulfillmentStatusses())
                         ->default('handled')
                         ->required()
                         ->native(false),
                     Select::make('order_origins')
-                        ->label('Geldt voor order origins')
-                        ->helperText('Laat leeg om alle origins te includeren. Bol.com is om beleidsredenen altijd uitgesloten.')
+                        ->label(__('Geldt voor order origins'))
+                        ->helperText(__('Laat leeg om alle origins te includeren. Bol.com is om beleidsredenen altijd uitgesloten.'))
                         ->options([
-                            'own' => 'Eigen shop',
-                            'pos' => 'Kassa / POS',
-                            'Etsy' => 'Etsy',
-                            'Channable' => 'Channable',
+                            'own' => __('Eigen shop'),
+                            'pos' => __('Kassa / POS'),
+                            'Etsy' => __('Etsy'),
+                            'Channable' => __('Channable'),
                         ])
                         ->multiple()
                         ->native(false),
                     Toggle::make('is_active')
-                        ->label('Actieve flow')
+                        ->label(__('Actieve flow'))
                         ->default(true)
-                        ->helperText('Per trigger-status kan maximaal 1 flow actief zijn. Een nieuwe actieve flow op dezelfde trigger-status zet de vorige automatisch op inactive.'),
+                        ->helperText(__('Per trigger-status kan maximaal 1 flow actief zijn. Een nieuwe actieve flow op dezelfde trigger-status zet de vorige automatisch op inactive.')),
                     Toggle::make('cancel_on_link_click')
-                        ->label('Annuleer flow bij klik')
+                        ->label(__('Annuleer flow bij klik'))
                         ->default(true)
-                        ->helperText('Wanneer een ontvanger op een knop of afbeelding-link in de mail klikt, worden eventuele volgende stappen voor deze bestelling overgeslagen.'),
+                        ->helperText(__('Wanneer een ontvanger op een knop of afbeelding-link in de mail klikt, worden eventuele volgende stappen voor deze bestelling overgeslagen.')),
                     TextInput::make('discount_prefix')
-                        ->label('Kortingscode prefix')
-                        ->helperText('Optioneel. Wordt gebruikt wanneer een stap een kortingsblok bevat zonder eigen code.')
+                        ->label(__('Kortingscode prefix'))
+                        ->helperText(__('Optioneel. Wordt gebruikt wanneer een stap een kortingsblok bevat zonder eigen code.'))
                         ->maxLength(20),
                     TextInput::make('skip_if_recently_ordered_within_days')
-                        ->label('Skip bij recente bestelling (dagen)')
-                        ->helperText('Geen mail versturen wanneer dezelfde klant in de afgelopen X dagen al een nieuwe betaalde bestelling heeft geplaatst. Leeg of 0 zet de check uit.')
+                        ->label(__('Skip bij recente bestelling (dagen)'))
+                        ->helperText(__('Geen mail versturen wanneer dezelfde klant in de afgelopen X dagen al een nieuwe betaalde bestelling heeft geplaatst. Leeg of 0 zet de check uit.'))
                         ->numeric()
                         ->minValue(0)
                         ->maxValue(365)
@@ -109,41 +109,41 @@ class OrderHandledFlowResource extends Resource
                 ->columns(2)
                 ->columnSpanFull(),
 
-            Section::make('Review-URLs (A/B test)')
-                ->description('Zodra een inschrijving start, wordt 1 van deze URLs gewogen willekeurig gekozen en op de inschrijving vastgelegd. Alle stappen van de flow voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat conversies per platform telbaar zijn. Laat leeg om de globale Customsetting "order_handled_flow_review_url" te gebruiken; vul meerdere rijen in om A/B te testen tussen review-platformen.')
+            Section::make(__('Review-URLs (A/B test)'))
+                ->description(__('Zodra een inschrijving start, wordt 1 van deze URLs gewogen willekeurig gekozen en op de inschrijving vastgelegd. Alle stappen van de flow voor dezelfde klant gebruiken vervolgens dezelfde URL, zodat conversies per platform telbaar zijn. Laat leeg om de globale Customsetting "order_handled_flow_review_url" te gebruiken; vul meerdere rijen in om A/B te testen tussen review-platformen.'))
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('review_urls')
-                        ->label('Review-URLs')
-                        ->addActionLabel('Review-URL toevoegen')
+                        ->label(__('Review-URLs'))
+                        ->addActionLabel(__('Review-URL toevoegen'))
                         ->reorderable()
                         ->collapsible()
                         ->itemLabel(fn ($state) => trim(((string) ($state['label'] ?? '')) . ' - ' . ((string) ($state['url'] ?? ''))) ?: 'Nieuwe review-URL')
                         ->defaultItems(0)
                         ->schema([
                             TextInput::make('label')
-                                ->label('Label')
-                                ->helperText('Bv. Google, KiyOh, WebwinkelKeur. Wordt alleen voor statistieken gebruikt.')
+                                ->label(__('Label'))
+                                ->helperText(__('Bv. Google, KiyOh, WebwinkelKeur. Wordt alleen voor statistieken gebruikt.'))
                                 ->maxLength(50),
                             TextInput::make('url')
-                                ->label('URL')
+                                ->label(__('URL'))
                                 ->required()
                                 ->url()
                                 ->maxLength(2048),
                             TextInput::make('weight')
-                                ->label('Gewicht')
+                                ->label(__('Gewicht'))
                                 ->numeric()
                                 ->minValue(0.1)
                                 ->maxValue(100)
                                 ->default(1)
-                                ->helperText('Hoger = vaker gekozen. Default 1 = gelijk verdeeld.'),
+                                ->helperText(__('Hoger = vaker gekozen. Default 1 = gelijk verdeeld.')),
                         ])
                         ->columns(3)
                         ->columnSpanFull(),
                 ]),
 
-            Section::make('Opvolg-stappen')
-                ->description('Voeg de mails toe die in volgorde verstuurd worden nadat een bestelling de geconfigureerde fulfillment-status krijgt.')
+            Section::make(__('Opvolg-stappen'))
+                ->description(__('Voeg de mails toe die in volgorde verstuurd worden nadat een bestelling de geconfigureerde fulfillment-status krijgt.'))
                 ->schema([
                     Repeater::make('steps')
                         ->relationship()
@@ -168,20 +168,20 @@ class OrderHandledFlowResource extends Resource
                         })
                         ->orderColumn('sort_order')
                         ->defaultItems(1)
-                        ->addActionLabel('Stap toevoegen')
+                        ->addActionLabel(__('Stap toevoegen'))
                         ->reorderableWithButtons()
                         ->collapsible()
                         ->extraItemActions([
                             Action::make('sendTestMail')
-                                ->label('Test mail naar mij sturen')
+                                ->label(__('Test mail naar mij sturen'))
                                 ->icon('heroicon-o-paper-airplane')
                                 ->color('info')
-                                ->modalHeading('Test mail versturen')
-                                ->modalDescription('Verstuurt een synchrone test-render van deze stap naar het opgegeven adres. Werkt ook voor nog niet opgeslagen wijzigingen.')
-                                ->modalSubmitActionLabel('Versturen')
+                                ->modalHeading(__('Test mail versturen'))
+                                ->modalDescription(__('Verstuurt een synchrone test-render van deze stap naar het opgegeven adres. Werkt ook voor nog niet opgeslagen wijzigingen.'))
+                                ->modalSubmitActionLabel(__('Versturen'))
                                 ->form([
                                     TextInput::make('recipient')
-                                        ->label('Ontvanger')
+                                        ->label(__('Ontvanger'))
                                         ->email()
                                         ->required()
                                         ->default(fn () => auth()->user()?->email),
@@ -237,13 +237,13 @@ class OrderHandledFlowResource extends Resource
                                         Mail::to($recipient)->sendNow($mailable);
 
                                         Notification::make()
-                                            ->title('Test mail verstuurd naar '.$recipient)
+                                            ->title(__('Test mail verstuurd naar :email', ['email' => $recipient]))
                                             ->success()
                                             ->send();
                                     } catch (\Throwable $e) {
                                         report($e);
                                         Notification::make()
-                                            ->title('Test mail mislukt')
+                                            ->title(__('Test mail mislukt'))
                                             ->body($e->getMessage())
                                             ->danger()
                                             ->send();
@@ -263,40 +263,40 @@ class OrderHandledFlowResource extends Resource
                         })
                         ->schema([
                             TextInput::make('send_after_minutes')
-                                ->label('Versturen na (minuten)')
-                                ->helperText('1440 = 1 dag, 10080 = 7 dagen, 20160 = 14 dagen, 43200 = 30 dagen')
+                                ->label(__('Versturen na (minuten)'))
+                                ->helperText(__('1440 = 1 dag, 10080 = 7 dagen, 20160 = 14 dagen, 43200 = 30 dagen'))
                                 ->numeric()
                                 ->minValue(1)
                                 ->default(20160)
                                 ->required(),
                             Toggle::make('is_active')
-                                ->label('Actief')
+                                ->label(__('Actief'))
                                 ->default(true),
                             TextInput::make('subject')
-                                ->label('Onderwerp')
+                                ->label(__('Onderwerp'))
                                 ->helperText('Beschikbare '.self::VARIABLES_HELP)
                                 ->required()
                                 ->maxLength(255)
                                 ->columnSpanFull(),
                             Builder::make('blocks')
-                                ->label('Inhoud blokken')
+                                ->label(__('Inhoud blokken'))
                                 ->helperText(self::VARIABLES_HELP.' - werken in elk tekst-, link- en code-veld hieronder.')
                                 ->blocks([
                                     Builder\Block::make('heading')
-                                        ->label('Kop')
+                                        ->label(__('Kop'))
                                         ->icon('heroicon-o-bars-3-bottom-left')
                                         ->schema([
                                             TextInput::make('content')
-                                                ->label('Tekst')
+                                                ->label(__('Tekst'))
                                                 ->helperText(self::VARIABLES_HELP)
                                                 ->required(),
                                         ]),
                                     Builder\Block::make('paragraph')
-                                        ->label('Tekst')
+                                        ->label(__('Tekst'))
                                         ->icon('heroicon-o-document-text')
                                         ->schema([
                                             RichEditor::make('content')
-                                                ->label('Tekst')
+                                                ->label(__('Tekst'))
                                                 ->helperText(self::VARIABLES_HELP)
                                                 ->toolbarButtons([
                                                     'bold', 'italic', 'underline', 'strike',
@@ -304,75 +304,75 @@ class OrderHandledFlowResource extends Resource
                                                 ]),
                                         ]),
                                     Builder\Block::make('button')
-                                        ->label('Knop')
+                                        ->label(__('Knop'))
                                         ->icon('heroicon-o-cursor-arrow-rays')
                                         ->schema([
                                             TextInput::make('label')
-                                                ->label('Knoptekst')
+                                                ->label(__('Knoptekst'))
                                                 ->helperText(self::VARIABLES_HELP)
                                                 ->default('Bekijk')
                                                 ->required(),
                                             TextInput::make('url')
-                                                ->label('URL')
+                                                ->label(__('URL'))
                                                 ->helperText(self::VARIABLES_HELP.' - gebruik :reviewUrl: voor de review-pagina of :siteUrl: voor de homepage.')
                                                 ->default(':reviewUrl:')
                                                 ->required(),
                                         ]),
                                     Builder\Block::make('image')
-                                        ->label('Afbeelding')
+                                        ->label(__('Afbeelding'))
                                         ->icon('heroicon-o-photo')
                                         ->schema([
                                             TextInput::make('url')
-                                                ->label('URL')
+                                                ->label(__('URL'))
                                                 ->helperText(self::VARIABLES_HELP)
                                                 ->required(),
                                             TextInput::make('alt')
-                                                ->label('Alt-tekst')
+                                                ->label(__('Alt-tekst'))
                                                 ->helperText(self::VARIABLES_HELP),
                                             TextInput::make('link')
-                                                ->label('Klik-link (optioneel)')
+                                                ->label(__('Klik-link (optioneel)'))
                                                 ->helperText('Maakt de afbeelding klikbaar. '.self::VARIABLES_HELP),
                                         ]),
                                     Builder\Block::make('divider')
-                                        ->label('Scheidingslijn')
+                                        ->label(__('Scheidingslijn'))
                                         ->icon('heroicon-o-minus')
                                         ->schema([]),
                                     Builder\Block::make('usp')
-                                        ->label('USPs')
+                                        ->label(__('USPs'))
                                         ->icon('heroicon-o-check-badge')
                                         ->maxItems(1)
                                         ->schema([
                                             Textarea::make('items')
-                                                ->label('USPs (één per regel)')
+                                                ->label(__('USPs (één per regel)'))
                                                 ->helperText('Voer elke USP op een nieuwe regel in. '.self::VARIABLES_HELP)
                                                 ->rows(4)
                                                 ->default("Gratis verzending\nSnel geleverd\nVeilig betalen"),
                                         ]),
                                     Builder\Block::make('discount')
-                                        ->label('Kortingscode')
+                                        ->label(__('Kortingscode'))
                                         ->icon('heroicon-o-tag')
                                         ->maxItems(1)
                                         ->schema([
                                             TextInput::make('label')
-                                                ->label('Tekst boven de code')
+                                                ->label(__('Tekst boven de code'))
                                                 ->helperText(self::VARIABLES_HELP)
                                                 ->default('Gebruik deze code voor extra korting:'),
                                             TextInput::make('code')
-                                                ->label('Code')
+                                                ->label(__('Code'))
                                                 ->helperText('Vul een specifieke code in. Optionele '.self::VARIABLES_HELP),
                                         ]),
                                     Builder\Block::make('order_products')
-                                        ->label('Bestelde producten (samenvatting)')
+                                        ->label(__('Bestelde producten (samenvatting)'))
                                         ->icon('heroicon-o-shopping-bag')
                                         ->maxItems(1)
                                         ->schema([
                                             TextInput::make('heading')
-                                                ->label('Kop boven de lijst')
+                                                ->label(__('Kop boven de lijst'))
                                                 ->helperText('Optioneel. '.self::VARIABLES_HELP)
                                                 ->default('Wat je hebt besteld:'),
                                             TextInput::make('max_items')
-                                                ->label('Max. aantal producten in de mail')
-                                                ->helperText('Daarboven verschijnt "+ N ander(e) product(en)" als samenvattingsregel.')
+                                                ->label(__('Max. aantal producten in de mail'))
+                                                ->helperText(__('Daarboven verschijnt "+ N ander(e) product(en)" als samenvattingsregel.'))
                                                 ->numeric()
                                                 ->minValue(1)
                                                 ->maxValue(50)
@@ -395,50 +395,50 @@ class OrderHandledFlowResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->weight('bold'),
                 TextColumn::make('trigger_status')
-                    ->label('Trigger status')
+                    ->label(__('Trigger status'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => Orders::getFulfillmentStatusses()[$state] ?? $state),
                 TextColumn::make('steps_count')
-                    ->label('Stappen')
+                    ->label(__('Stappen'))
                     ->counts('steps')
                     ->badge()
                     ->color('info'),
                 TextColumn::make('active_enrollments_count')
-                    ->label('In flow / wacht')
+                    ->label(__('In flow / wacht'))
                     ->counts('activeEnrollments')
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'warning' : 'gray')
                     ->sortable(),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean()
                     ->trueColor('success')
                     ->falseColor('gray'),
                 IconColumn::make('cancel_on_link_click')
-                    ->label('Cancel bij klik')
+                    ->label(__('Cancel bij klik'))
                     ->boolean(),
                 TextColumn::make('skip_if_recently_ordered_within_days')
-                    ->label('Skip cooldown (dagen)')
+                    ->label(__('Skip cooldown (dagen)'))
                     ->badge()
                     ->color('gray'),
                 TextColumn::make('updated_at')
-                    ->label('Bijgewerkt')
+                    ->label(__('Bijgewerkt'))
                     ->dateTime('d-m-Y H:i', 'Europe/Amsterdam')
                     ->sortable(),
             ])
             ->recordActions([
                 Action::make('activate')
-                    ->label('Activeren')
+                    ->label(__('Activeren'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn ($record) => ! $record->is_active)
                     ->action(function ($record) {
                         $record->activate();
-                        Notification::make()->title('Flow geactiveerd')->success()->send();
+                        Notification::make()->title(__('Flow geactiveerd'))->success()->send();
                     }),
                 EditAction::make()->button(),
                 DeleteAction::make(),

@@ -107,13 +107,13 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
 
         foreach (FulfillmentCompany::all() as $fulfillmentCompany) {
             if ($this->orderProducts->where('fulfillment_provider', $fulfillmentCompany->id)->count()) {
-                $sections[] = Section::make('Bestelde producten voor ' . $fulfillmentCompany->name)->columnSpanFull()
+                $sections[] = Section::make(__('Bestelde producten voor :naam', ['naam' => $fulfillmentCompany->name]))->columnSpanFull()
                     ->schema(
                         array_merge(
                             $this->getOrderProductSchema($fulfillmentCompany),
                             [
                                 Toggle::make('sendProductsToCustomer_' . $fulfillmentCompany->id)
-                                    ->label('Verstuur producten naar de klant'),
+                                    ->label(__('Verstuur producten naar de klant')),
                                 mediaHelper()->field('files_' . $fulfillmentCompany->id, 'Bijlagen', multiple: true, defaultFolder: 'orders/' . $this->order->invoice_id),
                             ]
                         )
@@ -133,8 +133,8 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
                 ->label($orderProduct->name)
                 ->schema([
                     Toggle::make("order_product_{$orderProduct->id}_send_to_fulfiller")
-                        ->label("{$orderProduct->name} {$orderProduct->quantity}x versturen")
-                        ->helperText($orderProduct->send_to_fulfiller ? 'Dit product is al doorgestuurd naar de fulfilment partij.' : 'Dit product moet nog doorgestuurd worden naar de fulfilment partij.'),
+                        ->label(__(':naam :aantalx versturen', ['naam' => $orderProduct->name, 'aantal' => $orderProduct->quantity]))
+                        ->helperText($orderProduct->send_to_fulfiller ? __('Dit product is al doorgestuurd naar de fulfilment partij.') : __('Dit product moet nog doorgestuurd worden naar de fulfilment partij.')),
                 ]);
         })->toArray();
     }
@@ -153,8 +153,8 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
 
         if (! $hasOrderProductSelected) {
             Notification::make()
-                ->title('Geen producten geselecteerd')
-                ->body('Selecteer minimaal één product om door te sturen naar de fulfilment partij.')
+                ->title(__('Geen producten geselecteerd'))
+                ->body(__('Selecteer minimaal één product om door te sturen naar de fulfilment partij.'))
                 ->danger()
                 ->send();
 
@@ -167,8 +167,8 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
         }
 
         Notification::make()
-            ->title('Bestelling doorgestuurd')
-            ->body('De bestelling is doorgestuurd naar de fulfilment partijen.')
+            ->title(__('Bestelling doorgestuurd'))
+            ->body(__('De bestelling is doorgestuurd naar de fulfilment partijen.'))
             ->success()
             ->send();
     }

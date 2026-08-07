@@ -28,18 +28,18 @@ class BulkPriceUpdateBulkAction
     {
         return BulkAction::make('changePrice')
             ->color('primary')
-            ->label('Verander prijzen')
-            ->modalHeading('Prijzen aanpassen voor geselecteerde producten')
-            ->modalDescription('Per soort prijs kun je kiezen of je een vaste waarde wilt zetten, een vast euro-bedrag wilt optellen/aftrekken, of een percentage wilt toepassen.')
-            ->modalSubmitActionLabel('Doorvoeren')
+            ->label(__('Verander prijzen'))
+            ->modalHeading(__('Prijzen aanpassen voor geselecteerde producten'))
+            ->modalDescription(__('Per soort prijs kun je kiezen of je een vaste waarde wilt zetten, een vast euro-bedrag wilt optellen/aftrekken, of een percentage wilt toepassen.'))
+            ->modalSubmitActionLabel(__('Doorvoeren'))
             ->schema(fn () => static::schemaForPriceFields())
             ->action(function (Collection $records, array $data): void {
                 $touched = static::applyToRecords($records, $data);
 
                 Notification::make()
                     ->title($touched === 0
-                        ? 'Geen wijzigingen toegepast'
-                        : sprintf('%d product(en) bijgewerkt', $touched))
+                        ? __('Geen wijzigingen toegepast')
+                        : __(':aantal product(en) bijgewerkt', ['aantal' => $touched]))
                     ->success($touched > 0)
                     ->warning($touched === 0)
                     ->send();
@@ -62,12 +62,12 @@ class BulkPriceUpdateBulkAction
                 ->description($priceField['helperText'] ?? null)
                 ->schema([
                     Select::make($modeKey)
-                        ->label('Aanpassing')
+                        ->label(__('Aanpassing'))
                         ->options([
-                            self::MODE_SKIP => 'Niet wijzigen',
-                            self::MODE_REPLACE => 'Vervangen door vaste waarde',
-                            self::MODE_PLUS_EURO => 'Bedrag erbij/eraf (€)',
-                            self::MODE_PLUS_PERCENT => 'Percentage erbij/eraf (%)',
+                            self::MODE_SKIP => __('Niet wijzigen'),
+                            self::MODE_REPLACE => __('Vervangen door vaste waarde'),
+                            self::MODE_PLUS_EURO => __('Bedrag erbij/eraf (€)'),
+                            self::MODE_PLUS_PERCENT => __('Percentage erbij/eraf (%)'),
                         ])
                         ->default(self::MODE_SKIP)
                         ->required()
@@ -92,19 +92,19 @@ class BulkPriceUpdateBulkAction
     protected static function valueLabelFor(string $mode): string
     {
         return match ($mode) {
-            self::MODE_REPLACE => 'Nieuwe waarde',
-            self::MODE_PLUS_EURO => 'Bedrag in euro (negatief = eraf)',
-            self::MODE_PLUS_PERCENT => 'Percentage (negatief = eraf)',
-            default => 'Waarde',
+            self::MODE_REPLACE => __('Nieuwe waarde'),
+            self::MODE_PLUS_EURO => __('Bedrag in euro (negatief = eraf)'),
+            self::MODE_PLUS_PERCENT => __('Percentage (negatief = eraf)'),
+            default => __('Waarde'),
         };
     }
 
     protected static function valueHelperTextFor(string $mode): ?string
     {
         return match ($mode) {
-            self::MODE_REPLACE => 'Voorbeeld: 19.95',
-            self::MODE_PLUS_EURO => 'Voorbeeld: 1.50 telt €1,50 op, -0.50 trekt €0,50 af.',
-            self::MODE_PLUS_PERCENT => 'Voorbeeld: 10 verhoogt met 10%, -5 verlaagt met 5%.',
+            self::MODE_REPLACE => __('Voorbeeld: 19.95'),
+            self::MODE_PLUS_EURO => __('Voorbeeld: 1.50 telt €1,50 op, -0.50 trekt €0,50 af.'),
+            self::MODE_PLUS_PERCENT => __('Voorbeeld: 10 verhoogt met 10%, -5 verlaagt met 5%.'),
             default => null,
         };
     }

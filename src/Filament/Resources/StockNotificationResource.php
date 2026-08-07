@@ -34,32 +34,32 @@ class StockNotificationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('product.name')
-                    ->label('Product')
+                    ->label(__('Product'))
                     ->formatStateUsing(fn ($state) => is_array($state) ? (reset($state) ?: '—') : ($state ?: '—'))
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('E-mail')
+                    ->label(__('E-mail'))
                     ->searchable(),
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->getStateUsing(fn (StockNotification $record) => $record->notified_at ? 'Verstuurd' : 'Openstaand')
                     ->color(fn (string $state) => $state === 'Verstuurd' ? 'success' : 'warning'),
                 TextColumn::make('created_at')
-                    ->label('Aangemeld op')
+                    ->label(__('Aangemeld op'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
                 TextColumn::make('notified_at')
-                    ->label('Verstuurd op')
+                    ->label(__('Verstuurd op'))
                     ->dateTime('d-m-Y H:i')
-                    ->placeholder('—')
+                    ->placeholder(__('—'))
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 TernaryFilter::make('notified_at')
-                    ->label('Status')
-                    ->placeholder('Alles')
+                    ->label(__('Status'))
+                    ->placeholder(__('Alles'))
                     ->trueLabel('Verstuurd')
                     ->falseLabel('Openstaand')
                     ->nullable(),

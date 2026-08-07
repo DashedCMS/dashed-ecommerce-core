@@ -74,93 +74,93 @@ class ProductSettingsPage extends Page
                     ->columnSpan(2),
                 Select::make("add_to_cart_redirect_to_{$site['id']}")
                     ->options([
-                        'same' => 'Zelfde pagina',
-                        'cart' => 'Winkelwagen (Hier bekijk je je winkelmand)',
-                        'checkout' => 'Checkout (Hier ga je afrekenen)',
+                        'same' => __('Zelfde pagina'),
+                        'cart' => __('Winkelwagen (Hier bekijk je je winkelmand)'),
+                        'checkout' => __('Checkout (Hier ga je afrekenen)'),
                     ])
-                    ->label('Waar moet de pagina naartoe gaan als je een item in je winkelmand toevoegd')
+                    ->label(__('Waar moet de pagina naartoe gaan als je een item in je winkelmand toevoegd'))
                     ->required(),
                 Select::make("product_filter_option_order_by_{$site['id']}")
                     ->options([
-                        'order' => 'Volgorde',
-                        'name' => 'Naam',
+                        'order' => __('Volgorde'),
+                        'name' => __('Naam'),
                     ])
-                    ->label('Op basis waarvan moeten product filter opties gesorteerd worden')
+                    ->label(__('Op basis waarvan moeten product filter opties gesorteerd worden'))
                     ->required(),
                 Select::make("product_out_of_stock_sellable_date_should_be_valid_{$site['id']}")
                     ->options([
-                        '1' => 'Ja',
-                        '0' => 'Nee',
+                        '1' => __('Ja'),
+                        '0' => __('Nee'),
                     ])
-                    ->label('Indien een product doorverkocht kan worden bij 0 voorraad, moet de \'weer op voorraad\' datum dan in de toekomst liggen?')
+                    ->label(__('Indien een product doorverkocht kan worden bij 0 voorraad, moet de \'weer op voorraad\' datum dan in de toekomst liggen?'))
                     ->required(),
                 Select::make("product_default_order_type_{$site['id']}")
                     ->options([
-                        'price' => 'Prijs',
-                        'purchases' => 'Aantal verkopen',
-                        'stock' => 'Vooraad',
-                        'created_at' => 'Aangemaakt op',
-                        'order' => 'Volgorde van producten',
-                        'orderByProductGroups' => 'Volgorde van product groepen',
+                        'price' => __('Prijs'),
+                        'purchases' => __('Aantal verkopen'),
+                        'stock' => __('Vooraad'),
+                        'created_at' => __('Aangemaakt op'),
+                        'order' => __('Volgorde van producten'),
+                        'orderByProductGroups' => __('Volgorde van product groepen'),
                     ])
-                    ->label('Producten sorteren op')
+                    ->label(__('Producten sorteren op'))
                     ->required(),
                 Select::make("product_default_order_sort_{$site['id']}")
                     ->options([
-                        'DESC' => 'Aflopend',
-                        'ASC' => 'Oplopend',
+                        'DESC' => __('Aflopend'),
+                        'ASC' => __('Oplopend'),
                     ])
-                    ->label('Standaard sortering van producten')
+                    ->label(__('Standaard sortering van producten'))
                     ->required(),
                 Select::make("product_categories_default_order_by_{$site['id']}")
                     ->options([
-                        'created_at' => 'Aangemaakt op',
-                        'order' => 'Volgorde van product categorieen',
+                        'created_at' => __('Aangemaakt op'),
+                        'order' => __('Volgorde van product categorieen'),
                     ])
-                    ->label('Product categorieen sorteren op')
+                    ->label(__('Product categorieen sorteren op'))
                     ->required(),
                 Select::make("product_categories_default_order_{$site['id']}")
                     ->options([
-                        'DESC' => 'Aflopend',
-                        'ASC' => 'Oplopend',
+                        'DESC' => __('Aflopend'),
+                        'ASC' => __('Oplopend'),
                     ])
-                    ->label('Standaard sortering van product categorieen')
+                    ->label(__('Standaard sortering van product categorieen'))
                     ->required(),
                 TextInput::make("product_default_amount_of_products_{$site['id']}")
-                    ->label('Standaard aantal producten per pagina')
+                    ->label(__('Standaard aantal producten per pagina'))
                     ->numeric()
                     ->required(),
                 Select::make("product_overview_page_id_{$site['id']}")
-                    ->label('Product overview pagina')
+                    ->label(__('Product overview pagina'))
                     ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
                 Select::make("cart_page_id_{$site['id']}")
-                    ->label('Winkelwagen pagina')
+                    ->label(__('Winkelwagen pagina'))
                     ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
                 Select::make("checkout_page_id_{$site['id']}")
-                    ->label('Afreken pagina')
+                    ->label(__('Afreken pagina'))
                     ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
                 Select::make("orders_page_id_{$site['id']}")
-                    ->label('Bestellingen pagina')
+                    ->label(__('Bestellingen pagina'))
                     ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
                 Select::make("order_page_id_{$site['id']}")
-                    ->label('Bestelling pagina')
+                    ->label(__('Bestelling pagina'))
                     ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
                 Toggle::make("product_use_simple_variation_style_{$site['id']}")
-                    ->label('Gebruik product variaties op de Livewire manier')
-                    ->helperText('Alleen gebruiken als jouw webshop hiervoor gebouwd is'),
+                    ->label(__('Gebruik product variaties op de Livewire manier'))
+                    ->helperText(__('Alleen gebruiken als jouw webshop hiervoor gebouwd is')),
 //                Toggle::make("products_hide_parents_in_overview_{$site['id']}")
 //                    ->label('Verberg alle hoofdproducten'),
                 Toggle::make("product_redirect_after_new_variation_selected_{$site['id']}")
-                    ->label('Redirect naar nieuwe pagina als nieuwe variatie gevonden is'),
+                    ->label(__('Redirect naar nieuwe pagina als nieuwe variatie gevonden is')),
                 Toggle::make("product_category_index_page_enabled_{$site['id']}")
-                    ->label('Product categorie index pagina inschakelen'),
+                    ->label(__('Product categorie index pagina inschakelen')),
                 Toggle::make("fill_with_first_product_if_product_group_loaded_{$site['id']}")
-                    ->label('Vul product groep met eerste product als deze geladen wordt'),
+                    ->label(__('Vul product groep met eerste product als deze geladen wordt')),
                 Toggle::make("product_bundle_show_bundle_product_images_{$site['id']}")
-                    ->label('Bundel producten vullen met afbeeldingen van de producten in de bundel'),
+                    ->label(__('Bundel producten vullen met afbeeldingen van de producten in de bundel')),
                 Toggle::make("product_list_infinite_scroll_{$site['id']}")
-                    ->label('Infinite scroll in CMS product-overzicht')
-                    ->helperText('Wanneer aan, vervangt de paginatie in /dashed/products door automatisch nieuwe rijen laden tijdens scrollen.'),
+                    ->label(__('Infinite scroll in CMS product-overzicht'))
+                    ->helperText(__('Wanneer aan, vervangt de paginatie in /dashed/products door automatisch nieuwe rijen laden tijdens scrollen.')),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -206,7 +206,7 @@ class ProductSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De product instellingen zijn opgeslagen')
+            ->title(__('De product instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

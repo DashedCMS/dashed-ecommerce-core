@@ -52,7 +52,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
         }
 
         return Action::make('action')
-            ->label($this->buttonText ?: 'Annuleer bestelling')
+            ->label($this->buttonText ?: __('Annuleer bestelling'))
             ->extraAttributes([
                 'class' => $this->buttonClass,
             ])
@@ -62,16 +62,16 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                 $orderProductSchema = [];
                 foreach ($this->order->orderProducts as $orderProduct) {
                     $orderProductSchema[] = \LaraZeus\Quantity\Components\Quantity::make("order_product_$orderProduct->id")
-                        ->label("$orderProduct->name retourneren")
+                        ->label(__(':naam retourneren', ['naam' => $orderProduct->name]))
                         ->numeric()
                         ->minValue(0)
                         ->default(0)
                         ->maxValue($orderProduct->quantity)
-                        ->helperText("{$orderProduct->quantity}x besteld voor " . CurrencyHelper::formatPrice($orderProduct->price));
+                        ->helperText(__(':aantal x besteld voor :prijs', ['aantal' => $orderProduct->quantity, 'prijs' => CurrencyHelper::formatPrice($orderProduct->price)]));
                 }
 
                 return [
-                    Section::make('Annuleren')->columnSpanFull()
+                    Section::make(__('Annuleren'))->columnSpanFull()
                         ->schema([
                             TextEntry::make('cancel')
                                 ->state('Klik op onderstaande knop om deze bestelling te annuleren.'),
@@ -83,11 +83,11 @@ class CancelOrder extends Component implements HasSchemas, HasActions
 //                                ->state('Kies de hoeveelheid van de producten, of de klant een mail moet krijgen, of er een creditfactuur gemaakt moet worden, of de gekochten producten geretourneerd moeten worden en of de voorraad teruggeboekt moet worden. Afhankelijk van de gekozen opties wordt er een credit bestelling aangemaakt of wordt deze bestelling simpelweg op geannuleerd gezet.'),
 //                        ])
 //                        ->hidden(!in_array($this->order->order_origin, ['own', 'pos'])),
-                    Section::make('Bestelde producten')
+                    Section::make(__('Bestelde producten'))
                         ->columnSpanFull()
                         ->headerActions([
                             Action::make('returnAll')
-                                ->label('Alles retourneren')
+                                ->label(__('Alles retourneren'))
                                 ->action(function (Set $set) {
                                     foreach ($this->order->orderProducts as $orderProduct) {
                                         $set("order_product_$orderProduct->id", $orderProduct->quantity);
@@ -110,28 +110,28 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                             'lg' => 3,
                         ]),
 //                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
-                    Section::make('Overige opties')->columnSpanFull()
+                    Section::make(__('Overige opties'))->columnSpanFull()
                         ->schema([
                             Select::make('fulfillment_status')
-                                ->label('Verander fulfillment status naar')
+                                ->label(__('Verander fulfillment status naar'))
                                 ->required()
                                 ->options(Orders::getFulfillmentStatusses()),
                             Select::make('payment_method_id')
-                                ->label('Betaalmethode voor terugbetaling')
+                                ->label(__('Betaalmethode voor terugbetaling'))
                                 ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->pluck('name', 'id')->toArray()),
 //                                ->options(PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->pluck('name', 'id')->toArray()),
                             Toggle::make('send_customer_email')
-                                ->label('Moet de klant een mail krijgen van deze annulering/retournering?'),
+                                ->label(__('Moet de klant een mail krijgen van deze annulering/retournering?')),
                             Toggle::make('products_must_be_returned')
-                                ->label('Moet de klant de producten nog retourneren?'),
+                                ->label(__('Moet de klant de producten nog retourneren?')),
                             Toggle::make('restock')
-                                ->label('Moet de voorraad weer terug geboekt worden?'),
+                                ->label(__('Moet de voorraad weer terug geboekt worden?')),
                             Toggle::make('refund_discount_costs')
-                                ->label('Korting terugvorderen? (' . CurrencyHelper::formatPrice($this->order->discount) . ') (Dit geldt alleen voor vaste korting, ex. €40,-, procentuele korting is op product niveau en wordt altijd terug gevorderd)'),
+                                ->label(__('Korting terugvorderen? (:bedrag) (Dit geldt alleen voor vaste korting, ex. €40,-, procentuele korting is op product niveau en wordt altijd terug gevorderd)', ['bedrag' => CurrencyHelper::formatPrice($this->order->discount)])),
                             Toggle::make('extra_order_line')
-                                ->label('Extra regel voor de factuur (Gebruik voor bijv. apart gekochte producten, of een
+                                ->label(__('Extra regel voor de factuur (Gebruik voor bijv. apart gekochte producten, of een
                                     aparte teruggave van een bedrag. Wil je alleen deze regel, zet de retour producten
-                                    dan op 0 hierboven)')
+                                    dan op 0 hierboven)'))
                                 ->reactive(),
                         ]),
 //                        ->hidden(! in_array($this->order->order_origin, ['own', 'pos'])),
@@ -158,7 +158,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
 
                     if (! $extraOrderLine && $cancelledProductsQuantity == 0) {
                         Notification::make()
-                            ->title('Je moet tenminste 1 product laten retourneren.')
+                            ->title(__('Je moet tenminste 1 product laten retourneren.'))
                             ->danger()
                             ->send();
 
@@ -186,7 +186,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                     $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id']);
 
                     Notification::make()
-                        ->title('Bestelling gemarkeerd als geannuleerd')
+                        ->title(__('Bestelling gemarkeerd als geannuleerd'))
                         ->success()
                         ->send();
 
@@ -196,7 +196,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                     $this->order->changeStatus('cancelled');
 
                     Notification::make()
-                        ->title('Bestelling gemarkeerd als geannuleerd')
+                        ->title(__('Bestelling gemarkeerd als geannuleerd'))
                         ->success()
                         ->send();
 

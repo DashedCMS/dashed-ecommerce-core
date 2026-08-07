@@ -55,16 +55,16 @@ class DoelenSettingsPage extends Page implements HasSchemas
         $sections = [];
         foreach (self::PERIODS as $key => $label) {
             $sections[] = Section::make($label)
-                ->description('Laat leeg of 0 voor geen doel.')
+                ->description(__('Laat leeg of 0 voor geen doel.'))
                 ->columns(2)
                 ->schema([
                     TextInput::make('revenue_target_' . $key)
-                        ->label('Omzetdoel (€)')
+                        ->label(__('Omzetdoel (€)'))
                         ->numeric()
                         ->minValue(0)
-                        ->prefix('€'),
+                        ->prefix(__('€')),
                     TextInput::make('orders_target_' . $key)
-                        ->label('Bestellingsdoel (aantal)')
+                        ->label(__('Bestellingsdoel (aantal)'))
                         ->numeric()
                         ->minValue(0)
                         ->integer(),
@@ -85,7 +85,7 @@ class DoelenSettingsPage extends Page implements HasSchemas
             }
         }
 
-        Notification::make()->title('Verkoopdoelen opgeslagen')->success()->send();
+        Notification::make()->title(__('Verkoopdoelen opgeslagen'))->success()->send();
 
         redirect(DoelenSettingsPage::getUrl());
     }

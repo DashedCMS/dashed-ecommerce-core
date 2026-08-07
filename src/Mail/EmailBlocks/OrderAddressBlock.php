@@ -15,7 +15,7 @@ class OrderAddressBlock extends EmailBlock
 
     public static function label(): string
     {
-        return 'Order adres';
+        return __('Order adres');
     }
 
     public static function filamentBlock(): Block
@@ -25,10 +25,10 @@ class OrderAddressBlock extends EmailBlock
             ->icon('heroicon-o-map-pin')
             ->schema([
                 Select::make('type')
-                    ->label('Type adres')
+                    ->label(__('Type adres'))
                     ->options([
-                        'shipping' => 'Verzendadres',
-                        'invoice' => 'Factuuradres',
+                        'shipping' => __('Verzendadres'),
+                        'invoice' => __('Factuuradres'),
                     ])
                     ->default('shipping')
                     ->required(),

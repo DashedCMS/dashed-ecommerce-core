@@ -84,7 +84,7 @@ class OrderProductsList extends Component implements HasSchemas
                         ->color('primary')
                         ->weight('bold')
                         ->getStateUsing(fn () => $orderProduct->quantity)
-                        ->suffix('x'),
+                        ->suffix(__('x')),
                     TextEntry::make('preOrder')
                         ->hiddenLabel()
                         ->badge()
@@ -118,7 +118,7 @@ class OrderProductsList extends Component implements HasSchemas
                     TextEntry::make('price')
                         ->hiddenLabel()
                         ->getStateUsing(fn () => $orderProduct->price)
-                        ->helperText(fn () => $orderProduct->discount > 0 ? 'Origineel ' . CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null)
+                        ->helperText(fn () => $orderProduct->discount > 0 ? __('Origineel :bedrag', ['bedrag' => CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount)]) : null)
                         ->money('EUR'),
                     TextEntry::make('fulfiller')
                         ->hiddenLabel()
@@ -143,8 +143,8 @@ class OrderProductsList extends Component implements HasSchemas
         return $schema
             ->record($this->order)
             ->components([
-                Fieldset::make('ordered_products')
-                    ->label('Bestelde producten')
+                Fieldset::make(__('ordered_products'))
+                    ->label(__('Bestelde producten'))
                     ->schema($productComponents)
                     ->columnSpanFull(),
             ]);

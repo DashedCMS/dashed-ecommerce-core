@@ -75,34 +75,34 @@ class Gs1SettingsPage extends Page
                         ->state("GS1 / EAN instellingen voor {$site['name']}")
                         ->columnSpan(2),
                     TextInput::make("gs1_contract_number_{$site['id']}")
-                        ->label('GS1 contractnummer')
-                        ->helperText('Wordt gebruikt voor de naamgeving van het export-bestand. Dit nummer staat ook op de contractsheet in mijnGS1.'),
+                        ->label(__('GS1 contractnummer'))
+                        ->helperText(__('Wordt gebruikt voor de naamgeving van het export-bestand. Dit nummer staat ook op de contractsheet in mijnGS1.')),
                     TextInput::make("gs1_default_classification_{$site['id']}")
-                        ->label('Productclassificatie (GPC)')
-                        ->helperText('Bijvoorbeeld: Decoraties - Accessoires. Per productcategorie of product te overschrijven.'),
+                        ->label(__('Productclassificatie (GPC)'))
+                        ->helperText(__('Bijvoorbeeld: Decoraties - Accessoires. Per productcategorie of product te overschrijven.')),
                     TextInput::make("gs1_default_packaging_type_{$site['id']}")
-                        ->label('Verpakkingstype')
-                        ->helperText('Bijvoorbeeld: Doos, Blister, Zak.'),
+                        ->label(__('Verpakkingstype'))
+                        ->helperText(__('Bijvoorbeeld: Doos, Blister, Zak.')),
                     TextInput::make("gs1_default_brand_{$site['id']}")
-                        ->label('Merk'),
+                        ->label(__('Merk')),
                     TextInput::make("gs1_default_sub_brand_{$site['id']}")
-                        ->label('Submerk'),
+                        ->label(__('Submerk')),
                     TextInput::make("gs1_default_language_{$site['id']}")
-                        ->label('Taal')
+                        ->label(__('Taal'))
                         ->default('Nederlands'),
                     TextInput::make("gs1_default_country_{$site['id']}")
-                        ->label('Land')
+                        ->label(__('Land'))
                         ->default('Nederland'),
                     TextInput::make("gs1_default_quantity_{$site['id']}")
-                        ->label('Aantal')
+                        ->label(__('Aantal'))
                         ->numeric()
                         ->default(1),
                     TextInput::make("gs1_default_unit_{$site['id']}")
-                        ->label('Eenheid')
+                        ->label(__('Eenheid'))
                         ->default('Stuks'),
                     Toggle::make("gs1_default_consumer_unit_{$site['id']}")
-                        ->label('Consumenteneenheid (Ja/Nee)')
-                        ->helperText('Een consumenteneenheid wordt aan de eindklant verkocht.'),
+                        ->label(__('Consumenteneenheid (Ja/Nee)'))
+                        ->helperText(__('Een consumenteneenheid wordt aan de eindklant verkocht.')),
                 ]);
         }
 
@@ -122,7 +122,7 @@ class Gs1SettingsPage extends Page
         }
 
         Notification::make()
-            ->title('Instellingen opgeslagen')
+            ->title(__('Instellingen opgeslagen'))
             ->success()
             ->send();
     }

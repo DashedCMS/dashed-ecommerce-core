@@ -229,33 +229,33 @@ class DiscountStatisticsPage extends Page implements HasSchemas
                     ->columnSpanFull()
                     ->schema([
                         DatePicker::make('startDate')
-                            ->label('Start datum')
+                            ->label(__('Start datum'))
                             ->default(now()->subMonth())
                             ->reactive(),
 
                         DatePicker::make('endDate')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->nullable()
                             ->after('startDate')
                             ->default(now())
                             ->reactive(),
 
                         Select::make('status')
-                            ->label('Status')
+                            ->label(__('Status'))
                             ->options([
-                                'all' => 'Alles',
-                                'payment_obligation' => 'Betalingsverplichting',
-                                'paid' => 'Betaald',
-                                'waiting_for_confirmation' => 'Wachten op bevestiging',
-                                'pending' => 'Lopende aankoop',
-                                'cancelled' => 'Geannuleerd',
-                                'return' => 'Retour',
+                                'all' => __('Alles'),
+                                'payment_obligation' => __('Betalingsverplichting'),
+                                'paid' => __('Betaald'),
+                                'waiting_for_confirmation' => __('Wachten op bevestiging'),
+                                'pending' => __('Lopende aankoop'),
+                                'cancelled' => __('Geannuleerd'),
+                                'return' => __('Retour'),
                             ])
                             ->default('payment_obligation')
                             ->reactive(),
 
                         Select::make('discountCode')
-                            ->label('Kortingscode')
+                            ->label(__('Kortingscode'))
                             ->options(array_merge([
                                 'all' => 'Alles',
                             ], DiscountCode::query()->pluck('name', 'code')->toArray()))

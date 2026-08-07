@@ -37,12 +37,12 @@ class PrintQueueSettingsPage extends Page
     {
         return [
             Action::make('discover_printers')
-                ->label('Auto-import printers van een Pi, NAS of Mac')
+                ->label(__('Auto-import printers van een Pi, NAS of Mac'))
                 ->icon('heroicon-o-magnifying-glass-plus')
                 ->color('success')
-                ->modalHeading('Auto-import printers van een Pi, NAS of Mac')
-                ->modalDescription('Genereert een eenmalig curl-commando. Draai het op de host (Raspberry Pi, NAS of een Mac) via SSH of Terminal; het script detecteert het besturingssysteem zelf en regelt alles in 1x: alle CUPS-printers detecteren en registreren in dit CMS (inclusief tokens), de daemon installeren en als service (systemd op Linux, launchd op macOS) starten.')
-                ->modalSubmitActionLabel('Genereer commando')
+                ->modalHeading(__('Auto-import printers van een Pi, NAS of Mac'))
+                ->modalDescription(__('Genereert een eenmalig curl-commando. Draai het op de host (Raspberry Pi, NAS of een Mac) via SSH of Terminal; het script detecteert het besturingssysteem zelf en regelt alles in 1x: alle CUPS-printers detecteren en registreren in dit CMS (inclusief tokens), de daemon installeren en als service (systemd op Linux, launchd op macOS) starten.'))
+                ->modalSubmitActionLabel(__('Genereer commando'))
                 ->action(function (): void {
                     $nonce = Str::random(16);
                     $url = URL::temporarySignedRoute(
@@ -54,7 +54,7 @@ class PrintQueueSettingsPage extends Page
                     $oneLiner = 'curl -fsSL "' . $url . '" | sudo bash';
 
                     Notification::make()
-                        ->title('Auto-import commando gegenereerd')
+                        ->title(__('Auto-import commando gegenereerd'))
                         ->body(new HtmlString(
                             '<p style="margin-bottom: 0.5rem;">Plak dit op je Pi/NAS in een SSH-sessie (geldig 24 uur):</p>'
                             . '<code style="display: block; background-color: #111827; color: #f3f4f6; padding: 0.5rem; border-radius: 0.375rem; font-family: ui-monospace, monospace; font-size: 0.75rem; word-break: break-all;">' . e($oneLiner) . '</code>'
@@ -86,7 +86,7 @@ class PrintQueueSettingsPage extends Page
         $printerListUrl = class_exists(PrinterResource::class) ? PrinterResource::getUrl('index') : null;
 
         return $schema->schema([
-            Section::make('Hoe stel je een printer in?')
+            Section::make(__('Hoe stel je een printer in?'))
                 ->columnSpanFull()
                 ->schema([
                     Placeholder::make('how_to_setup')
@@ -124,45 +124,45 @@ class PrintQueueSettingsPage extends Page
                             . '</div>'
                         )),
                 ]),
-            Section::make('Automatisch printen')
+            Section::make(__('Automatisch printen'))
                 ->columnSpanFull()
                 ->schema([
                     Toggle::make('auto_print_on_new_order')
-                        ->label('Automatisch pakbon printen na betaling')
-                        ->helperText('Voegt een pakbon-job toe aan de wachtrij zodra een bestelling betaald is (niet bij onbetaalde/afgehaakte bestellingen). Dit werkt alleen als minstens 1 printer type "pakbon" of "beide" actief is.'),
+                        ->label(__('Automatisch pakbon printen na betaling'))
+                        ->helperText(__('Voegt een pakbon-job toe aan de wachtrij zodra een bestelling betaald is (niet bij onbetaalde/afgehaakte bestellingen). Dit werkt alleen als minstens 1 printer type "pakbon" of "beide" actief is.')),
                     Toggle::make('auto_print_label_on_generated')
-                        ->label('Automatisch verzendlabel printen zodra label is aangemaakt')
-                        ->helperText('Pakt verzendlabels op die door MyParcel of Veloyd zijn gegenereerd. Werkt alleen als minstens 1 printer type "label" of "beide" actief is.'),
+                        ->label(__('Automatisch verzendlabel printen zodra label is aangemaakt'))
+                        ->helperText(__('Pakt verzendlabels op die door MyParcel of Veloyd zijn gegenereerd. Werkt alleen als minstens 1 printer type "label" of "beide" actief is.')),
                 ])
                 ->columns(1),
-            Section::make('Sync en health')
+            Section::make(__('Sync en health'))
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('label_sync_interval_minutes')
-                        ->label('Sync interval verzendlabels (minuten)')
-                        ->helperText('Hoe vaak verzendlabels van shipping providers worden opgehaald.')
+                        ->label(__('Sync interval verzendlabels (minuten)'))
+                        ->helperText(__('Hoe vaak verzendlabels van shipping providers worden opgehaald.'))
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(60),
                     TextInput::make('health_check_threshold_seconds')
-                        ->label('Health check threshold (seconden)')
-                        ->helperText('Een printer wordt als offline gemarkeerd als de laatste ping langer geleden is dan dit aantal seconden.')
+                        ->label(__('Health check threshold (seconden)'))
+                        ->helperText(__('Een printer wordt als offline gemarkeerd als de laatste ping langer geleden is dan dit aantal seconden.'))
                         ->numeric()
                         ->minValue(15)
                         ->maxValue(600),
                 ])
                 ->columns(2),
-            Section::make('Retentie')
+            Section::make(__('Retentie'))
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('job_retention_days')
-                        ->label('Bewaar afgeronde print jobs (dagen)')
-                        ->helperText('Afgeronde print jobs ouder dan dit aantal dagen worden opgeschoond.')
+                        ->label(__('Bewaar afgeronde print jobs (dagen)'))
+                        ->helperText(__('Afgeronde print jobs ouder dan dit aantal dagen worden opgeschoond.'))
                         ->numeric()
                         ->minValue(7),
                     TextInput::make('failed_job_retention_days')
-                        ->label('Bewaar mislukte print jobs (dagen)')
-                        ->helperText('Mislukte print jobs ouder dan dit aantal dagen worden opgeschoond.')
+                        ->label(__('Bewaar mislukte print jobs (dagen)'))
+                        ->helperText(__('Mislukte print jobs ouder dan dit aantal dagen worden opgeschoond.'))
                         ->numeric()
                         ->minValue(30),
                 ])
@@ -182,7 +182,7 @@ class PrintQueueSettingsPage extends Page
         Customsetting::set('print_queue.failed_job_retention_days', (int) ($formState['failed_job_retention_days'] ?? 365));
 
         Notification::make()
-            ->title('De print queue instellingen zijn opgeslagen')
+            ->title(__('De print queue instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

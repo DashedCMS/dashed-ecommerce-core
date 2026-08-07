@@ -58,61 +58,61 @@ class CustomerMatchSettingsPage extends Page
 
         return $schema
             ->components([
-                Section::make('Endpoint')
-                    ->description('Plak deze waardes in de Google Ads "HTTPS source" import.')
+                Section::make(__('Endpoint'))
+                    ->description(__('Plak deze waardes in de Google Ads "HTTPS source" import.'))
                     ->schema([
                         TextEntry::make('endpoint_url')
-                            ->label('URL')
+                            ->label(__('URL'))
                             ->state(fn () => $this->endpointUrl($endpoint))
                             ->copyable(),
                         TextInput::make('username')
-                            ->label('Gebruikersnaam')
+                            ->label(__('Gebruikersnaam'))
                             ->disabled()
                             ->dehydrated(false),
                         TextEntry::make('password_status')
-                            ->label('Wachtwoord')
+                            ->label(__('Wachtwoord'))
                             ->state(fn () => $this->passwordDisplay()),
                         TextInput::make('slug')
-                            ->label('Slug (deel van de URL)')
+                            ->label(__('Slug (deel van de URL)'))
                             ->disabled()
                             ->dehydrated(false),
                         Toggle::make('is_active')
-                            ->label('Endpoint actief')
-                            ->helperText('Uitschakelen blokkeert nieuwe downloads (404).'),
+                            ->label(__('Endpoint actief'))
+                            ->helperText(__('Uitschakelen blokkeert nieuwe downloads (404).')),
                     ])
                     ->columns(['default' => 1, 'lg' => 2]),
 
-                Section::make('Filter')
-                    ->description('Welke klanten worden meegenomen in de export.')
+                Section::make(__('Filter'))
+                    ->description(__('Welke klanten worden meegenomen in de export.'))
                     ->schema([
                         TextInput::make('min_orders')
-                            ->label('Minimum aantal betaalde bestellingen')
+                            ->label(__('Minimum aantal betaalde bestellingen'))
                             ->numeric()
                             ->minValue(1)
                             ->default(1),
                         TagsInput::make('countries')
-                            ->label('Landen (ISO-2, bv. NL, BE, DE)')
-                            ->placeholder('Voeg landcode toe')
-                            ->helperText('Leeg = alle landen.'),
+                            ->label(__('Landen (ISO-2, bv. NL, BE, DE)'))
+                            ->placeholder(__('Voeg landcode toe'))
+                            ->helperText(__('Leeg = alle landen.')),
                         DatePicker::make('since')
-                            ->label('Vanaf besteldatum')
+                            ->label(__('Vanaf besteldatum'))
                             ->native(false),
                         DatePicker::make('until')
-                            ->label('Tot besteldatum')
+                            ->label(__('Tot besteldatum'))
                             ->native(false),
                     ])
                     ->columns(['default' => 1, 'lg' => 2]),
 
-                Section::make('Activiteit')
+                Section::make(__('Activiteit'))
                     ->schema([
                         TextEntry::make('last_accessed')
-                            ->label('Laatst opgehaald')
+                            ->label(__('Laatst opgehaald'))
                             ->state(fn () => $this->lastAccessedDisplay()),
                         TextEntry::make('exports_30d')
-                            ->label('Succesvolle exports laatste 30 dagen')
+                            ->label(__('Succesvolle exports laatste 30 dagen'))
                             ->state(fn () => (string) $this->exportsLast30Days()),
                         TextEntry::make('matching_customers')
-                            ->label('Aantal matchende klanten')
+                            ->label(__('Aantal matchende klanten'))
                             ->state(fn () => (string) app(CustomerMatchExporter::class)->count(CustomerMatchEndpoint::singleton())),
                     ])
                     ->columns(['default' => 1, 'lg' => 3]),
@@ -124,10 +124,10 @@ class CustomerMatchSettingsPage extends Page
     {
         return [
             Action::make('regenerateSlug')
-                ->label('Roteer URL')
+                ->label(__('Roteer URL'))
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalDescription('De huidige URL stopt direct met werken. Werk daarna Google Ads bij met de nieuwe URL.')
+                ->modalDescription(__('De huidige URL stopt direct met werken. Werk daarna Google Ads bij met de nieuwe URL.'))
                 ->action(function (): void {
                     $endpoint = CustomerMatchEndpoint::singleton();
                     $endpoint->slug = CustomerMatchEndpoint::generateSlug();
@@ -136,16 +136,16 @@ class CustomerMatchSettingsPage extends Page
                     $this->mount();
 
                     Notification::make()
-                        ->title('Nieuwe URL gegenereerd')
+                        ->title(__('Nieuwe URL gegenereerd'))
                         ->success()
                         ->send();
                 }),
 
             Action::make('regeneratePassword')
-                ->label('Genereer nieuw wachtwoord')
+                ->label(__('Genereer nieuw wachtwoord'))
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalDescription('Het huidige wachtwoord wordt direct ongeldig. Het nieuwe wachtwoord zie je 1x na bevestigen.')
+                ->modalDescription(__('Het huidige wachtwoord wordt direct ongeldig. Het nieuwe wachtwoord zie je 1x na bevestigen.'))
                 ->action(function (): void {
                     $endpoint = CustomerMatchEndpoint::singleton();
                     $plain = CustomerMatchEndpoint::generatePassword();
@@ -155,15 +155,15 @@ class CustomerMatchSettingsPage extends Page
                     session()->flash('customer_match_plaintext_password', $plain);
 
                     Notification::make()
-                        ->title('Nieuw wachtwoord')
-                        ->body('Wachtwoord: '.$plain.' - kopieer nu, wordt niet opnieuw getoond.')
+                        ->title(__('Nieuw wachtwoord'))
+                        ->body(__('Wachtwoord: :wachtwoord - kopieer nu, wordt niet opnieuw getoond.', ['wachtwoord' => $plain]))
                         ->persistent()
                         ->success()
                         ->send();
                 }),
 
             Action::make('dryRun')
-                ->label('Preview eerste 5 rijen')
+                ->label(__('Preview eerste 5 rijen'))
                 ->color('gray')
                 ->action(function (): void {
                     $endpoint = CustomerMatchEndpoint::singleton();
@@ -171,7 +171,7 @@ class CustomerMatchSettingsPage extends Page
 
                     if ($rows === []) {
                         Notification::make()
-                            ->title('Geen klanten gevonden voor het huidige filter')
+                            ->title(__('Geen klanten gevonden voor het huidige filter'))
                             ->warning()
                             ->send();
 
@@ -184,7 +184,7 @@ class CustomerMatchSettingsPage extends Page
                     }
 
                     Notification::make()
-                        ->title('Preview ('.count($rows).' rijen)')
+                        ->title(__('Preview (:aantal rijen)', ['aantal' => count($rows)]))
                         ->body('<pre style="white-space:pre-wrap;font-size:11px">'.e($body).'</pre>')
                         ->success()
                         ->persistent()
@@ -208,7 +208,7 @@ class CustomerMatchSettingsPage extends Page
         $endpoint->save();
 
         Notification::make()
-            ->title('Customer Match instellingen opgeslagen')
+            ->title(__('Customer Match instellingen opgeslagen'))
             ->success()
             ->send();
     }

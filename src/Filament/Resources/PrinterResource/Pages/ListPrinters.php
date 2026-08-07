@@ -16,7 +16,7 @@ class ListPrinters extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Voeg printer toe'),
+                ->label(__('Voeg printer toe')),
         ];
     }
 }

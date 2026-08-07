@@ -14,7 +14,7 @@ class OrderDetailsBlock extends EmailBlock
 
     public static function label(): string
     {
-        return 'Order gegevens';
+        return __('Order gegevens');
     }
 
     public static function filamentBlock(): Block

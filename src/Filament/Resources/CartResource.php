@@ -29,31 +29,31 @@ class CartResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Winkelwagen')
+            Section::make(__('Winkelwagen'))
                 ->columnSpanFull()
                 ->schema([
                     Forms\Components\TextInput::make('id')
                         ->disabled(),
                     Forms\Components\TextInput::make('type')
-                        ->label('Type')
+                        ->label(__('Type'))
                         ->disabled(),
                     Forms\Components\TextInput::make('user')
-                        ->label('Gebruiker')
+                        ->label(__('Gebruiker'))
                         ->disabled(),
                     Forms\Components\TextInput::make('abandoned_email')
-                        ->label('E-mail (winkelwagen)')
+                        ->label(__('E-mail (winkelwagen)'))
                         ->disabled()
                         ->visible(fn ($record) => $record && filled($record->abandoned_email)),
                     Forms\Components\TextInput::make('total')
-                        ->label('Totale waarde')
+                        ->label(__('Totale waarde'))
                         ->numeric()
                         ->disabled(),
                     Forms\Components\DateTimePicker::make('created_at')
-                        ->label('Aangemaakt op')
+                        ->label(__('Aangemaakt op'))
                         ->displayFormat('d-m-Y H:i')
                         ->disabled(),
                     Forms\Components\DateTimePicker::make('updated_at')
-                        ->label('Bijgewerkt op')
+                        ->label(__('Bijgewerkt op'))
                         ->displayFormat('d-m-Y H:i')
                         ->disabled(),
                 ])
@@ -70,7 +70,7 @@ class CartResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->sortable()
                     ->searchable()
                     ->formatStateUsing(function ($state) {
@@ -83,36 +83,36 @@ class CartResource extends Resource
                         };
                     }),
                 Tables\Columns\TextColumn::make('user_or_email')
-                    ->label('Gebruiker')
+                    ->label(__('Gebruiker'))
                     ->state(fn ($record) => $record->user?->name ?: ($record->abandoned_email ?: null))
-                    ->placeholder('-')
+                    ->placeholder(__('-'))
                     ->description(fn ($record) => $record->user_id && $record->abandoned_email ? $record->abandoned_email : null)
                     ->searchable(query: function ($query, string $search) {
                         $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"))
                             ->orWhere('abandoned_email', 'like', "%{$search}%");
                     }),
                 Tables\Columns\TextColumn::make('total')
-                    ->label('Totaal')
+                    ->label(__('Totaal'))
                     ->money('eur')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('items_sum_quantity')
                     ->sum('items', 'quantity')
-                    ->label('Items')
+                    ->label(__('Items'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')->dateTime()->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->options([
-                        'default' => 'Webshop',
-                        'pos' => 'pos',
-                        'handorder' => 'handorder',
-                        'customer-pos' => 'customer-pos',
+                        'default' => __('Webshop'),
+                        'pos' => __('pos'),
+                        'handorder' => __('handorder'),
+                        'customer-pos' => __('customer-pos'),
                     ]),
                 Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Actief')
-                    ->placeholder('Alle winkelmandjes')
+                    ->label(__('Actief'))
+                    ->placeholder(__('Alle winkelmandjes'))
                     ->trueLabel('Alleen actieve')
                     ->falseLabel('Alleen leeg / inactief')
                     ->queries(
@@ -123,7 +123,7 @@ class CartResource extends Resource
             ])
             ->toolbarActions([
                 BulkAction::make('bulkEmpty')
-                    ->label('Leeggooien')
+                    ->label(__('Leeggooien'))
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
                     ->deselectRecordsAfterCompletion()
@@ -137,7 +137,7 @@ class CartResource extends Resource
                 ViewAction::make(),
 
                 Action::make('empty')
-                    ->label('Leeggooien')
+                    ->label(__('Leeggooien'))
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
                     ->action(function (Cart $record) {

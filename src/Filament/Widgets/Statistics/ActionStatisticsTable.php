@@ -59,17 +59,17 @@ class ActionStatisticsTable extends TableWidget
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Product'),
+                    ->label(__('Product')),
                 TextColumn::make('add_to_cart_count')
                     ->getStateUsing(fn ($record) => $this->addedToCartActions->where('product_id', $record->id)->sum('quantity'))
                     ->searchable()
                     ->sortable()
-                    ->label('Added to cart'),
+                    ->label(__('Added to cart')),
                 TextColumn::make('remove_from_cart_count')
                     ->getStateUsing(fn ($record) => $this->removedFromCartActions->where('product_id', $record->id)->sum('quantity'))
                     ->searchable()
                     ->sortable()
-                    ->label('Remove from cart'),
+                    ->label(__('Remove from cart')),
             ]);
     }
 }

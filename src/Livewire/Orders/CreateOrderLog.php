@@ -41,7 +41,7 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
 
         foreach (OrderLogTemplate::all() as $template) {
             $actions[] = Action::make('template-' . $template->id)
-                ->label('Verstuur ' . $template->name)
+                ->label(__('Verstuur :naam', ['naam' => $template->name]))
                 ->color('warning')
                 ->action(function ($data, $action) use ($template) {
                     $orderLog = new OrderLog();
@@ -62,7 +62,7 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
 
                     Notification::make()
                         ->success()
-                        ->title('De template ' . $template->name . ' is verstuurd')
+                        ->title(__('De template :naam is verstuurd', ['naam' => $template->name]))
                         ->send();
 
                     $this->dispatch('refreshData');
@@ -71,7 +71,7 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
         }
 
         return Action::make('action')
-            ->label('Maak bestellings notitie')
+            ->label(__('Maak bestellings notitie'))
             ->color('primary')
             ->extraModalFooterActions($actions)
             ->fillForm(function ($record) {
@@ -81,22 +81,22 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
             })
             ->schema([
                 Toggle::make('publicForCustomer')
-                    ->label('Zichtbaar voor klant')
+                    ->label(__('Zichtbaar voor klant'))
                     ->default(false)
                     ->reactive(),
                 Toggle::make('sendEmailToCustomer')
-                    ->label('Moet de klant een notificatie van deze notitie ontvangen?')
+                    ->label(__('Moet de klant een notificatie van deze notitie ontvangen?'))
                     ->default(false)
                     ->visible(fn (Get $get) => $get('publicForCustomer'))
                     ->reactive(),
                 TextInput::make('emailSubject')
-                    ->label('Onderwerp van de mail')
+                    ->label(__('Onderwerp van de mail'))
                     ->visible(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
                 mediaHelper()->field('images', 'Bestanden', multiple: true),
                 Textarea::make('note')
-                    ->label('Notitie')
-                    ->placeholder('Typ hier je notitie')
-                    ->helperText(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? 'Aanhef en afsluiting zit er standaard bij' : '')
+                    ->label(__('Notitie'))
+                    ->placeholder(__('Typ hier je notitie'))
+                    ->helperText(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer') ? __('Aanhef en afsluiting zit er standaard bij') : '')
                     ->required()
                     ->minLength(3)
                     ->maxLength(1500)
@@ -124,7 +124,7 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
 
                 Notification::make()
                     ->success()
-                    ->title('De notitie is aangemaakt')
+                    ->title(__('De notitie is aangemaakt'))
                     ->send();
 
                 $this->dispatch('refreshData');

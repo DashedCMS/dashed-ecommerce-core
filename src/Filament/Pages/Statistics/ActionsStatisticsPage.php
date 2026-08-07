@@ -181,12 +181,12 @@ class ActionsStatisticsPage extends Page implements HasSchemas
                     ->columnSpanFull()
                     ->schema([
                         DatePicker::make('startDate')
-                            ->label('Start datum')
+                            ->label(__('Start datum'))
                             ->default(now()->subMonth())
                             ->reactive(),
 
                         DatePicker::make('endDate')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->nullable()
                             ->after('startDate')
                             ->default(now())

@@ -31,17 +31,17 @@ class CreateTrackAndTrace extends Component implements HasSchemas, HasActions
     public function action(): Action
     {
         return Action::make('action')
-            ->label('Voeg track and trace toe')
+            ->label(__('Voeg track and trace toe'))
             ->color('primary')
             ->schema([
                 TextInput::make('delivery_company')
-                    ->label('Vervoersbedrijf')
+                    ->label(__('Vervoersbedrijf'))
                     ->required(),
                 TextInput::make('code')
-                    ->label('Track and trace code')
+                    ->label(__('Track and trace code'))
                     ->required(),
                 TextInput::make('link')
-                    ->label('Link')
+                    ->label(__('Link'))
                     ->required(),
             ])
             ->action(function ($data) {
@@ -62,7 +62,7 @@ class CreateTrackAndTrace extends Component implements HasSchemas, HasActions
 
                 Notification::make()
                     ->success()
-                    ->title('De track and trace is aangemaakt')
+                    ->title(__('De track and trace is aangemaakt'))
                     ->send();
 
                 $this->dispatch('refreshData');

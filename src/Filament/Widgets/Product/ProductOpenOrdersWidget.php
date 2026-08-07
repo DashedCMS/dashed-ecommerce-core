@@ -42,24 +42,24 @@ class ProductOpenOrdersWidget extends TableWidget
             ->poll('10s')
             ->paginated([5, 10, 25])
             ->defaultPaginationPageOption(5)
-            ->emptyStateHeading('Geen openstaande bestellingen')
-            ->emptyStateDescription('Er zijn op dit moment geen onafgehandelde bestellingen waarin dit product voorkomt.')
+            ->emptyStateHeading(__('Geen openstaande bestellingen'))
+            ->emptyStateDescription(__('Er zijn op dit moment geen onafgehandelde bestellingen waarin dit product voorkomt.'))
             ->recordUrl(fn ($record) => $record->order_id
                 ? route('filament.dashed.resources.orders.view', ['record' => $record->order_id])
                 : null)
             ->columns([
                 TextColumn::make('order.invoice_id')
-                    ->label('Bestelling')
+                    ->label(__('Bestelling'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('order.name')
-                    ->label('Klant'),
+                    ->label(__('Klant')),
                 TextColumn::make('quantity')
-                    ->label('Aantal')
+                    ->label(__('Aantal'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('order.fulfillment_status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state ? ucfirst(str_replace('_', ' ', $state)) : '-')
                     ->color(fn (?string $state): string => match ($state) {
@@ -71,7 +71,7 @@ class ProductOpenOrdersWidget extends TableWidget
                         default => 'gray',
                     }),
                 TextColumn::make('order.created_at')
-                    ->label('Besteld op')
+                    ->label(__('Besteld op'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
             ])

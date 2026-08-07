@@ -74,75 +74,75 @@ class CheckoutSettingsPage extends Page
                         'lg' => 2,
                     ]),
                 Radio::make("checkout_account_{$site['id']}")
-                    ->label('Klantaccounts')
+                    ->label(__('Klantaccounts'))
                     ->options([
-                        0 => 'Accounts zijn uitgeschakeld',
-                        2 => 'Accounts zijn optioneel',
-                        1 => 'Account vereist',
+                        0 => __('Accounts zijn uitgeschakeld'),
+                        2 => __('Accounts zijn optioneel'),
+                        1 => __('Account vereist'),
                     ])
                     ->required(),
                 Radio::make("checkout_form_name_{$site['id']}")
-                    ->label('Voor- en achternaam')
+                    ->label(__('Voor- en achternaam'))
                     ->options([
-                        0 => 'Alleen achternaam nodig',
-                        1 => 'Voor- en achternaam vereisen',
+                        0 => __('Alleen achternaam nodig'),
+                        1 => __('Voor- en achternaam vereisen'),
                     ])
                     ->required(),
                 Radio::make("checkout_form_company_name_{$site['id']}")
-                    ->label('Bedrijfsnaam')
+                    ->label(__('Bedrijfsnaam'))
                     ->options([
-                        0 => 'Verborgen',
-                        2 => 'Optioneel',
-                        1 => 'Verplicht',
+                        0 => __('Verborgen'),
+                        2 => __('Optioneel'),
+                        1 => __('Verplicht'),
                     ])
                     ->required(),
                 Radio::make("checkout_form_phone_number_delivery_address_{$site['id']}")
-                    ->label('Telefoonnummer van het bezorgadres')
+                    ->label(__('Telefoonnummer van het bezorgadres'))
                     ->options([
-                        0 => 'Verborgen',
-                        2 => 'Optioneel',
-                        1 => 'Verplicht',
+                        0 => __('Verborgen'),
+                        2 => __('Optioneel'),
+                        1 => __('Verplicht'),
                     ])
                     ->required(),
                 Toggle::make("checkout_delivery_address_standard_invoice_address_{$site['id']}")
-                    ->label('Het bezorgadres standaard als het factuuradres gebruiken')
-                    ->helperText('Reduceer het aantal velden dat is vereist om af te rekenen. Het factuuradres kan nog steeds worden bewerkt.'),
+                    ->label(__('Het bezorgadres standaard als het factuuradres gebruiken'))
+                    ->helperText(__('Reduceer het aantal velden dat is vereist om af te rekenen. Het factuuradres kan nog steeds worden bewerkt.')),
                 Toggle::make("checkout_autofill_address_{$site['id']}")
-                    ->label('Automatisch aanvullen van adresgegevens inschakelen')
-                    ->helperText('Hiermee wordt het adres van klanten automatisch aangevuld op basis van de Google API of PostNL API om zo het invullen soepeler te laten verlopen.'),
+                    ->label(__('Automatisch aanvullen van adresgegevens inschakelen'))
+                    ->helperText(__('Hiermee wordt het adres van klanten automatisch aangevuld op basis van de Google API of PostNL API om zo het invullen soepeler te laten verlopen.')),
                 Textarea::make("checkout_extra_scripts_{$site['id']}")
-                    ->label('Aanvullende scripts')
+                    ->label(__('Aanvullende scripts'))
                     ->rows(5)
-                    ->helperText('Specifieke scripts die ingeladen moeten worden op de bestelstatus pagina van de bestelling.')
+                    ->helperText(__('Specifieke scripts die ingeladen moeten worden op de bestelstatus pagina van de bestelling.'))
                     ->columnSpan([
                         'default' => 1,
                         'lg' => 2,
                     ]),
                 TextInput::make("checkout_google_api_key_{$site['id']}")
-                    ->label('Google Maps API key')
-                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een oude versie checkout.'),
+                    ->label(__('Google Maps API key'))
+                    ->helperText(__('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een oude versie checkout.')),
                 TextInput::make("checkout_postnl_api_key_{$site['id']}")
-                    ->label('PostNL API key')
+                    ->label(__('PostNL API key'))
                     ->hintAction(Action::make('requestPostcodeApi')
-                        ->label('API aanvragen')
+                        ->label(__('API aanvragen'))
                         ->url('https://developer.postnl.nl/integration-with-postnl/request-api-key/')
                         ->openUrlInNewTab())
-                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.'),
+                    ->helperText(__('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.')),
                 TextInput::make("checkout_postcode_api_key_{$site['id']}")
-                    ->label('Postcode API key')
+                    ->label(__('Postcode API key'))
                     ->hintAction(Action::make('requestPostcodeApi')
-                        ->label('API aanvragen')
+                        ->label(__('API aanvragen'))
                         ->url('https://postcode.tech/')
                         ->openUrlInNewTab())
-                    ->helperText('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.'),
+                    ->helperText(__('Dit wordt gebruikt voor het automatisch aanvullen van het adres van de klant. Dit werkt alleen met een nieuwe versie checkout.')),
                 TextInput::make("checkout_bcc_email_{$site['id']}")
                     ->email()
-                    ->label('BCC email om de bevestigingsmail naar te sturen'),
+                    ->label(__('BCC email om de bevestigingsmail naar te sturen')),
                 Toggle::make("checkout_force_checkout_page_{$site['id']}")
-                    ->label('Forceer checkout pagina vanaf de winkelwagen pagina')
-                    ->helperText('Hiermee wordt de klant direct naar de checkout pagina gestuurd als ze naar de winkelwagen pagina gaan.'),
+                    ->label(__('Forceer checkout pagina vanaf de winkelwagen pagina'))
+                    ->helperText(__('Hiermee wordt de klant direct naar de checkout pagina gestuurd als ze naar de winkelwagen pagina gaan.')),
                 Radio::make("currency_format_type_{$site['id']}")
-                    ->label('Bedragen weergeven als')
+                    ->label(__('Bedragen weergeven als'))
                     ->options(function () {
                         $options = [];
 
@@ -154,11 +154,11 @@ class CheckoutSettingsPage extends Page
                     })
                     ->required(),
                 Toggle::make("show_currency_symbol_{$site['id']}")
-                    ->label('Laat valutasymbool zien'),
+                    ->label(__('Laat valutasymbool zien')),
                 Toggle::make("first_payment_method_selected_{$site['id']}")
-                    ->label('Eerste betaalmethode standaard geselecteerd'),
+                    ->label(__('Eerste betaalmethode standaard geselecteerd')),
                 Toggle::make("first_shipping_method_selected_{$site['id']}")
-                    ->label('Eerste verzendmethode standaard geselecteerd'),
+                    ->label(__('Eerste verzendmethode standaard geselecteerd')),
             ];
 
             $tabs[] = Tab::make($site['id'])
@@ -200,7 +200,7 @@ class CheckoutSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De afreken instellingen zijn opgeslagen')
+            ->title(__('De afreken instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

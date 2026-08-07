@@ -59,14 +59,14 @@ class OrderReturnResource extends Resource
             ->defaultSort('requested_at', 'desc')
             ->columns([
                 TextColumn::make('order.invoice_id')
-                    ->label('Bestelling')
+                    ->label(__('Bestelling'))
                     ->formatStateUsing(fn ($state, $record) => $state ?: ('#' . $record->order_id))
                     ->url(fn ($record) => $record->order_id ? \Dashed\DashedEcommerceCore\Filament\Resources\OrderResource::getUrl('edit', ['record' => $record->order_id]) : null),
                 TextColumn::make('email')
-                    ->label('E-mail')
+                    ->label(__('E-mail'))
                     ->searchable(),
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => OrderReturn::statusLabels()[$state] ?? $state)
                     ->color(fn ($state) => match ($state) {
@@ -77,46 +77,46 @@ class OrderReturnResource extends Resource
                         default => 'gray',
                     }),
                 IconColumn::make('auto_accepted')
-                    ->label('Automatisch')
+                    ->label(__('Automatisch'))
                     ->boolean(),
                 TextColumn::make('requested_at')
-                    ->label('Aangevraagd op')
+                    ->label(__('Aangevraagd op'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
                 TextColumn::make('lines_count')
-                    ->label('Regels')
+                    ->label(__('Regels'))
                     ->counts('lines'),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->options(OrderReturn::statusLabels()),
             ])
             ->recordActions([
                 ViewAction::make(),
                 Action::make('approve')
-                    ->label('Goedkeuren')
+                    ->label(__('Goedkeuren'))
                     ->color('success')
                     ->visible(fn ($record) => $record->status === OrderReturn::STATUS_REQUESTED)
                     ->schema([
                         Textarea::make('admin_note')
-                            ->label('Notitie (optioneel)'),
+                            ->label(__('Notitie (optioneel)')),
                     ])
                     ->action(function ($record, $data) {
                         $record->approve($data['admin_note'] ?? null);
 
                         Notification::make()
                             ->success()
-                            ->title('Retouraanvraag goedgekeurd')
+                            ->title(__('Retouraanvraag goedgekeurd'))
                             ->send();
                     }),
                 Action::make('reject')
-                    ->label('Afkeuren')
+                    ->label(__('Afkeuren'))
                     ->color('danger')
                     ->visible(fn ($record) => $record->status === OrderReturn::STATUS_REQUESTED)
                     ->schema([
                         Textarea::make('rejected_reason')
-                            ->label('Reden')
+                            ->label(__('Reden'))
                             ->required(),
                     ])
                     ->action(function ($record, $data) {
@@ -124,11 +124,11 @@ class OrderReturnResource extends Resource
 
                         Notification::make()
                             ->success()
-                            ->title('Retouraanvraag afgekeurd')
+                            ->title(__('Retouraanvraag afgekeurd'))
                             ->send();
                     }),
                 Action::make('markHandled')
-                    ->label('Markeer als afgehandeld')
+                    ->label(__('Markeer als afgehandeld'))
                     ->color('gray')
                     ->visible(fn ($record) => in_array($record->status, [OrderReturn::STATUS_REQUESTED, OrderReturn::STATUS_APPROVED]))
                     ->requiresConfirmation()
@@ -137,21 +137,21 @@ class OrderReturnResource extends Resource
 
                         Notification::make()
                             ->success()
-                            ->title('Retouraanvraag gemarkeerd als afgehandeld')
+                            ->title(__('Retouraanvraag gemarkeerd als afgehandeld'))
                             ->send();
                     }),
                 Action::make('sendEmail')
-                    ->label('Stuur e-mail')
+                    ->label(__('Stuur e-mail'))
                     ->icon('heroicon-o-envelope')
                     ->color('primary')
                     ->schema([
                         TextInput::make('email')
-                            ->label('E-mailadres')
+                            ->label(__('E-mailadres'))
                             ->email()
                             ->required()
                             ->default(fn ($record) => $record->email),
                         TextInput::make('subject')
-                            ->label('Onderwerp')
+                            ->label(__('Onderwerp'))
                             ->required()
                             ->default(function () {
                                 $template = EmailTemplate::forMailable(OrderReturnCustomMail::emailTemplateKey());
@@ -160,10 +160,10 @@ class OrderReturnResource extends Resource
                                     ?: OrderReturnCustomMail::defaultSubject();
                             }),
                         Placeholder::make('variabelen')
-                            ->label('Beschikbare variabelen')
+                            ->label(__('Beschikbare variabelen'))
                             ->content(fn () => OrderReturnCustomMail::usableVariablesHint()),
                         RichEditor::make('message')
-                            ->label('Bericht')
+                            ->label(__('Bericht'))
                             ->required()
                             ->default(fn () => OrderReturnCustomMail::defaultMessage()),
                     ])
@@ -172,7 +172,7 @@ class OrderReturnResource extends Resource
 
                         Notification::make()
                             ->success()
-                            ->title('Bericht naar klant verstuurd')
+                            ->title(__('Bericht naar klant verstuurd'))
                             ->send();
                     }),
             ]);
@@ -181,41 +181,41 @@ class OrderReturnResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Fieldset::make('Retouraanvraag')
+            Fieldset::make(__('Retouraanvraag'))
                 ->columnSpanFull()
                 ->schema([
                     TextEntry::make('order.invoice_id')
-                        ->label('Bestelling')
+                        ->label(__('Bestelling'))
                         ->formatStateUsing(fn ($state, $record) => $state ?: ('#' . $record->order_id)),
                     TextEntry::make('email')
-                        ->label('E-mail'),
+                        ->label(__('E-mail')),
                     TextEntry::make('status')
-                        ->label('Status')
+                        ->label(__('Status'))
                         ->badge()
                         ->formatStateUsing(fn ($state) => OrderReturn::statusLabels()[$state] ?? $state),
                     TextEntry::make('requested_at')
-                        ->label('Aangevraagd op')
+                        ->label(__('Aangevraagd op'))
                         ->dateTime('d-m-Y H:i'),
                     TextEntry::make('auto_accepted')
-                        ->label('Automatisch goedgekeurd')
+                        ->label(__('Automatisch goedgekeurd'))
                         ->formatStateUsing(fn ($state) => $state ? 'Ja' : 'Nee'),
                     TextEntry::make('return_label_provider')
-                        ->label('Retourlabel via')
-                        ->placeholder('-'),
+                        ->label(__('Retourlabel via'))
+                        ->placeholder(__('-')),
                 ]),
             RepeatableEntry::make('lines')
-                ->label('Geretourneerde producten')
+                ->label(__('Geretourneerde producten'))
                 ->columnSpanFull()
                 ->schema([
                     TextEntry::make('orderProduct.name')
-                        ->label('Product'),
+                        ->label(__('Product')),
                     TextEntry::make('quantity')
-                        ->label('Aantal'),
+                        ->label(__('Aantal')),
                     TextEntry::make('returnReason.label')
-                        ->label('Reden')
+                        ->label(__('Reden'))
                         ->formatStateUsing(fn ($state) => is_array($state) ? ($state[app()->getLocale()] ?? reset($state)) : $state),
                     TextEntry::make('reason_note')
-                        ->label('Toelichting')
+                        ->label(__('Toelichting'))
                         ->default('-'),
                 ]),
         ]);

@@ -46,8 +46,8 @@ class OrderAbandonmentDiagnosisList extends Component implements HasSchemas
                 default => 'gray',
             };
 
-            $components[] = Fieldset::make('abandonment')->columnSpanFull()
-                ->label('Waarschijnlijke oorzaak')
+            $components[] = Fieldset::make(__('abandonment'))->columnSpanFull()
+                ->label(__('Waarschijnlijke oorzaak'))
                 ->schema([
                     TextEntry::make('cause_label')
                         ->hiddenLabel()

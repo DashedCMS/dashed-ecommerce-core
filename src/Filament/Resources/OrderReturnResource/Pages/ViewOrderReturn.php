@@ -30,12 +30,12 @@ class ViewOrderReturn extends ViewRecord
     {
         return [
             Action::make('approve')
-                ->label('Goedkeuren')
+                ->label(__('Goedkeuren'))
                 ->color('success')
                 ->visible(fn () => $this->getRecord()->status === OrderReturn::STATUS_REQUESTED)
                 ->schema([
                     Textarea::make('admin_note')
-                        ->label('Notitie (optioneel)'),
+                        ->label(__('Notitie (optioneel)')),
                 ])
                 ->action(function (array $data) {
                     $this->getRecord()->approve($data['admin_note'] ?? null);
@@ -43,16 +43,16 @@ class ViewOrderReturn extends ViewRecord
 
                     Notification::make()
                         ->success()
-                        ->title('Retouraanvraag goedgekeurd')
+                        ->title(__('Retouraanvraag goedgekeurd'))
                         ->send();
                 }),
             Action::make('reject')
-                ->label('Afkeuren')
+                ->label(__('Afkeuren'))
                 ->color('danger')
                 ->visible(fn () => $this->getRecord()->status === OrderReturn::STATUS_REQUESTED)
                 ->schema([
                     Textarea::make('rejected_reason')
-                        ->label('Reden')
+                        ->label(__('Reden'))
                         ->required(),
                 ])
                 ->action(function (array $data) {
@@ -61,11 +61,11 @@ class ViewOrderReturn extends ViewRecord
 
                     Notification::make()
                         ->success()
-                        ->title('Retouraanvraag afgekeurd')
+                        ->title(__('Retouraanvraag afgekeurd'))
                         ->send();
                 }),
             Action::make('markHandled')
-                ->label('Markeer als afgehandeld')
+                ->label(__('Markeer als afgehandeld'))
                 ->color('gray')
                 ->visible(fn () => in_array($this->getRecord()->status, [OrderReturn::STATUS_REQUESTED, OrderReturn::STATUS_APPROVED]))
                 ->requiresConfirmation()
@@ -75,21 +75,21 @@ class ViewOrderReturn extends ViewRecord
 
                     Notification::make()
                         ->success()
-                        ->title('Retouraanvraag gemarkeerd als afgehandeld')
+                        ->title(__('Retouraanvraag gemarkeerd als afgehandeld'))
                         ->send();
                 }),
             Action::make('sendEmail')
-                ->label('Stuur e-mail naar klant')
+                ->label(__('Stuur e-mail naar klant'))
                 ->icon('heroicon-o-envelope')
                 ->color('primary')
                 ->schema([
                     TextInput::make('email')
-                        ->label('E-mailadres')
+                        ->label(__('E-mailadres'))
                         ->email()
                         ->required()
                         ->default(fn () => $this->getRecord()->email),
                     TextInput::make('subject')
-                        ->label('Onderwerp')
+                        ->label(__('Onderwerp'))
                         ->required()
                         ->default(function () {
                             $template = EmailTemplate::forMailable(OrderReturnCustomMail::emailTemplateKey());
@@ -98,10 +98,10 @@ class ViewOrderReturn extends ViewRecord
                                 ?: OrderReturnCustomMail::defaultSubject();
                         }),
                     Placeholder::make('variabelen')
-                        ->label('Beschikbare variabelen')
+                        ->label(__('Beschikbare variabelen'))
                         ->content(fn () => OrderReturnCustomMail::usableVariablesHint()),
                     RichEditor::make('message')
-                        ->label('Bericht')
+                        ->label(__('Bericht'))
                         ->required()
                         ->default(fn () => OrderReturnCustomMail::defaultMessage()),
                 ])
@@ -110,7 +110,7 @@ class ViewOrderReturn extends ViewRecord
 
                     Notification::make()
                         ->success()
-                        ->title('Bericht naar klant verstuurd')
+                        ->title(__('Bericht naar klant verstuurd'))
                         ->send();
                 }),
         ];

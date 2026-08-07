@@ -31,13 +31,13 @@ class ProductFilterOptionRelationManager extends RelationManager
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 MediaColumn::make('image')
-                    ->label('Afbeelding'),
+                    ->label(__('Afbeelding')),
                 IconColumn::make('in_stock')
-                    ->label('Op voorraad')
+                    ->label(__('Op voorraad'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->trueColor('success')
                     ->falseIcon('heroicon-o-x-circle')
@@ -51,7 +51,7 @@ class ProductFilterOptionRelationManager extends RelationManager
             ->reorderable('order')
             ->recordActions([
                 Action::make('edit')
-                    ->label('Bewerken')
+                    ->label(__('Bewerken'))
                     ->icon('heroicon-o-pencil-square')
                     ->url(fn (ProductFilterOption $record) => route('filament.dashed.resources.product-filter-options.edit', [$record])),
                 DeleteAction::make(),

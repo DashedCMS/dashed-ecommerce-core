@@ -54,13 +54,13 @@ class OrderLogTemplateResource extends Resource
         $contentSchema = [
             TextEntry::make('name')
                 ->state('Variabelen')
-                ->helperText('Je kan de volgende variablen gebruiken in de mails: ' . implode(', ', OrderVariableReplacer::getAvailableVariables())),
+                ->helperText(__('Je kan de volgende variablen gebruiken in de mails: :variabelen', ['variabelen' => implode(', ', OrderVariableReplacer::getAvailableVariables())])),
             TextInput::make('name')
-                ->label('Naam')
+                ->label(__('Naam'))
                 ->required()
                 ->maxLength(100),
             TextInput::make('subject')
-                ->label('Onderwerp')
+                ->label(__('Onderwerp'))
                 ->required()
                 ->maxLength(200),
             cms()->editorField('body', 'Inhoud')
@@ -69,11 +69,11 @@ class OrderLogTemplateResource extends Resource
 
         return $schema
             ->schema([
-                Section::make('Globale informatie')
+                Section::make(__('Globale informatie'))
                     ->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
-                            ->label('Actief op site')
+                            ->label(__('Actief op site'))
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
                                 return ! (Sites::getAmountOfSites() > 1);
@@ -84,7 +84,7 @@ class OrderLogTemplateResource extends Resource
                         return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
-                Section::make('Template inhoud')
+                Section::make(__('Template inhoud'))
                     ->schema($contentSchema)
                     ->columnSpanFull(),
             ]);
@@ -95,23 +95,23 @@ class OrderLogTemplateResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('site_id')
-                    ->label('Actief op site')
+                    ->label(__('Actief op site'))
                     ->sortable()
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
-                    ->label('PSP')
+                    ->label(__('PSP'))
                     ->sortable()
                     ->searchable(),
                 ImageColumn::make('image')
-                    ->label('Afbeelding')
+                    ->label(__('Afbeelding'))
                     ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
 

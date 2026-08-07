@@ -145,61 +145,61 @@ class ProductExtra extends Model
     {
         return [
             TextInput::make('name')
-                ->label('Naam')
+                ->label(__('Naam'))
                 ->required()
                 ->maxLength(255),
             Select::make('type')
-                ->label('Type')
+                ->label(__('Type'))
                 ->options([
-                    'single' => '1 optie',
-                    'multiple' => 'Meerdere opties',
-                    'checkbox' => 'Checkbox',
-                    'input' => 'Invulveld',
-                    'textarea' => 'Groot tekstveld',
-                    'image' => 'Afbeelding kiezen',
-                    'file' => 'Upload bestand',
+                    'single' => __('1 optie'),
+                    'multiple' => __('Meerdere opties'),
+                    'checkbox' => __('Checkbox'),
+                    'input' => __('Invulveld'),
+                    'textarea' => __('Groot tekstveld'),
+                    'image' => __('Afbeelding kiezen'),
+                    'file' => __('Upload bestand'),
                 ])
                 ->default('single')
                 ->required()
                 ->reactive(),
             Select::make('input_type')
-                ->label('Input type')
+                ->label(__('Input type'))
                 ->options([
-                    'text' => 'Tekst',
-                    'numeric' => 'Getal',
-                    'date' => 'Datum',
-                    'dateTime' => 'Datum + tijd',
+                    'text' => __('Tekst'),
+                    'numeric' => __('Getal'),
+                    'date' => __('Datum'),
+                    'dateTime' => __('Datum + tijd'),
                 ])
                 ->default('text')
                 ->visible(fn (Get $get) => $get('type') == 'input')
                 ->required(fn (Get $get) => $get('type') == 'input'),
             TextInput::make('min_length')
-                ->label('Minimale lengte/waarde')
+                ->label(__('Minimale lengte/waarde'))
                 ->numeric()
                 ->visible(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
                 ->required(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea'),
             TextInput::make('max_length')
-                ->label('Maximale lengte/waarde')
+                ->label(__('Maximale lengte/waarde'))
                 ->numeric()
                 ->visible(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
                 ->required(fn (Get $get) => $get('type') == 'input' || $get('type') == 'textarea')
                 ->reactive(),
             TextInput::make('helper_text')
-                ->label('Help tekst'),
+                ->label(__('Help tekst')),
             TextInput::make('price')
-                ->label('Meerprijs van deze extra')
-                ->prefix('€')
-                ->helperText('Voorbeeld: 10.25')
+                ->label(__('Meerprijs van deze extra'))
+                ->prefix(__('€'))
+                ->helperText(__('Voorbeeld: 10.25'))
                 ->numeric()
                 ->minValue(0.00)
                 ->maxValue(10000),
             Toggle::make('required')
-                ->label('Verplicht')
+                ->label(__('Verplicht'))
                 ->columnSpanFull(),
             Repeater::make('productExtraOptions')
                 ->relationship('productExtraOptions')
                 ->cloneable(fn (Get $get) => $get('type') != 'checkbox')
-                ->label('Opties van deze product extra')
+                ->label(__('Opties van deze product extra'))
                 ->reorderable()
                 ->orderColumn('order')
                 ->visible(fn (Get $get) => $get('type') == 'single' || $get('type') == 'multiple' || $get('type') == 'checkbox' || $get('type') == 'imagePicker' || $get('type') == 'image')
@@ -208,20 +208,20 @@ class ProductExtra extends Model
                 ->reactive()
                 ->schema([
                     TextInput::make('value')
-                        ->label('Waarde')
+                        ->label(__('Waarde'))
                         ->required()
                         ->maxLength(255),
                     TextInput::make('price')
                         ->required()
-                        ->label('Meerprijs van deze optie')
-                        ->prefix('€')
-                        ->helperText('Voorbeeld: 10.25')
+                        ->label(__('Meerprijs van deze optie'))
+                        ->prefix(__('€'))
+                        ->helperText(__('Voorbeeld: 10.25'))
                         ->numeric()
                         ->minValue(0.00)
                         ->maxValue(10000),
                     mediaHelper()->field('image', 'Afbeelding'),
                     Toggle::make('calculate_only_1_quantity')
-                        ->label('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht'),
+                        ->label(__('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht')),
                 ])
                 ->columnSpan(2),
         ];

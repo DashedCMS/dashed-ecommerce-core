@@ -18,15 +18,15 @@ class OpenOrderProductsTable
         return $table
             ->columns([
                 TextColumn::make('order.invoice_id')
-                    ->label('Bestelling')
+                    ->label(__('Bestelling'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('product_id')
-                    ->label('Product ID')
+                    ->label(__('Product ID'))
                     ->toggleable()
                     ->sortable(),
                 TextColumn::make('name')
-                    ->label('Productnaam')
+                    ->label(__('Productnaam'))
                     ->wrap()
                     ->description(function ($record) {
                         if (! is_array($record->product_extras) || ! $record->product_extras) {
@@ -40,15 +40,15 @@ class OpenOrderProductsTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('sku')
-                    ->label('SKU')
+                    ->label(__('SKU'))
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('quantity')
-                    ->label('Aantal')
+                    ->label(__('Aantal'))
                     ->sortable(),
                 TextColumn::make('product.stock')
-                    ->label('Voorraad')
+                    ->label(__('Voorraad'))
                     ->getStateUsing(function ($record) {
                         $product = $record->product;
                         if (! $product) {
@@ -87,7 +87,7 @@ class OpenOrderProductsTable
                         ->orderBy('voorraad_join.stock', $dir)
                         ->select('dashed__order_products.*')),
                 TextColumn::make('order.order_origin')
-                    ->label('Order origin')
+                    ->label(__('Order origin'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state ? ucfirst($state) : '-')
                     ->sortable(query: fn (Builder $q, string $dir) => $q
@@ -100,7 +100,7 @@ class OpenOrderProductsTable
                         ->orderBy('order_origin_join.order_origin', $dir)
                         ->select('dashed__order_products.*')),
                 TextColumn::make('order.fulfillment_status')
-                    ->label('Fulfillment status')
+                    ->label(__('Fulfillment status'))
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'handled' => 'success',
@@ -111,20 +111,20 @@ class OpenOrderProductsTable
                         default => 'gray',
                     }),
                 TextColumn::make('order.name')
-                    ->label('Klant')
+                    ->label(__('Klant'))
                     ->toggleable()
                     // Bij de gegroepeerde weergaven hoort geen klantnaam (een
                     // regel bundelt meerdere orders/klanten).
                     ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
                 TextColumn::make('order.created_at')
-                    ->label('Besteld op')
+                    ->label(__('Besteld op'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
             ])
             ->defaultSort('order_id', 'desc')
             ->filters([
                 SelectFilter::make('fulfillment_status')
-                    ->label('Fulfillment status')
+                    ->label(__('Fulfillment status'))
                     ->options(Orders::getFulfillmentStatusses())
                     ->default('unhandled')
                     ->query(function (Builder $query, array $data): Builder {
@@ -136,7 +136,7 @@ class OpenOrderProductsTable
                     }),
 
                 SelectFilter::make('order_origin')
-                    ->label('Order origin')
+                    ->label(__('Order origin'))
                     ->multiple()
                     ->options(fn () => Order::query()
                         ->whereNotNull('order_origin')
@@ -154,8 +154,8 @@ class OpenOrderProductsTable
                     }),
 
                 TernaryFilter::make('has_product_extras')
-                    ->label('Product opties')
-                    ->placeholder('Alles')
+                    ->label(__('Product opties'))
+                    ->placeholder(__('Alles'))
                     ->trueLabel('Met opties')
                     ->falseLabel('Zonder opties')
                     ->queries(
@@ -171,8 +171,8 @@ class OpenOrderProductsTable
                     ),
 
                 TernaryFilter::make('has_product_id')
-                    ->label('Product ID')
-                    ->placeholder('Alles')
+                    ->label(__('Product ID'))
+                    ->placeholder(__('Alles'))
                     ->trueLabel('Met product ID')
                     ->falseLabel('Zonder product ID')
                     ->queries(
@@ -187,7 +187,7 @@ class OpenOrderProductsTable
                     ),
 
                 SelectFilter::make('product')
-                    ->label('Product')
+                    ->label(__('Product'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => \Dashed\DashedEcommerceCore\Models\Product::query()
@@ -204,7 +204,7 @@ class OpenOrderProductsTable
                     }),
 
                 SelectFilter::make('product_group')
-                    ->label('Productgroep')
+                    ->label(__('Productgroep'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => \Dashed\DashedEcommerceCore\Models\ProductGroup::query()
@@ -220,7 +220,7 @@ class OpenOrderProductsTable
                     }),
 
                 SelectFilter::make('product_category')
-                    ->label('Productcategorie')
+                    ->label(__('Productcategorie'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => \Dashed\DashedEcommerceCore\Models\ProductCategory::all()

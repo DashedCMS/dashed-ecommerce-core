@@ -200,7 +200,7 @@ trait CreateManualOrderActions2
             } else {
                 $productExtras[] = TextInput::make('extra.' . $extra['id'])
                     ->label($extra->name)
-                    ->helperText('This extra option is not build in yet, please notify Dashed')
+                    ->helperText(__('This extra option is not build in yet, please notify Dashed'))
                     ->required($extra['required']);
             }
         }
@@ -268,7 +268,7 @@ trait CreateManualOrderActions2
 
                     if ($this->cartInstance == 'handorder') {
                         Notification::make()
-                            ->title('Korting toegevoegd, klik nogmaals op "Gegevens bijwerken" om de korting toe te passen')
+                            ->title(__('Korting toegevoegd, klik nogmaals op "Gegevens bijwerken" om de korting toe te passen'))
                             ->success()
                             ->send();
                     }
@@ -300,7 +300,7 @@ trait CreateManualOrderActions2
 
         if ($showNotification) {
             Notification::make()
-                ->title('Informatie bijgewerkt')
+                ->title(__('Informatie bijgewerkt'))
                 ->success()
                 ->send();
         }
@@ -704,7 +704,7 @@ trait CreateManualOrderActions2
             $this->updateInfo(false);
         } else {
             Notification::make()
-                ->title('Product ' . $this->searchProductQuery . ' niet gevonden')
+                ->title(__('Product :query niet gevonden', ['query' => $this->searchProductQuery]))
                 ->danger()
                 ->send();
             $this->searchProductQuery = '';
@@ -808,37 +808,37 @@ trait CreateManualOrderActions2
         return $form
             ->schema([
                 TextInput::make('name')
-                    ->label('Productnaam')
+                    ->label(__('Productnaam'))
                     ->required()
                     ->autofocus()
                     ->columnSpanFull(),
                 TextInput::make('price')
-                    ->label('Prijs')
+                    ->label(__('Prijs'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(999999)
                     ->inputMode('decimal')
                     ->required()
-                    ->prefix('€')
+                    ->prefix(__('€'))
                     ->columnSpanFull(),
                 TextInput::make('quantity')
-                    ->label('Aantal')
+                    ->label(__('Aantal'))
                     ->numeric()
                     ->minValue(1)
                     ->maxValue(999999)
                     ->inputMode('numeric')
                     ->required()
                     ->default(1)
-                    ->prefix('x'),
+                    ->prefix(__('x')),
                 TextInput::make('vat_rate')
-                    ->label('Percentage')
+                    ->label(__('Percentage'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(100)
                     ->inputMode('numeric')
                     ->required()
                     ->default(21)
-                    ->prefix('%'),
+                    ->prefix(__('%')),
             ])
             ->columns(2)
             ->statePath('customProductData');
@@ -849,7 +849,7 @@ trait CreateManualOrderActions2
         return $form
             ->schema([
                 TextInput::make('order_id')
-                    ->label('Zoek order op ID')
+                    ->label(__('Zoek order op ID'))
                     ->required()
                     ->autofocus()
                     ->columnSpanFull()
@@ -870,7 +870,7 @@ trait CreateManualOrderActions2
             ->first();
         if (! $order) {
             Notification::make()
-                ->title('Order niet gevonden')
+                ->title(__('Order niet gevonden'))
                 ->danger()
                 ->send();
             $this->showOrder = null;
@@ -915,44 +915,44 @@ trait CreateManualOrderActions2
         return $form
             ->schema([
                 Select::make('type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->options([
-                        'percentage' => 'Percentage',
-                        'amount' => 'Vast bedrag',
-                        'discountCode' => 'Kortingscode',
+                        'percentage' => __('Percentage'),
+                        'amount' => __('Vast bedrag'),
+                        'discountCode' => __('Kortingscode'),
                     ])
                     ->reactive()
                     ->autofocus()
                     ->required(),
                 TextInput::make('note')
-                    ->label('Reden voor korting')
+                    ->label(__('Reden voor korting'))
                     ->visible(fn (Get $get) => $get('type') != 'discountCode')
                     ->reactive(),
                 TextInput::make('amount')
-                    ->label('Prijs')
+                    ->label(__('Prijs'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(999999)
                     ->inputMode('decimal')
                     ->required()
-                    ->prefix('€')
+                    ->prefix(__('€'))
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') == 'amount')
-                    ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
+                    ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),
                 TextInput::make('percentage')
-                    ->label('Percentage')
+                    ->label(__('Percentage'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(100)
                     ->inputMode('numeric')
                     ->required()
                     ->default(21)
-                    ->prefix('%')
+                    ->prefix(__('%'))
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') == 'percentage')
-                    ->helperText('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.'),
+                    ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),
                 Select::make('discountCode')
-                    ->label('Kortings code')
+                    ->label(__('Kortings code'))
                     ->preload()
                     ->searchable()
                     ->options(function () {
@@ -975,7 +975,7 @@ trait CreateManualOrderActions2
     {
         if (! $this->products) {
             Notification::make()
-                ->title('Geen producten in winkelmand')
+                ->title(__('Geen producten in winkelmand'))
                 ->danger()
                 ->send();
             $this->createDiscountPopup = false;
@@ -1007,7 +1007,7 @@ trait CreateManualOrderActions2
 
         if (! $discountCode) {
             Notification::make()
-                ->title('Kortingscode niet gevonden')
+                ->title(__('Kortingscode niet gevonden'))
                 ->danger()
                 ->send();
         }
@@ -1093,7 +1093,7 @@ trait CreateManualOrderActions2
     {
         if (! $this->products) {
             Notification::make()
-                ->title('Geen producten in winkelmand')
+                ->title(__('Geen producten in winkelmand'))
                 ->danger()
                 ->send();
 
@@ -1138,9 +1138,9 @@ trait CreateManualOrderActions2
         return $form
             ->schema([
                 TextInput::make('cashPaymentAmount')
-                    ->label('Prijs')
+                    ->label(__('Prijs'))
                     ->hiddenLabel()
-                    ->placeholder('Anders...')
+                    ->placeholder(__('Anders...'))
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(999999)
@@ -1157,7 +1157,7 @@ trait CreateManualOrderActions2
                     ->extraAttributes([
                         'class' => 'text-xl sm:text-xl md:text-xl py-2',
                     ])
-                    ->prefix('€'),
+                    ->prefix(__('€')),
             ]);
     }
 
@@ -1303,14 +1303,14 @@ trait CreateManualOrderActions2
         if ($this->paymentMethod->is_cash_payment) {
             if (! $this->cashPaymentAmount) {
                 Notification::make()
-                    ->title('Geen bedrag ingevoerd')
+                    ->title(__('Geen bedrag ingevoerd'))
                     ->danger()
                     ->send();
 
                 return;
             } elseif (! $hasMultiplePayments && $this->cashPaymentAmount < $this->totalUnformatted) {
                 Notification::make()
-                    ->title('Bedrag is te laag')
+                    ->title(__('Bedrag is te laag'))
                     ->danger()
                     ->send();
 
@@ -1346,7 +1346,7 @@ trait CreateManualOrderActions2
             $paymentMethod = collect($this->posPaymentMethods)->whereNotNull('pin_terminal_id')->first();
             if (! $paymentMethod) {
                 Notification::make()
-                    ->title('Geen pin terminal gevonden, bestelling incorrect afgehandeld')
+                    ->title(__('Geen pin terminal gevonden, bestelling incorrect afgehandeld'))
                     ->danger()
                     ->send();
 
@@ -1396,7 +1396,7 @@ trait CreateManualOrderActions2
             $this->printReceipt($this->lastOrder, true);
         } else {
             Notification::make()
-                ->title('Geen order gevonden')
+                ->title(__('Geen order gevonden'))
                 ->danger()
                 ->send();
         }

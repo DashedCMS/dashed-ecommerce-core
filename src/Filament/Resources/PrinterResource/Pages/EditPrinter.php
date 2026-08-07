@@ -22,11 +22,11 @@ class EditPrinter extends EditRecord
     {
         return [
             Action::make('generate_token')
-                ->label('Genereer token')
+                ->label(__('Genereer token'))
                 ->icon('heroicon-o-key')
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalDescription('Trekt het huidige token in (als er een is) en genereert een nieuwe. Het commando om de daemon opnieuw te installeren staat daarna in de Token-sectie hieronder.')
+                ->modalDescription(__('Trekt het huidige token in (als er een is) en genereert een nieuwe. Het commando om de daemon opnieuw te installeren staat daarna in de Token-sectie hieronder.'))
                 ->action(function (): void {
                     $printer = $this->getRecord();
                     $printer->tokens()->delete();
@@ -36,13 +36,13 @@ class EditPrinter extends EditRecord
                     $this->fillForm();
 
                     Notification::make()
-                        ->title('Token gegenereerd')
-                        ->body('Scroll naar de Token-sectie hieronder voor het token en het install-commando.')
+                        ->title(__('Token gegenereerd'))
+                        ->body(__('Scroll naar de Token-sectie hieronder voor het token en het install-commando.'))
                         ->success()
                         ->send();
                 }),
             Action::make('test_print')
-                ->label('Test print')
+                ->label(__('Test print'))
                 ->icon('heroicon-o-printer')
                 ->color('info')
                 ->visible(fn (): bool => (bool) $this->getRecord()->plain_token)
@@ -61,8 +61,8 @@ class EditPrinter extends EditRecord
                     ]);
 
                     Notification::make()
-                        ->title('Test job aangemaakt')
-                        ->body('De daemon pakt deze binnen 5 seconden op.')
+                        ->title(__('Test job aangemaakt'))
+                        ->body(__('De daemon pakt deze binnen 5 seconden op.'))
                         ->success()
                         ->send();
                 }),

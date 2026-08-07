@@ -51,13 +51,13 @@ class DefaultEcommerceSettingsPage extends Page
         foreach ($sites as $site) {
             $newSchema = [
                 TextInput::make("google_merchant_center_id_{$site['id']}")
-                    ->label('Google Merchant Center ID')
+                    ->label(__('Google Merchant Center ID'))
                     ->columnSpanFull(),
                 Toggle::make("enable_google_merchant_center_review_survey_{$site['id']}")
-                    ->label('Google Merchant Center Review Survey aanzetten')
+                    ->label(__('Google Merchant Center Review Survey aanzetten'))
                     ->columnSpanFull(),
                 Toggle::make("enable_google_merchant_center_review_badge_{$site['id']}")
-                    ->label('Google Merchant Center Review Badge aanzetten')
+                    ->label(__('Google Merchant Center Review Badge aanzetten'))
                     ->columnSpanFull(),
             ];
 
@@ -87,7 +87,7 @@ class DefaultEcommerceSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De algemene ecommerce instellingen zijn opgeslagen')
+            ->title(__('De algemene ecommerce instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

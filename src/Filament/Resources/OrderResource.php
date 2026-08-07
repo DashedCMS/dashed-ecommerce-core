@@ -134,10 +134,10 @@ class OrderResource extends Resource
     {
         $newSchema = [];
 
-        $newSchema[] = Section::make('Account')->columnSpanFull()
+        $newSchema[] = Section::make(__('Account'))->columnSpanFull()
             ->schema([
                 Select::make('user_id')
-                    ->label('Gekoppeld account')
+                    ->label(__('Gekoppeld account'))
                     ->nullable()
                     ->searchable()
                     ->getSearchResultsUsing(function (string $search) {
@@ -165,42 +165,42 @@ class OrderResource extends Resource
             ->hiddenOn(ViewOrder::class)
             ->columns(1);
 
-        $newSchema[] = Section::make('Persoonlijke informatie')->columnSpanFull()
+        $newSchema[] = Section::make(__('Persoonlijke informatie'))->columnSpanFull()
             ->schema([
                 TextInput::make('first_name')
-                    ->label('Voornaam')
+                    ->label(__('Voornaam'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('last_name')
-                    ->label('Achternaam')
+                    ->label(__('Achternaam'))
                     ->required()
                     ->maxLength(255),
                 TextInput::make('email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->required()
                     ->maxLength(255)
                     ->email(),
                 TextInput::make('phone_number')
-                    ->label('Telefoonnummer')
+                    ->label(__('Telefoonnummer'))
                     ->maxLength(255),
                 TextInput::make('street')
-                    ->label('Straat')
+                    ->label(__('Straat'))
                     ->maxLength(255)
                     ->reactive(),
                 TextInput::make('house_nr')
-                    ->label('Huisnummer')
+                    ->label(__('Huisnummer'))
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
-                    ->label('Postcode')
+                    ->label(__('Postcode'))
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('city')
-                    ->label('Stad')
+                    ->label(__('Stad'))
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 Select::make('country')
-                    ->label('Land')
+                    ->label(__('Land'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
@@ -214,7 +214,7 @@ class OrderResource extends Resource
                     ->nullable()
                     ->lazy(),
                 Textarea::make('note')
-                    ->label('Notitie')
+                    ->label(__('Notitie'))
                     ->nullable()
                     ->maxLength(5000)
                     ->columnSpanFull(),
@@ -225,13 +225,13 @@ class OrderResource extends Resource
                 'lg' => 2,
             ]);
 
-        $newSchema[] = Section::make('Bedrijfsinformatie')->columnSpanFull()
+        $newSchema[] = Section::make(__('Bedrijfsinformatie'))->columnSpanFull()
             ->schema([
                 TextInput::make('company_name')
-                    ->label('Bedrijfsnaam')
+                    ->label(__('Bedrijfsnaam'))
                     ->maxLength(255),
                 TextInput::make('btw_id')
-                    ->label('Btw ID')
+                    ->label(__('Btw ID'))
                     ->maxLength(255),
             ])
 //            ->hiddenOn(ViewOrder::class)
@@ -240,26 +240,26 @@ class OrderResource extends Resource
                 'lg' => 2,
             ]);
 
-        $newSchema[] = Section::make('Factuur informatie')->columnSpanFull()
+        $newSchema[] = Section::make(__('Factuur informatie'))->columnSpanFull()
             ->schema([
                 TextInput::make('invoice_street')
-                    ->label('Straat')
+                    ->label(__('Straat'))
                     ->maxLength(255)
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
-                    ->label('Huisnummer')
+                    ->label(__('Huisnummer'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
-                    ->label('Postcode')
+                    ->label(__('Postcode'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->maxLength(255),
                 TextInput::make('invoice_city')
-                    ->label('Stad')
+                    ->label(__('Stad'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->maxLength(255),
                 Select::make('invoice_country')
-                    ->label('Land')
+                    ->label(__('Land'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
@@ -321,16 +321,16 @@ class OrderResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('invoice_id')
-                    ->label('Bestelling ID')
+                    ->label(__('Bestelling ID'))
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('payment_method')
-                    ->label('Betaalmethode')
+                    ->label(__('Betaalmethode'))
                     ->toggleable()
                     ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
                 TextColumn::make('payment_status')
-                    ->label('Betaalstatus')
+                    ->label(__('Betaalstatus'))
                     ->toggleable()
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->orderStatus()['status'])
@@ -342,7 +342,7 @@ class OrderResource extends Resource
                         'gray' => fn ($state): bool => $state === 'Concept',
                     ]),
                 TextColumn::make('fulfillment_status')
-                    ->label('Fulfillment status')
+                    ->label(__('Fulfillment status'))
                     ->toggleable()
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->credit_for_order_id ? (Orders::getReturnStatusses()[$record->retour_status] ?? '') : (Orders::getFulfillmentStatusses()[$record->fulfillment_status] ?? ''))
@@ -352,7 +352,7 @@ class OrderResource extends Resource
                         'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden' || $state == 'Klaar om opgehaald te worden'),
                     ]),
                 TextColumn::make('name')
-                    ->label('Klant')
+                    ->label(__('Klant'))
                     ->toggleable()
                     ->searchable(array_merge([
                         'hash',
@@ -391,35 +391,35 @@ class OrderResource extends Resource
                 TextColumn::make('total')
                     ->toggleable()
                     ->sortable()
-                    ->label('Totaal')
+                    ->label(__('Totaal'))
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('orderProducts.name')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn ($record) => str($record->orderProducts->map(fn ($product) => $product->name.' x '.$product->quantity)->join(', '))->limit(30))
                     ->tooltip(fn ($record) => $record->orderProducts->map(fn ($product) => $product->name.' x '.$product->quantity)->join(', '))
-                    ->label('Bestelde producten')
+                    ->label(__('Bestelde producten'))
                     ->searchable(),
                 TextColumn::make('trackAndTraces.code')
-                    ->label('Track & trace')
+                    ->label(__('Track & trace'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn ($record) => $record->trackAndTraces->pluck('code')->filter()->join(', '))
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->toggleable()
-                    ->label('Aangemaakt op')
+                    ->label(__('Aangemaakt op'))
                     ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('utm_source')
-                    ->label('Bron')
+                    ->label(__('Bron'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 TextColumn::make('utm_medium')
-                    ->label('Medium')
+                    ->label(__('Medium'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 TextColumn::make('utm_campaign')
-                    ->label('Campagne')
+                    ->label(__('Campagne'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 static::lastEditedColumn(),
@@ -428,7 +428,7 @@ class OrderResource extends Resource
             ->filters([
                 Filter::make('proforma_awaiting_payment')
                     ->toggle()
-                    ->label('Wachtend op betaling (proforma)')
+                    ->label(__('Wachtend op betaling (proforma)'))
                     ->query(function (Builder $query, array $data): Builder {
                         if (! ($data['isActive'] ?? false)) {
                             return $query;
@@ -440,16 +440,16 @@ class OrderResource extends Resource
                     ->multiple()
                     ->form([
                         Select::make('values')
-                            ->label('Status')
+                            ->label(__('Status'))
                             ->multiple()
                             ->options([
-                                'paid' => 'Betaald',
-                                'partially_paid' => 'Gedeeltelijk betaald',
-                                'waiting_for_confirmation' => 'Wachten op bevestiging',
-                                'pending' => 'Lopende aankoop',
-                                'concept' => 'Concept',
-                                'cancelled' => 'Geannuleerd',
-                                'return ' => 'Retour',
+                                'paid' => __('Betaald'),
+                                'partially_paid' => __('Gedeeltelijk betaald'),
+                                'waiting_for_confirmation' => __('Wachten op bevestiging'),
+                                'pending' => __('Lopende aankoop'),
+                                'concept' => __('Concept'),
+                                'cancelled' => __('Geannuleerd'),
+                                'return ' => __('Retour'),
                             ])
                             ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
                     ])
@@ -490,7 +490,7 @@ class OrderResource extends Resource
                 Filter::make('start_date')
                     ->form([
                         DatePicker::make('start_date')
-                            ->label('Startdatum'),
+                            ->label(__('Startdatum')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -502,7 +502,7 @@ class OrderResource extends Resource
                 Filter::make('end_date')
                     ->form([
                         DatePicker::make('end_date')
-                            ->label('Einddatum'),
+                            ->label(__('Einddatum')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -512,7 +512,7 @@ class OrderResource extends Resource
                             );
                     }),
                 SelectFilter::make('utm_source')
-                    ->label('Bron (UTM)')
+                    ->label(__('Bron (UTM)'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => Order::query()
@@ -523,7 +523,7 @@ class OrderResource extends Resource
                         ->pluck('utm_source', 'utm_source')
                         ->toArray()),
                 SelectFilter::make('utm_medium')
-                    ->label('Medium (UTM)')
+                    ->label(__('Medium (UTM)'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => Order::query()
@@ -534,7 +534,7 @@ class OrderResource extends Resource
                         ->pluck('utm_medium', 'utm_medium')
                         ->toArray()),
                 SelectFilter::make('utm_campaign')
-                    ->label('Campagne (UTM)')
+                    ->label(__('Campagne (UTM)'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => Order::query()
@@ -545,7 +545,7 @@ class OrderResource extends Resource
                         ->pluck('utm_campaign', 'utm_campaign')
                         ->toArray()),
                 SelectFilter::make('country')
-                    ->label('Land')
+                    ->label(__('Land'))
                     ->multiple()
                     ->searchable()
                     ->options(fn () => Order::query()
@@ -560,21 +560,21 @@ class OrderResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('deleteDraft')
-                    ->label('Verwijderen')
+                    ->label(__('Verwijderen'))
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->visible(fn ($record) => $record->isDeletableDraft())
                     ->requiresConfirmation()
-                    ->modalHeading('Concept/proforma verwijderen')
-                    ->modalDescription('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).')
+                    ->modalHeading(__('Concept/proforma verwijderen'))
+                    ->modalDescription(__('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).'))
                     ->action(function ($record) {
                         ConceptOrderService::deleteDraft($record);
 
-                        Notification::make()->success()->title('Bestelling verwijderd')->send();
+                        Notification::make()->success()->title(__('Bestelling verwijderd'))->send();
                     }),
                 Action::make('quickActions')
                     ->button()
-                    ->label('Acties')
+                    ->label(__('Acties'))
                     ->color('primary')
                     ->modalContent(fn (Order $record): View => view(
                         'dashed-ecommerce-core::orders.quick-view-order',
@@ -582,7 +582,7 @@ class OrderResource extends Resource
                     ))
                     ->extraModalFooterActions([
                         Action::make('changeFulfillmentStatus')
-                            ->label('Verander fulfillment status')
+                            ->label(__('Verander fulfillment status'))
                             ->color('primary')
                             ->fillForm(function ($record) {
                                 return [
@@ -591,7 +591,7 @@ class OrderResource extends Resource
                             })
                             ->schema([
                                 Select::make('fulfillmentStatus')
-                                    ->label('Verander fulfilment status')
+                                    ->label(__('Verander fulfilment status'))
                                     ->options(Orders::getFulfillmentStatusses())
                                     ->required(),
                             ])
@@ -600,7 +600,7 @@ class OrderResource extends Resource
                                 if ($record->fulfillment_status == $data['fulfillmentStatus']) {
                                     Notification::make()
                                         ->danger()
-                                        ->title('Bestelling heeft al deze fulfillment status')
+                                        ->title(__('Bestelling heeft al deze fulfillment status'))
                                         ->send();
 
                                     return;
@@ -616,11 +616,11 @@ class OrderResource extends Resource
 
                                 Notification::make()
                                     ->success()
-                                    ->title('Bestelling fulfillment status aangepast')
+                                    ->title(__('Bestelling fulfillment status aangepast'))
                                     ->send();
                             }),
                         Action::make('changeRetourFulfillmentStatus')
-                            ->label('Verander retour fulfillment status')
+                            ->label(__('Verander retour fulfillment status'))
                             ->color('primary')
                             ->fillForm(function ($record) {
                                 return [
@@ -629,7 +629,7 @@ class OrderResource extends Resource
                             })
                             ->schema([
                                 Select::make('retourStatus')
-                                    ->label('Verander retour status')
+                                    ->label(__('Verander retour status'))
                                     ->options(Orders::getReturnStatusses())
                                     ->required(),
                             ])
@@ -638,7 +638,7 @@ class OrderResource extends Resource
                                 if ($record->retour_status == $data['retourStatus']) {
                                     Notification::make()
                                         ->danger()
-                                        ->title('Bestelling heeft al deze retour status')
+                                        ->title(__('Bestelling heeft al deze retour status'))
                                         ->send();
 
                                     return;
@@ -655,11 +655,11 @@ class OrderResource extends Resource
 
                                 Notification::make()
                                     ->success()
-                                    ->title('Bestelling retour status aangepast')
+                                    ->title(__('Bestelling retour status aangepast'))
                                     ->send();
                             }),
                         Action::make('sendConfirmationEmail')
-                            ->label('Stuur bevestigingsmail')
+                            ->label(__('Stuur bevestigingsmail'))
                             ->color('primary')
                             ->fillForm(function ($record) {
                                 return [
@@ -668,7 +668,7 @@ class OrderResource extends Resource
                             })
                             ->schema([
                                 TextInput::make('email')
-                                    ->label('Stuur de email naar')
+                                    ->label(__('Stuur de email naar'))
                                     ->email()
                                     ->required(),
                             ])
@@ -677,11 +677,11 @@ class OrderResource extends Resource
 
                                 Notification::make()
                                     ->success()
-                                    ->title('De bevestigingsmail is verstuurd')
+                                    ->title(__('De bevestigingsmail is verstuurd'))
                                     ->send();
                             }),
                         Action::make('createOrderLog')
-                            ->label('Maak bestellings notitie')
+                            ->label(__('Maak bestellings notitie'))
                             ->color('primary')
                             ->fillForm(function ($record) {
                                 return [
@@ -690,16 +690,16 @@ class OrderResource extends Resource
                             })
                             ->schema([
                                 Toggle::make('publicForCustomer')
-                                    ->label('Zichtbaar voor klant')
+                                    ->label(__('Zichtbaar voor klant'))
                                     ->default(false)
                                     ->reactive(),
                                 Toggle::make('sendEmailToCustomer')
-                                    ->label('Moet de klant een notificatie van deze notitie ontvangen?')
+                                    ->label(__('Moet de klant een notificatie van deze notitie ontvangen?'))
                                     ->default(false)
                                     ->visible(fn (Get $get) => $get('publicForCustomer'))
                                     ->reactive(),
                                 TextInput::make('emailSubject')
-                                    ->label('Onderwerp van de mail')
+                                    ->label(__('Onderwerp van de mail'))
                                     ->visible(fn (Get $get) => $get('publicForCustomer') && $get('sendEmailToCustomer')),
                                 FileUpload::make('images')
                                     ->name('Bestanden')
@@ -711,8 +711,8 @@ class OrderResource extends Resource
                                     ->directory('dashed/orders/logs/images')
                                     ->maxSize(50000),
                                 Textarea::make('note')
-                                    ->label('Notitie')
-                                    ->placeholder('Typ hier je notitie')
+                                    ->label(__('Notitie'))
+                                    ->placeholder(__('Typ hier je notitie'))
                                     ->required()
                                     ->minLength(3)
                                     ->maxLength(1500)
@@ -740,13 +740,13 @@ class OrderResource extends Resource
 
                                 Notification::make()
                                     ->success()
-                                    ->title('De notitie is aangemaakt')
+                                    ->title(__('De notitie is aangemaakt'))
                                     ->send();
                             }),
                     ])
-                    ->modalHeading('Bestelling bekijken')
+                    ->modalHeading(__('Bestelling bekijken'))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Sluiten')
+                    ->modalCancelActionLabel(__('Sluiten'))
                     ->action(function (Order $record, array $data): void {
                         if (isset($data['fulfillment_status'])) {
                             $record->fulfillment_status = $data['fulfillment_status'];
@@ -759,7 +759,7 @@ class OrderResource extends Resource
             ])
             ->toolbarActions([
                 BulkAction::make('downloadInvoices')
-                    ->label('Download facturen')
+                    ->label(__('Download facturen'))
                     ->color('primary')
                     ->action(function (Collection $records, array $data) {
                         $hash = Str::random();
@@ -785,21 +785,21 @@ class OrderResource extends Resource
                             Storage::disk('public')->put($invoicePath, '');
                             $pdfMerger->save(storage_path('app/public'.$invoicePath));
                             Notification::make()
-                                ->title('De export is gedownload')
+                                ->title(__('De export is gedownload'))
                                 ->success()
                                 ->send();
 
                             return Storage::disk('public')->download($invoicePath);
                         } else {
                             Notification::make()
-                                ->title('Geen facturen om te downloaden')
+                                ->title(__('Geen facturen om te downloaden'))
                                 ->success()
                                 ->send();
                         }
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('downloadPackingSlips')
-                    ->label('Download pakbonnen')
+                    ->label(__('Download pakbonnen'))
                     ->color('primary')
                     ->action(function (Collection $records, array $data) {
                         $hash = Str::random();
@@ -825,14 +825,14 @@ class OrderResource extends Resource
                             Storage::disk('public')->put($invoicePath, '');
                             $pdfMerger->save(storage_path('app/public'.$invoicePath));
                             Notification::make()
-                                ->title('De export is gedownload')
+                                ->title(__('De export is gedownload'))
                                 ->success()
                                 ->send();
 
                             return Storage::disk('public')->download($invoicePath);
                         } else {
                             Notification::make()
-                                ->title('Geen pakbonnen om te downloaden')
+                                ->title(__('Geen pakbonnen om te downloaden'))
                                 ->success()
                                 ->send();
                         }
@@ -840,10 +840,10 @@ class OrderResource extends Resource
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('changeFulfillmentStatus')
                     ->color('primary')
-                    ->label('Fulfillment status')
+                    ->label(__('Fulfillment status'))
                     ->schema([
                         Select::make('fulfillment_status')
-                            ->label('Veranderd fulfillment status naar')
+                            ->label(__('Veranderd fulfillment status naar'))
                             ->options(Orders::getFulfillmentStatusses())
                             ->required(),
                     ])
@@ -854,7 +854,7 @@ class OrderResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('deleteDrafts')
-                    ->label('Concepten/proforma verwijderen')
+                    ->label(__('Concepten/proforma verwijderen'))
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->requiresConfirmation()
@@ -871,7 +871,7 @@ class OrderResource extends Resource
                         if ($deleted === 0) {
                             Notification::make()
                                 ->warning()
-                                ->title('Geen verwijderbare bestellingen in de selectie')
+                                ->title(__('Geen verwijderbare bestellingen in de selectie'))
                                 ->send();
 
                             return;
@@ -879,7 +879,7 @@ class OrderResource extends Resource
 
                         Notification::make()
                             ->success()
-                            ->title($deleted . ' bestelling(en) verwijderd')
+                            ->title(__(':aantal bestelling(en) verwijderd', ['aantal' => $deleted]))
                             ->send();
                     }),
             ])

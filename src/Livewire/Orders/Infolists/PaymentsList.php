@@ -33,27 +33,27 @@ class PaymentsList extends Component implements HasSchemas
             $pid = $orderPayment->id ?? spl_object_id($orderPayment);
 
             $paymentsSchema[] = Fieldset::make('payment_' . $pid)
-                ->label('Betaling van ' . $orderPayment->created_at->format('d-m-Y H:i'))
+                ->label(__('Betaling van :datum', ['datum' => $orderPayment->created_at->format('d-m-Y H:i')]))
                 ->schema([
                     TextEntry::make('psp_' . $pid)
-                        ->label('PSP')
+                        ->label(__('PSP'))
                         ->state(fn () => $orderPayment->psp ?: '-'),
 
                     TextEntry::make('psp_id_' . $pid)
-                        ->label('PSP ID')
+                        ->label(__('PSP ID'))
                         ->state(fn () => $orderPayment->psp_id ?: '-'),
 
                     TextEntry::make('payment_method_' . $pid)
-                        ->label('Betaalmethode')
+                        ->label(__('Betaalmethode'))
                         ->state(fn () => $orderPayment->payment_method ?: ($orderPayment->paymentMethod->name ?? '-')),
 
                     TextEntry::make('amount_' . $pid)
-                        ->label('Bedrag')
+                        ->label(__('Bedrag'))
                         ->state(fn () => $orderPayment->amount)
                         ->money('EUR'),
 
                     TextEntry::make('status_' . $pid)
-                        ->label('Status')
+                        ->label(__('Status'))
                         ->state(fn () => $orderPayment->status)
                         ->badge()
                         ->color(fn () => match ($orderPayment->status) {
@@ -64,7 +64,7 @@ class PaymentsList extends Component implements HasSchemas
                         }),
 
                     TextEntry::make('note_' . $pid)
-                        ->label('Notitie')
+                        ->label(__('Notitie'))
                         ->state(fn () => data_get($orderPayment->getAttribute('attributes'), 'note') ?: '-')
                         ->columnSpanFull()
                         ->visible(fn () => filled(data_get($orderPayment->getAttribute('attributes'), 'note'))),
@@ -76,8 +76,8 @@ class PaymentsList extends Component implements HasSchemas
         return $schema
             ->record($this->order)
             ->components([
-                Fieldset::make('payments_root')
-                    ->label('Betalingen')
+                Fieldset::make(__('payments_root'))
+                    ->label(__('Betalingen'))
                     ->schema($paymentsSchema)
                     ->columnSpanFull(),
             ]);

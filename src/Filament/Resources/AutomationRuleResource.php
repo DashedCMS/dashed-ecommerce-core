@@ -150,10 +150,10 @@ class AutomationRuleResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Globale informatie')->columnSpanFull()
+            Section::make(__('Globale informatie'))->columnSpanFull()
                 ->schema([
                     Select::make('site_id')
-                        ->label('Actief op site')
+                        ->label(__('Actief op site'))
                         ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                         ->hidden(! (Sites::getAmountOfSites() > 1))
                         ->required(),
@@ -161,26 +161,26 @@ class AutomationRuleResource extends Resource
                 ->hidden(! (Sites::getAmountOfSites() > 1))
                 ->collapsed(fn ($livewire) => $livewire instanceof EditAutomationRule),
 
-            Section::make('Algemeen')
+            Section::make(__('Algemeen'))
                 ->columnSpanFull()
                 ->columns(2)
                 ->schema([
                     TextInput::make('name')
-                        ->label('Naam')
+                        ->label(__('Naam'))
                         ->required()
                         ->maxLength(255),
                     Toggle::make('is_active')
-                        ->label('Actief')
+                        ->label(__('Actief'))
                         ->default(true)
-                        ->helperText('Zet uit om de regel tijdelijk te pauzeren zonder de configuratie te verliezen.'),
+                        ->helperText(__('Zet uit om de regel tijdelijk te pauzeren zonder de configuratie te verliezen.')),
                 ]),
 
-            Section::make('Trigger')
-                ->description('Wanneer moet deze regel proberen te draaien?')
+            Section::make(__('Trigger'))
+                ->description(__('Wanneer moet deze regel proberen te draaien?'))
                 ->columnSpanFull()
                 ->schema([
                     Select::make('trigger')
-                        ->label('Trigger')
+                        ->label(__('Trigger'))
                         ->options(fn (): array => static::triggerOptions())
                         ->required()
                         ->native(false)
@@ -202,28 +202,28 @@ class AutomationRuleResource extends Resource
                         }),
                 ]),
 
-            Section::make('Planning')
-                ->description('Tijd-triggers draaien niet op een gebeurtenis maar op een periodieke scan (zie RunTimeBasedAutomationRules). Stel hier in wanneer deze regel in aanmerking komt.')
+            Section::make(__('Planning'))
+                ->description(__('Tijd-triggers draaien niet op een gebeurtenis maar op een periodieke scan (zie RunTimeBasedAutomationRules). Stel hier in wanneer deze regel in aanmerking komt.'))
                 ->columnSpanFull()
                 ->columns(2)
                 ->visible(fn (Get $get): bool => static::isTimeTrigger($get('trigger')))
                 ->schema([
                     // Relatief: "N uur/dagen na [anker]".
                     Select::make('schedule_anchor')
-                        ->label('Anker')
+                        ->label(__('Anker'))
                         ->options(self::SCHEDULE_ANCHOR_LABELS)
                         ->native(false)
                         ->rules(['in:' . implode(',', TimeAnchors::KEYS)])
                         ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative')
                         ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative'),
                     TextInput::make('schedule_amount')
-                        ->label('Aantal')
+                        ->label(__('Aantal'))
                         ->integer()
                         ->minValue(1)
                         ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative')
                         ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'relative'),
                     Select::make('schedule_unit')
-                        ->label('Eenheid')
+                        ->label(__('Eenheid'))
                         ->options(self::SCHEDULE_UNIT_LABELS)
                         ->native(false)
                         ->rules(['in:' . implode(',', array_keys(self::SCHEDULE_UNIT_LABELS))])
@@ -232,7 +232,7 @@ class AutomationRuleResource extends Resource
 
                     // Terugkerend: dagelijks/wekelijks op een vast tijdstip.
                     Select::make('schedule_frequency')
-                        ->label('Frequentie')
+                        ->label(__('Frequentie'))
                         ->options(self::SCHEDULE_FREQUENCY_LABELS)
                         ->native(false)
                         ->live()
@@ -248,14 +248,14 @@ class AutomationRuleResource extends Resource
                             }
                         }),
                     TextInput::make('schedule_at')
-                        ->label('Tijdstip')
-                        ->placeholder('14:30')
-                        ->helperText('Formaat uu:mm (24-uurs), bijvoorbeeld 14:30.')
+                        ->label(__('Tijdstip'))
+                        ->placeholder(__('14:30'))
+                        ->helperText(__('Formaat uu:mm (24-uurs), bijvoorbeeld 14:30.'))
                         ->rules(['regex:' . self::SCHEDULE_TIME_REGEX])
                         ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring')
                         ->required(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring'),
                     Select::make('schedule_weekday')
-                        ->label('Weekdag')
+                        ->label(__('Weekdag'))
                         ->options(self::SCHEDULE_WEEKDAY_LABELS)
                         ->native(false)
                         ->rules(['in:' . implode(',', array_keys(self::SCHEDULE_WEEKDAY_LABELS))])
@@ -265,20 +265,20 @@ class AutomationRuleResource extends Resource
                             && $get('schedule_frequency') === 'weekly'),
                 ]),
 
-            Section::make('Voorwaarden')
-                ->description('Alle voorwaarden moeten kloppen (EN-logica). Leeg laten = de regel geldt voor elke gebeurtenis van deze trigger.')
+            Section::make(__('Voorwaarden'))
+                ->description(__('Alle voorwaarden moeten kloppen (EN-logica). Leeg laten = de regel geldt voor elke gebeurtenis van deze trigger.'))
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('conditions')
-                        ->label('')
-                        ->addActionLabel('Voorwaarde toevoegen')
+                        ->label(__(''))
+                        ->addActionLabel(__('Voorwaarde toevoegen'))
                         ->reorderableWithButtons()
                         ->collapsible()
                         ->defaultItems(0)
                         ->itemLabel(fn (array $state): ?string => static::conditionItemLabel($state))
                         ->schema([
                             Select::make('field')
-                                ->label('Veld')
+                                ->label(__('Veld'))
                                 ->options(fn (Get $get): array => static::conditionFieldOptions($get('../../trigger')))
                                 ->required()
                                 ->native(false)
@@ -288,7 +288,7 @@ class AutomationRuleResource extends Resource
                                     $set('value', null);
                                 }),
                             Select::make('operator')
-                                ->label('Operator')
+                                ->label(__('Operator'))
                                 ->options(fn (Get $get): array => static::operatorsFor(
                                     static::conditionFieldType($get('../../trigger'), $get('field'))
                                 ))
@@ -301,7 +301,7 @@ class AutomationRuleResource extends Resource
                             // standaard-manier om per situatie een ander input-type te
                             // tonen onder dezelfde state-key.
                             Select::make('value')
-                                ->label('Waarde')
+                                ->label(__('Waarde'))
                                 ->options(fn (Get $get): array => static::conditionValueOptions($get('../../trigger'), $get('field')))
                                 ->multiple(fn (Get $get): bool => $get('operator') === 'in')
                                 ->native(false)
@@ -310,13 +310,13 @@ class AutomationRuleResource extends Resource
                                 ->dehydrated(fn (Get $get): bool => static::conditionFieldType($get('../../trigger'), $get('field')) === 'select')
                                 ->required(fn (Get $get): bool => static::conditionFieldType($get('../../trigger'), $get('field')) === 'select'),
                             TextInput::make('value')
-                                ->label('Waarde')
+                                ->label(__('Waarde'))
                                 ->numeric()
                                 ->visible(fn (Get $get): bool => static::conditionFieldType($get('../../trigger'), $get('field')) === 'number')
                                 ->dehydrated(fn (Get $get): bool => static::conditionFieldType($get('../../trigger'), $get('field')) === 'number')
                                 ->required(fn (Get $get): bool => static::conditionFieldType($get('../../trigger'), $get('field')) === 'number'),
                             TextInput::make('value')
-                                ->label('Waarde')
+                                ->label(__('Waarde'))
                                 ->visible(fn (Get $get): bool => ! in_array(
                                     static::conditionFieldType($get('../../trigger'), $get('field')),
                                     ['select', 'number', 'boolean'],
@@ -332,20 +332,20 @@ class AutomationRuleResource extends Resource
                         ->columnSpanFull(),
                 ]),
 
-            Section::make('Acties')
-                ->description('Deze acties draaien in deze volgorde. Alleen automatiseerbare acties zijn hier te kiezen — sommige acties (bv. een bestelling annuleren) blijven bewust alleen handmatig beschikbaar.')
+            Section::make(__('Acties'))
+                ->description(__('Deze acties draaien in deze volgorde. Alleen automatiseerbare acties zijn hier te kiezen — sommige acties (bv. een bestelling annuleren) blijven bewust alleen handmatig beschikbaar.'))
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('actions')
-                        ->label('')
-                        ->addActionLabel('Actie toevoegen')
+                        ->label(__(''))
+                        ->addActionLabel(__('Actie toevoegen'))
                         ->reorderableWithButtons()
                         ->collapsible()
                         ->defaultItems(0)
                         ->itemLabel(fn (array $state): ?string => static::actionItemLabel($state))
                         ->schema([
                             Select::make('key')
-                                ->label('Actie')
+                                ->label(__('Actie'))
                                 ->options(fn (): array => static::automatableActionOptions())
                                 ->required()
                                 ->native(false)
@@ -370,37 +370,37 @@ class AutomationRuleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->weight('bold'),
                 TextColumn::make('trigger')
-                    ->label('Trigger')
+                    ->label(__('Trigger'))
                     ->badge()
                     ->color('info')
                     ->formatStateUsing(fn (string $state): string => static::triggerOptions()[$state] ?? $state),
                 TextColumn::make('actions')
-                    ->label('Acties')
+                    ->label(__('Acties'))
                     ->state(fn (AutomationRule $record): int => count($record->actions ?? []))
                     ->badge()
                     ->color('gray'),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean()
                     ->trueColor('success')
                     ->falseColor('gray'),
                 TextColumn::make('site_id')
-                    ->label('Site')
+                    ->label(__('Site'))
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('runs_max_created_at')
-                    ->label('Laatste run')
+                    ->label(__('Laatste run'))
                     ->dateTime('d-m-Y H:i', 'Europe/Amsterdam')
                     ->sortable()
-                    ->placeholder('Nog niet gedraaid'),
+                    ->placeholder(__('Nog niet gedraaid')),
             ])
             ->filters([
                 SelectFilter::make('trigger')
-                    ->label('Trigger')
+                    ->label(__('Trigger'))
                     ->options(fn (): array => static::triggerOptions()),
             ])
             ->defaultSort('name')
@@ -411,8 +411,8 @@ class AutomationRuleResource extends Resource
                 DeleteAction::make(),
             ])
             ->toolbarActions(ToolbarActions::getActions())
-            ->emptyStateHeading('Nog geen automatiseringsregels')
-            ->emptyStateDescription('Maak een regel aan om acties automatisch te laten draaien zodra een trigger matcht.')
+            ->emptyStateHeading(__('Nog geen automatiseringsregels'))
+            ->emptyStateDescription(__('Maak een regel aan om acties automatisch te laten draaien zodra een trigger matcht.'))
             ->emptyStateIcon('heroicon-o-bolt');
     }
 
@@ -453,16 +453,16 @@ class AutomationRuleResource extends Resource
     private static function dryRunAction(): Action
     {
         return Action::make('dryRun')
-            ->label('Testen')
+            ->label(__('Testen'))
             ->icon('heroicon-o-beaker')
             ->color('gray')
-            ->modalHeading(fn (AutomationRule $record): string => "Droogloop — {$record->name}")
+            ->modalHeading(fn (AutomationRule $record): string => __('Droogloop — :naam', ['naam' => $record->name]))
             ->modalDescription(fn (AutomationRule $record): string => static::isScheduleRule($record)
-                ? 'Toont hoeveel bestellingen deze regel nú zou raken en welke acties zouden draaien. Er wordt niets uitgevoerd.'
-                : 'Kies een bestelling om te zien of deze regel zou matchen en welke acties zouden draaien. Er wordt niets uitgevoerd.')
+                ? __('Toont hoeveel bestellingen deze regel nú zou raken en welke acties zouden draaien. Er wordt niets uitgevoerd.')
+                : __('Kies een bestelling om te zien of deze regel zou matchen en welke acties zouden draaien. Er wordt niets uitgevoerd.'))
             ->modalWidth('2xl')
             ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Sluiten')
+            ->modalCancelActionLabel(__('Sluiten'))
             ->schema(fn (AutomationRule $record): array => static::isScheduleRule($record)
                 ? static::dryRunScheduleSchema($record)
                 : static::dryRunSchema($record));
@@ -497,13 +497,13 @@ class AutomationRuleResource extends Resource
 
         return [
             TextEntry::make('dry_run_would_fire_count')
-                ->label('Zou nu vuren voor')
+                ->label(__('Zou nu vuren voor'))
                 ->state("{$result['would_fire_count']} bestelling(en)")
                 ->badge()
                 ->color($result['would_fire_count'] > 0 ? 'success' : 'gray'),
 
             TextEntry::make('dry_run_schedule_actions')
-                ->label('Acties die zouden draaien')
+                ->label(__('Acties die zouden draaien'))
                 ->state(static::dryRunScheduleActionsForDisplay($result['actions'], $result['would_fire_count']))
                 ->listWithLineBreaks()
                 ->bulleted()
@@ -535,15 +535,15 @@ class AutomationRuleResource extends Resource
     {
         return [
             Select::make('order_id')
-                ->label('Bestelling (factuurnummer of ID)')
-                ->placeholder('Zoek op factuurnummer of ID')
+                ->label(__('Bestelling (factuurnummer of ID)'))
+                ->placeholder(__('Zoek op factuurnummer of ID'))
                 ->native(false)
                 ->searchable()
                 ->live()
                 ->getSearchResultsUsing(fn (string $search): array => static::dryRunOrderOptions($record, $search))
                 ->getOptionLabelUsing(fn ($value): ?string => static::dryRunOrderLabel(static::dryRunFindOrder($record, $value))),
 
-            Section::make('Resultaat')
+            Section::make(__('Resultaat'))
                 ->columnSpanFull()
                 ->visible(fn (Get $get): bool => filled($get('order_id')))
                 ->schema(fn (Get $get): array => static::dryRunResultSchema($record, $get('order_id'))),
@@ -632,7 +632,7 @@ class AutomationRuleResource extends Resource
         if ($order === null) {
             return [
                 TextEntry::make('dry_run_missing')
-                    ->label('')
+                    ->label(__(''))
                     ->state('Deze bestelling kon niet worden gevonden.'),
             ];
         }
@@ -642,19 +642,19 @@ class AutomationRuleResource extends Resource
 
         return [
             TextEntry::make('dry_run_matched')
-                ->label('Match')
+                ->label(__('Match'))
                 ->state($matchDisplay['label'])
                 ->badge()
                 ->color($matchDisplay['color']),
 
             KeyValueEntry::make('dry_run_context')
-                ->label('Gebruikte contextwaarden')
+                ->label(__('Gebruikte contextwaarden'))
                 ->keyLabel('Veld')
                 ->valueLabel('Waarde')
                 ->state(static::dryRunContextForDisplay($result['context'])),
 
             TextEntry::make('dry_run_actions')
-                ->label('Acties die zouden draaien')
+                ->label(__('Acties die zouden draaien'))
                 ->state(static::dryRunActionsForDisplay($result['actions'], $result['matched'], $result['undeterminable_fields']))
                 ->listWithLineBreaks()
                 ->bulleted()
@@ -1208,7 +1208,7 @@ class AutomationRuleResource extends Resource
         $component->required($isRequired);
 
         if ($isDynamicDefault) {
-            $component->helperText('Leeg laten om de waarde uit de bestelling zelf te gebruiken.');
+            $component->helperText(__('Leeg laten om de waarde uit de bestelling zelf te gebruiken.'));
         } elseif ($default !== null) {
             $component->default($default);
         }

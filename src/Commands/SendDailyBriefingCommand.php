@@ -84,7 +84,7 @@ class SendDailyBriefingCommand extends Command
                 app($center)->push()
                     ->type('daily.briefing')
                     ->site((string) $siteId)
-                    ->title('Goedemorgen 👋')
+                    ->title(__('Goedemorgen 👋'))
                     ->body($body)
                     ->route('/dashboard')
                     ->data([

@@ -26,8 +26,8 @@ class ListOrders extends ListRecords
                 ->iconButton()
                 ->color('danger')
                 ->icon('heroicon-o-exclamation-triangle')
-                ->label('Labels met fouten (' . $failedCount . ')')
-                ->tooltip('Labels met fouten (' . $failedCount . ')')
+                ->label(__('Labels met fouten (:aantal)', ['aantal' => $failedCount]))
+                ->tooltip(__('Labels met fouten (:aantal)', ['aantal' => $failedCount]))
                 ->url(\Dashed\DashedEcommerceCore\Filament\Pages\ShippingLabelErrors::getUrl())
                 ->openUrlInNewTab();
         }

@@ -45,38 +45,38 @@ class FlowStepsRelationManager extends RelationManager
             ->reorderable('sort_order')
             ->columns([
                 TextColumn::make('sort_order')
-                    ->label('#')
+                    ->label(__('#'))
                     ->width(40),
                 TextColumn::make('delay_label')
-                    ->label('Vertraging')
+                    ->label(__('Vertraging'))
                     ->badge()
                     ->color('gray'),
                 TextColumn::make('subject')
-                    ->label('Onderwerp')
+                    ->label(__('Onderwerp'))
                     ->limit(50)
                     ->weight('bold'),
                 TextColumn::make('pending_count')
-                    ->label('In wacht')
+                    ->label(__('In wacht'))
                     ->state(fn ($record) => $record->emails()->whereNull('sent_at')->whereNull('cancelled_at')->count())
                     ->badge()
                     ->color('warning'),
                 TextColumn::make('sent_count')
-                    ->label('Verzonden')
+                    ->label(__('Verzonden'))
                     ->state(fn ($record) => $record->emails()->whereNotNull('sent_at')->count())
                     ->badge()
                     ->color('info'),
                 TextColumn::make('converted_count')
-                    ->label('Geconverteerd')
+                    ->label(__('Geconverteerd'))
                     ->state(fn ($record) => $record->emails()->whereNotNull('converted_at')->count())
                     ->badge()
                     ->color('success'),
                 TextColumn::make('revenue')
-                    ->label('Omzet')
+                    ->label(__('Omzet'))
                     ->badge()
                     ->color('success')
                     ->state(fn ($record) => '€ '.number_format($record->revenueSum(), 2, ',', '.')),
                 TextColumn::make('conversion_rate')
-                    ->label('Conversieratio')
+                    ->label(__('Conversieratio'))
                     ->badge()
                     ->color(function ($state) {
                         $rate = (float) str_replace(['%', ','], ['', '.'], $state);
@@ -88,19 +88,19 @@ class FlowStepsRelationManager extends RelationManager
                         };
                     })
                     ->state(fn ($record) => number_format($record->conversionRateFromSent(), 1, ',', '.').'%'),
-                IconColumn::make('incentive_enabled')->label('Korting')->boolean(),
-                IconColumn::make('enabled')->label('Actief')->boolean(),
+                IconColumn::make('incentive_enabled')->label(__('Korting'))->boolean(),
+                IconColumn::make('enabled')->label(__('Actief'))->boolean(),
             ])
             ->recordActions([
                 EditAction::make()
                     ->schema($this->stepSchema()),
                 Action::make('sendTest')
-                    ->label('Stuur test')
+                    ->label(__('Stuur test'))
                     ->icon('heroicon-o-paper-airplane')
                     ->color('gray')
                     ->schema([
                         TextInput::make('test_email')
-                            ->label('E-mailadres')
+                            ->label(__('E-mailadres'))
                             ->email()
                             ->required()
                             ->default(fn () => auth()->user()?->email),
@@ -113,7 +113,7 @@ class FlowStepsRelationManager extends RelationManager
 
                         if (! $cart) {
                             Notification::make()
-                                ->title('Geen winkelwagen met producten gevonden om te simuleren.')
+                                ->title(__('Geen winkelwagen met producten gevonden om te simuleren.'))
                                 ->danger()
                                 ->send();
 
@@ -151,7 +151,7 @@ class FlowStepsRelationManager extends RelationManager
                             Mail::to($data['test_email'])->send(new AbandonedCartMail($previewRecord, $record, $discountCode));
                         } catch (\Throwable $e) {
                             Notification::make()
-                                ->title('Fout bij versturen: '.$e->getMessage())
+                                ->title(__('Fout bij versturen: :fout', ['fout' => $e->getMessage()]))
                                 ->danger()
                                 ->send();
 
@@ -159,7 +159,7 @@ class FlowStepsRelationManager extends RelationManager
                         }
 
                         Notification::make()
-                            ->title('Test email verzonden naar '.$data['test_email'])
+                            ->title(__('Test email verzonden naar :email', ['email' => $data['test_email']]))
                             ->success()
                             ->send();
                     }),
@@ -167,7 +167,7 @@ class FlowStepsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 CreateAction::make()
-                    ->label('Stap toevoegen')
+                    ->label(__('Stap toevoegen'))
                     ->schema($this->stepSchema())
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['sort_order'] = $this->getOwnerRecord()->steps()->max('sort_order') + 1;
@@ -182,93 +182,93 @@ class FlowStepsRelationManager extends RelationManager
     protected function stepSchema(): array
     {
         return [
-            Section::make('Timing')
+            Section::make(__('Timing'))
                 ->schema([
                     TextInput::make('delay_value')
-                        ->label('Vertraging')
+                        ->label(__('Vertraging'))
                         ->numeric()
                         ->minValue(1)
                         ->required()
                         ->default(1),
                     Select::make('delay_unit')
-                        ->label('Eenheid')
+                        ->label(__('Eenheid'))
                         ->options([
-                            'hours' => 'Uur',
-                            'days' => 'Dagen',
+                            'hours' => __('Uur'),
+                            'days' => __('Dagen'),
                         ])
                         ->default('hours')
                         ->required(),
                     Toggle::make('enabled')
-                        ->label('Stap inschakelen')
+                        ->label(__('Stap inschakelen'))
                         ->default(true),
                 ])
                 ->columns(3),
 
-            Section::make('Email inhoud')
+            Section::make(__('Email inhoud'))
                 ->schema([
                     TextInput::make('subject')
-                        ->label('Onderwerpregel')
-                        ->helperText('Beschikbare variabelen: :product: :siteName: :cartTotal:')
+                        ->label(__('Onderwerpregel'))
+                        ->helperText(__('Beschikbare variabelen: :product: :siteName: :cartTotal:'))
                         ->required()
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Builder::make('blocks')
-                        ->label('Inhoud blokken')
+                        ->label(__('Inhoud blokken'))
                         ->blocks([
                             Builder\Block::make('text')
-                                ->label('Tekst')
+                                ->label(__('Tekst'))
                                 ->icon('heroicon-o-document-text')
                                 ->schema([
                                     RichEditor::make('content')
-                                        ->label('Tekst')
-                                        ->helperText('Variabelen: :product: :siteName: :cartTotal:')
+                                        ->label(__('Tekst'))
+                                        ->helperText(__('Variabelen: :product: :siteName: :cartTotal:'))
                                         ->toolbarButtons([
                                             'bold', 'italic', 'underline', 'strike',
                                             'link', 'bulletList', 'orderedList', 'h2', 'h3',
                                         ]),
                                 ]),
                             Builder\Block::make('product')
-                                ->label('Hoofdproduct')
+                                ->label(__('Hoofdproduct'))
                                 ->icon('heroicon-o-shopping-bag')
                                 ->maxItems(1)
                                 ->schema([]),
                             Builder\Block::make('products')
-                                ->label('Alle producten')
+                                ->label(__('Alle producten'))
                                 ->icon('heroicon-o-shopping-cart')
                                 ->maxItems(1)
                                 ->schema([]),
                             Builder\Block::make('review')
-                                ->label('Klantreview')
+                                ->label(__('Klantreview'))
                                 ->icon('heroicon-o-star')
                                 ->maxItems(1)
                                 ->schema([]),
                             Builder\Block::make('discount')
-                                ->label('Kortingscode')
+                                ->label(__('Kortingscode'))
                                 ->icon('heroicon-o-tag')
                                 ->maxItems(1)
                                 ->schema([]),
                             Builder\Block::make('button')
-                                ->label('Knop')
+                                ->label(__('Knop'))
                                 ->icon('heroicon-o-cursor-arrow-rays')
                                 ->schema([
                                     TextInput::make('label')
-                                        ->label('Knoptekst')
+                                        ->label(__('Knoptekst'))
                                         ->default('Bestel nu')
                                         ->required()
                                         ->maxLength(100),
                                 ]),
                             Builder\Block::make('divider')
-                                ->label('Scheidingslijn')
+                                ->label(__('Scheidingslijn'))
                                 ->icon('heroicon-o-minus')
                                 ->schema([]),
                             Builder\Block::make('usp')
-                                ->label('USPs')
+                                ->label(__('USPs'))
                                 ->icon('heroicon-o-check-badge')
                                 ->maxItems(1)
                                 ->schema([
                                     Textarea::make('items')
-                                        ->label('USPs (één per regel)')
-                                        ->helperText('Voer elke USP op een nieuwe regel in')
+                                        ->label(__('USPs (één per regel)'))
+                                        ->helperText(__('Voer elke USP op een nieuwe regel in'))
                                         ->rows(4)
                                         ->default("Gratis verzending\nSnel geleverd\nVeilig betalen"),
                                 ]),
@@ -278,31 +278,31 @@ class FlowStepsRelationManager extends RelationManager
                         ->reorderableWithButtons(),
                 ]),
 
-            Section::make('Kortingscode')
+            Section::make(__('Kortingscode'))
                 ->schema([
                     Toggle::make('incentive_enabled')
-                        ->label('Kortingscode toevoegen')
+                        ->label(__('Kortingscode toevoegen'))
                         ->live(),
                     Select::make('incentive_type')
-                        ->label('Type korting')
+                        ->label(__('Type korting'))
                         ->options([
-                            'amount' => 'Vast bedrag (€)',
-                            'percentage' => 'Percentage (%)',
+                            'amount' => __('Vast bedrag (€)'),
+                            'percentage' => __('Percentage (%)'),
                         ])
                         ->default('amount')
                         ->visible(fn (Get $get) => $get('incentive_enabled')),
                     TextInput::make('incentive_value')
-                        ->label('Kortingswaarde')
+                        ->label(__('Kortingswaarde'))
                         ->numeric()
                         ->minValue(0)
                         ->default(5)
                         ->visible(fn (Get $get) => $get('incentive_enabled')),
                     TextInput::make('incentive_valid_days')
-                        ->label('Geldig (dagen)')
+                        ->label(__('Geldig (dagen)'))
                         ->numeric()
                         ->minValue(1)
                         ->default(7)
-                        ->suffix('dagen')
+                        ->suffix(__('dagen'))
                         ->visible(fn (Get $get) => $get('incentive_enabled')),
                 ])
                 ->columns(2),

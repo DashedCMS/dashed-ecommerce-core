@@ -38,29 +38,29 @@ class AbandonedCartFlowResource extends Resource
     {
         return $schema->schema([
             TextInput::make('name')
-                ->label('Naam')
+                ->label(__('Naam'))
                 ->required()
                 ->maxLength(255),
 
             TextInput::make('discount_prefix')
-                ->label('Kortingscode prefix')
-                ->helperText('Prefix voor gegenereerde kortingscodes, bijv. TERUG geeft TERUG-ABCD1234')
+                ->label(__('Kortingscode prefix'))
+                ->helperText(__('Prefix voor gegenereerde kortingscodes, bijv. TERUG geeft TERUG-ABCD1234'))
                 ->default('TERUG')
                 ->maxLength(20),
 
             Toggle::make('is_active')
-                ->label('Actieve flow')
-                ->helperText('Slechts één flow kan actief zijn tegelijk.'),
+                ->label(__('Actieve flow'))
+                ->helperText(__('Slechts één flow kan actief zijn tegelijk.')),
 
             CheckboxList::make('triggers')
-                ->label('Triggers')
+                ->label(__('Triggers'))
                 ->options([
-                    'cart_with_email' => 'Verlaten winkelwagen (met email)',
-                    'cancelled_order' => 'Geannuleerde bestelling (niet betaald)',
+                    'cart_with_email' => __('Verlaten winkelwagen (met email)'),
+                    'cancelled_order' => __('Geannuleerde bestelling (niet betaald)'),
                 ])
                 ->descriptions([
-                    'cart_with_email' => 'Start flow wanneer een cart een emailadres krijgt en niet wordt afgerond.',
-                    'cancelled_order' => 'Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.',
+                    'cart_with_email' => __('Start flow wanneer een cart een emailadres krijgt en niet wordt afgerond.'),
+                    'cancelled_order' => __('Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.'),
                 ])
                 ->default(['cart_with_email'])
                 ->minItems(1)
@@ -73,16 +73,16 @@ class AbandonedCartFlowResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->weight('bold'),
                 TextColumn::make('steps_count')
-                    ->label('Stappen')
+                    ->label(__('Stappen'))
                     ->counts('steps')
                     ->badge()
                     ->color('info'),
                 TextColumn::make('triggers')
-                    ->label('Triggers')
+                    ->label(__('Triggers'))
                     ->badge()
                     ->separator(',')
                     ->formatStateUsing(fn ($state) => match ($state) {
@@ -96,7 +96,7 @@ class AbandonedCartFlowResource extends Resource
                         default => 'gray',
                     }),
                 TextColumn::make('pending_count')
-                    ->label('In wacht (cart / order)')
+                    ->label(__('In wacht (cart / order)'))
                     ->state(function ($record) {
                         $cart = $record->emails()
                             ->where('dashed__abandoned_cart_emails.trigger_type', 'cart_with_email')
@@ -110,7 +110,7 @@ class AbandonedCartFlowResource extends Resource
                     ->badge()
                     ->color('warning'),
                 TextColumn::make('sent_count')
-                    ->label('Verzonden (cart / order)')
+                    ->label(__('Verzonden (cart / order)'))
                     ->state(function ($record) {
                         $cart = $record->emails()
                             ->where('dashed__abandoned_cart_emails.trigger_type', 'cart_with_email')
@@ -124,7 +124,7 @@ class AbandonedCartFlowResource extends Resource
                     ->badge()
                     ->color('info'),
                 TextColumn::make('converted_count')
-                    ->label('Geconverteerd (cart / order)')
+                    ->label(__('Geconverteerd (cart / order)'))
                     ->state(function ($record) {
                         $cart = $record->emails()
                             ->where('dashed__abandoned_cart_emails.trigger_type', 'cart_with_email')
@@ -138,22 +138,22 @@ class AbandonedCartFlowResource extends Resource
                     ->badge()
                     ->color('success'),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean(),
                 TextColumn::make('updated_at')
-                    ->label('Bijgewerkt')
+                    ->label(__('Bijgewerkt'))
                     ->dateTime('d-m-Y H:i', 'Europe/Amsterdam')
                     ->sortable(),
             ])
             ->recordActions([
                 Action::make('activate')
-                    ->label('Activeren')
+                    ->label(__('Activeren'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn ($record) => ! $record->is_active)
                     ->action(function ($record) {
                         $record->activate();
-                        Notification::make()->title('Flow geactiveerd')->success()->send();
+                        Notification::make()->title(__('Flow geactiveerd'))->success()->send();
                     }),
                 EditAction::make(),
                 DeleteAction::make(),

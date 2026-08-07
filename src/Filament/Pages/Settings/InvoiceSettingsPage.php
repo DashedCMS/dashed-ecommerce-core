@@ -60,16 +60,16 @@ class InvoiceSettingsPage extends Page
                         'lg' => 2,
                     ]),
                 Checkbox::make("random_invoice_number_{$site['id']}")
-                    ->label('Gebruik een willekeurige invoice ID')
+                    ->label(__('Gebruik een willekeurige invoice ID'))
                     ->reactive()
                     ->columnSpan([
                         'default' => 1,
                         'lg' => 2,
                     ]),
                 TextInput::make("invoice_id_replacement_{$site['id']}")
-                    ->label('Invoice ID replacement')
+                    ->label(__('Invoice ID replacement'))
                     ->maxLength(25)
-                    ->helperText('Gebruik * voor een random getal / letter, bijv: *****')
+                    ->helperText(__('Gebruik * voor een random getal / letter, bijv: *****'))
                     ->reactive()
                     ->columnSpan([
                         'default' => 1,
@@ -77,10 +77,10 @@ class InvoiceSettingsPage extends Page
                     ])
                     ->hidden(fn ($get) => ! $get("random_invoice_number_{$site['id']}")),
                 TextInput::make("current_invoice_number_{$site['id']}")
-                    ->label('Huidige factuurnummer')
+                    ->label(__('Huidige factuurnummer'))
                     ->type('number')
                     ->numeric()
-                    ->helperText('Alleen numeriek')
+                    ->helperText(__('Alleen numeriek'))
                     ->reactive()
                     ->columnSpan([
                         'default' => 1,
@@ -88,10 +88,10 @@ class InvoiceSettingsPage extends Page
                     ])
                     ->hidden(fn ($get) => $get("random_invoice_number_{$site['id']}")),
                 TextInput::make("invoice_id_prefix_{$site['id']}")
-                    ->label('Voorvoegsel')
+                    ->label(__('Voorvoegsel'))
                     ->maxLength(5),
                 TextInput::make("invoice_id_suffix_{$site['id']}")
-                    ->label('Achtervoegsel')
+                    ->label(__('Achtervoegsel'))
                     ->reactive()
                     ->maxLength(5),
                 TextEntry::make("Voorbeeld van factuur ID")
@@ -134,7 +134,7 @@ class InvoiceSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De facturatie instellingen zijn opgeslagen')
+            ->title(__('De facturatie instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

@@ -55,8 +55,8 @@ class ShippingClassResource extends Resource
         foreach (ShippingZone::all() as $shippingZone) {
             $shippingZoneSchema[] =
                 TextInput::make("price_shipping_zone_{$shippingZone->id}")
-                    ->label("Meerprijs voor verzending naar {$shippingZone->name}")
-                    ->prefix('€')
+                    ->label(__('Meerprijs voor verzending naar :naam', ['naam' => $shippingZone->name]))
+                    ->prefix(__('€'))
                     ->minValue(1)
                     ->maxValue(10000)
                     ->numeric();
@@ -64,10 +64,10 @@ class ShippingClassResource extends Resource
 
         return $schema
             ->schema([
-                Section::make('Globale informatie')->columnSpanFull()
+                Section::make(__('Globale informatie'))->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
-                            ->label('Actief op site')
+                            ->label(__('Actief op site'))
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
@@ -75,23 +75,23 @@ class ShippingClassResource extends Resource
                     ->columnSpanFull()
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingClass),
-                Section::make('Content')
+                Section::make(__('Content'))
                     ->schema(array_merge(array_merge([
                         TextInput::make('name')
-                            ->label('Name')
+                            ->label(__('Name'))
                             ->required()
                             ->maxLength(100),
                         Textarea::make('description')
-                            ->label('Beschrijving')
-                            ->helperText('Alleen intern gebruik')
+                            ->label(__('Beschrijving'))
+                            ->helperText(__('Alleen intern gebruik'))
                             ->rows(2)
                             ->maxLength(1250),
                     ], $shippingZoneSchema), [
                         Toggle::make("count_per_product")
-                            ->label("Tel de meerprijs per product in de winkelwagen")
-                            ->helperText('Als iemand dus 3x hetzelfde product besteld met deze verzendklas, wordt de meerprijs 3x geteld.'),
+                            ->label(__("Tel de meerprijs per product in de winkelwagen"))
+                            ->helperText(__('Als iemand dus 3x hetzelfde product besteld met deze verzendklas, wordt de meerprijs 3x geteld.')),
                         Toggle::make("count_once")
-                            ->label("Tel de meerprijs maximaal 1x in de winkelwagen"),
+                            ->label(__("Tel de meerprijs maximaal 1x in de winkelwagen")),
                     ]))
                     ->columnSpanFull(),
             ]);
@@ -102,11 +102,11 @@ class ShippingClassResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->sortable()
                     ->searchable(query: SearchQuery::make()),
                 TextColumn::make('site_id')
-                    ->label('Actief op site')
+                    ->label(__('Actief op site'))
                     ->sortable()
                     ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])

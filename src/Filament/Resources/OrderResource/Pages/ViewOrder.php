@@ -121,34 +121,34 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-s-arrow-left')
                 ->url(fn () => $previousOrder ? route('filament.dashed.resources.orders.view', ['record' => $previousOrder->id]) : '')
                 ->visible((bool)$previousOrder)
-                ->tooltip('Bekijk de vorige onverwerkte bestelling'),
+                ->tooltip(__('Bekijk de vorige onverwerkte bestelling')),
             Action::make('Volgende bestelling')
                 ->hiddenLabel()
                 ->icon('heroicon-s-arrow-right')
                 ->url(fn () => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
                 ->visible((bool)$nextOrder)
-                ->tooltip('Bekijk de volgende onverwerkte bestelling'),
+                ->tooltip(__('Bekijk de volgende onverwerkte bestelling')),
             Action::make('viewInWebsite')
                 ->hiddenLabel()
                 ->icon('heroicon-s-globe-alt')
                 ->url($this->record->getUrl())
-                ->tooltip('Bekijk bestelling in de webshop')
+                ->tooltip(__('Bekijk bestelling in de webshop'))
                 ->openUrlInNewTab(),
             Action::make('openProformaCheckout')
-                ->label('Proforma-afrekenlink')
+                ->label(__('Proforma-afrekenlink'))
                 ->icon('heroicon-o-link')
                 ->color('warning')
-                ->tooltip('Open de afrekenpagina die naar de klant is gestuurd')
+                ->tooltip(__('Open de afrekenpagina die naar de klant is gestuurd'))
                 ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
             Action::make('edit')
                 ->hiddenLabel()
                 ->icon('heroicon-s-pencil-square')
-                ->tooltip('Bewerk bestelling')
+                ->tooltip(__('Bewerk bestelling'))
                 ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
             Action::make('modify')
-                ->label('Bestelling wijzigen')
+                ->label(__('Bestelling wijzigen'))
                 ->icon('heroicon-o-pencil-square')
                 ->color('warning')
                 // De route-check hoort hier echt bij: draait er nog een oude
@@ -161,27 +161,27 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => route('filament.dashed.resources.orders.modify', ['record' => $this->record->id])),
             ActionGroup::make([
                 Action::make('Factuur')
-                    ->tooltip('Download de factuur als PDF')
+                    ->tooltip(__('Download de factuur als PDF'))
                     ->icon('heroicon-s-arrow-down-tray')
                     ->url($invoiceUrl)
                     ->openUrlInNewTab()
                     ->visible((bool)$invoiceUrl),
                 Action::make('Pakbon')
                     ->icon('heroicon-s-arrow-down-tray')
-                    ->tooltip('Download de pakbon als PDF')
+                    ->tooltip(__('Download de pakbon als PDF'))
                     ->url($packingSlipUrl)
                     ->openUrlInNewTab()
                     ->visible((bool)$packingSlipUrl),
                 RegenerateInvoiceAction::make($this->record),
                 Action::make('reprintDocuments')
-                    ->label('Pakbon + label printen')
+                    ->label(__('Pakbon + label printen'))
                     ->icon('heroicon-s-printer')
-                    ->tooltip('Stuur pakbon én label (opnieuw) naar de printers — zonder dubbele wachtrij-jobs')
+                    ->tooltip(__('Stuur pakbon én label (opnieuw) naar de printers — zonder dubbele wachtrij-jobs'))
                     ->visible(fn (): bool => $this->packingSlipPrinterAvailable()
                         || ($this->labelPrinterAvailable() && $this->orderHasLabel()))
                     ->requiresConfirmation()
-                    ->modalHeading('Opnieuw printen')
-                    ->modalDescription('Pakbon en/of verzendlabel worden naar de printers gestuurd. Staat er al een job in de wachtrij voor deze bestelling, dan wordt die niet gedupliceerd.')
+                    ->modalHeading(__('Opnieuw printen'))
+                    ->modalDescription(__('Pakbon en/of verzendlabel worden naar de printers gestuurd. Staat er al een job in de wachtrij voor deze bestelling, dan wordt die niet gedupliceerd.'))
                     ->action(function (): void {
                         $queued = [];
 
@@ -197,92 +197,92 @@ class ViewOrder extends ViewRecord
 
                         if ($queued) {
                             Notification::make()
-                                ->title('Naar de printer gestuurd: ' . implode(' + ', $queued))
+                                ->title(__('Naar de printer gestuurd: :items', ['items' => implode(' + ', $queued)]))
                                 ->success()
                                 ->send();
                         } else {
                             Notification::make()
-                                ->title('Niets toegevoegd')
-                                ->body('Er staat al een job in de wachtrij, of er is geen geschikte printer/label.')
+                                ->title(__('Niets toegevoegd'))
+                                ->body(__('Er staat al een job in de wachtrij, of er is geen geschikte printer/label.'))
                                 ->warning()
                                 ->send();
                         }
                     }),
                 Action::make('printLabelOnly')
-                    ->label('Alleen label printen')
+                    ->label(__('Alleen label printen'))
                     ->icon('heroicon-s-tag')
-                    ->tooltip('Stuur enkel het verzendlabel naar de label-printer')
+                    ->tooltip(__('Stuur enkel het verzendlabel naar de label-printer'))
                     ->visible(fn (): bool => $this->labelPrinterAvailable() && $this->orderHasLabel())
                     ->requiresConfirmation()
-                    ->modalHeading('Alleen label printen')
-                    ->modalDescription('Alleen het verzendlabel wordt naar de label-printer gestuurd (geen pakbon).')
+                    ->modalHeading(__('Alleen label printen'))
+                    ->modalDescription(__('Alleen het verzendlabel wordt naar de label-printer gestuurd (geen pakbon).'))
                     ->action(function (): void {
                         if ($this->queueJobOnce(PrintJobType::ShippingLabel)) {
-                            Notification::make()->title('Label naar de printer gestuurd')->success()->send();
+                            Notification::make()->title(__('Label naar de printer gestuurd'))->success()->send();
                         } else {
                             Notification::make()
-                                ->title('Niets toegevoegd')
-                                ->body('Er staat al een label-job in de wachtrij voor deze bestelling.')
+                                ->title(__('Niets toegevoegd'))
+                                ->body(__('Er staat al een label-job in de wachtrij voor deze bestelling.'))
                                 ->warning()
                                 ->send();
                         }
                     }),
                 Action::make('printPackingSlipOnly')
-                    ->label('Alleen pakbon printen')
+                    ->label(__('Alleen pakbon printen'))
                     ->icon('heroicon-s-document-text')
-                    ->tooltip('Stuur enkel de pakbon naar de pakbon-printer')
+                    ->tooltip(__('Stuur enkel de pakbon naar de pakbon-printer'))
                     ->visible(fn (): bool => $this->packingSlipPrinterAvailable())
                     ->requiresConfirmation()
-                    ->modalHeading('Alleen pakbon printen')
-                    ->modalDescription('Alleen de pakbon wordt naar de pakbon-printer gestuurd (geen label).')
+                    ->modalHeading(__('Alleen pakbon printen'))
+                    ->modalDescription(__('Alleen de pakbon wordt naar de pakbon-printer gestuurd (geen label).'))
                     ->action(function (): void {
                         if ($this->queueJobOnce(PrintJobType::PackingSlip)) {
-                            Notification::make()->title('Pakbon naar de printer gestuurd')->success()->send();
+                            Notification::make()->title(__('Pakbon naar de printer gestuurd'))->success()->send();
                         } else {
                             Notification::make()
-                                ->title('Niets toegevoegd')
-                                ->body('Er staat al een pakbon-job in de wachtrij voor deze bestelling.')
+                                ->title(__('Niets toegevoegd'))
+                                ->body(__('Er staat al een pakbon-job in de wachtrij voor deze bestelling.'))
                                 ->warning()
                                 ->send();
                         }
                     }),
             ])
-                ->label('Documenten')
+                ->label(__('Documenten'))
                 ->icon('heroicon-o-document-text')
                 ->button(),
             Action::make('syncLabelStatuses')
-                ->label('Labelstatussen bijwerken')
+                ->label(__('Labelstatussen bijwerken'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
-                ->tooltip('Haal de actuele bezorgstatus van de verzendlabels op bij de vervoerder(s)')
+                ->tooltip(__('Haal de actuele bezorgstatus van de verzendlabels op bij de vervoerder(s)'))
                 ->visible(fn (): bool => $this->orderHasLabel())
                 ->requiresConfirmation()
-                ->modalHeading('Labelstatussen bijwerken')
-                ->modalDescription('De huidige bezorgstatus van de verzendlabels van deze bestelling wordt op de achtergrond opgehaald bij de vervoerder(s).')
-                ->modalSubmitActionLabel('Bijwerken')
+                ->modalHeading(__('Labelstatussen bijwerken'))
+                ->modalDescription(__('De huidige bezorgstatus van de verzendlabels van deze bestelling wordt op de achtergrond opgehaald bij de vervoerder(s).'))
+                ->modalSubmitActionLabel(__('Bijwerken'))
                 ->action(function (): void {
                     \Dashed\DashedEcommerceCore\Jobs\SyncOrderLabelStatusesJob::dispatch($this->record);
 
                     Notification::make()
-                        ->title('Bijwerken gestart')
-                        ->body('De labelstatussen worden op de achtergrond bijgewerkt.')
+                        ->title(__('Bijwerken gestart'))
+                        ->body(__('De labelstatussen worden op de achtergrond bijgewerkt.'))
                         ->success()
                         ->send();
                 }),
             ActionGroup::make([
                 Action::make('markCancelledAsPaid')
-                    ->label('Markeer als betaald')
+                    ->label(__('Markeer als betaald'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn () => $this->record->status === 'cancelled')
                     ->requiresConfirmation()
-                    ->modalHeading('Geannuleerde bestelling op betaald zetten?')
-                    ->modalDescription('De bestelling wordt alsnog op betaald gezet (factuur, voorraad en afhandeling worden verwerkt).')
+                    ->modalHeading(__('Geannuleerde bestelling op betaald zetten?'))
+                    ->modalDescription(__('De bestelling wordt alsnog op betaald gezet (factuur, voorraad en afhandeling worden verwerkt).'))
                     ->action(function () {
                         $this->record->changeStatus('paid');
 
                         Notification::make()
-                            ->title('Bestelling op betaald gezet')
+                            ->title(__('Bestelling op betaald gezet'))
                             ->success()
                             ->send();
 
@@ -292,18 +292,18 @@ class ViewOrder extends ViewRecord
                 SendPaymentLinkAction::make($this->record),
                 RegisterRefundAction::make($this->record),
             ])
-                ->label('Betaling')
+                ->label(__('Betaling'))
                 ->icon('heroicon-o-banknotes')
                 ->color('primary')
                 ->button(),
             ActionGroup::make([
                 Action::make('editConceptInPos')
-                    ->label('Bewerken in kassa')
+                    ->label(__('Bewerken in kassa'))
                     ->icon('heroicon-o-pencil-square')
                     ->visible(fn (): bool => $this->record->isConcept())
                     ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
-                    ->modalHeading('Kassa-winkelwagen vervangen?')
-                    ->modalDescription('Je kassa bevat al producten. Die worden vervangen door dit concept.')
+                    ->modalHeading(__('Kassa-winkelwagen vervangen?'))
+                    ->modalDescription(__('Je kassa bevat al producten. Die worden vervangen door dit concept.'))
                     ->action(function () {
                         $cart = $this->activePosCart();
                         // loaded_concept_order_id vooraf zetten; hydrate() schrijft products
@@ -314,21 +314,21 @@ class ViewOrder extends ViewRecord
                         $this->redirect(route('dashed.ecommerce.point-of-sale'));
                     }),
                 Action::make('copyToPos')
-                    ->label('Kopiëren naar kassa')
+                    ->label(__('Kopiëren naar kassa'))
                     ->icon('heroicon-o-document-duplicate')
                     // De modal staat er nu altijd, want het vinkje hieronder moet
                     // gezet kunnen worden. De waarschuwing over een volle kassa
                     // blijft wat hij was: alleen wanneer er echt iets vervangen
                     // wordt, en dan ook als kop.
-                    ->modalHeading(fn (): string => $this->activeCartHasProducts() ? 'Kassa-winkelwagen vervangen?' : 'Kopiëren naar kassa')
+                    ->modalHeading(fn (): string => $this->activeCartHasProducts() ? __('Kassa-winkelwagen vervangen?') : __('Kopiëren naar kassa'))
                     ->modalDescription(fn (): ?string => $this->activeCartHasProducts()
-                        ? 'Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.'
+                        ? __('Je kassa bevat al producten. Die worden vervangen door een kopie van deze bestelling.')
                         : null)
-                    ->modalSubmitActionLabel('Kopiëren')
+                    ->modalSubmitActionLabel(__('Kopiëren'))
                     ->form([
                         Checkbox::make('copy_customer_details')
-                            ->label('Klantgegevens meekopiëren')
-                            ->helperText('Naam, adres, e-mail, telefoonnummer en factuurgegevens van deze bestelling gaan mee naar de kassa')
+                            ->label(__('Klantgegevens meekopiëren'))
+                            ->helperText(__('Naam, adres, e-mail, telefoonnummer en factuurgegevens van deze bestelling gaan mee naar de kassa'))
                             ->default(true),
                     ])
                     ->action(function (array $data) {
@@ -342,22 +342,22 @@ class ViewOrder extends ViewRecord
                         $this->redirect(route('dashed.ecommerce.point-of-sale'));
                     }),
             ])
-                ->label('POS')
+                ->label(__('POS'))
                 ->icon('heroicon-o-computer-desktop')
                 ->color('gray')
                 ->button(),
             Action::make('deleteDraft')
-                ->label('Verwijderen')
+                ->label(__('Verwijderen'))
                 ->icon('heroicon-o-trash')
                 ->color('danger')
                 ->visible(fn (): bool => $this->record->isDeletableDraft())
                 ->requiresConfirmation()
-                ->modalHeading('Concept/proforma verwijderen')
-                ->modalDescription('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).')
+                ->modalHeading(__('Concept/proforma verwijderen'))
+                ->modalDescription(__('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).'))
                 ->action(function () {
                     ConceptOrderService::deleteDraft($this->record);
 
-                    Notification::make()->success()->title('Bestelling verwijderd')->send();
+                    Notification::make()->success()->title(__('Bestelling verwijderd'))->send();
 
                     $this->redirect(route('filament.dashed.resources.orders.index'));
                 }),

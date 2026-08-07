@@ -78,11 +78,11 @@ class AttributionStatisticsPage extends Page implements HasSchemas
         return $schema
             ->statePath('data')
             ->schema([
-                Section::make('Filters')
+                Section::make(__('Filters'))
                     ->columns(2)
                     ->schema([
                         Select::make('period')
-                            ->label('Periode')
+                            ->label(__('Periode'))
                             ->live()
                             ->afterStateUpdated(function (?string $state) {
                                 if ($state) {
@@ -90,57 +90,57 @@ class AttributionStatisticsPage extends Page implements HasSchemas
                                 }
                             })
                             ->options([
-                                'today' => 'Vandaag',
-                                'yesterday' => 'Gisteren',
-                                'this_week' => 'Deze week',
-                                'last_week' => 'Vorige week',
-                                'this_month' => 'Deze maand',
-                                'last_month' => 'Vorige maand',
-                                'this_year' => 'Dit jaar',
-                                'last_year' => 'Vorig jaar',
-                                'custom' => 'Handmatig',
+                                'today' => __('Vandaag'),
+                                'yesterday' => __('Gisteren'),
+                                'this_week' => __('Deze week'),
+                                'last_week' => __('Vorige week'),
+                                'this_month' => __('Deze maand'),
+                                'last_month' => __('Vorige maand'),
+                                'this_year' => __('Dit jaar'),
+                                'last_year' => __('Vorig jaar'),
+                                'custom' => __('Handmatig'),
                             ])
                             ->default('this_month'),
                         DatePicker::make('startDate')
-                            ->label('Vanaf')
+                            ->label(__('Vanaf'))
                             ->live(onBlur: true)
                             ->columnSpan(1),
                         DatePicker::make('endDate')
-                            ->label('Tot')
+                            ->label(__('Tot'))
                             ->live(onBlur: true)
                             ->columnSpan(1),
                         Select::make('utm_source')
-                            ->label('Filter op bron')
-                            ->placeholder('Alle bronnen')
+                            ->label(__('Filter op bron'))
+                            ->placeholder(__('Alle bronnen'))
                             ->live()
                             ->options(fn () => $this->distinctValues('utm_source'))
                             ->searchable()
                             ->preload()
                             ->nullable(),
                         Select::make('utm_medium')
-                            ->label('Filter op medium')
-                            ->placeholder('Alle mediums')
+                            ->label(__('Filter op medium'))
+                            ->placeholder(__('Alle mediums'))
                             ->live()
                             ->options(fn () => $this->distinctValues('utm_medium'))
                             ->searchable()
                             ->preload()
                             ->nullable(),
                         Select::make('utm_campaign')
-                            ->label('Filter op campagne')
-                            ->placeholder('Alle campagnes')
+                            ->label(__('Filter op campagne'))
+                            ->placeholder(__('Alle campagnes'))
                             ->live()
                             ->options(fn () => $this->distinctValues('utm_campaign'))
                             ->searchable()
                             ->preload()
                             ->nullable(),
                         Select::make('limit')
-                            ->label('Toon maximaal')
+                            ->label(__('Toon maximaal'))
                             ->live()
                             ->options([
-                                10 => 'Top 10',
-                                25 => 'Top 25',
-                                50 => 'Top 50',
-                                100 => 'Top 100',
+                                10 => __('Top 10'),
+                                25 => __('Top 25'),
+                                50 => __('Top 50'),
+                                100 => __('Top 100'),
                             ])
                             ->default(10),
                     ]),

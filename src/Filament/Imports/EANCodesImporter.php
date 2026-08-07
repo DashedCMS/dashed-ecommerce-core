@@ -17,7 +17,7 @@ class EANCodesImporter extends Importer
     {
         return [
             ImportColumn::make('ean')
-            ->label('EAN code'),
+            ->label(__('EAN code')),
         ];
     }
 

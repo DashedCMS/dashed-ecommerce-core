@@ -61,110 +61,110 @@ class DiscountCodeResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Content')
+                Section::make(__('Content'))
                     ->columnSpanFull()
                     ->schema(
                         array_merge([
                             Toggle::make('is_global_discount')
-                                ->label('Is globale korting')
-                                ->helperText('Als deze optie is aangevinkt, wordt de kortingscode automatisch toegepast en is er geen code nodig.')
+                                ->label(__('Is globale korting'))
+                                ->helperText(__('Als deze optie is aangevinkt, wordt de kortingscode automatisch toegepast en is er geen code nodig.'))
                                 ->reactive()
                                 ->columnSpanFull()
                                 ->hidden(fn ($livewire) => ! $livewire instanceof CreateDiscountCode),
                             Select::make('site_ids')
                                 ->multiple()
-                                ->label('Actief op sites')
+                                ->label(__('Actief op sites'))
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
                                     return ! (Sites::getAmountOfSites() > 1);
                                 })
                                 ->required(),
                             TextInput::make('name')
-                                ->label('Naam')
+                                ->label(__('Naam'))
                                 ->required()
                                 ->maxLength(100),
                             TextInput::make('code')
-                                ->label('Code')
-                                ->helperText('Deze code vullen mensen in om af te rekenen.')
+                                ->label(__('Code'))
+                                ->helperText(__('Deze code vullen mensen in om af te rekenen.'))
                                 ->required()
                                 ->unique('dashed__discount_codes', 'code', fn ($record) => $record)
                                 ->hidden(fn (Get $get) => $get('is_global_discount'))
                                 ->minLength(3)
                                 ->maxLength(100),
                             Toggle::make('create_multiple_codes')
-                                ->label('Meerdere codes aanmaken')
+                                ->label(__('Meerdere codes aanmaken'))
                                 ->reactive()
                                 ->hidden(fn ($livewire, Get $get) => ! $livewire instanceof CreateDiscountCode || $get('is_global_discount')),
                             TextInput::make('amount_of_codes')
-                                ->label('Hoeveel kortingscodes moeten er aangemaakt worden')
-                                ->helperText('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
+                                ->label(__('Hoeveel kortingscodes moeten er aangemaakt worden'))
+                                ->helperText(__('Gebruik een * in de kortingscode om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE'))
                                 ->type('number')
                                 ->required()
                                 ->maxValue(500)
                                 ->hidden(fn (Get $get) => ! $get('create_multiple_codes') || $get('is_global_discount')),
                             Textarea::make('note')
-                                ->label('Notitie')
-                                ->helperText('Notitie voor intern gebruik')
+                                ->label(__('Notitie'))
+                                ->helperText(__('Notitie voor intern gebruik'))
                                 ->maxLength(5000)
                                 ->columnSpanFull(),
                         ])
                     )
                     ->columns(2),
-                Section::make('Globale informatie')
+                Section::make(__('Globale informatie'))
                     ->columnSpanFull()
                     ->schema([
                         DateTimePicker::make('start_date')
-                            ->label('Vul een startdatum in voor de kortingscode')
+                            ->label(__('Vul een startdatum in voor de kortingscode'))
                             ->nullable()
                             ->date(),
                         DateTimePicker::make('end_date')
-                            ->label('Vul een einddatum in voor de kortingscode')
+                            ->label(__('Vul een einddatum in voor de kortingscode'))
                             ->nullable()
                             ->date()
                             ->after(fn ($get) => $get('start_date') ? 'start_date' : null),
                     ]),
-                Section::make('Informatie')
+                Section::make(__('Informatie'))
                     ->columnSpanFull()
                     ->schema(array_merge([
                         Radio::make('type')
                             ->required()
                             ->reactive()
                             ->options([
-                                'percentage' => 'Percentage',
-                                'amount' => 'Vast bedrag',
+                                'percentage' => __('Percentage'),
+                                'amount' => __('Vast bedrag'),
                             ]),
                         TextInput::make('discount_percentage')
-                            ->label('Kortingswaarde')
-                            ->helperText('Hoeveel procent korting krijg je met deze code')
+                            ->label(__('Kortingswaarde'))
+                            ->helperText(__('Hoeveel procent korting krijg je met deze code'))
                             ->numeric()
-                            ->prefix('%')
+                            ->prefix(__('%'))
                             ->minValue(1)
                             ->maxValue(100)
                             ->required()
                             ->hidden(fn ($get) => $get('type') != 'percentage'),
                         TextInput::make('discount_amount')
-                            ->label('Kortingswaarde')
-                            ->helperText('Hoeveel euro korting krijg je met deze code')
-                            ->prefix('€')
+                            ->label(__('Kortingswaarde'))
+                            ->helperText(__('Hoeveel euro korting krijg je met deze code'))
+                            ->prefix(__('€'))
                             ->minValue(1)
                             ->maxValue(100000)
                             ->numeric()
                             ->required()
                             ->hidden(fn ($get) => $get('type') != 'amount'),
                         Radio::make('valid_for')
-                            ->label('Van toepassing op')
+                            ->label(__('Van toepassing op'))
                             ->reactive()
                             ->options([
-                                null => 'Alle producten',
-                                'products' => 'Specifieke producten',
-                                'categories' => 'Specifieke categorieën',
+                                null => __('Alle producten'),
+                                'products' => __('Specifieke producten'),
+                                'categories' => __('Specifieke categorieën'),
                             ]),
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
-                            ->label('Selecteer producten waar deze kortingscode voor geldt')
+                            ->label(__('Selecteer producten waar deze kortingscode voor geldt'))
                             ->required()
                             ->hidden(fn (Get $get) => $get('valid_for') != 'products'),
                         Select::make('productCategories')
@@ -172,20 +172,20 @@ class DiscountCodeResource extends Resource
                             ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
-                            ->label('Selecteer categorieën waar deze kortingscode voor geldt')
+                            ->label(__('Selecteer categorieën waar deze kortingscode voor geldt'))
                             ->required(fn (Get $get) => $get('valid_for') == 'categories')
                             ->hidden(fn (Get $get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
-                            ->label('Minimale eisen')
+                            ->label(__('Minimale eisen'))
                             ->hidden(fn (Get $get) => $get('is_global_discount'))
                             ->reactive()
                             ->options([
-                                null => 'Geen',
-                                'products' => 'Minimaal aantal producten',
-                                'amount' => 'Minimaal aankoopbedrag',
+                                null => __('Geen'),
+                                'products' => __('Minimaal aantal producten'),
+                                'amount' => __('Minimaal aankoopbedrag'),
                             ]),
                         TextInput::make('minimum_products_count')
-                            ->label('Minimum aantal producten')
+                            ->label(__('Minimum aantal producten'))
                             ->type('number')
                             ->minValue(1)
                             ->maxValue(100000)
@@ -193,26 +193,26 @@ class DiscountCodeResource extends Resource
                             ->required()
                             ->hidden(fn ($get) => $get('minimal_requirements') != 'products' || $get('is_global_discount')),
                         TextInput::make('minimum_amount')
-                            ->label('Minimum aankoopbedrag')
-                            ->prefix('€')
+                            ->label(__('Minimum aankoopbedrag'))
+                            ->prefix(__('€'))
                             ->minValue(1)
                             ->maxValue(100000)
                             ->required()
                             ->numeric()
                             ->hidden(fn (Get $get) => $get('minimal_requirements') != 'amount' || $get('is_global_discount')),
                         Toggle::make('use_stock')
-                            ->label('Een limiet instellen voor het aantal gebruiken van deze kortingscode')
+                            ->label(__('Een limiet instellen voor het aantal gebruiken van deze kortingscode'))
                             ->hidden(fn (Get $get) => $get('is_global_discount'))
                             ->reactive(),
                         TextInput::make('stock')
-                            ->label('Hoe vaak mag de kortingscode nog gebruikt worden')
+                            ->label(__('Hoe vaak mag de kortingscode nog gebruikt worden'))
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100000)
                             ->visible(fn (Get $get) => $get('use_stock') && ! $get('is_global_discount')),
                         Toggle::make('limit_use_per_customer')
                             ->hidden(fn (Get $get) => $get('is_global_discount'))
-                            ->label('Deze kortingscode mag 1x per klant gebruikt worden'),
+                            ->label(__('Deze kortingscode mag 1x per klant gebruikt worden')),
                     ])),
             ]);
     }
@@ -223,31 +223,31 @@ class DiscountCodeResource extends Resource
             ->query(DiscountCode::isNotGiftcard())
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('code')
-                    ->label('Code')
+                    ->label(__('Code'))
                     ->default('-')
                     ->searchable()
                     ->sortable(),
                 IconColumn::make('is_global_discount')
-                    ->label('Globale korting')
+                    ->label(__('Globale korting'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
                 TextColumn::make('site_ids')
-                    ->label('Actief op site(s)')
+                    ->label(__('Actief op site(s)'))
                     ->sortable()
                     ->badge()
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('amountOfUses')
-                    ->label('Aantal gebruiken')
+                    ->label(__('Aantal gebruiken'))
                     ->getStateUsing(function ($record) {
                         return "{$record->stock_used}x gebruikt / " . ($record->use_stock ? $record->stock . ' gebruiken over' : 'geen limiet');
                     }),
                 TextColumn::make('status')
-                    ->label('Status'),
+                    ->label(__('Status')),
                 static::lastEditedColumn(),
             ])
             ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited($query))

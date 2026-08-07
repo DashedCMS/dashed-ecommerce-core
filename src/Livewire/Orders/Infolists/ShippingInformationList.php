@@ -34,7 +34,7 @@ class ShippingInformationList extends Component implements HasSchemas
 
         foreach ($this->order->trackAndTraces as $trackAndTrace) {
             $trackAndTraceSets[] = Fieldset::make('track_and_trace_' . $i)
-                ->label('Track & Trace')
+                ->label(__('Track & Trace'))
                 ->columnSpanFull()
                 ->schema([
                     TextEntry::make('supplier_' . $i)
@@ -56,8 +56,8 @@ class ShippingInformationList extends Component implements HasSchemas
         return $schema
             ->record($this->order)
             ->components([
-                Fieldset::make('shipping_info')
-                    ->label('Verzend informatie')
+                Fieldset::make(__('shipping_info'))
+                    ->label(__('Verzend informatie'))
                     ->schema(array_merge([
                         TextEntry::make('shipping_address')
                             ->hiddenLabel()

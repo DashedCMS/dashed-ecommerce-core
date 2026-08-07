@@ -89,7 +89,7 @@ class ViewStatusses extends Component implements HasSchemas
         return $schema
             ->record($this->order)
             ->components([
-                Fieldset::make('Statussen')->columnSpanFull()
+                Fieldset::make(__('Statussen'))->columnSpanFull()
                     ->schema($statusEntries)
                     ->columns([
                         'default' => 2,

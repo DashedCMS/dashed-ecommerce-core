@@ -45,7 +45,7 @@ class CustomerInformationBlockList extends Component implements HasActions, HasS
         return $schema
             ->record($this->order)
             ->schema([
-                Fieldset::make('Klant')
+                Fieldset::make(__('Klant'))
                     ->schema([
                         ImageEntry::make('image')
                             ->getStateUsing(fn ($record) => Helper::getProfilePicture($record->email))
@@ -55,10 +55,10 @@ class CustomerInformationBlockList extends Component implements HasActions, HasS
                         Grid::make()
                             ->schema([
                                 TextEntry::make('name')
-                                    ->label('Naam')
+                                    ->label(__('Naam'))
                                     ->hiddenLabel(),
                                 TextEntry::make('phone_number')
-                                    ->label('Telefoonnummer')
+                                    ->label(__('Telefoonnummer'))
                                     ->url(fn ($record) => 'tel:'.$record->phone_number)
                                     ->badge()
                                     ->icon('heroicon-o-phone')
@@ -67,14 +67,14 @@ class CustomerInformationBlockList extends Component implements HasActions, HasS
                             ->columnSpan(1)
                             ->columns(1),
                         TextEntry::make('email')
-                            ->label('Email')
+                            ->label(__('Email'))
                             ->url(fn ($record) => 'mailto:'.$record->email)
                             ->badge()
                             ->columnSpanFull()
                             ->icon('heroicon-o-envelope')
                             ->hiddenLabel(),
                         TextEntry::make('customer_history_text')
-                            ->label('Eerdere bestellingen')
+                            ->label(__('Eerdere bestellingen'))
                             ->columnSpanFull()
                             ->getStateUsing(function () {
                                 $other = $this->history()->otherCount();
@@ -84,19 +84,19 @@ class CustomerInformationBlockList extends Component implements HasActions, HasS
                                     : 'Deze klant heeft al '.$other.' andere bestelling(en)';
                             })
                             ->visible(fn () => $this->history()->matchKey() !== null)
-                            ->helperText('Op basis van gebruiker, e-mail of voor+achternaam')
+                            ->helperText(__('Op basis van gebruiker, e-mail of voor+achternaam'))
                             ->hintAction(
                                 Action::make('customer_history')
-                                    ->label('Bekijk details')
+                                    ->label(__('Bekijk details'))
                                     ->icon('heroicon-o-chart-bar')
-                                    ->modalHeading(fn ($record) => 'Bestelhistorie: '.($record->name ?: $record->email))
+                                    ->modalHeading(fn ($record) => __('Bestelhistorie: :naam', ['naam' => $record->name ?: $record->email]))
                                     ->modalWidth('5xl')
                                     ->modalContent(fn () => view(
                                         'dashed-ecommerce-core::filament.orders.customer-history-modal',
                                         ['history' => $this->history()],
                                     ))
                                     ->modalSubmitAction(false)
-                                    ->modalCancelActionLabel('Sluiten')
+                                    ->modalCancelActionLabel(__('Sluiten'))
                                     ->visible(fn () => $this->history()->otherCount() > 0),
                             ),
                     ])

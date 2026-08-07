@@ -35,15 +35,15 @@ class EditOrderHandledFlow extends EditRecord
     {
         return [
             Action::make('backfillExisting')
-                ->label('Toepassen op bestaande bestellingen')
+                ->label(__('Toepassen op bestaande bestellingen'))
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
                 ->modalHeading(function (): string {
                     /** @var OrderHandledFlow|null $flow */
                     $flow = $this->record;
-                    $label = $flow ? (Orders::getFulfillmentStatusses()[$flow->trigger_status ?? 'handled'] ?? $flow->trigger_status) : 'gekozen status';
+                    $label = $flow ? (Orders::getFulfillmentStatusses()[$flow->trigger_status ?? 'handled'] ?? $flow->trigger_status) : __('gekozen status');
 
-                    return 'Flow met terugwerkende kracht toepassen (' . $label . ')';
+                    return __('Flow met terugwerkende kracht toepassen (:label)', ['label' => $label]);
                 })
                 ->modalDescription(function (): string {
                     /** @var OrderHandledFlow|null $flow */
@@ -51,12 +51,12 @@ class EditOrderHandledFlow extends EditRecord
                     $triggerStatus = $flow->trigger_status ?? 'handled';
                     $label = Orders::getFulfillmentStatusses()[$triggerStatus] ?? $triggerStatus;
 
-                    return 'Plant alsnog de stappen van deze flow voor bestellingen die binnen het opgegeven aantal dagen op fulfillment-status "' . $label . '" zijn gezet en nog niet in deze flow zitten. Records die al ingeschreven of geannuleerd zijn worden overgeslagen.';
+                    return __('Plant alsnog de stappen van deze flow voor bestellingen die binnen het opgegeven aantal dagen op fulfillment-status ":label" zijn gezet en nog niet in deze flow zitten. Records die al ingeschreven of geannuleerd zijn worden overgeslagen.', ['label' => $label]);
                 })
                 ->form([
                     TextInput::make('since_days')
-                        ->label('Aantal dagen terug')
-                        ->helperText('Backfill geldt voor orders waarvan updated_at binnen de afgelopen X dagen valt.')
+                        ->label(__('Aantal dagen terug'))
+                        ->helperText(__('Backfill geldt voor orders waarvan updated_at binnen de afgelopen X dagen valt.'))
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(3650)
@@ -69,8 +69,8 @@ class EditOrderHandledFlow extends EditRecord
 
                     if (! $flow->is_active) {
                         Notification::make()
-                            ->title('Flow is niet actief')
-                            ->body('Activeer de flow eerst voordat je hem op bestaande bestellingen toepast.')
+                            ->title(__('Flow is niet actief'))
+                            ->body(__('Activeer de flow eerst voordat je hem op bestaande bestellingen toepast.'))
                             ->warning()
                             ->send();
 
@@ -83,15 +83,14 @@ class EditOrderHandledFlow extends EditRecord
                     );
 
                     Notification::make()
-                        ->title('Backfill voltooid')
-                        ->body(sprintf(
-                            'Gestart: %d. Al gestart: %d. Geannuleerd: %d. Geen email: %d. Mails ingepland: %d.',
-                            $stats['orders_started'],
-                            $stats['orders_skipped_already_started'],
-                            $stats['orders_skipped_cancelled'],
-                            $stats['orders_skipped_no_email'],
-                            $stats['emails_dispatched'],
-                        ))
+                        ->title(__('Backfill voltooid'))
+                        ->body(__('Gestart: :gestart. Al gestart: :alGestart. Geannuleerd: :geannuleerd. Geen email: :geenEmail. Mails ingepland: :mailsIngepland.', [
+                            'gestart' => $stats['orders_started'],
+                            'alGestart' => $stats['orders_skipped_already_started'],
+                            'geannuleerd' => $stats['orders_skipped_cancelled'],
+                            'geenEmail' => $stats['orders_skipped_no_email'],
+                            'mailsIngepland' => $stats['emails_dispatched'],
+                        ]))
                         ->success()
                         ->send();
                 }),

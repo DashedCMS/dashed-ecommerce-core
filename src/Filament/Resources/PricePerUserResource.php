@@ -70,15 +70,15 @@ class PricePerUserResource extends Resource
             $productCategorySchema[] = Section::make($productCategory->name)->columnSpanFull()
                 ->schema([
                     TextInput::make($productCategory->id.'_category_discount_price')
-                        ->label('Korting bedrag')
-                        ->prefix('€')
+                        ->label(__('Korting bedrag'))
+                        ->prefix(__('€'))
                         ->required(fn (Get $get) => $get($productCategory->id.'_category_discount_percentage') === null)
                         ->minValue(1)
                         ->reactive()
                         ->numeric(),
                     TextInput::make($productCategory->id.'_category_discount_percentage')
-                        ->label('Korting percentage')
-                        ->suffix('%')
+                        ->label(__('Korting percentage'))
+                        ->suffix(__('%'))
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
@@ -88,7 +88,7 @@ class PricePerUserResource extends Resource
                 ])
                 ->headerActions([
                     Action::make('delete')
-                        ->label('Verwijder')
+                        ->label(__('Verwijder'))
                         ->hiddenLabel()
                         ->icon('heroicon-o-trash')
                         ->color('danger')
@@ -105,7 +105,7 @@ class PricePerUserResource extends Resource
         $newSchema[] = Section::make()->columnSpanFull()
             ->schema(array_merge([
                 Select::make('product_category_ids')
-                    ->label('Product categorieen')
+                    ->label(__('Product categorieen'))
                     ->multiple()
                     ->options($productCategories->pluck('name', 'id')->toArray())
                     ->searchable()
@@ -172,44 +172,44 @@ class PricePerUserResource extends Resource
             foreach ($extra->productExtraOptions as $option) {
                 $optionFields[] = Section::make($option->value)->columns(2)->schema([
                     TextInput::make('extra_option_' . $option->id . '_user_price')
-                        ->label('Vaste prijs')->prefix('€')->numeric()->nullable()
-                        ->helperText('Standaard: € ' . number_format((float) $option->price, 2, ',', '.')),
+                        ->label(__('Vaste prijs'))->prefix(__('€'))->numeric()->nullable()
+                        ->helperText(__('Standaard: € :prijs', ['prijs' => number_format((float) $option->price, 2, ',', '.')])),
                     TextInput::make('extra_option_' . $option->id . '_user_discount_percentage')
-                        ->label('Korting percentage')->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
+                        ->label(__('Korting percentage'))->suffix(__('%'))->minValue(1)->maxValue(100)->numeric()->nullable(),
                 ]);
             }
             $parentFields = [
-                Section::make('Vaste prijs voor deze extra')->columns(2)->schema([
+                Section::make(__('Vaste prijs voor deze extra'))->columns(2)->schema([
                     TextInput::make('extra_' . $extra->id . '_user_price')
-                        ->label('Vaste prijs')->prefix('€')->numeric()->nullable()
-                        ->helperText('Standaard: € ' . number_format((float) $extra->price, 2, ',', '.')),
+                        ->label(__('Vaste prijs'))->prefix(__('€'))->numeric()->nullable()
+                        ->helperText(__('Standaard: € :prijs', ['prijs' => number_format((float) $extra->price, 2, ',', '.')])),
                     TextInput::make('extra_' . $extra->id . '_user_discount_percentage')
-                        ->label('Korting percentage')->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
+                        ->label(__('Korting percentage'))->suffix(__('%'))->minValue(1)->maxValue(100)->numeric()->nullable(),
                 ]),
             ];
 
             if ($optionFields || (float) $extra->price) {
-                $userExtraSections[] = Section::make('Extra: ' . $extra->name)->columnSpanFull()->schema(array_merge($parentFields, $optionFields));
+                $userExtraSections[] = Section::make(__('Extra: :naam', ['naam' => $extra->name]))->columnSpanFull()->schema(array_merge($parentFields, $optionFields));
             }
         }
 
         return $schema
             ->schema(array_merge([
                 Toggle::make('has_custom_pricing')
-                    ->label('Custom pricing voor deze gebruiker activeren')
+                    ->label(__('Custom pricing voor deze gebruiker activeren'))
                     ->visible(fn (Get $get) => ! $get('price_group_id')),
                 Toggle::make('show_prices_ex_vat')
-                    ->label('Toon prijzen ex BTW')
-                    ->helperText('Deze gebruiker ziet prijzen ex BTW in de webshop, in e-mails en op de factuur.')
+                    ->label(__('Toon prijzen ex BTW'))
+                    ->helperText(__('Deze gebruiker ziet prijzen ex BTW in de webshop, in e-mails en op de factuur.'))
                     ->default(false)
                     ->visible(fn (Get $get) => ! $get('price_group_id')),
                 Select::make('price_group_id')
-                    ->label('Prijsgroep')
+                    ->label(__('Prijsgroep'))
                     ->options(PriceGroup::pluck('name', 'id')->toArray())
                     ->searchable()
                     ->nullable()
                     ->live()
-                    ->helperText('De gebruiker erft custom pricing, de ex BTW-instelling en alle prijzen van deze groep.'),
+                    ->helperText(__('De gebruiker erft custom pricing, de ex BTW-instelling en alle prijzen van deze groep.')),
             ], [
                 Group::make(array_merge($newSchema, $userExtraSections))
                     ->visible(fn (Get $get) => ! $get('price_group_id')),
@@ -245,11 +245,11 @@ class PricePerUserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(['first_name', 'last_name']),
                 TextColumn::make('email')
-                    ->label('E-mail')
+                    ->label(__('E-mail'))
                     ->searchable()
                     ->sortable(),
             ])

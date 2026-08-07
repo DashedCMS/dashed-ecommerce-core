@@ -52,17 +52,17 @@ class ProductGroupTable extends TableWidget
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Product group'),
+                    ->label(__('Product group')),
                 TextColumn::make('total_purchases')
-                    ->label('Aantal verkopen')
+                    ->label(__('Aantal verkopen'))
                     ->sortable(),
                 TextColumn::make('products_sum_stock')
-                    ->label('Totale voorraad')
+                    ->label(__('Totale voorraad'))
                     ->sum('products', 'stock')
                     ->sortable(),
                 TextColumn::make('amountSold')
                     ->money('EUR')
-                    ->label('Totaal opgeleverd')
+                    ->label(__('Totaal opgeleverd'))
                     ->getStateUsing(fn ($record) => $this->orderProducts->whereIn('product_id', $record->products->pluck('id'))->sum('price')),
             ]);
     }

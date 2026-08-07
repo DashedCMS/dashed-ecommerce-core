@@ -2047,28 +2047,28 @@ MARKDOWN,
     {
         $defaultBlocks = [
             Block::make('all-products')
-                ->label('Alle producten')
+                ->label(__('Alle producten'))
                 ->schema([]),
             Block::make('few-products')
-                ->label('Paar producten')
+                ->label(__('Paar producten'))
                 ->schema([
                     AppServiceProvider::getDefaultBlockFields(),
                     TextInput::make('title')
-                        ->label('Titel'),
+                        ->label(__('Titel')),
                     TextInput::make('subtitle')
-                        ->label('Subtitel'),
+                        ->label(__('Subtitel')),
                     TextInput::make('amount_of_products')
-                        ->label('Aantal producten')
+                        ->label(__('Aantal producten'))
                         ->integer()
                         ->required()
                         ->default(4)
                         ->minValue(1)
                         ->maxValue(100),
                     Toggle::make('useCartRelatedItems')
-                        ->label('Gebruik gerelateerde producten uit winkelwagen om de lijst aan te vullen'),
+                        ->label(__('Gebruik gerelateerde producten uit winkelwagen om de lijst aan te vullen')),
                     Select::make('products')
-                        ->label('Producten')
-                        ->helperText('Leeg laten om automatisch aan te vullen, indien je iets invult, worden alleen de ingevulde getoond')
+                        ->label(__('Producten'))
+                        ->helperText(__('Leeg laten om automatisch aan te vullen, indien je iets invult, worden alleen de ingevulde getoond'))
                         ->multiple()
                         ->searchable()
                         ->preload()
@@ -2083,14 +2083,14 @@ MARKDOWN,
                         }),
                 ]),
             Block::make('categories')
-                ->label('Categorieeen')
+                ->label(__('Categorieeen'))
                 ->schema([
                     AppServiceProvider::getDefaultBlockFields(),
                     TextInput::make('title')
-                        ->label('Titel')
+                        ->label(__('Titel'))
                         ->required(),
                     Select::make('categories')
-                        ->label('Categorieën')
+                        ->label(__('Categorieën'))
                         ->searchable()
                         ->preload()
                         ->multiple()
@@ -2110,44 +2110,44 @@ MARKDOWN,
     {
         $defaultBlocks = [
             Block::make('orders-block')
-                ->label('Bestellingen')
+                ->label(__('Bestellingen'))
                 ->schema([]),
             Block::make('cart-block')
-                ->label('Winkelwagen')
+                ->label(__('Winkelwagen'))
                 ->schema([]),
             Block::make('checkout-block')
-                ->label('Checkout')
+                ->label(__('Checkout'))
                 ->schema([]),
             Block::make('view-order-block')
-                ->label('Bestelling')
+                ->label(__('Bestelling'))
                 ->schema([]),
             Block::make('product-finder')
-                ->label('Product finder')
+                ->label(__('Product finder'))
                 ->schema([
                     Select::make('finder_id')
-                        ->label('Finder')
+                        ->label(__('Finder'))
                         ->options(\Dashed\DashedEcommerceCore\Models\ProductFinder::query()
                             ->where('is_active', true)->pluck('name', 'id'))
                         ->required()
                         ->searchable(),
                 ]),
             Block::make('return-form')
-                ->label('Retour / ontbindingsfunctie')
+                ->label(__('Retour / ontbindingsfunctie'))
                 ->schema([
                     TextInput::make('title')
-                        ->label('Titel')
+                        ->label(__('Titel'))
                         ->default('Koop ongedaan maken'),
                     \Filament\Forms\Components\Textarea::make('intro')
-                        ->label('Introtekst')
+                        ->label(__('Introtekst'))
                         ->rows(3),
                     \Filament\Forms\Components\Toggle::make('in_container')
-                        ->label('In container')
+                        ->label(__('In container'))
                         ->default(true),
                     \Filament\Forms\Components\Toggle::make('top_margin')
-                        ->label('Marge boven')
+                        ->label(__('Marge boven'))
                         ->default(true),
                     \Filament\Forms\Components\Toggle::make('bottom_margin')
-                        ->label('Marge onder')
+                        ->label(__('Marge onder'))
                         ->default(true),
                 ]),
         ];

@@ -47,20 +47,20 @@ class ExportOrdersPage extends Page
     {
         return $schema
             ->schema([
-                Section::make('Exporteer')->columnSpanFull()
+                Section::make(__('Exporteer'))->columnSpanFull()
                     ->schema([
                         DatePicker::make('startDate')
-                            ->label('Start datum')
+                            ->label(__('Start datum'))
                             ->nullable(),
                         DatePicker::make('endDate')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->nullable()
                             ->afterOrEqual('startDate'),
                         Select::make('type')
-                            ->label('Type export')
+                            ->label(__('Type export'))
                             ->options([
-                                'normal' => 'Normaal',
-                                'perInvoiceLine' => 'Per factuurregel',
+                                'normal' => __('Normaal'),
+                                'perInvoiceLine' => __('Per factuurregel'),
                             ])
                             ->required(),
                     ]),
@@ -78,7 +78,7 @@ class ExportOrdersPage extends Page
             auth()->id(),
         );
         Notification::make()
-            ->title('De export wordt klaargemaakt en naar je toe gemaild')
+            ->title(__('De export wordt klaargemaakt en naar je toe gemaild'))
             ->success()
             ->send();
     }

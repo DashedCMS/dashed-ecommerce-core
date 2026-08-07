@@ -17,24 +17,24 @@ class ListAbandonedCartFlows extends ListRecords
     {
         return [
             Action::make('create_default')
-                ->label('Maak standaard flow aan')
+                ->label(__('Maak standaard flow aan'))
                 ->icon('heroicon-o-sparkles')
                 ->color('success')
                 ->requiresConfirmation()
-                ->modalHeading('Standaard flow aanmaken')
-                ->modalDescription('Dit maakt een nieuwe flow aan met 3 stappen (1 uur, 24 uur en 72 uur na verlaten) en stelt deze in als actieve flow.')
-                ->modalSubmitActionLabel('Aanmaken')
+                ->modalHeading(__('Standaard flow aanmaken'))
+                ->modalDescription(__('Dit maakt een nieuwe flow aan met 3 stappen (1 uur, 24 uur en 72 uur na verlaten) en stelt deze in als actieve flow.'))
+                ->modalSubmitActionLabel(__('Aanmaken'))
                 ->action(function () {
                     AbandonedCartFlow::createDefault();
 
                     Notification::make()
-                        ->title('Standaard flow aangemaakt en geactiveerd')
+                        ->title(__('Standaard flow aangemaakt en geactiveerd'))
                         ->success()
                         ->send();
                 }),
 
             CreateAction::make()
-                ->label('Nieuwe flow'),
+                ->label(__('Nieuwe flow')),
         ];
     }
 }

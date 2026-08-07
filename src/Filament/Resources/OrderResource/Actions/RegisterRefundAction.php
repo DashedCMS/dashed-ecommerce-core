@@ -20,7 +20,7 @@ class RegisterRefundAction
             ->color('warning')
             ->button()
             ->visible(fn () => $order->overpaidAmount() > 0)
-            ->modalDescription(fn () => 'Er is ' . CurrencyHelper::formatPrice($order->overpaidAmount()) . ' te veel betaald. Registreer hier wat je hebt teruggestort.')
+            ->modalDescription(fn () => __('Er is :bedrag te veel betaald. Registreer hier wat je hebt teruggestort.', ['bedrag' => CurrencyHelper::formatPrice($order->overpaidAmount())]))
             ->form([
                 // De grenzen staan hier zodat een typefout (200 waar 20 te veel
                 // betaald is) een nette validatiemelding geeft in plaats van de

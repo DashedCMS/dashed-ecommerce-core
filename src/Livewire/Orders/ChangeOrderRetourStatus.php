@@ -30,7 +30,7 @@ class ChangeOrderRetourStatus extends Component implements HasSchemas, HasAction
     public function action(): Action
     {
         return Action::make('action')
-            ->label('Verander retour status')
+            ->label(__('Verander retour status'))
             ->color('primary')
             ->fillForm(function () {
                 return [
@@ -39,7 +39,7 @@ class ChangeOrderRetourStatus extends Component implements HasSchemas, HasAction
             })
             ->schema([
                 Select::make('retourStatus')
-                    ->label('Verander retour status')
+                    ->label(__('Verander retour status'))
                     ->options(Orders::getReturnStatusses())
                     ->required(),
             ])
@@ -55,7 +55,7 @@ class ChangeOrderRetourStatus extends Component implements HasSchemas, HasAction
 
                 Notification::make()
                     ->success()
-                    ->title('Bestelling retour status aangepast')
+                    ->title(__('Bestelling retour status aangepast'))
                     ->send();
 
                 $this->dispatch('refreshData');

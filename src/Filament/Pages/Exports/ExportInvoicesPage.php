@@ -43,18 +43,18 @@ class ExportInvoicesPage extends Page
     {
         return $schema
             ->schema([
-                Section::make('Exporteer')->columnSpanFull()
+                Section::make(__('Exporteer'))->columnSpanFull()
                     ->schema([
                         DatePicker::make('start_date')
-                            ->label('Start datum'),
+                            ->label(__('Start datum')),
                         DatePicker::make('end_date')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->afterOrEqual('start_date'),
                         Select::make('sort')
-                            ->label('Soort export')
+                            ->label(__('Soort export'))
                             ->options([
-                                'combined' => 'Alle orders in 1 factuur',
-                                'merged' => 'Alle facturen in 1 PDF',
+                                'combined' => __('Alle orders in 1 factuur'),
+                                'merged' => __('Alle facturen in 1 PDF'),
                             ])
                             ->required(),
                     ]),
@@ -73,7 +73,7 @@ class ExportInvoicesPage extends Page
         );
 
         Notification::make()
-            ->title('De export wordt klaargemaakt en naar je toe gemaild')
+            ->title(__('De export wordt klaargemaakt en naar je toe gemaild'))
             ->success()
             ->send();
     }

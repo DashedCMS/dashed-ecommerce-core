@@ -60,21 +60,21 @@ class DiscountTable extends TableWidget
                 TextColumn::make('invoice_id')
                     ->searchable()
                     ->sortable()
-                    ->label('Bestelling ID'),
+                    ->label(__('Bestelling ID')),
                 TextColumn::make('site_id')
                     ->searchable()
                     ->sortable()
-                    ->label('Site')
+                    ->label(__('Site'))
                     ->visible(count(Sites::getSites()) > 1),
                 TextColumn::make('paymentMethod')
                     ->searchable()
                     ->sortable()
-                    ->label('Betaalmethode'),
+                    ->label(__('Betaalmethode')),
                 TextColumn::make('status')
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->colors([
                         'primary' => fn ($state): bool => $state === 'Lopende aankoop',
                         'danger' => fn ($state): bool => $state === 'Geannuleerd',
@@ -84,22 +84,22 @@ class DiscountTable extends TableWidget
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Klant'),
+                    ->label(__('Klant')),
                 TextColumn::make('discount')
                     ->searchable()
                     ->sortable()
                     ->money('EUR')
-                    ->label('Korting'),
+                    ->label(__('Korting')),
                 TextColumn::make('total')
                     ->searchable()
                     ->sortable()
                     ->money('EUR')
-                    ->label('Totaal'),
+                    ->label(__('Totaal')),
                 TextColumn::make('created_at')
                     ->searchable()
                     ->sortable()
                     ->dateTime()
-                    ->label('Aangemaakt op'),
+                    ->label(__('Aangemaakt op')),
             ]);
     }
 }

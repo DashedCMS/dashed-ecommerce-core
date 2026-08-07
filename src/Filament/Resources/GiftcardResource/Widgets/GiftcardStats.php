@@ -35,17 +35,17 @@ class GiftcardStats extends StatsOverviewWidget
 
         return [
             Stat::make('Cadeaukaarten met saldo', $countWithBalance)
-                ->description('Niet-verlopen, restsaldo > €0')
+                ->description(__('Niet-verlopen, restsaldo > €0'))
                 ->color('success')
                 ->url(\Dashed\DashedCore\Filament\Support\ResourceFilterUrl::for(
                     \Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource::class,
                     ['has_balance' => 1],
                 )),
             Stat::make('Waarde nog te besteden', CurrencyHelper::formatPrice($totalRemaining))
-                ->description('Som van resterend saldo op actieve kaarten')
+                ->description(__('Som van resterend saldo op actieve kaarten'))
                 ->color('primary'),
             Stat::make('Totaal uitgegeven', CurrencyHelper::formatPrice($totalSpent))
-                ->description('Som van reeds verzilverd bedrag')
+                ->description(__('Som van reeds verzilverd bedrag'))
                 ->color('warning'),
         ];
     }

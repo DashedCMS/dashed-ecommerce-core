@@ -28,7 +28,7 @@ class AddPaymentToOrder extends Component implements HasSchemas, HasActions
     {
 
         return Action::make('action')
-            ->label("Voeg betaling toe (al voldaan: {$this->order->paidAmount})")
+            ->label(__('Voeg betaling toe (al voldaan: :bedrag)', ['bedrag' => $this->order->paidAmount]))
             ->color('primary')
             ->fillForm(function () {
                 $paymentAmount = $this->order->total - $this->order->orderPayments->where('status', 'paid')->sum('amount');
@@ -42,8 +42,8 @@ class AddPaymentToOrder extends Component implements HasSchemas, HasActions
             })
             ->schema([
                 TextInput::make('paymentAmount')
-                    ->label('Het bedrag dat betaald is')
-                    ->helperText(fn () => "Het bedrag dat is betaald (al voldaan: {$this->order->paidAmount})")
+                    ->label(__('Het bedrag dat betaald is'))
+                    ->helperText(fn () => __('Het bedrag dat is betaald (al voldaan: :bedrag)', ['bedrag' => $this->order->paidAmount]))
                     ->required()
                     ->numeric()
                     ->minValue(0.01),
@@ -61,7 +61,7 @@ class AddPaymentToOrder extends Component implements HasSchemas, HasActions
                 }
 
                 Notification::make()
-                    ->title('Bestelling gemarkeerd als betaald')
+                    ->title(__('Bestelling gemarkeerd als betaald'))
                     ->success()
                     ->send();
 

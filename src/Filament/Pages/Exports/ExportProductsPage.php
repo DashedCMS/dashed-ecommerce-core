@@ -39,12 +39,12 @@ class ExportProductsPage extends Page
     {
         return $schema
             ->schema([
-                Section::make('Exporteer')->columnSpanFull()
+                Section::make(__('Exporteer'))->columnSpanFull()
                     ->schema([
                         Toggle::make('only_public_showable')
-                            ->label('Exporteer alleen openbare producten')
+                            ->label(__('Exporteer alleen openbare producten'))
                             ->default(true)
-                            ->helperText('Indien aangevinkt, worden alleen openbare producten geëxporteerd.'),
+                            ->helperText(__('Indien aangevinkt, worden alleen openbare producten geëxporteerd.')),
                     ]),
             ])
             ->statePath('data');
@@ -58,7 +58,7 @@ class ExportProductsPage extends Page
             auth()->id(),
         );
         Notification::make()
-            ->title('De export wordt klaargemaakt en naar je toe gemaild')
+            ->title(__('De export wordt klaargemaakt en naar je toe gemaild'))
             ->success()
             ->send();
     }

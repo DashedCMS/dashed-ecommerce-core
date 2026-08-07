@@ -44,29 +44,29 @@ class PrinterResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Printer details')
-                ->description('Geef de printer een eigen naam in het CMS, en vul de CUPS-naam in die op de Pi/NAS staat geconfigureerd.')
+            Section::make(__('Printer details'))
+                ->description(__('Geef de printer een eigen naam in het CMS, en vul de CUPS-naam in die op de Pi/NAS staat geconfigureerd.'))
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('name')
-                        ->label('Naam in CMS')
-                        ->helperText('Vrij in te vullen, bijvoorbeeld "Lovora pakbon Brother".')
+                        ->label(__('Naam in CMS'))
+                        ->helperText(__('Vrij in te vullen, bijvoorbeeld "Lovora pakbon Brother".'))
                         ->required()
                         ->maxLength(100),
                     TextInput::make('cups_name')
-                        ->label('CUPS naam op de Pi/NAS')
-                        ->helperText('Exact zoals "lpstat -p" op de Pi/NAS de printer toont. Bijvoorbeeld "pakbon_brother".')
+                        ->label(__('CUPS naam op de Pi/NAS'))
+                        ->helperText(__('Exact zoals "lpstat -p" op de Pi/NAS de printer toont. Bijvoorbeeld "pakbon_brother".'))
                         ->required()
                         ->maxLength(80)
                         ->regex('/^[A-Za-z0-9_-]+$/')
                         ->validationMessages(['regex' => 'CUPS namen bevatten alleen letters, cijfers, _ en -.']),
                     Select::make('type')
-                        ->label('Doel')
+                        ->label(__('Doel'))
                         ->options(PrinterType::options())
                         ->required(),
                     TextInput::make('location')
-                        ->label('Locatie')
-                        ->helperText('Optioneel, bijvoorbeeld "magazijn" of "kassa".')
+                        ->label(__('Locatie'))
+                        ->helperText(__('Optioneel, bijvoorbeeld "magazijn" of "kassa".'))
                         ->maxLength(100),
                     TextInput::make('max_retries')
                         ->numeric()
@@ -76,14 +76,14 @@ class PrinterResource extends Resource
                     Toggle::make('is_active')
                         ->default(true),
                     Placeholder::make('last_ping_status')
-                        ->label('Laatste ping')
+                        ->label(__('Laatste ping'))
                         ->content(fn (?Printer $record): string => $record?->last_ping_at
                             ? $record->last_ping_at->diffForHumans() . ' (' . ($record->isOnline() ? 'online' : 'offline') . ')'
                             : 'Nog niet gepingd'),
                 ])
                 ->columns(2),
-            Section::make('Sanctum token + installatie-commando')
-                ->description('Genereer een token (knop bovenaan) en kopieer daarna het commando om de daemon op je Pi/NAS te installeren.')
+            Section::make(__('Sanctum token + installatie-commando'))
+                ->description(__('Genereer een token (knop bovenaan) en kopieer daarna het commando om de daemon op je Pi/NAS te installeren.'))
                 ->columnSpanFull()
                 ->visible(fn (?Printer $record): bool => $record !== null)
                 ->schema([
@@ -149,17 +149,17 @@ class PrinterResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('cups_name')->label('CUPS')->placeholder('-'),
+                TextColumn::make('cups_name')->label(__('CUPS'))->placeholder(__('-')),
                 TextColumn::make('location'),
                 TextColumn::make('type')
                     ->badge()
                     ->formatStateUsing(fn (PrinterType $state) => $state->label()),
                 IconColumn::make('is_online')
-                    ->label('Online')
+                    ->label(__('Online'))
                     ->getStateUsing(fn (Printer $r) => $r->isOnline())
                     ->boolean(),
                 TextColumn::make('pending_jobs_count')
-                    ->label('Wachtrij')
+                    ->label(__('Wachtrij'))
                     ->counts(['printJobs as pending_jobs_count' => fn ($q) => $q->where('status', 'pending')]),
                 ToggleColumn::make('is_active'),
                 TextColumn::make('last_ping_at')->since(),
@@ -168,7 +168,7 @@ class PrinterResource extends Resource
                 EditAction::make(),
                 DeleteAction::make()
                     ->requiresConfirmation()
-                    ->modalDescription('Verwijdert de printer en trekt het token in. De daemon op de Pi/NAS zal vanaf nu 401 krijgen. Print jobs blijven bestaan (printer_id wordt null).'),
+                    ->modalDescription(__('Verwijdert de printer en trekt het token in. De daemon op de Pi/NAS zal vanaf nu 401 krijgen. Print jobs blijven bestaan (printer_id wordt null).')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

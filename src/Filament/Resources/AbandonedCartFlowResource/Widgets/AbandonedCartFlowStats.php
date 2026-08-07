@@ -50,10 +50,10 @@ class AbandonedCartFlowStats extends StatsOverviewWidget
             Stat::make('Verzonden', $sent)
                 ->icon('heroicon-o-paper-airplane'),
             Stat::make('Geklikt', $clicked)
-                ->description($clickRate.'% klikratio')
+                ->description(__(':percentage% klikratio', ['percentage' => $clickRate]))
                 ->icon('heroicon-o-cursor-arrow-rays'),
             Stat::make('Conversies', $converted)
-                ->description($conversionRate.'% conversieratio')
+                ->description(__(':percentage% conversieratio', ['percentage' => $conversionRate]))
                 ->icon('heroicon-o-shopping-cart')
                 ->color('success'),
             Stat::make('Omzet', '€ '.number_format($revenue, 2, ',', '.'))
@@ -63,7 +63,7 @@ class AbandonedCartFlowStats extends StatsOverviewWidget
                 'Recovery rate',
                 number_format($this->record->recoveryRate(), 1, ',', '.').'%'
             )
-                ->description('Conversies gedeeld door verzonden mails')
+                ->description(__('Conversies gedeeld door verzonden mails'))
                 ->icon('heroicon-o-arrow-trending-up')
                 ->color('success'),
             Stat::make(
@@ -80,7 +80,7 @@ class AbandonedCartFlowStats extends StatsOverviewWidget
                     return number_format($hours, 1, ',', '.').' uur';
                 })()
             )
-                ->description('Gemiddelde tijd tussen mail en order')
+                ->description(__('Gemiddelde tijd tussen mail en order'))
                 ->icon('heroicon-o-clock')
                 ->color('info'),
             Stat::make('Knop kliks', $buttonClicks)

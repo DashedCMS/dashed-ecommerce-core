@@ -31,11 +31,11 @@ class RunsRelationManager extends RelationManager
             ->recordTitleAttribute('id')
             ->columns([
                 TextColumn::make('created_at')
-                    ->label('Wanneer')
+                    ->label(__('Wanneer'))
                     ->dateTime('d-m-Y H:i:s', 'Europe/Amsterdam')
                     ->sortable(),
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         AutomationRuleRun::STATUS_SUCCESS => 'Gelukt',
@@ -50,32 +50,32 @@ class RunsRelationManager extends RelationManager
                         default => 'gray',
                     }),
                 TextColumn::make('subject_type')
-                    ->label('Onderwerp')
+                    ->label(__('Onderwerp'))
                     ->formatStateUsing(fn (string $state): string => class_basename($state)),
                 TextColumn::make('subject_id')
-                    ->label('#'),
+                    ->label(__('#')),
                 TextColumn::make('error')
-                    ->label('Foutmelding')
+                    ->label(__('Foutmelding'))
                     ->limit(60)
                     ->toggleable()
-                    ->placeholder('-'),
+                    ->placeholder(__('-')),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->options([
-                        AutomationRuleRun::STATUS_SUCCESS => 'Gelukt',
-                        AutomationRuleRun::STATUS_FAILED => 'Mislukt',
-                        AutomationRuleRun::STATUS_RUNNING => 'Bezig',
+                        AutomationRuleRun::STATUS_SUCCESS => __('Gelukt'),
+                        AutomationRuleRun::STATUS_FAILED => __('Mislukt'),
+                        AutomationRuleRun::STATUS_RUNNING => __('Bezig'),
                     ]),
             ])
             ->paginated([10, 25, 50])
             ->headerActions([])
             ->recordActions([])
             ->toolbarActions([])
-            ->emptyStateHeading('Nog geen runs')
-            ->emptyStateDescription('Zodra deze regel matcht op een trigger, verschijnt het resultaat hier.')
+            ->emptyStateHeading(__('Nog geen runs'))
+            ->emptyStateDescription(__('Zodra deze regel matcht op een trigger, verschijnt het resultaat hier.'))
             ->emptyStateIcon('heroicon-o-clock');
     }
 

@@ -53,17 +53,17 @@ class POSSettingsPage extends Page
     {
         $newSchema = [
             TextEntry::make("POS instellingen voor")
-                ->label('POS instellingen')
+                ->label(__('POS instellingen'))
                 ->columnSpanFull(),
             Toggle::make("pos_enabled")
                 ->reactive()
-                ->label('POS activeren'),
+                ->label(__('POS activeren')),
             Select::make("pos_layout")
-                ->label('Kassa-layout')
-                ->helperText('Klassiek = de bestaande indeling. Modern = de nieuwe, opgeschoonde indeling.')
+                ->label(__('Kassa-layout'))
+                ->helperText(__('Klassiek = de bestaande indeling. Modern = de nieuwe, opgeschoonde indeling.'))
                 ->options([
-                    'classic' => 'Klassiek',
-                    'modern' => 'Modern (nieuw)',
+                    'classic' => __('Klassiek'),
+                    'modern' => __('Modern (nieuw)'),
                 ])
                 ->default('classic')
                 ->selectablePlaceholder(false)
@@ -71,43 +71,43 @@ class POSSettingsPage extends Page
                 ->visible(fn (Get $get) => $get("pos_enabled")),
             Select::make("receipt_printer_connector_type")
                 ->options([
-                    'cups' => 'cups',
-                    'network' => 'network',
-                    'windows' => 'windows',
+                    'cups' => __('cups'),
+                    'network' => __('network'),
+                    'windows' => __('windows'),
                 ])
                 ->reactive()
                 ->visible(fn (Get $get) => $get("pos_enabled"))
-                ->label('Bonnen printer connectie type'),
+                ->label(__('Bonnen printer connectie type')),
             TextInput::make("receipt_printer_connector_descriptor")
-                ->label('Naam van de printer')
+                ->label(__('Naam van de printer'))
                 ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->required(fn (Get $get) => $get("receipt_printer_connector_type")),
             Toggle::make("cash_register_available")
                 ->reactive()
                 ->visible(fn (Get $get) => $get("pos_enabled"))
-                ->label('Kassa beschikbaar'),
+                ->label(__('Kassa beschikbaar')),
             Toggle::make("cash_register_track_cash_book")
-                ->label('Kasboek bijhouden')
+                ->label(__('Kasboek bijhouden'))
                 ->reactive()
                 ->visible(fn (Get $get) => $get("pos_enabled") && $get("cash_register_available")),
             TextInput::make("cash_register_amount")
-                ->label('Bedrag in de kassa')
+                ->label(__('Bedrag in de kassa'))
                 ->required()
                 ->numeric()
-                ->prefix('€')
+                ->prefix(__('€'))
                 ->minValue(0)
                 ->maxValue(100000)
                 ->visible(fn (Get $get) => $get("pos_enabled") && $get("cash_register_track_cash_book")),
             Toggle::make("pos_auto_print_receipt")
-                ->label('Automatisch een bon printen na een bestelling')
+                ->label(__('Automatisch een bon printen na een bestelling'))
                 ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->reactive(),
             Toggle::make("pos_auto_print_other_orders")
-                ->label('Automatisch een bon printen bestellingen buiten de kassa om')
+                ->label(__('Automatisch een bon printen bestellingen buiten de kassa om'))
                 ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->reactive(),
             Toggle::make("pos_allow_proforma")
-                ->label('Proforma vanuit POS toestaan')
+                ->label(__('Proforma vanuit POS toestaan'))
                 ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->reactive(),
         ];
@@ -122,7 +122,7 @@ class POSSettingsPage extends Page
     {
         return [
             Action::make('testPrinter')
-                ->label('Test bonnen printer')
+                ->label(__('Test bonnen printer'))
                 ->visible(Customsetting::get('receipt_printer_connector_type', default: false))
                 ->action(function () {
                     try {
@@ -138,14 +138,14 @@ class POSSettingsPage extends Page
                         $printer->printReceipt();
                     } catch (\Exception $e) {
                         Notification::make()
-                            ->title('Er is een fout opgetreden')
+                            ->title(__('Er is een fout opgetreden'))
                             ->body($e->getMessage())
                             ->danger()
                             ->send();
                     }
                 }),
             Action::make('testRegister')
-                ->label('Test kassalade')
+                ->label(__('Test kassalade'))
                 ->visible(Customsetting::get('receipt_printer_connector_type', default: false) && Customsetting::get('cash_register_available', default: false))
                 ->action(function () {
                     try {
@@ -157,7 +157,7 @@ class POSSettingsPage extends Page
                         $printer->openDrawer();
                     } catch (\Exception $e) {
                         Notification::make()
-                            ->title('Er is een fout opgetreden')
+                            ->title(__('Er is een fout opgetreden'))
                             ->body($e->getMessage())
                             ->danger()
                             ->send();
@@ -186,7 +186,7 @@ class POSSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De POS instellingen zijn opgeslagen')
+            ->title(__('De POS instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

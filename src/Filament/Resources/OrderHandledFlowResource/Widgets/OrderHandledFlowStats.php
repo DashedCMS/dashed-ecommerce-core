@@ -76,10 +76,10 @@ class OrderHandledFlowStats extends StatsOverviewWidget
 
         $stats = [
             Stat::make('Inschrijvingen', $total)
-                ->description('Totaal aantal orders dat ooit in deze flow zat')
+                ->description(__('Totaal aantal orders dat ooit in deze flow zat'))
                 ->icon('heroicon-o-user-group'),
             Stat::make('Actief in flow', $active)
-                ->description('Lopende inschrijvingen zonder annulering')
+                ->description(__('Lopende inschrijvingen zonder annulering'))
                 ->icon('heroicon-o-play-circle')
                 ->color('success'),
             Stat::make('Geannuleerd', $cancelled)
@@ -87,7 +87,7 @@ class OrderHandledFlowStats extends StatsOverviewWidget
                 ->icon('heroicon-o-x-circle')
                 ->color($cancelled > 0 ? 'warning' : 'gray'),
             Stat::make('Klikken', $clicks)
-                ->description($uniqueClickers . ' unieke klikkers - ' . $clickRate . '% van inschrijvingen')
+                ->description(__(':clickers unieke klikkers - :percentage% van inschrijvingen', ['clickers' => $uniqueClickers, 'percentage' => $clickRate]))
                 ->icon('heroicon-o-cursor-arrow-rays')
                 ->color('info'),
             (function () use ($enrollmentsBase, $total): Stat {
@@ -102,16 +102,16 @@ class OrderHandledFlowStats extends StatsOverviewWidget
                 $avg = $total > 0 ? round($sentMails / $total, 2) : 0;
 
                 return Stat::make('Mails verzonden', $sentMails)
-                    ->description($avg.' gemiddeld per inschrijving')
+                    ->description(__(':gemiddelde gemiddeld per inschrijving', ['gemiddelde' => $avg]))
                     ->icon('heroicon-o-paper-airplane')
                     ->color($sentMails > 0 ? 'success' : 'gray');
             })(),
             Stat::make('Geconverteerd', $convertedCount)
-                ->description($conversionRate . '% conversieratio')
+                ->description(__(':percentage% conversieratio', ['percentage' => $conversionRate]))
                 ->icon('heroicon-o-shopping-cart')
                 ->color('success'),
             Stat::make('Vervolg-omzet', '€ ' . number_format($convertedRevenue, 2, ',', '.'))
-                ->description('Som van orders na inschrijving (zelfde e-mail)')
+                ->description(__('Som van orders na inschrijving (zelfde e-mail)'))
                 ->icon('heroicon-o-banknotes')
                 ->color('success'),
         ];

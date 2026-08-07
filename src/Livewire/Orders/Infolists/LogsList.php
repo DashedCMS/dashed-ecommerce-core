@@ -30,8 +30,8 @@ class LogsList extends Component implements HasSchemas
         return $schema
             ->record($this->order)
             ->components([
-                Fieldset::make('logs_root')
-                    ->label('Logs & notities')
+                Fieldset::make(__('logs_root'))
+                    ->label(__('Logs & notities'))
                     ->schema([
                         ViewEntry::make('logs_view')
                             ->view('dashed-ecommerce-core::orders.components.infolists.logs-list-items')

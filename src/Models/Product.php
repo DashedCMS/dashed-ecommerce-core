@@ -1796,8 +1796,8 @@ class Product extends Model
     {
         return [
             Select::make('stock_source_product_id')
-                ->label('Voorraad synchroniseren vanaf product')
-                ->helperText('Kies een product om de voorraad van dit product mee te synchroniseren')
+                ->label(__('Voorraad synchroniseren vanaf product'))
+                ->helperText(__('Kies een product om de voorraad van dit product mee te synchroniseren'))
                 ->searchable()
                 ->getSearchResultsUsing(function (string $query, $record) {
                     return Product::where(function ($q) use ($query) {
@@ -1823,13 +1823,13 @@ class Product extends Model
                     }
                 }),
             Placeholder::make('stock_sync_source_info')
-                ->label('')
+                ->label(__(''))
                 ->content(fn ($record) => $record && $record->stock_source_product_id
                     ? 'Voorraad wordt gesynchroniseerd vanaf: '.($record->stockSource?->name ?? 'Onbekend product')
                     : '')
                 ->visible(fn ($record) => $record && $record->stock_source_product_id),
             Placeholder::make('stock_sync_receivers_info')
-                ->label('')
+                ->label(__(''))
                 ->content(function ($record) {
                     if (! $record || ! $record->stockSyncedProducts()->exists()) {
                         return '';
@@ -1841,47 +1841,47 @@ class Product extends Model
                 })
                 ->visible(fn ($record) => $record && $record->stockSyncedProducts()->exists()),
             Toggle::make('use_stock')
-                ->label('Voorraad bijhouden')
+                ->label(__('Voorraad bijhouden'))
                 ->reactive()
                 ->disabled(fn ($record) => $record && $record->stock_source_product_id),
             Toggle::make('limit_purchases_per_customer')
-                ->label('Dit product mag maar een x aantal keer per bestelling gekocht worden')
+                ->label(__('Dit product mag maar een x aantal keer per bestelling gekocht worden'))
                 ->reactive(),
             Toggle::make('out_of_stock_sellable')
-                ->label('Product doorverkopen wanneer niet meer op voorraad (pre-orders)')
+                ->label(__('Product doorverkopen wanneer niet meer op voorraad (pre-orders)'))
                 ->reactive()
                 ->disabled(fn ($record) => $record && $record->stock_source_product_id)
                 ->hidden(fn (Get $get) => ! $get('use_stock')),
             Toggle::make('low_stock_notification')
-                ->label('Ik wil een melding krijgen als dit product laag op voorraad raakt')
+                ->label(__('Ik wil een melding krijgen als dit product laag op voorraad raakt'))
                 ->reactive()
                 ->hidden(fn (Get $get) => ! $get('use_stock')),
             Quantity::make('stock')
                 ->type('number')
-                ->label('Hoeveel heb je van dit product op voorraad')
-                ->helperText(fn ($record) => $record ? $record->reservedStock().' gereserveerd - '.$record->inCartStock().' in winkelwagen' : '')
+                ->label(__('Hoeveel heb je van dit product op voorraad'))
+                ->helperText(fn ($record) => $record ? __(':gereserveerd gereserveerd - :inWinkelwagen in winkelwagen', ['gereserveerd' => $record->reservedStock(), 'inWinkelwagen' => $record->inCartStock()]) : '')
                 ->maxValue(100000)
                 ->required()
                 ->numeric()
                 ->disabled(fn ($record) => $record && $record->stock_source_product_id)
                 ->hidden(fn (Get $get) => ! $get('use_stock')),
             DatePicker::make('expected_in_stock_date')
-                ->label('Wanneer komt dit product weer op voorraad')
+                ->label(__('Wanneer komt dit product weer op voorraad'))
                 ->reactive()
-                ->helperText('Gebruik 1 van deze 2 opties')
+                ->helperText(__('Gebruik 1 van deze 2 opties'))
                 ->required(fn (Get $get) => ! $get('expected_delivery_in_days'))
                 ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('out_of_stock_sellable')),
             Quantity::make('expected_delivery_in_days')
-                ->label('Levering in dagen')
-                ->helperText('Hoeveel dagen duurt het voordat dit product geleverd kan worden?')
+                ->label(__('Levering in dagen'))
+                ->helperText(__('Hoeveel dagen duurt het voordat dit product geleverd kan worden?'))
                 ->reactive()
                 ->numeric()
                 ->minValue(1)
                 ->maxValue(1000)
                 ->required(fn (Get $get) => ! $get('expected_in_stock_date') && $get('out_of_stock_sellable')),
             Quantity::make('low_stock_notification_limit')
-                ->label('Lage voorraad melding')
-                ->helperText('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een melding')
+                ->label(__('Lage voorraad melding'))
+                ->helperText(__('Als de voorraad van dit product onder onderstaand nummer komt, krijg je een melding'))
                 ->type('number')
                 ->reactive()
                 ->required()
@@ -1891,10 +1891,10 @@ class Product extends Model
                 ->numeric()
                 ->hidden(fn (Get $get) => ! $get('use_stock') || ! $get('low_stock_notification')),
             Select::make('stock_status')
-                ->label('Is dit product op voorraad')
+                ->label(__('Is dit product op voorraad'))
                 ->options([
-                    'in_stock' => 'Op voorraad',
-                    'out_of_stock' => 'Uitverkocht',
+                    'in_stock' => __('Op voorraad'),
+                    'out_of_stock' => __('Uitverkocht'),
                 ])
                 ->default('in_stock')
                 ->required()
@@ -1902,7 +1902,7 @@ class Product extends Model
                 ->hidden(fn (Get $get) => $get('use_stock')),
             Quantity::make('limit_purchases_per_customer_limit')
                 ->type('number')
-                ->label('Hoeveel mag dit product gekocht worden per bestelling')
+                ->label(__('Hoeveel mag dit product gekocht worden per bestelling'))
                 ->minValue(1)
                 ->maxValue(100000)
                 ->default(1)
@@ -1910,8 +1910,8 @@ class Product extends Model
                 ->numeric()
                 ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
             Select::make('fulfillment_provider')
-                ->label('Door wie wordt dit product verstuurd?')
-                ->helperText('Laat leeg voor eigen fulfillment')
+                ->label(__('Door wie wordt dit product verstuurd?'))
+                ->helperText(__('Laat leeg voor eigen fulfillment'))
                 ->options(function () {
                     $options = [];
 

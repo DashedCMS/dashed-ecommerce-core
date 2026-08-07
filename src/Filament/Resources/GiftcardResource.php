@@ -62,73 +62,73 @@ class GiftcardResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Content')
+                Section::make(__('Content'))
                     ->schema(
                         array_merge([
                             Select::make('site_ids')
                                 ->multiple()
-                                ->label('Actief op sites')
+                                ->label(__('Actief op sites'))
                                 ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                                 ->hidden(function () {
                                     return ! (Sites::getAmountOfSites() > 1);
                                 })
                                 ->required(),
                             TextInput::make('name')
-                                ->label('Naam')
+                                ->label(__('Naam'))
                                 ->required()
                                 ->maxLength(100),
                             TextInput::make('code')
-                                ->label('Code')
-                                ->helperText('Deze code vullen mensen in om af te rekenen.')
+                                ->label(__('Code'))
+                                ->helperText(__('Deze code vullen mensen in om af te rekenen.'))
                                 ->required()
                                 ->unique('dashed__discount_codes', 'code', fn ($record) => $record)
                                 ->hidden(fn (Get $get) => $get('is_global_discount'))
                                 ->minLength(3)
                                 ->maxLength(100),
                             Toggle::make('create_multiple_codes')
-                                ->label('Meerdere codes aanmaken')
+                                ->label(__('Meerdere codes aanmaken'))
                                 ->reactive()
                                 ->visible(fn ($livewire, Get $get) => $livewire instanceof CreateGiftcard),
                             TextInput::make('amount_of_codes')
-                                ->label('Hoeveel cadeaukaarten moeten er aangemaakt worden')
-                                ->helperText('Gebruik een * in de cadeaukaart om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE')
+                                ->label(__('Hoeveel cadeaukaarten moeten er aangemaakt worden'))
+                                ->helperText(__('Gebruik een * in de cadeaukaart om een willekeurige letter of getal neer te zetten. Gebruik er minstens 5! Voorbeeld: SITE*****ACTIE'))
                                 ->type('number')
                                 ->required()
                                 ->maxValue(500)
                                 ->visible(fn ($livewire, Get $get) => $get('create_multiple_codes') && $livewire instanceof CreateGiftcard),
                             Textarea::make('note')
-                                ->label('Notitie')
-                                ->helperText('Notitie voor intern gebruik')
+                                ->label(__('Notitie'))
+                                ->helperText(__('Notitie voor intern gebruik'))
                                 ->maxLength(5000)
                                 ->columnSpanFull(),
                         ])
                     )
                     ->columnSpanFull()
                     ->columns(2),
-                Section::make('Informatie')
+                Section::make(__('Informatie'))
                     ->schema(array_merge([
                         TextInput::make('discount_amount')
-                            ->label('Waarde van de cadeaukaart')
-                            ->helperText('Hoeveel euro moet er op deze cadeaukaart staan')
-                            ->prefix('€')
+                            ->label(__('Waarde van de cadeaukaart'))
+                            ->helperText(__('Hoeveel euro moet er op deze cadeaukaart staan'))
+                            ->prefix(__('€'))
                             ->minValue(0)
                             ->maxValue(100000)
                             ->numeric()
                             ->required(),
                         Radio::make('valid_for')
-                            ->label('Van toepassing op')
+                            ->label(__('Van toepassing op'))
                             ->reactive()
                             ->options([
-                                null => 'Alle producten',
-                                'products' => 'Specifieke producten',
-                                'categories' => 'Specifieke categorieën',
+                                null => __('Alle producten'),
+                                'products' => __('Specifieke producten'),
+                                'categories' => __('Specifieke categorieën'),
                             ]),
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
-                            ->label('Selecteer producten waar deze cadeaukaart voor geldt')
+                            ->label(__('Selecteer producten waar deze cadeaukaart voor geldt'))
                             ->required()
                             ->hidden(fn (Get $get) => $get('valid_for') != 'products'),
                         Select::make('productCategories')
@@ -136,19 +136,19 @@ class GiftcardResource extends Resource
                             ->multiple()
                             ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
-                            ->label('Selecteer categorieën waar deze cadeaukaart voor geldt')
+                            ->label(__('Selecteer categorieën waar deze cadeaukaart voor geldt'))
                             ->required(fn (Get $get) => $get('valid_for') == 'categories')
                             ->hidden(fn (Get $get) => $get('valid_for') != 'categories'),
                         Radio::make('minimal_requirements')
-                            ->label('Minimale eisen')
+                            ->label(__('Minimale eisen'))
                             ->reactive()
                             ->options([
-                                null => 'Geen',
-                                'products' => 'Minimaal aantal producten',
-                                'amount' => 'Minimaal aankoopbedrag',
+                                null => __('Geen'),
+                                'products' => __('Minimaal aantal producten'),
+                                'amount' => __('Minimaal aankoopbedrag'),
                             ]),
                         TextInput::make('minimum_products_count')
-                            ->label('Minimum aantal producten')
+                            ->label(__('Minimum aantal producten'))
                             ->type('number')
                             ->minValue(1)
                             ->maxValue(100000)
@@ -156,8 +156,8 @@ class GiftcardResource extends Resource
                             ->required()
                             ->hidden(fn ($get) => $get('minimal_requirements') != 'products'),
                         TextInput::make('minimum_amount')
-                            ->label('Minimum aankoopbedrag')
-                            ->prefix('€')
+                            ->label(__('Minimum aankoopbedrag'))
+                            ->prefix(__('€'))
                             ->minValue(1)
                             ->maxValue(100000)
                             ->required()
@@ -174,51 +174,51 @@ class GiftcardResource extends Resource
             ->query(DiscountCode::isGiftcard())
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('code')
-                    ->label('Code')
+                    ->label(__('Code'))
                     ->default('-')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('discount_amount')
-                    ->label('Huidig')
+                    ->label(__('Huidig'))
                     ->default('-')
                     ->money('EUR')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('initial_amount')
-                    ->label('Initieel')
+                    ->label(__('Initieel'))
                     ->default('-')
                     ->money('EUR')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('reserved_amount')
-                    ->label('Gereserveerd')
+                    ->label(__('Gereserveerd'))
                     ->default('-')
                     ->money('EUR')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('used_amount')
-                    ->label('Gebruikt')
+                    ->label(__('Gebruikt'))
                     ->default('-')
                     ->money('EUR')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('site_ids')
-                    ->label('Actief op site(s)')
+                    ->label(__('Actief op site(s)'))
                     ->sortable()
                     ->badge()
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('amountOfUses')
-                    ->label('Aantal gebruiken')
+                    ->label(__('Aantal gebruiken'))
                     ->getStateUsing(function ($record) {
                         return "{$record->stock_used}x gebruikt";
                     }),
                 TextColumn::make('created_at')
-                    ->label('Aangemaakt op')
+                    ->label(__('Aangemaakt op'))
                     ->dateTime()
                     ->sortable(),
                 static::lastEditedColumn(),
@@ -227,7 +227,7 @@ class GiftcardResource extends Resource
             ->defaultSort('created_at', 'DESC')
             ->filters([
                 \Filament\Tables\Filters\TernaryFilter::make('has_balance')
-                    ->label('Met restsaldo')
+                    ->label(__('Met restsaldo'))
                     ->queries(
                         true: fn (\Illuminate\Database\Eloquent\Builder $q) => $q->where('discount_amount', '>', 0),
                         false: fn (\Illuminate\Database\Eloquent\Builder $q) => $q->where('discount_amount', '<=', 0),
@@ -250,26 +250,26 @@ class GiftcardResource extends Resource
 
         return $schema
             ->schema([
-                Fieldset::make('Cadeaukaart informatie')
+                Fieldset::make(__('Cadeaukaart informatie'))
                     ->columnSpanFull()
                     ->schema([
                         TextEntry::make('name')
-                            ->label('Naam'),
+                            ->label(__('Naam')),
                         TextEntry::make('code')
-                            ->label('Code'),
+                            ->label(__('Code')),
                         TextEntry::make('created_at')
-                            ->label('Aangemaakt op')
+                            ->label(__('Aangemaakt op'))
                             ->dateTime(),
                         TextEntry::make('updated_at')
-                            ->label('Laatst aangepast op')
+                            ->label(__('Laatst aangepast op'))
                             ->dateTime(),
                         TextEntry::make('user_id')
-                            ->label('Aangemaakt door')
+                            ->label(__('Aangemaakt door'))
                             ->getStateUsing(function ($record) {
                                 return $record->user ? $record->user->name : 'Systeem';
                             }),
                         TextEntry::make('site_ids')
-                            ->label('Actief op site(s)')
+                            ->label(__('Actief op site(s)'))
                             ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->getStateUsing(function ($record) {
                                 $siteNames = [];
@@ -282,49 +282,49 @@ class GiftcardResource extends Resource
                                 return implode(', ', $siteNames);
                             }),
                     ]),
-                Fieldset::make('Waarde')
+                Fieldset::make(__('Waarde'))
                     ->columnSpanFull()
                     ->schema([
                         TextEntry::make('discount_amount')
-                            ->label('Huidige waarde')
+                            ->label(__('Huidige waarde'))
                             ->money('EUR'),
                         TextEntry::make('initial_amount')
-                            ->label('Initiele waarde')
+                            ->label(__('Initiele waarde'))
                             ->money('EUR'),
                         TextEntry::make('reserved_amount')
-                            ->label('Gereserveerde waarde')
-                            ->helperText('Dit is de waarde die momenteel in gebruik is in openstaande bestellingen.')
+                            ->label(__('Gereserveerde waarde'))
+                            ->helperText(__('Dit is de waarde die momenteel in gebruik is in openstaande bestellingen.'))
                             ->money('EUR'),
                         TextEntry::make('used_amount')
-                            ->label('Gebruikte waarde')
-                            ->helperText('Dit is de waarde die al gebruikt is in afgeronde bestellingen.')
+                            ->label(__('Gebruikte waarde'))
+                            ->helperText(__('Dit is de waarde die al gebruikt is in afgeronde bestellingen.'))
                             ->money('EUR'),
                     ]),
-                Fieldset::make('Logboek')
+                Fieldset::make(__('Logboek'))
                     ->columnSpanFull()
                     ->schema(function ($record) {
                         $schema = [];
 
                         foreach ($record->logs as $log) {
-                            $schema[] = Fieldset::make('Log van ' . $log->created_at->format('d-m-Y H:i'))
+                            $schema[] = Fieldset::make(__('Log van :datum', ['datum' => $log->created_at->format('d-m-Y H:i')]))
                                 ->schema([
                                     TextEntry::make('tag_' . $log->id)
-                                        ->label('Log')
+                                        ->label(__('Log'))
                                         ->default($log->tag()),
                                     TextEntry::make('created_at_' . $log->id)
-                                        ->label('Log aangemaakt op')
+                                        ->label(__('Log aangemaakt op'))
                                         ->dateTime()
                                         ->default($log->created_at),
                                     TextEntry::make('user_id_' . $log->id)
-                                        ->label('Door')
+                                        ->label(__('Door'))
                                         ->columnSpanFull()
                                         ->default($log->user ? $log->user->name : 'Systeem'),
                                     TextEntry::make('old_amount_' . $log->id)
-                                        ->label('Oude waarde')
+                                        ->label(__('Oude waarde'))
                                         ->money('EUR')
                                         ->default($log->old_amount),
                                     TextEntry::make('new_amount_' . $log->id)
-                                        ->label('Nieuwe waarde')
+                                        ->label(__('Nieuwe waarde'))
                                         ->money('EUR')
                                         ->default($log->new_amount),
                                 ])

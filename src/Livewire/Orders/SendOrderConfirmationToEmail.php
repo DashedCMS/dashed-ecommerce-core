@@ -28,7 +28,7 @@ class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasA
     public function action(): Action
     {
         return Action::make('action')
-            ->label('Stuur email bevestiging')
+            ->label(__('Stuur email bevestiging'))
             ->color('primary')
             ->fillForm(function () {
                 return [
@@ -37,7 +37,7 @@ class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasA
             })
             ->schema([
                 TextInput::make('email')
-                    ->label('Bestel bevestiging versturen naar')
+                    ->label(__('Bestel bevestiging versturen naar'))
                     ->required()
                     ->email(),
             ])
@@ -46,7 +46,7 @@ class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasA
 
                 Notification::make()
                     ->success()
-                    ->title('De notificatie is verstuurd')
+                    ->title(__('De notificatie is verstuurd'))
                     ->send();
 
                 $this->dispatch('refreshData');

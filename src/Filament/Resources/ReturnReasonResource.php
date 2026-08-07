@@ -40,14 +40,14 @@ class ReturnReasonResource extends Resource
         return $schema
             ->schema([
                 TextInput::make('label')
-                    ->label('Label')
+                    ->label(__('Label'))
                     ->required(),
                 TextInput::make('sort_order')
-                    ->label('Volgorde')
+                    ->label(__('Volgorde'))
                     ->numeric()
                     ->default(0),
                 Toggle::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->default(true),
             ]);
     }
@@ -57,12 +57,12 @@ class ReturnReasonResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('label')
-                    ->label('Label'),
+                    ->label(__('Label')),
                 TextColumn::make('sort_order')
-                    ->label('Volgorde')
+                    ->label(__('Volgorde'))
                     ->sortable(),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean(),
             ])
             ->defaultSort('sort_order')

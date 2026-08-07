@@ -28,9 +28,9 @@ class DateRangeFilterWidget extends Widget
 
                 Select::make('period')
                     ->options([
-                        'day' => 'Day',
-                        'week' => 'Week',
-                        'month' => 'Month',
+                        'day' => __('Day'),
+                        'week' => __('Week'),
+                        'month' => __('Month'),
                     ])
                     ->default('week')
                     ->reactive(),

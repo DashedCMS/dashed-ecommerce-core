@@ -37,8 +37,8 @@ class ModifyOrder extends Page implements HasSchemas
 
         if (! $this->order->isModifiable()) {
             Notification::make()
-                ->title('Deze bestelling kan niet gewijzigd worden')
-                ->body('Geannuleerde, geretourneerde, al vervangen of credit-bestellingen kunnen niet via dit scherm aangepast worden.')
+                ->title(__('Deze bestelling kan niet gewijzigd worden'))
+                ->body(__('Geannuleerde, geretourneerde, al vervangen of credit-bestellingen kunnen niet via dit scherm aangepast worden.'))
                 ->danger()
                 ->send();
 
@@ -75,7 +75,7 @@ class ModifyOrder extends Page implements HasSchemas
     {
         return [
             Action::make('backToView')
-                ->label('Terug naar bestelling')
+                ->label(__('Terug naar bestelling'))
                 ->icon('heroicon-m-arrow-uturn-left')
                 ->color('gray')
                 ->url(fn () => route('filament.dashed.resources.orders.view', ['record' => $this->order->id])),
@@ -98,8 +98,8 @@ class ModifyOrder extends Page implements HasSchemas
     protected function routeDescription(bool $inPlace, bool $creditOldOrder): string
     {
         return $inPlace
-            ? 'Deze bestelling wordt zelf aangepast. Er komt geen tweede bestelling bij.'
-            : 'Er wordt een vervangende bestelling aangemaakt met het al betaalde bedrag erin verrekend. Deze bestelling wordt ' . ($creditOldOrder ? 'gecrediteerd' : 'geannuleerd') . '.';
+            ? __('Deze bestelling wordt zelf aangepast. Er komt geen tweede bestelling bij.')
+            : __('Er wordt een vervangende bestelling aangemaakt met het al betaalde bedrag erin verrekend. Deze bestelling wordt :actie.', ['actie' => $creditOldOrder ? __('gecrediteerd') : __('geannuleerd')]);
     }
 
     public function modifyOrderForm(Schema $schema): Schema
@@ -108,7 +108,7 @@ class ModifyOrder extends Page implements HasSchemas
 
         return $schema
             ->schema([
-                Section::make('Wat er gaat gebeuren')
+                Section::make(__('Wat er gaat gebeuren'))
                     ->schema([
                         TextEntry::make('route')
                             ->hiddenLabel()
@@ -118,7 +118,7 @@ class ModifyOrder extends Page implements HasSchemas
                             ->state($this->routeDescription($inPlace, $this->order->hasRealInvoice())),
                     ])
                     ->columnSpanFull(),
-                Section::make('Regels')
+                Section::make(__('Regels'))
                     ->schema([
                         Repeater::make('lines')
                             ->hiddenLabel()
@@ -128,7 +128,7 @@ class ModifyOrder extends Page implements HasSchemas
                             ->generateUuidUsing(false)
                             ->schema([
                                 Select::make('product_id')
-                                    ->label('Product')
+                                    ->label(__('Product'))
                                     ->searchable()
                                     // name is een translatable JSON-kolom. LIKE op de ruwe
                                     // kolom matcht de opgeslagen JSON, en de labels moeten
@@ -158,11 +158,11 @@ class ModifyOrder extends Page implements HasSchemas
                                     ->live()
                                     ->columnSpan(2),
                                 TextInput::make('name')
-                                    ->label('Omschrijving')
+                                    ->label(__('Omschrijving'))
                                     ->required()
                                     ->columnSpan(2),
                                 TextInput::make('quantity')
-                                    ->label('Aantal')
+                                    ->label(__('Aantal'))
                                     ->numeric()
                                     ->minValue(1)
                                     ->required()
@@ -193,50 +193,50 @@ class ModifyOrder extends Page implements HasSchemas
                                         }
                                     }),
                                 TextInput::make('price')
-                                    ->label('Regeltotaal')
-                                    ->helperText('Het totaal van deze regel, niet de stuksprijs')
+                                    ->label(__('Regeltotaal'))
+                                    ->helperText(__('Het totaal van deze regel, niet de stuksprijs'))
                                     ->numeric()
                                     ->required()
-                                    ->prefix('€'),
+                                    ->prefix(__('€')),
                                 TextInput::make('vat_rate')
-                                    ->label('BTW')
+                                    ->label(__('BTW'))
                                     ->numeric()
                                     ->required()
                                     ->default(21)
-                                    ->suffix('%'),
+                                    ->suffix(__('%')),
                                 // Niet bewerkbaar in deze eerste versie; bestaat alleen om de
                                 // extras van een ongewijzigde regel de round-trip te laten
                                 // overleven (writeLines() herbouwt alle regels vanaf nul).
                                 Hidden::make('product_extras'),
                             ])
                             ->columns(4)
-                            ->addActionLabel('Regel toevoegen')
+                            ->addActionLabel(__('Regel toevoegen'))
                             ->reorderable(false)
                             ->live(),
                     ])
                     ->columnSpanFull(),
-                Section::make('Opties')
+                Section::make(__('Opties'))
                     ->schema([
                         Toggle::make('credit_old_order')
-                            ->label('Creditfactuur maken voor de oude bestelling')
-                            ->helperText('Standaard aan wanneer de bestelling een echt factuurnummer heeft')
+                            ->label(__('Creditfactuur maken voor de oude bestelling'))
+                            ->helperText(__('Standaard aan wanneer de bestelling een echt factuurnummer heeft'))
                             ->visible(! $inPlace),
                         Toggle::make('already_shipped')
-                            ->label('De oude producten zijn al verzonden en komen niet terug')
-                            ->helperText('Hiermee blijft de voorraad van de oude regels afgeboekt')
+                            ->label(__('De oude producten zijn al verzonden en komen niet terug'))
+                            ->helperText(__('Hiermee blijft de voorraad van de oude regels afgeboekt'))
                             ->visible(! $inPlace),
                         Toggle::make('deduct_new_stock')
-                            ->label('Voorraad van de nieuwe bestelling afboeken')
-                            ->helperText('Zet dit uit bij een administratieve correctie waarbij er niets nieuws verzonden wordt')
+                            ->label(__('Voorraad van de nieuwe bestelling afboeken'))
+                            ->helperText(__('Zet dit uit bij een administratieve correctie waarbij er niets nieuws verzonden wordt'))
                             ->default(true)
                             ->visible(! $inPlace),
                         Toggle::make('products_must_be_returned')
-                            ->label('De producten moeten terugkomen van de klant')
+                            ->label(__('De producten moeten terugkomen van de klant'))
                             ->visible(! $inPlace),
                         Toggle::make('send_customer_email')
-                            ->label('Klant een wijzigingsmail sturen'),
+                            ->label(__('Klant een wijzigingsmail sturen')),
                         Textarea::make('customer_note')
-                            ->label('Toelichting in de mail')
+                            ->label(__('Toelichting in de mail'))
                             ->rows(3),
                     ])
                     ->columnSpanFull(),
@@ -280,12 +280,12 @@ class ModifyOrder extends Page implements HasSchemas
     public function submitAction(): Action
     {
         return Action::make('submitAction')
-            ->label('Wijziging doorvoeren')
+            ->label(__('Wijziging doorvoeren'))
             ->color('primary')
             ->requiresConfirmation()
-            ->modalHeading('Wijziging doorvoeren?')
+            ->modalHeading(__('Wijziging doorvoeren?'))
             ->modalDescription(fn () => $this->buildConfirmationDescription())
-            ->modalSubmitActionLabel('Ja, doorvoeren')
+            ->modalSubmitActionLabel(__('Ja, doorvoeren'))
             ->action(fn () => $this->submit());
     }
 
@@ -313,11 +313,11 @@ class ModifyOrder extends Page implements HasSchemas
         $balance = round($newTotal - $paid, 2);
 
         if ($balance > 0.005) {
-            $moneySentence = 'Er blijft ' . CurrencyHelper::formatPrice($balance) . ' te betalen over.';
+            $moneySentence = __('Er blijft :bedrag te betalen over.', ['bedrag' => CurrencyHelper::formatPrice($balance)]);
         } elseif ($balance < -0.005) {
-            $moneySentence = 'Er moet ' . CurrencyHelper::formatPrice(abs($balance)) . ' terugbetaald worden.';
+            $moneySentence = __('Er moet :bedrag terugbetaald worden.', ['bedrag' => CurrencyHelper::formatPrice(abs($balance))]);
         } else {
-            $moneySentence = 'Er hoeft niets (meer) betaald te worden.';
+            $moneySentence = __('Er hoeft niets (meer) betaald te worden.');
         }
 
         $differenceText = match (true) {
@@ -327,14 +327,14 @@ class ModifyOrder extends Page implements HasSchemas
         };
 
         $emailSentence = (bool) ($state['send_customer_email'] ?? true)
-            ? 'De klant ontvangt een wijzigingsmail.'
-            : 'De klant ontvangt geen wijzigingsmail.';
+            ? __('De klant ontvangt een wijzigingsmail.')
+            : __('De klant ontvangt geen wijzigingsmail.');
 
         // De korting expliciet noemen zodra er een is: bij een procentuele code
         // beweegt hij mee met de nieuwe regels en dan moet de beheerder kunnen
         // zien welk bedrag er daadwerkelijk toegepast wordt.
         $discountSentence = $discount > 0.005
-            ? ' Toegepaste korting: ' . CurrencyHelper::formatPrice($discount) . '.'
+            ? ' ' . __('Toegepaste korting: :bedrag.', ['bedrag' => CurrencyHelper::formatPrice($discount)])
             : '';
 
         // Wordt de korting afgetopt op het nieuwe subtotaal, dan raakt de klant
@@ -342,13 +342,15 @@ class ModifyOrder extends Page implements HasSchemas
         // automatisch terugkomt. Dat hoort de beheerder te zien vóór hij
         // bevestigt, niet pas achteraf in het orderlogboek.
         $capSentence = $discountBreakdown['reduced_by'] > 0.005
-            ? ' Let op: ' . lcfirst(OrderTotalsCalculator::cappedDiscountSentence($this->order, $discountBreakdown))
+            ? ' ' . __('Let op: :zin', ['zin' => lcfirst(OrderTotalsCalculator::cappedDiscountSentence($this->order, $discountBreakdown))])
             : '';
 
         return $this->routeDescription($inPlace, (bool) ($state['credit_old_order'] ?? $this->order->hasRealInvoice()))
-            . ' Huidig totaal: ' . CurrencyHelper::formatPrice($oldTotal)
-            . ', nieuw totaal: ' . CurrencyHelper::formatPrice($newTotal)
-            . ' (verschil: ' . $differenceText . ').'
+            . ' ' . __('Huidig totaal: :oud, nieuw totaal: :nieuw (verschil: :verschil).', [
+                'oud' => CurrencyHelper::formatPrice($oldTotal),
+                'nieuw' => CurrencyHelper::formatPrice($newTotal),
+                'verschil' => $differenceText,
+            ])
             . $discountSentence
             . $capSentence
             . ' ' . $moneySentence
@@ -392,8 +394,8 @@ class ModifyOrder extends Page implements HasSchemas
         // komt in plaats van een nette melding.
         if (! $this->order->fresh()->isModifiable()) {
             Notification::make()
-                ->title('Deze bestelling kan niet gewijzigd worden')
-                ->body('De bestelling is intussen niet meer wijzigbaar, bijvoorbeeld omdat hij al vervangen, gecrediteerd of geannuleerd is.')
+                ->title(__('Deze bestelling kan niet gewijzigd worden'))
+                ->body(__('De bestelling is intussen niet meer wijzigbaar, bijvoorbeeld omdat hij al vervangen, gecrediteerd of geannuleerd is.'))
                 ->danger()
                 ->send();
 
@@ -418,7 +420,7 @@ class ModifyOrder extends Page implements HasSchemas
 
         if (! count($lines)) {
             Notification::make()
-                ->title('Een bestelling moet minimaal één regel houden')
+                ->title(__('Een bestelling moet minimaal één regel houden'))
                 ->danger()
                 ->send();
 
@@ -442,8 +444,8 @@ class ModifyOrder extends Page implements HasSchemas
         }
 
         Notification::make()
-            ->title('Bestelling gewijzigd')
-            ->body('Nieuw totaal: ' . CurrencyHelper::formatPrice($target->fresh()->total))
+            ->title(__('Bestelling gewijzigd'))
+            ->body(__('Nieuw totaal: :bedrag', ['bedrag' => CurrencyHelper::formatPrice($target->fresh()->total)]))
             ->success()
             ->send();
 

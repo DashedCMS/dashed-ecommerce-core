@@ -50,28 +50,28 @@ class ProductCharacteristicResource extends Resource
         return $schema
             ->schema(
                 [
-                    Section::make('Content')
+                    Section::make(__('Content'))
                         ->columnSpanFull()
                         ->schema(
                             array_merge([
                                 TextInput::make('name')
-                                    ->label('Naam')
+                                    ->label(__('Naam'))
                                     ->required()
                                     ->maxLength(100),
                                 TextInput::make('order')
-                                    ->label('Volgorde')
+                                    ->label(__('Volgorde'))
                                     ->numeric()
                                     ->required()
                                     ->default(1)
                                     ->minLength(1)
                                     ->maxLength(100),
                                 Textarea::make('notes')
-                                    ->label('Notitie')
+                                    ->label(__('Notitie'))
                                     ->rows(3)
                                     ->columnSpanFull()
-                                    ->helperText('Intern gebruik, niet zichtbaar voor klanten'),
+                                    ->helperText(__('Intern gebruik, niet zichtbaar voor klanten')),
                                 Toggle::make('hide_from_public')
-                                    ->label('Dit kenmerk verbergen op de website'),
+                                    ->label(__('Dit kenmerk verbergen op de website')),
                             ])
                         )
                         ->columns(2),
@@ -84,14 +84,14 @@ class ProductCharacteristicResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('order')
-                    ->label('Volgorde')
+                    ->label(__('Volgorde'))
                     ->sortable(),
                 IconColumn::make('hide_from_public')
-                    ->label('Tonen op website')
+                    ->label(__('Tonen op website'))
                     ->trueIcon('heroicon-o-eye-slash')
                     ->trueColor('danger')
                     ->falseIcon('heroicon-o-eye')

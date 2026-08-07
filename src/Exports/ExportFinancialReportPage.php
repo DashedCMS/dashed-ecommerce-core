@@ -47,12 +47,12 @@ class ExportFinancialReportPage extends Page
     {
         return $schema
             ->schema([
-                Section::make('Exporteer')->columnSpanFull()
+                Section::make(__('Exporteer'))->columnSpanFull()
                     ->schema([
                         DatePicker::make('start_date')
-                            ->label('Start datum'),
+                            ->label(__('Start datum')),
                         DatePicker::make('end_date')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->afterOrEqual('start_date'),
                     ]),
             ])
@@ -69,7 +69,7 @@ class ExportFinancialReportPage extends Page
         );
 
         Notification::make()
-            ->title('De export wordt klaargemaakt en naar je toe gemaild')
+            ->title(__('De export wordt klaargemaakt en naar je toe gemaild'))
             ->success()
             ->send();
     }

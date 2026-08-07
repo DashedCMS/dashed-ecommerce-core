@@ -55,46 +55,46 @@ class ProductCategoryResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Content')->columnSpanFull()
+                Section::make(__('Content'))->columnSpanFull()
                     ->schema(array_merge([
                         TextInput::make('name')
-                            ->label('Naam')
+                            ->label(__('Naam'))
                             ->required()
                             ->maxLength(100),
                         TextInput::make('slug')
-                            ->label('Slug')
+                            ->label(__('Slug'))
                             ->unique('dashed__product_categories', 'slug', fn ($record) => $record)
-                            ->helperText('Laat leeg om automatisch te laten genereren')
+                            ->helperText(__('Laat leeg om automatisch te laten genereren'))
                             ->maxLength(255),
                         mediaHelper()->field('image', 'Afbeelding'),
                         cms()->getFilamentBuilderBlock(),
                     ], static::customBlocksTab('productCategoryBlocks')))
                     ->columns(2),
-                Section::make('Algemene informatie')
+                Section::make(__('Algemene informatie'))
                     ->columnSpanFull()
                     ->schema(static::publishTab()),
-                Section::make('Meta data')
+                Section::make(__('Meta data'))
                     ->columnSpanFull()
                     ->schema(static::metadataTab()),
-                Section::make('GS1 / EAN overrides')
-                    ->description('Optioneel. Producten zonder eigen override krijgen deze waarden voor het GS1 export-bestand.')
+                Section::make(__('GS1 / EAN overrides'))
+                    ->description(__('Optioneel. Producten zonder eigen override krijgen deze waarden voor het GS1 export-bestand.'))
                     ->columnSpanFull()
                     ->collapsed()
                     ->collapsible()
                     ->columns(['default' => 1, 'lg' => 3])
                     ->schema([
-                        TextInput::make('gs1_classification')->label('Productclassificatie (GPC)'),
-                        TextInput::make('gs1_packaging_type')->label('Verpakkingstype'),
-                        TextInput::make('gs1_brand')->label('Merk'),
-                        TextInput::make('gs1_sub_brand')->label('Submerk'),
-                        TextInput::make('gs1_language')->label('Taal'),
-                        TextInput::make('gs1_country')->label('Land'),
-                        TextInput::make('gs1_quantity')->label('Aantal')->numeric(),
-                        TextInput::make('gs1_unit')->label('Eenheid'),
+                        TextInput::make('gs1_classification')->label(__('Productclassificatie (GPC)')),
+                        TextInput::make('gs1_packaging_type')->label(__('Verpakkingstype')),
+                        TextInput::make('gs1_brand')->label(__('Merk')),
+                        TextInput::make('gs1_sub_brand')->label(__('Submerk')),
+                        TextInput::make('gs1_language')->label(__('Taal')),
+                        TextInput::make('gs1_country')->label(__('Land')),
+                        TextInput::make('gs1_quantity')->label(__('Aantal'))->numeric(),
+                        TextInput::make('gs1_unit')->label(__('Eenheid')),
                         \Filament\Forms\Components\Select::make('gs1_consumer_unit')
-                            ->label('Consumenteneenheid')
-                            ->options(['1' => 'Ja', '0' => 'Nee'])
-                            ->placeholder('Erven van shop'),
+                            ->label(__('Consumenteneenheid'))
+                            ->options(['1' => __('Ja'), '0' => __('Nee')])
+                            ->placeholder(__('Erven van shop')),
                     ]),
             ]);
     }
@@ -104,7 +104,7 @@ class ProductCategoryResource extends Resource
         return $table
             ->columns(array_merge([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make()),
             ], static::visitableTableColumns()))
             ->recordActions([

@@ -25,8 +25,8 @@ class PrinterOfflineNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return FilamentNotification::make()
-            ->title('Printer offline')
-            ->body("Printer {$this->printer->name} heeft >5 minuten geen ping gestuurd.")
+            ->title(__('Printer offline'))
+            ->body(__('Printer :naam heeft >5 minuten geen ping gestuurd.', ['naam' => $this->printer->name]))
             ->danger()
             ->getDatabaseMessage();
     }

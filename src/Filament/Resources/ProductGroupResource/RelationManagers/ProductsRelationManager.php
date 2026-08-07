@@ -37,7 +37,7 @@ class ProductsRelationManager extends RelationManager
         return $schema
             ->schema([
                 TextInput::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->maxLength(255)
                     ->required(),
             ]);
@@ -51,9 +51,9 @@ class ProductsRelationManager extends RelationManager
             ->columns([
                 ImageColumn::make('image')
                     ->getStateUsing(fn ($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : ($record->productGroup->images ? (mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url ?? '') : null))
-                    ->label(''),
+                    ->label(__('')),
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable([
                         'name',
                         'short_description',
@@ -63,39 +63,39 @@ class ProductsRelationManager extends RelationManager
                     ])
                     ->sortable(),
                 TextColumn::make('price')
-                    ->label('Prijs')
+                    ->label(__('Prijs'))
                     ->searchable()
                     ->sortable()
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice($state)),
                 TextColumn::make('stock')
-                    ->label('Voorraad')
+                    ->label(__('Voorraad'))
                     ->formatStateUsing(fn ($record) => $record->stock.((! $record->use_stock && $record->stock_status == 'in_stock') || $record->out_of_stock_sellable ? ' - ∞' : ''))
                     ->sortable(),
                 TextColumn::make('total_purchases')
-                    ->label('Aantal verkopen')
+                    ->label(__('Aantal verkopen'))
                     ->sortable(),
                 TextColumn::make('open_orders')
-                    ->label('Openstaande bestellingen')
+                    ->label(__('Openstaande bestellingen'))
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->openOrdersCount())
                     ->color(fn ($state) => $state > 0 ? 'warning' : 'gray'),
                 IconColumn::make('indexable')
-                    ->label('Tonen in overzicht')
+                    ->label(__('Tonen in overzicht'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->sortable(),
                 IconColumn::make('status')
-                    ->label('Status')
+                    ->label(__('Status'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
             ])
             ->recordActions([
                 Action::make('quickActions')
                     ->button()
-                    ->label('Snelle acties')
+                    ->label(__('Snelle acties'))
                     ->color('primary')
-                    ->modalHeading('Snel bewerken')
-                    ->modalSubmitActionLabel('Opslaan')
+                    ->modalHeading(__('Snel bewerken'))
+                    ->modalSubmitActionLabel(__('Opslaan'))
                     ->fillForm(function (Product $record) {
                         $data = [
                             'use_stock' => $record->use_stock,
@@ -118,7 +118,7 @@ class ProductsRelationManager extends RelationManager
                         return $data;
                     })
                     ->schema([
-                        Section::make('Beheer de prijzen')
+                        Section::make(__('Beheer de prijzen'))
                             ->columnSpanFull()
                             ->schema(function () {
                                 $schema = [];
@@ -127,7 +127,7 @@ class ProductsRelationManager extends RelationManager
                                     $schema[] = TextInput::make($key)
                                         ->label($priceField['label'])
                                         ->helperText($priceField['helperText'])
-                                        ->prefix('€')
+                                        ->prefix(__('€'))
                                         ->minValue(0)
                                         ->numeric()
                                         ->maxValue(100000)
@@ -141,7 +141,7 @@ class ProductsRelationManager extends RelationManager
                                 'default' => 1,
                                 'lg' => 2,
                             ]),
-                        Section::make('Voorraad beheren')
+                        Section::make(__('Voorraad beheren'))
                             ->schema(Product::stockFilamentSchema())
                             ->columns([
                                 'default' => 1,
@@ -155,12 +155,12 @@ class ProductsRelationManager extends RelationManager
                         $record->save();
 
                         Notification::make()
-                            ->title('Het product is aangepast')
+                            ->title(__('Het product is aangepast'))
                             ->success()
                             ->send();
                     }),
                 Action::make('edit')
-                    ->label('Bewerken')
+                    ->label(__('Bewerken'))
                     ->url(fn (Product $record) => route('filament.dashed.resources.products.edit', [$record])),
                 DeleteAction::make(),
                 RestoreAction::make(),
@@ -174,7 +174,7 @@ class ProductsRelationManager extends RelationManager
                 BulkDeliveryTimeUpdateBulkAction::make(),
                 BulkAction::make('public')
                     ->color('primary')
-                    ->label('Openbaar maken')
+                    ->label(__('Openbaar maken'))
                     ->action(function (Collection $records, array $data): void {
                         foreach ($records as $record) {
                             $record->public = 1;
@@ -182,14 +182,14 @@ class ProductsRelationManager extends RelationManager
                         }
 
                         Notification::make()
-                            ->title('De producten zijn aangepast')
+                            ->title(__('De producten zijn aangepast'))
                             ->success()
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('hidden')
                     ->color('primary')
-                    ->label('Verbergen')
+                    ->label(__('Verbergen'))
                     ->action(function (Collection $records, array $data): void {
                         foreach ($records as $record) {
                             $record->public = 0;
@@ -197,7 +197,7 @@ class ProductsRelationManager extends RelationManager
                         }
 
                         Notification::make()
-                            ->title('De producten zijn aangepast')
+                            ->title(__('De producten zijn aangepast'))
                             ->success()
                             ->send();
                     })

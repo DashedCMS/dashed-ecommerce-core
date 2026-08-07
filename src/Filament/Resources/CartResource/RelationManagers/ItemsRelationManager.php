@@ -22,29 +22,29 @@ class ItemsRelationManager extends RelationManager
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('product_id')
-                    ->label('Product ID')
+                    ->label(__('Product ID'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('quantity')->label('Aantal')->sortable(),
+                Tables\Columns\TextColumn::make('quantity')->label(__('Aantal'))->sortable(),
 
                 Tables\Columns\TextColumn::make('unit_price')
-                    ->label('Per stuk')
+                    ->label(__('Per stuk'))
                     ->money('EUR', locale: 'nl_NL')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total_price')
                     ->getStateUsing(fn ($record) => $record->unit_price * $record->quantity)
-                    ->label('Totaal')
+                    ->label(__('Totaal'))
                     ->money('EUR', locale: 'nl_NL'),
 
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Bijgewerkt op')
+                    ->label(__('Bijgewerkt op'))
                     ->dateTime()
                     ->sortable(),
             ])

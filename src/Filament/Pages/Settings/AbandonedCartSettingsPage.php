@@ -51,69 +51,69 @@ class AbandonedCartSettingsPage extends Page
         return $schema
             ->statePath('data')
             ->schema([
-                Section::make('Algemeen')
+                Section::make(__('Algemeen'))
                     ->schema([
                         Toggle::make('abandoned_cart_emails_enabled')
-                            ->label('Verlaten winkelwagen emails inschakelen')
-                            ->helperText('Stuur automatisch emails naar bezoekers die hun winkelwagen hebben achtergelaten.'),
+                            ->label(__('Verlaten winkelwagen emails inschakelen'))
+                            ->helperText(__('Stuur automatisch emails naar bezoekers die hun winkelwagen hebben achtergelaten.')),
                     ]),
 
-                Section::make('Email 1 - 1 uur na verlaten')
+                Section::make(__('Email 1 - 1 uur na verlaten'))
                     ->schema([
                         TextInput::make('abandoned_cart_email1_delay_hours')
-                            ->label('Uren na verlaten')
+                            ->label(__('Uren na verlaten'))
                             ->numeric()
                             ->minValue(1)
-                            ->suffix('uur'),
+                            ->suffix(__('uur')),
                         TextInput::make('abandoned_cart_email1_subject')
-                            ->label('Onderwerpregel')
+                            ->label(__('Onderwerpregel'))
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('Email 2 - 24 uur later')
+                Section::make(__('Email 2 - 24 uur later'))
                     ->schema([
                         TextInput::make('abandoned_cart_email2_delay_hours')
-                            ->label('Uren na email 1')
+                            ->label(__('Uren na email 1'))
                             ->numeric()
                             ->minValue(1)
-                            ->suffix('uur'),
+                            ->suffix(__('uur')),
                         TextInput::make('abandoned_cart_email2_subject')
-                            ->label('Onderwerpregel')
-                            ->helperText('Gebruik :product voor de productnaam.')
+                            ->label(__('Onderwerpregel'))
+                            ->helperText(__('Gebruik :product voor de productnaam.'))
                             ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Section::make('Email 3 - 72 uur later (optioneel)')
+                Section::make(__('Email 3 - 72 uur later (optioneel)'))
                     ->schema([
                         Toggle::make('abandoned_cart_email3_enabled')
-                            ->label('Email 3 inschakelen'),
+                            ->label(__('Email 3 inschakelen')),
                         TextInput::make('abandoned_cart_email3_delay_hours')
-                            ->label('Uren na email 2')
+                            ->label(__('Uren na email 2'))
                             ->numeric()
                             ->minValue(1)
-                            ->suffix('uur'),
+                            ->suffix(__('uur')),
                         TextInput::make('abandoned_cart_email3_subject')
-                            ->label('Onderwerpregel')
+                            ->label(__('Onderwerpregel'))
                             ->maxLength(255),
                         Select::make('abandoned_cart_email3_incentive_type')
-                            ->label('Incentive type')
+                            ->label(__('Incentive type'))
                             ->options([
-                                'none' => 'Geen kortingscode',
-                                'amount' => 'Vast bedrag (bijv. €5)',
-                                'percentage' => 'Percentage (bijv. 10%)',
+                                'none' => __('Geen kortingscode'),
+                                'amount' => __('Vast bedrag (bijv. €5)'),
+                                'percentage' => __('Percentage (bijv. 10%)'),
                             ]),
                         TextInput::make('abandoned_cart_email3_incentive_value')
-                            ->label('Kortingswaarde')
+                            ->label(__('Kortingswaarde'))
                             ->numeric()
                             ->minValue(0)
-                            ->helperText('Bedrag in euro\'s of percentage.'),
+                            ->helperText(__('Bedrag in euro\'s of percentage.')),
                         TextInput::make('abandoned_cart_email3_valid_days')
-                            ->label('Geldigheid kortingscode')
+                            ->label(__('Geldigheid kortingscode'))
                             ->numeric()
                             ->minValue(1)
-                            ->suffix('dagen'),
+                            ->suffix(__('dagen')),
                     ])
                     ->columns(2),
             ]);
@@ -123,7 +123,7 @@ class AbandonedCartSettingsPage extends Page
     {
         return [
             Action::make('save')
-                ->label('Opslaan')
+                ->label(__('Opslaan'))
                 ->action('save'),
         ];
     }
@@ -136,6 +136,6 @@ class AbandonedCartSettingsPage extends Page
             Customsetting::set($key, $value);
         }
 
-        Notification::make()->title('Instellingen opgeslagen')->success()->send();
+        Notification::make()->title(__('Instellingen opgeslagen'))->success()->send();
     }
 }

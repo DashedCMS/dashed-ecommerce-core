@@ -98,12 +98,14 @@ class OrderTotalsCalculator
     {
         $discountCode = $order->discountCode;
 
-        $sentence = 'Korting verlaagd van ' . CurrencyHelper::formatPrice($breakdown['uncapped'])
-            . ' naar ' . CurrencyHelper::formatPrice($breakdown['discount'])
-            . ' (' . CurrencyHelper::formatPrice($breakdown['reduced_by']) . ' minder), omdat de korting niet groter kan zijn dan het subtotaal van de bestelling.';
+        $sentence = __('Korting verlaagd van :van naar :naar (:minder minder), omdat de korting niet groter kan zijn dan het subtotaal van de bestelling.', [
+            'van' => CurrencyHelper::formatPrice($breakdown['uncapped']),
+            'naar' => CurrencyHelper::formatPrice($breakdown['discount']),
+            'minder' => CurrencyHelper::formatPrice($breakdown['reduced_by']),
+        ]);
 
         if ($discountCode && $discountCode->is_giftcard) {
-            return $sentence . ' Dit is cadeaubon ' . $discountCode->code . ': dat saldo wordt niet automatisch teruggeboekt, corrigeer het handmatig op de cadeaubon.';
+            return $sentence . ' ' . __('Dit is cadeaubon :code: dat saldo wordt niet automatisch teruggeboekt, corrigeer het handmatig op de cadeaubon.', ['code' => $discountCode->code]);
         }
 
         return $sentence;

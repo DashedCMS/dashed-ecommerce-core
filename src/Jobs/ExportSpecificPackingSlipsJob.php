@@ -82,11 +82,11 @@ class ExportSpecificPackingSlipsJob implements ShouldQueue
             $this->markExportAsCompleted($filePath, $fileName);
 
             Notification::make()
-                ->body('Pakbonnen zijn aangemaakt (' . count($this->orders) . ' bestellingen)')
+                ->body(__('Pakbonnen zijn aangemaakt (:aantal bestellingen)', ['aantal' => count($this->orders)]))
                 ->persistent()
                 ->actions([
                     Action::make('download')
-                        ->label('Download pakbonnen')
+                        ->label(__('Download pakbonnen'))
                         ->button()
                         ->url(Storage::disk('public')->url($filePath))
                         ->openUrlInNewTab(),

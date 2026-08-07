@@ -36,13 +36,13 @@ class DailyRevenueStats extends StatsOverviewWidget
 
         return [
             StatsOverviewWidget\Stat::make('Aantal bestellingen (vandaag)', $statistics['day']['orders'])
-                ->description($statistics['dayReturn']['orders'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['dayReturn']['orders']])),
             StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['day']['orderAmount'])
-                ->description($statistics['dayReturn']['orderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['dayReturn']['orderAmount']])),
             StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['day']['averageOrderAmount'])
-                ->description($statistics['dayReturn']['averageOrderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['dayReturn']['averageOrderAmount']])),
             StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['day']['products'])
-                ->description($statistics['dayReturn']['products'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['dayReturn']['products']])),
         ];
     }
 }

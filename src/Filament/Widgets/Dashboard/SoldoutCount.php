@@ -21,9 +21,9 @@ class SoldoutCount extends StatsOverviewWidget
 
         return [
             StatsOverviewWidget\Stat::make('Uitverkochte producten', $soldOutCount)
-                ->description('Aantal producten die uitverkocht zijn'),
+                ->description(__('Aantal producten die uitverkocht zijn')),
             StatsOverviewWidget\Stat::make('Bijna uitverkochte producten', $almostSoldOutCount)
-                ->description('Deze producten hebben minder dan 5 voorraad'),
+                ->description(__('Deze producten hebben minder dan 5 voorraad')),
         ];
     }
 }

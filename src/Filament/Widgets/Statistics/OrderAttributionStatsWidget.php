@@ -30,21 +30,21 @@ class OrderAttributionStatsWidget extends TableWidget
             ->paginated(false)
             ->columns([
                 TextColumn::make('type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->badge()
                     ->colors([
                         'primary' => 'Bron',
                         'success' => 'Campagne',
                     ]),
                 TextColumn::make('value')
-                    ->label('Waarde')
+                    ->label(__('Waarde'))
                     ->wrap(),
                 TextColumn::make('order_count')
-                    ->label('Aantal bestellingen')
+                    ->label(__('Aantal bestellingen'))
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('revenue')
-                    ->label('Omzet')
+                    ->label(__('Omzet'))
                     ->formatStateUsing(fn ($state) => CurrencyHelper::formatPrice((float) $state)),
             ]);
     }

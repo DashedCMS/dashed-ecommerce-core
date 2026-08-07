@@ -128,26 +128,26 @@ class OrderSettingsPage extends Page
 
         $newSchema = [
             Repeater::make('apis')
-                ->label('APIs')
-                ->helperText('Stel hier in welke APIs er bij een nieuwe bestelling aangeroepen moeten worden.')
+                ->label(__('APIs'))
+                ->helperText(__('Stel hier in welke APIs er bij een nieuwe bestelling aangeroepen moeten worden.'))
                 ->visible(count(forms()->builder('orderApiClasses')))
                 ->reactive()
                 ->schema(fn (Get $get) => array_merge([
                     Select::make('class')
-                        ->label('API class')
+                        ->label(__('API class'))
                         ->options(collect(forms()->builder('orderApiClasses'))->pluck('name', 'class')->toArray())
                         ->searchable()
                         ->preload()
                         ->required()
                         ->reactive(),
                     Toggle::make('sync_always')
-                        ->label('Altijd synchroniseren (ook zonder marketing-toestemming)')
-                        ->helperText('Standaard wordt deze API alleen aangeroepen als de klant in de checkout marketing-toestemming heeft gegeven. Zet aan om altijd te syncen.')
+                        ->label(__('Altijd synchroniseren (ook zonder marketing-toestemming)'))
+                        ->helperText(__('Standaard wordt deze API alleen aangeroepen als de klant in de checkout marketing-toestemming heeft gegeven. Zet aan om altijd te syncen.'))
                         ->default(false)
                         ->columnSpanFull(),
                 ], $apiFields))
                 ->columnSpanFull()
-                ->addActionLabel('API toevoegen')
+                ->addActionLabel(__('API toevoegen'))
                 ->columns([
                     'default' => 1,
                     'lg' => 2,
@@ -165,71 +165,71 @@ class OrderSettingsPage extends Page
         $newSchema = [
             TextEntry::make('label')
                 ->state("Algemene instelling voor bestellingen"),
-            Section::make('UTM- / herkomst-tracking')
-                ->description('Vangt UTM-parameters (utm_source, utm_medium, ...) en click-IDs (gclid, fbclid, msclkid) automatisch op uit de querystring zodra een bezoeker op de webshop landt. Deze waardes worden bewaard op de winkelwagen en bij plaatsing op de bestelling, zodat je per bestelling kunt zien via welk kanaal of welke campagne een klant binnenkwam.')
+            Section::make(__('UTM- / herkomst-tracking'))
+                ->description(__('Vangt UTM-parameters (utm_source, utm_medium, ...) en click-IDs (gclid, fbclid, msclkid) automatisch op uit de querystring zodra een bezoeker op de webshop landt. Deze waardes worden bewaard op de winkelwagen en bij plaatsing op de bestelling, zodat je per bestelling kunt zien via welk kanaal of welke campagne een klant binnenkwam.'))
                 ->columnSpanFull()
                 ->schema([
                     Toggle::make('attribution_tracking_enabled')
-                        ->label('UTM-tracking inschakelen')
-                        ->helperText('Als dit uitstaat, slaat de middleware geen UTM-parameters meer op. Bestaande data op orders blijft bewaard.')
+                        ->label(__('UTM-tracking inschakelen'))
+                        ->helperText(__('Als dit uitstaat, slaat de middleware geen UTM-parameters meer op. Bestaande data op orders blijft bewaard.'))
                         ->default(true),
                     Toggle::make('attribution_show_on_invoice')
-                        ->label('Toon UTM-velden in factuur-PDF')
-                        ->helperText('Voegt een klein blok met de bron-, medium- en campagne-waardes onderaan de factuur toe. Standaard uit, want klanten hoeven dit normaal niet te zien.')
+                        ->label(__('Toon UTM-velden in factuur-PDF'))
+                        ->helperText(__('Voegt een klein blok met de bron-, medium- en campagne-waardes onderaan de factuur toe. Standaard uit, want klanten hoeven dit normaal niet te zien.'))
                         ->default(false),
                 ])
                 ->columns(2),
-            Section::make('Order opvolg flow')
-                ->description('Globale fallback voor de :reviewUrl: variabele in de order-opvolg-mails. Wordt alleen gebruikt wanneer een flow geen eigen review-URLs heeft staan.')
+            Section::make(__('Order opvolg flow'))
+                ->description(__('Globale fallback voor de :reviewUrl: variabele in de order-opvolg-mails. Wordt alleen gebruikt wanneer een flow geen eigen review-URLs heeft staan.'))
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('order_handled_flow_review_url')
-                        ->label('Standaard review-URL')
-                        ->helperText('Wordt als :reviewUrl: in opvolg-mails ingevuld wanneer de flow zelf geen review-URLs heeft staan. Vul per flow meerdere URLs in om A/B-testen tussen platformen mogelijk te maken.')
+                        ->label(__('Standaard review-URL'))
+                        ->helperText(__('Wordt als :reviewUrl: in opvolg-mails ingevuld wanneer de flow zelf geen review-URLs heeft staan. Vul per flow meerdere URLs in om A/B-testen tussen platformen mogelijk te maken.'))
                         ->url()
                         ->maxLength(2048)
                         ->columnSpanFull(),
                     TextInput::make('order_flow_max_sends_per_run')
-                        ->label('Max. opvolg-mails per verzendronde')
-                        ->helperText('Begrenst hoeveel opvolg-mails de verzender per run (uurlijks) verstuurt. Handig om een grote achterstand gespreid te versturen i.p.v. in één keer. 0 = geen limiet.')
+                        ->label(__('Max. opvolg-mails per verzendronde'))
+                        ->helperText(__('Begrenst hoeveel opvolg-mails de verzender per run (uurlijks) verstuurt. Handig om een grote achterstand gespreid te versturen i.p.v. in één keer. 0 = geen limiet.'))
                         ->numeric()
                         ->minValue(0)
                         ->default(0)
                         ->columnSpanFull(),
                 ])
                 ->columns(1),
-            Section::make('Facturen printer')->columnSpanFull()
+            Section::make(__('Facturen printer'))->columnSpanFull()
                 ->schema([
                     Select::make("invoice_printer_connector_type")
                         ->options([
-                            'cups' => 'cups',
-                            'network' => 'network',
-                            'windows' => 'windows',
+                            'cups' => __('cups'),
+                            'network' => __('network'),
+                            'windows' => __('windows'),
                         ])
                         ->reactive()
-                        ->label('Printer connectie type'),
+                        ->label(__('Printer connectie type')),
                     TextInput::make("invoice_printer_connector_descriptor")
-                        ->label('Naam van de printer')
+                        ->label(__('Naam van de printer'))
                         ->required(fn (Get $get) => $get("invoice_printer_connector_type"))
                         ->reactive()
-                        ->helperText('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
+                        ->helperText(__('Als je dit koppelt worden de facturen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling')),
                 ])
                 ->columns(2),
-            Section::make('Pakbon printer')->columnSpanFull()
+            Section::make(__('Pakbon printer'))->columnSpanFull()
                 ->schema([
                     Select::make("packing_slip_printer_connector_type")
                         ->options([
-                            'cups' => 'cups',
-                            'network' => 'network',
-                            'windows' => 'windows',
+                            'cups' => __('cups'),
+                            'network' => __('network'),
+                            'windows' => __('windows'),
                         ])
                         ->reactive()
-                        ->label('Printer connectie type'),
+                        ->label(__('Printer connectie type')),
                     TextInput::make("packing_slip_printer_connector_descriptor")
-                        ->label('Naam van de printer')
+                        ->label(__('Naam van de printer'))
                         ->required(fn (Get $get) => $get("packing_slip_printer_connector_type"))
                         ->reactive()
-                        ->helperText('Als je dit koppelt worden de pakbonnen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling'),
+                        ->helperText(__('Als je dit koppelt worden de pakbonnen automatisch geprint als ze worden aangemaakt bij een nieuwe bestelling')),
                 ])
                 ->columns(2),
         ];
@@ -250,20 +250,20 @@ class OrderSettingsPage extends Page
                     ->columnSpan(2),
                 TagsInput::make("notification_invoice_emails_{$site['id']}")
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
-                    ->label('Emails om de bevestigingsmail van een bestelling naar te sturen')
-                    ->placeholder('Voer een email in')
+                    ->label(__('Emails om de bevestigingsmail van een bestelling naar te sturen'))
+                    ->placeholder(__('Voer een email in'))
                     ->reactive(),
                 TagsInput::make("notification_low_stock_emails_{$site['id']}")
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
-                    ->label('Emails om de notificaties van lage voorraad naartoe te sturen')
-                    ->placeholder('Voer een email in')
+                    ->label(__('Emails om de notificaties van lage voorraad naartoe te sturen'))
+                    ->placeholder(__('Voer een email in'))
                     ->reactive(),
                 TagsInput::make("notification_bcc_order_emails_{$site['id']}")
                     ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
-                    ->label('Emails om alle bestel notificaties van de klant naar te sturen in BCC')
-                    ->placeholder('Voer een email in')
+                    ->label(__('Emails om alle bestel notificaties van de klant naar te sturen in BCC'))
+                    ->placeholder(__('Voer een email in'))
                     ->reactive(),
-                Section::make('Admin notificaties per bestel kanaal')
+                Section::make(__('Admin notificaties per bestel kanaal'))
                     ->columnSpanFull()
                     ->schema(
                         collect(OrderOrigins::all($site['id']))
@@ -299,13 +299,13 @@ class OrderSettingsPage extends Page
             $newSchema = [
                 TextEntry::make('label')
                     ->state("Fulfillment notificaties voor {$locale['name']}")
-                    ->helperText('Vink hieronder aan welke fulfillment-status wijzigingen een mail naar de klant triggeren. De onderwerp- en inhoud-velden beheer je per status via de E-mail templates.'),
+                    ->helperText(__('Vink hieronder aan welke fulfillment-status wijzigingen een mail naar de klant triggeren. De onderwerp- en inhoud-velden beheer je per status via de E-mail templates.')),
             ];
 
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 $newSchema = array_merge($newSchema, [
                     Toggle::make("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")
-                        ->label('Mail klant bij status "' . $name . '"')
+                        ->label(__('Mail klant bij status ":status"', ['status' => $name]))
                         ->reactive()
                         ->columnSpan([
                             'default' => 1,
@@ -331,35 +331,35 @@ class OrderSettingsPage extends Page
                 ->label('Suggesties - '.ucfirst($site['name']))
                 ->schema([
                     Toggle::make("cart_suggestions_enabled_{$site['id']}")
-                        ->label('Cart-suggesties aan')
-                        ->helperText('Master kill-switch voor alle voorgestelde producten in cart, checkout en popup.')
+                        ->label(__('Cart-suggesties aan'))
+                        ->helperText(__('Master kill-switch voor alle voorgestelde producten in cart, checkout en popup.'))
                         ->columnSpanFull(),
                     TextInput::make("cart_suggestions_limit_cart_{$site['id']}")
-                        ->label('Aantal kaarten - cart-pagina')
+                        ->label(__('Aantal kaarten - cart-pagina'))
                         ->numeric()->minValue(1)->maxValue(20)->default(6),
                     TextInput::make("cart_suggestions_limit_checkout_{$site['id']}")
-                        ->label('Aantal kaarten - checkout')
+                        ->label(__('Aantal kaarten - checkout'))
                         ->numeric()->minValue(1)->maxValue(20)->default(4),
                     TextInput::make("cart_suggestions_limit_popup_{$site['id']}")
-                        ->label('Aantal kaarten - cart popup')
+                        ->label(__('Aantal kaarten - cart popup'))
                         ->numeric()->minValue(1)->maxValue(10)->default(3),
                     TextInput::make("cart_suggestions_boost_slots_{$site['id']}")
-                        ->label('Gegarandeerde slots voor gap-closers')
-                        ->helperText('Aantal posities dat gereserveerd is voor producten die gratis verzending overbruggen.')
+                        ->label(__('Gegarandeerde slots voor gap-closers'))
+                        ->helperText(__('Aantal posities dat gereserveerd is voor producten die gratis verzending overbruggen.'))
                         ->numeric()->minValue(0)->maxValue(10)->default(3),
                     TextInput::make("cart_suggestions_gap_min_factor_{$site['id']}")
-                        ->label('Gap-factor min')
-                        ->helperText('Sweet-spot ondergrens als factor van het gap (default 0.8 = 80%).')
+                        ->label(__('Gap-factor min'))
+                        ->helperText(__('Sweet-spot ondergrens als factor van het gap (default 0.8 = 80%).'))
                         ->numeric()->step(0.1)->default(0.8),
                     TextInput::make("cart_suggestions_gap_max_factor_{$site['id']}")
-                        ->label('Gap-factor max')
-                        ->helperText('Sweet-spot bovengrens als factor van het gap (default 1.5 = 150%).')
+                        ->label(__('Gap-factor max'))
+                        ->helperText(__('Sweet-spot bovengrens als factor van het gap (default 1.5 = 150%).'))
                         ->numeric()->step(0.1)->default(1.5),
                     Toggle::make("cart_suggestions_require_in_stock_{$site['id']}")
-                        ->label('Alleen producten met voorraad'),
+                        ->label(__('Alleen producten met voorraad')),
                     Toggle::make("cart_suggestions_fallback_random_{$site['id']}")
-                        ->label('Random fallback aan')
-                        ->helperText('Vult op met willekeurige producten als cross-sell + categorie-match niet genoeg geeft.'),
+                        ->label(__('Random fallback aan'))
+                        ->helperText(__('Vult op met willekeurige producten als cross-sell + categorie-match niet genoeg geeft.')),
                 ])
                 ->columns(['default' => 1, 'lg' => 2]);
         }
@@ -449,7 +449,7 @@ class OrderSettingsPage extends Page
         $this->form->fill($formState);
 
         Notification::make()
-            ->title('De bestellings instellingen zijn opgeslagen')
+            ->title(__('De bestellings instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }
@@ -458,13 +458,13 @@ class OrderSettingsPage extends Page
     {
         return [
             Action::make('backfillApiSubscriptions')
-                ->label('Bestaande e-mails synchroniseren')
+                ->label(__('Bestaande e-mails synchroniseren'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('primary')
                 ->visible(count(forms()->builder('orderApiClasses')) > 0)
-                ->modalHeading('Bestaande e-mails synchroniseren naar APIs')
-                ->modalDescription('Stuurt eerder verzamelde e-mailadressen alsnog naar de geselecteerde APIs. Reeds gesynchroniseerde combinaties van e-mail + API worden overgeslagen op basis van het log.')
-                ->modalSubmitActionLabel('Backfill starten')
+                ->modalHeading(__('Bestaande e-mails synchroniseren naar APIs'))
+                ->modalDescription(__('Stuurt eerder verzamelde e-mailadressen alsnog naar de geselecteerde APIs. Reeds gesynchroniseerde combinaties van e-mail + API worden overgeslagen op basis van het log.'))
+                ->modalSubmitActionLabel(__('Backfill starten'))
                 ->form(function () {
                     $apiOptions = [];
                     foreach (Customsetting::get('apis', null, []) ?? [] as $configuredApi) {
@@ -522,33 +522,33 @@ class OrderSettingsPage extends Page
 
                     return [
                         CheckboxList::make('api_classes')
-                            ->label('APIs')
-                            ->helperText('Kies de APIs waar e-mails naartoe gestuurd moeten worden.')
+                            ->label(__('APIs'))
+                            ->helperText(__('Kies de APIs waar e-mails naartoe gestuurd moeten worden.'))
                             ->options($apiOptions)
                             ->default(array_keys($apiOptions))
                             ->columns(1)
                             ->required(),
                         CheckboxList::make('sources')
-                            ->label('Bronnen')
-                            ->helperText('Kies waar de e-mailadressen vandaan moeten komen.')
+                            ->label(__('Bronnen'))
+                            ->helperText(__('Kies waar de e-mailadressen vandaan moeten komen.'))
                             ->options($sourceOptions)
                             ->default(array_keys($sourceOptions))
                             ->columns(1)
                             ->required(),
                         CheckboxList::make('order_origins')
-                            ->label('Order-origins (alleen voor bron "orders")')
-                            ->helperText('Kies welke order-origins meegenomen worden uit de orders-bron. Bol-bestellingen staan standaard uit.')
+                            ->label(__('Order-origins (alleen voor bron "orders")'))
+                            ->helperText(__('Kies welke order-origins meegenomen worden uit de orders-bron. Bol-bestellingen staan standaard uit.'))
                             ->options($orderOriginOptions)
                             ->default($defaultOrigins)
                             ->columns(1)
                             ->visible(! empty($orderOriginOptions)),
                         Toggle::make('only_marketing')
-                            ->label('Alleen waar marketing-toestemming aanwezig is')
-                            ->helperText('Filtert bestellingen + klantaccounts op marketing = true. Bronnen zonder marketing-kolom worden volledig meegenomen.')
+                            ->label(__('Alleen waar marketing-toestemming aanwezig is'))
+                            ->helperText(__('Filtert bestellingen + klantaccounts op marketing = true. Bronnen zonder marketing-kolom worden volledig meegenomen.'))
                             ->default(false),
                         TextInput::make('batch_size')
-                            ->label('Batchgrootte')
-                            ->helperText('Aantal records per batch om rate-limits van externe APIs te respecteren.')
+                            ->label(__('Batchgrootte'))
+                            ->helperText(__('Aantal records per batch om rate-limits van externe APIs te respecteren.'))
                             ->numeric()
                             ->minValue(1)
                             ->maxValue(500)
@@ -566,7 +566,7 @@ class OrderSettingsPage extends Page
                     );
 
                     Notification::make()
-                        ->title('Backfill gestart - resultaten verschijnen in het log')
+                        ->title(__('Backfill gestart - resultaten verschijnen in het log'))
                         ->success()
                         ->send();
                 }),
@@ -577,7 +577,7 @@ class OrderSettingsPage extends Page
     {
         return [
             Action::make('testInvoicePrinter')
-                ->label('Test factuur printer')
+                ->label(__('Test factuur printer'))
                 ->visible(Customsetting::get('packing_slip_printer_connector_descriptor', null, false))
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();
@@ -591,7 +591,7 @@ class OrderSettingsPage extends Page
                     $order->printInvoice();
                 }),
             Action::make('testPackingSlipPrinter')
-                ->label('Test pakbon printer')
+                ->label(__('Test pakbon printer'))
                 ->visible(Customsetting::get('packing_slip_printer_connector_descriptor', null, false))
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();

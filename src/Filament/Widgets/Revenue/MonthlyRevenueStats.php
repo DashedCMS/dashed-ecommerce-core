@@ -40,13 +40,13 @@ class MonthlyRevenueStats extends StatsOverviewWidget
 
         return [
             StatsOverviewWidget\Stat::make('Aantal bestellingen (deze maand)', $statistics['month']['orders'])
-                ->description($statistics['monthReturn']['orders'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['monthReturn']['orders']])),
             StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['month']['orderAmount'])
-                ->description($statistics['monthReturn']['orderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['monthReturn']['orderAmount']])),
             StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['month']['averageOrderAmount'])
-                ->description($statistics['monthReturn']['averageOrderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['monthReturn']['averageOrderAmount']])),
             StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['month']['products'])
-                ->description($statistics['monthReturn']['products'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['monthReturn']['products']])),
         ];
     }
 }

@@ -52,19 +52,19 @@ class ProductTable extends TableWidget
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable()
-                    ->label('Product')
+                    ->label(__('Product'))
                     ->openUrlInNewTab()
                     ->url(fn ($record) => route('filament.dashed.resources.products.edit', ['record' => $record->id])),
                 TextColumn::make('purchases')
-                    ->label('Aantal verkocht')
+                    ->label(__('Aantal verkocht'))
                     ->sortable(),
                 TextColumn::make('stock')
-                    ->label('Voorraad')
+                    ->label(__('Voorraad'))
                     ->sortable()
                     ->getStateUsing(fn ($record) => $record->use_stock ? $record->stock : ($record->stock_status == 'in_stock' ? 100000 : 0)),
                 TextColumn::make('amountSold')
                     ->money('EUR')
-                    ->label('Totaal opgeleverd')
+                    ->label(__('Totaal opgeleverd'))
                     ->getStateUsing(fn ($record) => $this->orderProducts->where('product_id', $record->id)->sum('price')),
             ]);
     }

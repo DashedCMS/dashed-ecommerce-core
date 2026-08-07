@@ -179,21 +179,21 @@ class DashedEcommerceCorePlugin implements Plugin
                     ->iconButton()
                     ->color('gray')
                     ->icon('heroicon-o-arrow-path')
-                    ->label('Verzendstatussen ophalen')
-                    ->tooltip('Verzendstatussen ophalen bij alle verzendkoppelingen')
+                    ->label(__('Verzendstatussen ophalen'))
+                    ->tooltip(__('Verzendstatussen ophalen bij alle verzendkoppelingen'))
                     ->visible(fn () => count(ecommerce()->shippingStatusCommands()) > 0)
                     ->requiresConfirmation()
-                    ->modalHeading('Verzendstatussen synchroniseren')
-                    ->modalDescription('Hiermee wordt voor elke niet-afgehandelde bestelling de huidige status bij alle gekoppelde vervoerders opgehaald en bijgewerkt. De sync draait in de achtergrond.')
-                    ->modalSubmitActionLabel('Sync starten')
+                    ->modalHeading(__('Verzendstatussen synchroniseren'))
+                    ->modalDescription(__('Hiermee wordt voor elke niet-afgehandelde bestelling de huidige status bij alle gekoppelde vervoerders opgehaald en bijgewerkt. De sync draait in de achtergrond.'))
+                    ->modalSubmitActionLabel(__('Sync starten'))
                     ->action(function () {
                         foreach (ecommerce()->shippingStatusCommands() as $command) {
                             Artisan::queue($command)->onQueue('ecommerce');
                         }
 
                         Notification::make()
-                            ->title('Sync gestart')
-                            ->body('De verzendstatussen worden in de achtergrond opgehaald.')
+                            ->title(__('Sync gestart'))
+                            ->body(__('De verzendstatussen worden in de achtergrond opgehaald.'))
                             ->success()
                             ->send();
                     }),

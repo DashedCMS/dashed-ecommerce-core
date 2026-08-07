@@ -60,14 +60,14 @@ class RecommendationsDebugPage extends Page
     {
         return $schema->components([
             Select::make('productId')
-                ->label('Product')
+                ->label(__('Product'))
                 ->options(fn () => Product::query()->limit(200)->orderBy('name')->pluck('name', 'id')->all())
                 ->searchable()
                 ->reactive()
                 ->afterStateUpdated(fn () => $this->compute()),
 
             Select::make('placement')
-                ->label('Placement')
+                ->label(__('Placement'))
                 ->options(collect(RecommendationPlacement::cases())
                     ->mapWithKeys(fn ($c) => [$c->value => $c->name])
                     ->all())

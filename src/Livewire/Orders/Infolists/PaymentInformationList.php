@@ -42,61 +42,61 @@ class PaymentInformationList extends Component implements HasSchemas
         return $schema
             ->record($this->order)
             ->components([
-                Fieldset::make('payment_info')->columnSpanFull()
-                    ->label('Betaal informatie')
+                Fieldset::make(__('payment_info'))->columnSpanFull()
+                    ->label(__('Betaal informatie'))
                     ->schema([
                         TextEntry::make('order_origin')
-                            ->label('Bestellingsherkomst'),
+                            ->label(__('Bestellingsherkomst')),
 
                         TextEntry::make('ip')
-                            ->label('IP'),
+                            ->label(__('IP')),
 
                         TextEntry::make('note')
-                            ->label('Notitie')
+                            ->label(__('Notitie'))
                             ->state(fn (Order $record) => $record->note ?: 'Geen notitie'),
 
                         IconEntry::make('marketing')
-                            ->label('Marketing geaccepteerd')
+                            ->label(__('Marketing geaccepteerd'))
                             ->trueIcon('heroicon-o-check-circle')
                             ->falseIcon('heroicon-o-x-circle'),
 
                         TextEntry::make('invoice_id')
-                            ->label('Factuur ID'),
+                            ->label(__('Factuur ID')),
 
                         TextEntry::make('payment_method_name')
-                            ->label('Betaalmethode')
+                            ->label(__('Betaalmethode'))
                             ->state(fn (Order $record) => $record->mainPaymentMethod?->name ?? 'Niet gevonden'),
 
                         TextEntry::make('psp')
-                            ->label('PSP')
+                            ->label(__('PSP'))
                             ->visible(fn (Order $record) => (bool) $record->psp),
 
                         TextEntry::make('psp_id')
-                            ->label('PSP ID')
+                            ->label(__('PSP ID'))
                             ->visible(fn (Order $record) => (bool) $record->psp),
 
                         TextEntry::make('shipping_method_name')
-                            ->label('Verzendmethode')
+                            ->label(__('Verzendmethode'))
                             ->state(fn (Order $record) => $record->shippingMethod->name ?? 'Niet gevonden'),
 
                         TextEntry::make('subtotal')
-                            ->label('Subtotaal')
+                            ->label(__('Subtotaal'))
                             ->money('EUR'),
 
                         TextEntry::make('discount')
-                            ->label('Korting')
+                            ->label(__('Korting'))
                             ->money('EUR'),
 
                         TextEntry::make('discountCode.code')
-                            ->label('Kortingscode')
+                            ->label(__('Kortingscode'))
                             ->visible(fn (Order $record) => (bool) $record->discountCode),
 
                         TextEntry::make('btw')
-                            ->label('BTW')
+                            ->label(__('BTW'))
                             ->money('EUR'),
 
                         KeyValueEntry::make('vat_percentages')
-                            ->label('BTW percentages')
+                            ->label(__('BTW percentages'))
                             ->keyLabel('Percentage')
                             ->valueLabel('Bedrag')
                             ->state(function (Order $record) {
@@ -109,17 +109,17 @@ class PaymentInformationList extends Component implements HasSchemas
                             }),
 
                         TextEntry::make('vat_reverse_charge')
-                            ->label('BTW verlegd')
+                            ->label(__('BTW verlegd'))
                         ->getStateUsing(fn ($record) => $record->vat_reverse_charge ? 'Ja' : 'Nee'),
 
                         TextEntry::make('total')
-                            ->label('Totaal')
+                            ->label(__('Totaal'))
                             ->money('EUR'),
                     ])
                     ->columns(4),
 
-                Fieldset::make('extra_info')->columnSpanFull()
-                    ->label('Extra informatie')
+                Fieldset::make(__('extra_info'))->columnSpanFull()
+                    ->label(__('Extra informatie'))
                     ->schema($customOrderFields)
                     ->visible(count($customOrderFields) > 0)
                     ->columns(4),

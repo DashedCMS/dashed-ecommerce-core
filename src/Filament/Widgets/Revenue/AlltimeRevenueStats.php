@@ -38,13 +38,13 @@ class AlltimeRevenueStats extends StatsOverviewWidget
 
         return [
             StatsOverviewWidget\Stat::make('Aantal bestellingen (altijd)', $statistics['allTime']['orders'])
-                ->description($statistics['allTimeReturn']['orders'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['allTimeReturn']['orders']])),
             StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['allTime']['orderAmount'])
-                ->description($statistics['allTimeReturn']['orderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['allTimeReturn']['orderAmount']])),
             StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['allTime']['averageOrderAmount'])
-                ->description($statistics['allTimeReturn']['averageOrderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['allTimeReturn']['averageOrderAmount']])),
             StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['allTime']['products'])
-                ->description($statistics['allTimeReturn']['products'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['allTimeReturn']['products']])),
         ];
     }
 

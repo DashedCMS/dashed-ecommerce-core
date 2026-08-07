@@ -54,30 +54,30 @@ class ShippingZoneResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Globale informatie')->columnSpanFull()
+                Section::make(__('Globale informatie'))->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
-                            ->label('Actief op site')
+                            ->label(__('Actief op site'))
                             ->options(collect(Sites::getSites())->pluck('name', 'id'))
                             ->hidden(! (Sites::getAmountOfSites() > 1))
                             ->required(),
                     ])
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->collapsed(fn ($livewire) => $livewire instanceof EditShippingZone),
-                Section::make('Content')->columnSpanFull()
+                Section::make(__('Content'))->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
-                            ->label('Name')
+                            ->label(__('Name'))
                             ->required()
                             ->maxLength(100),
                         TextInput::make('search_fields')
-                            ->label('Voer extra woorden in waarop deze verzendzone geactiveerd mag worden, woorden scheiden met een komma')
-                            ->helperText('Alleen relevant als land veld geen select box is.')
+                            ->label(__('Voer extra woorden in waarop deze verzendzone geactiveerd mag worden, woorden scheiden met een komma'))
+                            ->helperText(__('Alleen relevant als land veld geen select box is.'))
                             ->maxLength(255),
                         Toggle::make('hide_vat_on_invoice')
-                            ->label('Verberg BTW op de factuur bij het kiezen van deze verzendzone'),
+                            ->label(__('Verberg BTW op de factuur bij het kiezen van deze verzendzone')),
                         Select::make('zones')
-                            ->label('Geactiveerde regio\'s')
+                            ->label(__('Geactiveerde regio\'s'))
                             ->multiple()
                             ->options(function () {
                                 $countries = [];
@@ -89,21 +89,21 @@ class ShippingZoneResource extends Resource
                             })
                             ->required(),
                         Select::make('disabled_payment_method_ids')
-                            ->label('Deactiveer betalingsmethodes voor deze verzendzone')
+                            ->label(__('Deactiveer betalingsmethodes voor deze verzendzone'))
                             ->multiple()
                             ->options(collect(PaymentMethods::get())->pluck('name', 'id')->toArray()),
                         Toggle::make('vat_reverse_charge')
-                            ->label('Deze verzendzone heeft een BTW verleggingsregeling'),
+                            ->label(__('Deze verzendzone heeft een BTW verleggingsregeling')),
                         Toggle::make('country_specific_vat')
                             ->reactive()
-                            ->label('Deze verzendzone heeft een land specifieke BTW percentage')
-                            ->helperText('Gebruik deze optie indien dit nodig is voor de OSS (vanaf 10.000 ex btw omzet in alle buitenlandse EU landen)'),
+                            ->label(__('Deze verzendzone heeft een land specifieke BTW percentage'))
+                            ->helperText(__('Gebruik deze optie indien dit nodig is voor de OSS (vanaf 10.000 ex btw omzet in alle buitenlandse EU landen)')),
                         TextInput::make('country_specific_vat_rate')
                             ->visible(fn (Get $get) => $get('country_specific_vat'))
                             ->required()
                             ->nullable()
                             ->numeric()
-                            ->suffix('%')
+                            ->suffix(__('%'))
                             ->minValue(0)
                             ->maxValue(100),
                     ]),
@@ -115,11 +115,11 @@ class ShippingZoneResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->sortable()
                     ->searchable(query: SearchQuery::make()),
                 TextColumn::make('site_id')
-                    ->label('Actief op site')
+                    ->label(__('Actief op site'))
                     ->sortable()
                     ->hidden(! (Sites::getAmountOfSites() > 1)),
             ])

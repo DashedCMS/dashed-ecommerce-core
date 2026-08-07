@@ -16,12 +16,12 @@ class EditOrder extends EditRecord
     {
         return [
             Action::make('backToView')
-                ->label('Terug naar order')
+                ->label(__('Terug naar order'))
                 ->icon('heroicon-m-arrow-uturn-left')
                 ->color('gray')
                 ->url(fn () => route('filament.dashed.resources.orders.view', ['record' => $this->record->id])),
             Action::make('stopRecoveryEmails')
-                ->label('Stop herstel-emails')
+                ->label(__('Stop herstel-emails'))
                 ->icon('heroicon-m-no-symbol')
                 ->color('warning')
                 ->visible(fn () => $this->record->email && AbandonedCartEmail::query()
@@ -30,12 +30,12 @@ class EditOrder extends EditRecord
                     ->whereNull('cancelled_at')
                     ->exists())
                 ->requiresConfirmation()
-                ->modalHeading('Herstel-emails stoppen')
-                ->modalDescription('Alle openstaande herstel-emails voor deze klant op dit email-adres worden geannuleerd.')
+                ->modalHeading(__('Herstel-emails stoppen'))
+                ->modalDescription(__('Alle openstaande herstel-emails voor deze klant op dit email-adres worden geannuleerd.'))
                 ->action(function () {
                     $count = AbandonedCartEmail::cancelPendingForEmail($this->record->email, 'manual_admin');
                     Notification::make()
-                        ->title("{$count} geplande herstel-email(s) geannuleerd")
+                        ->title(__(':aantal geplande herstel-email(s) geannuleerd', ['aantal' => $count]))
                         ->success()
                         ->send();
                 }),

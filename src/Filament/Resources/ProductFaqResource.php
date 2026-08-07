@@ -54,22 +54,22 @@ class ProductFaqResource extends Resource
     {
         return $schema
             ->schema(array_merge([
-                Section::make('Content')
+                Section::make(__('Content'))
                     ->columnSpanFull()
                     ->schema(array_merge([
                         TextInput::make('name')
-                            ->label('Naam')
+                            ->label(__('Naam'))
                             ->required()
                             ->maxLength(100),
                         Repeater::make('questions')
-                            ->label('Vragen')
+                            ->label(__('Vragen'))
                             ->schema([
                                 TextInput::make('question')
-                                    ->label('Vraag')
+                                    ->label(__('Vraag'))
                                     ->required()
                                     ->maxLength(255),
                                 cms()->editorField('answer')
-                                    ->label('Antwoord')
+                                    ->label(__('Antwoord'))
                                     ->required()
                                     ->columnSpanFull(),
                             ])
@@ -78,28 +78,28 @@ class ProductFaqResource extends Resource
                             ->collapsible(),
                         Select::make('products')
                             ->relationship('products', 'name')
-                            ->label('Gekoppelde producten')
+                            ->label(__('Gekoppelde producten'))
                             ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->searchable()
                             ->multiple()
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->hintAction(
                                 Action::make('addAllProducts')
-                                    ->label('Voeg alle producten toe')
+                                    ->label(__('Voeg alle producten toe'))
                                     ->action(function (Set $set) {
                                         $set('products', Product::all()->pluck('id')->toArray());
                                     }),
                             ),
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
-                            ->label('Gekoppelde categorieen')
+                            ->label(__('Gekoppelde categorieen'))
                             ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
                             ->searchable()
                             ->multiple()
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->hintAction(
                                 Action::make('addAllCategories')
-                                    ->label('Voeg alle categorieen toe')
+                                    ->label(__('Voeg alle categorieen toe'))
                                     ->action(function (Set $set) {
                                         $set('productCategories', ProductCategory::all()->pluck('id')->toArray());
                                     }),
@@ -113,12 +113,12 @@ class ProductFaqResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('products_count')
                     ->counts('products')
-                    ->label('Aantal producten')
+                    ->label(__('Aantal producten'))
                     ->sortable(),
             ])
             ->reorderable('order')

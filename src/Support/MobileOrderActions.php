@@ -339,8 +339,8 @@ class MobileOrderActions
                     }
 
                     [$route, $defaultTitle, $defaultBody] = match (true) {
-                        $subject instanceof Product => ["/product/{$subject->id}", 'Voorraad-melding', (string) $subject->name],
-                        $subject instanceof Order => ["/order/{$subject->id}", 'Klant-melding', (string) $subject->email],
+                        $subject instanceof Product => ["/product/{$subject->id}", __('Voorraad-melding'), (string) $subject->name],
+                        $subject instanceof Order => ["/order/{$subject->id}", __('Klant-melding'), (string) $subject->email],
                         default => [null, null, null],
                     };
 

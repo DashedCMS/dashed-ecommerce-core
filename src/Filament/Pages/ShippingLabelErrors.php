@@ -44,7 +44,7 @@ class ShippingLabelErrors extends Page
             $provider->retry($id);
 
             Notification::make()
-                ->title('Label opnieuw in wachtrij gezet')
+                ->title(__('Label opnieuw in wachtrij gezet'))
                 ->success()
                 ->send();
         }

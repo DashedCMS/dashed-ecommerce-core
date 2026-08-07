@@ -14,7 +14,7 @@ class OrderTrackAndTraceBlock extends EmailBlock
 
     public static function label(): string
     {
-        return 'Track & trace';
+        return __('Track & trace');
     }
 
     public static function filamentBlock(): Block

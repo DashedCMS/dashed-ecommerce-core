@@ -15,7 +15,7 @@ class OrderMethodsBlock extends EmailBlock
 
     public static function label(): string
     {
-        return 'Verzend- en betaalmethode';
+        return __('Verzend- en betaalmethode');
     }
 
     public static function filamentBlock(): Block
@@ -24,9 +24,9 @@ class OrderMethodsBlock extends EmailBlock
             ->label(self::label())
             ->icon('heroicon-o-truck')
             ->schema([
-                Toggle::make('show_shipping')->label('Verzendmethode tonen')->default(true),
-                Toggle::make('show_payment')->label('Betaalmethode tonen')->default(true),
-                Toggle::make('show_instructions')->label('Betaalinstructies tonen')->default(true),
+                Toggle::make('show_shipping')->label(__('Verzendmethode tonen'))->default(true),
+                Toggle::make('show_payment')->label(__('Betaalmethode tonen'))->default(true),
+                Toggle::make('show_instructions')->label(__('Betaalinstructies tonen'))->default(true),
             ]);
     }
 

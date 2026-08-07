@@ -47,17 +47,17 @@ class FulfillmentCompanyResource extends Resource
         return $schema
             ->schema([
                 TextInput::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->maxLength(255)
                     ->required(),
                 TextInput::make('email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->maxLength(255)
                     ->email()
                     ->required(),
                 Toggle::make('process_automatically')
-                    ->label('Automatisch verwerken')
-                    ->helperText('Als je dit aan zet worden bestelling met producten van dit fulfillment bedrijf automatisch naar het bedrijf gemaild.'),
+                    ->label(__('Automatisch verwerken'))
+                    ->helperText(__('Als je dit aan zet worden bestelling met producten van dit fulfillment bedrijf automatisch naar het bedrijf gemaild.')),
             ]);
     }
 
@@ -66,22 +66,22 @@ class FulfillmentCompanyResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->url(fn ($record) => "mailto:{$record->email}")
                     ->searchable()
                     ->sortable(),
                 IconColumn::make('process_automatically')
-                    ->label('Automatisch verwerken')
+                    ->label(__('Automatisch verwerken'))
                     ->trueIcon('heroicon-s-check-circle')
                     ->falseIcon('heroicon-s-x-circle')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('products_count')
-                    ->label('Aantal producten')
+                    ->label(__('Aantal producten'))
                     ->counts('products')
                     ->sortable(),
             ])

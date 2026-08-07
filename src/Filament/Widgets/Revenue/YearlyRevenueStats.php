@@ -40,13 +40,13 @@ class YearlyRevenueStats extends StatsOverviewWidget
 
         return [
             StatsOverviewWidget\Stat::make('Aantal bestellingen (dit jaar)', $statistics['year']['orders'])
-                ->description($statistics['yearReturn']['orders'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['yearReturn']['orders']])),
             StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['year']['orderAmount'])
-                ->description($statistics['yearReturn']['orderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['yearReturn']['orderAmount']])),
             StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['year']['averageOrderAmount'])
-                ->description($statistics['yearReturn']['averageOrderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['yearReturn']['averageOrderAmount']])),
             StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['year']['products'])
-                ->description($statistics['yearReturn']['products'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['yearReturn']['products']])),
         ];
     }
 }

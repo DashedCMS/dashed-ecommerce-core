@@ -25,8 +25,8 @@ class PrintJobExhaustedRetriesNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return FilamentNotification::make()
-            ->title("Print job opgegeven (order {$this->job->order?->invoice_id})")
-            ->body($this->job->error_message ?? 'Geen foutmelding')
+            ->title(__('Print job opgegeven (order :nummer)', ['nummer' => $this->job->order?->invoice_id]))
+            ->body($this->job->error_message ?? __('Geen foutmelding'))
             ->danger()
             ->getDatabaseMessage();
     }

@@ -55,69 +55,69 @@ class PaymentMethodResource extends Resource
     {
         $contentSchema = [
             TextInput::make('name')
-                ->label('Name')
+                ->label(__('Name'))
                 ->required()
                 ->maxLength(100),
             TextInput::make('psp')
-                ->label('PSP')
+                ->label(__('PSP'))
                 ->disabled(),
             TextInput::make('psp_id')
-                ->label('PSP ID')
+                ->label(__('PSP ID'))
                 ->disabled(),
             Toggle::make('active')
-                ->label('Actief')
+                ->label(__('Actief'))
                 ->default(1),
             Toggle::make('is_cash_payment')
-                ->label('Dit is een contante betalingsmethode')
+                ->label(__('Dit is een contante betalingsmethode'))
                 ->default(0),
             Select::make('type')
-                ->label('Type')
-                ->helperText('Waarvoor is deze betaalmethode?')
+                ->label(__('Type'))
+                ->helperText(__('Waarvoor is deze betaalmethode?'))
                 ->default('online')
                 ->options(PaymentMethods::getTypes())
                 ->reactive()
                 ->required(),
             Select::make('pin_terminal_id')
-                ->label('PIN terminal')
-                ->helperText('Pin terminal')
+                ->label(__('PIN terminal'))
+                ->helperText(__('Pin terminal'))
                 ->visible(fn (Get $get) => $get('type') == 'pos')
                 ->options(fn () => PinTerminal::active()->get()->pluck('name', 'id')->toArray())
                 ->searchable()
                 ->preload(),
             Toggle::make('postpay')
-                ->label('Achteraf betaalmethode'),
+                ->label(__('Achteraf betaalmethode')),
             Textarea::make('additional_info')
-                ->label('Aanvullende gegevens')
-                ->helperText('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen')
+                ->label(__('Aanvullende gegevens'))
+                ->helperText(__('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen'))
                 ->rows(2)
                 ->maxLength(1250),
             Textarea::make('payment_instructions')
-                ->label('Betalingsinstructies')
-                ->helperText('Wordt getoond aan klanten wanneer zij een bestelling hebben geplaatst met deze betaalmethode')
+                ->label(__('Betalingsinstructies'))
+                ->helperText(__('Wordt getoond aan klanten wanneer zij een bestelling hebben geplaatst met deze betaalmethode'))
                 ->rows(2)
                 ->maxLength(1250),
             mediaHelper()->field('image', 'Afbeelding / icon', isImage: true),
             TextInput::make('extra_costs')
-                ->label('Extra kosten wanneer deze betalingsmethode wordt gekozen')
+                ->label(__('Extra kosten wanneer deze betalingsmethode wordt gekozen'))
                 ->maxValue(100000)
                 ->numeric()
                 ->required()
                 ->default(0),
             TextInput::make('available_from_amount')
-                ->label('Vanaf hoeveel € moet deze betaalmethode beschikbaar zijn')
+                ->label(__('Vanaf hoeveel € moet deze betaalmethode beschikbaar zijn'))
                 ->numeric()
                 ->maxValue(100000)
                 ->required()
                 ->default(0),
             TextInput::make('deposit_calculation')
-                ->label('Calculatie voor de aanbetaling met deze betaalmethode (leeg = geen aanbetaling), let op: hiervoor moet je een PSP gekoppeld hebben & dit werkt niet bij het aanmaken van handmatige orders')
-                ->helperText('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}')
+                ->label(__('Calculatie voor de aanbetaling met deze betaalmethode (leeg = geen aanbetaling), let op: hiervoor moet je een PSP gekoppeld hebben & dit werkt niet bij het aanmaken van handmatige orders'))
+                ->helperText(__('Variables: {ORDER_TOTAL} {ORDER_TOTAL_MINUS_PAYMENT_COSTS}'))
                 ->maxLength(255)
                 ->reactive()
                 ->hidden(fn ($record) => ! $record || ($record && $record->psp != 'own')),
             Select::make('deposit_calculation_payment_method_ids')
                 ->multiple()
-                ->label('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden')
+                ->label(__('Vink de betaalmethodes aan waarmee een aanbetaling voldaan mag worden'))
                 ->options(PaymentMethod::where('psp', '!=', 'own')->pluck('name', 'id')->toArray())
                 ->hidden(fn ($record, Get $get) => (! $record || ($record && $record->psp != 'own')) || ! $get('deposit_calculation')),
             Select::make('users')
@@ -126,24 +126,24 @@ class PaymentMethodResource extends Resource
                 ->multiple()
                 ->preload()
                 ->searchable()
-                ->label('Wie mag deze betaalmethode gebruiken?')
-                ->helperText('Leeg = iedereen mag deze betaalmethode gebruiken'),
+                ->label(__('Wie mag deze betaalmethode gebruiken?'))
+                ->helperText(__('Leeg = iedereen mag deze betaalmethode gebruiken')),
             Select::make('shippingMethods')
                 ->relationship('shippingMethods')
                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->name)
                 ->multiple()
                 ->preload()
                 ->searchable()
-                ->label('Activeer bepaalde verzendmethodes voor deze betaalmethode')
-                ->helperText('Leeg = alle verzendmethodes zijn beschikbaar voor deze betaalmethode'),
+                ->label(__('Activeer bepaalde verzendmethodes voor deze betaalmethode'))
+                ->helperText(__('Leeg = alle verzendmethodes zijn beschikbaar voor deze betaalmethode')),
         ];
 
         return $schema
             ->schema([
-                Section::make('Globale informatie')->columnSpanFull()
+                Section::make(__('Globale informatie'))->columnSpanFull()
                     ->schema([
                         Select::make('site_id')
-                            ->label('Actief op site')
+                            ->label(__('Actief op site'))
                             ->options(collect(Sites::getSites())->pluck('name', 'id')->toArray())
                             ->hidden(function () {
                                 return ! (Sites::getAmountOfSites() > 1);
@@ -154,7 +154,7 @@ class PaymentMethodResource extends Resource
                         return ! (Sites::getAmountOfSites() > 1);
                     })
                     ->collapsed(fn ($livewire) => $livewire instanceof EditPaymentMethod),
-                Section::make('Betaalmethode')
+                Section::make(__('Betaalmethode'))
                     ->columnSpanFull()
                     ->schema($contentSchema),
             ]);
@@ -165,23 +165,23 @@ class PaymentMethodResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('site_id')
-                    ->label('Actief op site')
+                    ->label(__('Actief op site'))
                     ->sortable()
                     ->hidden(! (Sites::getAmountOfSites() > 1))
                     ->searchable(),
                 TextColumn::make('psp')
-                    ->label('PSP')
+                    ->label(__('PSP'))
                     ->sortable()
                     ->searchable(),
                 ImageColumn::make('image')
-                    ->label('Afbeelding')
+                    ->label(__('Afbeelding'))
                     ->getStateUsing(fn ($record) => $record->image ? (mediaHelper()->getSingleMedia($record->image)->url ?? '') : ''),
                 IconColumn::make('active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle'),
 

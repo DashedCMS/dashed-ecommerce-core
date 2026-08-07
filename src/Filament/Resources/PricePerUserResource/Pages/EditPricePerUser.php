@@ -33,23 +33,23 @@ class EditPricePerUser extends EditRecord
         return [
             Impersonate::make(),
             Action::make('exportProducts')
-                ->label('Producten')
+                ->label(__('Producten'))
                 ->icon('heroicon-s-arrow-down-tray')
                 ->action(function () {
                     Notification::make()
-                        ->title('Exporteren')
-                        ->body('Het exporteren is gelukt.')
+                        ->title(__('Exporteren'))
+                        ->body(__('Het exporteren is gelukt.'))
                         ->success()
                         ->send();
 
                     return Excel::download(new PricePerProductForUserExport($this->record), 'Prijzen voor '.$this->record->name.'.xlsx');
                 }),
             Action::make('importProducts')
-                ->label('Producten')
+                ->label(__('Producten'))
                 ->icon('heroicon-s-arrow-up-tray')
                 ->schema([
                     FileUpload::make('file')
-                        ->label('Bestand')
+                        ->label(__('Bestand'))
                         ->disk('local')
                         ->directory('imports')
                         ->rules([
@@ -63,29 +63,29 @@ class EditPricePerUser extends EditRecord
                     ImportPricesPerUserPerProduct::dispatch($this->record, $data['file']);
 
                     Notification::make()
-                        ->title('Importeren')
-                        ->body('Het importeren is gelukt, refresh de pagina.')
+                        ->title(__('Importeren'))
+                        ->body(__('Het importeren is gelukt, refresh de pagina.'))
                         ->success()
                         ->send();
                 }),
             Action::make('export')
-                ->label('Categorieen')
+                ->label(__('Categorieen'))
                 ->icon('heroicon-s-arrow-down-tray')
                 ->action(function () {
                     Notification::make()
-                        ->title('Exporteren')
-                        ->body('Het exporteren is gelukt.')
+                        ->title(__('Exporteren'))
+                        ->body(__('Het exporteren is gelukt.'))
                         ->success()
                         ->send();
 
                     return Excel::download(new PricePerCategoryForUserExport($this->record), 'Prijzen van categorieen voor '.$this->record->name.'.xlsx');
                 }),
             Action::make('import')
-                ->label('Categorieen')
+                ->label(__('Categorieen'))
                 ->icon('heroicon-s-arrow-up-tray')
                 ->schema([
                     FileUpload::make('file')
-                        ->label('Bestand')
+                        ->label(__('Bestand'))
                         ->disk('local')
                         ->directory('imports')
                         ->rules([
@@ -99,8 +99,8 @@ class EditPricePerUser extends EditRecord
                     ImportPricesPerUserPerProduct::dispatch($this->record, $data['file']);
 
                     Notification::make()
-                        ->title('Importeren')
-                        ->body('Het importeren is gelukt, refresh de pagina.')
+                        ->title(__('Importeren'))
+                        ->body(__('Het importeren is gelukt, refresh de pagina.'))
                         ->success()
                         ->send();
                 }),

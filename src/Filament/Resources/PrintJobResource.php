@@ -41,18 +41,18 @@ class PrintJobResource extends Resource
                 TextColumn::make('ulid')->limit(8)->tooltip(fn ($state) => $state),
                 TextColumn::make('type')->badge()->formatStateUsing(fn ($state) => $state?->label()),
                 TextColumn::make('order.invoice_id')
-                    ->label('Bestelling')
+                    ->label(__('Bestelling'))
                     ->url(fn (PrintJob $r) => $r->order
                         ? route('filament.dashed.resources.orders.view', $r->order_id)
                         : null),
-                TextColumn::make('printer.name')->label('Printer')->placeholder('-'),
+                TextColumn::make('printer.name')->label(__('Printer'))->placeholder(__('-')),
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn ($state) => $state?->color())
                     ->formatStateUsing(fn ($state) => $state?->label()),
                 TextColumn::make('attempts'),
                 TextColumn::make('created_at')->since(),
-                TextColumn::make('printed_at')->since()->placeholder('-'),
+                TextColumn::make('printed_at')->since()->placeholder(__('-')),
             ])
             ->filters([
                 SelectFilter::make('status')->multiple()->options(
@@ -82,12 +82,12 @@ class PrintJobResource extends Resource
             ])
             ->toolbarActions([
                 BulkAction::make('retry_bulk')
-                    ->label('Opnieuw proberen')
+                    ->label(__('Opnieuw proberen'))
                     ->action(fn (Collection $records) => $records
                         ->filter(fn (PrintJob $j) => $j->status === PrintJobStatus::Failed)
                         ->each(fn (PrintJob $j) => $j->retry())),
                 BulkAction::make('cancel_bulk')
-                    ->label('Annuleren')
+                    ->label(__('Annuleren'))
                     ->action(fn (Collection $records) => $records->each(
                         fn (PrintJob $j) => $j->update(['status' => PrintJobStatus::Cancelled])
                     )),

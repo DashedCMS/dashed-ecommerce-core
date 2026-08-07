@@ -67,13 +67,13 @@ class RevenueStats extends StatsOverviewWidget
 
         return [
             StatsOverviewWidget\Stat::make('Aantal bestellingen', $statistics['normal']['orders'])
-                ->description($statistics['normalReturn']['orders'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['orders']])),
             StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['normal']['orderAmount'])
-                ->description($statistics['normalReturn']['orderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['orderAmount']])),
             StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['normal']['averageOrderAmount'])
-                ->description($statistics['normalReturn']['averageOrderAmount'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['averageOrderAmount']])),
             StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['normal']['products'])
-                ->description($statistics['normalReturn']['products'] . ' retour'),
+                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['products']])),
         ];
     }
 }

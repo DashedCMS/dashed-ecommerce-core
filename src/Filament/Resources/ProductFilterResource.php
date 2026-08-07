@@ -52,24 +52,24 @@ class ProductFilterResource extends Resource
     {
         return $schema
             ->schema(array_merge([
-                Section::make('Content')
+                Section::make(__('Content'))
                     ->columnSpanFull()
                     ->schema(array_merge([
                         Toggle::make('hide_filter_on_overview_page')
-                            ->label('Moet deze filter verborgen worden op de overzichts pagina van de producten?'),
+                            ->label(__('Moet deze filter verborgen worden op de overzichts pagina van de producten?')),
                         Toggle::make('use_stock')
-                            ->label('Voorraad gebruiken bij deze filter?'),
+                            ->label(__('Voorraad gebruiken bij deze filter?')),
                         TextInput::make('name')
-                            ->label('Naam')
+                            ->label(__('Naam'))
                             ->required()
                             ->maxLength(100),
                         Select::make('type')
-                            ->label('Type')
+                            ->label(__('Type'))
                             ->default('select')
                             ->options([
-                                'select' => 'Dropdown',
-                                'image' => 'Afbeelding',
-                                'button' => 'Buttons',
+                                'select' => __('Dropdown'),
+                                'image' => __('Afbeelding'),
+                                'button' => __('Buttons'),
                             ])
                             ->required(),
                     ])),
@@ -81,11 +81,11 @@ class ProductFilterResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 IconColumn::make('hide_filter_on_overview_page')
-                    ->label('Tonen op website')
+                    ->label(__('Tonen op website'))
                     ->trueIcon('heroicon-o-eye-slash')
                     ->trueColor('danger')
                     ->falseIcon('heroicon-o-eye')
@@ -93,10 +93,10 @@ class ProductFilterResource extends Resource
                     ->sortable(),
                 TextColumn::make('product_filter_options_count')
                     ->counts('productFilterOptions')
-                    ->label('Aantal waardes')
+                    ->label(__('Aantal waardes'))
                     ->sortable(),
                 IconColumn::make('use_stock')
-                    ->label('Gebruik met voorraad')
+                    ->label(__('Gebruik met voorraad'))
                     ->trueIcon('heroicon-o-check-circle')
                     ->trueColor('success')
                     ->falseIcon('heroicon-o-x-circle')

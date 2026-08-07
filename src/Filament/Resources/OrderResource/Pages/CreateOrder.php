@@ -43,7 +43,7 @@ class CreateOrder extends Page implements HasSchemas
     {
         return [
             Action::make('updateInfo')
-                ->label('Gegevens bijwerken')
+                ->label(__('Gegevens bijwerken'))
                 ->action(fn () => $this->updateInfo()),
         ];
     }
@@ -55,14 +55,14 @@ class CreateOrder extends Page implements HasSchemas
         $newSchema[] = Wizard\Step::make('Persoonlijke informatie')
             ->schema([
                 Select::make('user_id')
-                    ->label('Hang de bestelling aan een gebruiker')
+                    ->label(__('Hang de bestelling aan een gebruiker'))
                     ->options($this->users)
                     ->searchable()
                     ->reactive(),
                 Toggle::make('marketing')
-                    ->label('De klant accepteert marketing'),
+                    ->label(__('De klant accepteert marketing')),
                 TextInput::make('password')
-                    ->label('Wachtwoord')
+                    ->label(__('Wachtwoord'))
                     ->type('password')
                     ->nullable()
                     ->minLength(6)
@@ -70,7 +70,7 @@ class CreateOrder extends Page implements HasSchemas
                     ->confirmed()
                     ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('password_confirmation')
-                    ->label('Wachtwoord herhalen')
+                    ->label(__('Wachtwoord herhalen'))
                     ->type('password')
                     ->nullable()
                     ->minLength(6)
@@ -78,34 +78,34 @@ class CreateOrder extends Page implements HasSchemas
                     ->confirmed()
                     ->visible(fn (Get $get) => ! $get('user_id')),
                 TextInput::make('first_name')
-                    ->label('Voornaam')
+                    ->label(__('Voornaam'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('last_name')
-                    ->label('Achternaam')
+                    ->label(__('Achternaam'))
                     ->required()
                     ->nullable()
                     ->maxLength(255),
                 DatePicker::make('date_of_birth')
-                    ->label('Geboortedatum')
+                    ->label(__('Geboortedatum'))
                     ->nullable()
                     ->date(),
                 Select::make('gender')
-                    ->label('Geslacht')
+                    ->label(__('Geslacht'))
                     ->options([
-                        '' => 'Niet gekozen',
-                        'm' => 'Man',
-                        'f' => 'Vrouw',
+                        '' => __('Niet gekozen'),
+                        'm' => __('Man'),
+                        'f' => __('Vrouw'),
                     ]),
                 TextInput::make('email')
-                    ->label('Email')
+                    ->label(__('Email'))
                     ->type('email')
                     ->required()
                     ->email()
                     ->minLength(4)
                     ->maxLength(255),
                 TextInput::make('phone_number')
-                    ->label('Telefoon nummer')
+                    ->label(__('Telefoon nummer'))
                     ->maxLength(255),
             ])
             ->columns(2);
@@ -113,28 +113,28 @@ class CreateOrder extends Page implements HasSchemas
         $newSchema[] = Wizard\Step::make('Adres')
             ->schema([
                 TextInput::make('street')
-                    ->label('Straat')
+                    ->label(__('Straat'))
                     ->nullable()
                     ->maxLength(255)
                     ->lazy()
                     ->reactive(),
                 TextInput::make('house_nr')
-                    ->label('Huisnummer')
+                    ->label(__('Huisnummer'))
                     ->nullable()
                     ->required(fn (Get $get) => $get('street'))
                     ->maxLength(255),
                 TextInput::make('zip_code')
-                    ->label('Postcode')
+                    ->label(__('Postcode'))
                     ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('city')
-                    ->label('Stad')
+                    ->label(__('Stad'))
                     ->required(fn (Get $get) => $get('street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('country')
-                    ->label('Land')
+                    ->label(__('Land'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
                         $options = [];
@@ -148,33 +148,33 @@ class CreateOrder extends Page implements HasSchemas
                     ->nullable()
                     ->lazy(),
                 TextInput::make('company_name')
-                    ->label('Bedrijfsnaam')
+                    ->label(__('Bedrijfsnaam'))
                     ->maxLength(255),
                 TextInput::make('btw_id')
-                    ->label('BTW id')
+                    ->label(__('BTW id'))
                     ->maxLength(255),
                 TextInput::make('invoice_street')
-                    ->label('Factuur straat')
+                    ->label(__('Factuur straat'))
                     ->nullable()
                     ->maxLength(255)
                     ->reactive(),
                 TextInput::make('invoice_house_nr')
-                    ->label('Factuur huisnummer')
+                    ->label(__('Factuur huisnummer'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_zip_code')
-                    ->label('Factuur postcode')
+                    ->label(__('Factuur postcode'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 TextInput::make('invoice_city')
-                    ->label('Factuur stad')
+                    ->label(__('Factuur stad'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->nullable()
                     ->maxLength(255),
                 Select::make('invoice_country')
-                    ->label('Factuur land')
+                    ->label(__('Factuur land'))
                     ->required(fn (Get $get) => $get('invoice_street'))
                     ->options(function () {
                         $countries = Countries::getAllSelectedCountries();
@@ -192,31 +192,31 @@ class CreateOrder extends Page implements HasSchemas
         $newSchema[] = Wizard\Step::make('Producten')
             ->schema([
                 Repeater::make('products')
-                    ->label('Kies producten')
-                    ->helperText('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.')
+                    ->label(__('Kies producten'))
+                    ->helperText(__('Check goed of de producten op voorraad zijn. Als een product niet op voorraad is, wordt hij bij stap 5 wel meegeteld, maar niet aangemaakt in de bestelling.'))
                     ->schema([
                         Select::make('id')
-                            ->label('Kies product')
+                            ->label(__('Kies product'))
                             ->options(Product::handOrderShowable()->pluck('name', 'id'))
 //                            ->options($this->allProducts->pluck('name', 'id'))
                             ->required()
                             ->searchable()
                             ->reactive(),
                         TextInput::make('quantity')
-                            ->label('Aantal')
+                            ->label(__('Aantal'))
                             ->numeric()
                             ->required()
                             ->minValue(0)
                             ->maxValue(1000)
                             ->default(0),
                         TextEntry::make('Voorraad')
-                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : 'Kies een product'),
+                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->total_stock : __('Kies een product')),
                         TextEntry::make('Prijs')
-                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : 'Kies een product'),
+                            ->label(fn (Get $get) => $get('id') ? Product::find($get('id'))->currentPrice : __('Kies een product')),
                         TextEntry::make('Afbeelding')
                             ->visible(fn (Get $get) => $get('id') && Product::find($get('id'))->firstImage)
-                            ->label(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'original')->url ?? '') . '">') : 'Kies een product'),
-                        Section::make('Extra\'s')
+                            ->label(fn (Get $get) => $get('id') ? new HtmlString('<img width="300" src="' . (mediaHelper()->getSingleMedia(Product::find($get('id'))->firstImage, 'original')->url ?? '') . '">') : __('Kies een product')),
+                        Section::make(__('Extra\'s'))
                             ->columnSpanFull()
                             ->schema(fn (Get $get) => $get('id') ? $this->getProductExtrasSchema(Product::find($get('id'))) : []),
                     ]),
@@ -275,16 +275,16 @@ class CreateOrder extends Page implements HasSchemas
         $newSchema[] = Wizard\Step::make('Overige informatie')
             ->schema([
                 Textarea::make('note')
-                    ->label('Notitie')
+                    ->label(__('Notitie'))
                     ->nullable()
                     ->maxLength(1500),
                 TextInput::make('discount_code')
-                    ->label('Kortingscode')
+                    ->label(__('Kortingscode'))
                     ->nullable()
                     ->maxLength(255)
                     ->reactive(),
                 Select::make('shipping_method_id')
-                    ->label('Verzendmethode')
+                    ->label(__('Verzendmethode'))
                     ->options(function () {
                         return collect(ShoppingCart::getAllShippingMethods($this->country, true))->pluck('correctName', 'id')->toArray();
                     }),

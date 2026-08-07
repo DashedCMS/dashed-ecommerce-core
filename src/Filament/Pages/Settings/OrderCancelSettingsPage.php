@@ -52,7 +52,7 @@ class OrderCancelSettingsPage extends Page
                 TextEntry::make('label')
                     ->state("Bestelling annuleren instellingen voor {$site['name']}"),
                 Select::make("order_cancel_default_fulfillment_status_{$site['id']}")
-                    ->label('Verander fulfillment status naar')
+                    ->label(__('Verander fulfillment status naar'))
                     ->options(array_merge([
                         '' => 'Leeg',
                     ], Orders::getFulfillmentStatusses())),
@@ -82,7 +82,7 @@ class OrderCancelSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De annuleer bestelling instellingen zijn opgeslagen')
+            ->title(__('De annuleer bestelling instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

@@ -51,8 +51,8 @@ class VATSettingsPage extends Page
                 TextEntry::make('label')
                     ->state("BTW instellingen voor {$site['name']}"),
                 Toggle::make("taxes_prices_include_taxes_{$site['id']}")
-                    ->label('Alle prijzen zijn inclusief belasting')
-                    ->helperText('Indien dit aangevinkt staat wordt de opgegeven prijs bij een product gerekend als inclusief BTW. Indien dit staat uitgeschakeld wordt de BTW over de producten pas bij de checkout berekend.')
+                    ->label(__('Alle prijzen zijn inclusief belasting'))
+                    ->helperText(__('Indien dit aangevinkt staat wordt de opgegeven prijs bij een product gerekend als inclusief BTW. Indien dit staat uitgeschakeld wordt de BTW over de producten pas bij de checkout berekend.'))
                     ->required(),
             ];
 
@@ -80,7 +80,7 @@ class VATSettingsPage extends Page
         }
 
         Notification::make()
-            ->title('De BTW instellingen zijn opgeslagen')
+            ->title(__('De BTW instellingen zijn opgeslagen'))
             ->success()
             ->send();
     }

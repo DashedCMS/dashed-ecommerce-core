@@ -42,11 +42,11 @@ class OrderHandledFlowEnrollments extends TableWidget
             })
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(10)
-            ->emptyStateHeading('Nog geen inschrijvingen')
-            ->emptyStateDescription('Zodra een bestelling in de gekozen fulfillment-status komt verschijnt die hier.')
+            ->emptyStateHeading(__('Nog geen inschrijvingen'))
+            ->emptyStateDescription(__('Zodra een bestelling in de gekozen fulfillment-status komt verschijnt die hier.'))
             ->columns([
                 TextColumn::make('order.invoice_id')
-                    ->label('Bestelling')
+                    ->label(__('Bestelling'))
                     ->url(fn (OrderFlowEnrollment $record): ?string => $record->order
                         ? route('filament.dashed.resources.orders.edit', ['record' => $record->order_id])
                         : null)
@@ -54,7 +54,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('order.first_name')
-                    ->label('Klant')
+                    ->label(__('Klant'))
                     ->wrap()
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         // Sorteren op klantnaam via JOIN op de orders-tabel
@@ -68,36 +68,36 @@ class OrderHandledFlowEnrollments extends TableWidget
                     })
                     ->getStateUsing(fn (OrderFlowEnrollment $record): string => $record->order?->name ?: '-'),
                 TextColumn::make('chosen_review_url_label')
-                    ->label('Platform')
-                    ->placeholder('-')
+                    ->label(__('Platform'))
+                    ->placeholder(__('-'))
                     ->badge()
                     ->color(fn (?string $state): string => self::platformBadgeColor($state))
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('order.email')
-                    ->label('E-mail')
+                    ->label(__('E-mail'))
                     ->copyable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('started_at')
-                    ->label('Ingeschreven op')
+                    ->label(__('Ingeschreven op'))
                     ->dateTime('d-m-Y H:i')
                     ->sortable(),
                 TextColumn::make('next_mail_at')
-                    ->label('Volgende mail')
+                    ->label(__('Volgende mail'))
                     ->dateTime('d-m-Y H:i')
-                    ->placeholder('-')
+                    ->placeholder(__('-'))
                     ->sortable()
                     ->description(function (OrderFlowEnrollment $record): ?string {
                         if (! $record->next_mail_at) {
-                            return $record->cancelled_at ? 'flow gestopt' : 'alle mails verstuurd';
+                            return $record->cancelled_at ? __('flow gestopt') : __('alle mails verstuurd');
                         }
 
                         return $record->next_mail_at->isPast()
-                            ? 'staat klaar om te versturen'
-                            : 'over '.$record->next_mail_at->diffForHumans(now(), true);
+                            ? __('staat klaar om te versturen')
+                            : __('over :tijd', ['tijd' => $record->next_mail_at->diffForHumans(now(), true)]);
                     }),
                 TextColumn::make('sent_steps_count')
-                    ->label('Verzonden')
+                    ->label(__('Verzonden'))
                     ->badge()
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         // sent_steps is een JSON-object {step_id: timestamp}.
@@ -131,18 +131,18 @@ class OrderHandledFlowEnrollments extends TableWidget
                     })
                     ->tooltip(function (OrderFlowEnrollment $record): ?string {
                         if (! is_array($record->sent_steps) || empty($record->sent_steps)) {
-                            return 'Nog geen mails verzonden voor deze inschrijving.';
+                            return __('Nog geen mails verzonden voor deze inschrijving.');
                         }
 
                         $items = [];
                         foreach ($record->sent_steps as $stepId => $iso) {
-                            $items[] = 'stap '.$stepId.': '.\Illuminate\Support\Carbon::parse($iso)->format('d-m-Y H:i');
+                            $items[] = __('stap :stap: :datum', ['stap' => $stepId, 'datum' => \Illuminate\Support\Carbon::parse($iso)->format('d-m-Y H:i')]);
                         }
 
                         return implode("\n", $items);
                     }),
                 IconColumn::make('cancelled_at')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean()
                     ->trueIcon('heroicon-o-x-circle')
                     ->falseIcon('heroicon-o-check-circle')
@@ -150,11 +150,11 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->falseColor('success')
                     ->getStateUsing(fn (OrderFlowEnrollment $record): bool => $record->cancelled_at !== null)
                     ->tooltip(fn (OrderFlowEnrollment $record): string => $record->cancelled_at
-                        ? 'Geannuleerd op ' . $record->cancelled_at->format('d-m-Y H:i')
-                        : 'Loopt nog'),
+                        ? __('Geannuleerd op :datum', ['datum' => $record->cancelled_at->format('d-m-Y H:i')])
+                        : __('Loopt nog')),
                 TextColumn::make('cancelled_reason')
-                    ->label('Reden')
-                    ->placeholder('-')
+                    ->label(__('Reden'))
+                    ->placeholder(__('-'))
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'link_click' => 'Klik op link',
                         'unsubscribed_via_link' => 'Afgemeld via link',
@@ -174,28 +174,28 @@ class OrderHandledFlowEnrollments extends TableWidget
                         default => 'gray',
                     }),
                 TextColumn::make('cancelled_at')
-                    ->label('Geannuleerd op')
+                    ->label(__('Geannuleerd op'))
                     ->dateTime('d-m-Y H:i')
-                    ->placeholder('-')
+                    ->placeholder(__('-'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Filter::make('actief')
-                    ->label('Alleen actieve')
+                    ->label(__('Alleen actieve'))
                     ->query(fn (Builder $query): Builder => $query->whereNull('cancelled_at')),
                 SelectFilter::make('cancelled_reason')
-                    ->label('Annuleer-reden')
+                    ->label(__('Annuleer-reden'))
                     ->options([
-                        'link_click' => 'Klik op link',
-                        'unsubscribed_via_link' => 'Afgemeld via link',
-                        'recent_paid_order' => 'Recent betaalde order',
-                        'mail_failed' => 'Mail mislukt',
-                        'migrated' => 'Gemigreerd',
-                        'proforma_order' => 'Proforma / concept-order',
+                        'link_click' => __('Klik op link'),
+                        'unsubscribed_via_link' => __('Afgemeld via link'),
+                        'recent_paid_order' => __('Recent betaalde order'),
+                        'mail_failed' => __('Mail mislukt'),
+                        'migrated' => __('Gemigreerd'),
+                        'proforma_order' => __('Proforma / concept-order'),
                     ]),
                 SelectFilter::make('chosen_review_url_label')
-                    ->label('Platform')
+                    ->label(__('Platform'))
                     ->options(function (): array {
                         if (! $this->record?->id) {
                             return [];

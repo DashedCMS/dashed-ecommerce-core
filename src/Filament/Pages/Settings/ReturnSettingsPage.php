@@ -61,48 +61,48 @@ class ReturnSettingsPage extends Page
         return $schema
             ->statePath('data')
             ->schema([
-                Section::make('Retourpagina')
+                Section::make(__('Retourpagina'))
                     ->schema([
                         Select::make('return_page_id')
-                            ->label('Standaard retourpagina')
-                            ->helperText('De pagina met het retourformulier waar klanten hun retour aanmelden. Wordt automatisch aangemaakt; hier kun je een andere pagina kiezen.')
+                            ->label(__('Standaard retourpagina'))
+                            ->helperText(__('De pagina met het retourformulier waar klanten hun retour aanmelden. Wordt automatisch aangemaakt; hier kun je een andere pagina kiezen.'))
                             ->searchable()
                             ->options(PageModel::pluck('name', 'id')),
                     ]),
 
-                Section::make('Automatisch goedkeuren')
+                Section::make(__('Automatisch goedkeuren'))
                     ->schema([
                         Toggle::make('returns_auto_accept_enabled')
-                            ->label('Retouren automatisch goedkeuren')
-                            ->helperText('Keur binnenkomende retouren automatisch goed wanneer ze aan de onderstaande voorwaarden voldoen.'),
+                            ->label(__('Retouren automatisch goedkeuren'))
+                            ->helperText(__('Keur binnenkomende retouren automatisch goed wanneer ze aan de onderstaande voorwaarden voldoen.')),
                         TextInput::make('returns_auto_accept_max_days')
-                            ->label('Automatisch goedkeuren binnen (dagen)')
+                            ->label(__('Automatisch goedkeuren binnen (dagen)'))
                             ->numeric()
                             ->minValue(1)
                             ->default(14)
-                            ->suffix('dagen'),
+                            ->suffix(__('dagen')),
                     ])
                     ->columns(2),
 
-                Section::make('Uitsluitingen')
+                Section::make(__('Uitsluitingen'))
                     ->schema([
                         Select::make('returns_auto_accept_excluded_category_ids')
-                            ->label('Uitgesloten categorieen')
-                            ->helperText('Retouren met een product uit deze categorieen worden niet automatisch goedgekeurd.')
+                            ->label(__('Uitgesloten categorieen'))
+                            ->helperText(__('Retouren met een product uit deze categorieen worden niet automatisch goedgekeurd.'))
                             ->multiple()
                             ->searchable()
                             ->options($categoryOptions),
                         Select::make('returns_auto_accept_excluded_order_origins')
-                            ->label('Uitgesloten herkomsten (order origins)')
-                            ->helperText('Retouren van bestellingen met deze herkomst worden niet automatisch goedgekeurd.')
+                            ->label(__('Uitgesloten herkomsten (order origins)'))
+                            ->helperText(__('Retouren van bestellingen met deze herkomst worden niet automatisch goedgekeurd.'))
                             ->multiple()
                             ->searchable()
                             ->options($orderOrigins),
                         TextInput::make('returns_auto_accept_max_amount')
-                            ->label('Maximaal retourbedrag (leeg = geen limiet)')
+                            ->label(__('Maximaal retourbedrag (leeg = geen limiet)'))
                             ->numeric()
                             ->minValue(0)
-                            ->prefix('€'),
+                            ->prefix(__('€')),
                     ])
                     ->columns(2),
             ]);
@@ -112,7 +112,7 @@ class ReturnSettingsPage extends Page
     {
         return [
             Action::make('save')
-                ->label('Opslaan')
+                ->label(__('Opslaan'))
                 ->action('save'),
         ];
     }
@@ -135,6 +135,6 @@ class ReturnSettingsPage extends Page
         $maxAmount = $data['returns_auto_accept_max_amount'] ?? null;
         Customsetting::set('returns_auto_accept_max_amount', ($maxAmount === '' || $maxAmount === null) ? '' : $maxAmount);
 
-        Notification::make()->title('Instellingen opgeslagen')->success()->send();
+        Notification::make()->title(__('Instellingen opgeslagen'))->success()->send();
     }
 }

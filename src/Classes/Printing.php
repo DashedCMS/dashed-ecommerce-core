@@ -15,7 +15,7 @@ class Printing
 
             if ($returnValue !== 0) {
                 Notification::make()
-                    ->title('Printen mislukt')
+                    ->title(__('Printen mislukt'))
                     ->body(implode("\n", $output))
                     ->danger()
                     ->send();
@@ -24,14 +24,14 @@ class Printing
             }
 
             Notification::make()
-                ->title('Printen gelukt')
+                ->title(__('Printen gelukt'))
                 ->success()
                 ->send();
 
             return;
         } catch (\Exception $e) {
             Notification::make()
-                ->title('Printen mislukt')
+                ->title(__('Printen mislukt'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

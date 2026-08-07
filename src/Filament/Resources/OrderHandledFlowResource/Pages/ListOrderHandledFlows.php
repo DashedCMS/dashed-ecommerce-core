@@ -17,24 +17,24 @@ class ListOrderHandledFlows extends ListRecords
     {
         return [
             Action::make('create_default')
-                ->label('Maak standaard flow aan')
+                ->label(__('Maak standaard flow aan'))
                 ->icon('heroicon-o-sparkles')
                 ->color('success')
                 ->requiresConfirmation()
-                ->modalHeading('Standaard flow aanmaken')
-                ->modalDescription('Maakt een nieuwe flow aan met 1 stap (14 dagen na fulfillment_status = handled) en stelt deze in als actieve flow. Andere flows worden automatisch op inactive gezet.')
-                ->modalSubmitActionLabel('Aanmaken')
+                ->modalHeading(__('Standaard flow aanmaken'))
+                ->modalDescription(__('Maakt een nieuwe flow aan met 1 stap (14 dagen na fulfillment_status = handled) en stelt deze in als actieve flow. Andere flows worden automatisch op inactive gezet.'))
+                ->modalSubmitActionLabel(__('Aanmaken'))
                 ->action(function () {
                     OrderHandledFlow::createDefault();
 
                     Notification::make()
-                        ->title('Standaard flow aangemaakt en geactiveerd')
+                        ->title(__('Standaard flow aangemaakt en geactiveerd'))
                         ->success()
                         ->send();
                 }),
 
             CreateAction::make()
-                ->label('Nieuwe flow'),
+                ->label(__('Nieuwe flow')),
         ];
     }
 }

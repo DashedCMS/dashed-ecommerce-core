@@ -53,48 +53,48 @@ class ProductFinderResource extends Resource
             ->toArray();
 
         return $schema->schema([
-            Section::make('Instellingen')
+            Section::make(__('Instellingen'))
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('name')
-                        ->label('Naam')
+                        ->label(__('Naam'))
                         ->required()
                         ->maxLength(255),
                     Toggle::make('is_active')
-                        ->label('Actief')
+                        ->label(__('Actief'))
                         ->default(true),
                     Textarea::make('intro')
-                        ->label('Introductie')
+                        ->label(__('Introductie'))
                         ->columnSpanFull(),
                     TextInput::make('result_count')
-                        ->label('Aantal resultaten')
+                        ->label(__('Aantal resultaten'))
                         ->numeric()
                         ->default(4)
                         ->minValue(1),
                     Toggle::make('only_in_stock')
-                        ->label('Alleen producten op voorraad')
+                        ->label(__('Alleen producten op voorraad'))
                         ->default(true),
                     Select::make('category_ids')
-                        ->label('Categorieen')
+                        ->label(__('Categorieen'))
                         ->multiple()
                         ->options($categoryOptions)
                         ->searchable(),
                 ])
                 ->columns(1),
-            Section::make('Vragen')
+            Section::make(__('Vragen'))
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('questions')
-                        ->label('Vragen')
+                        ->label(__('Vragen'))
                         ->schema([
                             TextInput::make('label')
-                                ->label('Vraag')
+                                ->label(__('Vraag'))
                                 ->required(),
                             Repeater::make('options')
-                                ->label('Antwoordopties')
+                                ->label(__('Antwoordopties'))
                                 ->schema([
                                     TextInput::make('label')
-                                        ->label('Antwoord')
+                                        ->label(__('Antwoord'))
                                         ->required(),
                                 ])
                                 ->columns(1)
@@ -113,14 +113,14 @@ class ProductFinderResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
                 IconColumn::make('is_active')
-                    ->label('Actief')
+                    ->label(__('Actief'))
                     ->boolean(),
                 TextColumn::make('result_count')
-                    ->label('Aantal resultaten')
+                    ->label(__('Aantal resultaten'))
                     ->sortable(),
             ])
             ->filters([

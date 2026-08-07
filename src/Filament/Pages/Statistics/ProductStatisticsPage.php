@@ -66,19 +66,19 @@ class ProductStatisticsPage extends Page implements HasSchemas
                 Section::make()
                     ->schema([
                         DatePicker::make('startDate')
-                            ->label('Start datum')
+                            ->label(__('Start datum'))
                             ->default(now()->subMonth())
                             ->reactive(),
 
                         DatePicker::make('endDate')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->nullable()
                             ->after('startDate')
                             ->default(now())
                             ->reactive(),
 
                         Select::make('locale')
-                            ->label('Locale')
+                            ->label(__('Locale'))
                             ->nullable()
                             ->options(function () {
                                 $locales = [];
@@ -92,7 +92,7 @@ class ProductStatisticsPage extends Page implements HasSchemas
                             ->reactive(),
 
                         TextInput::make('search')
-                            ->label('Zoekterm')
+                            ->label(__('Zoekterm'))
                             ->reactive(),
                     ])
                     ->columns([

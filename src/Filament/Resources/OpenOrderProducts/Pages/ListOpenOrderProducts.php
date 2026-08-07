@@ -106,7 +106,7 @@ class ListOpenOrderProducts extends ListRecords
     {
         return [
             Action::make('exportExcel')
-                ->label('Exporteer Excel')
+                ->label(__('Exporteer Excel'))
                 ->icon('heroicon-o-document-arrow-down')
                 ->action(function () {
                     $mode = $this->resolveExportMode();

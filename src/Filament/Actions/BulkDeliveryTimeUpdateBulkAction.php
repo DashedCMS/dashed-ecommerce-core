@@ -34,18 +34,18 @@ class BulkDeliveryTimeUpdateBulkAction
         return BulkAction::make('changeDeliveryTime')
             ->color('primary')
             ->icon('heroicon-o-truck')
-            ->label('Verander levertijd')
-            ->modalHeading('Levertijd aanpassen voor geselecteerde producten')
-            ->modalDescription('Voor zowel de verwachte voorraad-datum als de levertijd in dagen kun je kiezen om de waarde te vervangen, te verschuiven of te wissen.')
-            ->modalSubmitActionLabel('Doorvoeren')
+            ->label(__('Verander levertijd'))
+            ->modalHeading(__('Levertijd aanpassen voor geselecteerde producten'))
+            ->modalDescription(__('Voor zowel de verwachte voorraad-datum als de levertijd in dagen kun je kiezen om de waarde te vervangen, te verschuiven of te wissen.'))
+            ->modalSubmitActionLabel(__('Doorvoeren'))
             ->schema(fn () => static::schema())
             ->action(function (Collection $records, array $data): void {
                 $touched = static::applyToRecords($records, $data);
 
                 Notification::make()
                     ->title($touched === 0
-                        ? 'Geen wijzigingen toegepast'
-                        : sprintf('%d product(en) bijgewerkt', $touched))
+                        ? __('Geen wijzigingen toegepast')
+                        : __(':aantal product(en) bijgewerkt', ['aantal' => $touched]))
                     ->success($touched > 0)
                     ->warning($touched === 0)
                     ->send();
@@ -59,27 +59,27 @@ class BulkDeliveryTimeUpdateBulkAction
     protected static function schema(): array
     {
         return [
-            Section::make('Verwachte voorraad-datum')
-                ->description('De absolute datum waarop het product weer op voorraad is (expected_in_stock_date).')
+            Section::make(__('Verwachte voorraad-datum'))
+                ->description(__('De absolute datum waarop het product weer op voorraad is (expected_in_stock_date).'))
                 ->schema([
                     Select::make('mode_expected_in_stock_date')
-                        ->label('Aanpassing')
+                        ->label(__('Aanpassing'))
                         ->options([
-                            self::MODE_SKIP => 'Niet wijzigen',
-                            self::MODE_REPLACE => 'Vervangen door vaste datum',
-                            self::MODE_SHIFT => 'Verschuiven met +/- dagen',
-                            self::MODE_CLEAR => 'Wissen',
+                            self::MODE_SKIP => __('Niet wijzigen'),
+                            self::MODE_REPLACE => __('Vervangen door vaste datum'),
+                            self::MODE_SHIFT => __('Verschuiven met +/- dagen'),
+                            self::MODE_CLEAR => __('Wissen'),
                         ])
                         ->default(self::MODE_SKIP)
                         ->required()
                         ->reactive(),
                     DatePicker::make('value_expected_in_stock_date_date')
-                        ->label('Nieuwe datum')
+                        ->label(__('Nieuwe datum'))
                         ->required(fn (callable $get) => $get('mode_expected_in_stock_date') === self::MODE_REPLACE)
                         ->visible(fn (callable $get) => $get('mode_expected_in_stock_date') === self::MODE_REPLACE),
                     TextInput::make('value_expected_in_stock_date_shift')
-                        ->label('Verschuiven met dagen (negatief = eerder)')
-                        ->helperText('Voorbeeld: 7 verschuift een week later, -3 drie dagen eerder.')
+                        ->label(__('Verschuiven met dagen (negatief = eerder)'))
+                        ->helperText(__('Voorbeeld: 7 verschuift een week later, -3 drie dagen eerder.'))
                         ->numeric()
                         ->step(1)
                         ->required(fn (callable $get) => $get('mode_expected_in_stock_date') === self::MODE_SHIFT)
@@ -88,24 +88,24 @@ class BulkDeliveryTimeUpdateBulkAction
                 ->columns(2)
                 ->compact(),
 
-            Section::make('Levertijd in dagen')
-                ->description('Relatief aantal dagen vanaf besteldatum (expected_delivery_in_days). Wordt gebruikt als de absolute datum leeg is.')
+            Section::make(__('Levertijd in dagen'))
+                ->description(__('Relatief aantal dagen vanaf besteldatum (expected_delivery_in_days). Wordt gebruikt als de absolute datum leeg is.'))
                 ->schema([
                     Select::make('mode_expected_delivery_in_days')
-                        ->label('Aanpassing')
+                        ->label(__('Aanpassing'))
                         ->options([
-                            self::MODE_SKIP => 'Niet wijzigen',
-                            self::MODE_REPLACE => 'Vervangen door vast aantal dagen',
-                            self::MODE_SHIFT => 'Aantal dagen erbij/eraf',
-                            self::MODE_CLEAR => 'Wissen',
+                            self::MODE_SKIP => __('Niet wijzigen'),
+                            self::MODE_REPLACE => __('Vervangen door vast aantal dagen'),
+                            self::MODE_SHIFT => __('Aantal dagen erbij/eraf'),
+                            self::MODE_CLEAR => __('Wissen'),
                         ])
                         ->default(self::MODE_SKIP)
                         ->required()
                         ->reactive(),
                     TextInput::make('value_expected_delivery_in_days')
                         ->label(fn (callable $get) => $get('mode_expected_delivery_in_days') === self::MODE_SHIFT
-                            ? 'Aantal dagen (negatief = minder)'
-                            : 'Aantal dagen')
+                            ? __('Aantal dagen (negatief = minder)')
+                            : __('Aantal dagen'))
                         ->numeric()
                         ->step(1)
                         ->minValue(fn (callable $get) => $get('mode_expected_delivery_in_days') === self::MODE_REPLACE ? 0 : null)

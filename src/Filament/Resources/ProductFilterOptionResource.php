@@ -48,25 +48,25 @@ class ProductFilterOptionResource extends Resource
                 Select::make('product_filter_id')
                     ->relationship('productFilter', 'name')
                     ->default(request()->get('productFilterId'))
-                    ->label('Filter')
+                    ->label(__('Filter'))
                     ->required()
                     ->reactive()
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name),
                 TextInput::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->required()
                     ->maxLength(100),
                 Toggle::make('in_stock')
-                    ->label('Op voorraad')
+                    ->label(__('Op voorraad'))
                     ->columnSpanFull()
                     ->visible(fn ($record) => $record && $record->productFilter->use_stock)
-                    ->helperText('Als je deze optie op uitverkocht zet, dan kunnen ook producten met "doorverkoop" niet meer verkocht worden.')
+                    ->helperText(__('Als je deze optie op uitverkocht zet, dan kunnen ook producten met "doorverkoop" niet meer verkocht worden.'))
                     ->default(true),
                 mediaHelper()->field('image', 'Afbeelding')
                     ->required()
                     ->visible(fn (Get $get) => $get('product_filter_id') && ProductFilter::find($get('product_filter_id'))->type == 'image'),
                 TextInput::make('order')
-                    ->label('Volgorde')
+                    ->label(__('Volgorde'))
                     ->required()
                     ->minValue(1)
                     ->maxValue(10000)
@@ -81,11 +81,11 @@ class ProductFilterOptionResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Naam')
+                    ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())
                     ->sortable(),
                 TextColumn::make('productFilter.name')
-                    ->label('Filter')
+                    ->label(__('Filter'))
                     ->sortable()
                     ->searchable(),
             ])

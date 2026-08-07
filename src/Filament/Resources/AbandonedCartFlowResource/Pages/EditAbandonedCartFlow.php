@@ -20,16 +20,16 @@ class EditAbandonedCartFlow extends EditRecord
     {
         return [
             Action::make('backfillExisting')
-                ->label('Toepassen op bestaande')
+                ->label(__('Toepassen op bestaande'))
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
                 ->visible(fn (): bool => (bool) $this->record?->is_active)
-                ->modalHeading('Flow toepassen op bestaande carts/orders')
-                ->modalDescription('Plant alsnog de stappen van deze flow voor verlaten winkelwagens en/of geannuleerde bestellingen die binnen het opgegeven aantal dagen vallen. Records waarvoor deze flow al gepland staat worden overgeslagen.')
+                ->modalHeading(__('Flow toepassen op bestaande carts/orders'))
+                ->modalDescription(__('Plant alsnog de stappen van deze flow voor verlaten winkelwagens en/of geannuleerde bestellingen die binnen het opgegeven aantal dagen vallen. Records waarvoor deze flow al gepland staat worden overgeslagen.'))
                 ->form([
                     TextInput::make('since_days')
-                        ->label('Aantal dagen terug')
-                        ->helperText('Backfill geldt voor records die in de afgelopen X dagen zijn aangemaakt.')
+                        ->label(__('Aantal dagen terug'))
+                        ->helperText(__('Backfill geldt voor records die in de afgelopen X dagen zijn aangemaakt.'))
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(365)
@@ -46,14 +46,13 @@ class EditAbandonedCartFlow extends EditRecord
                     );
 
                     Notification::make()
-                        ->title('Backfill voltooid')
-                        ->body(sprintf(
-                            'Carts gepland: %d (al gepland: %d). Orders gepland: %d (al gepland: %d).',
-                            $stats['carts_scheduled'],
-                            $stats['carts_skipped_existing'],
-                            $stats['orders_scheduled'],
-                            $stats['orders_skipped_existing'],
-                        ))
+                        ->title(__('Backfill voltooid'))
+                        ->body(__('Carts gepland: :cartsGepland (al gepland: :cartsAlGepland). Orders gepland: :ordersGepland (al gepland: :ordersAlGepland).', [
+                            'cartsGepland' => $stats['carts_scheduled'],
+                            'cartsAlGepland' => $stats['carts_skipped_existing'],
+                            'ordersGepland' => $stats['orders_scheduled'],
+                            'ordersAlGepland' => $stats['orders_skipped_existing'],
+                        ]))
                         ->success()
                         ->send();
                 }),

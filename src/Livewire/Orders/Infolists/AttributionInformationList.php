@@ -64,65 +64,65 @@ class AttributionInformationList extends Component implements HasActions, HasSch
         return $schema
             ->record($this->order)
             ->schema([
-                Fieldset::make('Herkomst')
+                Fieldset::make(__('Herkomst'))
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextEntry::make('utm_source')
-                                    ->label('Bron')
-                                    ->placeholder('Niet ingesteld')
+                                    ->label(__('Bron'))
+                                    ->placeholder(__('Niet ingesteld'))
                                     ->copyable(),
                                 TextEntry::make('utm_medium')
-                                    ->label('Medium')
-                                    ->placeholder('Niet ingesteld')
+                                    ->label(__('Medium'))
+                                    ->placeholder(__('Niet ingesteld'))
                                     ->copyable(),
                                 TextEntry::make('utm_campaign')
-                                    ->label('Campagne')
-                                    ->placeholder('Niet ingesteld')
+                                    ->label(__('Campagne'))
+                                    ->placeholder(__('Niet ingesteld'))
                                     ->copyable(),
                                 TextEntry::make('utm_term')
-                                    ->label('Term')
+                                    ->label(__('Term'))
                                     ->copyable()
                                     ->visible(fn ($record) => filled($record->utm_term)),
                                 TextEntry::make('utm_content')
-                                    ->label('Content')
+                                    ->label(__('Content'))
                                     ->copyable()
                                     ->visible(fn ($record) => filled($record->utm_content)),
                                 TextEntry::make('gclid')
-                                    ->label('Google Click ID (gclid)')
+                                    ->label(__('Google Click ID (gclid)'))
                                     ->copyable()
                                     ->visible(fn ($record) => filled($record->gclid)),
                                 TextEntry::make('fbclid')
-                                    ->label('Facebook Click ID (fbclid)')
+                                    ->label(__('Facebook Click ID (fbclid)'))
                                     ->copyable()
                                     ->visible(fn ($record) => filled($record->fbclid)),
                                 TextEntry::make('msclkid')
-                                    ->label('Microsoft Click ID (msclkid)')
+                                    ->label(__('Microsoft Click ID (msclkid)'))
                                     ->copyable()
                                     ->visible(fn ($record) => filled($record->msclkid)),
                             ]),
                         TextEntry::make('landing_page')
-                            ->label('Landingspagina')
+                            ->label(__('Landingspagina'))
                             ->columnSpanFull()
                             ->copyable()
                             ->url(fn ($record) => $record->landing_page ?: null, shouldOpenInNewTab: true)
                             ->visible(fn ($record) => filled($record->landing_page)),
                         TextEntry::make('landing_page_referrer')
-                            ->label('Verwijzer')
+                            ->label(__('Verwijzer'))
                             ->columnSpanFull()
                             ->copyable()
                             ->url(fn ($record) => $record->landing_page_referrer ?: null, shouldOpenInNewTab: true)
                             ->visible(fn ($record) => filled($record->landing_page_referrer)),
                         TextEntry::make('attribution_first_touch_at')
-                            ->label('First-touch')
+                            ->label(__('First-touch'))
                             ->dateTime('d-m-Y H:i')
-                            ->placeholder('Onbekend'),
+                            ->placeholder(__('Onbekend')),
                         TextEntry::make('attribution_last_touch_at')
-                            ->label('Last-touch')
+                            ->label(__('Last-touch'))
                             ->dateTime('d-m-Y H:i')
-                            ->placeholder('Onbekend'),
+                            ->placeholder(__('Onbekend')),
                         TextEntry::make('attribution_extra')
-                            ->label('Extra parameters')
+                            ->label(__('Extra parameters'))
                             ->columnSpanFull()
                             ->getStateUsing(function ($record) {
                                 $extra = $record->attribution_extra;

@@ -103,7 +103,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                 Section::make()
                     ->schema([
                         Select::make('period')
-                            ->label('Periode')
+                            ->label(__('Periode'))
                             ->options(Dashboard::getPeriodOptions())
                             ->default('this_month')
                             ->reactive()
@@ -115,46 +115,46 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                             }),
 
                         Select::make('steps')
-                            ->label('Stappen')
+                            ->label(__('Stappen'))
                             ->options([
-                                'per_hour' => 'Per uur',
-                                'per_day' => 'Per dag',
-                                'per_week' => 'Per week',
-                                'per_month' => 'Per maand',
-                                'per_quarter' => 'Per kwartaal',
-                                'per_year' => 'Per jaar',
+                                'per_hour' => __('Per uur'),
+                                'per_day' => __('Per dag'),
+                                'per_week' => __('Per week'),
+                                'per_month' => __('Per maand'),
+                                'per_quarter' => __('Per kwartaal'),
+                                'per_year' => __('Per jaar'),
                             ])
                             ->default('per_day')
                             ->reactive(),
 
                         DatePicker::make('startDate')
-                            ->label('Start datum')
+                            ->label(__('Start datum'))
                             ->default(now()->startOfMonth())
                             ->reactive(),
 
                         DatePicker::make('endDate')
-                            ->label('Eind datum')
+                            ->label(__('Eind datum'))
                             ->nullable()
                             ->after('startDate')
                             ->default(now()->endOfMonth())
                             ->reactive(),
 
                         Select::make('status')
-                            ->label('Status')
+                            ->label(__('Status'))
                             ->options([
-                                'all' => 'Alles',
-                                'payment_obligation' => 'Betalingsverplichting',
-                                'paid' => 'Betaald',
-                                'waiting_for_confirmation' => 'Wachten op bevestiging',
-                                'pending' => 'Lopende aankoop',
-                                'cancelled' => 'Geannuleerd',
-                                'return' => 'Retour',
+                                'all' => __('Alles'),
+                                'payment_obligation' => __('Betalingsverplichting'),
+                                'paid' => __('Betaald'),
+                                'waiting_for_confirmation' => __('Wachten op bevestiging'),
+                                'pending' => __('Lopende aankoop'),
+                                'cancelled' => __('Geannuleerd'),
+                                'return' => __('Retour'),
                             ])
                             ->default('payment_obligation')
                             ->reactive(),
 
                         Select::make('paymentMethod')
-                            ->label('Betalingsmethode')
+                            ->label(__('Betalingsmethode'))
                             ->options(array_merge([
                                 'all' => 'Alles',
                             ], $paymentMethods, $legacyPaymentMethods))
@@ -162,30 +162,30 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                             ->reactive(),
 
                         Select::make('fulfillmentStatus')
-                            ->label('Fulfillment status')
+                            ->label(__('Fulfillment status'))
                             ->options([
-                                'all' => 'Alles',
-                                'handled' => 'Afgehandeld',
-                                'unhandled' => 'Niet afgehandeld',
+                                'all' => __('Alles'),
+                                'handled' => __('Afgehandeld'),
+                                'unhandled' => __('Niet afgehandeld'),
                             ])
                             ->default('all')
                             ->reactive(),
 
                         Select::make('retourStatus')
-                            ->label('Retour status')
+                            ->label(__('Retour status'))
                             ->options([
-                                'all' => 'Alles',
-                                'handled' => 'Afgehandeld',
-                                'unhandled' => 'Niet afgehandeld',
-                                'received' => 'Ontvangen',
-                                'shipped' => 'Onderweg',
-                                'waiting_for_return' => 'Wachten op retour',
+                                'all' => __('Alles'),
+                                'handled' => __('Afgehandeld'),
+                                'unhandled' => __('Niet afgehandeld'),
+                                'received' => __('Ontvangen'),
+                                'shipped' => __('Onderweg'),
+                                'waiting_for_return' => __('Wachten op retour'),
                             ])
                             ->default('all')
                             ->reactive(),
 
                         Select::make('orderOrigin')
-                            ->label('Bestellings herkomst')
+                            ->label(__('Bestellings herkomst'))
                             ->options(array_merge([
                                 'all' => 'Alles',
                             ], $orderOrigins))

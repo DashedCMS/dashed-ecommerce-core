@@ -23,11 +23,11 @@ class LogsRelationManager extends RelationManager
             ->recordTitleAttribute('message')
             ->columns([
                 TextColumn::make('created_at')
-                    ->label('Wanneer')
+                    ->label(__('Wanneer'))
                     ->dateTime('d-m-Y H:i:s', 'Europe/Amsterdam')
                     ->sortable(),
                 TextColumn::make('event')
-                    ->label('Event')
+                    ->label(__('Event'))
                     ->badge()
                     ->color(fn (string $state): string => match (true) {
                         str_starts_with($state, 'cart.product.') => 'primary',
@@ -37,7 +37,7 @@ class LogsRelationManager extends RelationManager
                         default => 'gray',
                     }),
                 TextColumn::make('message')
-                    ->label('Bericht')
+                    ->label(__('Bericht'))
                     ->wrap(),
             ])
             ->defaultSort('created_at', 'desc')
@@ -48,7 +48,7 @@ class LogsRelationManager extends RelationManager
                         ->distinct()
                         ->pluck('event', 'event')
                         ->toArray())
-                    ->label('Event type'),
+                    ->label(__('Event type')),
             ])
             ->paginated([25, 50, 100])
             ->headerActions([])
