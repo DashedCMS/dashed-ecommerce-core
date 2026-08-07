@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
-use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
