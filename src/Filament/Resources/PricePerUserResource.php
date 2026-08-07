@@ -71,14 +71,14 @@ class PricePerUserResource extends Resource
                 ->schema([
                     TextInput::make($productCategory->id.'_category_discount_price')
                         ->label(__('Korting bedrag'))
-                        ->prefix(__('€'))
+                        ->prefix('€')
                         ->required(fn (Get $get) => $get($productCategory->id.'_category_discount_percentage') === null)
                         ->minValue(1)
                         ->reactive()
                         ->numeric(),
                     TextInput::make($productCategory->id.'_category_discount_percentage')
                         ->label(__('Korting percentage'))
-                        ->suffix(__('%'))
+                        ->suffix('%')
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
@@ -172,19 +172,19 @@ class PricePerUserResource extends Resource
             foreach ($extra->productExtraOptions as $option) {
                 $optionFields[] = Section::make($option->value)->columns(2)->schema([
                     TextInput::make('extra_option_' . $option->id . '_user_price')
-                        ->label(__('Vaste prijs'))->prefix(__('€'))->numeric()->nullable()
+                        ->label(__('Vaste prijs'))->prefix('€')->numeric()->nullable()
                         ->helperText(__('Standaard: € :prijs', ['prijs' => number_format((float) $option->price, 2, ',', '.')])),
                     TextInput::make('extra_option_' . $option->id . '_user_discount_percentage')
-                        ->label(__('Korting percentage'))->suffix(__('%'))->minValue(1)->maxValue(100)->numeric()->nullable(),
+                        ->label(__('Korting percentage'))->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
                 ]);
             }
             $parentFields = [
                 Section::make(__('Vaste prijs voor deze extra'))->columns(2)->schema([
                     TextInput::make('extra_' . $extra->id . '_user_price')
-                        ->label(__('Vaste prijs'))->prefix(__('€'))->numeric()->nullable()
+                        ->label(__('Vaste prijs'))->prefix('€')->numeric()->nullable()
                         ->helperText(__('Standaard: € :prijs', ['prijs' => number_format((float) $extra->price, 2, ',', '.')])),
                     TextInput::make('extra_' . $extra->id . '_user_discount_percentage')
-                        ->label(__('Korting percentage'))->suffix(__('%'))->minValue(1)->maxValue(100)->numeric()->nullable(),
+                        ->label(__('Korting percentage'))->suffix('%')->minValue(1)->maxValue(100)->numeric()->nullable(),
                 ]),
             ];
 

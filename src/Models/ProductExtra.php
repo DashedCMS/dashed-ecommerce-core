@@ -188,7 +188,7 @@ class ProductExtra extends Model
                 ->label(__('Help tekst')),
             TextInput::make('price')
                 ->label(__('Meerprijs van deze extra'))
-                ->prefix(__('€'))
+                ->prefix('€')
                 ->helperText(__('Voorbeeld: 10.25'))
                 ->numeric()
                 ->minValue(0.00)
@@ -214,7 +214,7 @@ class ProductExtra extends Model
                     TextInput::make('price')
                         ->required()
                         ->label(__('Meerprijs van deze optie'))
-                        ->prefix(__('€'))
+                        ->prefix('€')
                         ->helperText(__('Voorbeeld: 10.25'))
                         ->numeric()
                         ->minValue(0.00)

@@ -110,7 +110,7 @@ class GiftcardResource extends Resource
                         TextInput::make('discount_amount')
                             ->label(__('Waarde van de cadeaukaart'))
                             ->helperText(__('Hoeveel euro moet er op deze cadeaukaart staan'))
-                            ->prefix(__('€'))
+                            ->prefix('€')
                             ->minValue(0)
                             ->maxValue(100000)
                             ->numeric()
@@ -157,7 +157,7 @@ class GiftcardResource extends Resource
                             ->hidden(fn ($get) => $get('minimal_requirements') != 'products'),
                         TextInput::make('minimum_amount')
                             ->label(__('Minimum aankoopbedrag'))
-                            ->prefix(__('€'))
+                            ->prefix('€')
                             ->minValue(1)
                             ->maxValue(100000)
                             ->required()

@@ -670,7 +670,7 @@ trait CreateManualOrderActions
                     ->maxValue(999999)
                     ->inputMode('decimal')
                     ->required()
-                    ->prefix(__('€'))
+                    ->prefix('€')
                     ->columnSpanFull(),
                 TextInput::make('quantity')
                     ->label(__('Aantal'))
@@ -689,7 +689,7 @@ trait CreateManualOrderActions
                     ->inputMode('numeric')
                     ->required()
                     ->default(21)
-                    ->prefix(__('%')),
+                    ->prefix('%'),
             ])
             ->columns(2)
             ->statePath('customProductData');
@@ -786,7 +786,7 @@ trait CreateManualOrderActions
                     ->maxValue(999999)
                     ->inputMode('decimal')
                     ->required()
-                    ->prefix(__('€'))
+                    ->prefix('€')
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') == 'amount')
                     ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),
@@ -798,7 +798,7 @@ trait CreateManualOrderActions
                     ->inputMode('numeric')
                     ->required()
                     ->default(21)
-                    ->prefix(__('%'))
+                    ->prefix('%')
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') == 'percentage')
                     ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),
@@ -1007,7 +1007,7 @@ trait CreateManualOrderActions
                     ->extraAttributes([
                         'class' => 'text-xl sm:text-xl md:text-xl py-2',
                     ])
-                    ->prefix(__('€')),
+                    ->prefix('€'),
             ]);
     }
 

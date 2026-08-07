@@ -103,7 +103,7 @@ class ShippingZoneResource extends Resource
                             ->required()
                             ->nullable()
                             ->numeric()
-                            ->suffix(__('%'))
+                            ->suffix('%')
                             ->minValue(0)
                             ->maxValue(100),
                     ]),

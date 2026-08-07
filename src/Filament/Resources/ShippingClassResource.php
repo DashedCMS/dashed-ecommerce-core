@@ -56,7 +56,7 @@ class ShippingClassResource extends Resource
             $shippingZoneSchema[] =
                 TextInput::make("price_shipping_zone_{$shippingZone->id}")
                     ->label(__('Meerprijs voor verzending naar :naam', ['naam' => $shippingZone->name]))
-                    ->prefix(__('€'))
+                    ->prefix('€')
                     ->minValue(1)
                     ->maxValue(10000)
                     ->numeric();

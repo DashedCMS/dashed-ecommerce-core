@@ -199,7 +199,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->inputMode('numeric')
                     ->required()
                     ->default(21)
-                    ->prefix(__('%')),
+                    ->prefix('%'),
             ])
             ->columns(2)
             ->statePath('customProductData');
@@ -453,7 +453,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->autofocus()
                     ->required()
                     ->default(10)
-                    ->prefix(__('%'))
+                    ->prefix('%')
                     ->reactive()
                     ->visible(fn (Get $get) => $get('type') === 'percentage')
                     ->helperText(__('Bij opslaan wordt er een kortingscode gemaakt die 30 minuten geldig is.')),

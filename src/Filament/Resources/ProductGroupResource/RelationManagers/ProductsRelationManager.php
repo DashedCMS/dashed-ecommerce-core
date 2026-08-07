@@ -51,7 +51,7 @@ class ProductsRelationManager extends RelationManager
             ->columns([
                 ImageColumn::make('image')
                     ->getStateUsing(fn ($record) => $record->images ? (mediaHelper()->getSingleMedia($record->images[0], 'original')->url ?? '') : ($record->productGroup->images ? (mediaHelper()->getSingleMedia($record->productGroup->images[0], 'original')->url ?? '') : null))
-                    ->label(__('')),
+                    ->label(''),
                 TextColumn::make('name')
                     ->label(__('Naam'))
                     ->searchable([
@@ -127,7 +127,7 @@ class ProductsRelationManager extends RelationManager
                                     $schema[] = TextInput::make($key)
                                         ->label($priceField['label'])
                                         ->helperText($priceField['helperText'])
-                                        ->prefix(__('€'))
+                                        ->prefix('€')
                                         ->minValue(0)
                                         ->numeric()
                                         ->maxValue(100000)

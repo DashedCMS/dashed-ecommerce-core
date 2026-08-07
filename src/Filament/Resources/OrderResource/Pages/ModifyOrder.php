@@ -197,13 +197,13 @@ class ModifyOrder extends Page implements HasSchemas
                                     ->helperText(__('Het totaal van deze regel, niet de stuksprijs'))
                                     ->numeric()
                                     ->required()
-                                    ->prefix(__('€')),
+                                    ->prefix('€'),
                                 TextInput::make('vat_rate')
                                     ->label(__('BTW'))
                                     ->numeric()
                                     ->required()
                                     ->default(21)
-                                    ->suffix(__('%')),
+                                    ->suffix('%'),
                                 // Niet bewerkbaar in deze eerste versie; bestaat alleen om de
                                 // extras van een ongewijzigde regel de round-trip te laten
                                 // overleven (writeLines() herbouwt alle regels vanaf nul).

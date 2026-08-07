@@ -62,7 +62,7 @@ class DoelenSettingsPage extends Page implements HasSchemas
                         ->label(__('Omzetdoel (€)'))
                         ->numeric()
                         ->minValue(0)
-                        ->prefix(__('€')),
+                        ->prefix('€'),
                     TextInput::make('orders_target_' . $key)
                         ->label(__('Bestellingsdoel (aantal)'))
                         ->numeric()

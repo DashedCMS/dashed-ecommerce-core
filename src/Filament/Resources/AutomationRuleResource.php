@@ -270,7 +270,7 @@ class AutomationRuleResource extends Resource
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('conditions')
-                        ->label(__(''))
+                        ->label('')
                         ->addActionLabel(__('Voorwaarde toevoegen'))
                         ->reorderableWithButtons()
                         ->collapsible()
@@ -337,7 +337,7 @@ class AutomationRuleResource extends Resource
                 ->columnSpanFull()
                 ->schema([
                     Repeater::make('actions')
-                        ->label(__(''))
+                        ->label('')
                         ->addActionLabel(__('Actie toevoegen'))
                         ->reorderableWithButtons()
                         ->collapsible()
@@ -632,7 +632,7 @@ class AutomationRuleResource extends Resource
         if ($order === null) {
             return [
                 TextEntry::make('dry_run_missing')
-                    ->label(__(''))
+                    ->label('')
                     ->state('Deze bestelling kon niet worden gevonden.'),
             ];
         }

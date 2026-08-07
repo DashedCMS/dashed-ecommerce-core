@@ -54,14 +54,14 @@ class PriceGroupResource extends Resource
                 ->schema([
                     TextInput::make($productCategory->id . '_category_discount_price')
                         ->label(__('Korting bedrag'))
-                        ->prefix(__('€'))
+                        ->prefix('€')
                         ->required(fn (Get $get) => $get($productCategory->id . '_category_discount_percentage') === null)
                         ->minValue(1)
                         ->reactive()
                         ->numeric(),
                     TextInput::make($productCategory->id . '_category_discount_percentage')
                         ->label(__('Korting percentage'))
-                        ->suffix(__('%'))
+                        ->suffix('%')
                         ->minValue(1)
                         ->maxValue(100)
                         ->nullable()
@@ -95,13 +95,13 @@ class PriceGroupResource extends Resource
                     ->schema([
                         TextInput::make('extra_option_' . $option->id . '_price')
                             ->label(__('Vaste prijs'))
-                            ->prefix(__('€'))
+                            ->prefix('€')
                             ->numeric()
                             ->nullable()
                             ->helperText(__('Standaard: € :prijs', ['prijs' => number_format((float) $option->price, 2, ',', '.')])),
                         TextInput::make('extra_option_' . $option->id . '_discount_percentage')
                             ->label(__('Korting percentage'))
-                            ->suffix(__('%'))
+                            ->suffix('%')
                             ->minValue(1)
                             ->maxValue(100)
                             ->numeric()
@@ -113,13 +113,13 @@ class PriceGroupResource extends Resource
             $parentFields = [
                 TextInput::make('extra_' . $productExtra->id . '_price')
                     ->label(__('Vaste prijs voor deze extra'))
-                    ->prefix(__('€'))
+                    ->prefix('€')
                     ->numeric()
                     ->nullable()
                     ->helperText(__('Standaard: € :prijs', ['prijs' => number_format((float) $productExtra->price, 2, ',', '.')])),
                 TextInput::make('extra_' . $productExtra->id . '_discount_percentage')
                     ->label(__('Korting percentage'))
-                    ->suffix(__('%'))
+                    ->suffix('%')
                     ->minValue(1)
                     ->maxValue(100)
                     ->numeric()

@@ -102,7 +102,7 @@ class ReturnSettingsPage extends Page
                             ->label(__('Maximaal retourbedrag (leeg = geen limiet)'))
                             ->numeric()
                             ->minValue(0)
-                            ->prefix(__('€')),
+                            ->prefix('€'),
                     ])
                     ->columns(2),
             ]);

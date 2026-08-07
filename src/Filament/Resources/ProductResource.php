@@ -203,7 +203,7 @@ class ProductResource extends Resource
             $pricesSchema[] = TextInput::make($key)
                 ->label($priceField['label'])
                 ->helperText($priceField['helperText'])
-                ->prefix(__('€'))
+                ->prefix('€')
                 ->minValue(0)
                 ->maxValue(100000)
                 ->numeric()
@@ -220,7 +220,7 @@ class ProductResource extends Resource
                 TextInput::make('purchase_price')
                     ->label(__('Inkoop prijs'))
                     ->helperText(__('Voorbeeld: 3.50'))
-                    ->prefix(__('€'))
+                    ->prefix('€')
                     ->minValue(0)
                     ->maxValue(100000)
                     ->numeric()
@@ -236,7 +236,7 @@ class ProductResource extends Resource
                     ->minValue(0)
                     ->maxValue(100)
                     ->default(21)
-                    ->suffix(__('%'))
+                    ->suffix('%')
                     ->columnSpan([
                         'default' => 1,
                         'lg' => 3,
@@ -694,7 +694,7 @@ class ProductResource extends Resource
 
                         return $record->firstImage ? (mediaHelper()->getSingleMedia($record->firstImage, 'original')->url ?? '') : null;
                     })
-                    ->label(__('')),
+                    ->label(''),
                 TextColumn::make('name')
                     ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())
@@ -767,7 +767,7 @@ class ProductResource extends Resource
                                         ->label($priceField['label'])
                                         ->helperText($priceField['helperText'])
                                         ->numeric()
-                                        ->prefix(__('€'))
+                                        ->prefix('€')
                                         ->minValue(0)
                                         ->maxValue(100000)
                                         ->required($priceField['required'] ?? false)

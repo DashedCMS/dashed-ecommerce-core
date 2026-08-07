@@ -1823,13 +1823,13 @@ class Product extends Model
                     }
                 }),
             Placeholder::make('stock_sync_source_info')
-                ->label(__(''))
+                ->label('')
                 ->content(fn ($record) => $record && $record->stock_source_product_id
                     ? 'Voorraad wordt gesynchroniseerd vanaf: '.($record->stockSource?->name ?? 'Onbekend product')
                     : '')
                 ->visible(fn ($record) => $record && $record->stock_source_product_id),
             Placeholder::make('stock_sync_receivers_info')
-                ->label(__(''))
+                ->label('')
                 ->content(function ($record) {
                     if (! $record || ! $record->stockSyncedProducts()->exists()) {
                         return '';

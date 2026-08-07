@@ -522,13 +522,13 @@ class ProductGroupResource extends Resource
                             ->numeric()
                             ->required()
                             ->visible(fn (Get $get) => $get('type') == 'fixed')
-                            ->prefix(__('€')),
+                            ->prefix('€'),
                         TextInput::make('discount_percentage')
                             ->label(__('Kortings percentage'))
                             ->numeric()
                             ->required()
                             ->visible(fn (Get $get) => $get('type') == 'percentage')
-                            ->suffix(__('%')),
+                            ->suffix('%'),
                         Toggle::make('active_for_all_variants')
                             ->label(__('Actief voor alle varianten'))
                             ->default(true)
@@ -588,7 +588,7 @@ class ProductGroupResource extends Resource
 
                         return $record->firstImage ? (mediaHelper()->getSingleMedia($record->firstImage, 'original')->url ?? '') : null;
                     })
-                    ->label(__('')),
+                    ->label(''),
                 TextColumn::make('name')
                     ->label(__('Naam'))
                     ->searchable(query: SearchQuery::make())

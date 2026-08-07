@@ -63,7 +63,7 @@ class ChildProductsRelationManager extends RelationManager
                     ->label(__('Voorraad')),
                 ImageColumn::make('image')
                     ->getStateUsing(fn ($record) => $record->images ? mediaHelper()->getSingleMedia($record->images[0], 'original')->url : '')
-                    ->label(__('')),
+                    ->label(''),
                 IconColumn::make('indexable')
                     ->label(__('Tonen in overzicht'))
                     ->trueIcon('heroicon-o-check-circle')
@@ -87,7 +87,7 @@ class ChildProductsRelationManager extends RelationManager
                                 TextInput::make('price')
                                     ->label(__('Prijs van het product'))
                                     ->helperText(__('Voorbeeld: 10.25'))
-                                    ->prefix(__('€'))
+                                    ->prefix('€')
                                     ->minValue(1)
                                     ->maxValue(100000)
                                     ->numeric()
@@ -96,7 +96,7 @@ class ChildProductsRelationManager extends RelationManager
                                 TextInput::make('new_price')
                                     ->label(__('Vorige prijs (de hogere prijs)'))
                                     ->helperText(__('Voorbeeld: 14.25'))
-                                    ->prefix(__('€'))
+                                    ->prefix('€')
                                     ->minValue(1)
                                     ->maxValue(100000)
                                     ->numeric()
