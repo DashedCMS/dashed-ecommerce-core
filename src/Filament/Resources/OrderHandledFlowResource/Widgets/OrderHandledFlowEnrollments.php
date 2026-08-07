@@ -69,7 +69,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                     ->getStateUsing(fn (OrderFlowEnrollment $record): string => $record->order?->name ?: '-'),
                 TextColumn::make('chosen_review_url_label')
                     ->label(__('Platform'))
-                    ->placeholder(__('-'))
+                    ->placeholder('-')
                     ->badge()
                     ->color(fn (?string $state): string => self::platformBadgeColor($state))
                     ->sortable()
@@ -85,7 +85,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                 TextColumn::make('next_mail_at')
                     ->label(__('Volgende mail'))
                     ->dateTime('d-m-Y H:i')
-                    ->placeholder(__('-'))
+                    ->placeholder('-')
                     ->sortable()
                     ->description(function (OrderFlowEnrollment $record): ?string {
                         if (! $record->next_mail_at) {
@@ -154,7 +154,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                         : __('Loopt nog')),
                 TextColumn::make('cancelled_reason')
                     ->label(__('Reden'))
-                    ->placeholder(__('-'))
+                    ->placeholder('-')
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'link_click' => 'Klik op link',
                         'unsubscribed_via_link' => 'Afgemeld via link',
@@ -176,7 +176,7 @@ class OrderHandledFlowEnrollments extends TableWidget
                 TextColumn::make('cancelled_at')
                     ->label(__('Geannuleerd op'))
                     ->dateTime('d-m-Y H:i')
-                    ->placeholder(__('-'))
+                    ->placeholder('-')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

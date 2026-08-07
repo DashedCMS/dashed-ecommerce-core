@@ -118,7 +118,7 @@ class PaymentInformationList extends Component implements HasSchemas
                     ])
                     ->columns(4),
 
-                Fieldset::make(__('extra_info'))->columnSpanFull()
+                Fieldset::make()->columnSpanFull()
                     ->label(__('Extra informatie'))
                     ->schema($customOrderFields)
                     ->visible(count($customOrderFields) > 0)

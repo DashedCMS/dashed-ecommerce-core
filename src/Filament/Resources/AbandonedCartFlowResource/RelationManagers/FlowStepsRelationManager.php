@@ -45,7 +45,7 @@ class FlowStepsRelationManager extends RelationManager
             ->reorderable('sort_order')
             ->columns([
                 TextColumn::make('sort_order')
-                    ->label(__('#'))
+                    ->label('#')
                     ->width(40),
                 TextColumn::make('delay_label')
                     ->label(__('Vertraging'))

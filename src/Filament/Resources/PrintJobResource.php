@@ -45,14 +45,14 @@ class PrintJobResource extends Resource
                     ->url(fn (PrintJob $r) => $r->order
                         ? route('filament.dashed.resources.orders.view', $r->order_id)
                         : null),
-                TextColumn::make('printer.name')->label(__('Printer'))->placeholder(__('-')),
+                TextColumn::make('printer.name')->label(__('Printer'))->placeholder('-'),
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn ($state) => $state?->color())
                     ->formatStateUsing(fn ($state) => $state?->label()),
                 TextColumn::make('attempts'),
                 TextColumn::make('created_at')->since(),
-                TextColumn::make('printed_at')->since()->placeholder(__('-')),
+                TextColumn::make('printed_at')->since()->placeholder('-'),
             ])
             ->filters([
                 SelectFilter::make('status')->multiple()->options(

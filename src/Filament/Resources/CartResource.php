@@ -85,7 +85,7 @@ class CartResource extends Resource
                 Tables\Columns\TextColumn::make('user_or_email')
                     ->label(__('Gebruiker'))
                     ->state(fn ($record) => $record->user?->name ?: ($record->abandoned_email ?: null))
-                    ->placeholder(__('-'))
+                    ->placeholder('-')
                     ->description(fn ($record) => $record->user_id && $record->abandoned_email ? $record->abandoned_email : null)
                     ->searchable(query: function ($query, string $search) {
                         $query->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"))

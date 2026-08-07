@@ -7,8 +7,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\R
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
+use Filament\Resources\RelationManagers\RelationManager;
 
 /**
  * Read-only overzicht van het uitvoerlog van deze regel — zelfde opzet als
@@ -53,12 +53,12 @@ class RunsRelationManager extends RelationManager
                     ->label(__('Onderwerp'))
                     ->formatStateUsing(fn (string $state): string => class_basename($state)),
                 TextColumn::make('subject_id')
-                    ->label(__('#')),
+                    ->label('#'),
                 TextColumn::make('error')
                     ->label(__('Foutmelding'))
                     ->limit(60)
                     ->toggleable()
-                    ->placeholder(__('-')),
+                    ->placeholder('-'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

@@ -15,9 +15,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\EmailTemplate;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
@@ -201,7 +201,7 @@ class OrderReturnResource extends Resource
                         ->formatStateUsing(fn ($state) => $state ? 'Ja' : 'Nee'),
                     TextEntry::make('return_label_provider')
                         ->label(__('Retourlabel via'))
-                        ->placeholder(__('-')),
+                        ->placeholder('-'),
                 ]),
             RepeatableEntry::make('lines')
                 ->label(__('Geretourneerde producten'))

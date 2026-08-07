@@ -249,7 +249,7 @@ class AutomationRuleResource extends Resource
                         }),
                     TextInput::make('schedule_at')
                         ->label(__('Tijdstip'))
-                        ->placeholder(__('14:30'))
+                        ->placeholder('14:30')
                         ->helperText(__('Formaat uu:mm (24-uurs), bijvoorbeeld 14:30.'))
                         ->rules(['regex:' . self::SCHEDULE_TIME_REGEX])
                         ->visible(fn (Get $get): bool => static::triggerScheduleMode($get('trigger')) === 'recurring')

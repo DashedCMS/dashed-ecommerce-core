@@ -149,7 +149,7 @@ class PrinterResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('cups_name')->label(__('CUPS'))->placeholder(__('-')),
+                TextColumn::make('cups_name')->label(__('CUPS'))->placeholder('-'),
                 TextColumn::make('location'),
                 TextColumn::make('type')
                     ->badge()

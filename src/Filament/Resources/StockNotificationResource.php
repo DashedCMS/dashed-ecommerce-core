@@ -52,7 +52,7 @@ class StockNotificationResource extends Resource
                 TextColumn::make('notified_at')
                     ->label(__('Verstuurd op'))
                     ->dateTime('d-m-Y H:i')
-                    ->placeholder(__('—'))
+                    ->placeholder('—')
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
