@@ -239,10 +239,12 @@ class DatabaseCart
             return $cart;
         }
 
-        // nieuw
-        return Cart::create([
+        // nieuw. createOrFirst en niet create: twee gelijktijdige verzoeken met
+        // hetzelfde cookie-token zien allebei geen winkelwagen en botsen anders
+        // op de unieke index dashed__carts_token_unique. Laravel vangt die
+        // violation af en geeft de zojuist aangemaakte rij terug.
+        return Cart::createOrFirst(['token' => $token], [
             'user_id' => $userId,
-            'token' => $token,
             'type' => $this->type ?? 'default',
             'store_id' => $this->storeId,
             'locale' => app()->getLocale(),

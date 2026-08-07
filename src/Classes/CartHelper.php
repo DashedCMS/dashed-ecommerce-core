@@ -426,9 +426,14 @@ class CartHelper
         }
 
         if (! $cart) {
-            $cart = CartModel::create([
+            // createOrFirst en niet create: de kassa vuurt meerdere
+            // cart-verzoeken tegelijk af met hetzelfde cookie-token. Zonder dit
+            // zien twee gelijktijdige verzoeken allebei geen winkelwagen en
+            // botsen ze op de unieke index dashed__carts_token_unique. Laravel
+            // vangt de unique-violation af en geeft de rij terug die de andere
+            // aanvraag net heeft aangemaakt.
+            $cart = CartModel::createOrFirst(['token' => $token], [
                 'user_id' => $userId,
-                'token' => $token,
                 'type' => static::$cartType ?? 'default',
                 'locale' => app()->getLocale(),
                 'currency' => config('app.currency', 'EUR'),
