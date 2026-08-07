@@ -12,7 +12,7 @@ class CheckoutAbandonmentsPage extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-cart';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Statistics';
+    protected static string|UnitEnum|null $navigationGroup = 'Statistieken';
 
     protected static ?string $title = 'Checkout-uitval';
 

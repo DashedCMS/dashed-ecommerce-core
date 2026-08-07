@@ -29,7 +29,7 @@ class CustomerMatchSettingsPage extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Google Ads Customer Match';
-    protected static string|UnitEnum|null $navigationGroup = 'Overige';
+    protected static string|UnitEnum|null $navigationGroup = 'Systeem';
     protected static ?string $title = 'Google Ads Customer Match';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

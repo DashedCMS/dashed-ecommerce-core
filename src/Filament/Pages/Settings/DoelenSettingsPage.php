@@ -8,8 +8,8 @@ use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Section;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
@@ -23,7 +23,7 @@ class DoelenSettingsPage extends Page implements HasSchemas
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-flag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Verkoopdoelen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Systeem';
     protected static ?string $title = 'Verkoopdoelen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

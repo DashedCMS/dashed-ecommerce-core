@@ -21,7 +21,7 @@ use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationCo
  */
 class RecommendationsDebugPage extends Page
 {
-    protected static string|UnitEnum|null $navigationGroup = 'Overige';
+    protected static string|UnitEnum|null $navigationGroup = 'Systeem';
     protected static ?int $navigationSort = 99100;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';
     protected static ?string $navigationLabel = 'Recommendations debug';

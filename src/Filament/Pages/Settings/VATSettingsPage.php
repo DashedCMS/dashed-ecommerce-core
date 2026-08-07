@@ -22,7 +22,7 @@ class VATSettingsPage extends Page
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-receipt-percent';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'BTW instellingen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Systeem';
     protected static ?string $title = 'BTW instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

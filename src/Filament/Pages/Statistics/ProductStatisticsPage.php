@@ -25,7 +25,7 @@ class ProductStatisticsPage extends Page implements HasSchemas
 
     protected static \BackedEnum | null | string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Product statistieken';
-    protected static \UnitEnum | string | null $navigationGroup = 'Statistics';
+    protected static \UnitEnum | string | null $navigationGroup = 'Statistieken';
     protected static ?string $title = 'Product statistieken';
     protected static ?int $navigationSort = 100000;
 

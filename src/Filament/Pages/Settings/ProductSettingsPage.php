@@ -25,7 +25,7 @@ class ProductSettingsPage extends Page
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Product instellingen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Systeem';
     protected static ?string $title = 'Product instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

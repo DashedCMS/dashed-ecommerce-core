@@ -23,7 +23,7 @@ class OrderCancelSettingsPage extends Page
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-arrow-uturn-left';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Annuleer bestelling instellingen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Systeem';
     protected static ?string $title = 'Annuleer bestelling instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

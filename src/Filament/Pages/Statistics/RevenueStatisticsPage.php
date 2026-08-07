@@ -2,24 +2,24 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
+use UnitEnum;
 use BackedEnum;
 use Carbon\Carbon;
-use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
-use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
-use UnitEnum;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Contracts\HasSchemas;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
 
 class RevenueStatisticsPage extends Page implements HasSchemas
 {
@@ -29,7 +29,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
 
     protected static ?string $navigationLabel = 'Omzet statistieken';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Statistics';
+    protected static string|UnitEnum|null $navigationGroup = 'Statistieken';
 
     protected static ?string $title = 'Omzet statistieken';
 

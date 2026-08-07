@@ -169,10 +169,13 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ],
         ]);
 
-        cms()->registerNavigationGroup('E-commerce', 30);
-        cms()->registerNavigationGroup('Producten', 40);
-        cms()->registerNavigationGroup('Statistics', 110);
-        cms()->registerNavigationGroup('Export', 120);
+        // Dagelijks transactioneel werk bovenaan, analyse eronder. Retouren en
+        // Print queue werden nooit geregistreerd en zakten daardoor onder Export.
+        cms()->registerNavigationGroup('E-commerce', 10);
+        cms()->registerNavigationGroup('Retouren', 15);
+        cms()->registerNavigationGroup('Producten', 20);
+        cms()->registerNavigationGroup('Statistieken', 65);
+        cms()->registerNavigationGroup('Export', 70);
 
         \Illuminate\Support\Facades\RateLimiter::for('google-ads-customer-match', function (\Illuminate\Http\Request $request) {
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->ip() ?? 'unknown');

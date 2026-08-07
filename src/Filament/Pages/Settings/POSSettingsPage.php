@@ -26,7 +26,7 @@ class POSSettingsPage extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'POS instellingen';
-    protected static string|UnitEnum|null $navigationGroup = 'Overige';
+    protected static string|UnitEnum|null $navigationGroup = 'Systeem';
     protected static ?string $title = 'POS instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

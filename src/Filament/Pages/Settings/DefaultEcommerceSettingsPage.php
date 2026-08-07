@@ -22,7 +22,7 @@ class DefaultEcommerceSettingsPage extends Page
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-report';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Facturatie instellingen';
-    protected static string | UnitEnum | null $navigationGroup = 'Overige';
+    protected static string | UnitEnum | null $navigationGroup = 'Systeem';
     protected static ?string $title = 'Facturatie instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';

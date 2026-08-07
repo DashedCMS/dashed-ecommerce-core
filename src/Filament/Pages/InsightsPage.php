@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages;
 
-use BackedEnum;
 use UnitEnum;
+use BackedEnum;
 use Filament\Pages\Page;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Support\InsightsService;
@@ -18,7 +18,7 @@ class InsightsPage extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-trending-up';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Statistics';
+    protected static string|UnitEnum|null $navigationGroup = 'Statistieken';
 
     protected static ?string $navigationLabel = 'Inzichten';
 

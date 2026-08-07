@@ -26,7 +26,7 @@ class PrintQueueSettingsPage extends Page
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-printer';
     protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationLabel = 'Print queue';
-    protected static string|UnitEnum|null $navigationGroup = 'Overige';
+    protected static string|UnitEnum|null $navigationGroup = 'Systeem';
     protected static ?string $title = 'Print queue instellingen';
 
     protected string $view = 'dashed-core::settings.pages.default-settings';
