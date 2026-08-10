@@ -2207,6 +2207,25 @@ MARKDOWN,
             cms()->registerContentQualityCheck(new \Dashed\DashedEcommerceCore\ContentQuality\ProductWithoutImageCheck());
         }
 
+        // Bestelcondities voor de nieuwsbriefsegmenten. Los gekoppeld: dit
+        // package vereist dashed-newsletter niet, want de webshop moet ook
+        // draaien zonder nieuwsbriefmodule. De guard kijkt naar de binding en
+        // niet naar de klasse, zodat de conditieklassen (die een interface uit
+        // dat package implementeren) pas geladen worden als hij er echt is.
+        //
+        // In booted() en niet hier rechtstreeks: configurePackage() draait in de
+        // register-fase, en dashed-ecommerce-core komt daarin vóór
+        // dashed-newsletter. De binding bestaat op dit moment dus nog niet en de
+        // condities zouden stilzwijgend nooit geregistreerd worden.
+        $this->app->booted(function (): void {
+            if (! app()->bound('newsletter')) {
+                return;
+            }
+
+            app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\OrderTotalCondition());
+            app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\LastOrderDateCondition());
+        });
+
         cms()->registerSettingsPage(DefaultEcommerceSettingsPage::class, 'Algemene Ecommerce', 'banknotes', 'Algemene Ecommerce instellingen');
         cms()->registerSettingsPage(InvoiceSettingsPage::class, 'Facturatie instellingen', 'document-check', 'Instellingen voor de facturatie');
         cms()->registerSettingsPage(OrderSettingsPage::class, 'Bestellingen', 'banknotes', 'Instellingen voor de bestellingen');
