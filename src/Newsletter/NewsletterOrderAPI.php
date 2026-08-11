@@ -7,11 +7,12 @@ namespace Dashed\DashedEcommerceCore\Newsletter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedNewsletter\Models\NewsletterList;
 use Dashed\DashedEcommerceCore\Contracts\SupportsEmailBackfill;
+use Dashed\DashedNewsletter\Classes\FormApis\NewsletterListAPI;
 
 /**
  * Zet de klant van een bestelling op een CMS-nieuwsbrieflijst.
@@ -99,8 +100,13 @@ class NewsletterOrderAPI implements SupportsEmailBackfill
                     Select::make('field_id')
                         ->label(__('Veld uit de bestelling'))
                         ->options(Order::getMarketingFields()),
-                    TextInput::make('newsletter_field_key')
-                        ->label(__('Sleutel van het nieuwsbriefveld'))
+                    // Een keuzelijst en geen vrij tekstvak: een sleutel die net
+                    // anders geschreven is wordt stilzwijgend genegeerd, en dan
+                    // komen de contacten wel binnen maar zonder die waarde.
+                    Select::make('newsletter_field_key')
+                        ->label(__('Nieuwsbriefveld'))
+                        ->options(fn (Get $get): array => NewsletterListAPI::fieldOptions($get('../../newsletter_list_id')))
+                        ->placeholder(__('Kies eerst een lijst'))
                         ->required(),
                 ])
                 ->columnSpanFull(),
