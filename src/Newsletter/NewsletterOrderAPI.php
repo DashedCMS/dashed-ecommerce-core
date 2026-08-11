@@ -106,9 +106,8 @@ class NewsletterOrderAPI implements SupportsEmailBackfill
                 ->columnSpanFull(),
             Textarea::make('consent_text')
                 ->label(__('Toestemmingstekst'))
-                ->helperText(__('De tekst die de klant bij het afrekenen te zien kreeg. Deze wordt letterlijk bewaard als bewijs.'))
-                ->rows(2)
-                ->required(),
+                ->helperText(__('De tekst die de klant bij het afrekenen te zien kreeg, letterlijk bewaard als bewijs. Laat je hem leeg, dan wordt de toestemming zelf nog steeds vastgelegd met tijdstip, IP en bron, alleen zonder tekst erbij.'))
+                ->rows(2),
         ];
     }
 
