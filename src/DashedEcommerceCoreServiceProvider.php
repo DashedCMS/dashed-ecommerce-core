@@ -2224,6 +2224,19 @@ MARKDOWN,
 
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\OrderTotalCondition());
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\LastOrderDateCondition());
+
+            // De eigen nieuwsbrief moet overal te kiezen zijn waar een koppeling
+            // als Laposta dat ook is. Zonder deze registratie staat hij wel bij
+            // de formulieren en niet bij de bestellingen.
+            forms()->builder(
+                'orderApiClasses',
+                array_merge(forms()->builder('orderApiClasses'), [
+                    'newsletter-order-api' => [
+                        'name' => 'Nieuwsbrieflijst in het CMS',
+                        'class' => \Dashed\DashedEcommerceCore\Newsletter\NewsletterOrderAPI::class,
+                    ],
+                ])
+            );
         });
 
         cms()->registerSettingsPage(DefaultEcommerceSettingsPage::class, 'Algemene Ecommerce', 'banknotes', 'Algemene Ecommerce instellingen');
