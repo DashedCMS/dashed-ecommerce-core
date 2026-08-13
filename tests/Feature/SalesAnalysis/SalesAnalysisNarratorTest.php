@@ -35,9 +35,13 @@ it('geeft het verhaal van het model terug', function () {
 it('stuurt de signalen mee en niet de ruwe cijfers', function () {
     Ai::shouldReceive('hasProvider')->andReturnTrue();
     Ai::shouldReceive('text')->once()->withArgs(function (string $prompt) {
-        return str_contains($prompt, 'Voorraad raakt op')
+        return str_contains($prompt, Signal::URGENT)
+            && str_contains($prompt, 'Voorraad raakt op')
             && str_contains($prompt, 'Nog 3 dagen')
-            && ! str_contains($prompt, 'kerncijfers');
+            && str_contains($prompt, 'Dagen: 3')
+            && ! str_contains($prompt, 'kerncijfers')
+            && ! str_contains($prompt, 'revenue')
+            && ! str_contains($prompt, '100');
     })->andReturn('Verhaal');
 
     expect(SalesAnalysisNarrator::narrate(narratorReport(), narratorContext()))->toBe('Verhaal');
@@ -45,6 +49,13 @@ it('stuurt de signalen mee en niet de ruwe cijfers', function () {
 
 it('geeft niets terug zonder AI-provider', function () {
     Ai::shouldReceive('hasProvider')->andReturnFalse();
+    Ai::shouldReceive('text')->never();
+
+    expect(SalesAnalysisNarrator::narrate(narratorReport(), narratorContext()))->toBeNull();
+});
+
+it('geeft niets terug wanneer het controleren van de provider klapt', function () {
+    Ai::shouldReceive('hasProvider')->andThrow(new RuntimeException('Config kapot'));
     Ai::shouldReceive('text')->never();
 
     expect(SalesAnalysisNarrator::narrate(narratorReport(), narratorContext()))->toBeNull();

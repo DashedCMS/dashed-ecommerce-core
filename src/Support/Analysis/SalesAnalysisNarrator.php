@@ -25,11 +25,11 @@ class SalesAnalysisNarrator
             return null;
         }
 
-        if (! class_exists(Ai::class) || ! Ai::hasProvider()) {
-            return null;
-        }
-
         try {
+            if (! class_exists(Ai::class) || ! Ai::hasProvider()) {
+                return null;
+            }
+
             $narrative = Ai::text(self::prompt($signals, $context));
         } catch (Throwable $e) {
             report($e);
