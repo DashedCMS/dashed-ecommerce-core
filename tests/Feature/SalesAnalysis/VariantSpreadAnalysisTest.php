@@ -1,5 +1,6 @@
 <?php
 
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Support\Analysis\Signal;
 use Dashed\DashedEcommerceCore\Tests\Support\AnalysisFixtures;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisPeriod;
@@ -67,6 +68,31 @@ it('meldt niets wanneer de varianten redelijk verdeeld verkopen', function () {
     ]);
 
     expect((new VariantSpreadAnalysis())->run(variantenContext())->signals)->toBe([]);
+});
+
+it('telt een variant die na de bestelling verwijderd is ook niet meer als verkocht', function () {
+    $groep = AnalysisFixtures::productGroup('Veluro');
+    $loper = AnalysisFixtures::product('Veluro Zwart', group: $groep);
+    $tweede = AnalysisFixtures::product('Veluro Rood', group: $groep);
+    $verwijderd = AnalysisFixtures::product('Veluro Blauw', group: $groep);
+
+    AnalysisFixtures::paidOrder('2026-03-05', [
+        ['product' => $loper, 'quantity' => 10, 'price' => 900.0],
+        ['product' => $tweede, 'quantity' => 1, 'price' => 60.0],
+        ['product' => $verwijderd, 'quantity' => 1, 'price' => 40.0],
+    ]);
+
+    Product::withoutEvents(fn () => $verwijderd->delete());
+
+    $groups = (new VariantSpreadAnalysis())->run(variantenContext())->facts['groups'];
+
+    // De telling en de verkoopregels moeten dezelfde populatie beschrijven:
+    // de verwijderde variant telt niet meer als variant, dus mag hij ook
+    // niet meer als verkochte variant meetellen.
+    expect($groups)->toHaveCount(1)
+        ->and($groups[0]['variants'])->toBe(2)
+        ->and($groups[0]['sold_variants'])->toBe(2)
+        ->and($groups[0]['sold_variants'])->toBeLessThanOrEqual($groups[0]['variants']);
 });
 
 it('telt varianten van een andere site niet mee', function () {

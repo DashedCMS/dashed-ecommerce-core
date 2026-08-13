@@ -44,12 +44,22 @@ class VariantSpreadAnalysis implements SalesAnalysis
 
     public function run(AnalysisContext $context): AnalysisResult
     {
-        // Expliciet gescoopt op de site van de context: een kale query over
+        // Beide verzamelingen hieronder moeten dezelfde populatie
+        // beschrijven: het aantal varianten in een groep en het aantal
+        // varianten dat verkocht is horen over precies dezelfde producten
+        // te gaan. Doen ze dat niet, dan kan `sold_variants` groter worden
+        // dan `variants` en zegt het signaal letterlijk dat er van twee
+        // varianten er drie verkochten.
+        //
+        // Daarom staat de populatie hier één keer als query, en leiden de
+        // telling en de omzetregels er allebei van af. Die query is
+        // gescoopt op de site van de context (een kale query over
         // dashed__products telt anders ook varianten van andere webshops
-        // mee, waardoor zowel het aantal varianten als het aandeel van de
-        // dominante variant niet meer klopt op een multi-site-installatie.
-        $variantCounts = Product::query()
-            ->thisSite($context->siteId)
+        // mee) en sluit via de soft-delete-scope van het Product-model de
+        // verwijderde varianten uit.
+        $variantsInScope = Product::query()->thisSite($context->siteId);
+
+        $variantCounts = (clone $variantsInScope)
             ->selectRaw('product_group_id, COUNT(*) as variants')
             ->groupBy('product_group_id')
             ->pluck('variants', 'product_group_id');
@@ -57,6 +67,11 @@ class VariantSpreadAnalysis implements SalesAnalysis
         $rows = OrderLineQuery::lines($context->period, $context->siteId)
             ->join('dashed__products as p', 'p.id', '=', 'op.product_id')
             ->join('dashed__product_groups as g', 'g.id', '=', 'p.product_group_id')
+            // Dezelfde populatie als de telling hierboven, uitgedrukt als
+            // beperking op de verkochte product-id's. Dat leest duidelijker
+            // dan de site- en soft-delete-voorwaarden hier nog eens met de
+            // hand op `p` herhalen, en het kan niet uit elkaar gaan lopen.
+            ->whereIn('op.product_id', (clone $variantsInScope)->select('dashed__products.id'))
             ->selectRaw('g.id as group_id, MAX(g.name) as group_name, op.product_id, MAX(op.name) as name, SUM(op.price) as revenue')
             ->groupBy('g.id', 'op.product_id')
             ->get()

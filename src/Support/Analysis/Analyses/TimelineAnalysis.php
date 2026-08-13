@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Support\Analysis\Analyses;
 
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisResult;
 use Dashed\DashedEcommerceCore\Support\Analysis\OrderLineQuery;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisContext;
@@ -40,10 +41,19 @@ class TimelineAnalysis implements SalesAnalysis
     {
         $weekly = $context->period->days() >= self::WEEKLY_FROM_DAYS;
 
+        // Per dag optellen in de database in plaats van elke order als model
+        // op te halen: bij tienduizenden orders in een periode is dat het
+        // verschil tussen een query en een geheugengrens. DATE() werkt zowel
+        // op MySQL (productie) als op SQLite (tests).
+        //
+        // Hier bewust niet afronden. Dat gebeurde eerst per dag én daarna
+        // nog eens over de weeksom, waardoor de grafiek een paar cent van
+        // het kerncijfer af kon liggen; nu wordt er alleen aan het eind
+        // afgerond.
         $revenuePerDay = OrderLineQuery::orders($context->period, $context->siteId)
-            ->get(['created_at', 'total'])
-            ->groupBy(fn ($order) => $order->created_at->toDateString())
-            ->map(fn ($orders) => round((float) $orders->sum('total'), 2));
+            ->selectRaw('DATE(created_at) as day, COALESCE(SUM(total), 0) as revenue')
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->pluck('revenue', 'day');
 
         $labels = [];
         $revenue = [];

@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Statistics;
 
+use Throwable;
 use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
@@ -111,7 +112,11 @@ class SalesAnalysisPage extends Page implements HasSchemas
         // Een uur cache met een knop ernaast. De reden is niet de rekentijd
         // maar het geld: dezelfde periode twee keer openen hoort niet twee
         // keer een AI-aanroep te kosten.
-        $cacheKey = 'sales-analysis:' . $siteId . ':' . $period->cacheKey();
+        //
+        // De taal hoort in de sleutel: labels en signaalteksten zijn op het
+        // moment van berekenen al door __() gehaald en gaan zo vertaald en
+        // wel een uur de cache in.
+        $cacheKey = 'sales-analysis:' . $siteId . ':' . app()->getLocale() . ':' . $period->cacheKey();
 
         if ($fresh) {
             Cache::forget($cacheKey);
@@ -155,8 +160,30 @@ class SalesAnalysisPage extends Page implements HasSchemas
                 continue;
             }
 
-            $sections[$class::group()][$key] = [
-                'label' => $class::label(),
+            // De runner vangt al af dat een analyse uit een ander pakket kan
+            // gooien, ook in label(). Dan mag dezelfde analyse hier niet
+            // alsnog de hele pagina omleggen.
+            try {
+                $group = $class::group();
+            } catch (Throwable $e) {
+                // Zonder groep is er geen plek om de sectie te tonen, dus
+                // slaan we hem over in plaats van te klappen.
+                report($e);
+
+                continue;
+            }
+
+            try {
+                $label = $class::label();
+            } catch (Throwable $e) {
+                // Zonder label valt de sectie terug op zijn sleutel; dat is
+                // lelijk, maar de rest van het rapport staat er gewoon.
+                report($e);
+                $label = $key;
+            }
+
+            $sections[$group][$key] = [
+                'label' => $label,
                 'facts' => $result->facts,
             ];
         }

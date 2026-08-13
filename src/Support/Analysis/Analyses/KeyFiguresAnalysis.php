@@ -59,9 +59,16 @@ class KeyFiguresAnalysis implements SalesAnalysis
     /** @return array<string, float|int> */
     protected function figures(AnalysisPeriod $period, string $siteId): array
     {
-        $orders = OrderLineQuery::orders($period, $siteId)->get(['id', 'total']);
-        $revenue = round((float) $orders->sum('total'), 2);
-        $orderCount = $orders->count();
+        // Optellen in de database, niet in PHP. Deze methode draait drie
+        // keer per rapport en een webshop kan tienduizenden orders per
+        // periode hebben; die allemaal als model hydrateren is geen
+        // traagheid maar een geheugengrens.
+        $totals = OrderLineQuery::orders($period, $siteId)
+            ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')
+            ->first();
+
+        $revenue = round((float) ($totals->revenue ?? 0), 2);
+        $orderCount = (int) ($totals->orders ?? 0);
 
         $lines = OrderLineQuery::lines($period, $siteId)
             ->selectRaw('COALESCE(SUM(op.quantity), 0) as units, COUNT(DISTINCT op.product_id) as unique_products')
