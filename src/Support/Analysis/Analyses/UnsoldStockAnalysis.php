@@ -51,7 +51,11 @@ class UnsoldStockAnalysis implements SalesAnalysis
             ->pluck('op.product_id')
             ->all();
 
+        // Expliciet de site van de context, niet de actief geselecteerde site: de
+        // analyse gaat over de site waarover gerapporteerd wordt, niet over wat
+        // een beheerder toevallig open heeft staan.
         $products = Product::query()
+            ->thisSite($context->siteId)
             ->where('stock', '>', 0)
             ->when($soldProductIds !== [], fn ($query) => $query->whereNotIn('id', $soldProductIds))
             ->get(['id', 'name', 'stock', 'current_price', 'price']);

@@ -47,3 +47,12 @@ it('meldt niets wanneer er nauwelijks kapitaal stilligt', function () {
 
     expect((new UnsoldStockAnalysis())->run(stilleContext())->signals)->toBe([]);
 });
+
+it('negeert voorraad van een andere site', function () {
+    AnalysisFixtures::product('Andere shop', price: 50.0, stock: 5, siteId: 'andere-site');
+
+    $facts = (new UnsoldStockAnalysis())->run(stilleContext())->facts;
+
+    expect($facts['products'])->toBe([])
+        ->and($facts['total_value'])->toBe(0.0);
+});

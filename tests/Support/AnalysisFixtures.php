@@ -22,7 +22,7 @@ class AnalysisFixtures
      * UpdateProductInformationJob MySQL-only SQL gebruikt en de tests op
      * SQLite draaien.
      */
-    public static function product(string $name, float $price = 10.0, int $stock = 0, ?ProductGroup $group = null): Product
+    public static function product(string $name, float $price = 10.0, int $stock = 0, ?ProductGroup $group = null, string $siteId = 'site'): Product
     {
         Queue::fake();
 
@@ -32,7 +32,7 @@ class AnalysisFixtures
             'product_group_id' => $group->id,
             'name' => ['en' => $name, 'nl' => $name],
             'slug' => ['en' => 'analyse-' . uniqid(), 'nl' => 'analyse-' . uniqid()],
-            'site_ids' => ['site'],
+            'site_ids' => [$siteId],
             'price' => $price,
             'current_price' => $price,
             'vat_rate' => 21,
