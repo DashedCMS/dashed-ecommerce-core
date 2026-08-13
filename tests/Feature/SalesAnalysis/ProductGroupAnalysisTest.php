@@ -53,9 +53,43 @@ it('meldt een groep die duidelijk aandeel verliest', function () {
         ->and($signals[0]->title)->toContain('Zakkende groep');
 });
 
-it('geeft een lege lijst zonder verkopen en deelt niet door nul', function () {
+it('geeft een lege lijst en geen signalen zonder verkopen', function () {
     $result = (new ProductGroupAnalysis())->run(groepenContext());
 
     expect($result->facts['groups'])->toBe([])
         ->and($result->signals)->toBe([]);
+});
+
+it('geeft geen signaal in de eerste periode, ook al staat het aandeel meteen op 100%', function () {
+    $groep = AnalysisFixtures::productGroup('Enige groep');
+
+    // Alleen omzet in de huidige periode, niets in de vorige: zonder de
+    // guard zou het aandeel vergeleken worden met 0% en dus altijd een
+    // vals signaal geven.
+    AnalysisFixtures::paidOrder('2026-03-05', [
+        ['product' => AnalysisFixtures::product('A', group: $groep), 'quantity' => 1, 'price' => 500.0],
+    ]);
+
+    $result = (new ProductGroupAnalysis())->run(groepenContext());
+
+    expect($result->facts['groups'])->toHaveCount(1)
+        ->and($result->facts['groups'][0]['share_pct'])->toBe(100.0)
+        ->and($result->signals)->toBe([]);
+});
+
+it('rekent een aandeel van nul uit als de omzet in de periode nul is', function () {
+    $groep = AnalysisFixtures::productGroup('Gratis groep');
+
+    // Een regel met prijs 0.00: er is wel een verkochte regel, maar het
+    // omzettotaal van de periode is nul. Dat mag niet op een deling door
+    // nul stuklopen.
+    AnalysisFixtures::paidOrder('2026-03-05', [
+        ['product' => AnalysisFixtures::product('A', group: $groep), 'quantity' => 1, 'price' => 0.0],
+    ]);
+
+    $groups = (new ProductGroupAnalysis())->run(groepenContext())->facts['groups'];
+
+    expect($groups)->toHaveCount(1)
+        ->and($groups[0]['revenue'])->toBe(0.0)
+        ->and($groups[0]['share_pct'])->toBe(0.0);
 });
