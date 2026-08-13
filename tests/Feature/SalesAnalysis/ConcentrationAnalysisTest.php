@@ -72,6 +72,25 @@ it('zegt niets als de omzet gelijk verdeeld is over genoeg producten', function 
         ->and($result->signals)->toBe([]);
 });
 
+it('sorteert op omzet aflopend, ongeacht de invoegvolgorde', function () {
+    // De vier goedkope producten worden hier als eerste aangemaakt en het
+    // dure product als laatste: de invoegvolgorde is bewust niet aflopend.
+    // Zonder sortering op omzet zou products_for_half op 4 uitkomen in
+    // plaats van 1.
+    AnalysisFixtures::paidOrder('2026-03-05', [
+        ['product' => AnalysisFixtures::product('Klein 1'), 'quantity' => 1, 'price' => 100.0],
+        ['product' => AnalysisFixtures::product('Klein 2'), 'quantity' => 1, 'price' => 100.0],
+        ['product' => AnalysisFixtures::product('Klein 3'), 'quantity' => 1, 'price' => 100.0],
+        ['product' => AnalysisFixtures::product('Klein 4'), 'quantity' => 1, 'price' => 100.0],
+        ['product' => AnalysisFixtures::product('Groot'), 'quantity' => 1, 'price' => 600.0],
+    ]);
+
+    $facts = (new ConcentrationAnalysis())->run(concentratieContext())->facts;
+
+    expect($facts['products_for_half'])->toBe(1)
+        ->and($facts['top_share_pct'])->toBe(60.0);
+});
+
 it('deelt niet door nul zonder verkopen', function () {
     $facts = (new ConcentrationAnalysis())->run(concentratieContext())->facts;
 
