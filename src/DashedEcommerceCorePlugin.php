@@ -39,6 +39,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
+use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\CartStatistics;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSCustomerPageRedirect;
@@ -51,7 +52,6 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\YearlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource;
-use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource;
@@ -95,6 +95,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ExportOrdersPage::class,
                 ExportProductsPage::class,
                 ExportFinancialReportPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Statistics\SalesAnalysisPage::class,
                 RevenueStatisticsPage::class,
                 ProductStatisticsPage::class,
                 DiscountStatisticsPage::class,

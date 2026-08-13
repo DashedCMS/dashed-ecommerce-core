@@ -1673,6 +1673,20 @@ MARKDOWN,
             \Dashed\DashedEcommerceCore\Services\Summary\OrderFlowSummaryContributor::class,
         ]);
 
+        // Verkoopanalyse: de ingebouwde analyses aanmelden bij het register.
+        // De builder-API mergt automatisch met eerder geregistreerde analyses,
+        // zodat een ander pakket er zelf een kan toevoegen.
+        cms()->builder('salesAnalyses', [
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\KeyFiguresAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\TopProductsAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\MoversAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\ProductGroupAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\TimelineAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\UnsoldStockAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\ConcentrationAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\VariantSpreadAnalysis::class,
+        ]);
+
         cms()->builder('dashboardWidgets', [
             'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 'full',      'sort' => 10],
             'ec-revenue' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 'full',      'sort' => 15],
