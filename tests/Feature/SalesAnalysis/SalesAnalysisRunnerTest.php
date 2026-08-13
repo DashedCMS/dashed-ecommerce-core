@@ -130,6 +130,90 @@ class RunnerUnavailableAnalysis implements SalesAnalysis
     }
 }
 
+class RunnerFirstAttentionAnalysis implements SalesAnalysis
+{
+    public static function key(): string
+    {
+        return 'eersteaandacht';
+    }
+
+    public static function label(): string
+    {
+        return 'Eerste aandachtsanalyse';
+    }
+
+    public static function group(): string
+    {
+        return 'verkoop';
+    }
+
+    public static function isAvailable(AnalysisContext $context): bool
+    {
+        return true;
+    }
+
+    public function run(AnalysisContext $context): AnalysisResult
+    {
+        return new AnalysisResult(signals: [new Signal(Signal::ATTENTION, 'Eerst', 'Uitleg')]);
+    }
+}
+
+class RunnerSecondAttentionAnalysis implements SalesAnalysis
+{
+    public static function key(): string
+    {
+        return 'tweedeaandacht';
+    }
+
+    public static function label(): string
+    {
+        return 'Tweede aandachtsanalyse';
+    }
+
+    public static function group(): string
+    {
+        return 'assortiment';
+    }
+
+    public static function isAvailable(AnalysisContext $context): bool
+    {
+        return true;
+    }
+
+    public function run(AnalysisContext $context): AnalysisResult
+    {
+        return new AnalysisResult(signals: [new Signal(Signal::ATTENTION, 'Tweede', 'Uitleg')]);
+    }
+}
+
+class RunnerLabelBrokenAnalysis implements SalesAnalysis
+{
+    public static function key(): string
+    {
+        return 'labelkapot';
+    }
+
+    public static function label(): string
+    {
+        throw new RuntimeException('Het label klapt ook');
+    }
+
+    public static function group(): string
+    {
+        return 'verkoop';
+    }
+
+    public static function isAvailable(AnalysisContext $context): bool
+    {
+        return true;
+    }
+
+    public function run(AnalysisContext $context): AnalysisResult
+    {
+        throw new RuntimeException('De query klapte ook');
+    }
+}
+
 it('draait alle beschikbare analyses en bewaart hun feiten', function () {
     SalesAnalysisRegistry::fakeMap(['goed' => RunnerGoodAnalysis::class]);
 
@@ -149,7 +233,8 @@ it('laat de andere analyses staan wanneer er een klapt', function () {
 
     expect($report->resultFor('goed'))->not->toBeNull()
         ->and($report->resultFor('kapot'))->toBeNull()
-        ->and($report->failed)->toHaveKey('kapot');
+        ->and($report->failed)->toHaveKey('kapot')
+        ->and($report->failed['kapot'])->toBe('Kapotte analyse');
 });
 
 it('slaat een analyse over die op deze shop niets kan zeggen', function () {
@@ -172,4 +257,25 @@ it('zet de zwaarste signalen bovenaan, ongeacht de volgorde van de analyses', fu
     expect($signals)->toHaveCount(2)
         ->and($signals[0]->title)->toBe('Brand')
         ->and($signals[1]->title)->toBe('Kansje');
+});
+
+it('houdt binnen dezelfde ernst de volgorde van de analyses aan', function () {
+    SalesAnalysisRegistry::fakeMap([
+        'eersteaandacht' => RunnerFirstAttentionAnalysis::class,
+        'tweedeaandacht' => RunnerSecondAttentionAnalysis::class,
+    ]);
+
+    $signals = (new SalesAnalysisRunner())->run(runnerContext())->signals();
+
+    expect($signals)->toHaveCount(2)
+        ->and($signals[0]->title)->toBe('Eerst')
+        ->and($signals[1]->title)->toBe('Tweede');
+});
+
+it('valt terug op de sleutel als ook het label van de mislukte analyse klapt', function () {
+    SalesAnalysisRegistry::fakeMap(['labelkapot' => RunnerLabelBrokenAnalysis::class]);
+
+    $report = (new SalesAnalysisRunner())->run(runnerContext());
+
+    expect($report->failed)->toBe(['labelkapot' => 'labelkapot']);
 });
