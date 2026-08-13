@@ -7,6 +7,7 @@ use Dashed\DashedEcommerceCore\Support\Analysis\Signal;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisResult;
 use Dashed\DashedEcommerceCore\Support\Analysis\OrderLineQuery;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisContext;
+use Dashed\DashedEcommerceCore\Support\Analysis\TranslatableColumn;
 use Dashed\DashedEcommerceCore\Support\Analysis\Contracts\SalesAnalysis;
 
 /**
@@ -80,7 +81,7 @@ class VariantSpreadAnalysis implements SalesAnalysis
 
             $groups[] = [
                 'product_group_id' => (int) $groupId,
-                'name' => self::translated((string) $top->group_name),
+                'name' => TranslatableColumn::value((string) $top->group_name),
                 'variants' => $variantCount,
                 'sold_variants' => $variants->count(),
                 'dominant_name' => (string) $top->name,
@@ -127,25 +128,5 @@ class VariantSpreadAnalysis implements SalesAnalysis
         }
 
         return $signals;
-    }
-
-    /**
-     * De naam uit een vertaalbare JSON-kolom. Valt terug op de ruwe waarde
-     * wanneer het geen JSON is, want oudere rijen bevatten gewone tekst.
-     *
-     * Zelfde logica als ProductGroupAnalysis::translated(), maar die
-     * methode is daar protected, dus wordt hier los gehouden in plaats van
-     * de zichtbaarheid van een andere analyse te wijzigen voor deze ene
-     * aanroep.
-     */
-    protected static function translated(string $raw): string
-    {
-        $decoded = json_decode($raw, true);
-
-        if (! is_array($decoded) || $decoded === []) {
-            return $raw;
-        }
-
-        return (string) ($decoded[app()->getLocale()] ?? reset($decoded));
     }
 }

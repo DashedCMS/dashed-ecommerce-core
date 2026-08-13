@@ -7,6 +7,7 @@ use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisPeriod;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisResult;
 use Dashed\DashedEcommerceCore\Support\Analysis\OrderLineQuery;
 use Dashed\DashedEcommerceCore\Support\Analysis\AnalysisContext;
+use Dashed\DashedEcommerceCore\Support\Analysis\TranslatableColumn;
 use Dashed\DashedEcommerceCore\Support\Analysis\Contracts\SalesAnalysis;
 
 /**
@@ -84,28 +85,13 @@ class ProductGroupAnalysis implements SalesAnalysis
                 (int) $row->group_id => [
                     // g.name is een vertaalbare JSON-kolom; de ruwe waarde
                     // moet nog door de vertaalslag heen.
-                    'name' => self::translated((string) $row->name),
+                    'name' => TranslatableColumn::value((string) $row->name),
                     'revenue' => $revenue,
                     'units' => (int) $row->units,
                     'share_pct' => $total > 0 ? round($revenue / $total * 100, 1) : 0.0,
                 ],
             ];
         })->all();
-    }
-
-    /**
-     * De naam uit een vertaalbare JSON-kolom. Valt terug op de ruwe waarde
-     * wanneer het geen JSON is, want oudere rijen bevatten gewone tekst.
-     */
-    protected static function translated(string $raw): string
-    {
-        $decoded = json_decode($raw, true);
-
-        if (! is_array($decoded) || $decoded === []) {
-            return $raw;
-        }
-
-        return (string) ($decoded[app()->getLocale()] ?? reset($decoded));
     }
 
     /**
