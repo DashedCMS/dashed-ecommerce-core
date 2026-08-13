@@ -93,6 +93,30 @@ it('meldt niets wanneer de omzet dicht bij beide vergelijkingen ligt', function 
     expect((new KeyFiguresAnalysis())->run(keyFiguresContext())->signals)->toBe([]);
 });
 
+it('meldt niets wanneer alleen de vorige periode tegenvalt, want dat is seizoen', function () {
+    $a = AnalysisFixtures::product('Product A');
+
+    // 100 tegen 400 is 75 procent omlaag, maar 100 tegen 105 blijft binnen de
+    // marge. Beide vergelijkingsbedragen liggen boven de ondergrens van 100,
+    // dus deviation() geeft hier twee echte getallen terug en niet null.
+    AnalysisFixtures::paidOrder('2026-03-15', [['product' => $a, 'quantity' => 1, 'price' => 100.0]]);
+    AnalysisFixtures::paidOrder('2026-02-10', [['product' => $a, 'quantity' => 1, 'price' => 400.0]]);
+    AnalysisFixtures::paidOrder('2025-03-15', [['product' => $a, 'quantity' => 1, 'price' => 105.0]]);
+
+    expect((new KeyFiguresAnalysis())->run(keyFiguresContext())->signals)->toBe([]);
+});
+
+it('meldt niets wanneer alleen vorig jaar tegenvalt, want dat is een jaartrend', function () {
+    $a = AnalysisFixtures::product('Product A');
+
+    // Het spiegelbeeld: de vorige periode ligt vlak, vorig jaar ligt ver weg.
+    AnalysisFixtures::paidOrder('2026-03-15', [['product' => $a, 'quantity' => 1, 'price' => 100.0]]);
+    AnalysisFixtures::paidOrder('2026-02-10', [['product' => $a, 'quantity' => 1, 'price' => 105.0]]);
+    AnalysisFixtures::paidOrder('2025-03-15', [['product' => $a, 'quantity' => 1, 'price' => 400.0]]);
+
+    expect((new KeyFiguresAnalysis())->run(keyFiguresContext())->signals)->toBe([]);
+});
+
 it('meldt niets zonder omzet in de vergelijkingsperiodes, in plaats van door nul te delen', function () {
     $a = AnalysisFixtures::product('Product A');
 
