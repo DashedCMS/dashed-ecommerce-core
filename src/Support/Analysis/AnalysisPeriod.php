@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Support\Analysis;
 
-use InvalidArgumentException;
-use Carbon\CarbonInterface;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
+use InvalidArgumentException;
 
 /**
  * De periode waarover geanalyseerd wordt, plus de twee waar hij tegen
