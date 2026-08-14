@@ -100,10 +100,19 @@ class ProductVariationNaming
      * de groep zelf geen naam heeft blijven ongemoeid: die zouden anders een
      * lege naam krijgen.
      *
+     * @param  bool  $regenerateName  laat de naam met rust als dit uit staat
+     * @param  bool  $regenerateSlug  laat de slug met rust als dit uit staat
      * @return int  het aantal producten waarvan de naam of slug veranderde
      */
-    public static function regenerateForProductGroup(ProductGroup $productGroup): int
-    {
+    public static function regenerateForProductGroup(
+        ProductGroup $productGroup,
+        bool $regenerateName = true,
+        bool $regenerateSlug = true
+    ): int {
+        if (! $regenerateName && ! $regenerateSlug) {
+            return 0;
+        }
+
         self::flushOptionCache();
 
         $locales = collect(Locales::getLocales())
@@ -122,11 +131,15 @@ class ProductVariationNaming
             $names = [];
             $slugs = [];
             foreach ($locales as $locale) {
-                $names[$locale] = self::name($productGroup, $optionIds, $locale);
+                if ($regenerateName) {
+                    $names[$locale] = self::name($productGroup, $optionIds, $locale);
+                }
 
-                $slug = self::slug($productGroup, $optionIds, $locale);
-                if ($slug !== '') {
-                    $slugs[$locale] = $slug;
+                if ($regenerateSlug) {
+                    $slug = self::slug($productGroup, $optionIds, $locale);
+                    if ($slug !== '') {
+                        $slugs[$locale] = $slug;
+                    }
                 }
             }
 
@@ -151,12 +164,14 @@ class ProductVariationNaming
             return 0;
         }
 
-        DB::transaction(function () use ($wanted) {
+        DB::transaction(function () use ($wanted, $regenerateSlug) {
             // De producten die verschuiven houden elkaars nieuwe slug nog
             // bezet; IsVisitable::saving() zou daar een willekeurig teken
             // achter plakken. Daarom eerst alle betrokken slugs wegzetten,
             // buiten de modelevents om, en daarna pas opslaan.
-            self::parkSlugs(collect($wanted)->map(fn ($entry) => $entry[0])->all());
+            if ($regenerateSlug) {
+                self::parkSlugs(collect($wanted)->map(fn ($entry) => $entry[0])->all());
+            }
 
             foreach ($wanted as [$product, $names, $slugs]) {
                 foreach ($names as $locale => $name) {
