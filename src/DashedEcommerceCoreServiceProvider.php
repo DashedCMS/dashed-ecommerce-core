@@ -203,6 +203,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         if (method_exists(cms(), 'emailBlock') && app()->bound('newsletter')) {
             cms()->emailBlock('products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\ProductsBlock::class);
             cms()->emailBlock('auto-products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\AutoProductsBlock::class);
+            cms()->emailBlock('discount-code', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\DiscountCodeBlock::class);
         }
 
         cms()
