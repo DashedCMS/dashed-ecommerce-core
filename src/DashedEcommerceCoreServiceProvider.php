@@ -202,6 +202,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         // nergens voor nodig.
         if (method_exists(cms(), 'emailBlock') && app()->bound('newsletter')) {
             cms()->emailBlock('products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\ProductsBlock::class);
+            cms()->emailBlock('auto-products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\AutoProductsBlock::class);
         }
 
         cms()
