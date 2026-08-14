@@ -197,6 +197,13 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->emailBlock('order-note', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderNoteBlock::class)
             ->emailBlock('order-track-and-trace', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderTrackAndTraceBlock::class);
 
+        // Twee guards: dashed-core kan ouder zijn en emailBlock nog niet
+        // kennen, en een webshop zonder nieuwsbriefmodule heeft deze blokken
+        // nergens voor nodig.
+        if (method_exists(cms(), 'emailBlock') && app()->bound('newsletter')) {
+            cms()->emailBlock('products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\ProductsBlock::class);
+        }
+
         cms()
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail::class)
