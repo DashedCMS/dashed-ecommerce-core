@@ -10,9 +10,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
+use Dashed\DashedEcommerceCore\Classes\ProductVariationNaming;
 
 class CreateMissingProductVariationsJob implements ShouldQueue
 {
@@ -56,29 +56,16 @@ class CreateMissingProductVariationsJob implements ShouldQueue
             ];
         }
 
+        ProductVariationNaming::flushOptionCache();
+
         foreach ($missingVariations as $missingVariation) {
+            $optionIds = array_values($missingVariation);
+
             $newProduct = new Product();
             $newProduct->site_ids = $this->productGroup->site_ids;
             foreach (Locales::getLocales() as $locale) {
-                $name = $this->productGroup->getTranslation('name', $locale['id']);
-                $optionCount = 0;
-                foreach ($missingVariation as $optionId) {
-                    if ($optionCount === 0) {
-                        $name .= Translation::get('missing-product-variation-name-divider', 'missing-product-variations', '|') . ' ' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
-                    } else {
-                        $name .= Translation::get('missing-product-variation-option-divider', 'missing-product-variations', '|') . ' ' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
-                    }
-                    $name = str($name)->replace('  ', ' ')->toString();
-                    $optionCount++;
-                }
-                $newProduct->setTranslation('name', $locale['id'], $name);
-            }
-            foreach (Locales::getLocales() as $locale) {
-                $slug = $this->productGroup->getTranslation('slug', $locale['id']);
-                foreach ($missingVariation as $optionId) {
-                    $slug .= '-' . ProductFilterOption::find($optionId)->getTranslation('name', $locale['id']);
-                }
-                $newProduct->setTranslation('slug', $locale['id'], str($slug)->slug());
+                $newProduct->setTranslation('name', $locale['id'], ProductVariationNaming::name($this->productGroup, $optionIds, $locale['id']));
+                $newProduct->setTranslation('slug', $locale['id'], ProductVariationNaming::slug($this->productGroup, $optionIds, $locale['id']));
             }
             $newProduct->sku = 'SKU' . rand(10000, 99999);
             while (Product::withTrashed()->where('sku', $newProduct->sku)->exists()) {

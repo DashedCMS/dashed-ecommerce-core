@@ -10,6 +10,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
@@ -20,6 +21,7 @@ use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
+use Dashed\DashedEcommerceCore\Classes\ProductVariationNaming;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductGroupOpenOrdersWidget;
@@ -174,6 +176,17 @@ class EditProductGroup extends EditRecord
             ->action('duplicateProductGroup')
             ->color('warning');
 
+        $buttons[] = Action::make('regenerateProductNames')
+            ->label(__('Namen en slugs opnieuw genereren'))
+            ->icon('heroicon-o-arrow-path')
+            ->color('gray')
+            ->visible(fn () => $this->record->products()->exists())
+            ->requiresConfirmation()
+            ->modalHeading(__('Namen en slugs opnieuw genereren'))
+            ->modalDescription(__('Alle producten in deze groep krijgen opnieuw een naam en slug op basis van de groepsnaam en hun variatie-opties. Sla de groep eerst op, want er wordt gerekend met de opgeslagen naam en slug. Handmatige aanpassingen aan de naam of slug van een product gaan hierbij verloren; de oude product-URL\'s worden automatisch omgeleid.'))
+            ->modalSubmitActionLabel(__('Opnieuw genereren'))
+            ->action('regenerateProductNamesAndSlugs');
+
         if (class_exists(AnalyzeSeoAction::class)) {
             $buttons[] = AnalyzeSeoAction::make();
         }
@@ -182,6 +195,24 @@ class EditProductGroup extends EditRecord
         $buttons[] = DeleteAction::make();
 
         return $buttons;
+    }
+
+    public function regenerateProductNamesAndSlugs(): void
+    {
+        $changed = ProductVariationNaming::regenerateForProductGroup($this->record);
+
+        if (! $changed) {
+            $title = __('Alle producten hadden de juiste naam en slug al');
+        } elseif ($changed === 1) {
+            $title = __('1 product heeft een nieuwe naam en slug gekregen');
+        } else {
+            $title = __(':aantal producten hebben een nieuwe naam en slug gekregen', ['aantal' => $changed]);
+        }
+
+        Notification::make()
+            ->title($title)
+            ->success()
+            ->send();
     }
 
     public function duplicateProductGroup()
