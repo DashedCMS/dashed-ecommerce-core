@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Mail\EmailBlocks;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
 
@@ -50,7 +49,10 @@ class AutoProductsBlock extends EmailBlock
     {
         $limit = max(1, min(12, (int) ($blockData['limit'] ?? 4)));
 
-        $query = Product::public();
+        // visibleQuery() en niet Product::public(): zie het commentaar bij
+        // ProductsBlock. Zonder de sitefilter vult deze automatische selectie
+        // zich met producten die van een andere site kunnen zijn.
+        $query = ProductsBlock::visibleQuery($context['siteId'] ?? null);
 
         // De selectie wordt op het moment van verzenden bepaald, één keer voor
         // de hele ronde. Zie CampaignRenderer: rendert de code per ontvanger,

@@ -56,16 +56,38 @@ class ProductsBlock extends EmailBlock
             return '';
         }
 
-        // public() erbij: een product dat op de site verborgen is, hoort ook
-        // niet in een mail te staan. En sortBy houdt de volgorde aan die de
-        // redacteur koos, want whereIn geeft die niet terug.
-        $products = Product::public()
+        // visibleQuery() erbij: een product dat op de site verborgen is, of
+        // van een andere site is, hoort ook niet in een mail te staan. En
+        // sortBy houdt de volgorde aan die de redacteur koos, want whereIn
+        // geeft die niet terug.
+        $products = self::visibleQuery($context['siteId'] ?? null)
             ->whereIn('id', $ids)
             ->get()
             ->sortBy(fn (Product $product): int => array_search($product->id, $ids, true))
             ->values();
 
         return self::renderProducts($products, (int) ($blockData['columns'] ?? 2), $context);
+    }
+
+    /**
+     * Openbare producten voor de mail, op de juiste site als die bekend is.
+     *
+     * Geen thisSite() (die valt zonder site-parameter terug op
+     * Sites::getActive(), en in een queue-job is er geen HTTP-request om de
+     * actieve site uit af te leiden): whereJsonContains() met een expliciet
+     * siteId. Op een installatie met meer dan één site zou een campagne van
+     * site A anders producten van site B kunnen tonen, terwijl campagne,
+     * lijst en segment allemaal wél site-gebonden zijn.
+     */
+    public static function visibleQuery(?string $siteId): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Product::public();
+
+        if ($siteId) {
+            $query->whereJsonContains('site_ids', $siteId);
+        }
+
+        return $query;
     }
 
     /**

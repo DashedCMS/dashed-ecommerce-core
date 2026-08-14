@@ -7,6 +7,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
+use Filament\Schemas\Components\Utilities\Get;
 
 class DiscountCodeBlock extends EmailBlock
 {
@@ -33,7 +34,21 @@ class DiscountCodeBlock extends EmailBlock
             ->schema([
                 Select::make('discount_code_id')
                     ->label(__('Bestaande kortingscode'))
-                    ->options(fn (): array => DiscountCode::pluck('code', 'id')->all())
+                    // ../../site_id: dit blok zit in de Builder van de
+                    // campagne, één niveau genest. Zonder deze filter toont de
+                    // keuzelijst kortingscodes van elke site, en dan kan een
+                    // redacteur voor site A per ongeluk een code van site B
+                    // kiezen. $get() geeft null terug als het pad niet
+                    // bestaat (bijvoorbeeld dit blok in een ander formulier
+                    // zonder site_id), en dan blijft de lijst ongefilterd:
+                    // niet erger dan het gedrag van vóór deze reparatie.
+                    ->options(fn (Get $get): array => DiscountCode::query()
+                        ->when(
+                            $get('../../site_id'),
+                            fn ($query, $siteId) => $query->whereJsonContains('site_ids', $siteId)
+                        )
+                        ->pluck('code', 'id')
+                        ->all())
                     ->searchable(),
                 TextInput::make('code')
                     ->label(__('Code (als deze niet in de webshop staat)')),
