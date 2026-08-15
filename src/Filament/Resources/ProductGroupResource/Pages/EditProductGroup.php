@@ -4,13 +4,16 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pag
 
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Forms\Components\CheckboxList;
 use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilter;
@@ -20,6 +23,7 @@ use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristic;
 use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
+use Dashed\DashedEcommerceCore\Classes\ProductVariationNaming;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductGroupOpenOrdersWidget;
@@ -174,6 +178,31 @@ class EditProductGroup extends EditRecord
             ->action('duplicateProductGroup')
             ->color('warning');
 
+        $buttons[] = ActionGroup::make([
+            Action::make('regenerateProductNames')
+                ->label(__('Hernoemen'))
+                ->icon('heroicon-o-arrow-path')
+                ->visible(fn () => $this->record->products()->exists())
+                ->modalHeading(__('Producten hernoemen'))
+                ->modalDescription(__('De gekozen velden worden voor alle producten in deze groep opnieuw opgebouwd uit de groepsnaam en hun variatie-opties. Sla de groep eerst op, want er wordt gerekend met de opgeslagen naam en slug. Handmatige aanpassingen aan de gekozen velden gaan hierbij verloren; oude product-URL\'s worden automatisch omgeleid.'))
+                ->schema([
+                    CheckboxList::make('fields')
+                        ->label(__('Opnieuw genereren'))
+                        ->options([
+                            'name' => __('Naam'),
+                            'slug' => __('Slug'),
+                        ])
+                        ->default(['name', 'slug'])
+                        ->required(),
+                ])
+                ->modalSubmitActionLabel(__('Opnieuw genereren'))
+                ->action(fn (array $data) => $this->regenerateProductNamesAndSlugs($data['fields'] ?? [])),
+        ])
+            ->label(__('Acties'))
+            ->icon('heroicon-o-ellipsis-horizontal')
+            ->color('gray')
+            ->button();
+
         if (class_exists(AnalyzeSeoAction::class)) {
             $buttons[] = AnalyzeSeoAction::make();
         }
@@ -182,6 +211,31 @@ class EditProductGroup extends EditRecord
         $buttons[] = DeleteAction::make();
 
         return $buttons;
+    }
+
+    /**
+     * @param  array<int, string>  $fields  'name' en/of 'slug'
+     */
+    public function regenerateProductNamesAndSlugs(array $fields = ['name', 'slug']): void
+    {
+        $changed = ProductVariationNaming::regenerateForProductGroup(
+            $this->record,
+            in_array('name', $fields, true),
+            in_array('slug', $fields, true),
+        );
+
+        if (! $changed) {
+            $title = __('Alle producten waren al bijgewerkt');
+        } elseif ($changed === 1) {
+            $title = __('1 product bijgewerkt');
+        } else {
+            $title = __(':aantal producten bijgewerkt', ['aantal' => $changed]);
+        }
+
+        Notification::make()
+            ->title($title)
+            ->success()
+            ->send();
     }
 
     public function duplicateProductGroup()
