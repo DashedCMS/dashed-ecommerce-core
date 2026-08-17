@@ -89,6 +89,8 @@ Route::prefix('api/v1')
         Route::post('products/bulk', [ProductController::class, 'bulk'])->middleware('ability:products.write');
         Route::get('products/{product}', [ProductController::class, 'show'])->middleware('ability:products.read');
         Route::put('products/{product}', [ProductController::class, 'update'])->middleware('ability:products.write');
+        Route::post('products/{product}/duplicate', [ProductController::class, 'duplicate'])->middleware('ability:products.write');
+        Route::get('products/{product}/activity', [ProductController::class, 'activity'])->middleware('ability:products.read');
 
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
 

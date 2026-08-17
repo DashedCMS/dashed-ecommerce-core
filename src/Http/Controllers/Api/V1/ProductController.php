@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Classes\ProductDuplicator;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\ProductResource;
@@ -236,6 +237,42 @@ class ProductController extends Controller
             'ok_count' => $okCount,
             'fail_count' => $failCount,
         ]);
+    }
+
+    /**
+     * Dupliceert een product (incl. relaties) via de gedeelde ProductDuplicator
+     * en geeft het nieuwe product terug.
+     */
+    public function duplicate(Request $request, int $product): ProductResource
+    {
+        $source = Product::thisSite()->findOrFail($product);
+
+        return new ProductResource(ProductDuplicator::duplicate($source)->fresh());
+    }
+
+    /**
+     * Mutatielog van een product (spatie activity-log): wie wanneer wat wijzigde.
+     * Nieuwste eerst, begrensd tot de laatste 50 regels.
+     */
+    public function activity(int $product): JsonResponse
+    {
+        $model = Product::thisSite()->findOrFail($product);
+
+        $entries = $model->activities()
+            ->with('causer')
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'description' => $a->description,
+                'event' => $a->event,
+                'causer' => $a->causer?->name,
+                'properties' => $a->properties?->toArray() ?? [],
+                'created_at' => optional($a->created_at)->toIso8601String(),
+            ]);
+
+        return response()->json(['data' => $entries]);
     }
 
     /**
