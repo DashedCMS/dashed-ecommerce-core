@@ -6,9 +6,12 @@ namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 use Illuminate\Routing\Controller;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
@@ -154,6 +157,85 @@ class ProductController extends Controller
         });
 
         return new ProductResource($model->fresh());
+    }
+
+    /**
+     * Bulk-actie op meerdere producten: publiceren/verbergen, voorraad zetten,
+     * prijs zetten of aan een categorie toewijzen. Verwerkt per id (mag deels
+     * falen) en geeft per-id uitkomst + tellers terug (net als de order-bulk).
+     */
+    public function bulk(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'max:200'],
+            'ids.*' => ['integer'],
+            'action' => ['required', Rule::in(['visibility', 'stock', 'price', 'category'])],
+            'value' => ['required'],
+        ]);
+
+        $action = (string) $data['action'];
+        $patch = [];
+        $categoryId = null;
+
+        if ($action === 'visibility') {
+            $patch = ['public' => filter_var($data['value'], FILTER_VALIDATE_BOOLEAN)];
+        } elseif ($action === 'stock') {
+            $n = filter_var($data['value'], FILTER_VALIDATE_INT);
+            abort_if($n === false || $n < 0, 422, 'Ongeldige voorraadwaarde.');
+            $patch = ['stock' => $n];
+        } elseif ($action === 'price') {
+            $p = filter_var($data['value'], FILTER_VALIDATE_FLOAT);
+            abort_if($p === false || $p < 0, 422, 'Ongeldige prijs.');
+            $patch = ['price' => $p];
+        } else { // category
+            $cid = filter_var($data['value'], FILTER_VALIDATE_INT);
+            abort_if($cid === false || $cid <= 0, 422, 'Ongeldige categorie.');
+            $categoryId = $cid;
+        }
+
+        $results = [];
+        $okCount = 0;
+        $failCount = 0;
+
+        foreach (array_values(array_unique(array_map('intval', $data['ids']))) as $id) {
+            $model = Product::thisSite()->find($id);
+
+            if (! $model) {
+                $results[] = ['id' => $id, 'ok' => false, 'error' => 'Product niet gevonden.'];
+                $failCount++;
+
+                continue;
+            }
+
+            try {
+                DB::transaction(function () use ($model, $patch, $categoryId): void {
+                    if ($patch) {
+                        $this->applyData($model, $patch);
+                        $model->save();
+                    }
+                    if ($categoryId !== null) {
+                        // "Toewijzen" = toevoegen: bestaande categorieën blijven staan.
+                        $model->productCategories()->syncWithoutDetaching([$categoryId]);
+                    }
+                });
+
+                activity()->performedOn($model)->causedBy($request->user())
+                    ->withProperties(['action' => $action])->log('mobile-api: bulk product bijgewerkt');
+
+                $results[] = ['id' => $id, 'ok' => true, 'error' => null];
+                $okCount++;
+            } catch (\Throwable $e) {
+                report($e);
+                $results[] = ['id' => $id, 'ok' => false, 'error' => $e->getMessage()];
+                $failCount++;
+            }
+        }
+
+        return response()->json([
+            'results' => $results,
+            'ok_count' => $okCount,
+            'fail_count' => $failCount,
+        ]);
     }
 
     /**

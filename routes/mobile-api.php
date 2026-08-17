@@ -86,6 +86,7 @@ Route::prefix('api/v1')
 
         Route::get('products', [ProductController::class, 'index'])->middleware('ability:products.read');
         Route::post('products', [ProductController::class, 'store'])->middleware('ability:products.write');
+        Route::post('products/bulk', [ProductController::class, 'bulk'])->middleware('ability:products.write');
         Route::get('products/{product}', [ProductController::class, 'show'])->middleware('ability:products.read');
         Route::put('products/{product}', [ProductController::class, 'update'])->middleware('ability:products.write');
 
