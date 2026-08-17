@@ -8,6 +8,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderReturnController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductInsightsController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\SalesAnalysisController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
@@ -91,6 +92,8 @@ Route::prefix('api/v1')
         Route::put('products/{product}', [ProductController::class, 'update'])->middleware('ability:products.write');
         Route::post('products/{product}/duplicate', [ProductController::class, 'duplicate'])->middleware('ability:products.write');
         Route::get('products/{product}/activity', [ProductController::class, 'activity'])->middleware('ability:products.read');
+
+        Route::get('statistics/sales-analysis', [SalesAnalysisController::class, 'index'])->middleware('ability:dashboard.read');
 
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
 

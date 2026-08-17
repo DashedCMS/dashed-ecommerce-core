@@ -176,6 +176,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         cms()->registerNavigationGroup('Producten', 20);
         cms()->registerNavigationGroup('Statistieken', 65);
         cms()->registerNavigationGroup('Export', 70);
+        // Printers en printwachtrij hebben een eigen kop, vlak boven Systeem.
+        cms()->registerNavigationGroup('Printers', 90);
 
         \Illuminate\Support\Facades\RateLimiter::for('google-ads-customer-match', function (\Illuminate\Http\Request $request) {
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->ip() ?? 'unknown');
@@ -1692,6 +1694,7 @@ MARKDOWN,
             \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\ProductGroupAnalysis::class,
             \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\TimelineAnalysis::class,
             \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\UnsoldStockAnalysis::class,
+            \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\ReorderAdviceAnalysis::class,
             \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\ConcentrationAnalysis::class,
             \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\VariantSpreadAnalysis::class,
         ]);
