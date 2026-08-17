@@ -441,6 +441,40 @@ class OrderController extends Controller
         return \Dashed\DashedEcommerceCore\Support\Automation\LabelCreator::attempt($model, $provider, $overrides);
     }
 
+    /**
+     * De recente print-jobs van een order (nieuwste eerst), inclusief status en
+     * foutmelding. Zo kan de app een mislukte print (bv. label niet op te halen
+     * bij de carrier, of printer offline) tonen — die faalt async in de daemon
+     * en was tot nu toe onzichtbaar in de app.
+     */
+    public function printJobs(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $jobs = \Dashed\DashedEcommerceCore\Models\PrintJob::query()
+            ->where('order_id', $model->id)
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(function ($j): array {
+                $type = $j->type;
+                $status = $j->status;
+
+                return [
+                    'id' => $j->id,
+                    'type' => $type instanceof \BackedEnum ? $type->value : $type,
+                    'type_label' => (is_object($type) && method_exists($type, 'label')) ? $type->label() : (string) ($type instanceof \BackedEnum ? $type->value : $type),
+                    'status' => $status instanceof \BackedEnum ? $status->value : $status,
+                    'error_message' => $j->error_message,
+                    'attempts' => (int) $j->attempts,
+                    'created_at' => optional($j->created_at)->toIso8601String(),
+                    'failed_at' => optional($j->failed_at)->toIso8601String(),
+                ];
+            });
+
+        return response()->json(['data' => $jobs]);
+    }
+
     // ── Bulk-acties ──────────────────────────────────────────────────────────
     //
     // Dezelfde per-order logica als de single-endpoints hierboven, maar in een
