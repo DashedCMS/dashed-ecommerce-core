@@ -33,7 +33,9 @@ class PrinterResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-printer';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Systeem';
+    protected static string|UnitEnum|null $navigationGroup = 'Printers';
+
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $navigationLabel = 'Printers';
 
