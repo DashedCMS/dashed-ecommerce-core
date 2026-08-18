@@ -9,8 +9,6 @@ class DiscountChart extends ChartWidget
     protected int|string|array $columnSpan = 'full';
     protected ?string $maxHeight = '300px';
 
-    protected ?string $pollingInterval = '1s';
-
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',
     ];

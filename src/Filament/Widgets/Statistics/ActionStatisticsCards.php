@@ -6,8 +6,6 @@ use Filament\Widgets\StatsOverviewWidget;
 
 class ActionStatisticsCards extends StatsOverviewWidget
 {
-    protected ?string $pollingInterval = '1s';
-
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',
     ];

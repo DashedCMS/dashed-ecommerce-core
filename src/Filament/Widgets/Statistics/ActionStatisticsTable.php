@@ -11,8 +11,6 @@ use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 class ActionStatisticsTable extends TableWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected ?string $pollingInterval = '1s';
-
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',
     ];

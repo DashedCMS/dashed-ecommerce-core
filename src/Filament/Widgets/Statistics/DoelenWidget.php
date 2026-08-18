@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Widgets\Statistics;
 
 use Carbon\Carbon;
 use Filament\Widgets\Widget;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 class DoelenWidget extends Widget
 {
