@@ -6,8 +6,6 @@ use Filament\Widgets\StatsOverviewWidget;
 
 class RevenueCards extends StatsOverviewWidget
 {
-    protected ?string $pollingInterval = '1s';
-
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',
     ];
@@ -21,20 +19,26 @@ class RevenueCards extends StatsOverviewWidget
 
     public function getHeading(): string
     {
-        return 'Omzet statistieken';
+        return __('Omzet statistieken');
     }
 
-    protected function getCards(): array
+    protected function getStats(): array
     {
+        $data = $this->graphData['data'] ?? [];
+
+        if ($data === []) {
+            return [];
+        }
+
         return [
-            StatsOverviewWidget\Stat::make('Aantal bestellingen', $this->graphData['data']['ordersAmount']),
-            StatsOverviewWidget\Stat::make('Totaal bedrag', $this->graphData['data']['orderAmount']),
-            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $this->graphData['data']['averageOrderAmount']),
-            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $this->graphData['data']['productsSold']),
-            StatsOverviewWidget\Stat::make('Betalingskosten', $this->graphData['data']['paymentCostsAmount']),
-            StatsOverviewWidget\Stat::make('Verzendkosten', $this->graphData['data']['shippingCostsAmount']),
-            StatsOverviewWidget\Stat::make('Korting', $this->graphData['data']['discountAmount']),
-            StatsOverviewWidget\Stat::make('BTW', $this->graphData['data']['btwAmount']),
+            StatsOverviewWidget\Stat::make(__('Aantal bestellingen'), $data['ordersAmount'] ?? 0),
+            StatsOverviewWidget\Stat::make(__('Totaal bedrag'), $data['orderAmount'] ?? '-'),
+            StatsOverviewWidget\Stat::make(__('Gemiddelde waarde per order'), $data['averageOrderAmount'] ?? '-'),
+            StatsOverviewWidget\Stat::make(__('Aantal producten verkocht'), $data['productsSold'] ?? 0),
+            StatsOverviewWidget\Stat::make(__('Betalingskosten'), $data['paymentCostsAmount'] ?? '-'),
+            StatsOverviewWidget\Stat::make(__('Verzendkosten'), $data['shippingCostsAmount'] ?? '-'),
+            StatsOverviewWidget\Stat::make(__('Korting'), $data['discountAmount'] ?? '-'),
+            StatsOverviewWidget\Stat::make(__('BTW'), $data['btwAmount'] ?? '-'),
         ];
     }
 }

@@ -9,8 +9,6 @@ class RevenueChart extends ChartWidget
     protected int|string|array $columnSpan = 'full';
     protected ?string $maxHeight = '300px';
 
-    protected ?string $pollingInterval = '1s';
-
     protected $listeners = [
         'updateGraphData' => 'updateGraphData',
     ];
@@ -24,12 +22,18 @@ class RevenueChart extends ChartWidget
 
     public function getHeading(): string
     {
-        return 'Omzet statistieken';
+        return __('Omzet statistieken');
     }
 
     protected function getData(): array
     {
-        return $this->graphData['graph'];
+        // De pagina levert de cijfers aan, bij het opbouwen via getWidgetData()
+        // en daarna via de gebeurtenis hierboven. Zolang er nog niets is moet
+        // dit een lege grafiek zijn en geen fout op een ontbrekende sleutel.
+        return $this->graphData['graph'] ?? [
+            'datasets' => [],
+            'labels' => [],
+        ];
     }
 
     protected function getType(): string

@@ -8,7 +8,9 @@ use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
+use Illuminate\Support\Facades\Cache;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -42,6 +44,14 @@ class RevenueStatisticsPage extends Page implements HasSchemas
 
     protected string $view = 'dashed-ecommerce-core::statistics.pages.revenue-statistics';
 
+    /**
+     * Bovengrens op het aantal punten in de grafiek. Per uur over een jaar zijn
+     * dat er bijna negenduizend: onleesbaar in de grafiek en genoeg om de
+     * browser te laten hangen. Liever een afgekapte lijn dan een pagina die
+     * niets meer teruggeeft.
+     */
+    protected const MAX_GRAPH_POINTS = 750;
+
     public ?array $data = [];
 
     public array $graphData = [];
@@ -69,34 +79,65 @@ class RevenueStatisticsPage extends Page implements HasSchemas
 
     public function updated(string $propertyName): void
     {
+        // De periode zet zelf de start- en einddatum en rekent daarna opnieuw.
+        // Zou dat hier ook gebeuren, dan telt die berekening met de datums van
+        // voor de wijziging, en dat was precies de fout: na het kiezen van
+        // "vorige maand" stonden de datumvelden goed maar ging de grafiek over
+        // de afgelopen maand vanaf vandaag.
+        if ($propertyName === 'data.period') {
+            return;
+        }
+
         if (str_starts_with($propertyName, 'data.')) {
             $this->calculateStatistics();
         }
     }
 
+    /**
+     * De keuzelijsten met betaalmethodes en herkomsten. Twee daarvan zijn een
+     * DISTINCT over de volledige betalings- en bestellingentabel, en form()
+     * draait bij elke Livewire-ronde opnieuw: zonder deze cache betaalt elke
+     * filterwijziging twee volledige scans voordat er ook maar iets gerekend is.
+     *
+     * @return array<string, array<string, string>>
+     */
+    protected function filterOptions(): array
+    {
+        $siteId = (string) Sites::getActive();
+
+        return Cache::remember(
+            "dashed.revenue-statistics.filter-options.{$siteId}",
+            now()->addMinutes(10),
+            fn (): array => [
+                'paymentMethods' => PaymentMethod::query()
+                    ->pluck('name', 'id')
+                    ->toArray(),
+                'legacyPaymentMethods' => OrderPayment::query()
+                    ->whereNotNull('payment_method')
+                    ->distinct()
+                    ->pluck('payment_method')
+                    ->filter()
+                    ->unique()
+                    ->mapWithKeys(fn ($paymentMethod) => [$paymentMethod => $paymentMethod])
+                    ->toArray(),
+                'orderOrigins' => Order::query()
+                    ->whereNotNull('order_origin')
+                    ->distinct()
+                    ->pluck('order_origin')
+                    ->filter()
+                    ->unique()
+                    ->mapWithKeys(fn ($orderOrigin) => [$orderOrigin => ucfirst($orderOrigin)])
+                    ->toArray(),
+            ]
+        );
+    }
+
     public function form(Schema $schema): Schema
     {
-        $paymentMethods = PaymentMethod::query()
-            ->pluck('name', 'id')
-            ->toArray();
-
-        $legacyPaymentMethods = OrderPayment::query()
-            ->whereNotNull('payment_method')
-            ->distinct()
-            ->pluck('payment_method')
-            ->filter()
-            ->unique()
-            ->mapWithKeys(fn ($paymentMethod) => [$paymentMethod => $paymentMethod])
-            ->toArray();
-
-        $orderOrigins = Order::query()
-            ->whereNotNull('order_origin')
-            ->distinct()
-            ->pluck('order_origin')
-            ->filter()
-            ->unique()
-            ->mapWithKeys(fn ($orderOrigin) => [$orderOrigin => ucfirst($orderOrigin)])
-            ->toArray();
+        $options = $this->filterOptions();
+        $paymentMethods = $options['paymentMethods'];
+        $legacyPaymentMethods = $options['legacyPaymentMethods'];
+        $orderOrigins = $options['orderOrigins'];
 
         return $schema
             ->components([
@@ -112,6 +153,8 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                                 $set('startDate', $defaultData['startDate']);
                                 $set('endDate', $defaultData['endDate']);
                                 $set('steps', $defaultData['steps']);
+
+                                $this->calculateStatistics();
                             }),
 
                         Select::make('steps')
@@ -135,7 +178,11 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                         DatePicker::make('endDate')
                             ->label(__('Eind datum'))
                             ->nullable()
-                            ->after('startDate')
+                            // Gelijk aan de startdatum mag: een enkele dag
+                            // bekijken is de normaalste vraag die er is. Met
+                            // after() faalde de validatie stilletjes en bleef de
+                            // grafiek op de vorige periode staan.
+                            ->afterOrEqual('startDate')
                             ->default(now()->endOfMonth())
                             ->reactive(),
 
@@ -200,6 +247,48 @@ class RevenueStatisticsPage extends Page implements HasSchemas
                     ]),
             ])
             ->statePath('data');
+    }
+
+    /**
+     * In welke stap valt dit tijdstip. De grenzen lopen oplopend, dus dat is een
+     * binaire zoekactie: bij tienduizenden orders is een lus door alle stappen
+     * per order net zo goed een reden om te wachten als de queries van hiervoor.
+     *
+     * @param array<int, int> $boundaries
+     */
+    protected function stepIndexFor(int $timestamp, array $boundaries): ?int
+    {
+        $low = 0;
+        $high = count($boundaries) - 1;
+
+        if ($high < 0 || $timestamp < $boundaries[0]) {
+            return null;
+        }
+
+        while ($low < $high) {
+            $middle = intdiv($low + $high + 1, 2);
+
+            if ($boundaries[$middle] <= $timestamp) {
+                $low = $middle;
+            } else {
+                $high = $middle - 1;
+            }
+        }
+
+        return $low;
+    }
+
+    /** Een label dat bij de gekozen stap past; alles op d-m-Y gaf per uur zes keer dezelfde tekst. */
+    protected function graphLabel(Carbon $start, string $steps): string
+    {
+        return match ($steps) {
+            'per_hour' => $start->format('d-m H:00'),
+            'per_week' => __('week :week', ['week' => $start->isoWeek()]) . $start->format(' (d-m)'),
+            'per_month' => $start->format('m-Y'),
+            'per_quarter' => 'Q' . $start->quarter . $start->format(' Y'),
+            'per_year' => $start->format('Y'),
+            default => $start->format('d-m-Y'),
+        };
     }
 
     protected function calculateStatistics(): void
@@ -287,24 +376,54 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             ")
             ->first();
 
-        $graphLabels = [];
-        $graphValues = [];
-
+        // De grafiek haalt zijn cijfers in een enkele query op en verdeelt ze
+        // daarna in PHP over de stappen. Een som per stap was een query per punt
+        // op de lijn: een jaar per dag is 365 keer dezelfde gefilterde query,
+        // inclusief de subquery op betaalmethode, en per uur over een maand
+        // ruim zevenhonderd. Dat is waar de pagina op vastliep.
+        $starts = [];
         $cursor = $beginDate->copy()->$startFormat();
         $end = $endDate->copy()->$endFormat();
 
-        while ($cursor->lte($end)) {
-            $periodStart = $cursor->copy()->$startFormat();
-            $periodEnd = $cursor->copy()->$endFormat();
-
-            $periodAmount = (clone $filteredOrdersQuery)
-                ->whereBetween('created_at', [$periodStart, $periodEnd])
-                ->sum('total');
-
-            $graphLabels[] = $periodStart->format('d-m-Y');
-            $graphValues[] = (float) $periodAmount;
-
+        while ($cursor->lte($end) && count($starts) < self::MAX_GRAPH_POINTS) {
+            $starts[] = $cursor->copy()->$startFormat();
             $cursor->$addFormat();
+        }
+
+        $boundaries = array_map(fn (Carbon $start): int => $start->getTimestamp(), $starts);
+        $totalsPerStep = array_fill(0, count($starts), 0.0);
+        $lastBoundary = $endDate->getTimestamp();
+
+        // Kale rijen, geen Eloquent-modellen: bij een jaar omzet scheelt dat
+        // tienduizenden objecten die alleen maar opgeteld hoeven te worden.
+        (clone $filteredOrdersQuery)
+            ->toBase()
+            ->select(['id', 'created_at', 'total'])
+            ->orderBy('id')
+            ->chunkById(5000, function ($rows) use (&$totalsPerStep, $boundaries, $lastBoundary) {
+                foreach ($rows as $row) {
+                    $timestamp = strtotime((string) $row->created_at);
+
+                    if ($timestamp === false || $timestamp > $lastBoundary) {
+                        continue;
+                    }
+
+                    $index = $this->stepIndexFor($timestamp, $boundaries);
+
+                    if ($index === null) {
+                        continue;
+                    }
+
+                    $totalsPerStep[$index] += (float) $row->total;
+                }
+            });
+
+        $graphLabels = [];
+        $graphValues = [];
+
+        foreach ($starts as $index => $start) {
+            $graphLabels[] = $this->graphLabel($start, $steps);
+            $graphValues[] = round($totalsPerStep[$index], 2);
         }
 
         $totalOrderCount = (int) ($orderTotals->total_orders ?? 0);
@@ -340,6 +459,7 @@ class RevenueStatisticsPage extends Page implements HasSchemas
             'data' => $statistics,
             'filters' => [
                 'beginDate' => $beginDate->toDateTimeString(),
+                'steps' => $steps,
                 'endDate' => $endDate->toDateTimeString(),
                 'status' => $status,
                 'paymentMethod' => $paymentMethod,
