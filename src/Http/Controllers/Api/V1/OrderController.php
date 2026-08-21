@@ -865,6 +865,21 @@ class OrderController extends Controller
             }
         }
 
+        // Verzendlabel op order-niveau (geen specifiek label gekozen) → de labels
+        // van deze order meteen uit de "Download labels"-wachtrij halen. Anders
+        // gebeurt dat pas als de async print-daemon de job voltooit, en blijft het
+        // label bij een trage of mislukte daemon onterecht in de wachtrij staan.
+        // (Een specifiek label is hierboven al gemarkeerd; de daemon markeert bij
+        // voltooiing nogmaals, maar dat is idempotent.)
+        if ($jobType === \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel && $printableId === null) {
+            foreach (\Dashed\DashedEcommerceCore\Models\PrintJob::shippingLabelSources() as $sourceModel) {
+                $sourceModel::query()
+                    ->where('order_id', $model->id)
+                    ->where('label_printed', 0)
+                    ->update(['label_printed' => 1]);
+            }
+        }
+
         \Dashed\DashedEcommerceCore\Models\PrintJob::create([
             'type' => $jobType,
             'order_id' => $model->id,
