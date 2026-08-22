@@ -259,11 +259,21 @@ class OrderController extends Controller
     }
 
     /** Verzendlabel-PDF-URL van de fulfillment-integratie (MyParcel/Veloyd), indien aangemaakt. */
-    public function labelUrl(int $order): JsonResponse
+    public function labelUrl(Request $request, int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
 
-        return response()->json(['url' => $this->firstLabelPublicUrl($model)]);
+        $data = $request->validate([
+            // Optioneel exact label targeten (uit de labellijst); anders het nieuwste.
+            'carrier' => ['sometimes', 'nullable', Rule::in(['myparcel', 'veloyd'])],
+            'label_id' => ['sometimes', 'nullable', 'integer'],
+        ]);
+
+        $url = (! empty($data['carrier']) && ! empty($data['label_id']))
+            ? $this->specificLabelPublicUrl($model, (string) $data['carrier'], (int) $data['label_id'])
+            : $this->firstLabelPublicUrl($model);
+
+        return response()->json(['url' => $url]);
     }
 
     /**
@@ -701,51 +711,77 @@ class OrderController extends Controller
         if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
             $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
                 ->whereNotNull('shipment_id')->latest()->first();
-            if ($mp) {
-                $path = $mp->label_pdf_path;
-                if ((! $path || ! \Illuminate\Support\Facades\Storage::disk('public')->exists($path))
-                    && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
-                    try {
-                        $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($mp);
-                    } catch (\Throwable $e) {
-                        report($e);
-                        $path = null;
-                    }
-                }
-                if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-                    // Label gedownload via de app → uit de wachtrij halen.
-                    if (! $mp->label_printed) {
-                        $mp->forceFill(['label_printed' => 1])->save();
-                    }
-
-                    return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
-                }
+            if ($url = $this->publicUrlForLabelRecord($mp, 'myparcel')) {
+                return $url;
             }
         }
 
         if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
                 ->whereNotNull('shipment_id')->latest()->first();
-            if ($v) {
-                $path = $v->label_pdf_path;
-                if ((! $path || ! \Illuminate\Support\Facades\Storage::disk('public')->exists($path))
-                    && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)) {
-                    try {
-                        $path = \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::downloadLabelForOrder($v);
-                    } catch (\Throwable $e) {
-                        report($e);
-                        $path = null;
-                    }
-                }
-                if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-                    // Label gedownload via de app → uit de wachtrij halen.
-                    if (! $v->label_printed) {
-                        $v->forceFill(['label_printed' => 1])->save();
-                    }
-
-                    return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
-                }
+            if ($url = $this->publicUrlForLabelRecord($v, 'veloyd')) {
+                return $url;
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Publieke PDF-URL voor één specifiek label (carrier + id uit de labellijst),
+     * zodat exact dát label uit de "Download labels"-wachtrij verdwijnt i.p.v. het
+     * nieuwste van de order. Null bij onbekende carrier of geen PDF.
+     */
+    private function specificLabelPublicUrl(Order $model, string $carrier, int $labelId): ?string
+    {
+        $map = [
+            'myparcel' => \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class,
+            'veloyd' => \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class,
+        ];
+        $cls = $map[$carrier] ?? null;
+        if (! $cls || ! class_exists($cls)) {
+            return null;
+        }
+
+        $record = $cls::where('order_id', $model->id)->whereKey($labelId)->first();
+
+        return $this->publicUrlForLabelRecord($record, $carrier);
+    }
+
+    /**
+     * Levert de publieke PDF-URL van één label-record (downloadt de PDF zo nodig
+     * bij de vervoerder) en haalt dat label uit de "Download labels"-wachtrij.
+     * Null als er geen record of geen PDF beschikbaar is.
+     *
+     * @param  \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder|\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder|null  $record
+     */
+    private function publicUrlForLabelRecord($record, string $carrier): ?string
+    {
+        if (! $record) {
+            return null;
+        }
+
+        $path = $record->label_pdf_path;
+        if (! $path || ! \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            try {
+                if ($carrier === 'myparcel' && class_exists(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)) {
+                    $path = \Dashed\DashedEcommerceMyParcel\Classes\MyParcel::downloadLabelForOrder($record);
+                } elseif ($carrier === 'veloyd' && class_exists(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)) {
+                    $path = \Dashed\DashedEcommerceVeloyd\Classes\Veloyd::downloadLabelForOrder($record);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                $path = null;
+            }
+        }
+
+        if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            // Label gedownload via de app → uit de wachtrij halen.
+            if (! $record->label_printed) {
+                $record->forceFill(['label_printed' => 1])->save();
+            }
+
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
         }
 
         return null;
