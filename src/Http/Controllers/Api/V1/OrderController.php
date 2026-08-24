@@ -250,6 +250,50 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Pas een productwijziging daadwerkelijk toe: in-place (regels overschrijven +
+     * totalen herberekenen) wanneer `OrderModificationService::canModifyInPlace()`
+     * dat toestaat, anders een vervangende order met verrekening van het al
+     * betaalde bedrag (creditorder). Spiegelt `modifyPreview()` qua validatie,
+     * maar muteert nu daadwerkelijk.
+     *
+     * Response-vorm: `{order: <zelfde platte velden als detail()>, replaced: bool,
+     * replacement_order_id: ?int}`. `order` is de `OrderResource` rechtstreeks in
+     * de JSON genest (niet via `->response()`), dus zonder `data`-wrapper — anders
+     * dan `GET orders/{id}` (die wél wrapt, want daar retourneert de controller de
+     * Resource als top-level actie-resultaat en past Laravel de standaard-wrap toe).
+     */
+    public function modify(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        if (! $model->isModifiable()) {
+            return response()->json(['success' => false, 'message' => 'Deze bestelling kan niet meer gewijzigd worden.'], 422);
+        }
+
+        $lines = $this->validatedModifyLines($request);
+        $options = $request->validate([
+            'send_customer_email' => ['sometimes', 'boolean'],
+            'customer_note' => ['sometimes', 'nullable', 'string'],
+            'products_must_be_returned' => ['sometimes', 'boolean'],
+        ]);
+
+        $inPlace = OrderModificationService::canModifyInPlace($model);
+        $target = $inPlace
+            ? OrderModificationService::applyInPlace($model, $lines, $options)
+            : OrderModificationService::replaceWithNewOrder($model, $lines, $options);
+
+        activity()->performedOn($model)->causedBy($request->user())
+            ->withProperties(['in_place' => $inPlace, 'lines' => count($lines)])
+            ->log('mobile-api: order-producten gewijzigd');
+
+        return response()->json([
+            'order' => $this->detail($target),
+            'replaced' => ! $inPlace,
+            'replacement_order_id' => $inPlace ? null : $target->id,
+        ]);
+    }
+
     /** Markeer de bestelling als betaald (zoals Filament "Markeer als betaald"). */
     public function markAsPaid(Request $request, int $order): OrderResource
     {

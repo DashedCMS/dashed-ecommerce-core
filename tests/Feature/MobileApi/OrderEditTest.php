@@ -189,3 +189,117 @@ it('weigert een modify-preview zonder de orders.write ability', function () {
         ],
     ], ['X-Site-Id' => 'site'])->assertStatus(403);
 });
+
+it('past een productwijziging in-place toe voor een onbetaalde, bewerkbare order', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    // Onbetaald, geen echt factuurnummer, geen geslaagde betaling → canModifyInPlace() true.
+    $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
+    $orderProduct = OrderProduct::create([
+        'order_id' => $order->id,
+        'name' => 'Testproduct',
+        'quantity' => 1,
+        'price' => 10.00,
+        'discount' => 0,
+        'vat_rate' => 21,
+    ]);
+
+    $res = $this->patchJson("/api/v1/orders/{$order->id}/modify", [
+        'lines' => [
+            [
+                'order_product_id' => $orderProduct->id,
+                'name' => 'Testproduct',
+                'quantity' => 3,
+                'price' => 30.00,
+                'vat_rate' => 21,
+            ],
+        ],
+        'send_customer_email' => false,
+    ], ['X-Site-Id' => 'site']);
+
+    $res->assertOk()
+        ->assertJsonPath('replaced', false)
+        ->assertJsonPath('replacement_order_id', null)
+        ->assertJsonPath('order.id', $order->id);
+
+    $fresh = $order->fresh();
+    expect($fresh->orderProducts()->count())->toBe(1);
+    $line = $fresh->orderProducts()->first();
+    expect($line->quantity)->toBe(3)
+        ->and((float) $line->price)->toBe(30.00)
+        ->and((float) $fresh->total)->toBe(30.00);
+});
+
+it('vervangt een betaalde order door een nieuwe met creditorder bij een productwijziging', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    // Al betaald met een echt factuurnummer → canModifyInPlace() false, isModifiable() true.
+    $order = makeEditableOrder(['status' => 'paid']);
+    $orderProduct = OrderProduct::create([
+        'order_id' => $order->id,
+        'name' => 'Testproduct',
+        'quantity' => 1,
+        'price' => 10.00,
+        'discount' => 0,
+        'vat_rate' => 21,
+    ]);
+
+    $res = $this->patchJson("/api/v1/orders/{$order->id}/modify", [
+        'lines' => [
+            [
+                'order_product_id' => $orderProduct->id,
+                'name' => 'Testproduct',
+                'quantity' => 2,
+                'price' => 20.00,
+                'vat_rate' => 21,
+            ],
+        ],
+        'send_customer_email' => false,
+    ], ['X-Site-Id' => 'site']);
+
+    $res->assertOk()->assertJsonPath('replaced', true);
+    $replacementId = $res->json('replacement_order_id');
+    expect($replacementId)->not->toBeNull()
+        ->and($res->json('order.id'))->toBe($replacementId);
+
+    $fresh = $order->fresh();
+    expect($fresh->replaced_by_order_id)->toBe($replacementId);
+
+    $replacement = Order::find($replacementId);
+    expect($replacement)->not->toBeNull()
+        ->and($replacement->orderProducts()->count())->toBe(1)
+        ->and((float) $replacement->total)->toBe(20.00);
+});
+
+it('weigert een modify voor een order die niet meer bewerkbaar is', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $order = makeEditableOrder(['status' => 'cancelled']);
+
+    $res = $this->patchJson("/api/v1/orders/{$order->id}/modify", [
+        'lines' => [
+            ['name' => 'X', 'quantity' => 1, 'price' => 1],
+        ],
+    ], ['X-Site-Id' => 'site']);
+
+    $res->assertStatus(422)->assertJsonPath('success', false);
+});
+
+it('returns 404 bij modify van een order op een andere site', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $other = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA'], 'other');
+
+    $this->patchJson("/api/v1/orders/{$other->id}/modify", [
+        'lines' => [
+            ['name' => 'X', 'quantity' => 1, 'price' => 1],
+        ],
+    ], ['X-Site-Id' => 'site'])->assertNotFound();
+});
+
+it('weigert modify zonder de orders.write ability', function () {
+    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
+
+    $this->patchJson("/api/v1/orders/{$order->id}/modify", [
+        'lines' => [
+            ['name' => 'X', 'quantity' => 1, 'price' => 1],
+        ],
+    ], ['X-Site-Id' => 'site'])->assertStatus(403);
+});
