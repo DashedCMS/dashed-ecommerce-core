@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
+use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
+use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
@@ -179,6 +182,72 @@ class OrderController extends Controller
             ->log('mobile-api: ordergegevens bewerkt');
 
         return $this->detail($model);
+    }
+
+    /**
+     * Valideer en normaliseer productregels voor een orderwijziging, in de
+     * line-vorm die `OrderModificationService` verwacht. Gedeeld tussen
+     * `modifyPreview` (muteert niets) en de daadwerkelijke wijzig-actie.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function validatedModifyLines(Request $request): array
+    {
+        $data = $request->validate([
+            'lines' => ['required', 'array', 'min:1'],
+            'lines.*.order_product_id' => ['sometimes', 'nullable', 'integer'],
+            'lines.*.product_id' => ['sometimes', 'nullable', 'integer'],
+            'lines.*.name' => ['required', 'string', 'max:255'],
+            'lines.*.quantity' => ['required', 'integer', 'min:1'],
+            'lines.*.price' => ['required', 'numeric'], // regeltotaal na korting
+            'lines.*.vat_rate' => ['sometimes', 'numeric'],
+            'lines.*.discount' => ['sometimes', 'nullable', 'numeric'],
+            'lines.*.product_extras' => ['sometimes', 'array'],
+        ]);
+
+        return array_map(static fn (array $l): array => [
+            'order_product_id' => $l['order_product_id'] ?? null,
+            'product_id' => $l['product_id'] ?? null,
+            'name' => $l['name'],
+            'quantity' => (int) $l['quantity'],
+            'price' => (float) $l['price'],
+            'vat_rate' => (float) ($l['vat_rate'] ?? 21),
+            'discount' => isset($l['discount']) ? (float) $l['discount'] : null,
+            'product_extras' => $l['product_extras'] ?? [],
+        ], $data['lines']);
+    }
+
+    /**
+     * Preview van een productwijziging: berekent de totalen-breakdown zonder
+     * de order aan te passen, plus of de wijziging in-place kan (of een
+     * vervangende order wordt) en of de order überhaupt bewerkbaar is. Zo kan
+     * de app het effect tonen vóórdat de gebruiker bevestigt.
+     */
+    public function modifyPreview(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $lines = $this->validatedModifyLines($request);
+
+        // breakdownForLines verwacht [{price, discount}] — leid de korting af
+        // zoals OrderModificationService::writeLines dat ook doet.
+        $previewLines = array_map(static function (array $l): array {
+            $source = $l['order_product_id']
+                ? OrderProduct::find($l['order_product_id'])
+                : null;
+
+            return [
+                'price' => $l['price'],
+                'discount' => OrderModificationService::discountForLine($l, $source),
+            ];
+        }, $lines);
+
+        $breakdown = OrderTotalsCalculator::breakdownForLines($model, $previewLines);
+
+        return response()->json([
+            'breakdown' => $breakdown,
+            'in_place' => OrderModificationService::canModifyInPlace($model),
+            'is_modifiable' => $model->isModifiable(),
+        ]);
     }
 
     /** Markeer de bestelling als betaald (zoals Filament "Markeer als betaald"). */

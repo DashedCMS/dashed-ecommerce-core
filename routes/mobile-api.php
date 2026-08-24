@@ -139,6 +139,7 @@ Route::prefix('api/v1')
         Route::get('orders/{order}', [OrderController::class, 'show'])->middleware('ability:orders.read');
         Route::patch('orders/{order}', [OrderController::class, 'update'])->middleware('ability:orders.write');
         Route::patch('orders/{order}/details', [OrderController::class, 'updateDetails'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/modify/preview', [OrderController::class, 'modifyPreview'])->middleware('ability:orders.write');
         Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');
         Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return', [OrderController::class, 'returnOrder'])->middleware('ability:orders.write');
