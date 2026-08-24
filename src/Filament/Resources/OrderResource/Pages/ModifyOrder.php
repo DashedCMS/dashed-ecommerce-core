@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -63,6 +64,7 @@ class ModifyOrder extends Page implements HasSchemas
             'already_shipped' => false,
             'products_must_be_returned' => false,
             'credit_old_order' => $this->order->hasRealInvoice(),
+            'old_order_fulfillment_status' => 'handled',
             'customer_note' => null,
         ]);
     }
@@ -247,6 +249,14 @@ class ModifyOrder extends Page implements HasSchemas
                         Toggle::make('products_must_be_returned')
                             ->label(__('De producten moeten terugkomen van de klant'))
                             ->visible(! $inPlace),
+                        Select::make('old_order_fulfillment_status')
+                            ->label(__('Status van de oude bestelling'))
+                            ->helperText(__('De oude bestelling is vervangen en hoeft niet meer opgepakt te worden. De klant krijgt hiervan geen statusmail.'))
+                            ->options(collect(Orders::getFulfillmentStatusses())->map(fn (string $label) => __($label))->all())
+                            ->default('handled')
+                            ->selectablePlaceholder(false)
+                            ->required()
+                            ->visible(! $inPlace),
                         Toggle::make('send_customer_email')
                             ->label(__('Klant een wijzigingsmail sturen')),
                         Textarea::make('customer_note')
@@ -381,6 +391,15 @@ class ModifyOrder extends Page implements HasSchemas
             ? __('De klant ontvangt een wijzigingsmail.')
             : __('De klant ontvangt geen wijzigingsmail.');
 
+        // Alleen op de vervangroute: bij een wijziging in plaats is er geen
+        // oude bestelling die achterblijft.
+        $oldStatus = $state['old_order_fulfillment_status'] ?? 'handled';
+        $oldStatusSentence = $inPlace
+            ? ''
+            : ' ' . __('De oude bestelling blijft achter op :status.', [
+                'status' => __(Orders::getFulfillmentStatusses()[$oldStatus] ?? $oldStatus),
+            ]);
+
         // De korting expliciet noemen zodra er een is. De regelprijzen zijn de
         // prijzen ná korting, dus dit bedrag verlaagt het nieuwe totaal niet
         // nog een keer; het laat zien hoe het subtotaal is opgebouwd.
@@ -405,7 +424,8 @@ class ModifyOrder extends Page implements HasSchemas
             . $discountSentence
             . $capSentence
             . ' ' . $moneySentence
-            . ' ' . $emailSentence;
+            . ' ' . $emailSentence
+            . $oldStatusSentence;
     }
 
     /**
@@ -486,6 +506,7 @@ class ModifyOrder extends Page implements HasSchemas
             'deduct_new_stock' => (bool) ($state['deduct_new_stock'] ?? true),
             'products_must_be_returned' => (bool) ($state['products_must_be_returned'] ?? false),
             'credit_old_order' => (bool) ($state['credit_old_order'] ?? $this->order->hasRealInvoice()),
+            'old_order_fulfillment_status' => $state['old_order_fulfillment_status'] ?? 'handled',
         ];
 
         if (OrderModificationService::canModifyInPlace($this->order)) {

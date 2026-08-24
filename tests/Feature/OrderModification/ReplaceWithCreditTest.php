@@ -198,11 +198,12 @@ it('schrijft de klant in de credittak niet in voor de na-aankoop-flows', functio
     OrderModificationService::replaceWithNewOrder($old->fresh(), [creditLine('Ander product', 100.0)]);
 
     expect(OrderFlowEnrollment::count())->toBe(0)
-        // De fulfillment-status van de oude order mag ook niet verzet zijn: dat
-        // is precies het mechanisme waarmee de inschrijving voorkomen wordt, en
-        // het zou de klant bovendien een FulfillmentStatusHandledMail sturen
-        // terwijl er een vervangende bestelling openstaat.
-        ->and($old->fresh()->fulfillment_status)->toBe('shipped');
+        // De oude order komt wél op 'handled' te staan: hij is vervangen en
+        // hoeft niet meer opgepakt te worden. Dat gebeurt stil, buiten
+        // changeFulfillmentStatus() om, en juist dat maakt deze toets scherper
+        // dan hij was. De status verzet zich naar precies de waarde waar deze
+        // flow op triggert, en er mag nog steeds geen inschrijving ontstaan.
+        ->and($old->fresh()->fulfillment_status)->toBe('handled');
 });
 
 it('stuurt de beheerders geen annuleringsmail bij een wijziging via de credittak', function () {

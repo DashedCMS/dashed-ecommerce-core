@@ -166,6 +166,40 @@ class OrderModificationService
                 $order->save();
             }
 
+            // De oude bestelling is van de baan: hij is vervangen en hoeft niet
+            // meer opgepakt te worden. In welke stand hij achterblijft kiest de
+            // beheerder in het wijzigscherm, standaard afgehandeld. Een
+            // onbekende waarde valt terug op afgehandeld in plaats van een
+            // uitzondering te gooien: we zitten hier midden in een transactie
+            // waarin de vervanger al bestaat en de betalingen al verhuisd zijn.
+            //
+            // Bewust niet via changeFulfillmentStatus(): die stuurt de klant de
+            // FulfillmentStatusHandledMail (die zou zeggen dat de bestelling
+            // klaar is terwijl er een vervanger openstaat die mogelijk nog
+            // betaald moet worden) en vuurt OrderFulfillmentStatusChangedEvent,
+            // dat de klant via QueueOrderFlowEmailsListener in de
+            // na-aankoop-flows zet voor een order die net vervangen is. Om
+            // precies diezelfde reden geeft creditOldOrder() nog steeds de
+            // huidige status door aan markAsCancelledWithCredit(), zodat de
+            // aanroep dáárbinnen een no-op blijft en het verzetten hier gebeurt.
+            $newFulfillmentStatus = $options['old_order_fulfillment_status'] ?? 'handled';
+
+            if (! array_key_exists($newFulfillmentStatus, Orders::getFulfillmentStatusses())) {
+                $newFulfillmentStatus = 'handled';
+            }
+
+            if ($order->fulfillment_status !== $newFulfillmentStatus) {
+                $previousFulfillmentStatus = $order->fulfillment_status;
+                $order->fulfillment_status = $newFulfillmentStatus;
+                $order->save();
+
+                OrderLog::createLog(
+                    orderId: $order->id,
+                    tag: 'order.modified.fulfillment-status',
+                    note: 'Status na wijziging van '.$previousFulfillmentStatus.' naar '.$newFulfillmentStatus,
+                );
+            }
+
             // 3. Status, factuur en voorraad van de nieuwe order. Bewust niet
             // via markAsPaid(): die verstuurt een factuurmail, leegt
             // winkelwagens en stuurt een GA-omzethit die dubbel zou tellen.
@@ -232,14 +266,14 @@ class OrderModificationService
             extraOrderLineName: null,
             extraOrderLinePrice: 0,
             chosenOrderProducts: $chosenOrderProducts,
-            // Bewust de huidige status en niet 'handled'. changeFulfillmentStatus()
-            // stopt bij gelijke oude en nieuwe status, dus hiermee blijft er per
-            // constructie zowel de FulfillmentStatusHandledMail naar de klant weg
-            // (die zou zeggen dat de bestelling klaar is terwijl er een vervanger
-            // openstaat die mogelijk nog betaald moet worden) als de
-            // OrderFulfillmentStatusChangedEvent die de klant via
-            // QueueOrderFlowEmailsListener in de na-aankoop-flows zou zetten voor
-            // een order die net weggecrediteerd is.
+            // Bewust de huidige status. changeFulfillmentStatus() stopt bij
+            // gelijke oude en nieuwe status, dus deze aanroep is per constructie
+            // een no-op en er gaat vanuit deze methode dus geen
+            // FulfillmentStatusHandledMail en geen
+            // OrderFulfillmentStatusChangedEvent uit. De oude order gaat wel
+            // degelijk naar een eindstand, maar dat gebeurt stil in
+            // replaceWithNewOrder() nadat deze methode klaar is; zie de
+            // toelichting daar.
             fulfillmentStatus: $order->fulfillment_status,
             paymentMethodId: null,
             // Geen annuleringsmail naar de beheerders: dit is een wijziging, geen
